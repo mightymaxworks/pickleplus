@@ -16,9 +16,9 @@ export default function Profile() {
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!isAuthenticated && !user) {
-      navigate("/login");
+      setLocation("/login");
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, user, setLocation]);
   
   // Fetch user activities for statistics
   const { 
