@@ -8,6 +8,7 @@ import Leaderboard from "@/pages/Leaderboard";
 import Profile from "@/pages/Profile";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import AuthPage from "@/pages/auth-page";
 import LandingPage from "@/pages/LandingPage";
 import TournamentCheckIn from "@/pages/TournamentCheckIn";
 import { MainLayout } from "@/components/MainLayout";
@@ -31,15 +32,16 @@ function App() {
         </Route>
         
         {/* Auth Routes */}
-        <Route path="/login">
+        <Route path="/auth">
           <AuthLayout>
-            <Login />
+            <AuthPage />
           </AuthLayout>
         </Route>
+        <Route path="/login">
+          <Redirect to="/auth" />
+        </Route>
         <Route path="/register">
-          <AuthLayout>
-            <Register />
-          </AuthLayout>
+          <Redirect to="/auth" />
         </Route>
 
         {/* Main App Routes */}
