@@ -428,23 +428,168 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Ranking System Section */}
+      <section className="py-12 sm:py-20 bg-white">
+        <div className="container mx-auto px-4 sm:px-6">
+          <motion.div 
+            className="text-center mb-8 sm:mb-12"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={fadeIn}
+          >
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Triple-Threat Progression System</h2>
+            <p className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto">
+              Pickle+ offers a unique three-tiered progression system that rewards every aspect of your pickleball journey
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-6 mb-10">
+            <motion.div 
+              className="bg-white rounded-xl border border-[#FF5722]/20 shadow-md p-5 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="w-16 h-16 rounded-full bg-[#FF5722]/10 flex items-center justify-center mx-auto mb-4">
+                <Award className="text-[#FF5722]" size={28} />
+              </div>
+              <h3 className="font-bold text-xl mb-2 text-[#FF5722]">XP Points</h3>
+              <p className="text-sm sm:text-base text-gray-600 mb-4">
+                Earned for participation and achievements. XP determines your player level and unlocks features and cosmetics.
+              </p>
+              <div className="bg-[#FF5722]/5 rounded-lg p-3 mb-2">
+                <div className="text-[#FF5722] font-bold mb-1 text-sm">How to earn XP:</div>
+                <ul className="text-left text-sm text-gray-600 space-y-1">
+                  <li className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#FF5722]"></div>
+                    <div>Playing matches (+15 XP)</div>
+                  </li>
+                  <li className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#FF5722]"></div>
+                    <div>Completing achievements (varies)</div>
+                  </li>
+                  <li className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#FF5722]"></div>
+                    <div>Attending tournaments (+50 XP)</div>
+                  </li>
+                </ul>
+              </div>
+              <div className="text-xs text-gray-500">XP never decreases — it's a lifetime measure of your pickleball journey</div>
+            </motion.div>
+
+            <motion.div 
+              className="bg-white rounded-xl border border-[#2196F3]/20 shadow-md p-5 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <div className="w-16 h-16 rounded-full bg-[#2196F3]/10 flex items-center justify-center mx-auto mb-4">
+                <Trophy className="text-[#2196F3]" size={28} />
+              </div>
+              <h3 className="font-bold text-xl mb-2 text-[#2196F3]">Ranking Points</h3>
+              <p className="text-sm sm:text-base text-gray-600 mb-4">
+                Competitive score that rises and falls based on match performance. Determines your position on the leaderboard.
+              </p>
+              <div className="bg-[#2196F3]/5 rounded-lg p-3 mb-2">
+                <div className="text-[#2196F3] font-bold mb-1 text-sm">How ranking changes:</div>
+                <ul className="text-left text-sm text-gray-600 space-y-1">
+                  <li className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#2196F3]"></div>
+                    <div>Win vs higher-ranked (+12 pts)</div>
+                  </li>
+                  <li className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#2196F3]"></div>
+                    <div>Win vs similar-ranked (+8 pts)</div>
+                  </li>
+                  <li className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#2196F3]"></div>
+                    <div>Loss vs lower-ranked (-10 pts)</div>
+                  </li>
+                </ul>
+              </div>
+              <div className="text-xs text-gray-500">Ranking points reflect your current competitive performance</div>
+            </motion.div>
+
+            <motion.div 
+              className="bg-white rounded-xl border border-[#4CAF50]/20 shadow-md p-5 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <div className="w-16 h-16 rounded-full bg-[#4CAF50]/10 flex items-center justify-center mx-auto mb-4">
+                <Users className="text-[#4CAF50]" size={28} />
+              </div>
+              <h3 className="font-bold text-xl mb-2 text-[#4CAF50]">Skill Rating</h3>
+              <p className="text-sm sm:text-base text-gray-600 mb-4">
+                Standard pickleball skill classification (1.0 - 5.0+) used to find appropriate competition and training partners.
+              </p>
+              <div className="bg-[#4CAF50]/5 rounded-lg p-3 mb-2">
+                <div className="text-[#4CAF50] font-bold mb-1 text-sm">Rating indicators:</div>
+                <ul className="text-left text-sm text-gray-600 space-y-1">
+                  <li className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#4CAF50]"></div>
+                    <div>2.0-2.5: Beginner</div>
+                  </li>
+                  <li className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#4CAF50]"></div>
+                    <div>3.0-3.5: Intermediate</div>
+                  </li>
+                  <li className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#4CAF50]"></div>
+                    <div>4.0-5.0+: Advanced/Pro</div>
+                  </li>
+                </ul>
+              </div>
+              <div className="text-xs text-gray-500">Self-reported, but verified through app challenges and tournaments</div>
+            </motion.div>
+          </div>
+
+          <motion.div
+            className="bg-gray-50 rounded-xl p-5 max-w-3xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+          >
+            <div className="flex items-center justify-center gap-2 sm:gap-4 mb-4">
+              <div className="h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-[#FF5722]"></div>
+              <div className="text-xs sm:text-sm text-gray-500">XP for participation</div>
+              <div className="h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-[#2196F3]"></div>
+              <div className="text-xs sm:text-sm text-gray-500">Ranking for competition</div>
+              <div className="h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-[#4CAF50]"></div>
+              <div className="text-xs sm:text-sm text-gray-500">Rating for matchmaking</div>
+            </div>
+            <p className="text-center text-sm sm:text-base text-gray-600">
+              Our triple system ensures players of all skill levels have meaningful progression paths regardless of their competitive focus.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Final CTA Section */}
-      <section className="py-12 sm:py-16 bg-[#2196F3] text-white">
+      <section className="py-14 sm:py-20 bg-gradient-to-br from-[#2196F3] to-[#1a75c9] text-white">
         <div className="container mx-auto px-4 sm:px-6 text-center">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
+            className="max-w-3xl mx-auto"
           >
-            <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">Ready to Transform Your Pickleball Experience?</h2>
-            <p className="text-lg sm:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6 leading-tight">
+              Ready to Transform Your Pickleball Experience?
+            </h2>
+            <p className="text-base sm:text-lg mb-8 sm:mb-10 mx-auto text-white/90 max-w-2xl">
               Join thousands of players who are already tracking their progress and improving their game with Pickle+
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-sm sm:max-w-md mx-auto">
               <Button 
                 size="lg" 
-                className="bg-white text-[#2196F3] hover:bg-white/90 w-full sm:w-auto"
+                className="bg-white text-[#2196F3] hover:bg-white/90 w-full font-medium text-base sm:text-lg"
                 onClick={() => navigate("/register")}
               >
                 Create Free Account
@@ -452,12 +597,16 @@ export default function LandingPage() {
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="border-white text-white hover:bg-white/10 w-full sm:w-auto"
+                className="border-white border-2 text-white hover:bg-white/10 w-full font-medium text-base sm:text-lg"
                 onClick={() => navigate("/login")}
               >
                 Sign In
               </Button>
             </div>
+            
+            <p className="mt-6 text-sm text-white/70">
+              No credit card required · Free forever · Level up today
+            </p>
           </motion.div>
         </div>
       </section>
