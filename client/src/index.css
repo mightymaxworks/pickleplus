@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-[#F5F5F5] text-[#212121];
+  }
+
+  :root {
+    --background: 0 0% 96.1%;
+    --foreground: 0 0% 13%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 13%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 13%;
+
+    --primary: 16.8 100% 56.1%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 207.1 90.1% 54.1%;
+    --secondary-foreground: 0 0% 100%;
+
+    --accent: 122.4 39.4% 49.2%;
+    --accent-foreground: 0 0% 100%;
+
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.9%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 16.8 100% 56.1%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer components {
+  .progress-ring {
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+  }
+  
+  .progress-ring-circle {
+    transition: stroke-dashoffset 0.35s;
+    stroke-width: 8;
+    stroke-linecap: round;
+  }
+}
