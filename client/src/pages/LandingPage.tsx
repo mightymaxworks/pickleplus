@@ -542,11 +542,11 @@ export default function LandingPage() {
                   </li>
                   <li className="flex items-center gap-1.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-[#2196F3]"></div>
-                    <div>Loss vs lower-ranked (-10 pts)</div>
+                    <div>Win vs lower-ranked (+5 pts)</div>
                   </li>
                 </ul>
               </div>
-              <div className="text-xs text-gray-500">Ranking points reflect your current competitive performance</div>
+              <div className="text-xs text-gray-500 italic">Point values shown are illustrative—your pickleball journey always moves forward!</div>
             </motion.div>
 
             <motion.div 
