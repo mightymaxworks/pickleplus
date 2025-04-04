@@ -13,17 +13,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
 import {
   Card,
   CardContent,
@@ -96,8 +88,9 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
-  // State for the multi-step form
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  // State for the multi-step wizard form
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [subStep, setSubStep] = useState<1 | 2 | 3 | 4>(1); // For breaking down steps into smaller parts
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentGame, setCurrentGame] = useState(1);
   const [totalGames, setTotalGames] = useState(1);
@@ -215,6 +208,7 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
       });
       
       setStep(1);
+      setSubStep(1);
       setGames([{ playerOneScore: 0, playerTwoScore: 0 }]);
       setCurrentGame(1);
       setTotalGames(1);
@@ -313,21 +307,32 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
     setSubmittingData(null);
   };
 
-  // Handlers for the stepper
+  // Handlers for the wizard with sub-steps
   const goToNextStep = () => {
     if (step === 1) {
-      // Validate step 1 fields
-      const step1Valid = [
-        form.trigger("formatType"),
-        form.trigger("scoringSystem"),
-        form.trigger("pointsToWin"),
-      ];
-      
-      if (step1Valid.every(Boolean)) {
+      if (subStep === 1) {
+        // Validate format type 
+        form.trigger("formatType").then(valid => {
+          if (valid) setSubStep(2);
+        });
+      } else if (subStep === 2) {
+        // Validate scoring system 
+        form.trigger("scoringSystem").then(valid => {
+          if (valid) setSubStep(3);
+        });
+      } else if (subStep === 3) {
+        // Validate points to win
+        form.trigger("pointsToWin").then(valid => {
+          if (valid) setSubStep(4);
+        });
+      } else if (subStep === 4) {
+        // Game format selection doesn't need validation
+        // Move to the next main step
         setStep(2);
+        setSubStep(1);
       }
     } else if (step === 2) {
-      // Validate step 2 fields
+      // Validate players fields
       const step2Fields = ["playerOneId", "playerTwoId"];
       
       if (formatType === "doubles") {
@@ -338,16 +343,51 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
       Promise.all(step2Promises).then(results => {
         if (results.every(Boolean)) {
           setStep(3);
+          setSubStep(1);
         }
       });
+    } else if (step === 3 && totalGames > 1) {
+      if (subStep < totalGames) {
+        // Move to the next game in multi-game format
+        setSubStep(subStep + 1 as 1 | 2 | 3);
+        setCurrentGame(subStep + 1);
+      } else {
+        // Move to the match details step
+        setStep(4);
+        setSubStep(1);
+      }
+    } else if (step === 3 && totalGames === 1) {
+      // Single game - move to match details
+      setStep(4);
+      setSubStep(1);
     }
   };
 
   const goToPrevStep = () => {
-    if (step === 2) {
+    if (step === 1) {
+      if (subStep > 1) {
+        setSubStep(subStep - 1 as 1 | 2 | 3);
+      }
+    } else if (step === 2) {
       setStep(1);
+      setSubStep(4); // Go back to game format selection
     } else if (step === 3) {
-      setStep(2);
+      if (totalGames > 1 && subStep > 1) {
+        // Navigate between games in multi-game format
+        setSubStep(subStep - 1 as 1 | 2 | 3);
+        setCurrentGame(subStep - 1);
+      } else {
+        setStep(2);
+        setSubStep(1);
+      }
+    } else if (step === 4) {
+      setStep(3);
+      if (totalGames > 1) {
+        setSubStep(totalGames as 1 | 2 | 3);
+        setCurrentGame(totalGames);
+      } else {
+        setSubStep(1);
+      }
     }
   };
 
@@ -390,24 +430,30 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
     }
   };
 
-  // Render the appropriate step content
+  // Render the appropriate step content based on main step and sub-step
   const renderStepContent = () => {
-    switch (step) {
-      case 1:
-        return (
-          <div className="space-y-3">
-            <div className="text-center mb-3">
-              <h3 className="text-lg font-semibold">Step 1: Match Format</h3>
-              <p className="text-sm text-muted-foreground">Select the format and scoring system</p>
-            </div>
-            
-            {/* Match Format Type */}
+    // Step 1: Match Format (broken into sub-steps)
+    if (step === 1) {
+      return (
+        <div className="space-y-3">
+          <div className="text-center mb-1">
+            <h3 className="text-base font-semibold">Step 1: Match Format</h3>
+            <p className="text-xs text-muted-foreground">
+              {subStep === 1 && "Select singles or doubles format"}
+              {subStep === 2 && "Choose scoring system"}
+              {subStep === 3 && "Select points needed to win"}
+              {subStep === 4 && "Choose game format"}
+            </p>
+          </div>
+          
+          {/* Step 1a - Match Format Type */}
+          {subStep === 1 && (
             <FormField
               control={form.control}
               name="formatType"
               render={({ field }) => (
                 <FormItem className="space-y-1">
-                  <FormLabel className="text-base">Match Format</FormLabel>
+                  <FormLabel className="text-sm">Match Format</FormLabel>
                   <FormControl>
                     <ToggleGroup
                       type="single"
@@ -418,11 +464,11 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
                         if (value) field.onChange(value);
                       }}
                     >
-                      <ToggleGroupItem value="singles" className="flex items-center justify-center gap-2 h-16">
+                      <ToggleGroupItem value="singles" className="flex items-center justify-center gap-2 h-20">
                         <UserCircle className="h-5 w-5" />
                         <span>Singles</span>
                       </ToggleGroupItem>
-                      <ToggleGroupItem value="doubles" className="flex items-center justify-center gap-2 h-16">
+                      <ToggleGroupItem value="doubles" className="flex items-center justify-center gap-2 h-20">
                         <Users className="h-5 w-5" />
                         <span>Doubles</span>
                       </ToggleGroupItem>
@@ -432,14 +478,16 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
                 </FormItem>
               )}
             />
-            
-            {/* Scoring System */}
+          )}
+          
+          {/* Step 1b - Scoring System */}
+          {subStep === 2 && (
             <FormField
               control={form.control}
               name="scoringSystem"
               render={({ field }) => (
                 <FormItem className="space-y-1">
-                  <FormLabel className="text-base">Scoring System</FormLabel>
+                  <FormLabel className="text-sm">Scoring System</FormLabel>
                   <FormControl>
                     <ToggleGroup
                       type="single"
@@ -450,13 +498,13 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
                         if (value) field.onChange(value);
                       }}
                     >
-                      <ToggleGroupItem value="traditional" className="h-16">
+                      <ToggleGroupItem value="traditional" className="h-20">
                         <div className="flex flex-col items-center justify-center">
                           <span>Traditional</span>
                           <span className="text-xs text-muted-foreground">Server scores only</span>
                         </div>
                       </ToggleGroupItem>
-                      <ToggleGroupItem value="rally" className="h-16">
+                      <ToggleGroupItem value="rally" className="h-20">
                         <div className="flex flex-col items-center justify-center">
                           <span>Rally</span>
                           <span className="text-xs text-muted-foreground">Every rally scores</span>
@@ -468,14 +516,16 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
                 </FormItem>
               )}
             />
-            
-            {/* Points to Win */}
+          )}
+          
+          {/* Step 1c - Points to Win */}
+          {subStep === 3 && (
             <FormField
               control={form.control}
               name="pointsToWin"
               render={({ field }) => (
                 <FormItem className="space-y-1">
-                  <FormLabel className="text-base">Points to Win</FormLabel>
+                  <FormLabel className="text-sm">Points to Win</FormLabel>
                   <FormControl>
                     <ToggleGroup
                       type="single"
@@ -486,19 +536,21 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
                         if (value) field.onChange(parseInt(value));
                       }}
                     >
-                      <ToggleGroupItem value="11" className="h-14">11</ToggleGroupItem>
-                      <ToggleGroupItem value="15" className="h-14">15</ToggleGroupItem>
-                      <ToggleGroupItem value="21" className="h-14">21</ToggleGroupItem>
+                      <ToggleGroupItem value="11" className="h-20">11</ToggleGroupItem>
+                      <ToggleGroupItem value="15" className="h-20">15</ToggleGroupItem>
+                      <ToggleGroupItem value="21" className="h-20">21</ToggleGroupItem>
                     </ToggleGroup>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
-            {/* Game Format */}
+          )}
+          
+          {/* Step 1d - Game Format */}
+          {subStep === 4 && (
             <div className="space-y-1">
-              <FormLabel className="text-base">Game Format</FormLabel>
+              <FormLabel className="text-sm">Game Format</FormLabel>
               <ToggleGroup
                 type="single"
                 variant="outline"
@@ -508,13 +560,13 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
                   if (value) setGameFormat(value as "single" | "best-of-3");
                 }}
               >
-                <ToggleGroupItem value="single" className="h-16">
+                <ToggleGroupItem value="single" className="h-20">
                   <div className="flex flex-col items-center justify-center">
                     <span>Single Game</span>
                     <span className="text-xs text-muted-foreground">Just one game</span>
                   </div>
                 </ToggleGroupItem>
-                <ToggleGroupItem value="best-of-3" className="h-16">
+                <ToggleGroupItem value="best-of-3" className="h-20">
                   <div className="flex flex-col items-center justify-center">
                     <span>Best of 3</span>
                     <span className="text-xs text-muted-foreground">First to 2 wins</span>
@@ -522,198 +574,204 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
                 </ToggleGroupItem>
               </ToggleGroup>
             </div>
+          )}
+        </div>
+      );
+    }
+    
+    // Step 2: Players
+    else if (step === 2) {
+      return (
+        <div className="space-y-3">
+          <div className="text-center mb-2">
+            <h3 className="text-base font-semibold">Step 2: Players</h3>
+            <p className="text-xs text-muted-foreground">
+              {formatType === "singles" 
+                ? "Enter your opponent's ID"
+                : "Enter your partner and opponents' IDs"
+              }
+            </p>
           </div>
-        );
-        
-      case 2:
-        return (
-          <div className="space-y-3">
-            <div className="text-center mb-3">
-              <h3 className="text-lg font-semibold">Step 2: Players</h3>
-              <p className="text-sm text-muted-foreground">
-                {formatType === "singles" 
-                  ? "Enter your opponent's ID"
-                  : "Enter your partner and opponents' IDs"
-                }
-              </p>
-            </div>
-            
-            {/* Player One ID (Current User) */}
-            <FormField
-              control={form.control}
-              name="playerOneId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Your Player ID</FormLabel>
-                  <FormControl>
-                    <Input disabled {...field} value={user?.id || ""} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            {/* Player One Partner ID (Doubles only) */}
-            {formatType === "doubles" && (
-              <FormField
-                control={form.control}
-                name="playerOnePartnerId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Your Partner's ID</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter your partner's ID"
-                        {...field}
-                        value={field.value || ""}
-                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          
+          {/* Player One ID (Current User) */}
+          <FormField
+            control={form.control}
+            name="playerOneId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm">Your Player ID</FormLabel>
+                <FormControl>
+                  <Input disabled {...field} value={user?.id || ""} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-            
-            {/* Player Two ID (Opponent) */}
+          />
+          
+          {/* Player One Partner ID (Doubles only) */}
+          {formatType === "doubles" && (
             <FormField
               control={form.control}
-              name="playerTwoId"
+              name="playerOnePartnerId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {formatType === "singles" ? "Opponent's ID" : "Opponent 1 ID"}
-                  </FormLabel>
+                  <FormLabel className="text-sm">Your Partner's ID</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder={`Enter ${formatType === "singles" ? "opponent's" : "opponent 1's"} ID`}
+                      placeholder="Enter your partner's ID"
                       {...field}
-                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : 0)}
+                      value={field.value || ""}
+                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
-            {/* Player Two Partner ID (Doubles only) */}
-            {formatType === "doubles" && (
-              <FormField
-                control={form.control}
-                name="playerTwoPartnerId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Opponent 2 ID</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter opponent 2's ID"
-                        {...field}
-                        value={field.value || ""}
-                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          )}
+          
+          {/* Player Two ID (Opponent) */}
+          <FormField
+            control={form.control}
+            name="playerTwoId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm">
+                  {formatType === "singles" ? "Opponent's ID" : "Opponent 1 ID"}
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder={`Enter ${formatType === "singles" ? "opponent's" : "opponent 1's"} ID`}
+                    {...field}
+                    onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : 0)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-          </div>
-        );
-        
-      case 3:
-        return (
-          <div className="space-y-3">
-            <div className="text-center mb-3">
-              <h3 className="text-lg font-semibold">Step 3: Score</h3>
-              <p className="text-sm text-muted-foreground">
-                Record the final game score{totalGames > 1 ? "s" : ""}
-              </p>
-            </div>
-            
-            {/* For multi-game matches, display tabs for each game */}
-            {totalGames > 1 ? (
-              <Tabs
-                defaultValue="1"
-                value={String(currentGame)}
-                onValueChange={(value) => setCurrentGame(parseInt(value))}
-                className="w-full"
-              >
-                <TabsList className="grid grid-cols-3 mb-4">
-                  <TabsTrigger value="1">Game 1</TabsTrigger>
-                  <TabsTrigger value="2">Game 2</TabsTrigger>
-                  <TabsTrigger value="3">Game 3</TabsTrigger>
-                </TabsList>
-                
-                {[1, 2, 3].map((gameNumber) => (
-                  <TabsContent key={gameNumber} value={String(gameNumber)} className="mt-0">
-                    <ScoreCard
-                      gameNumber={gameNumber}
-                      playerOneName={user?.displayName || "You"}
-                      playerTwoName="Opponent"
-                      playerOneScore={games[gameNumber - 1]?.playerOneScore || 0}
-                      playerTwoScore={games[gameNumber - 1]?.playerTwoScore || 0}
-                      onScoreChange={(player, operation) => updateGameScore(player, operation)}
-                      pointsToWin={pointsToWin}
+          />
+          
+          {/* Player Two Partner ID (Doubles only) */}
+          {formatType === "doubles" && (
+            <FormField
+              control={form.control}
+              name="playerTwoPartnerId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm">Opponent 2 ID</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter opponent 2's ID"
+                      {...field}
+                      value={field.value || ""}
+                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                     />
-                  </TabsContent>
-                ))}
-              </Tabs>
-            ) : (
-              // Single game display
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+        </div>
+      );
+    }
+    
+    // Step 3: Scores
+    else if (step === 3) {
+      return (
+        <div className="space-y-3">
+          <div className="text-center mb-2">
+            <h3 className="text-base font-semibold">Step 3: Score</h3>
+            <p className="text-xs text-muted-foreground">
+              Record the final score
+            </p>
+          </div>
+          
+          {/* For multi-game matches, display current game based on subStep */}
+          {totalGames > 1 ? (
+            <div>
+              <div className="text-center mb-2">
+                <h4 className="text-sm font-medium">Game {subStep} of {totalGames}</h4>
+              </div>
               <ScoreCard
-                gameNumber={1}
+                gameNumber={subStep}
                 playerOneName={user?.displayName || "You"}
                 playerTwoName="Opponent"
-                playerOneScore={games[0]?.playerOneScore || 0}
-                playerTwoScore={games[0]?.playerTwoScore || 0}
+                playerOneScore={games[subStep - 1]?.playerOneScore || 0}
+                playerTwoScore={games[subStep - 1]?.playerTwoScore || 0}
                 onScoreChange={(player, operation) => updateGameScore(player, operation)}
                 pointsToWin={pointsToWin}
               />
-            )}
-            
-            {/* Optional Match Details */}
-            <Separator className="my-4" />
-            
-            <div className="grid grid-cols-1 gap-4">
-              {/* Location */}
-              <FormField
-                control={form.control}
-                name="location"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Location (Optional)</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter match location"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              {/* Notes */}
-              <FormField
-                control={form.control}
-                name="notes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Notes (Optional)</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Any additional notes"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
-          </div>
-        );
+          ) : (
+            // Single game display
+            <ScoreCard
+              gameNumber={1}
+              playerOneName={user?.displayName || "You"}
+              playerTwoName="Opponent"
+              playerOneScore={games[0]?.playerOneScore || 0}
+              playerTwoScore={games[0]?.playerTwoScore || 0}
+              onScoreChange={(player, operation) => updateGameScore(player, operation)}
+              pointsToWin={pointsToWin}
+            />
+          )}
+        </div>
+      );
     }
+    
+    // Step 4: Match Details 
+    else if (step === 4) {
+      return (
+        <div className="space-y-3">
+          <div className="text-center mb-2">
+            <h3 className="text-base font-semibold">Step 4: Match Details</h3>
+            <p className="text-xs text-muted-foreground">
+              Add optional information
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 gap-4">
+            {/* Location */}
+            <FormField
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm">Location (Optional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter match location"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            {/* Notes */}
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm">Notes (Optional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Any additional notes"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+      );
+    }
+    
+    return null;
   };
 
   return (
@@ -723,7 +781,8 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
           {renderStepContent()}
           
           <div className="flex justify-between pt-2 mt-2">
-            {step > 1 ? (
+            {/* Back Button - Show when not on first sub-step */}
+            {(step > 1 || subStep > 1) ? (
               <Button 
                 type="button" 
                 variant="outline" 
@@ -737,14 +796,17 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
               <div></div> // Spacer for flex layout
             )}
             
-            {step < 3 ? (
+            {/* Next Button - Hide on final step */}
+            {step < 4 ? (
               <Button 
                 type="button" 
                 onClick={goToNextStep}
                 className="flex items-center h-10 px-3 sm:px-4"
                 size="sm"
               >
-                Next <ChevronRight className="ml-1 h-4 w-4" />
+                {step === 3 && (totalGames === 1 || subStep === totalGames) 
+                  ? "Continue" 
+                  : "Next"} <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
             ) : (
               <Button 
@@ -823,12 +885,6 @@ function ScoreCard({
   
   return (
     <div>
-      {gameNumber > 1 && (
-        <div className="mb-3 text-center">
-          <h4 className="text-sm font-medium">Game {gameNumber}</h4>
-        </div>
-      )}
-      
       <div className="grid grid-cols-2 gap-2">
         {/* Player One Score Card */}
         <Card className={`border-2 ${playerOneWon ? "border-green-500" : ""}`}>
