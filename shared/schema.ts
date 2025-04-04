@@ -154,16 +154,22 @@ export const matches = pgTable("matches", {
   id: serial("id").primaryKey(),
   playerOneId: integer("player_one_id").notNull().references(() => users.id),
   playerTwoId: integer("player_two_id").notNull().references(() => users.id),
+  playerOnePartnerId: integer("player_one_partner_id").references(() => users.id),
+  playerTwoPartnerId: integer("player_two_partner_id").references(() => users.id),
   winnerId: integer("winner_id").notNull().references(() => users.id),
   scorePlayerOne: text("score_player_one").notNull(),
   scorePlayerTwo: text("score_player_two").notNull(),
   pointsAwarded: integer("points_awarded").notNull(),
   xpAwarded: integer("xp_awarded").notNull(),
-  matchType: text("match_type").notNull(), // friendly, tournament, league
+  matchType: text("match_type").notNull(), // casual, league, tournament
+  formatType: text("format_type").notNull().default("singles"), // singles, doubles
+  scoringSystem: text("scoring_system").notNull().default("traditional"), // traditional, rally
+  pointsToWin: integer("points_to_win").notNull().default(11), // 11, 15, 21
   tournamentId: integer("tournament_id").references(() => tournaments.id),
   matchDate: timestamp("match_date").defaultNow(),
   location: text("location"),
-  notes: text("notes")
+  notes: text("notes"),
+  gameScores: json("game_scores").default([]), // Array of game scores for multi-game matches
 });
 
 export const matchesRelations = relations(matches, ({ one }) => ({
@@ -176,6 +182,16 @@ export const matchesRelations = relations(matches, ({ one }) => ({
     fields: [matches.playerTwoId],
     references: [users.id],
     relationName: "playerTwo"
+  }),
+  playerOnePartner: one(users, {
+    fields: [matches.playerOnePartnerId],
+    references: [users.id],
+    relationName: "playerOnePartner"
+  }),
+  playerTwoPartner: one(users, {
+    fields: [matches.playerTwoPartnerId],
+    references: [users.id],
+    relationName: "playerTwoPartner"
   }),
   winner: one(users, {
     fields: [matches.winnerId],
@@ -320,5 +336,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   userRedemptions: many(userRedemptions),
   matchesAsPlayerOne: many(matches, { relationName: "playerOne" }),
   matchesAsPlayerTwo: many(matches, { relationName: "playerTwo" }),
+  matchesAsPlayerOnePartner: many(matches, { relationName: "playerOnePartner" }),
+  matchesAsPlayerTwoPartner: many(matches, { relationName: "playerTwoPartner" }),
   rankingHistory: many(rankingHistory)
 }));

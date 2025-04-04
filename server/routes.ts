@@ -11,7 +11,8 @@ import {
   registerUserSchema,
   loginSchema, 
   insertTournamentRegistrationSchema, 
-  redeemCodeSchema 
+  redeemCodeSchema,
+  insertMatchSchema
 } from "@shared/schema";
 import { ZodError } from "zod";
 
@@ -415,83 +416,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/matches", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const { playerOneId, playerTwoId, playerOneScore, playerTwoScore, location, matchType } = req.body;
       
-      if (!playerOneId || !playerTwoId || playerOneScore === undefined || playerTwoScore === undefined) {
-        return res.status(400).json({ message: "Missing required match information" });
+      // Validate match data against our schema
+      const matchData = insertMatchSchema.parse({
+        ...req.body,
+        // Set default values for optional fields if not provided
+        playerOnePartnerId: req.body.playerOnePartnerId || undefined,
+        playerTwoPartnerId: req.body.playerTwoPartnerId || undefined,
+        formatType: req.body.formatType || "singles",
+        scoringSystem: req.body.scoringSystem || "traditional",
+        pointsToWin: req.body.pointsToWin || 11,
+        matchType: "casual", // Always casual for this version
+        notes: req.body.notes || null,
+        location: req.body.location || null
+      });
+      
+      // Ensure the current user is either player one or player one's partner
+      if (matchData.playerOneId !== userId && matchData.playerOnePartnerId !== userId) {
+        return res.status(400).json({ 
+          message: "Current user must be player one or player one's partner" 
+        });
       }
       
-      // Determine winner and loser
-      const playerOneWon = playerOneScore > playerTwoScore;
-      const winnerId = playerOneWon ? playerOneId : playerTwoId;
-      const loserId = playerOneWon ? playerTwoId : playerOneId;
+      // If winnerId is not provided in the data, determine it from scores
+      if (!matchData.winnerId) {
+        // Single game or total games in best-of-3
+        const playerOneScore = parseInt(matchData.scorePlayerOne);
+        const playerTwoScore = parseInt(matchData.scorePlayerTwo);
+        matchData.winnerId = playerOneScore > playerTwoScore ? matchData.playerOneId : matchData.playerTwoId;
+      }
+      
+      const loserId = matchData.winnerId === matchData.playerOneId ? matchData.playerTwoId : matchData.playerOneId;
       
       // Create the match record
       const match = await storage.createMatch({
-        playerOneId,
-        playerTwoId,
-        winnerId,
-        scorePlayerOne: playerOneScore.toString(),
-        scorePlayerTwo: playerTwoScore.toString(),
-        pointsAwarded: 0, // Will be set based on match type
-        xpAwarded: 25, // Standard XP for playing a match
-        matchType: matchType || "casual",
-        location: location || null
-        // matchDate will be set to default now() by the database
+        ...matchData,
+        pointsAwarded: 10, // Fixed points for casual matches
+        xpAwarded: 25 // Standard XP for playing a match
       });
       
-      // Award points based on match type
-      let pointsForWinner = 0;
-      
-      switch (matchType) {
-        case "tournament":
-          pointsForWinner = 20;
-          break;
-        case "league":
-          pointsForWinner = 15;
-          break;
-        case "casual":
-        default:
-          pointsForWinner = 10;
-          break;
-      }
+      // Fixed points for casual matches
+      const pointsForWinner = 10;
       
       // Update winner's ranking points and create ranking history
-      const updatedWinner = await storage.updateUserRankingPoints(winnerId, pointsForWinner);
+      const updatedWinner = await storage.updateUserRankingPoints(matchData.winnerId, pointsForWinner);
       
       // Get the old and new ranking
       const oldRanking = (updatedWinner?.rankingPoints || 0) - pointsForWinner;
       const newRanking = updatedWinner?.rankingPoints || 0;
       
+      // Determine opponent(s) for the ranking history reason text
+      let opponentText = `player #${loserId}`;
+      if (matchData.formatType === "doubles") {
+        opponentText = `players #${loserId}${matchData.playerTwoPartnerId ? ` and #${matchData.playerTwoPartnerId}` : ''}`;
+      }
+      
       await storage.recordRankingChange({
-        userId: winnerId,
+        userId: matchData.winnerId,
         oldRanking,
         newRanking,
-        reason: `Won ${matchType || "casual"} match against player #${loserId}`,
+        reason: `Won casual ${matchData.formatType} match against ${opponentText}`,
         matchId: match.id
       });
       
-      // Update match counts for both players
-      if (playerOneId === userId || playerTwoId === userId) {
-        const isWinner = userId === winnerId;
-        
-        await storage.updateUser(userId, {
-          totalMatches: (req.user as any).totalMatches + 1,
-          matchesWon: isWinner ? (req.user as any).matchesWon + 1 : (req.user as any).matchesWon
-        });
-        
-        // Create activity for the user recording the match
-        await storage.createActivity({
-          userId,
-          type: "match_played",
-          description: isWinner ? "Won a match" : "Played a match",
-          xpEarned: 25, // Award XP for playing a match regardless of outcome
-          metadata: { matchId: match.id }
-        });
-        
-        // Update user XP
-        await storage.updateUserXP(userId, 25);
-      }
+      // Update match counts for the current user
+      const isWinner = userId === matchData.winnerId;
+      
+      await storage.updateUser(userId, {
+        totalMatches: (req.user as any).totalMatches + 1,
+        matchesWon: isWinner ? (req.user as any).matchesWon + 1 : (req.user as any).matchesWon
+      });
+      
+      // Create activity for the user recording the match
+      await storage.createActivity({
+        userId,
+        type: "match_played",
+        description: isWinner ? "Won a match" : "Played a match",
+        xpEarned: 25, // Award XP for playing a match regardless of outcome
+        metadata: { matchId: match.id }
+      });
+      
+      // Update user XP
+      await storage.updateUserXP(userId, 25);
       
       res.status(201).json({
         match,
