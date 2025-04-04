@@ -1,199 +1,242 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Link, useLocation } from "wouter";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
+import { PicklePlusLogo } from "@/components/icons/PicklePlusLogo";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { insertUserSchema } from "@shared/schema";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { z } from "zod";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const formSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
-  email: z.string().email("Please enter a valid email address"),
-  displayName: z.string().min(2, "Display name must be at least 2 characters"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  skillLevel: z.string(),
+// Create a schema for the registration form
+const registerSchema = insertUserSchema.extend({
+  confirmPassword: z.string().min(6, "Password must be at least 6 characters"),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"]
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type RegisterFormData = z.infer<typeof registerSchema>;
 
-interface RegisterProps {
-  onRegisterSuccess: () => void;
-}
+export default function Register() {
+  const { register } = useAuth();
+  const [, navigate] = useLocation();
+  const [isRegistering, setIsRegistering] = useState(false);
 
-const Register = ({ onRegisterSuccess }: RegisterProps) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [, setLocation] = useLocation();
-  const { toast } = useToast();
-
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
     defaultValues: {
       username: "",
-      email: "",
-      displayName: "",
       password: "",
-      skillLevel: "2.5",
+      confirmPassword: "",
+      displayName: "",
+      location: "",
+      playingSince: "",
+      skillLevel: "",
+      avatarInitials: "",
+      level: 1,
+      xp: 0,
+      totalMatches: 0,
+      matchesWon: 0,
+      totalTournaments: 0,
     },
   });
 
-  const onSubmit = async (data: FormValues) => {
-    setIsLoading(true);
-    
+  const handleSubmit = async (data: RegisterFormData) => {
+    setIsRegistering(true);
     try {
-      await apiRequest("POST", "/api/users/register", data);
+      // Generate initials if not provided
+      if (!data.avatarInitials) {
+        const nameParts = data.displayName.split(" ");
+        data.avatarInitials = nameParts.length > 1
+          ? (nameParts[0][0] + nameParts[1][0]).toUpperCase()
+          : data.displayName.substring(0, 2).toUpperCase();
+      }
       
-      // Auto login after registration
-      await apiRequest("POST", "/api/users/login", {
-        username: data.username,
-        password: data.password,
-      });
-      
-      toast({
-        title: "Success",
-        description: "Your account has been created successfully!",
-      });
-      
-      onRegisterSuccess();
-      setLocation("/");
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Registration failed. Please try again.",
-        variant: "destructive",
-      });
+      await register(data);
+      navigate("/");
+    } catch (error) {
+      console.error("Registration error:", error);
     } finally {
-      setIsLoading(false);
+      setIsRegistering(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="w-full max-w-md p-6 bg-white rounded-md shadow-md">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-primary">Pickle<span className="text-secondary">+</span></h1>
-          <p className="text-gray-500 mt-2">Create your Pickle+ account</p>
-        </div>
-        
+    <div className="flex flex-col items-center">
+      <div className="mb-8">
+        <PicklePlusLogo className="h-12 w-auto" />
+      </div>
+
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-2xl">Create Account</CardTitle>
+          <CardDescription>
+            Join Pickle+ to track your pickleball journey
+          </CardDescription>
+        </CardHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Username</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Choose a username" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="Enter your email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="displayName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Display Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter your full name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" placeholder="Create a password" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="skillLevel"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Skill Level</FormLabel>
-                  <FormControl>
-                    <select 
-                      className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                      {...field}
+          <form onSubmit={form.handleSubmit(handleSubmit)}>
+            <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Pick a username" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="displayName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Display Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Your full name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="location"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Location</FormLabel>
+                      <FormControl>
+                        <Input placeholder="City, State" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="playingSince"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Playing Since</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. 2021" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormField
+                control={form.control}
+                name="skillLevel"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Skill Level</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
                     >
-                      <option value="2.0">2.0 - Beginner</option>
-                      <option value="2.5">2.5 - Advanced Beginner</option>
-                      <option value="3.0">3.0 - Intermediate</option>
-                      <option value="3.5">3.5 - Advanced Intermediate</option>
-                      <option value="4.0">4.0 - Advanced</option>
-                      <option value="4.5">4.5 - Expert</option>
-                      <option value="5.0">5.0 - Professional</option>
-                    </select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <Button type="submit" className="w-full bg-primary" disabled={isLoading}>
-              {isLoading ? (
-                <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Creating Account
-                </span>
-              ) : (
-                "Create Account"
-              )}
-            </Button>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select your skill level" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="2.0 Beginner">2.0 Beginner</SelectItem>
+                        <SelectItem value="2.5 Beginner+">2.5 Beginner+</SelectItem>
+                        <SelectItem value="3.0 Intermediate">3.0 Intermediate</SelectItem>
+                        <SelectItem value="3.5 Intermediate+">3.5 Intermediate+</SelectItem>
+                        <SelectItem value="4.0 Advanced">4.0 Advanced</SelectItem>
+                        <SelectItem value="4.5 Advanced+">4.5 Advanced+</SelectItem>
+                        <SelectItem value="5.0 Pro">5.0 Pro</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="avatarInitials"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Avatar Initials</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. JS" maxLength={2} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="••••••••" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="••••••••" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+            <CardFooter className="flex flex-col">
+              <Button 
+                type="submit" 
+                className="w-full bg-[#FF5722] hover:bg-[#E64A19]"
+                disabled={isRegistering}
+              >
+                {isRegistering ? "Creating account..." : "Create Account"}
+              </Button>
+              <p className="mt-4 text-sm text-center text-gray-500">
+                Already have an account?{" "}
+                <a
+                  href="/login"
+                  className="text-[#2196F3] hover:underline"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate("/login");
+                  }}
+                >
+                  Login
+                </a>
+              </p>
+            </CardFooter>
           </form>
         </Form>
-        
-        <div className="mt-6 text-center">
-          <p className="text-gray-600">
-            Already have an account?{" "}
-            <Link href="/login">
-              <a className="text-secondary hover:underline">Sign in</a>
-            </Link>
-          </p>
-        </div>
-      </div>
+      </Card>
     </div>
   );
-};
-
-export default Register;
+}

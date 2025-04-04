@@ -1,488 +1,386 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import express from "express";
 import session from "express-session";
-import createMemoryStore from "memorystore";
-import { z } from "zod";
-import { nanoid } from "nanoid";
+import MemoryStore from "memorystore";
+import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
+import bcrypt from "bcryptjs";
 import { 
-  insertUserSchema, 
-  insertTournamentSchema, 
-  insertTournamentParticipantSchema,
-  insertMatchSchema, 
-  insertXpCodeSchema
+  insertUserSchema,
+  registerUserSchema,
+  loginSchema, 
+  insertTournamentRegistrationSchema, 
+  redeemCodeSchema 
 } from "@shared/schema";
+import { ZodError } from "zod";
 
-// Add session type definition
-declare module 'express-session' {
-  interface SessionData {
-    userId?: number;
-  }
-}
+const SessionStore = MemoryStore(session);
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup sessions with MemoryStore
-  const MemoryStore = createMemoryStore(session);
-  app.use(session({
-    secret: 'pickle-plus-secret',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { secure: false, maxAge: 86400000 }, // 24 hours
-    store: new MemoryStore({
-      checkPeriod: 86400000 // prune expired entries every 24h
+  // Set up session middleware
+  app.use(
+    session({
+      store: new SessionStore({
+        checkPeriod: 86400000, // prune expired entries every 24h
+      }),
+      secret: process.env.SESSION_SECRET || "pickle-plus-secret",
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      },
     })
-  }));
-  
-  // User routes
-  app.post("/api/users/register", async (req, res) => {
+  );
+
+  // Set up passport
+  app.use(passport.initialize());
+  app.use(passport.session());
+
+  // Define passport strategies
+  passport.use(
+    new LocalStrategy(async (username, password, done) => {
+      try {
+        const user = await storage.getUserByUsername(username);
+        if (!user) {
+          return done(null, false, { message: "User not found" });
+        }
+
+        // In a real app, use proper password hashing like bcrypt
+        // For this demo, we're comparing directly (not recommended in production)
+        const passwordMatch = await bcrypt.compare(password, user.password);
+        if (!passwordMatch) {
+          return done(null, false, { message: "Incorrect password" });
+        }
+
+        // Remove password before returning user object
+        const { password: _, ...userWithoutPassword } = user;
+        return done(null, userWithoutPassword);
+      } catch (error) {
+        return done(error);
+      }
+    })
+  );
+
+  passport.serializeUser((user: any, done) => {
+    done(null, user.id);
+  });
+
+  passport.deserializeUser(async (id: number, done) => {
     try {
-      const validatedData = insertUserSchema.parse(req.body);
-      const existingUser = await storage.getUserByUsername(validatedData.username);
+      const user = await storage.getUser(id);
+      if (!user) {
+        return done(null, false);
+      }
+      // Remove password before returning user object
+      const { password, ...userWithoutPassword } = user;
+      done(null, userWithoutPassword);
+    } catch (error) {
+      done(error);
+    }
+  });
+
+  // Middleware to check if user is authenticated
+  const isAuthenticated = (req: Request, res: Response, next: any) => {
+    if (req.isAuthenticated()) {
+      return next();
+    }
+    res.status(401).json({ message: "Unauthorized" });
+  };
+
+  // Auth routes
+  app.post("/api/auth/register", async (req: Request, res: Response) => {
+    try {
+      // Validate the full registration data (including password confirmation)
+      const registrationData = registerUserSchema.parse(req.body);
       
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(registrationData.username);
       if (existingUser) {
         return res.status(400).json({ message: "Username already exists" });
       }
+
+      // Hash the password
+      const hashedPassword = await bcrypt.hash(registrationData.password, 10);
       
-      const user = await storage.createUser(validatedData);
-      // Remove password from response
-      const { password, ...userWithoutPassword } = user;
+      // Create the user with hashed password, removing the confirmPassword field
+      // Extract only the fields needed for the database and replace with hashed password
+      const newUser = await storage.createUser({
+        username: registrationData.username,
+        password: hashedPassword,
+        displayName: registrationData.displayName,
+        location: registrationData.location || null,
+        playingSince: registrationData.playingSince || null,
+        skillLevel: registrationData.skillLevel || null,
+        level: registrationData.level || 1,
+        xp: registrationData.xp || 0,
+        avatarInitials: registrationData.avatarInitials,
+        totalMatches: registrationData.totalMatches || 0,
+        matchesWon: registrationData.matchesWon || 0,
+        totalTournaments: registrationData.totalTournaments || 0
+      });
+
+      // Remove password from the response
+      const { password, ...userWithoutPassword } = newUser;
       
       res.status(201).json(userWithoutPassword);
     } catch (error) {
-      console.error("Registration error:", error);
-      res.status(400).json({ message: "Invalid registration data" });
+      if (error instanceof ZodError) {
+        res.status(400).json({ message: "Validation error", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to register user" });
+      }
     }
   });
 
-  app.post("/api/users/login", async (req, res) => {
+  app.post("/api/auth/login", (req: Request, res: Response, next: any) => {
     try {
-      const { username, password } = req.body;
+      loginSchema.parse(req.body);
       
-      if (!username || !password) {
-        return res.status(400).json({ message: "Username and password required" });
-      }
-      
-      const user = await storage.getUserByUsername(username);
-      
-      if (!user || user.password !== password) {
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-      
-      // Mock session by setting a user ID in the session
-      if (req.session) {
-        req.session.userId = user.id;
-      }
-      
-      // Remove password from response
-      const { password: _, ...userWithoutPassword } = user;
-      
-      res.status(200).json(userWithoutPassword);
+      passport.authenticate("local", (err: any, user: any, info: any) => {
+        if (err) {
+          return next(err);
+        }
+        if (!user) {
+          return res.status(401).json({ message: info.message || "Authentication failed" });
+        }
+        req.logIn(user, (err) => {
+          if (err) {
+            return next(err);
+          }
+          return res.json(user);
+        });
+      })(req, res, next);
     } catch (error) {
-      console.error("Login error:", error);
-      res.status(500).json({ message: "Internal server error" });
+      if (error instanceof ZodError) {
+        res.status(400).json({ message: "Validation error", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Login error" });
+      }
     }
   });
 
-  app.get("/api/users/current", async (req, res) => {
-    try {
-      if (!req.session || !req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
+  app.post("/api/auth/logout", (req: Request, res: Response) => {
+    req.logout((err) => {
+      if (err) {
+        return res.status(500).json({ message: "Error logging out" });
       }
-      
-      const user = await storage.getUser(req.session.userId);
-      
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      // Remove password from response
-      const { password, ...userWithoutPassword } = user;
-      
-      res.status(200).json(userWithoutPassword);
-    } catch (error) {
-      console.error("Get current user error:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
+      res.json({ message: "Logged out successfully" });
+    });
   });
 
-  app.post("/api/users/logout", (req, res) => {
-    if (req.session) {
-      req.session.destroy(() => {
-        res.status(200).json({ message: "Logged out successfully" });
-      });
+  app.get("/api/auth/current-user", (req: Request, res: Response) => {
+    if (req.isAuthenticated()) {
+      res.json(req.user);
     } else {
-      res.status(200).json({ message: "Already logged out" });
+      res.status(401).json({ message: "Not logged in" });
     }
   });
 
-  app.get("/api/users/:id", async (req, res) => {
+  // User routes
+  app.get("/api/users/:id", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const id = parseInt(req.params.id);
-      
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid user ID" });
-      }
-      
-      const user = await storage.getUser(id);
-      
+      const user = await storage.getUser(parseInt(req.params.id));
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
       
-      // Remove password from response
+      // Remove password from the response
       const { password, ...userWithoutPassword } = user;
-      
-      res.status(200).json(userWithoutPassword);
+      res.json(userWithoutPassword);
     } catch (error) {
-      console.error("Get user error:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get("/api/users/playerId/:playerId", async (req, res) => {
-    try {
-      const { playerId } = req.params;
-      
-      const user = await storage.getUserByPlayerId(playerId);
-      
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      // Remove password from response
-      const { password, ...userWithoutPassword } = user;
-      
-      res.status(200).json(userWithoutPassword);
-    } catch (error) {
-      console.error("Get user by player ID error:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get("/api/leaderboard", async (req, res) => {
-    try {
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
-      const topUsers = await storage.getTopUsers(limit);
-      
-      // Remove passwords from response
-      const leaderboard = topUsers.map(user => {
-        const { password, ...userWithoutPassword } = user;
-        return userWithoutPassword;
-      });
-      
-      res.status(200).json(leaderboard);
-    } catch (error) {
-      console.error("Get leaderboard error:", error);
-      res.status(500).json({ message: "Internal server error" });
+      res.status(500).json({ message: "Error retrieving user" });
     }
   });
 
   // Tournament routes
-  app.post("/api/tournaments", async (req, res) => {
-    try {
-      const validatedData = insertTournamentSchema.parse(req.body);
-      const tournament = await storage.createTournament(validatedData);
-      
-      res.status(201).json(tournament);
-    } catch (error) {
-      console.error("Create tournament error:", error);
-      res.status(400).json({ message: "Invalid tournament data" });
-    }
-  });
-
-  app.get("/api/tournaments", async (req, res) => {
+  app.get("/api/tournaments", async (req: Request, res: Response) => {
     try {
       const tournaments = await storage.getAllTournaments();
-      res.status(200).json(tournaments);
+      res.json(tournaments);
     } catch (error) {
-      console.error("Get tournaments error:", error);
-      res.status(500).json({ message: "Internal server error" });
+      res.status(500).json({ message: "Error retrieving tournaments" });
     }
   });
 
-  app.get("/api/tournaments/:id", async (req, res) => {
+  app.get("/api/tournaments/:id", async (req: Request, res: Response) => {
     try {
-      const id = parseInt(req.params.id);
-      
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid tournament ID" });
-      }
-      
-      const tournament = await storage.getTournament(id);
-      
+      const tournament = await storage.getTournament(parseInt(req.params.id));
       if (!tournament) {
         return res.status(404).json({ message: "Tournament not found" });
       }
-      
-      res.status(200).json(tournament);
+      res.json(tournament);
     } catch (error) {
-      console.error("Get tournament error:", error);
-      res.status(500).json({ message: "Internal server error" });
+      res.status(500).json({ message: "Error retrieving tournament" });
     }
   });
 
-  app.post("/api/tournaments/:id/register", async (req, res) => {
+  // Tournament registration routes
+  app.post("/api/tournament-registrations", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      if (!req.session || !req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-      
-      const tournamentId = parseInt(req.params.id);
-      
-      if (isNaN(tournamentId)) {
-        return res.status(400).json({ message: "Invalid tournament ID" });
-      }
-      
-      const tournament = await storage.getTournament(tournamentId);
-      
-      if (!tournament) {
-        return res.status(404).json({ message: "Tournament not found" });
-      }
+      const userId = (req.user as any).id;
+      const registrationData = insertTournamentRegistrationSchema.parse({
+        ...req.body,
+        userId
+      });
       
       // Check if user is already registered
-      const userTournaments = await storage.getUserTournaments(req.session.userId);
-      const alreadyRegistered = userTournaments.some(ut => ut.tournament.id === tournamentId);
+      const existingRegistration = await storage.getTournamentRegistration(
+        registrationData.userId, 
+        registrationData.tournamentId
+      );
       
-      if (alreadyRegistered) {
+      if (existingRegistration) {
         return res.status(400).json({ message: "Already registered for this tournament" });
       }
       
-      const registrationData = {
-        tournamentId,
-        userId: req.session.userId,
-        registrationDate: new Date(),
-        status: "registered"
-      };
-      
-      const registration = await storage.registerUserForTournament(registrationData);
-      
+      const registration = await storage.registerForTournament(registrationData);
       res.status(201).json(registration);
     } catch (error) {
-      console.error("Register for tournament error:", error);
-      res.status(500).json({ message: "Internal server error" });
+      if (error instanceof ZodError) {
+        res.status(400).json({ message: "Validation error", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Error registering for tournament" });
+      }
     }
   });
 
-  app.post("/api/tournaments/:id/checkin", async (req, res) => {
+  app.get("/api/user/tournaments", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      if (!req.session || !req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-      
-      const tournamentId = parseInt(req.params.id);
-      
-      if (isNaN(tournamentId)) {
-        return res.status(400).json({ message: "Invalid tournament ID" });
-      }
-      
-      const checkedIn = await storage.checkInUserToTournament(req.session.userId, tournamentId);
-      
-      if (!checkedIn) {
-        return res.status(404).json({ message: "Tournament registration not found" });
-      }
-      
-      res.status(200).json(checkedIn);
-    } catch (error) {
-      console.error("Tournament check-in error:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get("/api/tournaments/user/:userId", async (req, res) => {
-    try {
-      const userId = parseInt(req.params.userId);
-      
-      if (isNaN(userId)) {
-        return res.status(400).json({ message: "Invalid user ID" });
-      }
-      
+      const userId = (req.user as any).id;
       const userTournaments = await storage.getUserTournaments(userId);
-      
-      res.status(200).json(userTournaments);
+      res.json(userTournaments);
     } catch (error) {
-      console.error("Get user tournaments error:", error);
-      res.status(500).json({ message: "Internal server error" });
+      res.status(500).json({ message: "Error retrieving user tournaments" });
     }
   });
 
-  // Match routes
-  app.post("/api/matches", async (req, res) => {
+  app.post("/api/tournament-check-in", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      if (!req.session || !req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
+      const userId = (req.user as any).id;
+      const { tournamentId } = req.body;
+      
+      if (!tournamentId) {
+        return res.status(400).json({ message: "Tournament ID is required" });
       }
       
-      const validatedData = insertMatchSchema.parse(req.body);
-      const match = await storage.createMatch(validatedData);
+      const registration = await storage.checkInUserForTournament(userId, tournamentId);
       
-      res.status(201).json(match);
-    } catch (error) {
-      console.error("Create match error:", error);
-      res.status(400).json({ message: "Invalid match data" });
-    }
-  });
-
-  app.get("/api/matches/user/:userId", async (req, res) => {
-    try {
-      const userId = parseInt(req.params.userId);
-      
-      if (isNaN(userId)) {
-        return res.status(400).json({ message: "Invalid user ID" });
+      if (!registration) {
+        return res.status(404).json({ message: "Registration not found" });
       }
       
-      const matches = await storage.getUserMatches(userId);
-      
-      res.status(200).json(matches);
+      res.json(registration);
     } catch (error) {
-      console.error("Get user matches error:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get("/api/matches/recent", async (req, res) => {
-    try {
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-      const matches = await storage.getRecentMatches(limit);
-      
-      res.status(200).json(matches);
-    } catch (error) {
-      console.error("Get recent matches error:", error);
-      res.status(500).json({ message: "Internal server error" });
+      res.status(500).json({ message: "Error checking in to tournament" });
     }
   });
 
   // Achievement routes
-  app.get("/api/achievements", async (req, res) => {
+  app.get("/api/achievements", async (req: Request, res: Response) => {
     try {
       const achievements = await storage.getAllAchievements();
-      
-      res.status(200).json(achievements);
+      res.json(achievements);
     } catch (error) {
-      console.error("Get achievements error:", error);
-      res.status(500).json({ message: "Internal server error" });
+      res.status(500).json({ message: "Error retrieving achievements" });
     }
   });
 
-  app.get("/api/achievements/user/:userId", async (req, res) => {
+  app.get("/api/user/achievements", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.params.userId);
-      
-      if (isNaN(userId)) {
-        return res.status(400).json({ message: "Invalid user ID" });
-      }
-      
+      const userId = (req.user as any).id;
       const userAchievements = await storage.getUserAchievements(userId);
-      
-      res.status(200).json(userAchievements);
+      res.json(userAchievements);
     } catch (error) {
-      console.error("Get user achievements error:", error);
-      res.status(500).json({ message: "Internal server error" });
+      res.status(500).json({ message: "Error retrieving user achievements" });
     }
   });
 
-  app.get("/api/achievements/user/:userId/recent", async (req, res) => {
+  // Activity routes
+  app.get("/api/user/activities", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = parseInt(req.params.userId);
-      
-      if (isNaN(userId)) {
-        return res.status(400).json({ message: "Invalid user ID" });
-      }
-      
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-      const recentAchievements = await storage.getRecentAchievements(userId, limit);
-      
-      res.status(200).json(recentAchievements);
+      const userId = (req.user as any).id;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      const activities = await storage.getUserActivities(userId, limit);
+      res.json(activities);
     } catch (error) {
-      console.error("Get recent achievements error:", error);
-      res.status(500).json({ message: "Internal server error" });
+      res.status(500).json({ message: "Error retrieving user activities" });
     }
   });
 
-  // XP Code routes
-  app.post("/api/xp-codes", async (req, res) => {
+  // Redemption code routes
+  app.post("/api/redeem-code", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      if (!req.session || !req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
+      const userId = (req.user as any).id;
+      const { code } = redeemCodeSchema.parse(req.body);
+      
+      // Find the redemption code
+      const redemptionCode = await storage.getRedemptionCodeByCode(code);
+      
+      if (!redemptionCode) {
+        return res.status(404).json({ message: "Invalid or expired code" });
       }
       
-      const code = nanoid(8).toUpperCase();
-      const xpCodeData = {
-        ...req.body,
-        code,
-        createdBy: req.session.userId,
-        isUsed: false
-      };
+      // Check if user has already redeemed this code
+      const hasRedeemed = await storage.hasUserRedeemedCode(userId, redemptionCode.id);
       
-      const validatedData = insertXpCodeSchema.parse(xpCodeData);
-      const xpCode = await storage.createXpCode(validatedData);
-      
-      res.status(201).json(xpCode);
-    } catch (error) {
-      console.error("Create XP code error:", error);
-      res.status(400).json({ message: "Invalid XP code data" });
-    }
-  });
-
-  app.post("/api/xp-codes/redeem", async (req, res) => {
-    try {
-      if (!req.session || !req.session.userId) {
-        return res.status(401).json({ message: "Not authenticated" });
+      if (hasRedeemed) {
+        return res.status(400).json({ message: "Code already redeemed" });
       }
       
-      const { code } = req.body;
-      
-      if (!code) {
-        return res.status(400).json({ message: "Code is required" });
-      }
-      
-      const xpCode = await storage.getXpCodeByCode(code);
-      
-      if (!xpCode) {
-        return res.status(404).json({ message: "Invalid code" });
-      }
-      
-      if (xpCode.isUsed) {
-        return res.status(400).json({ message: "Code has already been used" });
-      }
-      
-      if (xpCode.expiryDate && new Date(xpCode.expiryDate) < new Date()) {
-        return res.status(400).json({ message: "Code has expired" });
-      }
-      
-      const alreadyRedeemed = await storage.isCodeRedeemedByUser(req.session.userId, code);
-      
-      if (alreadyRedeemed) {
-        return res.status(400).json({ message: "You have already redeemed this code" });
-      }
-      
-      const redemption = await storage.redeemXpCode({
-        userId: req.session.userId,
-        codeId: xpCode.id,
-        redeemedDate: new Date()
+      // Redeem the code
+      await storage.redeemCode({
+        userId,
+        codeId: redemptionCode.id
       });
       
-      // Get updated user with new XP
-      const user = await storage.getUser(req.session.userId);
+      // Add XP to user
+      const updatedUser = await storage.updateUserXP(userId, redemptionCode.xpReward);
       
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
+      // Create an activity for this redemption
+      await storage.createActivity({
+        userId,
+        type: "code_redemption",
+        description: `Redeemed code: ${redemptionCode.description || code}`,
+        xpEarned: redemptionCode.xpReward,
+        metadata: { code }
+      });
       
-      const { password, ...userWithoutPassword } = user;
+      // Remove password from the response
+      const { password, ...userWithoutPassword } = updatedUser!;
       
-      res.status(200).json({
-        redemption,
-        xpValue: xpCode.xpValue,
-        user: userWithoutPassword
+      res.json({
+        message: `Successfully redeemed code for ${redemptionCode.xpReward} XP`,
+        user: userWithoutPassword,
+        xpEarned: redemptionCode.xpReward
       });
     } catch (error) {
-      console.error("Redeem XP code error:", error);
-      res.status(500).json({ message: "Internal server error" });
+      if (error instanceof ZodError) {
+        res.status(400).json({ message: "Validation error", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Error redeeming code" });
+      }
+    }
+  });
+
+  // Leaderboard route
+  app.get("/api/leaderboard", async (req: Request, res: Response) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      const leaderboard = await storage.getLeaderboard(limit);
+      
+      // Remove passwords from the response
+      const leaderboardWithoutPasswords = leaderboard.map(user => {
+        const { password, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+      });
+      
+      res.json(leaderboardWithoutPasswords);
+    } catch (error) {
+      res.status(500).json({ message: "Error retrieving leaderboard" });
     }
   });
 
   const httpServer = createServer(app);
-
   return httpServer;
 }

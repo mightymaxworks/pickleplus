@@ -1,124 +1,174 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// User table schema
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
-  email: text("email").notNull(),
   displayName: text("display_name").notNull(),
-  level: integer("level").notNull().default(1),
-  xp: integer("xp").notNull().default(0),
-  rating: integer("rating").notNull().default(2000), // ELO-like rating system
-  skillLevel: text("skill_level").notNull().default("2.5"), // Pickleball skill level
-  totalMatches: integer("total_matches").notNull().default(0),
-  wins: integer("wins").notNull().default(0),
-  losses: integer("losses").notNull().default(0),
-  profileImage: text("profile_image"),
-  playerId: text("player_id").notNull().unique(), // Unique ID for QR code generation
+  location: text("location"),
+  playingSince: text("playing_since"),
+  skillLevel: text("skill_level"),
+  level: integer("level").default(1),
+  xp: integer("xp").default(0),
+  avatarInitials: text("avatar_initials").notNull(),
+  totalMatches: integer("total_matches").default(0),
+  matchesWon: integer("matches_won").default(0),
+  totalTournaments: integer("total_tournaments").default(0),
+  createdAt: timestamp("created_at").defaultNow()
 });
 
+// Tournament table schema
 export const tournaments = pgTable("tournaments", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  location: text("location").notNull(),
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
-  skillLevel: text("skill_level").notNull(),
-  status: text("status").notNull().default("open"), // "open", "ongoing", "completed"
-  imageUrl: text("image_url"),
+  location: text("location").notNull(),
+  description: text("description"),
+  imageUrl: text("image_url")
 });
 
-export const tournamentParticipants = pgTable("tournament_participants", {
+// Tournament registrations table schema
+export const tournamentRegistrations = pgTable("tournament_registrations", {
   id: serial("id").primaryKey(),
-  tournamentId: integer("tournament_id").notNull(),
-  userId: integer("user_id").notNull(),
-  registrationDate: timestamp("registration_date").notNull(),
-  status: text("status").notNull().default("registered"), // "registered", "checked-in", "completed"
+  userId: integer("user_id").notNull().references(() => users.id),
+  tournamentId: integer("tournament_id").notNull().references(() => tournaments.id),
+  division: text("division"),
+  status: text("status").default("registered"),
+  checkedIn: boolean("checked_in").default(false).notNull(),
+  placement: text("placement"),
+  createdAt: timestamp("created_at").defaultNow()
 });
 
-export const matches = pgTable("matches", {
-  id: serial("id").primaryKey(),
-  matchType: text("match_type").notNull(), // "singles", "doubles"
-  matchDate: timestamp("match_date").notNull(),
-  tournamentId: integer("tournament_id"), // Null if it's a casual match
-  players: jsonb("players").notNull(), // Array of player IDs and team assignments
-  scores: jsonb("scores").notNull(), // Array of scores, can be multiple sets
-  winnerIds: jsonb("winner_ids").notNull(), // Array of winner user IDs
-  loserIds: jsonb("loser_ids").notNull(), // Array of loser user IDs
-  xpEarned: integer("xp_earned").notNull(),
-  ratingChange: jsonb("rating_change").notNull(), // Object with user IDs and their rating changes
-});
-
+// Achievements table schema
 export const achievements = pgTable("achievements", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description").notNull(),
-  iconClass: text("icon_class").notNull(),
-  requiredValue: integer("required_value").notNull(), // Value needed to complete
-  category: text("category").notNull(), // "streak", "tournament", "matches", "social", etc.
   xpReward: integer("xp_reward").notNull(),
+  imageUrl: text("image_url"),
+  category: text("category").notNull(),
+  requirement: integer("requirement").notNull()
 });
 
+// User achievements table schema
 export const userAchievements = pgTable("user_achievements", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  achievementId: integer("achievement_id").notNull(),
-  progress: integer("progress").notNull().default(0),
-  completed: boolean("completed").notNull().default(false),
-  completedDate: timestamp("completed_date"),
+  userId: integer("user_id").notNull().references(() => users.id),
+  achievementId: integer("achievement_id").notNull().references(() => achievements.id),
+  unlockedAt: timestamp("unlocked_at").defaultNow()
 });
 
-export const xpCodes = pgTable("xp_codes", {
+// Activity table schema
+export const activities = pgTable("activities", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  type: text("type").notNull(),
+  description: text("description").notNull(),
+  xpEarned: integer("xp_earned").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  metadata: json("metadata")
+});
+
+// Redemption codes table schema
+export const redemptionCodes = pgTable("redemption_codes", {
   id: serial("id").primaryKey(),
   code: text("code").notNull().unique(),
-  xpValue: integer("xp_value").notNull(),
-  description: text("description").notNull(),
-  expiryDate: timestamp("expiry_date"),
-  isUsed: boolean("is_used").notNull().default(false),
-  createdBy: integer("created_by").notNull(), // Admin user ID
+  xpReward: integer("xp_reward").notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  expiresAt: timestamp("expires_at")
 });
 
-export const userCodeRedemptions = pgTable("user_code_redemptions", {
+// User redemption records table schema
+export const userRedemptions = pgTable("user_redemptions", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  codeId: integer("code_id").notNull(),
-  redeemedDate: timestamp("redeemed_date").notNull(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  codeId: integer("code_id").notNull().references(() => redemptionCodes.id),
+  redeemedAt: timestamp("redeemed_at").defaultNow()
 });
 
-// Insert schemas
-export const insertUserSchema = createInsertSchema(users).omit({
-  id: true,
-  playerId: true,
-  totalMatches: true,
-  wins: true,
-  losses: true,
-});
+// Insert schema definitions using drizzle-zod
+// Schema for validating user registration
+export const registerUserSchema = createInsertSchema(users)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    confirmPassword: z.string().min(6)
+  })
+  .refine(data => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"]
+  });
+
+// Schema for actually inserting a user into the database
+export const insertUserSchema = createInsertSchema(users)
+  .omit({ id: true, createdAt: true });
 
 export const insertTournamentSchema = createInsertSchema(tournaments).omit({ id: true });
-export const insertTournamentParticipantSchema = createInsertSchema(tournamentParticipants).omit({ id: true });
-export const insertMatchSchema = createInsertSchema(matches).omit({ id: true });
+
+export const insertTournamentRegistrationSchema = createInsertSchema(tournamentRegistrations).omit({ 
+  id: true, 
+  createdAt: true, 
+  placement: true 
+});
+
 export const insertAchievementSchema = createInsertSchema(achievements).omit({ id: true });
-export const insertUserAchievementSchema = createInsertSchema(userAchievements).omit({ id: true });
-export const insertXpCodeSchema = createInsertSchema(xpCodes).omit({ id: true });
-export const insertUserCodeRedemptionSchema = createInsertSchema(userCodeRedemptions).omit({ id: true });
 
-// Types
+export const insertUserAchievementSchema = createInsertSchema(userAchievements).omit({ 
+  id: true, 
+  unlockedAt: true 
+});
+
+export const insertActivitySchema = createInsertSchema(activities).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const insertRedemptionCodeSchema = createInsertSchema(redemptionCodes).omit({ 
+  id: true 
+});
+
+export const insertUserRedemptionSchema = createInsertSchema(userRedemptions).omit({ 
+  id: true, 
+  redeemedAt: true 
+});
+
+export const redeemCodeSchema = z.object({
+  code: z.string().min(1)
+});
+
+export const loginSchema = z.object({
+  username: z.string().min(1),
+  password: z.string().min(6)
+});
+
+// Type exports
 export type InsertUser = z.infer<typeof insertUserSchema>;
-export type InsertTournament = z.infer<typeof insertTournamentSchema>;
-export type InsertTournamentParticipant = z.infer<typeof insertTournamentParticipantSchema>;
-export type InsertMatch = z.infer<typeof insertMatchSchema>;
-export type InsertAchievement = z.infer<typeof insertAchievementSchema>;
-export type InsertUserAchievement = z.infer<typeof insertUserAchievementSchema>;
-export type InsertXpCode = z.infer<typeof insertXpCodeSchema>;
-export type InsertUserCodeRedemption = z.infer<typeof insertUserCodeRedemptionSchema>;
-
 export type User = typeof users.$inferSelect;
+
+export type InsertTournament = z.infer<typeof insertTournamentSchema>;
 export type Tournament = typeof tournaments.$inferSelect;
-export type TournamentParticipant = typeof tournamentParticipants.$inferSelect;
-export type Match = typeof matches.$inferSelect;
+
+export type InsertTournamentRegistration = z.infer<typeof insertTournamentRegistrationSchema>;
+export type TournamentRegistration = typeof tournamentRegistrations.$inferSelect;
+
+export type InsertAchievement = z.infer<typeof insertAchievementSchema>;
 export type Achievement = typeof achievements.$inferSelect;
+
+export type InsertUserAchievement = z.infer<typeof insertUserAchievementSchema>;
 export type UserAchievement = typeof userAchievements.$inferSelect;
-export type XpCode = typeof xpCodes.$inferSelect;
-export type UserCodeRedemption = typeof userCodeRedemptions.$inferSelect;
+
+export type InsertActivity = z.infer<typeof insertActivitySchema>;
+export type Activity = typeof activities.$inferSelect;
+
+export type InsertRedemptionCode = z.infer<typeof insertRedemptionCodeSchema>;
+export type RedemptionCode = typeof redemptionCodes.$inferSelect;
+
+export type InsertUserRedemption = z.infer<typeof insertUserRedemptionSchema>;
+export type UserRedemption = typeof userRedemptions.$inferSelect;
+
+export type RedeemCode = z.infer<typeof redeemCodeSchema>;
+export type Login = z.infer<typeof loginSchema>;

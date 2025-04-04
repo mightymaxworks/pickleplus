@@ -1,178 +1,250 @@
 import {
-  users,
-  tournaments,
-  tournamentParticipants,
-  matches,
-  achievements,
-  userAchievements,
-  xpCodes,
-  userCodeRedemptions,
-  type User,
-  type InsertUser,
-  type Tournament,
-  type InsertTournament,
-  type TournamentParticipant,
-  type InsertTournamentParticipant,
-  type Match,
-  type InsertMatch,
-  type Achievement,
-  type InsertAchievement,
-  type UserAchievement,
-  type InsertUserAchievement,
-  type XpCode,
-  type InsertXpCode,
-  type UserCodeRedemption,
-  type InsertUserCodeRedemption
+  users, type User, type InsertUser,
+  tournaments, type Tournament, type InsertTournament,
+  tournamentRegistrations, type TournamentRegistration, type InsertTournamentRegistration,
+  achievements, type Achievement, type InsertAchievement,
+  userAchievements, type UserAchievement, type InsertUserAchievement,
+  activities, type Activity, type InsertActivity,
+  redemptionCodes, type RedemptionCode, type InsertRedemptionCode,
+  userRedemptions, type UserRedemption, type InsertUserRedemption
 } from "@shared/schema";
-import { nanoid } from "nanoid";
 
+// Storage interface for all CRUD operations
 export interface IStorage {
-  // User methods
+  // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
-  getUserByPlayerId(playerId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  updateUser(id: number, data: Partial<User>): Promise<User | undefined>;
-  getAllUsers(): Promise<User[]>;
-  getTopUsers(limit: number): Promise<User[]>;
-
-  // Tournament methods
-  createTournament(tournament: InsertTournament): Promise<Tournament>;
+  updateUser(id: number, update: Partial<InsertUser>): Promise<User | undefined>;
+  updateUserXP(id: number, xpToAdd: number): Promise<User | undefined>;
+  
+  // Tournament operations
   getTournament(id: number): Promise<Tournament | undefined>;
   getAllTournaments(): Promise<Tournament[]>;
-  updateTournamentStatus(id: number, status: string): Promise<Tournament | undefined>;
-
-  // Tournament Participant methods
-  registerUserForTournament(data: InsertTournamentParticipant): Promise<TournamentParticipant>;
-  getTournamentParticipants(tournamentId: number): Promise<TournamentParticipant[]>;
-  getUserTournaments(userId: number): Promise<{ tournament: Tournament, participant: TournamentParticipant }[]>;
-  checkInUserToTournament(userId: number, tournamentId: number): Promise<TournamentParticipant | undefined>;
-
-  // Match methods
-  createMatch(match: InsertMatch): Promise<Match>;
-  getUserMatches(userId: number): Promise<Match[]>;
-  getRecentMatches(limit: number): Promise<Match[]>;
-
-  // Achievement methods
-  createAchievement(achievement: InsertAchievement): Promise<Achievement>;
+  createTournament(tournament: InsertTournament): Promise<Tournament>;
+  
+  // Tournament registration operations
+  registerForTournament(registration: InsertTournamentRegistration): Promise<TournamentRegistration>;
+  getTournamentRegistration(userId: number, tournamentId: number): Promise<TournamentRegistration | undefined>;
+  getUserTournaments(userId: number): Promise<{tournament: Tournament, registration: TournamentRegistration}[]>;
+  checkInUserForTournament(userId: number, tournamentId: number): Promise<TournamentRegistration | undefined>;
+  
+  // Achievement operations
   getAllAchievements(): Promise<Achievement[]>;
-  getUserAchievements(userId: number): Promise<{ achievement: Achievement, userAchievement: UserAchievement }[]>;
-  updateUserAchievementProgress(userId: number, achievementId: number, progress: number): Promise<UserAchievement>;
-  completeUserAchievement(userId: number, achievementId: number): Promise<UserAchievement>;
-  getRecentAchievements(userId: number, limit: number): Promise<{ achievement: Achievement, userAchievement: UserAchievement }[]>;
-
-  // XP Code methods
-  createXpCode(code: InsertXpCode): Promise<XpCode>;
-  getXpCodeByCode(code: string): Promise<XpCode | undefined>;
-  redeemXpCode(redemption: InsertUserCodeRedemption): Promise<UserCodeRedemption>;
-  isCodeRedeemedByUser(userId: number, code: string): Promise<boolean>;
+  getAchievement(id: number): Promise<Achievement | undefined>;
+  createAchievement(achievement: InsertAchievement): Promise<Achievement>;
+  getUserAchievements(userId: number): Promise<{achievement: Achievement, userAchievement: UserAchievement}[]>;
+  unlockAchievement(userAchievement: InsertUserAchievement): Promise<UserAchievement>;
+  
+  // Activity operations
+  createActivity(activity: InsertActivity): Promise<Activity>;
+  getUserActivities(userId: number, limit?: number): Promise<Activity[]>;
+  
+  // Redemption code operations
+  getRedemptionCodeByCode(code: string): Promise<RedemptionCode | undefined>;
+  createRedemptionCode(redemptionCode: InsertRedemptionCode): Promise<RedemptionCode>;
+  redeemCode(userRedemption: InsertUserRedemption): Promise<UserRedemption>;
+  hasUserRedeemedCode(userId: number, codeId: number): Promise<boolean>;
+  
+  // Leaderboard operations
+  getLeaderboard(limit: number): Promise<User[]>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private tournaments: Map<number, Tournament>;
-  private tournamentParticipants: Map<number, TournamentParticipant>;
-  private matches: Map<number, Match>;
+  private tournamentRegistrations: Map<number, TournamentRegistration>;
   private achievements: Map<number, Achievement>;
   private userAchievements: Map<number, UserAchievement>;
-  private xpCodes: Map<number, XpCode>;
-  private userCodeRedemptions: Map<number, UserCodeRedemption>;
+  private activities: Map<number, Activity>;
+  private redemptionCodes: Map<number, RedemptionCode>;
+  private userRedemptions: Map<number, UserRedemption>;
   
-  private currentId: {
-    users: number;
-    tournaments: number;
-    tournamentParticipants: number;
-    matches: number;
-    achievements: number;
-    userAchievements: number;
-    xpCodes: number;
-    userCodeRedemptions: number;
-  };
+  private userId: number;
+  private tournamentId: number;
+  private registrationId: number;
+  private achievementId: number;
+  private userAchievementId: number;
+  private activityId: number;
+  private redemptionCodeId: number;
+  private userRedemptionId: number;
 
   constructor() {
     this.users = new Map();
     this.tournaments = new Map();
-    this.tournamentParticipants = new Map();
-    this.matches = new Map();
+    this.tournamentRegistrations = new Map();
     this.achievements = new Map();
     this.userAchievements = new Map();
-    this.xpCodes = new Map();
-    this.userCodeRedemptions = new Map();
+    this.activities = new Map();
+    this.redemptionCodes = new Map();
+    this.userRedemptions = new Map();
     
-    this.currentId = {
-      users: 1,
-      tournaments: 1,
-      tournamentParticipants: 1,
-      matches: 1,
-      achievements: 1,
-      userAchievements: 1,
-      xpCodes: 1,
-      userCodeRedemptions: 1
+    this.userId = 1;
+    this.tournamentId = 1;
+    this.registrationId = 1;
+    this.achievementId = 1;
+    this.userAchievementId = 1;
+    this.activityId = 1;
+    this.redemptionCodeId = 1;
+    this.userRedemptionId = 1;
+    
+    // Initialize with sample achievements and redemption codes
+    this.initSampleData();
+  }
+  
+  private initSampleData() {
+    // Add sample achievements
+    const sampleAchievements: InsertAchievement[] = [
+      {
+        name: "Dink Master",
+        description: "50 successful dinks",
+        xpReward: 100,
+        imageUrl: "dink_master.svg",
+        category: "skill",
+        requirement: 50
+      },
+      {
+        name: "Tournament Finalist",
+        description: "Reached final round",
+        xpReward: 250,
+        imageUrl: "tournament_finalist.svg",
+        category: "tournament",
+        requirement: 1
+      },
+      {
+        name: "Social Butterfly",
+        description: "Play with 10+ players",
+        xpReward: 150,
+        imageUrl: "social_butterfly.svg",
+        category: "social",
+        requirement: 10
+      },
+      {
+        name: "Champion",
+        description: "Win a tournament",
+        xpReward: 500,
+        imageUrl: "champion.svg",
+        category: "tournament",
+        requirement: 1
+      },
+      {
+        name: "Match Maker",
+        description: "Play 25 matches",
+        xpReward: 200,
+        imageUrl: "match_maker.svg",
+        category: "matches",
+        requirement: 25
+      }
+    ];
+    
+    sampleAchievements.forEach(achievement => {
+      this.createAchievement(achievement);
+    });
+    
+    // Add sample redemption codes
+    const sampleCodes: InsertRedemptionCode[] = [
+      {
+        code: "WELCOME2023",
+        xpReward: 100,
+        description: "Welcome bonus for new players",
+        isActive: true,
+        expiresAt: new Date(2024, 11, 31)
+      },
+      {
+        code: "SUMMERSLAM",
+        xpReward: 250,
+        description: "Summer Tournament special code",
+        isActive: true,
+        expiresAt: new Date(2023, 8, 30)
+      }
+    ];
+    
+    sampleCodes.forEach(code => {
+      this.createRedemptionCode(code);
+    });
+    
+    // Add sample tournament
+    const now = new Date();
+    const sampleTournament: InsertTournament = {
+      name: "Spring Championship 2023",
+      startDate: new Date(now.getFullYear(), now.getMonth() + 1, 15),
+      endDate: new Date(now.getFullYear(), now.getMonth() + 1, 16),
+      location: "Central Park Courts",
+      description: "Annual spring championship with singles and doubles categories",
+      imageUrl: "spring_championship.svg"
     };
-
-    // Initialize with sample achievements
-    this.initializeAchievements();
+    
+    this.createTournament(sampleTournament);
   }
 
-  // User methods
+  // User operations
   async getUser(id: number): Promise<User | undefined> {
     return this.users.get(id);
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
-  }
-
-  async getUserByPlayerId(playerId: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.playerId === playerId,
+      (user) => user.username === username
     );
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentId.users++;
-    const playerId = `PB-${nanoid(5).toUpperCase()}`;
-    const user: User = { ...insertUser, id, playerId, totalMatches: 0, wins: 0, losses: 0 };
+    const id = this.userId++;
+    const createdAt = new Date();
+    
+    // Ensure the data types match the schema definition
+    const user: User = { 
+      ...insertUser,
+      id,
+      createdAt,
+      location: insertUser.location || null,
+      playingSince: insertUser.playingSince || null,
+      skillLevel: insertUser.skillLevel || null,
+      level: insertUser.level || 1,
+      xp: insertUser.xp || 0,
+      totalMatches: insertUser.totalMatches || 0,
+      matchesWon: insertUser.matchesWon || 0,
+      totalTournaments: insertUser.totalTournaments || 0
+    };
+    
     this.users.set(id, user);
-    
-    // Create initial user achievements
-    const allAchievements = await this.getAllAchievements();
-    for (const achievement of allAchievements) {
-      await this.updateUserAchievementProgress(id, achievement.id, 0);
-    }
-    
     return user;
   }
-
-  async updateUser(id: number, data: Partial<User>): Promise<User | undefined> {
+  
+  async updateUser(id: number, update: Partial<InsertUser>): Promise<User | undefined> {
     const user = await this.getUser(id);
     if (!user) return undefined;
     
-    const updatedUser = { ...user, ...data };
+    const updatedUser = { ...user, ...update };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+  
+  async updateUserXP(id: number, xpToAdd: number): Promise<User | undefined> {
+    const user = await this.getUser(id);
+    if (!user) return undefined;
+    
+    const currentXP = user.xp || 0;
+    const currentLevel = user.level || 1;
+    
+    // Calculate new XP and level
+    const newXP = currentXP + xpToAdd;
+    
+    // Simple level calculation: level up for every 1000 XP
+    const xpPerLevel = 1000;
+    const newLevel = Math.floor(newXP / xpPerLevel) + 1;
+    
+    const updatedUser = { 
+      ...user, 
+      xp: newXP,
+      level: newLevel 
+    };
+    
     this.users.set(id, updatedUser);
     return updatedUser;
   }
 
-  async getAllUsers(): Promise<User[]> {
-    return Array.from(this.users.values());
-  }
-
-  async getTopUsers(limit: number): Promise<User[]> {
-    return Array.from(this.users.values())
-      .sort((a, b) => b.rating - a.rating)
-      .slice(0, limit);
-  }
-
-  // Tournament methods
-  async createTournament(insertTournament: InsertTournament): Promise<Tournament> {
-    const id = this.currentId.tournaments++;
-    const tournament: Tournament = { ...insertTournament, id };
-    this.tournaments.set(id, tournament);
-    return tournament;
-  }
-
+  // Tournament operations
   async getTournament(id: number): Promise<Tournament | undefined> {
     return this.tournaments.get(id);
   }
@@ -181,348 +253,169 @@ export class MemStorage implements IStorage {
     return Array.from(this.tournaments.values());
   }
 
-  async updateTournamentStatus(id: number, status: string): Promise<Tournament | undefined> {
-    const tournament = await this.getTournament(id);
-    if (!tournament) return undefined;
-    
-    const updatedTournament = { ...tournament, status };
-    this.tournaments.set(id, updatedTournament);
-    return updatedTournament;
+  async createTournament(insertTournament: InsertTournament): Promise<Tournament> {
+    const id = this.tournamentId++;
+    const tournament: Tournament = { 
+      ...insertTournament,
+      id,
+      description: insertTournament.description || null,
+      imageUrl: insertTournament.imageUrl || null
+    };
+    this.tournaments.set(id, tournament);
+    return tournament;
   }
 
-  // Tournament Participant methods
-  async registerUserForTournament(data: InsertTournamentParticipant): Promise<TournamentParticipant> {
-    const id = this.currentId.tournamentParticipants++;
-    const participant: TournamentParticipant = { ...data, id };
-    this.tournamentParticipants.set(id, participant);
-    return participant;
+  // Tournament registration operations
+  async registerForTournament(insertRegistration: InsertTournamentRegistration): Promise<TournamentRegistration> {
+    const id = this.registrationId++;
+    const createdAt = new Date();
+    
+    // Create object with all required properties explicitly set
+    const registration: TournamentRegistration = { 
+      userId: insertRegistration.userId,
+      tournamentId: insertRegistration.tournamentId,
+      id, 
+      createdAt,
+      status: insertRegistration.status || null,
+      division: insertRegistration.division || null,
+      checkedIn: false,
+      placement: null // Required field in the schema
+    };
+    
+    this.tournamentRegistrations.set(id, registration);
+    return registration;
   }
 
-  async getTournamentParticipants(tournamentId: number): Promise<TournamentParticipant[]> {
-    return Array.from(this.tournamentParticipants.values())
-      .filter(p => p.tournamentId === tournamentId);
+  async getTournamentRegistration(userId: number, tournamentId: number): Promise<TournamentRegistration | undefined> {
+    return Array.from(this.tournamentRegistrations.values()).find(
+      (reg) => reg.userId === userId && reg.tournamentId === tournamentId
+    );
   }
 
-  async getUserTournaments(userId: number): Promise<{ tournament: Tournament, participant: TournamentParticipant }[]> {
-    const userParticipations = Array.from(this.tournamentParticipants.values())
-      .filter(p => p.userId === userId);
+  async getUserTournaments(userId: number): Promise<{tournament: Tournament, registration: TournamentRegistration}[]> {
+    const registrations = Array.from(this.tournamentRegistrations.values()).filter(
+      (reg) => reg.userId === userId
+    );
     
-    const result = [];
-    for (const participant of userParticipations) {
-      const tournament = await this.getTournament(participant.tournamentId);
-      if (tournament) {
-        result.push({ tournament, participant });
-      }
-    }
-    
-    return result;
+    return registrations.map(registration => {
+      const tournament = this.tournaments.get(registration.tournamentId)!;
+      return { tournament, registration };
+    });
   }
 
-  async checkInUserToTournament(userId: number, tournamentId: number): Promise<TournamentParticipant | undefined> {
-    const participant = Array.from(this.tournamentParticipants.values())
-      .find(p => p.userId === userId && p.tournamentId === tournamentId);
+  async checkInUserForTournament(userId: number, tournamentId: number): Promise<TournamentRegistration | undefined> {
+    const registration = await this.getTournamentRegistration(userId, tournamentId);
+    if (!registration) return undefined;
     
-    if (!participant) return undefined;
-    
-    const updatedParticipant = { ...participant, status: "checked-in" };
-    this.tournamentParticipants.set(participant.id, updatedParticipant);
-    return updatedParticipant;
+    const updatedRegistration = { ...registration, checkedIn: true };
+    this.tournamentRegistrations.set(registration.id, updatedRegistration);
+    return updatedRegistration;
   }
 
-  // Match methods
-  async createMatch(insertMatch: InsertMatch): Promise<Match> {
-    const id = this.currentId.matches++;
-    const match: Match = { ...insertMatch, id };
-    this.matches.set(id, match);
-    
-    // Update user stats
-    const winnerIds = match.winnerIds as number[];
-    const loserIds = match.loserIds as number[];
-    
-    const allPlayerIds = [...winnerIds, ...loserIds];
-    for (const playerId of allPlayerIds) {
-      const user = await this.getUser(playerId);
-      if (user) {
-        const isWinner = winnerIds.includes(playerId);
-        const updatedUser = {
-          ...user,
-          totalMatches: user.totalMatches + 1,
-          wins: isWinner ? user.wins + 1 : user.wins,
-          losses: !isWinner ? user.losses + 1 : user.losses,
-          xp: user.xp + match.xpEarned,
-        };
-        
-        // Update rating
-        const ratingChange = match.ratingChange as Record<string, number>;
-        if (ratingChange[playerId]) {
-          updatedUser.rating += ratingChange[playerId];
-        }
-        
-        this.users.set(playerId, updatedUser);
-        
-        // Check and update achievements
-        await this.checkAndUpdateAchievements(playerId);
-      }
-    }
-    
-    return match;
-  }
-
-  async getUserMatches(userId: number): Promise<Match[]> {
-    return Array.from(this.matches.values())
-      .filter(match => {
-        const players = [...(match.winnerIds as number[]), ...(match.loserIds as number[])];
-        return players.includes(userId);
-      })
-      .sort((a, b) => new Date(b.matchDate).getTime() - new Date(a.matchDate).getTime());
-  }
-
-  async getRecentMatches(limit: number): Promise<Match[]> {
-    return Array.from(this.matches.values())
-      .sort((a, b) => new Date(b.matchDate).getTime() - new Date(a.matchDate).getTime())
-      .slice(0, limit);
-  }
-
-  // Achievement methods
-  async createAchievement(insertAchievement: InsertAchievement): Promise<Achievement> {
-    const id = this.currentId.achievements++;
-    const achievement: Achievement = { ...insertAchievement, id };
-    this.achievements.set(id, achievement);
-    
-    // Create user achievement entries for all users
-    const allUsers = await this.getAllUsers();
-    for (const user of allUsers) {
-      await this.updateUserAchievementProgress(user.id, id, 0);
-    }
-    
-    return achievement;
-  }
-
+  // Achievement operations
   async getAllAchievements(): Promise<Achievement[]> {
     return Array.from(this.achievements.values());
   }
 
-  async getUserAchievements(userId: number): Promise<{ achievement: Achievement, userAchievement: UserAchievement }[]> {
-    const userAchievements = Array.from(this.userAchievements.values())
-      .filter(ua => ua.userId === userId);
-    
-    const result = [];
-    for (const userAchievement of userAchievements) {
-      const achievement = await this.achievements.get(userAchievement.achievementId);
-      if (achievement) {
-        result.push({ achievement, userAchievement });
-      }
-    }
-    
-    return result;
+  async getAchievement(id: number): Promise<Achievement | undefined> {
+    return this.achievements.get(id);
   }
 
-  async updateUserAchievementProgress(userId: number, achievementId: number, progress: number): Promise<UserAchievement> {
-    const existingUserAchievement = Array.from(this.userAchievements.values())
-      .find(ua => ua.userId === userId && ua.achievementId === achievementId);
-    
-    if (existingUserAchievement) {
-      const updatedUserAchievement = {
-        ...existingUserAchievement,
-        progress: progress,
-      };
-      this.userAchievements.set(existingUserAchievement.id, updatedUserAchievement);
-      return updatedUserAchievement;
-    } else {
-      const id = this.currentId.userAchievements++;
-      const userAchievement: UserAchievement = {
-        id,
-        userId,
-        achievementId,
-        progress,
-        completed: false,
-        completedDate: null,
-      };
-      this.userAchievements.set(id, userAchievement);
-      return userAchievement;
-    }
-  }
-
-  async completeUserAchievement(userId: number, achievementId: number): Promise<UserAchievement> {
-    const userAchievement = Array.from(this.userAchievements.values())
-      .find(ua => ua.userId === userId && ua.achievementId === achievementId);
-    
-    if (!userAchievement) {
-      throw new Error("User achievement not found");
-    }
-    
-    const achievement = await this.achievements.get(achievementId);
-    if (!achievement) {
-      throw new Error("Achievement not found");
-    }
-    
-    // Update user achievement
-    const now = new Date();
-    const updatedUserAchievement = {
-      ...userAchievement,
-      completed: true,
-      completedDate: now,
-      progress: achievement.requiredValue,
+  async createAchievement(insertAchievement: InsertAchievement): Promise<Achievement> {
+    const id = this.achievementId++;
+    const achievement: Achievement = { 
+      ...insertAchievement, 
+      id,
+      imageUrl: insertAchievement.imageUrl || null
     };
-    this.userAchievements.set(userAchievement.id, updatedUserAchievement);
-    
-    // Add XP reward to user
-    const user = await this.getUser(userId);
-    if (user) {
-      const updatedUser = {
-        ...user,
-        xp: user.xp + achievement.xpReward,
-      };
-      this.users.set(userId, updatedUser);
-    }
-    
-    return updatedUserAchievement;
+    this.achievements.set(id, achievement);
+    return achievement;
   }
 
-  async getRecentAchievements(userId: number, limit: number): Promise<{ achievement: Achievement, userAchievement: UserAchievement }[]> {
-    const userAchievements = Array.from(this.userAchievements.values())
-      .filter(ua => ua.userId === userId && ua.completed)
+  async getUserAchievements(userId: number): Promise<{achievement: Achievement, userAchievement: UserAchievement}[]> {
+    const userAchievements = Array.from(this.userAchievements.values()).filter(
+      (ua) => ua.userId === userId
+    );
+    
+    return userAchievements.map(userAchievement => {
+      const achievement = this.achievements.get(userAchievement.achievementId)!;
+      return { achievement, userAchievement };
+    });
+  }
+
+  async unlockAchievement(insertUserAchievement: InsertUserAchievement): Promise<UserAchievement> {
+    const id = this.userAchievementId++;
+    const unlockedAt = new Date();
+    const userAchievement: UserAchievement = { ...insertUserAchievement, id, unlockedAt };
+    this.userAchievements.set(id, userAchievement);
+    return userAchievement;
+  }
+
+  // Activity operations
+  async createActivity(insertActivity: InsertActivity): Promise<Activity> {
+    const id = this.activityId++;
+    const createdAt = new Date();
+    const activity: Activity = { 
+      ...insertActivity, 
+      id, 
+      createdAt,
+      metadata: insertActivity.metadata || null
+    };
+    this.activities.set(id, activity);
+    return activity;
+  }
+
+  async getUserActivities(userId: number, limit: number = 10): Promise<Activity[]> {
+    const activities = Array.from(this.activities.values())
+      .filter(activity => activity.userId === userId)
       .sort((a, b) => {
-        if (!a.completedDate || !b.completedDate) return 0;
-        return new Date(b.completedDate).getTime() - new Date(a.completedDate).getTime();
-      })
+        const aTime = a.createdAt ? a.createdAt.getTime() : 0;
+        const bTime = b.createdAt ? b.createdAt.getTime() : 0;
+        return bTime - aTime;
+      });
+    
+    return activities.slice(0, limit);
+  }
+
+  // Redemption code operations
+  async getRedemptionCodeByCode(code: string): Promise<RedemptionCode | undefined> {
+    return Array.from(this.redemptionCodes.values()).find(
+      (rc) => rc.code === code && rc.isActive && (rc.expiresAt ? rc.expiresAt > new Date() : true)
+    );
+  }
+
+  async createRedemptionCode(insertRedemptionCode: InsertRedemptionCode): Promise<RedemptionCode> {
+    const id = this.redemptionCodeId++;
+    const redemptionCode: RedemptionCode = { 
+      ...insertRedemptionCode, 
+      id,
+      description: insertRedemptionCode.description || null,
+      isActive: insertRedemptionCode.isActive || null,
+      expiresAt: insertRedemptionCode.expiresAt || null
+    };
+    this.redemptionCodes.set(id, redemptionCode);
+    return redemptionCode;
+  }
+
+  async redeemCode(insertUserRedemption: InsertUserRedemption): Promise<UserRedemption> {
+    const id = this.userRedemptionId++;
+    const redeemedAt = new Date();
+    const userRedemption: UserRedemption = { ...insertUserRedemption, id, redeemedAt };
+    this.userRedemptions.set(id, userRedemption);
+    return userRedemption;
+  }
+
+  async hasUserRedeemedCode(userId: number, codeId: number): Promise<boolean> {
+    return Array.from(this.userRedemptions.values()).some(
+      (ur) => ur.userId === userId && ur.codeId === codeId
+    );
+  }
+
+  // Leaderboard operations
+  async getLeaderboard(limit: number = 10): Promise<User[]> {
+    return Array.from(this.users.values())
+      .sort((a, b) => (b.xp || 0) - (a.xp || 0))
       .slice(0, limit);
-    
-    const result = [];
-    for (const userAchievement of userAchievements) {
-      const achievement = await this.achievements.get(userAchievement.achievementId);
-      if (achievement) {
-        result.push({ achievement, userAchievement });
-      }
-    }
-    
-    return result;
-  }
-
-  // XP Code methods
-  async createXpCode(insertXpCode: InsertXpCode): Promise<XpCode> {
-    const id = this.currentId.xpCodes++;
-    const xpCode: XpCode = { ...insertXpCode, id };
-    this.xpCodes.set(id, xpCode);
-    return xpCode;
-  }
-
-  async getXpCodeByCode(code: string): Promise<XpCode | undefined> {
-    return Array.from(this.xpCodes.values())
-      .find(xpCode => xpCode.code === code);
-  }
-
-  async redeemXpCode(insertRedemption: InsertUserCodeRedemption): Promise<UserCodeRedemption> {
-    const id = this.currentId.userCodeRedemptions++;
-    const redemption: UserCodeRedemption = { ...insertRedemption, id };
-    this.userCodeRedemptions.set(id, redemption);
-    
-    // Mark code as used
-    const xpCode = await this.xpCodes.get(redemption.codeId);
-    if (xpCode) {
-      const updatedXpCode = { ...xpCode, isUsed: true };
-      this.xpCodes.set(xpCode.id, updatedXpCode);
-      
-      // Add XP to user
-      const user = await this.getUser(redemption.userId);
-      if (user) {
-        const updatedUser = { ...user, xp: user.xp + xpCode.xpValue };
-        this.users.set(user.id, updatedUser);
-      }
-    }
-    
-    return redemption;
-  }
-
-  async isCodeRedeemedByUser(userId: number, code: string): Promise<boolean> {
-    const xpCode = await this.getXpCodeByCode(code);
-    if (!xpCode) return false;
-    
-    return Array.from(this.userCodeRedemptions.values())
-      .some(redemption => redemption.userId === userId && redemption.codeId === xpCode.id);
-  }
-
-  // Helper methods
-  private async checkAndUpdateAchievements(userId: number): Promise<void> {
-    const user = await this.getUser(userId);
-    if (!user) return;
-    
-    const allAchievements = await this.getAllAchievements();
-    const userMatches = await this.getUserMatches(userId);
-    
-    for (const achievement of allAchievements) {
-      // Check different achievement types
-      switch (achievement.category) {
-        case 'matches':
-          await this.updateUserAchievementProgress(userId, achievement.id, user.totalMatches);
-          if (user.totalMatches >= achievement.requiredValue) {
-            await this.completeUserAchievement(userId, achievement.id);
-          }
-          break;
-        case 'wins':
-          await this.updateUserAchievementProgress(userId, achievement.id, user.wins);
-          if (user.wins >= achievement.requiredValue) {
-            await this.completeUserAchievement(userId, achievement.id);
-          }
-          break;
-        case 'streak':
-          // Calculate current win streak
-          let streak = 0;
-          for (const match of userMatches) {
-            const winnerIds = match.winnerIds as number[];
-            if (winnerIds.includes(userId)) {
-              streak++;
-            } else {
-              break;
-            }
-          }
-          await this.updateUserAchievementProgress(userId, achievement.id, streak);
-          if (streak >= achievement.requiredValue) {
-            await this.completeUserAchievement(userId, achievement.id);
-          }
-          break;
-        // Add more achievement types as needed
-      }
-    }
-  }
-
-  private async initializeAchievements(): Promise<void> {
-    // Basic achievements
-    await this.createAchievement({
-      name: "Hot Streak",
-      description: "Win 5 matches in a row",
-      iconClass: "fas fa-fire",
-      requiredValue: 5,
-      category: "streak",
-      xpReward: 100
-    });
-    
-    await this.createAchievement({
-      name: "Tournament Finalist",
-      description: "Reach finals in any tournament",
-      iconClass: "fas fa-trophy",
-      requiredValue: 1,
-      category: "tournament",
-      xpReward: 150
-    });
-    
-    await this.createAchievement({
-      name: "Consistent Player",
-      description: "Play 20 matches in 30 days",
-      iconClass: "fas fa-calendar-check",
-      requiredValue: 20,
-      category: "matches",
-      xpReward: 200
-    });
-    
-    await this.createAchievement({
-      name: "Social Butterfly",
-      description: "Play with 10 different partners",
-      iconClass: "fas fa-users",
-      requiredValue: 10,
-      category: "social",
-      xpReward: 100
-    });
   }
 }
 

@@ -1,99 +1,67 @@
 import { Switch, Route } from "wouter";
-import { useState, useEffect } from "react";
-import Login from "@/pages/Login";
-import Register from "@/pages/Register";
+import { Toaster } from "@/components/ui/toaster";
+import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
-import Profile from "@/pages/Profile";
 import Tournaments from "@/pages/Tournaments";
 import Achievements from "@/pages/Achievements";
 import Leaderboard from "@/pages/Leaderboard";
-import NotFound from "@/pages/not-found";
-import AppLayout from "@/components/layout/AppLayout";
-import { useQuery } from "@tanstack/react-query";
-import { User } from "@/lib/types";
+import Profile from "@/pages/Profile";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import { MainLayout } from "@/components/MainLayout";
+import { AuthLayout } from "@/components/AuthLayout";
+import { AuthProvider } from "@/hooks/useAuth";
 
 function App() {
-  const [loggedIn, setLoggedIn] = useState<boolean>(false);
-
-  // Check if user is logged in
-  const { data: user, isLoading } = useQuery<User | null>({
-    queryKey: ['/api/users/current'],
-    retry: false,
-    onSuccess: (data) => {
-      if (data) {
-        setLoggedIn(true);
-      }
-    },
-    onError: () => {
-      setLoggedIn(false);
-    }
-  });
-
-  if (isLoading) {
-    return (
-      <div className="h-screen w-full flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
   return (
-    <Switch>
-      {/* Auth routes */}
-      <Route path="/login">
-        {loggedIn ? <Dashboard /> : <Login onLoginSuccess={() => setLoggedIn(true)} />}
-      </Route>
-      <Route path="/register">
-        {loggedIn ? <Dashboard /> : <Register onRegisterSuccess={() => setLoggedIn(true)} />}
-      </Route>
+    <AuthProvider>
+      <Switch>
+        {/* Auth Routes */}
+        <Route path="/login">
+          <AuthLayout>
+            <Login />
+          </AuthLayout>
+        </Route>
+        <Route path="/register">
+          <AuthLayout>
+            <Register />
+          </AuthLayout>
+        </Route>
 
-      {/* Protected routes */}
-      <Route path="/">
-        {loggedIn ? 
-          <AppLayout>
+        {/* Main App Routes */}
+        <Route path="/">
+          <MainLayout>
             <Dashboard />
-          </AppLayout> 
-          : <Login onLoginSuccess={() => setLoggedIn(true)} />
-        }
-      </Route>
-      <Route path="/profile">
-        {loggedIn ? 
-          <AppLayout>
-            <Profile />
-          </AppLayout> 
-          : <Login onLoginSuccess={() => setLoggedIn(true)} />
-        }
-      </Route>
-      <Route path="/tournaments">
-        {loggedIn ? 
-          <AppLayout>
+          </MainLayout>
+        </Route>
+        <Route path="/tournaments">
+          <MainLayout>
             <Tournaments />
-          </AppLayout> 
-          : <Login onLoginSuccess={() => setLoggedIn(true)} />
-        }
-      </Route>
-      <Route path="/achievements">
-        {loggedIn ? 
-          <AppLayout>
+          </MainLayout>
+        </Route>
+        <Route path="/achievements">
+          <MainLayout>
             <Achievements />
-          </AppLayout> 
-          : <Login onLoginSuccess={() => setLoggedIn(true)} />
-        }
-      </Route>
-      <Route path="/leaderboard">
-        {loggedIn ? 
-          <AppLayout>
+          </MainLayout>
+        </Route>
+        <Route path="/leaderboard">
+          <MainLayout>
             <Leaderboard />
-          </AppLayout> 
-          : <Login onLoginSuccess={() => setLoggedIn(true)} />
-        }
-      </Route>
+          </MainLayout>
+        </Route>
+        <Route path="/profile">
+          <MainLayout>
+            <Profile />
+          </MainLayout>
+        </Route>
 
-      {/* Fallback route */}
-      <Route>
-        <NotFound />
-      </Route>
-    </Switch>
+        {/* 404 Route */}
+        <Route>
+          <NotFound />
+        </Route>
+      </Switch>
+      <Toaster />
+    </AuthProvider>
   );
 }
 
