@@ -15,6 +15,7 @@ import {
   insertMatchSchema
 } from "@shared/schema";
 import { ZodError } from "zod";
+import { generatePassportId, validatePassportId } from "./utils/passport-id";
 
 const SessionStore = MemoryStore(session);
 
@@ -104,12 +105,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Hash the password
       const hashedPassword = await bcrypt.hash(registrationData.password, 10);
       
+      // Generate a unique passport ID
+      const passportId = await generatePassportId();
+      
       // Create the user with hashed password, removing the confirmPassword field
       // Extract only the fields needed for the database and replace with hashed password
       const newUser = await storage.createUser({
         username: registrationData.username,
         password: hashedPassword,
         displayName: registrationData.displayName,
+        passportId, // Add the passport ID
         location: registrationData.location || null,
         playingSince: registrationData.playingSince || null,
         skillLevel: registrationData.skillLevel || null,
@@ -193,6 +198,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error retrieving user" });
     }
   });
+  
+  // Get user by passport ID
+  app.get("/api/passport/:passportId", async (req: Request, res: Response) => {
+    try {
+      const { passportId } = req.params;
+      
+      // Validate passport ID format
+      if (!passportId || !validatePassportId(passportId)) {
+        return res.status(400).json({ message: "Invalid passport ID format" });
+      }
+      
+      const user = await storage.getUserByPassportId(passportId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Return limited public info for the passport ID lookup
+      const publicUserInfo = {
+        id: user.id,
+        displayName: user.displayName,
+        passportId: user.passportId,
+        avatarInitials: user.avatarInitials,
+        level: user.level,
+        rankingPoints: user.rankingPoints
+      };
+      
+      res.json(publicUserInfo);
+    } catch (error) {
+      res.status(500).json({ message: "Error retrieving user by passport ID" });
+    }
+  });
 
   // Tournament routes
   app.get("/api/tournaments", async (req: Request, res: Response) => {
@@ -258,21 +294,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/tournament-check-in", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = (req.user as any).id;
-      const { tournamentId } = req.body;
+      const { tournamentId, passportId } = req.body;
       
       if (!tournamentId) {
         return res.status(400).json({ message: "Tournament ID is required" });
       }
       
-      const registration = await storage.checkInUserForTournament(userId, tournamentId);
+      if (!passportId) {
+        return res.status(400).json({ message: "Passport ID is required" });
+      }
       
+      // Verify the tournament exists
+      const tournament = await storage.getTournament(tournamentId);
+      if (!tournament) {
+        return res.status(404).json({ message: "Tournament not found" });
+      }
+      
+      // Find user by passport ID
+      const user = await storage.getUserByPassportId(passportId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found. Invalid passport ID" });
+      }
+      
+      // Check if user is registered for the tournament
+      const registration = await storage.getTournamentRegistration(user.id, tournamentId);
       if (!registration) {
+        return res.status(400).json({ message: "User is not registered for this tournament" });
+      }
+      
+      // Check if already checked in
+      if (registration.checkedIn) {
+        return res.status(400).json({ message: "User is already checked in to this tournament" });
+      }
+      
+      // Check-in the user
+      const updatedRegistration = await storage.checkInUserForTournament(user.id, tournamentId);
+      
+      if (!updatedRegistration) {
         return res.status(404).json({ message: "Registration not found" });
       }
       
-      res.json(registration);
+      // Create an activity record for the check-in
+      await storage.createActivity({
+        userId: user.id,
+        type: "tournament_check_in",
+        description: `Checked in to tournament: ${tournament.name}`,
+        xpEarned: 50, // Award some XP for checking in
+        relatedId: tournamentId,
+        relatedType: "tournament"
+      });
+      
+      res.json(updatedRegistration);
     } catch (error) {
+      console.error("Error checking in user:", error);
       res.status(500).json({ message: "Error checking in to tournament" });
     }
   });

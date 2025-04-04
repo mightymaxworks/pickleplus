@@ -9,6 +9,7 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   displayName: text("display_name").notNull(),
+  passportId: text("passport_id").unique(), // Unique passport ID in format PKL-XXXX-YYY
   location: text("location"),
   playingSince: text("playing_since"),
   skillLevel: text("skill_level"),

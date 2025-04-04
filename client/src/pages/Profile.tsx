@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { userApi, leaderboardApi } from "@/lib/apiClient";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { QRCodeDisplay } from "@/components/QRCodeDisplay";
+import PassportQRCode from "@/components/passport/PassportQRCode";
 import { CodeRedemptionForm } from "@/components/CodeRedemptionForm";
 import { MatchRecordingForm } from "@/components/MatchRecordingForm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -101,7 +101,9 @@ export default function Profile() {
           </div>
           
           {/* QR Code Passport */}
-          <QRCodeDisplay userId={user.id} username={user.username} />
+          <div className="mt-4">
+            <PassportQRCode user={user} />
+          </div>
         </CardContent>
       </Card>
       

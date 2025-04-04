@@ -2,54 +2,66 @@ export interface User {
   id: number;
   username: string;
   displayName: string;
-  location?: string;
-  playingSince?: string;
-  skillLevel?: string;
+  avatarInitials: string;
+  passportId: string | null;
+  location: string | null;
+  playingSince: string | null;
+  skillLevel: string | null;
   level: number;
   xp: number;
-  rankingPoints?: number;
-  avatarInitials: string;
+  rankingPoints: number;
   totalMatches: number;
   matchesWon: number;
   totalTournaments: number;
+  lastMatchDate: Date | null;
+  createdAt: Date;
 }
 
 export interface Tournament {
   id: number;
   name: string;
-  startDate: string | Date;
-  endDate: string | Date;
+  description: string | null;
   location: string;
-  description?: string;
-  imageUrl?: string;
+  startDate: Date;
+  endDate: Date | null;
+  registrationDeadline: Date | null;
+  maxParticipants: number | null;
+  currentParticipants: number;
+  tournamentType: string;
+  skillLevelRequired: string | null;
+  xpReward: number;
+  rankingPointsReward: number;
+  status: 'upcoming' | 'active' | 'completed' | 'cancelled';
+  createdAt: Date;
 }
 
 export interface TournamentRegistration {
   id: number;
   userId: number;
   tournamentId: number;
-  division?: string;
-  status: string;
+  registeredAt: Date;
   checkedIn: boolean;
-  placement?: string;
-  createdAt: string | Date;
+  checkedInAt: Date | null;
+  placement: number | null;
 }
 
 export interface Achievement {
   id: number;
   name: string;
   description: string;
+  criteria: string;
   xpReward: number;
-  imageUrl?: string;
+  badgeImageUrl: string | null;
   category: string;
-  requirement: number;
+  difficulty: 'easy' | 'medium' | 'hard' | 'special';
+  createdAt: Date;
 }
 
 export interface UserAchievement {
   id: number;
   userId: number;
   achievementId: number;
-  unlockedAt: string | Date;
+  unlockedAt: Date;
 }
 
 export interface Activity {
@@ -58,61 +70,59 @@ export interface Activity {
   type: string;
   description: string;
   xpEarned: number;
-  createdAt: string | Date;
-  metadata?: any;
+  relatedId: number | null;
+  relatedType: string | null;
+  createdAt: Date;
 }
 
 export interface RedemptionCode {
   id: number;
   code: string;
+  description: string;
   xpReward: number;
-  description?: string;
+  rankingPointsReward: number | null;
+  achievementId: number | null;
+  expiresAt: Date | null;
   isActive: boolean;
-  expiresAt?: string | Date;
+  maxRedemptions: number | null;
+  currentRedemptions: number;
+  createdAt: Date;
 }
 
-export interface UserTournament {
-  tournament: Tournament;
-  registration: TournamentRegistration;
+export interface UserRedemption {
+  id: number;
+  userId: number;
+  redemptionCodeId: number;
+  redeemedAt: Date;
 }
 
-export interface UserAchievementWithDetails {
-  achievement: Achievement;
-  userAchievement: UserAchievement;
+export interface Match {
+  id: number;
+  location: string | null;
+  tournamentId: number | null;
+  matchDate: Date;
+  notes: string | null;
+  playerOneId: number;
+  playerTwoId: number;
+  playerOnePartnerId: number | null;
+  playerTwoPartnerId: number | null;
+  winnerId: number;
+  matchType: 'singles' | 'doubles';
+  scorePlayerOne: string;
+  scorePlayerTwo: string;
+  xpEarned: number;
+  rankingPointsEarned: number;
+  gameScores: any;
+  createdAt: Date;
 }
 
-export interface AuthUser {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (username: string, password: string) => Promise<void>;
-  register: (userData: RegisterFormData) => Promise<void>;
-  logout: () => Promise<void>;
-}
-
-export interface RegisterFormData {
-  username: string;
-  password: string;
-  confirmPassword: string;
-  displayName: string;
-  location?: string;
-  playingSince?: string;
-  skillLevel?: string;
-  avatarInitials: string;
-}
-
-export interface LoginFormData {
-  username: string;
-  password: string;
-}
-
-export interface RedeemCodeFormData {
-  code: string;
-}
-
-export interface QRScanResult {
-  type: 'tournament-check-in' | 'player-connect' | 'unknown';
-  data: string;
-  tournamentId?: number;
-  playerId?: number;
+export interface RankingHistory {
+  id: number;
+  userId: number;
+  oldRanking: number;
+  newRanking: number;
+  reason: string;
+  matchId: number | null;
+  tournamentId: number | null;
+  createdAt: Date;
 }

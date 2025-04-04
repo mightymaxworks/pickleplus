@@ -9,6 +9,7 @@ import Profile from "@/pages/Profile";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import LandingPage from "@/pages/LandingPage";
+import TournamentCheckIn from "@/pages/TournamentCheckIn";
 import { MainLayout } from "@/components/MainLayout";
 import { AuthLayout } from "@/components/AuthLayout";
 import { AuthProvider } from "@/hooks/useAuth";
@@ -60,6 +61,11 @@ function App() {
         <Route path="/profile">
           <MainLayout>
             <Profile />
+          </MainLayout>
+        </Route>
+        <Route path="/tournaments/:id/check-in">
+          <MainLayout>
+            <TournamentCheckIn />
           </MainLayout>
         </Route>
 
