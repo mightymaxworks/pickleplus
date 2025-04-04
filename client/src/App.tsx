@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
@@ -20,6 +20,11 @@ function App() {
     <AuthProvider>
       <div className="font-pairing-default">
       <Switch>
+        {/* Root redirects to welcome page */}
+        <Route path="/">
+          <Redirect to="/welcome" />
+        </Route>
+        
         {/* Landing Page */}
         <Route path="/welcome">
           <LandingPage />
@@ -38,7 +43,7 @@ function App() {
         </Route>
 
         {/* Main App Routes */}
-        <Route path="/">
+        <Route path="/dashboard">
           <MainLayout>
             <Dashboard />
           </MainLayout>

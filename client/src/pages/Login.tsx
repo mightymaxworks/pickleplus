@@ -35,7 +35,7 @@ export default function Login() {
     setIsLoggingIn(true);
     try {
       await login(data.identifier, data.password);
-      navigate("/");
+      navigate("/dashboard");
     } catch (error) {
       console.error("Login error:", error);
     } finally {

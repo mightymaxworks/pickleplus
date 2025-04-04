@@ -60,7 +60,7 @@ export default function Register() {
       }
       
       await register(data);
-      navigate("/");
+      navigate("/dashboard");
     } catch (error) {
       console.error("Registration error:", error);
     } finally {

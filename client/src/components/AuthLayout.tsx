@@ -13,7 +13,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
   // Redirect to dashboard if already authenticated
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
-      navigate("/");
+      navigate("/dashboard");
     }
   }, [isAuthenticated, isLoading, navigate]);
   
