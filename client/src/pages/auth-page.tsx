@@ -110,13 +110,7 @@ export default function AuthPage() {
     try {
       const { confirmPassword, redemptionCode, ...userData } = values;
       
-      // Generate initials for avatar
-      const nameParts = values.displayName.split(" ");
-      const avatarInitials = nameParts.length > 1
-        ? (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
-        : values.displayName.slice(0, 2).toUpperCase();
-      
-      // Let the server generate the passportId
+      // Let the server generate both the passportId and avatarInitials
       // Create a properly typed object for registration
       await register({
         username: userData.username,
@@ -127,7 +121,6 @@ export default function AuthPage() {
         location: userData.location,
         playingSince: userData.playingSince,
         skillLevel: userData.skillLevel,
-        avatarInitials: avatarInitials,
         redemptionCode: redemptionCode || undefined
       });
       
