@@ -158,9 +158,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.status(201).json(userWithoutPassword);
     } catch (error) {
+      console.error("Registration error:", error);
       if (error instanceof ZodError) {
+        console.error("Validation errors:", error.errors);
         res.status(400).json({ message: "Validation error", errors: error.errors });
       } else {
+        console.error("Failed to register user:", error instanceof Error ? error.message : String(error));
         res.status(500).json({ message: "Failed to register user" });
       }
     }

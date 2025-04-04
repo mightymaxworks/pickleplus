@@ -153,5 +153,5 @@ export interface RegisterFormData {
   playingSince?: string;
   skillLevel?: string;
   redemptionCode?: string;
-  confirmPassword?: string; // Used in form validation, not sent to server
+  confirmPassword: string; // Required by the server validation
 }

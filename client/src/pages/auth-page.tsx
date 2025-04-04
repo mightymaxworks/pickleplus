@@ -115,6 +115,7 @@ export default function AuthPage() {
         username: userData.username,
         email: userData.email,
         password: userData.password,
+        confirmPassword: values.confirmPassword, // Add required confirmPassword field
         displayName: userData.displayName,
         yearOfBirth: values.yearOfBirth || null,
         location: userData.location,
