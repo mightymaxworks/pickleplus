@@ -42,19 +42,19 @@ export function EasterEggModal({ isOpen, onClose }: EasterEggModalProps) {
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-center gap-2 text-center font-bold text-xl">
+      <DialogContent className="sm:max-w-md max-h-[95vh] overflow-y-auto p-4 sm:p-6">
+        <DialogHeader className="p-0 sm:p-0">
+          <DialogTitle className="flex items-center justify-center gap-2 text-center font-bold text-lg sm:text-xl">
             <Sparkles className="h-5 w-5 text-[#FF5722]" /> 
             <span>Secret Unlocked!</span>
             <Sparkles className="h-5 w-5 text-[#FF5722]" />
           </DialogTitle>
-          <DialogDescription className="text-center pt-2">
+          <DialogDescription className="text-center pt-1 sm:pt-2">
             You've discovered a hidden layer of the Pickle+ universe
           </DialogDescription>
         </DialogHeader>
         
-        <div className="bg-black/90 text-green-400 p-4 rounded-md font-mono text-sm space-y-3 my-4">
+        <div className="bg-black/90 text-green-400 p-3 sm:p-4 rounded-md font-mono text-xs sm:text-sm space-y-2 sm:space-y-3 my-3 sm:my-4">
           <div className="text-white/70 uppercase text-[0.6rem] tracking-widest font-sans mb-1">
             CLASSIFIED TRANSMISSION [P+ PROTO-CORE]
           </div>
@@ -66,7 +66,7 @@ export function EasterEggModal({ isOpen, onClose }: EasterEggModalProps) {
           
           <div 
             ref={codeRef}
-            className="bg-[#FF5722]/10 border border-[#FF5722]/30 text-[#FF5722] p-2 rounded flex items-center justify-between mt-3"
+            className="bg-[#FF5722]/10 border border-[#FF5722]/30 text-[#FF5722] p-2 rounded flex items-center justify-between mt-2 sm:mt-3"
           >
             <code>ALPHA100</code>
             <Button 
@@ -80,16 +80,16 @@ export function EasterEggModal({ isOpen, onClose }: EasterEggModalProps) {
             </Button>
           </div>
           
-          <p className="text-xs text-green-400/70 mt-4">
+          <p className="text-xs text-green-400/70 mt-2 sm:mt-4">
             [REMINDER: The above narrative is fictional and part of the Pickle+ gamification experience.]
           </p>
         </div>
         
-        <DialogFooter className="sm:justify-center gap-2">
+        <DialogFooter className="sm:justify-center gap-2 pt-1 sm:pt-2">
           <Button 
             variant="default" 
             onClick={onClose}
-            className="bg-[#FF5722] hover:bg-[#FF5722]/90"
+            className="bg-[#FF5722] hover:bg-[#FF5722]/90 w-full sm:w-auto"
           >
             Continue
           </Button>
