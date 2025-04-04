@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,11 +47,12 @@ export default function AuthPage() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
 
-  // If user is already logged in, redirect to dashboard
-  if (user) {
-    setLocation("/dashboard");
-    return null;
-  }
+  // Handle redirect using useEffect
+  useEffect(() => {
+    if (user) {
+      setLocation("/dashboard");
+    }
+  }, [user, setLocation]);
 
   // Login form initialization
   const loginForm = useForm<LoginFormValues>({
