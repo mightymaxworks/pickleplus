@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { PicklePlusLogo } from "@/components/icons/PicklePlusLogo";
 
 export function Header() {
   const { user, logout } = useAuth();
@@ -31,9 +32,7 @@ export function Header() {
     <header className="bg-white pickle-shadow">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <div className="flex items-center cursor-pointer" onClick={() => setLocation("/")}>
-          <h1 className="text-2xl font-bold font-product-sans text-[#FF5722]">
-            Pickle<span className="text-[#2196F3]">+</span>
-          </h1>
+          <PicklePlusLogo className="h-10 w-auto" />
         </div>
         
         {user ? (
