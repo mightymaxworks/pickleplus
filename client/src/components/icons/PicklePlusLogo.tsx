@@ -1,17 +1,8 @@
-import logoImage from "@/assets/pickle-plus-logo.png";
-
-interface PicklePlusLogoProps {
-  className?: string;
-}
-
-export function PicklePlusLogo({ className = "h-8 w-auto" }: PicklePlusLogoProps) {
+export function PicklePlusLogo({ className = "" }: { className?: string }) {
   return (
-    <div className={`flex items-center justify-center ${className}`}>
-      <img 
-        src={logoImage} 
-        alt="Pickle+ Logo" 
-        className="w-auto h-full" 
-      />
+    <div className={`flex items-center ${className}`}>
+      <div className="text-[#FF5722] font-bold text-3xl tracking-wider">PICKLE</div>
+      <div className="text-[#2196F3] font-bold text-3xl">+</div>
     </div>
   );
 }

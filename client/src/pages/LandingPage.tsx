@@ -1,6 +1,7 @@
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { PicklePlusTextLogo } from "@/components/icons/PicklePlusTextLogo";
+import { PicklePlusLogo } from "@/components/icons/PicklePlusLogo";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, Award, Calendar, BarChart, ArrowRight, Users, Trophy, Zap } from "lucide-react";
 
@@ -115,7 +116,7 @@ export default function LandingPage() {
             >
               <div className="relative w-full max-w-sm sm:max-w-md bg-white p-6 sm:p-8 rounded-xl shadow-xl">
                 <div className="absolute -top-8 sm:-top-10 left-1/2 transform -translate-x-1/2">
-                  <PicklePlusTextLogo className="h-16 sm:h-20 w-auto" />
+                  <PicklePlusLogo className="h-16 sm:h-20" />
                 </div>
                 <div className="pt-10 sm:pt-12 pb-2 sm:pb-4">
                   <div className="bg-gray-100 rounded-lg p-3 sm:p-4 mb-4">
@@ -161,23 +162,23 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="container mx-auto px-6">
+      <section className="py-12 sm:py-20 bg-gray-50">
+        <div className="container mx-auto px-4 sm:px-6">
           <motion.div 
-            className="text-center mb-12"
+            className="text-center mb-8 sm:mb-12"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
           >
-            <h2 className="text-3xl font-bold mb-4">Elevate Your Pickleball Experience</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Elevate Your Pickleball Experience</h2>
+            <p className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto">
               Pickle+ brings your pickleball journey to life with powerful features designed to help you track, improve, and enjoy the game like never before.
             </p>
           </motion.div>
           
           <motion.div 
-            className="grid md:grid-cols-2 lg:grid-cols-4 gap-8"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
@@ -208,22 +209,22 @@ export default function LandingPage() {
       </section>
 
       {/* Benefits Section */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-6">
+      <section className="py-12 sm:py-20 bg-white">
+        <div className="container mx-auto px-4 sm:px-6">
           <motion.div 
-            className="text-center mb-12"
+            className="text-center mb-8 sm:mb-12"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
           >
-            <h2 className="text-3xl font-bold mb-4">Why Pickleball Players Love Pickle+</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Why Pickleball Players Love Pickle+</h2>
+            <p className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto">
               Join thousands of players who are taking their game to the next level with our innovative platform.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div className="grid md:grid-cols-2 gap-8 sm:gap-12 items-center">
             <motion.div 
               className="order-2 md:order-1"
               initial={{ opacity: 0, x: -30 }}
@@ -231,77 +232,77 @@ export default function LandingPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
             >
-              <ul className="space-y-6">
+              <ul className="space-y-4 sm:space-y-6">
                 <li className="flex items-start gap-3">
-                  <div className="bg-[#FF5722]/10 p-2 rounded-full text-[#FF5722]">
-                    <Zap size={24} />
+                  <div className="flex-shrink-0 bg-[#FF5722]/10 p-2 rounded-full text-[#FF5722]">
+                    <Zap size={20} className="sm:w-6 sm:h-6" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg mb-1">Gamified Progression</h3>
-                    <p className="text-gray-600">Makes improvement fun and addictive with levels, XP, and achievements.</p>
+                    <h3 className="font-bold text-base sm:text-lg mb-0.5 sm:mb-1">Gamified Progression</h3>
+                    <p className="text-sm sm:text-base text-gray-600">Makes improvement fun and addictive with levels, XP, and achievements.</p>
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="bg-[#2196F3]/10 p-2 rounded-full text-[#2196F3]">
-                    <Users size={24} />
+                  <div className="flex-shrink-0 bg-[#2196F3]/10 p-2 rounded-full text-[#2196F3]">
+                    <Users size={20} className="sm:w-6 sm:h-6" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg mb-1">Community-Driven</h3>
-                    <p className="text-gray-600">Connect with other players, organize matches, and join local events.</p>
+                    <h3 className="font-bold text-base sm:text-lg mb-0.5 sm:mb-1">Community-Driven</h3>
+                    <p className="text-sm sm:text-base text-gray-600">Connect with other players, organize matches, and join local events.</p>
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="bg-[#4CAF50]/10 p-2 rounded-full text-[#4CAF50]">
-                    <BarChart size={24} />
+                  <div className="flex-shrink-0 bg-[#4CAF50]/10 p-2 rounded-full text-[#4CAF50]">
+                    <BarChart size={20} className="sm:w-6 sm:h-6" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg mb-1">Detailed Insights</h3>
-                    <p className="text-gray-600">Get a clear view of your playing style and areas for improvement.</p>
+                    <h3 className="font-bold text-base sm:text-lg mb-0.5 sm:mb-1">Detailed Insights</h3>
+                    <p className="text-sm sm:text-base text-gray-600">Get a clear view of your playing style and areas for improvement.</p>
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="bg-[#FF9800]/10 p-2 rounded-full text-[#FF9800]">
-                    <Trophy size={24} />
+                  <div className="flex-shrink-0 bg-[#FF9800]/10 p-2 rounded-full text-[#FF9800]">
+                    <Trophy size={20} className="sm:w-6 sm:h-6" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg mb-1">Tournament Ready</h3>
-                    <p className="text-gray-600">Simplifies tournament participation with digital check-ins and history tracking.</p>
+                    <h3 className="font-bold text-base sm:text-lg mb-0.5 sm:mb-1">Tournament Ready</h3>
+                    <p className="text-sm sm:text-base text-gray-600">Simplifies tournament participation with digital check-ins and history tracking.</p>
                   </div>
                 </li>
               </ul>
             </motion.div>
 
             <motion.div 
-              className="order-1 md:order-2 bg-gradient-to-br from-[#FF5722]/5 to-[#2196F3]/5 rounded-2xl p-8"
+              className="order-1 md:order-2 bg-gradient-to-br from-[#FF5722]/5 to-[#2196F3]/5 rounded-2xl p-4 sm:p-8"
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
             >
               <div className="relative">
-                <div className="absolute -top-6 -left-6 bg-white p-3 rounded-lg shadow-md">
-                  <Award className="text-[#FF5722]" size={32} />
+                <div className="absolute -top-4 sm:-top-6 -left-4 sm:-left-6 bg-white p-2 sm:p-3 rounded-lg shadow-md">
+                  <Award className="text-[#FF5722]" size={24} />
                 </div>
-                <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-                  <h3 className="font-bold text-xl mb-2">Recently Unlocked</h3>
-                  <div className="flex items-center gap-4 p-4 bg-[#F5F5F5] rounded-lg">
-                    <div className="h-16 w-16 bg-[#4CAF50] rounded-full flex items-center justify-center text-white">
-                      <Trophy size={32} />
+                <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
+                  <h3 className="font-bold text-lg sm:text-xl mb-2">Recently Unlocked</h3>
+                  <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-[#F5F5F5] rounded-lg">
+                    <div className="h-12 w-12 sm:h-16 sm:w-16 bg-[#4CAF50] rounded-full flex items-center justify-center text-white">
+                      <Trophy size={24} className="sm:w-8 sm:h-8" />
                     </div>
                     <div>
-                      <div className="font-bold text-lg">Tournament Champion</div>
-                      <div className="text-sm text-gray-600">Win your first tournament</div>
-                      <div className="text-sm font-semibold text-[#FF5722]">+500 XP</div>
+                      <div className="font-bold text-base sm:text-lg">Tournament Champion</div>
+                      <div className="text-xs sm:text-sm text-gray-600">Win your first tournament</div>
+                      <div className="text-xs sm:text-sm font-semibold text-[#FF5722]">+500 XP</div>
                     </div>
                   </div>
                 </div>
-                <div className="bg-white rounded-xl shadow-md p-6">
-                  <h3 className="font-bold text-xl mb-2">Your Stats This Month</h3>
-                  <div className="space-y-4">
+                <div className="bg-white rounded-xl shadow-md p-4 sm:p-6">
+                  <h3 className="font-bold text-lg sm:text-xl mb-2">Your Stats This Month</h3>
+                  <div className="space-y-3 sm:space-y-4">
                     <div>
                       <div className="flex justify-between mb-1">
-                        <span className="font-medium">Matches Played</span>
-                        <span className="text-[#2196F3]">8</span>
+                        <span className="text-sm sm:text-base font-medium">Matches Played</span>
+                        <span className="text-sm sm:text-base text-[#2196F3]">8</span>
                       </div>
                       <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                         <div className="bg-[#2196F3] h-full" style={{ width: '80%' }}></div>
@@ -309,8 +310,8 @@ export default function LandingPage() {
                     </div>
                     <div>
                       <div className="flex justify-between mb-1">
-                        <span className="font-medium">Win Rate</span>
-                        <span className="text-[#4CAF50]">62.5%</span>
+                        <span className="text-sm sm:text-base font-medium">Win Rate</span>
+                        <span className="text-sm sm:text-base text-[#4CAF50]">62.5%</span>
                       </div>
                       <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                         <div className="bg-[#4CAF50] h-full" style={{ width: '62.5%' }}></div>
@@ -318,8 +319,8 @@ export default function LandingPage() {
                     </div>
                     <div>
                       <div className="flex justify-between mb-1">
-                        <span className="font-medium">XP Earned</span>
-                        <span className="text-[#FF5722]">720</span>
+                        <span className="text-sm sm:text-base font-medium">XP Earned</span>
+                        <span className="text-sm sm:text-base text-[#FF5722]">720</span>
                       </div>
                       <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                         <div className="bg-[#FF5722] h-full" style={{ width: '72%' }}></div>
@@ -334,29 +335,29 @@ export default function LandingPage() {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-20 bg-gray-50" id="how-it-works">
-        <div className="container mx-auto px-6">
+      <section className="py-12 sm:py-20 bg-gray-50" id="how-it-works">
+        <div className="container mx-auto px-4 sm:px-6">
           <motion.div 
-            className="text-center mb-16"
+            className="text-center mb-8 sm:mb-16"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeIn}
           >
-            <h2 className="text-3xl font-bold mb-4">How Pickle+ Works</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">How Pickle+ Works</h2>
+            <p className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto">
               Get started in minutes and begin your pickleball journey with these simple steps
             </p>
           </motion.div>
 
           <motion.div 
-            className="grid md:grid-cols-2 gap-16 items-center"
+            className="grid md:grid-cols-2 gap-8 sm:gap-12 md:gap-16 items-center"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={staggerContainer}
           >
-            <div className="space-y-12">
+            <div className="space-y-6 sm:space-y-8 md:space-y-12">
               <HowItWorksStep 
                 number={1} 
                 title="Create Your Profile" 
@@ -380,39 +381,46 @@ export default function LandingPage() {
             </div>
 
             <motion.div 
-              className="bg-white rounded-xl shadow-lg overflow-hidden"
+              className="bg-white rounded-xl shadow-lg overflow-hidden mt-4 sm:mt-0"
               variants={fadeIn}
             >
-              <div className="p-4 bg-[#FF5722] text-white font-bold text-center">
+              <div className="p-3 sm:p-4 bg-[#FF5722] text-white font-bold text-center">
                 Match Recording Wizard
               </div>
-              <div className="p-6">
-                <div className="flex justify-between text-sm text-gray-500 mb-3">
+              <div className="p-4 sm:p-6">
+                <div className="flex justify-between text-xs sm:text-sm text-gray-500 mb-2 sm:mb-3">
                   <div>Step 2 of 4</div>
                   <div>Match Details</div>
                 </div>
-                <div className="h-1 bg-gray-200 rounded-full mb-6">
+                <div className="h-1 bg-gray-200 rounded-full mb-4 sm:mb-6">
                   <div className="bg-[#FF5722] h-full rounded-full" style={{ width: '50%' }}></div>
                 </div>
-                <div className="space-y-4 mb-6">
+                <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
                   <div>
-                    <h4 className="font-medium mb-2">Match Type</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-[#FF5722] text-white p-3 rounded-lg text-center font-medium">Singles</div>
-                      <div className="border border-gray-300 p-3 rounded-lg text-center">Doubles</div>
+                    <h4 className="text-sm sm:text-base font-medium mb-1 sm:mb-2">Match Type</h4>
+                    <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                      <div className="bg-[#FF5722] text-white p-2 sm:p-3 rounded-lg text-center text-sm sm:text-base font-medium">Singles</div>
+                      <div className="border border-gray-300 p-2 sm:p-3 rounded-lg text-center text-sm sm:text-base">Doubles</div>
                     </div>
                   </div>
                   <div>
-                    <h4 className="font-medium mb-2">Scoring System</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-[#2196F3] text-white p-3 rounded-lg text-center font-medium">Standard (11 pts)</div>
-                      <div className="border border-gray-300 p-3 rounded-lg text-center">Rally (15 pts)</div>
+                    <h4 className="text-sm sm:text-base font-medium mb-1 sm:mb-2">Scoring System</h4>
+                    <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                      <div className="bg-[#2196F3] text-white p-2 sm:p-3 rounded-lg text-center text-sm sm:text-base font-medium">Standard (11 pts)</div>
+                      <div className="border border-gray-300 p-2 sm:p-3 rounded-lg text-center text-sm sm:text-base">Rally (15 pts)</div>
                     </div>
                   </div>
                 </div>
                 <div className="flex justify-between">
-                  <Button variant="outline">Back</Button>
-                  <Button>Continue <ArrowRight size={16} className="ml-2" /></Button>
+                  <Button size="sm" className="sm:hidden" variant="outline">Back</Button>
+                  <Button size="default" className="hidden sm:flex" variant="outline">Back</Button>
+                  
+                  <Button size="sm" className="sm:hidden">
+                    Continue <ArrowRight size={14} className="ml-1" />
+                  </Button>
+                  <Button size="default" className="hidden sm:flex">
+                    Continue <ArrowRight size={16} className="ml-2" />
+                  </Button>
                 </div>
               </div>
             </motion.div>
@@ -421,22 +429,22 @@ export default function LandingPage() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="py-16 bg-[#2196F3] text-white">
-        <div className="container mx-auto px-6 text-center">
+      <section className="py-12 sm:py-16 bg-[#2196F3] text-white">
+        <div className="container mx-auto px-4 sm:px-6 text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-3xl font-bold mb-6">Ready to Transform Your Pickleball Experience?</h2>
-            <p className="text-xl mb-8 max-w-2xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">Ready to Transform Your Pickleball Experience?</h2>
+            <p className="text-lg sm:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto">
               Join thousands of players who are already tracking their progress and improving their game with Pickle+
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <Button 
                 size="lg" 
-                className="bg-white text-[#2196F3] hover:bg-white/90"
+                className="bg-white text-[#2196F3] hover:bg-white/90 w-full sm:w-auto"
                 onClick={() => navigate("/register")}
               >
                 Create Free Account
@@ -444,7 +452,7 @@ export default function LandingPage() {
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="border-white text-white hover:bg-white/10"
+                className="border-white text-white hover:bg-white/10 w-full sm:w-auto"
                 onClick={() => navigate("/login")}
               >
                 Sign In
@@ -455,35 +463,35 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="container mx-auto px-6">
+      <footer className="bg-gray-900 text-white py-10 sm:py-12">
+        <div className="container mx-auto px-4 sm:px-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-6 md:mb-0">
-              <PicklePlusTextLogo className="h-10 w-auto text-white" />
-              <p className="mt-2 text-gray-400">The ultimate pickleball companion app</p>
+            <div className="mb-8 md:mb-0 text-center md:text-left">
+              <PicklePlusLogo className="mx-auto md:mx-0 mb-2" />
+              <p className="text-gray-400">The ultimate pickleball companion app</p>
             </div>
-            <div className="flex flex-col md:flex-row gap-8">
-              <div>
-                <h3 className="font-bold mb-4">Features</h3>
-                <ul className="space-y-2 text-gray-400">
+            <div className="grid grid-cols-2 md:flex md:flex-row gap-8 sm:gap-12 text-center md:text-left">
+              <div className="col-span-1">
+                <h3 className="font-bold mb-3 sm:mb-4">Features</h3>
+                <ul className="space-y-1 sm:space-y-2 text-gray-400">
                   <li>Match Recording</li>
                   <li>Achievement System</li>
                   <li>Tournament Passport</li>
                   <li>Player Rankings</li>
                 </ul>
               </div>
-              <div>
-                <h3 className="font-bold mb-4">Community</h3>
-                <ul className="space-y-2 text-gray-400">
+              <div className="col-span-1">
+                <h3 className="font-bold mb-3 sm:mb-4">Community</h3>
+                <ul className="space-y-1 sm:space-y-2 text-gray-400">
                   <li>Find Players</li>
                   <li>Local Events</li>
                   <li>Forums</li>
                   <li>Coaching</li>
                 </ul>
               </div>
-              <div>
-                <h3 className="font-bold mb-4">Company</h3>
-                <ul className="space-y-2 text-gray-400">
+              <div className="col-span-2 mt-6 md:mt-0">
+                <h3 className="font-bold mb-3 sm:mb-4">Company</h3>
+                <ul className="space-y-1 sm:space-y-2 text-gray-400 md:text-left">
                   <li>About Us</li>
                   <li>Contact</li>
                   <li>Privacy Policy</li>
@@ -492,7 +500,7 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
-          <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-500">
+          <div className="border-t border-gray-800 mt-8 sm:mt-12 pt-6 sm:pt-8 text-center text-gray-500">
             <p>© {new Date().getFullYear()} Pickle+. All rights reserved.</p>
           </div>
         </div>
