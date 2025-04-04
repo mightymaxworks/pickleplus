@@ -395,8 +395,8 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
     switch (step) {
       case 1:
         return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
+          <div className="space-y-3">
+            <div className="text-center mb-3">
               <h3 className="text-lg font-semibold">Step 1: Match Format</h3>
               <p className="text-sm text-muted-foreground">Select the format and scoring system</p>
             </div>
@@ -527,8 +527,8 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
         
       case 2:
         return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
+          <div className="space-y-3">
+            <div className="text-center mb-3">
               <h3 className="text-lg font-semibold">Step 2: Players</h3>
               <p className="text-sm text-muted-foreground">
                 {formatType === "singles" 
@@ -622,8 +622,8 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
         
       case 3:
         return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
+          <div className="space-y-3">
+            <div className="text-center mb-3">
               <h3 className="text-lg font-semibold">Step 3: Score</h3>
               <p className="text-sm text-muted-foreground">
                 Record the final game score{totalGames > 1 ? "s" : ""}
@@ -719,16 +719,17 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {renderStepContent()}
           
-          <div className="flex justify-between pt-2">
+          <div className="flex justify-between pt-2 mt-2">
             {step > 1 ? (
               <Button 
                 type="button" 
                 variant="outline" 
                 onClick={goToPrevStep}
-                className="flex items-center"
+                className="flex items-center h-10 px-3 sm:px-4"
+                size="sm"
               >
                 <ChevronLeft className="mr-1 h-4 w-4" /> Back
               </Button>
@@ -740,7 +741,8 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
               <Button 
                 type="button" 
                 onClick={goToNextStep}
-                className="flex items-center"
+                className="flex items-center h-10 px-3 sm:px-4"
+                size="sm"
               >
                 Next <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
@@ -748,7 +750,8 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
               <Button 
                 type="submit" 
                 disabled={isSubmitting}
-                className="flex items-center"
+                className="flex items-center h-10 px-3 sm:px-4"
+                size="sm"
               >
                 {isSubmitting ? "Recording..." : "Record Match"}
               </Button>
@@ -759,22 +762,28 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
       
       {/* Alert Dialog for Win by 2 Rule */}
       <AlertDialog open={showWinByTwoAlert} onOpenChange={setShowWinByTwoAlert}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center">
-              <AlertCircle className="h-5 w-5 mr-2 text-yellow-500" />
-              Non-standard Score
+        <AlertDialogContent className="max-w-[350px] sm:max-w-[425px] p-4 sm:p-6">
+          <AlertDialogHeader className="space-y-2">
+            <AlertDialogTitle className="flex items-center text-base sm:text-lg">
+              <AlertCircle className="h-5 w-5 mr-2 text-yellow-500 flex-shrink-0" />
+              <span>Non-standard Score</span>
             </AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogDescription className="text-sm">
               In pickleball, games are typically won by a 2-point margin.
               The score you've entered doesn't follow this rule. Do you want to proceed anyway?
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelSubmission}>
+          <AlertDialogFooter className="sm:space-x-2 flex-col sm:flex-row gap-2 sm:gap-0 mt-4 sm:mt-6">
+            <AlertDialogCancel 
+              onClick={cancelSubmission}
+              className="mt-0 text-sm h-9 px-3"
+            >
               No, let me fix the score
             </AlertDialogCancel>
-            <AlertDialogAction onClick={confirmSubmission}>
+            <AlertDialogAction 
+              onClick={confirmSubmission}
+              className="text-sm h-9 px-3"
+            >
               Yes, record as entered
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -823,20 +832,21 @@ function ScoreCard({
       <div className="grid grid-cols-2 gap-2">
         {/* Player One Score Card */}
         <Card className={`border-2 ${playerOneWon ? "border-green-500" : ""}`}>
-          <CardContent className="pt-6 text-center">
-            <p className="font-medium mb-2">{playerOneName}</p>
-            <div className="flex items-center justify-center gap-4">
+          <CardContent className="p-3 sm:pt-6 text-center">
+            <p className="font-medium mb-1 sm:mb-2 text-sm sm:text-base truncate">{playerOneName}</p>
+            <div className="flex items-center justify-center gap-2 sm:gap-4">
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
+                className="h-8 w-8 sm:h-10 sm:w-10"
                 onClick={() => onScoreChange("playerOne", "subtract")}
                 disabled={playerOneScore <= 0}
               >
                 <Minus className="h-4 w-4" />
               </Button>
               
-              <div className="text-4xl font-bold w-12 text-center">
+              <div className="text-3xl sm:text-4xl font-bold w-10 sm:w-12 text-center">
                 {playerOneScore}
               </div>
               
@@ -844,6 +854,7 @@ function ScoreCard({
                 type="button"
                 variant="outline"
                 size="icon"
+                className="h-8 w-8 sm:h-10 sm:w-10"
                 onClick={() => onScoreChange("playerOne", "add")}
               >
                 <Plus className="h-4 w-4" />
@@ -854,20 +865,21 @@ function ScoreCard({
         
         {/* Player Two Score Card */}
         <Card className={`border-2 ${playerTwoWon ? "border-green-500" : ""}`}>
-          <CardContent className="pt-6 text-center">
-            <p className="font-medium mb-2">{playerTwoName}</p>
-            <div className="flex items-center justify-center gap-4">
+          <CardContent className="p-3 sm:pt-6 text-center">
+            <p className="font-medium mb-1 sm:mb-2 text-sm sm:text-base truncate">{playerTwoName}</p>
+            <div className="flex items-center justify-center gap-2 sm:gap-4">
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
+                className="h-8 w-8 sm:h-10 sm:w-10"
                 onClick={() => onScoreChange("playerTwo", "subtract")}
                 disabled={playerTwoScore <= 0}
               >
                 <Minus className="h-4 w-4" />
               </Button>
               
-              <div className="text-4xl font-bold w-12 text-center">
+              <div className="text-3xl sm:text-4xl font-bold w-10 sm:w-12 text-center">
                 {playerTwoScore}
               </div>
               
@@ -875,6 +887,7 @@ function ScoreCard({
                 type="button"
                 variant="outline"
                 size="icon"
+                className="h-8 w-8 sm:h-10 sm:w-10"
                 onClick={() => onScoreChange("playerTwo", "add")}
               >
                 <Plus className="h-4 w-4" />

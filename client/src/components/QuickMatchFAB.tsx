@@ -33,14 +33,16 @@ export default function QuickMatchFAB() {
       </div>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto p-4 pt-6">
+          <DialogHeader className="pb-2">
             <DialogTitle>Record Match Results</DialogTitle>
             <DialogDescription>
               Log your match results to earn XP and ranking points.
             </DialogDescription>
           </DialogHeader>
-          <MatchRecordingForm onSuccess={() => setIsOpen(false)} />
+          <div className="pb-safe">
+            <MatchRecordingForm onSuccess={() => setIsOpen(false)} />
+          </div>
         </DialogContent>
       </Dialog>
     </>
