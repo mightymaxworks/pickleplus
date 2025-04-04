@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { MatchRecordingForm } from "@/components/MatchRecordingForm";
 import { useAuth } from "@/hooks/useAuth";
-import { useIsMobile } from "@/hooks/useIsMobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 /**
  * Floating Action Button (FAB) for quick match recording

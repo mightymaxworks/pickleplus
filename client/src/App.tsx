@@ -16,6 +16,7 @@ import QuickMatchFAB from "@/components/QuickMatchFAB";
 function App() {
   return (
     <AuthProvider>
+      <div className="font-pairing-default">
       <Switch>
         {/* Auth Routes */}
         <Route path="/login">
@@ -65,6 +66,7 @@ function App() {
       {/* Global Components */}
       <QuickMatchFAB />
       <Toaster />
+      </div>
     </AuthProvider>
   );
 }

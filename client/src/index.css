@@ -1,3 +1,6 @@
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&family=Roboto+Flex:opsz,wght@8..144,400;8..144,500;8..144,700&family=Roboto:wght@300;400;500;700&family=Sora:wght@400;500;600;700&family=Urbanist:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,6 +12,51 @@
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
+  }
+
+  /* Typography Scale */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-bold;
+  }
+  
+  h1 {
+    @apply text-3xl md:text-4xl lg:text-5xl;
+  }
+  
+  h2 {
+    @apply text-2xl md:text-3xl lg:text-4xl;
+  }
+  
+  h3 {
+    @apply text-xl md:text-2xl;
+  }
+  
+  h4 {
+    @apply text-lg md:text-xl;
+  }
+  
+  h5 {
+    @apply text-base md:text-lg font-medium;
+  }
+  
+  h6 {
+    @apply text-sm md:text-base font-medium;
+  }
+  
+  p {
+    @apply text-base leading-relaxed;
+  }
+  
+  .text-xs {
+    @apply font-medium tracking-wide;
+  }
+  
+  button, .button, a.button {
+    @apply font-heading font-semibold;
+  }
+  
+  input, select, textarea {
+    @apply font-sans;
   }
 
   :root {
@@ -35,13 +83,61 @@
   }
 }
 
-@font-face {
-  font-family: 'Product Sans';
-  src: url('https://fonts.gstatic.com/s/productsans/v5/HYvgU2fE2nRJvZ5JFAumwegdm0LZdjqr5-oayXSOefg.woff2') format('woff2');
+/* Font utility classes for the different pairings */
+.font-pairing-default h1, 
+.font-pairing-default h2, 
+.font-pairing-default h3, 
+.font-pairing-default h4, 
+.font-pairing-default h5, 
+.font-pairing-default h6 {
+  @apply font-montserrat;
+}
+.font-pairing-default body, 
+.font-pairing-default p, 
+.font-pairing-default div {
+  @apply font-inter;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Product Sans', sans-serif;
+.font-pairing-sporty h1, 
+.font-pairing-sporty h2, 
+.font-pairing-sporty h3, 
+.font-pairing-sporty h4, 
+.font-pairing-sporty h5, 
+.font-pairing-sporty h6 {
+  @apply font-bebas uppercase tracking-wide;
+}
+.font-pairing-sporty body, 
+.font-pairing-sporty p, 
+.font-pairing-sporty div {
+  @apply font-roboto;
+}
+
+.font-pairing-modern h1, 
+.font-pairing-modern h2, 
+.font-pairing-modern h3, 
+.font-pairing-modern h4, 
+.font-pairing-modern h5, 
+.font-pairing-modern h6 {
+  @apply font-urbanist;
+}
+.font-pairing-modern body, 
+.font-pairing-modern p, 
+.font-pairing-modern div {
+  @apply font-dmsans;
+}
+
+.font-pairing-youthful h1, 
+.font-pairing-youthful h2, 
+.font-pairing-youthful h3, 
+.font-pairing-youthful h4, 
+.font-pairing-youthful h5, 
+.font-pairing-youthful h6 {
+  @apply font-poppins;
+}
+.font-pairing-youthful body, 
+.font-pairing-youthful p, 
+.font-pairing-youthful div {
+  @apply font-poppins;
 }
 
 .pickle-shadow {

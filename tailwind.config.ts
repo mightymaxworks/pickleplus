@@ -5,6 +5,23 @@ export default {
   content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        // Primary Fonts
+        montserrat: ["Montserrat", "sans-serif"],
+        bebas: ["Bebas Neue", "sans-serif"],
+        urbanist: ["Urbanist", "sans-serif"],
+        sora: ["Sora", "sans-serif"],
+        
+        // Secondary Fonts
+        inter: ["Inter", "sans-serif"],
+        poppins: ["Poppins", "sans-serif"],
+        roboto: ["Roboto", "Roboto Flex", "sans-serif"],
+        dmsans: ["DM Sans", "sans-serif"],
+        
+        // Default Fonts
+        sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        heading: ["Montserrat", "sans-serif"],
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
