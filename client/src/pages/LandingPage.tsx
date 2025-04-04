@@ -85,7 +85,7 @@ export default function LandingPage() {
   }, [konamiDetected, reset]);
 
   return (
-    <div className="landing-page">
+    <div className="landing-page overflow-x-hidden w-full">
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-[#FF5722] to-[#FF8A65] text-white py-16 md:py-20 overflow-hidden">
         <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10"></div>
@@ -213,7 +213,7 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-12 sm:py-20 bg-gray-50">
+      <section className="py-12 sm:py-20 bg-gray-50 overflow-hidden">
         <div className="container mx-auto px-4 sm:px-6">
           <motion.div 
             className="text-center mb-8 sm:mb-12"
@@ -260,7 +260,7 @@ export default function LandingPage() {
       </section>
 
       {/* Benefits Section */}
-      <section className="py-12 sm:py-20 bg-white">
+      <section className="py-12 sm:py-20 bg-white overflow-hidden">
         <div className="container mx-auto px-4 sm:px-6">
           <motion.div 
             className="text-center mb-8 sm:mb-12"
@@ -386,7 +386,7 @@ export default function LandingPage() {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-12 sm:py-20 bg-gray-50" id="how-it-works">
+      <section className="py-12 sm:py-20 bg-gray-50 overflow-hidden" id="how-it-works">
         <div className="container mx-auto px-4 sm:px-6">
           <motion.div 
             className="text-center mb-8 sm:mb-16"
@@ -480,7 +480,7 @@ export default function LandingPage() {
       </section>
 
       {/* Ranking System Section */}
-      <section className="py-12 sm:py-20 bg-white">
+      <section className="py-12 sm:py-20 bg-white overflow-hidden">
         <div className="container mx-auto px-4 sm:px-6">
           <motion.div 
             className="text-center mb-8 sm:mb-12"
@@ -622,7 +622,7 @@ export default function LandingPage() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="py-14 sm:py-20 bg-gradient-to-br from-[#2196F3] to-[#1a75c9] text-white">
+      <section className="py-14 sm:py-20 bg-gradient-to-br from-[#2196F3] to-[#1a75c9] text-white overflow-hidden">
         <div className="container mx-auto px-4 sm:px-6 text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -663,7 +663,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-10 sm:py-12">
+      <footer className="bg-gray-900 text-white py-10 sm:py-12 overflow-hidden">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-8 md:mb-0 text-center md:text-left">
