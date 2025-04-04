@@ -15,6 +15,8 @@ import { MainLayout } from "@/components/MainLayout";
 import { AuthLayout } from "@/components/AuthLayout";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import QuickMatchFAB from "@/components/QuickMatchFAB";
+import { FeatureProtectedRoute } from "@/components/FeatureProtectedRoute";
+import { Features, useFeatureFlag } from "@/lib/featureFlags";
 
 function App() {
   return (
@@ -25,7 +27,9 @@ function App() {
 }
 
 function AppRoutes() {
-  const { isAuthenticated } = useAuth();
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
+  const showQuickMatchFAB = useFeatureFlag(Features.QUICK_MATCH);
   
   return (
     <div className="font-pairing-default">
@@ -63,29 +67,35 @@ function AppRoutes() {
             <Dashboard />
           </MainLayout>
         </Route>
-        <Route path="/tournaments">
-          <MainLayout>
-            <Tournaments />
-          </MainLayout>
-        </Route>
-        <Route path="/achievements">
-          <MainLayout>
-            <Achievements />
-          </MainLayout>
-        </Route>
-        <Route path="/leaderboard">
-          <MainLayout>
-            <Leaderboard />
-          </MainLayout>
-        </Route>
+        
+        {/* Feature Protected Routes */}
+        <FeatureProtectedRoute 
+          path="/tournaments" 
+          component={Tournaments} 
+          featureFlag={Features.TOURNAMENTS} 
+        />
+        
+        <FeatureProtectedRoute 
+          path="/achievements" 
+          component={Achievements} 
+          featureFlag={Features.ACHIEVEMENTS} 
+        />
+        
+        <FeatureProtectedRoute 
+          path="/leaderboard" 
+          component={Leaderboard} 
+          featureFlag={Features.LEADERBOARD} 
+        />
+        
+        <FeatureProtectedRoute 
+          path="/tournaments/:id/check-in" 
+          component={TournamentCheckIn} 
+          featureFlag={Features.TOURNAMENTS} 
+        />
+        
         <Route path="/profile">
           <MainLayout>
             <Profile />
-          </MainLayout>
-        </Route>
-        <Route path="/tournaments/:id/check-in">
-          <MainLayout>
-            <TournamentCheckIn />
           </MainLayout>
         </Route>
 
@@ -96,7 +106,7 @@ function AppRoutes() {
       </Switch>
       
       {/* Global Components */}
-      <QuickMatchFAB />
+      {showQuickMatchFAB && <QuickMatchFAB />}
       <Toaster />
     </div>
   );

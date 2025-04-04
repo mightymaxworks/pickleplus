@@ -13,10 +13,16 @@ import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, Dialog
 import { Button } from "@/components/ui/button";
 import { type Activity } from "@/types";
 import { PlusCircle, Award, TrendingUp, ArrowUp, ArrowDown } from "lucide-react";
+import { Features, useFeatureFlag } from "@/lib/featureFlags";
 
 export default function Profile() {
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
   const [, setLocation] = useLocation();
+  
+  // Check feature flags
+  const showPassportQR = useFeatureFlag(Features.PASSPORT_QR);
+  const showQuickMatch = useFeatureFlag(Features.QUICK_MATCH);
   
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -100,10 +106,20 @@ export default function Profile() {
             </div>
           </div>
           
-          {/* QR Code Passport */}
-          <div className="mt-4">
-            <PassportQRCode user={user} />
-          </div>
+          {/* QR Code Passport - Only display if feature is enabled */}
+          {showPassportQR && (
+            <div className="mt-4">
+              <PassportQRCode user={user} />
+            </div>
+          )}
+          
+          {/* Coming Soon Message for Passport QR when disabled */}
+          {!showPassportQR && (
+            <div className="mt-6 bg-orange-50 border border-orange-200 rounded-lg p-4 text-center">
+              <div className="text-[#FF5722] font-semibold mb-1">Passport QR Code Coming Soon!</div>
+              <p className="text-sm text-gray-600">Your digital pickleball passport is on the way. Check back on April 12, 2025!</p>
+            </div>
+          )}
         </CardContent>
       </Card>
       
@@ -114,25 +130,27 @@ export default function Profile() {
         </CardContent>
       </Card>
       
-      {/* Match Recording Button */}
-      <div className="flex justify-end mb-6">
-        <Dialog open={matchDialogOpen} onOpenChange={setMatchDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-[#FF5722] flex items-center gap-2">
-              <PlusCircle size={16} /> Record Match
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Record Match Results</DialogTitle>
-              <DialogDescription>
-                Log your match results to earn XP and ranking points.
-              </DialogDescription>
-            </DialogHeader>
-            <MatchRecordingForm onSuccess={() => setMatchDialogOpen(false)} />
-          </DialogContent>
-        </Dialog>
-      </div>
+      {/* Match Recording Button - Only display if feature is enabled */}
+      {showQuickMatch && (
+        <div className="flex justify-end mb-6">
+          <Dialog open={matchDialogOpen} onOpenChange={setMatchDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-[#FF5722] flex items-center gap-2">
+                <PlusCircle size={16} /> Record Match
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Record Match Results</DialogTitle>
+                <DialogDescription>
+                  Log your match results to earn XP and ranking points.
+                </DialogDescription>
+              </DialogHeader>
+              <MatchRecordingForm onSuccess={() => setMatchDialogOpen(false)} />
+            </DialogContent>
+          </Dialog>
+        </div>
+      )}
       
       {/* Ranking Card */}
       <Card className="mb-6 pickle-shadow">
