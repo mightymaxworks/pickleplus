@@ -13,17 +13,30 @@ import LandingPage from "@/pages/LandingPage";
 import TournamentCheckIn from "@/pages/TournamentCheckIn";
 import { MainLayout } from "@/components/MainLayout";
 import { AuthLayout } from "@/components/AuthLayout";
-import { AuthProvider } from "@/hooks/useAuth";
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import QuickMatchFAB from "@/components/QuickMatchFAB";
 
 function App() {
   return (
     <AuthProvider>
-      <div className="font-pairing-default">
+      <AppRoutes />
+    </AuthProvider>
+  );
+}
+
+function AppRoutes() {
+  const { isAuthenticated } = useAuth();
+  
+  return (
+    <div className="font-pairing-default">
       <Switch>
-        {/* Root redirects to welcome page */}
+        {/* Root path - redirects based on authentication status */}
         <Route path="/">
-          <Redirect to="/welcome" />
+          {isAuthenticated ? (
+            <Redirect to="/dashboard" />
+          ) : (
+            <Redirect to="/welcome" />
+          )}
         </Route>
         
         {/* Landing Page */}
@@ -85,8 +98,7 @@ function App() {
       {/* Global Components */}
       <QuickMatchFAB />
       <Toaster />
-      </div>
-    </AuthProvider>
+    </div>
   );
 }
 
