@@ -764,10 +764,10 @@ export class DatabaseStorage implements IStorage {
 
   // Redemption code operations
   async getRedemptionCodeByCode(code: string): Promise<RedemptionCode | undefined> {
-    // First try to get the code regardless of expiration to ensure it exists
+    // Make the code lookup case-insensitive by converting both sides to uppercase
     const [redemptionCode] = await db.select()
       .from(redemptionCodes)
-      .where(eq(redemptionCodes.code, code));
+      .where(sql`UPPER(${redemptionCodes.code}) = UPPER(${code})`);
 
     if (!redemptionCode) return undefined;
     
