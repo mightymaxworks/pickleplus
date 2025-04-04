@@ -1,59 +1,64 @@
-import { cn } from "@/lib/utils";
-import { Sparkles } from "lucide-react";
+import React from "react";
+import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 interface XpMultiplierIndicatorProps {
   multiplier: number;
-  className?: string;
+  size?: "sm" | "md" | "lg";
   showLabel?: boolean;
   showTooltip?: boolean;
-  size?: "sm" | "md" | "lg";
+  className?: string;
 }
 
-export function XpMultiplierIndicator({
+export function XpMultiplierIndicator({ 
   multiplier,
-  className,
-  showLabel = true,
-  showTooltip = true,
-  size = "md"
+  size = "md",
+  showLabel = false,
+  showTooltip = false,
+  className
 }: XpMultiplierIndicatorProps) {
-  // Only show if there's an actual multiplier greater than 1
-  if (multiplier <= 1) return null;
+  const formattedMultiplier = `${multiplier}x`;
   
-  const formattedMultiplier = `${multiplier.toFixed(1)}x`;
-  
-  const indicator = (
-    <div className={cn(
-      "inline-flex items-center gap-1 text-amber-500 font-semibold",
-      size === "sm" && "text-xs",
-      size === "md" && "text-sm",
-      size === "lg" && "text-base",
-      className
-    )}>
-      <Sparkles className={cn(
-        "text-amber-400",
-        size === "sm" && "h-3 w-3",
-        size === "md" && "h-4 w-4",
-        size === "lg" && "h-5 w-5",
-      )} />
-      {showLabel && <span>{formattedMultiplier}</span>}
-    </div>
-  );
+  const sizeClasses = {
+    sm: "text-xs px-2 py-0.5",
+    md: "text-sm px-2.5 py-1",
+    lg: "text-base px-3 py-1.5"
+  };
 
+  const content = (
+    <Badge 
+      variant="outline" 
+      className={cn(
+        "bg-yellow-100 text-yellow-800 border-yellow-400 font-medium",
+        sizeClasses[size],
+        className
+      )}
+    >
+      {showLabel ? (
+        <span>
+          <span className="font-bold">{formattedMultiplier}</span> XP Multiplier
+        </span>
+      ) : (
+        <span className="font-bold">{formattedMultiplier}</span>
+      )}
+    </Badge>
+  );
+  
   if (showTooltip) {
     return (
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            {indicator}
+            {content}
           </TooltipTrigger>
           <TooltipContent>
-            <p className="text-sm">You earn {formattedMultiplier} more XP as a Founding Member</p>
+            <p>Founding Member Bonus: All XP is multiplied by {formattedMultiplier}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
     );
   }
-
-  return indicator;
+  
+  return content;
 }

@@ -96,12 +96,12 @@ export default function Dashboard() {
       <div className="mb-6">
         <div className="flex items-center mb-2">
           <h2 className="text-xl font-bold font-product-sans mr-2">Welcome back, {user.displayName.split(' ')[0]}!</h2>
-          {user.isFoundingMember && <FoundingMemberBadge size="sm" variant="default" showTooltip />}
+          {user.isFoundingMember && <FoundingMemberBadge size="sm" showText={true} />}
         </div>
         <div className="flex items-center">
           <p className="text-gray-500 mr-3">Ready to elevate your pickleball game?</p>
           {user.isFoundingMember && user.xpMultiplier && (
-            <XpMultiplierIndicator multiplier={user.xpMultiplier} size="sm" showLabel showTooltip />
+            <XpMultiplierIndicator multiplier={user.xpMultiplier} size="sm" showLabel={true} showTooltip={true} />
           )}
         </div>
       </div>

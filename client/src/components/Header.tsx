@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { PicklePlusLogo } from "@/components/icons/PicklePlusLogo";
+import { PickleGoldLogo } from "@/components/icons/PickleGoldLogo";
+import { FoundingMemberBadge } from "@/components/ui/founding-member-badge";
 
 export function Header() {
   const { user, logout } = useAuth();
@@ -32,7 +34,11 @@ export function Header() {
     <header className="bg-white pickle-shadow">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <div className="flex items-center cursor-pointer" onClick={() => setLocation("/dashboard")}>
-          <PicklePlusLogo className="h-10 w-auto" />
+          {user?.isFoundingMember ? (
+            <PickleGoldLogo height={40} />
+          ) : (
+            <PicklePlusLogo className="h-10 w-auto" />
+          )}
         </div>
         
         {user ? (
