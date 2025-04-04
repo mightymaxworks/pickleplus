@@ -71,26 +71,26 @@ export default function LandingPage() {
   return (
     <div className="landing-page">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-[#FF5722] to-[#FF8A65] text-white py-20 overflow-hidden">
+      <section className="relative bg-gradient-to-r from-[#FF5722] to-[#FF8A65] text-white py-16 md:py-20 overflow-hidden">
         <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10"></div>
-        <div className="container mx-auto px-6 relative z-10">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-10">
+        <div className="container mx-auto px-4 sm:px-6 relative z-10">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8 md:gap-10">
             <motion.div 
-              className="md:w-1/2 text-center md:text-left"
+              className="w-full md:w-1/2 text-center md:text-left"
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 leading-tight">
                 Level Up Your Pickleball Game with Pickle+
               </h1>
-              <p className="text-xl mb-8 text-white/90">
+              <p className="text-lg sm:text-xl mb-6 md:mb-8 text-white/90">
                 Track your progress, compete in tournaments, and unlock achievements in the ultimate pickleball companion app
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center md:justify-start">
                 <Button 
                   size="lg" 
-                  className="bg-white text-[#FF5722] hover:bg-white/90"
+                  className="bg-white text-[#FF5722] hover:bg-white/90 w-full sm:w-auto"
                   onClick={() => navigate("/register")}
                 >
                   Get Started
@@ -98,7 +98,7 @@ export default function LandingPage() {
                 <Button 
                   size="lg" 
                   variant="outline" 
-                  className="border-white text-white hover:bg-white/10"
+                  className="border-white text-white hover:bg-white/10 w-full sm:w-auto"
                   onClick={() => {
                     document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
                   }}
@@ -108,17 +108,17 @@ export default function LandingPage() {
               </div>
             </motion.div>
             <motion.div 
-              className="md:w-1/2 flex justify-center"
+              className="w-full md:w-1/2 flex justify-center mt-10 md:mt-0"
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <div className="relative w-full max-w-md bg-white p-8 rounded-xl shadow-xl">
-                <div className="absolute -top-10 left-1/2 transform -translate-x-1/2">
-                  <PicklePlusTextLogo className="h-20 w-auto" />
+              <div className="relative w-full max-w-sm sm:max-w-md bg-white p-6 sm:p-8 rounded-xl shadow-xl">
+                <div className="absolute -top-8 sm:-top-10 left-1/2 transform -translate-x-1/2">
+                  <PicklePlusTextLogo className="h-16 sm:h-20 w-auto" />
                 </div>
-                <div className="pt-12 pb-4">
-                  <div className="bg-gray-100 rounded-lg p-4 mb-4">
+                <div className="pt-10 sm:pt-12 pb-2 sm:pb-4">
+                  <div className="bg-gray-100 rounded-lg p-3 sm:p-4 mb-4">
                     <div className="flex justify-between items-center mb-2">
                       <div className="font-bold">Level 5</div>
                       <div className="text-[#FF5722]">520/1000 XP</div>
@@ -127,18 +127,18 @@ export default function LandingPage() {
                       <div className="bg-[#FF5722] h-full" style={{ width: '52%' }}></div>
                     </div>
                   </div>
-                  <div className="flex gap-3 mb-4">
-                    <div className="bg-[#2196F3]/10 rounded-lg p-3 flex-1 text-center">
-                      <div className="text-2xl font-bold text-[#2196F3]">24</div>
-                      <div className="text-sm text-gray-600">Matches</div>
+                  <div className="flex gap-2 sm:gap-3 mb-4">
+                    <div className="bg-[#2196F3]/10 rounded-lg p-2 sm:p-3 flex-1 text-center">
+                      <div className="text-xl sm:text-2xl font-bold text-[#2196F3]">24</div>
+                      <div className="text-xs sm:text-sm text-gray-600">Matches</div>
                     </div>
-                    <div className="bg-[#FF5722]/10 rounded-lg p-3 flex-1 text-center">
-                      <div className="text-2xl font-bold text-[#FF5722]">8</div>
-                      <div className="text-sm text-gray-600">Achievements</div>
+                    <div className="bg-[#FF5722]/10 rounded-lg p-2 sm:p-3 flex-1 text-center">
+                      <div className="text-xl sm:text-2xl font-bold text-[#FF5722]">8</div>
+                      <div className="text-xs sm:text-sm text-gray-600">Achievements</div>
                     </div>
-                    <div className="bg-[#4CAF50]/10 rounded-lg p-3 flex-1 text-center">
-                      <div className="text-2xl font-bold text-[#4CAF50]">3</div>
-                      <div className="text-sm text-gray-600">Tournaments</div>
+                    <div className="bg-[#4CAF50]/10 rounded-lg p-2 sm:p-3 flex-1 text-center">
+                      <div className="text-xl sm:text-2xl font-bold text-[#4CAF50]">3</div>
+                      <div className="text-xs sm:text-sm text-gray-600">Tournaments</div>
                     </div>
                   </div>
                   <div className="flex items-center mb-2">
@@ -154,7 +154,7 @@ export default function LandingPage() {
               </div>
             </motion.div>
           </div>
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white/80 animate-bounce">
+          <div className="absolute bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2 text-white/80 animate-bounce">
             <ChevronDown size={24} />
           </div>
         </div>
