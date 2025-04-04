@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
-import { PicklePlusLogo } from "@/components/icons/PicklePlusLogo";
+import { PicklePlusTextLogo } from "@/components/icons/PicklePlusTextLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -69,7 +69,7 @@ export default function Register() {
   return (
     <div className="flex flex-col items-center">
       <div className="mb-10 flex flex-col items-center">
-        <PicklePlusLogo className="h-32 w-auto" />
+        <PicklePlusTextLogo className="h-32 w-auto" />
       </div>
 
       <Card className="w-full max-w-md">
