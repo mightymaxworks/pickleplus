@@ -1,4 +1,5 @@
 import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -20,6 +21,13 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
+export const usersRelations = relations(users, ({ many }) => ({
+  tournamentRegistrations: many(tournamentRegistrations),
+  userAchievements: many(userAchievements),
+  activities: many(activities),
+  userRedemptions: many(userRedemptions)
+}));
+
 // Tournament table schema
 export const tournaments = pgTable("tournaments", {
   id: serial("id").primaryKey(),
@@ -30,6 +38,10 @@ export const tournaments = pgTable("tournaments", {
   description: text("description"),
   imageUrl: text("image_url")
 });
+
+export const tournamentsRelations = relations(tournaments, ({ many }) => ({
+  registrations: many(tournamentRegistrations)
+}));
 
 // Tournament registrations table schema
 export const tournamentRegistrations = pgTable("tournament_registrations", {
@@ -43,6 +55,17 @@ export const tournamentRegistrations = pgTable("tournament_registrations", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
+export const tournamentRegistrationsRelations = relations(tournamentRegistrations, ({ one }) => ({
+  user: one(users, {
+    fields: [tournamentRegistrations.userId],
+    references: [users.id]
+  }),
+  tournament: one(tournaments, {
+    fields: [tournamentRegistrations.tournamentId],
+    references: [tournaments.id]
+  })
+}));
+
 // Achievements table schema
 export const achievements = pgTable("achievements", {
   id: serial("id").primaryKey(),
@@ -54,6 +77,10 @@ export const achievements = pgTable("achievements", {
   requirement: integer("requirement").notNull()
 });
 
+export const achievementsRelations = relations(achievements, ({ many }) => ({
+  userAchievements: many(userAchievements)
+}));
+
 // User achievements table schema
 export const userAchievements = pgTable("user_achievements", {
   id: serial("id").primaryKey(),
@@ -61,6 +88,17 @@ export const userAchievements = pgTable("user_achievements", {
   achievementId: integer("achievement_id").notNull().references(() => achievements.id),
   unlockedAt: timestamp("unlocked_at").defaultNow()
 });
+
+export const userAchievementsRelations = relations(userAchievements, ({ one }) => ({
+  user: one(users, {
+    fields: [userAchievements.userId],
+    references: [users.id]
+  }),
+  achievement: one(achievements, {
+    fields: [userAchievements.achievementId],
+    references: [achievements.id]
+  })
+}));
 
 // Activity table schema
 export const activities = pgTable("activities", {
@@ -73,6 +111,13 @@ export const activities = pgTable("activities", {
   metadata: json("metadata")
 });
 
+export const activitiesRelations = relations(activities, ({ one }) => ({
+  user: one(users, {
+    fields: [activities.userId],
+    references: [users.id]
+  })
+}));
+
 // Redemption codes table schema
 export const redemptionCodes = pgTable("redemption_codes", {
   id: serial("id").primaryKey(),
@@ -83,6 +128,10 @@ export const redemptionCodes = pgTable("redemption_codes", {
   expiresAt: timestamp("expires_at")
 });
 
+export const redemptionCodesRelations = relations(redemptionCodes, ({ many }) => ({
+  userRedemptions: many(userRedemptions)
+}));
+
 // User redemption records table schema
 export const userRedemptions = pgTable("user_redemptions", {
   id: serial("id").primaryKey(),
@@ -90,6 +139,17 @@ export const userRedemptions = pgTable("user_redemptions", {
   codeId: integer("code_id").notNull().references(() => redemptionCodes.id),
   redeemedAt: timestamp("redeemed_at").defaultNow()
 });
+
+export const userRedemptionsRelations = relations(userRedemptions, ({ one }) => ({
+  user: one(users, {
+    fields: [userRedemptions.userId],
+    references: [users.id]
+  }),
+  redemptionCode: one(redemptionCodes, {
+    fields: [userRedemptions.codeId],
+    references: [redemptionCodes.id]
+  })
+}));
 
 // Insert schema definitions using drizzle-zod
 // Schema for validating user registration

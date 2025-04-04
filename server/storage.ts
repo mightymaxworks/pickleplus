@@ -8,6 +8,8 @@ import {
   redemptionCodes, type RedemptionCode, type InsertRedemptionCode,
   userRedemptions, type UserRedemption, type InsertUserRedemption
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, and, desc, sql } from "drizzle-orm";
 
 // Storage interface for all CRUD operations
 export interface IStorage {
@@ -419,4 +421,308 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class DatabaseStorage implements IStorage {
+  // User operations
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db.insert(users).values(insertUser).returning();
+    return user;
+  }
+
+  async updateUser(id: number, update: Partial<InsertUser>): Promise<User | undefined> {
+    const [updatedUser] = await db.update(users)
+      .set(update)
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
+  }
+
+  async updateUserXP(id: number, xpToAdd: number): Promise<User | undefined> {
+    const user = await this.getUser(id);
+    if (!user) return undefined;
+
+    const currentXP = user.xp || 0;
+    const xpPerLevel = 1000;
+    const newXP = currentXP + xpToAdd;
+    const newLevel = Math.floor(newXP / xpPerLevel) + 1;
+
+    const [updatedUser] = await db.update(users)
+      .set({ 
+        xp: newXP,
+        level: newLevel 
+      })
+      .where(eq(users.id, id))
+      .returning();
+    
+    return updatedUser;
+  }
+
+  // Tournament operations
+  async getTournament(id: number): Promise<Tournament | undefined> {
+    const [tournament] = await db.select().from(tournaments).where(eq(tournaments.id, id));
+    return tournament;
+  }
+
+  async getAllTournaments(): Promise<Tournament[]> {
+    return await db.select().from(tournaments);
+  }
+
+  async createTournament(insertTournament: InsertTournament): Promise<Tournament> {
+    const [tournament] = await db.insert(tournaments).values(insertTournament).returning();
+    return tournament;
+  }
+
+  // Tournament registration operations
+  async registerForTournament(insertRegistration: InsertTournamentRegistration): Promise<TournamentRegistration> {
+    const [registration] = await db.insert(tournamentRegistrations)
+      .values({
+        ...insertRegistration,
+        checkedIn: false
+      })
+      .returning();
+    return registration;
+  }
+
+  async getTournamentRegistration(userId: number, tournamentId: number): Promise<TournamentRegistration | undefined> {
+    const [registration] = await db.select()
+      .from(tournamentRegistrations)
+      .where(
+        and(
+          eq(tournamentRegistrations.userId, userId),
+          eq(tournamentRegistrations.tournamentId, tournamentId)
+        )
+      );
+    return registration;
+  }
+
+  async getUserTournaments(userId: number): Promise<{tournament: Tournament, registration: TournamentRegistration}[]> {
+    const results = await db.select({
+      tournament: tournaments,
+      registration: tournamentRegistrations
+    })
+    .from(tournamentRegistrations)
+    .innerJoin(tournaments, eq(tournamentRegistrations.tournamentId, tournaments.id))
+    .where(eq(tournamentRegistrations.userId, userId));
+    
+    return results;
+  }
+
+  async checkInUserForTournament(userId: number, tournamentId: number): Promise<TournamentRegistration | undefined> {
+    const [registration] = await db.update(tournamentRegistrations)
+      .set({ checkedIn: true })
+      .where(
+        and(
+          eq(tournamentRegistrations.userId, userId),
+          eq(tournamentRegistrations.tournamentId, tournamentId)
+        )
+      )
+      .returning();
+    return registration;
+  }
+
+  // Achievement operations
+  async getAllAchievements(): Promise<Achievement[]> {
+    return await db.select().from(achievements);
+  }
+
+  async getAchievement(id: number): Promise<Achievement | undefined> {
+    const [achievement] = await db.select().from(achievements).where(eq(achievements.id, id));
+    return achievement;
+  }
+
+  async createAchievement(insertAchievement: InsertAchievement): Promise<Achievement> {
+    const [achievement] = await db.insert(achievements).values(insertAchievement).returning();
+    return achievement;
+  }
+
+  async getUserAchievements(userId: number): Promise<{achievement: Achievement, userAchievement: UserAchievement}[]> {
+    const results = await db.select({
+      achievement: achievements,
+      userAchievement: userAchievements
+    })
+    .from(userAchievements)
+    .innerJoin(achievements, eq(userAchievements.achievementId, achievements.id))
+    .where(eq(userAchievements.userId, userId));
+    
+    return results;
+  }
+
+  async unlockAchievement(insertUserAchievement: InsertUserAchievement): Promise<UserAchievement> {
+    const [userAchievement] = await db.insert(userAchievements)
+      .values(insertUserAchievement)
+      .returning();
+    return userAchievement;
+  }
+
+  // Activity operations
+  async createActivity(insertActivity: InsertActivity): Promise<Activity> {
+    const [activity] = await db.insert(activities).values(insertActivity).returning();
+    return activity;
+  }
+
+  async getUserActivities(userId: number, limit: number = 10): Promise<Activity[]> {
+    const userActivities = await db.select()
+      .from(activities)
+      .where(eq(activities.userId, userId))
+      .orderBy(desc(activities.createdAt))
+      .limit(limit);
+    
+    return userActivities;
+  }
+
+  // Redemption code operations
+  async getRedemptionCodeByCode(code: string): Promise<RedemptionCode | undefined> {
+    const now = new Date();
+    const [redemptionCode] = await db.select()
+      .from(redemptionCodes)
+      .where(
+        and(
+          eq(redemptionCodes.code, code),
+          eq(redemptionCodes.isActive, true),
+          sql`${redemptionCodes.expiresAt} IS NULL OR ${redemptionCodes.expiresAt} > ${now}`
+        )
+      );
+    return redemptionCode;
+  }
+
+  async createRedemptionCode(insertRedemptionCode: InsertRedemptionCode): Promise<RedemptionCode> {
+    const [redemptionCode] = await db.insert(redemptionCodes)
+      .values(insertRedemptionCode)
+      .returning();
+    return redemptionCode;
+  }
+
+  async redeemCode(insertUserRedemption: InsertUserRedemption): Promise<UserRedemption> {
+    const [userRedemption] = await db.insert(userRedemptions)
+      .values(insertUserRedemption)
+      .returning();
+    return userRedemption;
+  }
+
+  async hasUserRedeemedCode(userId: number, codeId: number): Promise<boolean> {
+    const [result] = await db.select({ count: sql<number>`count(*)` })
+      .from(userRedemptions)
+      .where(
+        and(
+          eq(userRedemptions.userId, userId),
+          eq(userRedemptions.codeId, codeId)
+        )
+      );
+    return result.count > 0;
+  }
+
+  // Leaderboard operations
+  async getLeaderboard(limit: number = 10): Promise<User[]> {
+    const leaderboard = await db.select()
+      .from(users)
+      .orderBy(desc(users.xp))
+      .limit(limit);
+    return leaderboard;
+  }
+}
+
+// Initialize sample data
+async function initSampleData() {
+  const achievementsCount = await db.select({ count: sql<number>`count(*)` }).from(achievements);
+  if (achievementsCount[0].count === 0) {
+    // Sample achievements
+    const sampleAchievements: InsertAchievement[] = [
+      {
+        name: "Dink Master",
+        description: "50 successful dinks",
+        xpReward: 100,
+        imageUrl: "dink_master.svg",
+        category: "skill",
+        requirement: 50
+      },
+      {
+        name: "Tournament Finalist",
+        description: "Reached final round",
+        xpReward: 250,
+        imageUrl: "tournament_finalist.svg",
+        category: "tournament",
+        requirement: 1
+      },
+      {
+        name: "Social Butterfly",
+        description: "Play with 10+ players",
+        xpReward: 150,
+        imageUrl: "social_butterfly.svg",
+        category: "social",
+        requirement: 10
+      },
+      {
+        name: "Champion",
+        description: "Win a tournament",
+        xpReward: 500,
+        imageUrl: "champion.svg",
+        category: "tournament",
+        requirement: 1
+      },
+      {
+        name: "Match Maker",
+        description: "Play 25 matches",
+        xpReward: 200,
+        imageUrl: "match_maker.svg",
+        category: "matches",
+        requirement: 25
+      }
+    ];
+    
+    await db.insert(achievements).values(sampleAchievements);
+  }
+  
+  const redemptionCodesCount = await db.select({ count: sql<number>`count(*)` }).from(redemptionCodes);
+  if (redemptionCodesCount[0].count === 0) {
+    // Sample redemption codes
+    const sampleCodes: InsertRedemptionCode[] = [
+      {
+        code: "WELCOME2023",
+        xpReward: 100,
+        description: "Welcome bonus for new players",
+        isActive: true,
+        expiresAt: new Date(2024, 11, 31)
+      },
+      {
+        code: "SUMMERSLAM",
+        xpReward: 250,
+        description: "Summer Tournament special code",
+        isActive: true,
+        expiresAt: new Date(2023, 8, 30)
+      }
+    ];
+    
+    await db.insert(redemptionCodes).values(sampleCodes);
+  }
+  
+  const tournamentsCount = await db.select({ count: sql<number>`count(*)` }).from(tournaments);
+  if (tournamentsCount[0].count === 0) {
+    // Sample tournament
+    const now = new Date();
+    const sampleTournament: InsertTournament = {
+      name: "Spring Championship 2023",
+      startDate: new Date(now.getFullYear(), now.getMonth() + 1, 15),
+      endDate: new Date(now.getFullYear(), now.getMonth() + 1, 16),
+      location: "Central Park Courts",
+      description: "Annual spring championship with singles and doubles categories",
+      imageUrl: "spring_championship.svg"
+    };
+    
+    await db.insert(tournaments).values(sampleTournament);
+  }
+}
+
+// Initialize the database with sample data
+initSampleData().catch(console.error);
+
+// Use database storage for the app
+export const storage = new DatabaseStorage();
