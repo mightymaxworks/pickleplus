@@ -8,7 +8,33 @@ import { ActivityCard } from "@/components/ActivityCard";
 import { TournamentCard } from "@/components/TournamentCard";
 import { AchievementBadge } from "@/components/AchievementBadge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Activity, Achievement, UserAchievementWithDetails, UserTournament } from "@/types";
+import { Activity, Achievement, Tournament } from "@/types";
+import { FoundingMemberBadge } from "@/components/ui/founding-member-badge";
+import { XpMultiplierIndicator } from "@/components/ui/xp-multiplier-indicator";
+
+// Define missing interfaces
+interface UserAchievementWithDetails {
+  achievement: Achievement;
+  userAchievement: {
+    id: number;
+    userId: number;
+    achievementId: number;
+    unlockedAt: Date;
+  };
+}
+
+interface UserTournament {
+  tournament: Tournament;
+  registration: {
+    id: number;
+    userId: number;
+    tournamentId: number;
+    registeredAt: Date;
+    checkedIn: boolean;
+    checkedInAt: Date | null;
+    placement: number | null;
+  };
+}
 
 export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();
@@ -68,8 +94,16 @@ export default function Dashboard() {
     <div className="dashboard-view pb-20 md:pb-6">
       {/* Welcome Section */}
       <div className="mb-6">
-        <h2 className="text-xl font-bold mb-2 font-product-sans">Welcome back, {user.displayName.split(' ')[0]}!</h2>
-        <p className="text-gray-500">Ready to elevate your pickleball game?</p>
+        <div className="flex items-center mb-2">
+          <h2 className="text-xl font-bold font-product-sans mr-2">Welcome back, {user.displayName.split(' ')[0]}!</h2>
+          {user.isFoundingMember && <FoundingMemberBadge size="sm" variant="default" showTooltip />}
+        </div>
+        <div className="flex items-center">
+          <p className="text-gray-500 mr-3">Ready to elevate your pickleball game?</p>
+          {user.isFoundingMember && user.xpMultiplier && (
+            <XpMultiplierIndicator multiplier={user.xpMultiplier} size="sm" showLabel showTooltip />
+          )}
+        </div>
       </div>
       
       {/* Stats Overview */}
@@ -219,7 +253,10 @@ export default function Dashboard() {
                   description: "Win a tournament",
                   xpReward: 500,
                   category: "tournament",
-                  requirement: 1
+                  difficulty: "hard",
+                  badgeImageUrl: null,
+                  criteria: "Win a tournament",
+                  createdAt: new Date()
                 }} 
                 unlocked={false}
               />
@@ -233,7 +270,10 @@ export default function Dashboard() {
                 description: "Win a tournament",
                 xpReward: 500,
                 category: "tournament",
-                requirement: 1
+                difficulty: "hard",
+                badgeImageUrl: null,
+                criteria: "Win a tournament",
+                createdAt: new Date()
               }} 
               unlocked={false}
             />

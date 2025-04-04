@@ -234,3 +234,29 @@
     padding-bottom: calc(56px + env(safe-area-inset-bottom, 0.5rem));
   }
 }
+
+/* Founding Member styling */
+.qr-gold-gradient {
+  background: radial-gradient(circle at center, rgba(251, 191, 36, 0.1) 0%, rgba(255, 255, 255, 0) 70%);
+}
+
+/* Animated gold effect for founding members */
+@keyframes goldShimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.gold-shimmer {
+  background: linear-gradient(90deg, #f59e0b, #d97706, #fbbf24, #f59e0b);
+  background-size: 300% 100%;
+  animation: goldShimmer 4s ease infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

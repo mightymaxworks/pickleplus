@@ -15,6 +15,8 @@ export interface User {
   totalTournaments: number;
   lastMatchDate: Date | null;
   createdAt: Date;
+  isFoundingMember?: boolean;
+  xpMultiplier?: number;
 }
 
 export interface Tournament {

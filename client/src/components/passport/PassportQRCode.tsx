@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Share2, Download } from 'lucide-react';
+import { Share2, Download, Crown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { QRCodeSVG } from 'qrcode.react';
 import { User } from '@/types';
+import { cn } from '@/lib/utils';
+import { FoundingMemberBadge } from '@/components/ui/founding-member-badge';
 
 interface PassportQRCodeProps {
   user: User;
@@ -128,23 +130,52 @@ export default function PassportQRCode({ user, showShareButton = true }: Passpor
   // Format the passport ID
   const passportId = user.passportId || `PKL-${user.id.toString().padStart(4, '0')}-${user.username.substring(0, 3).toUpperCase()}`;
   
+  // Check if the user is a founding member
+  const isFoundingMember = user.isFoundingMember === true;
+  
   return (
-    <Card className="overflow-hidden border-2 border-[#FF5722]/10">
+    <Card className={cn(
+      "overflow-hidden", 
+      isFoundingMember 
+        ? "border-2 border-amber-300 bg-gradient-to-b from-amber-50 to-white" 
+        : "border-2 border-[#FF5722]/10"
+    )}>
       <CardContent className="p-5">
         <div className="flex flex-col items-center">
-          <h3 className="text-lg font-bold mb-1">Pickle+ Passport</h3>
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="text-lg font-bold">Pickle+ Passport</h3>
+            {isFoundingMember && (
+              <FoundingMemberBadge size="sm" />
+            )}
+          </div>
+          
           <p className="text-sm text-muted-foreground mb-4">
             ID: {passportId}
           </p>
           
-          <div className="p-3 bg-white rounded-xl mb-4 shadow-sm">
-            <QRCodeSVG
-              id="passport-qr-code"
-              value={qrData}
-              size={200}
-              level="H"
-              includeMargin={true}
-            />
+          <div className={cn(
+            "p-3 bg-white rounded-xl mb-4 shadow-sm",
+            isFoundingMember && "border-2 border-amber-200"
+          )}>
+            <div className={cn(
+              "relative",
+              isFoundingMember && "qr-gold-gradient"
+            )}>
+              <QRCodeSVG
+                id="passport-qr-code"
+                value={qrData}
+                size={200}
+                level="H"
+                includeMargin={true}
+                bgColor={isFoundingMember ? "#FFFBEB" : "#FFFFFF"}
+                fgColor={isFoundingMember ? "#B45309" : "#000000"}
+              />
+              {isFoundingMember && (
+                <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+                  <Crown className="w-32 h-32 text-amber-300" />
+                </div>
+              )}
+            </div>
           </div>
           
           <div className="text-sm text-center text-muted-foreground mb-4">
@@ -154,7 +185,10 @@ export default function PassportQRCode({ user, showShareButton = true }: Passpor
           <div className="flex gap-3 w-full">
             <Button 
               variant="outline" 
-              className="flex-1"
+              className={cn(
+                "flex-1",
+                isFoundingMember && "border-amber-300 text-amber-700 hover:bg-amber-50"
+              )}
               onClick={handleDownloadQR}
               disabled={isDownloading}
             >
@@ -165,7 +199,12 @@ export default function PassportQRCode({ user, showShareButton = true }: Passpor
             {showShareButton && (
               <Button 
                 variant="default" 
-                className="flex-1 bg-[#FF5722]"
+                className={cn(
+                  "flex-1",
+                  isFoundingMember
+                    ? "bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600"
+                    : "bg-[#FF5722]"
+                )}
                 onClick={handleSharePassport}
               >
                 <Share2 className="mr-2 h-4 w-4" />
