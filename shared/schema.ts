@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, date } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -14,6 +14,8 @@ export const users = pgTable("users", {
   skillLevel: text("skill_level"),
   level: integer("level").default(1),
   xp: integer("xp").default(0),
+  rankingPoints: integer("ranking_points").default(0),
+  lastMatchDate: timestamp("last_match_date"),
   avatarInitials: text("avatar_initials").notNull(),
   totalMatches: integer("total_matches").default(0),
   matchesWon: integer("matches_won").default(0),
@@ -21,12 +23,8 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
-export const usersRelations = relations(users, ({ many }) => ({
-  tournamentRegistrations: many(tournamentRegistrations),
-  userAchievements: many(userAchievements),
-  activities: many(activities),
-  userRedemptions: many(userRedemptions)
-}));
+// We'll define the user relations after all tables are defined
+// to avoid reference errors
 
 // Tournament table schema
 export const tournaments = pgTable("tournaments", {
@@ -151,6 +149,71 @@ export const userRedemptionsRelations = relations(userRedemptions, ({ one }) => 
   })
 }));
 
+// Matches table schema
+export const matches = pgTable("matches", {
+  id: serial("id").primaryKey(),
+  playerOneId: integer("player_one_id").notNull().references(() => users.id),
+  playerTwoId: integer("player_two_id").notNull().references(() => users.id),
+  winnerId: integer("winner_id").notNull().references(() => users.id),
+  scorePlayerOne: text("score_player_one").notNull(),
+  scorePlayerTwo: text("score_player_two").notNull(),
+  pointsAwarded: integer("points_awarded").notNull(),
+  xpAwarded: integer("xp_awarded").notNull(),
+  matchType: text("match_type").notNull(), // friendly, tournament, league
+  tournamentId: integer("tournament_id").references(() => tournaments.id),
+  matchDate: timestamp("match_date").defaultNow(),
+  location: text("location"),
+  notes: text("notes")
+});
+
+export const matchesRelations = relations(matches, ({ one }) => ({
+  playerOne: one(users, {
+    fields: [matches.playerOneId],
+    references: [users.id],
+    relationName: "playerOne"
+  }),
+  playerTwo: one(users, {
+    fields: [matches.playerTwoId],
+    references: [users.id],
+    relationName: "playerTwo"
+  }),
+  winner: one(users, {
+    fields: [matches.winnerId],
+    references: [users.id]
+  }),
+  tournament: one(tournaments, {
+    fields: [matches.tournamentId],
+    references: [tournaments.id]
+  })
+}));
+
+// Ranking history table schema
+export const rankingHistory = pgTable("ranking_history", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  oldRanking: integer("old_ranking").notNull(),
+  newRanking: integer("new_ranking").notNull(),
+  reason: text("reason").notNull(), // match_win, tournament_placement, decay
+  matchId: integer("match_id").references(() => matches.id),
+  tournamentId: integer("tournament_id").references(() => tournaments.id),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const rankingHistoryRelations = relations(rankingHistory, ({ one }) => ({
+  user: one(users, {
+    fields: [rankingHistory.userId],
+    references: [users.id]
+  }),
+  match: one(matches, {
+    fields: [rankingHistory.matchId],
+    references: [matches.id]
+  }),
+  tournament: one(tournaments, {
+    fields: [rankingHistory.tournamentId],
+    references: [tournaments.id]
+  })
+}));
+
 // Insert schema definitions using drizzle-zod
 // Schema for validating user registration
 export const registerUserSchema = createInsertSchema(users)
@@ -196,6 +259,16 @@ export const insertUserRedemptionSchema = createInsertSchema(userRedemptions).om
   redeemedAt: true 
 });
 
+export const insertMatchSchema = createInsertSchema(matches).omit({
+  id: true,
+  matchDate: true
+});
+
+export const insertRankingHistorySchema = createInsertSchema(rankingHistory).omit({
+  id: true,
+  createdAt: true
+});
+
 export const redeemCodeSchema = z.object({
   code: z.string().min(1)
 });
@@ -230,5 +303,22 @@ export type RedemptionCode = typeof redemptionCodes.$inferSelect;
 export type InsertUserRedemption = z.infer<typeof insertUserRedemptionSchema>;
 export type UserRedemption = typeof userRedemptions.$inferSelect;
 
+export type InsertMatch = z.infer<typeof insertMatchSchema>;
+export type Match = typeof matches.$inferSelect;
+
+export type InsertRankingHistory = z.infer<typeof insertRankingHistorySchema>;
+export type RankingHistory = typeof rankingHistory.$inferSelect;
+
 export type RedeemCode = z.infer<typeof redeemCodeSchema>;
 export type Login = z.infer<typeof loginSchema>;
+
+// Now define user relations after all tables are defined
+export const usersRelations = relations(users, ({ many }) => ({
+  tournamentRegistrations: many(tournamentRegistrations),
+  userAchievements: many(userAchievements),
+  activities: many(activities),
+  userRedemptions: many(userRedemptions),
+  matchesAsPlayerOne: many(matches, { relationName: "playerOne" }),
+  matchesAsPlayerTwo: many(matches, { relationName: "playerTwo" }),
+  rankingHistory: many(rankingHistory)
+}));

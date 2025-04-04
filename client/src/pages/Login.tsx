@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
-import { PicklePlusLogo } from "@/components/icons/PicklePlusLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,9 +44,6 @@ export default function Login() {
 
   return (
     <div className="flex flex-col items-center">
-      <div className="mb-8">
-        <PicklePlusLogo className="h-12 w-auto" />
-      </div>
 
       <Card className="w-full max-w-md">
         <CardHeader>

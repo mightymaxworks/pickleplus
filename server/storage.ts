@@ -6,10 +6,12 @@ import {
   userAchievements, type UserAchievement, type InsertUserAchievement,
   activities, type Activity, type InsertActivity,
   redemptionCodes, type RedemptionCode, type InsertRedemptionCode,
-  userRedemptions, type UserRedemption, type InsertUserRedemption
+  userRedemptions, type UserRedemption, type InsertUserRedemption,
+  matches, type Match, type InsertMatch,
+  rankingHistory, type RankingHistory, type InsertRankingHistory
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, or, desc, sql } from "drizzle-orm";
 
 // Storage interface for all CRUD operations
 export interface IStorage {
@@ -48,8 +50,19 @@ export interface IStorage {
   redeemCode(userRedemption: InsertUserRedemption): Promise<UserRedemption>;
   hasUserRedeemedCode(userId: number, codeId: number): Promise<boolean>;
   
+  // Match operations
+  createMatch(match: InsertMatch): Promise<Match>;
+  getMatch(id: number): Promise<Match | undefined>;
+  getUserMatches(userId: number, limit?: number): Promise<Match[]>;
+  
+  // Ranking operations
+  updateUserRankingPoints(userId: number, pointsToAdd: number): Promise<User | undefined>;
+  recordRankingChange(rankingHistory: InsertRankingHistory): Promise<RankingHistory>;
+  getUserRankingHistory(userId: number, limit?: number): Promise<RankingHistory[]>;
+  
   // Leaderboard operations
   getLeaderboard(limit: number): Promise<User[]>;
+  getRankingLeaderboard(limit: number): Promise<User[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -61,6 +74,8 @@ export class MemStorage implements IStorage {
   private activities: Map<number, Activity>;
   private redemptionCodes: Map<number, RedemptionCode>;
   private userRedemptions: Map<number, UserRedemption>;
+  private matches: Map<number, Match>;
+  private rankingHistories: Map<number, RankingHistory>;
   
   private userId: number;
   private tournamentId: number;
@@ -70,6 +85,8 @@ export class MemStorage implements IStorage {
   private activityId: number;
   private redemptionCodeId: number;
   private userRedemptionId: number;
+  private matchId: number;
+  private rankingHistoryId: number;
 
   constructor() {
     this.users = new Map();
@@ -80,6 +97,8 @@ export class MemStorage implements IStorage {
     this.activities = new Map();
     this.redemptionCodes = new Map();
     this.userRedemptions = new Map();
+    this.matches = new Map();
+    this.rankingHistories = new Map();
     
     this.userId = 1;
     this.tournamentId = 1;
@@ -89,6 +108,8 @@ export class MemStorage implements IStorage {
     this.activityId = 1;
     this.redemptionCodeId = 1;
     this.userRedemptionId = 1;
+    this.matchId = 1;
+    this.rankingHistoryId = 1;
     
     // Initialize with sample achievements and redemption codes
     this.initSampleData();
@@ -204,6 +225,8 @@ export class MemStorage implements IStorage {
       skillLevel: insertUser.skillLevel || null,
       level: insertUser.level || 1,
       xp: insertUser.xp || 0,
+      rankingPoints: insertUser.rankingPoints || 0,
+      lastMatchDate: insertUser.lastMatchDate || null,
       totalMatches: insertUser.totalMatches || 0,
       matchesWon: insertUser.matchesWon || 0,
       totalTournaments: insertUser.totalTournaments || 0
@@ -413,10 +436,120 @@ export class MemStorage implements IStorage {
     );
   }
 
+  // Match operations
+  async createMatch(insertMatch: InsertMatch): Promise<Match> {
+    const id = this.matchId++;
+    const matchDate = new Date();
+    
+    const match: Match = {
+      ...insertMatch,
+      id,
+      location: insertMatch.location || null,
+      tournamentId: insertMatch.tournamentId || null,
+      matchDate,
+      notes: insertMatch.notes || null
+    };
+    
+    this.matches.set(id, match);
+    
+    // Update user stats
+    const player1 = await this.getUser(match.playerOneId);
+    const player2 = await this.getUser(match.playerTwoId);
+    
+    if (player1) {
+      const totalMatches = (player1.totalMatches || 0) + 1;
+      const matchesWon = (player1.matchesWon || 0) + (match.winnerId === player1.id ? 1 : 0);
+      await this.updateUser(player1.id, { 
+        totalMatches, 
+        matchesWon,
+        lastMatchDate: matchDate
+      });
+    }
+    
+    if (player2) {
+      const totalMatches = (player2.totalMatches || 0) + 1;
+      const matchesWon = (player2.matchesWon || 0) + (match.winnerId === player2.id ? 1 : 0);
+      await this.updateUser(player2.id, { 
+        totalMatches, 
+        matchesWon,
+        lastMatchDate: matchDate
+      });
+    }
+    
+    return match;
+  }
+
+  async getMatch(id: number): Promise<Match | undefined> {
+    return this.matches.get(id);
+  }
+
+  async getUserMatches(userId: number, limit: number = 10): Promise<Match[]> {
+    const matches = Array.from(this.matches.values())
+      .filter(match => match.playerOneId === userId || match.playerTwoId === userId)
+      .sort((a, b) => {
+        const aTime = a.matchDate ? a.matchDate.getTime() : 0;
+        const bTime = b.matchDate ? b.matchDate.getTime() : 0;
+        return bTime - aTime;
+      });
+    
+    return matches.slice(0, limit);
+  }
+  
+  // Ranking operations
+  async updateUserRankingPoints(userId: number, pointsToAdd: number): Promise<User | undefined> {
+    const user = await this.getUser(userId);
+    if (!user) return undefined;
+    
+    const currentPoints = user.rankingPoints || 0;
+    const newPoints = currentPoints + pointsToAdd;
+    
+    const updatedUser = { 
+      ...user, 
+      rankingPoints: newPoints
+    };
+    
+    this.users.set(userId, updatedUser);
+    return updatedUser;
+  }
+  
+  async recordRankingChange(insertRankingHistory: InsertRankingHistory): Promise<RankingHistory> {
+    const id = this.rankingHistoryId++;
+    const createdAt = new Date();
+    
+    const rankingHistory: RankingHistory = {
+      ...insertRankingHistory,
+      id,
+      createdAt,
+      tournamentId: insertRankingHistory.tournamentId || null,
+      matchId: insertRankingHistory.matchId || null
+    };
+    
+    this.rankingHistories.set(id, rankingHistory);
+    return rankingHistory;
+  }
+  
+  async getUserRankingHistory(userId: number, limit: number = 10): Promise<RankingHistory[]> {
+    const history = Array.from(this.rankingHistories.values())
+      .filter(history => history.userId === userId)
+      .sort((a, b) => {
+        const aTime = a.createdAt ? a.createdAt.getTime() : 0;
+        const bTime = b.createdAt ? b.createdAt.getTime() : 0;
+        return bTime - aTime;
+      });
+    
+    return history.slice(0, limit);
+  }
+
   // Leaderboard operations
   async getLeaderboard(limit: number = 10): Promise<User[]> {
     return Array.from(this.users.values())
       .sort((a, b) => (b.xp || 0) - (a.xp || 0))
+      .slice(0, limit);
+  }
+  
+  async getRankingLeaderboard(limit: number = 10): Promise<User[]> {
+    return Array.from(this.users.values())
+      .sort((a, b) => (b.rankingPoints || 0) - (a.rankingPoints || 0))
       .slice(0, limit);
   }
 }
@@ -620,6 +753,91 @@ export class DatabaseStorage implements IStorage {
     return result.count > 0;
   }
 
+  // Match operations
+  async createMatch(insertMatch: InsertMatch): Promise<Match> {
+    const [match] = await db.insert(matches).values(insertMatch).returning();
+    
+    // Update user stats for player 1
+    const player1 = await this.getUser(match.playerOneId);
+    if (player1) {
+      const totalMatches = (player1.totalMatches || 0) + 1;
+      const matchesWon = (player1.matchesWon || 0) + (match.winnerId === player1.id ? 1 : 0);
+      await this.updateUser(player1.id, { 
+        totalMatches, 
+        matchesWon,
+        lastMatchDate: new Date()
+      });
+    }
+    
+    // Update user stats for player 2
+    const player2 = await this.getUser(match.playerTwoId);
+    if (player2) {
+      const totalMatches = (player2.totalMatches || 0) + 1;
+      const matchesWon = (player2.matchesWon || 0) + (match.winnerId === player2.id ? 1 : 0);
+      await this.updateUser(player2.id, { 
+        totalMatches, 
+        matchesWon,
+        lastMatchDate: new Date()
+      });
+    }
+    
+    return match;
+  }
+
+  async getMatch(id: number): Promise<Match | undefined> {
+    const [match] = await db.select().from(matches).where(eq(matches.id, id));
+    return match;
+  }
+
+  async getUserMatches(userId: number, limit: number = 10): Promise<Match[]> {
+    const userMatches = await db.select()
+      .from(matches)
+      .where(
+        or(
+          eq(matches.playerOneId, userId),
+          eq(matches.playerTwoId, userId)
+        )
+      )
+      .orderBy(desc(matches.matchDate))
+      .limit(limit);
+    
+    return userMatches;
+  }
+  
+  // Ranking operations
+  async updateUserRankingPoints(userId: number, pointsToAdd: number): Promise<User | undefined> {
+    const user = await this.getUser(userId);
+    if (!user) return undefined;
+    
+    const currentPoints = user.rankingPoints || 0;
+    const newPoints = currentPoints + pointsToAdd;
+    
+    const [updatedUser] = await db.update(users)
+      .set({ rankingPoints: newPoints })
+      .where(eq(users.id, userId))
+      .returning();
+    
+    return updatedUser;
+  }
+  
+  async recordRankingChange(insertRankingHistory: InsertRankingHistory): Promise<RankingHistory> {
+    const [rankingHistoryRecord] = await db.insert(rankingHistory)
+      .values(insertRankingHistory)
+      .returning();
+    
+    return rankingHistoryRecord;
+  }
+  
+  async getUserRankingHistory(userId: number, limit: number = 10): Promise<RankingHistory[]> {
+    const history = await db.select()
+      .from(rankingHistory)
+      .where(eq(rankingHistory.userId, userId))
+      .orderBy(desc(rankingHistory.createdAt))
+      .limit(limit);
+    
+    return history;
+  }
+
   // Leaderboard operations
   async getLeaderboard(limit: number = 10): Promise<User[]> {
     const leaderboard = await db.select()
@@ -627,6 +845,14 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(users.xp))
       .limit(limit);
     return leaderboard;
+  }
+  
+  async getRankingLeaderboard(limit: number = 10): Promise<User[]> {
+    const rankingLeaderboard = await db.select()
+      .from(users)
+      .orderBy(desc(users.rankingPoints))
+      .limit(limit);
+    return rankingLeaderboard;
   }
 }
 
