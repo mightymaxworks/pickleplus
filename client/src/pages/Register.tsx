@@ -67,55 +67,57 @@ export default function Register() {
   };
 
   return (
-    <div className="flex flex-col items-center">
-      <div className="mb-10 flex flex-col items-center">
-        <PicklePlusTextLogo className="h-32 w-auto" />
+    <div className="flex flex-col items-center max-w-md w-full mx-auto">
+      <div className="mb-6 flex flex-col items-center">
+        <PicklePlusTextLogo className="h-24 w-auto" />
       </div>
 
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl">Create Account</CardTitle>
+      <Card className="w-full shadow-md">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl">Create Account</CardTitle>
           <CardDescription>
-            Join Pickle+ to track your pickleball journey
+            Join PICKLE+ to track your pickleball journey
           </CardDescription>
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)}>
-            <CardContent className="space-y-4">
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Pick a username" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <CardContent className="space-y-3 pb-4">
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel>Username</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Username" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="displayName"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel>Display Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Full name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               
-              <FormField
-                control={form.control}
-                name="displayName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Display Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Your full name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
                   name="location"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="space-y-1">
                       <FormLabel>Location</FormLabel>
                       <FormControl>
                         <Input placeholder="City, State" {...field} />
@@ -129,7 +131,7 @@ export default function Register() {
                   control={form.control}
                   name="playingSince"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="space-y-1">
                       <FormLabel>Playing Since</FormLabel>
                       <FormControl>
                         <Input placeholder="e.g. 2021" {...field} />
@@ -140,87 +142,91 @@ export default function Register() {
                 />
               </div>
               
-              <FormField
-                control={form.control}
-                name="skillLevel"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Skill Level</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="skillLevel"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel>Skill Level</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value || ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select level" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="2.0 Beginner">2.0 Beginner</SelectItem>
+                          <SelectItem value="2.5 Beginner+">2.5 Beginner+</SelectItem>
+                          <SelectItem value="3.0 Intermediate">3.0 Intermediate</SelectItem>
+                          <SelectItem value="3.5 Intermediate+">3.5 Intermediate+</SelectItem>
+                          <SelectItem value="4.0 Advanced">4.0 Advanced</SelectItem>
+                          <SelectItem value="4.5 Advanced+">4.5 Advanced+</SelectItem>
+                          <SelectItem value="5.0 Pro">5.0 Pro</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="avatarInitials"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel>Avatar Initials</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your skill level" />
-                        </SelectTrigger>
+                        <Input placeholder="e.g. JS" maxLength={2} {...field} />
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="2.0 Beginner">2.0 Beginner</SelectItem>
-                        <SelectItem value="2.5 Beginner+">2.5 Beginner+</SelectItem>
-                        <SelectItem value="3.0 Intermediate">3.0 Intermediate</SelectItem>
-                        <SelectItem value="3.5 Intermediate+">3.5 Intermediate+</SelectItem>
-                        <SelectItem value="4.0 Advanced">4.0 Advanced</SelectItem>
-                        <SelectItem value="4.5 Advanced+">4.5 Advanced+</SelectItem>
-                        <SelectItem value="5.0 Pro">5.0 Pro</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               
-              <FormField
-                control={form.control}
-                name="avatarInitials"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Avatar Initials</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. JS" maxLength={2} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Confirm Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="••••••••" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel>Confirm Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="••••••••" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </CardContent>
-            <CardFooter className="flex flex-col">
+            <CardFooter className="flex flex-col pt-0">
               <Button 
                 type="submit" 
-                className="w-full"
+                className="w-full bg-[#FF5722] hover:bg-[#E64A19]"
                 disabled={isRegistering}
               >
                 {isRegistering ? "Creating account..." : "Create Account"}
               </Button>
-              <p className="mt-4 text-sm text-center text-gray-500">
+              <p className="mt-3 text-sm text-center text-gray-500">
                 Already have an account?{" "}
                 <a
                   href="/login"
