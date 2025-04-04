@@ -96,14 +96,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     try {
-      // Validate the full registration data (including password confirmation)
-      const registrationData = registerUserSchema.parse(req.body);
+      console.log("Registration payload:", JSON.stringify(req.body));
       
-      // Check if username already exists
-      const existingUser = await storage.getUserByUsername(registrationData.username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Username already exists" });
-      }
+      // Validate the full registration data (including password confirmation)
+      const registrationData = await (async () => {
+        try {
+          const data = registerUserSchema.parse(req.body);
+          
+          // Check if username already exists
+          const existingUser = await storage.getUserByUsername(data.username);
+          if (existingUser) {
+            res.status(400).json({ message: "Username already exists" });
+            return null;
+          }
+          return data;
+        } catch (validationError) {
+          console.error("Validation error:", validationError);
+          throw validationError;
+        }
+      })();
+      
+      // If validation failed or user already exists, exit early
+      if (!registrationData) return;
 
       // Hash the password
       const hashedPassword = await bcrypt.hash(registrationData.password, 10);

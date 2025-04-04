@@ -110,9 +110,8 @@ export default function AuthPage() {
     try {
       const { confirmPassword, redemptionCode, ...userData } = values;
       
-      // Let the server generate both the passportId and avatarInitials
-      // Create a properly typed object for registration
-      await register({
+      // Log what's being sent to the server
+      const registrationData = {
         username: userData.username,
         email: userData.email,
         password: userData.password,
@@ -122,7 +121,13 @@ export default function AuthPage() {
         playingSince: userData.playingSince,
         skillLevel: userData.skillLevel,
         redemptionCode: redemptionCode || undefined
-      });
+      };
+      
+      console.log("Sending registration data:", JSON.stringify(registrationData));
+      
+      // Let the server generate both the passportId and avatarInitials
+      // Create a properly typed object for registration
+      await register(registrationData);
       
       toast({
         title: "Registration successful",
@@ -130,8 +135,17 @@ export default function AuthPage() {
       });
       
       setLocation("/dashboard");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Registration error:", error);
+      // Log more details if available
+      if (error && error.response) {
+        try {
+          const errorData = await error.response.json();
+          console.error("Error response:", errorData);
+        } catch (e) {
+          console.error("Could not parse error response");
+        }
+      }
       // Error toast is shown in the register function
     } finally {
       setIsRegistering(false);
