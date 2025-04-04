@@ -17,12 +17,12 @@ interface FeatureState {
   [key: string]: boolean;
 }
 
-// Default state - all specified features are locked
+// Default state - passport QR is enabled, other features are locked
 const DEFAULT_STATE: FeatureState = {
   [Features.TOURNAMENTS]: false,
   [Features.ACHIEVEMENTS]: false,
   [Features.LEADERBOARD]: false,
-  [Features.PASSPORT_QR]: false,
+  [Features.PASSPORT_QR]: true, // Passport QR is enabled immediately
   [Features.QUICK_MATCH]: false,
 };
 
