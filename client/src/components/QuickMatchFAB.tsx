@@ -21,11 +21,11 @@ export default function QuickMatchFAB() {
 
   return (
     <>
-      <div className={`fixed z-40 ${isMobile ? 'bottom-20 right-4' : 'bottom-8 right-8'}`}>
+      <div className={`fixed z-40 ${isMobile ? 'bottom-20 left-4' : 'bottom-8 left-8'}`}>
         <Button 
           onClick={() => setIsOpen(true)}
           size="lg"
-          className="rounded-full w-14 h-14 shadow-lg bg-[#FF5722] hover:bg-[#E64A19] focus:ring-[#FF5722]"
+          className="rounded-full w-14 h-14 shadow-lg bg-[#4CAF50] hover:bg-[#388E3C] focus:ring-[#4CAF50]"
         >
           <PlusCircle className="h-6 w-6" />
           <span className="sr-only">Record Match</span>
