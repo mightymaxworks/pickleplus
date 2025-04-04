@@ -408,6 +408,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Invalid or expired code" });
       }
       
+      // Check if the code has reached its maximum number of redemptions
+      const currentRedemptions = redemptionCode.currentRedemptions || 0;
+      if (redemptionCode.maxRedemptions && redemptionCode.maxRedemptions <= currentRedemptions) {
+        return res.status(400).json({ message: "This code has reached its maximum number of redemptions" });
+      }
+      
       // Check if user has already redeemed this code
       const hasRedeemed = await storage.hasUserRedeemedCode(userId, redemptionCode.id);
       
@@ -415,11 +421,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Code already redeemed" });
       }
       
+      // Check if this is a founding member code
+      const isFoundingMemberCode = redemptionCode.isFoundingMemberCode || false;
+      
+      // Update redemption code counter
+      await storage.incrementRedemptionCodeCounter(redemptionCode.id);
+      
       // Redeem the code
       await storage.redeemCode({
         userId,
         codeId: redemptionCode.id
       });
+      
+      // If it's a founding member code, update the user's founding member status
+      if (isFoundingMemberCode) {
+        await storage.updateUser(userId, {
+          isFoundingMember: true,
+          xpMultiplier: 110 // 1.1x multiplier (stored as percentage)
+        });
+      }
       
       // Add XP to user
       const updatedUser = await storage.updateUserXP(userId, redemptionCode.xpReward);
@@ -427,8 +447,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create an activity for this redemption
       await storage.createActivity({
         userId,
-        type: "code_redemption",
-        description: `Redeemed code: ${redemptionCode.description || code}`,
+        type: isFoundingMemberCode ? "founding_member" : "code_redemption",
+        description: isFoundingMemberCode 
+          ? "Became a Founding Member!" 
+          : `Redeemed code: ${redemptionCode.description || code}`,
         xpEarned: redemptionCode.xpReward,
         metadata: { code }
       });
@@ -437,9 +459,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { password, ...userWithoutPassword } = updatedUser!;
       
       res.json({
-        message: `Successfully redeemed code for ${redemptionCode.xpReward} XP`,
+        message: isFoundingMemberCode 
+          ? `Congratulations! You are now a Founding Member with a permanent 1.1x XP boost!` 
+          : `Successfully redeemed code for ${redemptionCode.xpReward} XP`,
         user: userWithoutPassword,
-        xpEarned: redemptionCode.xpReward
+        xpEarned: redemptionCode.xpReward,
+        isFoundingMember: isFoundingMemberCode
       });
     } catch (error) {
       if (error instanceof ZodError) {

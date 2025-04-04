@@ -51,6 +51,7 @@ export interface IStorage {
   createRedemptionCode(redemptionCode: InsertRedemptionCode): Promise<RedemptionCode>;
   redeemCode(userRedemption: InsertUserRedemption): Promise<UserRedemption>;
   hasUserRedeemedCode(userId: number, codeId: number): Promise<boolean>;
+  incrementRedemptionCodeCounter(codeId: number): Promise<RedemptionCode | undefined>;
   
   // Match operations
   createMatch(match: InsertMatch): Promise<Match>;
@@ -452,6 +453,17 @@ export class MemStorage implements IStorage {
       (ur) => ur.userId === userId && ur.codeId === codeId
     );
   }
+  
+  async incrementRedemptionCodeCounter(codeId: number): Promise<RedemptionCode | undefined> {
+    const code = this.redemptionCodes.get(codeId);
+    if (!code) return undefined;
+    
+    // Increment the current redemptions counter
+    const currentRedemptions = (code.currentRedemptions || 0) + 1;
+    const updatedCode = { ...code, currentRedemptions };
+    this.redemptionCodes.set(codeId, updatedCode);
+    return updatedCode;
+  }
 
   // Match operations
   async createMatch(insertMatch: InsertMatch): Promise<Match> {
@@ -789,6 +801,26 @@ export class DatabaseStorage implements IStorage {
         )
       );
     return result.count > 0;
+  }
+  
+  async incrementRedemptionCodeCounter(codeId: number): Promise<RedemptionCode | undefined> {
+    // Get current counter value
+    const [redemptionCode] = await db.select()
+      .from(redemptionCodes)
+      .where(eq(redemptionCodes.id, codeId));
+    
+    if (!redemptionCode) return undefined;
+    
+    // Increment the counter
+    const currentRedemptions = (redemptionCode.currentRedemptions || 0) + 1;
+    
+    // Update the code
+    const [updatedCode] = await db.update(redemptionCodes)
+      .set({ currentRedemptions })
+      .where(eq(redemptionCodes.id, codeId))
+      .returning();
+    
+    return updatedCode;
   }
 
   // Match operations

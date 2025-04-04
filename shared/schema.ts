@@ -23,6 +23,8 @@ export const users = pgTable("users", {
   totalMatches: integer("total_matches").default(0),
   matchesWon: integer("matches_won").default(0),
   totalTournaments: integer("total_tournaments").default(0),
+  isFoundingMember: boolean("is_founding_member").default(false),
+  xpMultiplier: integer("xp_multiplier").default(100), // Store as an integer representing percentage (100 = 1.0x, 110 = 1.1x)
   createdAt: timestamp("created_at").defaultNow()
 });
 
@@ -126,6 +128,9 @@ export const redemptionCodes = pgTable("redemption_codes", {
   xpReward: integer("xp_reward").notNull(),
   description: text("description"),
   isActive: boolean("is_active").default(true),
+  isFoundingMemberCode: boolean("is_founding_member_code").default(false),
+  maxRedemptions: integer("max_redemptions"), // Limit number of redemptions (40 for founding members)
+  currentRedemptions: integer("current_redemptions").default(0),
   expiresAt: timestamp("expires_at")
 });
 
