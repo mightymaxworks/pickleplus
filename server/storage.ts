@@ -764,16 +764,22 @@ export class DatabaseStorage implements IStorage {
 
   // Redemption code operations
   async getRedemptionCodeByCode(code: string): Promise<RedemptionCode | undefined> {
-    const now = new Date();
+    // First try to get the code regardless of expiration to ensure it exists
     const [redemptionCode] = await db.select()
       .from(redemptionCodes)
-      .where(
-        and(
-          eq(redemptionCodes.code, code),
-          eq(redemptionCodes.isActive, true),
-          sql`${redemptionCodes.expiresAt} IS NULL OR ${redemptionCodes.expiresAt} > ${now}`
-        )
-      );
+      .where(eq(redemptionCodes.code, code));
+
+    if (!redemptionCode) return undefined;
+    
+    // Then check if it's active and not expired
+    if (!redemptionCode.isActive) return undefined;
+    
+    // If there's an expiry date, check if it's in the future
+    if (redemptionCode.expiresAt) {
+      const now = new Date();
+      if (redemptionCode.expiresAt < now) return undefined;
+    }
+    
     return redemptionCode;
   }
 
