@@ -24,17 +24,17 @@ export function BottomNavigation() {
   if (!isMobile) return null;
 
   return (
-    <div className="bg-white pickle-shadow fixed bottom-0 left-0 right-0 flex justify-around items-center z-20">
+    <div className="bg-white pickle-shadow fixed bottom-0 left-0 right-0 flex justify-around items-center z-20 pb-safe">
       {navItems.map((item, index) => (
         <div
           key={index}
-          className={`py-3 px-5 flex flex-col items-center ${
+          className={`py-2 px-1 flex flex-col items-center justify-center w-1/5 ${
             location === item.path ? "text-[#FF5722]" : "text-gray-500"
           }`}
           onClick={() => setLocation(item.path)}
         >
-          <span className="material-icons">{item.icon}</span>
-          <span className="text-xs">{item.label}</span>
+          <span className="material-icons text-[22px]">{item.icon}</span>
+          <span className="text-[10px] mt-1 font-medium">{item.label}</span>
         </div>
       ))}
     </div>

@@ -31,7 +31,6 @@ export function Header() {
     <header className="bg-white pickle-shadow">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <div className="flex items-center cursor-pointer" onClick={() => setLocation("/")}>
-          <span className="material-icons text-[#FF5722] mr-2">sports_tennis</span>
           <h1 className="text-2xl font-bold font-product-sans text-[#FF5722]">
             Pickle<span className="text-[#2196F3]">+</span>
           </h1>

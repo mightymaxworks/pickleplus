@@ -126,3 +126,15 @@ h1, h2, h3, h4, h5, h6 {
   justify-content: center;
   font-weight: bold;
 }
+
+/* Bottom safe area for mobile devices */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0.5rem);
+}
+
+/* Fix for main content to not be hidden behind the bottom navigation */
+@media (max-width: 768px) {
+  main {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0.5rem));
+  }
+}
