@@ -11,6 +11,7 @@ import Register from "@/pages/Register";
 import { MainLayout } from "@/components/MainLayout";
 import { AuthLayout } from "@/components/AuthLayout";
 import { AuthProvider } from "@/hooks/useAuth";
+import QuickMatchFAB from "@/components/QuickMatchFAB";
 
 function App() {
   return (
@@ -60,6 +61,9 @@ function App() {
           <NotFound />
         </Route>
       </Switch>
+      
+      {/* Global Components */}
+      <QuickMatchFAB />
       <Toaster />
     </AuthProvider>
   );
