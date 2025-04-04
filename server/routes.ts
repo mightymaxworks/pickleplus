@@ -401,10 +401,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req.user as any).id;
       const { code } = redeemCodeSchema.parse(req.body);
       
+      console.log(`[redemption] Attempting to redeem code: ${code} for user ID: ${userId}`);
+      
       // Find the redemption code
       const redemptionCode = await storage.getRedemptionCodeByCode(code);
       
+      console.log(`[redemption] Code lookup result:`, redemptionCode);
+      
       if (!redemptionCode) {
+        console.log(`[redemption] Code not found: ${code}`);
         return res.status(404).json({ message: "Invalid or expired code" });
       }
       
