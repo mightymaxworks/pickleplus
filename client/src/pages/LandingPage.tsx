@@ -4,6 +4,9 @@ import { PicklePlusTextLogo } from "@/components/icons/PicklePlusTextLogo";
 import { PicklePlusLogo } from "@/components/icons/PicklePlusLogo";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, Award, Calendar, BarChart, ArrowRight, Users, Trophy, Zap } from "lucide-react";
+import { useKonamiCode } from "@/hooks/useKonamiCode";
+import { EasterEggModal } from "@/components/EasterEggModal";
+import { useState, useEffect } from "react";
 
 // Animation variants
 const fadeIn = {
@@ -68,6 +71,18 @@ const HowItWorksStep = ({ number, title, description }: {
 
 export default function LandingPage() {
   const [, navigate] = useLocation();
+  const [isEasterEggModalOpen, setIsEasterEggModalOpen] = useState(false);
+  
+  // Set up Konami code detection
+  const { konamiDetected, reset } = useKonamiCode();
+  
+  // Show Easter egg modal when Konami code is detected
+  useEffect(() => {
+    if (konamiDetected) {
+      setIsEasterEggModalOpen(true);
+      reset(); // Reset the Konami code detector
+    }
+  }, [konamiDetected, reset]);
 
   return (
     <div className="landing-page">
@@ -690,6 +705,12 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+      
+      {/* Easter Egg Modal */}
+      <EasterEggModal 
+        isOpen={isEasterEggModalOpen}
+        onClose={() => setIsEasterEggModalOpen(false)}
+      />
     </div>
   );
 }
