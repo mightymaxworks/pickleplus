@@ -49,7 +49,7 @@ export default function Login() {
         <Button 
           variant="ghost" 
           className="absolute left-0 top-0" 
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/welcome")}
         >
           ← Back to Home
         </Button>
