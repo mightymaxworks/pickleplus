@@ -92,7 +92,7 @@ export default function LandingPage() {
                 <Button 
                   size="lg" 
                   className="bg-white text-[#FF5722] hover:bg-white/90 w-full sm:w-auto"
-                  onClick={() => navigate("/register")}
+                  onClick={() => navigate("/auth")}
                 >
                   Get Started
                 </Button>
@@ -626,7 +626,7 @@ export default function LandingPage() {
               <Button 
                 size="lg" 
                 className="bg-white text-[#2196F3] hover:bg-white/90 w-full font-medium text-base sm:text-lg"
-                onClick={() => navigate("/register")}
+                onClick={() => navigate("/auth")}
               >
                 Create Free Account
               </Button>
@@ -634,7 +634,7 @@ export default function LandingPage() {
                 size="lg" 
                 variant="outline" 
                 className="border-white border-2 text-white hover:bg-white/10 w-full font-medium text-base sm:text-lg bg-black/20"
-                onClick={() => navigate("/login")}
+                onClick={() => navigate("/auth")}
               >
                 Sign In
               </Button>

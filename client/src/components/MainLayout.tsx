@@ -17,7 +17,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!isAuthenticated && !isLoading) {
-      navigate("/login");
+      navigate("/auth");
     }
   }, [isAuthenticated, isLoading, navigate]);
   

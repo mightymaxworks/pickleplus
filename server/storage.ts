@@ -270,8 +270,16 @@ export class MemStorage implements IStorage {
     const currentXP = user.xp || 0;
     const currentLevel = user.level || 1;
     
+    // Apply XP multiplier if the user is a founding member
+    let finalXpToAdd = xpToAdd;
+    if (user.isFoundingMember && user.xpMultiplier) {
+      // xpMultiplier is stored as a percentage (e.g., 110 for 1.1x)
+      finalXpToAdd = Math.floor(xpToAdd * (user.xpMultiplier / 100));
+      console.log(`[XP] User ${id} is a founding member with multiplier ${user.xpMultiplier}%. Adding ${finalXpToAdd}XP instead of ${xpToAdd}XP`);
+    }
+    
     // Calculate new XP and level
-    const newXP = currentXP + xpToAdd;
+    const newXP = currentXP + finalXpToAdd;
     
     // Simple level calculation: level up for every 1000 XP
     const xpPerLevel = 1000;
@@ -634,8 +642,21 @@ export class DatabaseStorage implements IStorage {
     if (!user) return undefined;
 
     const currentXP = user.xp || 0;
+    const currentLevel = user.level || 1;
+    
+    // Apply XP multiplier if the user is a founding member
+    let finalXpToAdd = xpToAdd;
+    if (user.isFoundingMember && user.xpMultiplier) {
+      // xpMultiplier is stored as a percentage (e.g., 110 for 1.1x)
+      finalXpToAdd = Math.floor(xpToAdd * (user.xpMultiplier / 100));
+      console.log(`[XP] User ${id} is a founding member with multiplier ${user.xpMultiplier}%. Adding ${finalXpToAdd}XP instead of ${xpToAdd}XP`);
+    }
+    
+    // Calculate new XP and level
+    const newXP = currentXP + finalXpToAdd;
+    
+    // Simple level calculation: level up for every 1000 XP
     const xpPerLevel = 1000;
-    const newXP = currentXP + xpToAdd;
     const newLevel = Math.floor(newXP / xpPerLevel) + 1;
 
     const [updatedUser] = await db.update(users)
