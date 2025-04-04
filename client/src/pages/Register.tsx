@@ -70,7 +70,14 @@ export default function Register() {
 
   return (
     <div className="flex flex-col items-center max-w-md w-full mx-auto">
-      <div className="mb-6 flex flex-col items-center">
+      <div className="mb-6 flex flex-col items-center relative w-full">
+        <Button 
+          variant="ghost" 
+          className="absolute left-0 top-0" 
+          onClick={() => navigate("/")}
+        >
+          ← Back to Home
+        </Button>
         <PicklePlusTextLogo className="h-24 w-auto" />
       </div>
 
