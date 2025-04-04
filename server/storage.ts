@@ -18,6 +18,7 @@ export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByIdentifier(identifier: string): Promise<User | undefined>;
   getUserByPassportId(passportId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, update: Partial<InsertUser>): Promise<User | undefined>;
@@ -212,6 +213,12 @@ export class MemStorage implements IStorage {
     );
   }
   
+  async getUserByIdentifier(identifier: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.username === identifier || user.email === identifier
+    );
+  }
+  
   async getUserByPassportId(passportId: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(
       (user) => user.passportId === passportId
@@ -227,6 +234,9 @@ export class MemStorage implements IStorage {
       ...insertUser,
       id,
       createdAt,
+      email: insertUser.email,
+      passportId: insertUser.passportId || null,
+      yearOfBirth: insertUser.yearOfBirth || null,
       location: insertUser.location || null,
       playingSince: insertUser.playingSince || null,
       skillLevel: insertUser.skillLevel || null,
@@ -454,7 +464,13 @@ export class MemStorage implements IStorage {
       location: insertMatch.location || null,
       tournamentId: insertMatch.tournamentId || null,
       matchDate,
-      notes: insertMatch.notes || null
+      notes: insertMatch.notes || null,
+      playerOnePartnerId: insertMatch.playerOnePartnerId || null,
+      playerTwoPartnerId: insertMatch.playerTwoPartnerId || null,
+      formatType: insertMatch.formatType || "standard",
+      scoringSystem: insertMatch.scoringSystem || "traditional",
+      pointsToWin: insertMatch.pointsToWin || 11,
+      gameScores: insertMatch.gameScores || null
     };
     
     this.matches.set(id, match);
@@ -570,6 +586,16 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+  
+  async getUserByIdentifier(identifier: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(
+      or(
+        eq(users.username, identifier),
+        eq(users.email, identifier)
+      )
+    );
     return user;
   }
   

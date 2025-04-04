@@ -41,15 +41,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Define passport strategies
   passport.use(
-    new LocalStrategy(async (username, password, done) => {
+    new LocalStrategy({
+      usernameField: 'identifier', // Use the 'identifier' field from the login request
+      passwordField: 'password'
+    }, async (identifier, password, done) => {
       try {
-        const user = await storage.getUserByUsername(username);
+        // Try to find user by either username or email
+        const user = await storage.getUserByIdentifier(identifier);
         if (!user) {
           return done(null, false, { message: "User not found" });
         }
 
-        // In a real app, use proper password hashing like bcrypt
-        // For this demo, we're comparing directly (not recommended in production)
+        // Verify password
         const passwordMatch = await bcrypt.compare(password, user.password);
         if (!passwordMatch) {
           return done(null, false, { message: "Incorrect password" });
@@ -108,19 +111,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate a unique passport ID
       const passportId = await generatePassportId();
       
+      // Generate avatar initials from display name (first letter of each word, up to 2)
+      const nameParts = registrationData.displayName.trim().split(/\s+/);
+      const avatarInitials = nameParts.length > 1 
+        ? (nameParts[0][0] + nameParts[1][0]).toUpperCase()
+        : (nameParts[0].length > 1 
+            ? (nameParts[0][0] + nameParts[0][1]).toUpperCase() 
+            : nameParts[0][0].toUpperCase());
+      
       // Create the user with hashed password, removing the confirmPassword field
       // Extract only the fields needed for the database and replace with hashed password
       const newUser = await storage.createUser({
         username: registrationData.username,
+        email: registrationData.email,
         password: hashedPassword,
         displayName: registrationData.displayName,
         passportId, // Add the passport ID
+        yearOfBirth: registrationData.yearOfBirth || null,
         location: registrationData.location || null,
         playingSince: registrationData.playingSince || null,
         skillLevel: registrationData.skillLevel || null,
         level: registrationData.level || 1,
         xp: registrationData.xp || 0,
-        avatarInitials: registrationData.avatarInitials,
+        avatarInitials: avatarInitials,
         totalMatches: registrationData.totalMatches || 0,
         matchesWon: registrationData.matchesWon || 0,
         totalTournaments: registrationData.totalTournaments || 0
@@ -340,8 +353,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         type: "tournament_check_in",
         description: `Checked in to tournament: ${tournament.name}`,
         xpEarned: 50, // Award some XP for checking in
-        relatedId: tournamentId,
-        relatedType: "tournament"
+        metadata: { tournamentId, tournamentName: tournament.name }
       });
       
       res.json(updatedRegistration);
@@ -491,6 +503,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = (req.user as any).id;
       
+      // Determine winner from scores before validation
+      let winnerId;
+      const playerOneScore = parseInt(req.body.scorePlayerOne);
+      const playerTwoScore = parseInt(req.body.scorePlayerTwo);
+      winnerId = playerOneScore > playerTwoScore ? req.body.playerOneId : req.body.playerTwoId;
+      
       // Validate match data against our schema
       const matchData = insertMatchSchema.parse({
         ...req.body,
@@ -502,7 +520,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         pointsToWin: req.body.pointsToWin || 11,
         matchType: "casual", // Always casual for this version
         notes: req.body.notes || null,
-        location: req.body.location || null
+        location: req.body.location || null,
+        pointsAwarded: 10, // Fixed points for casual matches
+        xpAwarded: 25, // Standard XP for playing a match
+        winnerId: winnerId // Set winner based on scores
       });
       
       // Ensure the current user is either player one or player one's partner
@@ -512,13 +533,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // If winnerId is not provided in the data, determine it from scores
-      if (!matchData.winnerId) {
-        // Single game or total games in best-of-3
-        const playerOneScore = parseInt(matchData.scorePlayerOne);
-        const playerTwoScore = parseInt(matchData.scorePlayerTwo);
-        matchData.winnerId = playerOneScore > playerTwoScore ? matchData.playerOneId : matchData.playerTwoId;
-      }
+      // Winner is already determined before validation
       
       const loserId = matchData.winnerId === matchData.playerOneId ? matchData.playerTwoId : matchData.playerOneId;
       

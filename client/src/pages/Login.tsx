@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { PicklePlusTextLogo } from "@/components/icons/PicklePlusTextLogo";
 
 const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
+  identifier: z.string().min(1, "Username or email is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
@@ -26,7 +26,7 @@ export default function Login() {
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
+      identifier: "",
       password: "",
     },
   });
@@ -34,7 +34,7 @@ export default function Login() {
   const handleSubmit = async (data: LoginFormData) => {
     setIsLoggingIn(true);
     try {
-      await login(data.username, data.password);
+      await login(data.identifier, data.password);
       navigate("/");
     } catch (error) {
       console.error("Login error:", error);
@@ -61,12 +61,12 @@ export default function Login() {
             <CardContent className="space-y-3 pb-4">
               <FormField
                 control={form.control}
-                name="username"
+                name="identifier"
                 render={({ field }) => (
                   <FormItem className="space-y-1">
-                    <FormLabel>Username</FormLabel>
+                    <FormLabel>Username or Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your username" {...field} />
+                      <Input placeholder="Enter your username or email" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

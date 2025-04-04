@@ -31,9 +31,11 @@ export default function Register() {
     resolver: zodResolver(registerSchema),
     defaultValues: {
       username: "",
+      email: "",
       password: "",
       confirmPassword: "",
       displayName: "",
+      yearOfBirth: undefined,
       location: "",
       playingSince: "",
       skillLevel: "",
@@ -105,6 +107,47 @@ export default function Register() {
                       <FormLabel>Display Name</FormLabel>
                       <FormControl>
                         <Input placeholder="Full name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="you@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="yearOfBirth"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel>Year of Birth</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="e.g. 1985" 
+                          min="1900" 
+                          max={new Date().getFullYear()} 
+                          {...field}
+                          value={field.value || ""}
+                          onChange={e => {
+                            const value = e.target.value ? parseInt(e.target.value) : undefined;
+                            field.onChange(value);
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

@@ -40,15 +40,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   // Login function
-  const login = async (username: string, password: string) => {
+  const login = async (identifier: string, password: string) => {
     try {
-      const userData = await authApi.login({ username, password });
+      const userData = await authApi.login({ identifier, password });
       setUser(userData);
       return userData;
     } catch (error) {
       toast({
         title: "Login failed",
-        description: "Invalid username or password",
+        description: "Invalid username/email or password",
         variant: "destructive",
       });
       throw error;

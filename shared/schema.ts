@@ -7,8 +7,10 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
   password: text("password").notNull(),
   displayName: text("display_name").notNull(),
+  yearOfBirth: integer("year_of_birth"),
   passportId: text("passport_id").unique(), // Unique passport ID in format PKL-XXXX-YYY
   location: text("location"),
   playingSince: text("playing_since"),
@@ -234,7 +236,7 @@ export const rankingHistoryRelations = relations(rankingHistory, ({ one }) => ({
 // Insert schema definitions using drizzle-zod
 // Schema for validating user registration
 export const registerUserSchema = createInsertSchema(users)
-  .omit({ id: true, createdAt: true })
+  .omit({ id: true, createdAt: true, avatarInitials: true, passportId: true })
   .extend({
     confirmPassword: z.string().min(6)
   })
@@ -291,7 +293,7 @@ export const redeemCodeSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  username: z.string().min(1),
+  identifier: z.string().min(1),
   password: z.string().min(6)
 });
 

@@ -126,3 +126,25 @@ export interface RankingHistory {
   tournamentId: number | null;
   createdAt: Date;
 }
+
+export interface AuthUser {
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (identifier: string, password: string) => Promise<User>;
+  register: (userData: RegisterFormData) => Promise<User>;
+  logout: () => Promise<void>;
+}
+
+export interface LoginFormData {
+  identifier: string;
+  password: string;
+}
+
+export interface RegisterFormData {
+  username: string;
+  email: string;
+  password: string;
+  displayName: string;
+  yearOfBirth: number | null;
+}
