@@ -3,11 +3,23 @@ interface PicklePlusLogoProps {
 }
 
 export function PicklePlusLogo({ className = "h-8 w-auto" }: PicklePlusLogoProps) {
+  // Calculate SVG dimensions based on className height
+  let svgSize = 32;
+  let textSize = "text-2xl";
+  
+  if (className.includes("h-32")) {
+    svgSize = 86;
+    textSize = "text-5xl";
+  } else if (className.includes("h-24")) {
+    svgSize = 64;
+    textSize = "text-4xl";
+  }
+  
   return (
     <div className={`flex items-center ${className}`}>
       <svg 
-        width="32" 
-        height="32" 
+        width={svgSize} 
+        height={svgSize} 
         viewBox="0 0 24 24"
         className="text-[#FF5722] mr-2"
         fill="currentColor"
@@ -22,7 +34,7 @@ export function PicklePlusLogo({ className = "h-8 w-auto" }: PicklePlusLogoProps
         c0-1.059,0.962-1.919,2.147-1.919c1.186,0,2.147,0.86,2.147,1.919
         C9.34,13.3,8.379,14.16,7.193,14.16z"/>
       </svg>
-      <h1 className="text-2xl font-bold font-product-sans text-[#FF5722]">
+      <h1 className={`${textSize} font-bold font-product-sans text-[#FF5722]`}>
         Pickle<span className="text-[#2196F3]">+</span>
       </h1>
     </div>

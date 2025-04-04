@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { PicklePlusLogo } from "@/components/icons/PicklePlusLogo";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -44,6 +45,9 @@ export default function Login() {
 
   return (
     <div className="flex flex-col items-center">
+      <div className="mb-10 flex flex-col items-center">
+        <PicklePlusLogo className="h-32 w-auto" />
+      </div>
 
       <Card className="w-full max-w-md">
         <CardHeader>
@@ -86,7 +90,7 @@ export default function Login() {
             <CardFooter className="flex flex-col">
               <Button 
                 type="submit" 
-                className="w-full bg-[#FF5722] hover:bg-[#E64A19]"
+                className="w-full"
                 disabled={isLoggingIn}
               >
                 {isLoggingIn ? "Logging in..." : "Login"}

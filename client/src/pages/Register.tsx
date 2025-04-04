@@ -68,8 +68,8 @@ export default function Register() {
 
   return (
     <div className="flex flex-col items-center">
-      <div className="mb-8">
-        <PicklePlusLogo className="h-12 w-auto" />
+      <div className="mb-10 flex flex-col items-center">
+        <PicklePlusLogo className="h-32 w-auto" />
       </div>
 
       <Card className="w-full max-w-md">
