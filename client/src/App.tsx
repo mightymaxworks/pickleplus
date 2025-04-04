@@ -8,6 +8,7 @@ import Leaderboard from "@/pages/Leaderboard";
 import Profile from "@/pages/Profile";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import LandingPage from "@/pages/LandingPage";
 import { MainLayout } from "@/components/MainLayout";
 import { AuthLayout } from "@/components/AuthLayout";
 import { AuthProvider } from "@/hooks/useAuth";
@@ -18,6 +19,11 @@ function App() {
     <AuthProvider>
       <div className="font-pairing-default">
       <Switch>
+        {/* Landing Page */}
+        <Route path="/welcome">
+          <LandingPage />
+        </Route>
+        
         {/* Auth Routes */}
         <Route path="/login">
           <AuthLayout>
