@@ -363,7 +363,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Leaderboard route
+  // Leaderboard routes
   app.get("/api/leaderboard", async (req: Request, res: Response) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
@@ -378,6 +378,129 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(leaderboardWithoutPasswords);
     } catch (error) {
       res.status(500).json({ message: "Error retrieving leaderboard" });
+    }
+  });
+
+  // Ranking leaderboard route (sorted by ranking points instead of XP)
+  app.get("/api/ranking-leaderboard", async (req: Request, res: Response) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      const leaderboard = await storage.getRankingLeaderboard(limit);
+      
+      // Remove passwords from the response
+      const leaderboardWithoutPasswords = leaderboard.map(user => {
+        const { password, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+      });
+      
+      res.json(leaderboardWithoutPasswords);
+    } catch (error) {
+      res.status(500).json({ message: "Error retrieving ranking leaderboard" });
+    }
+  });
+  
+  // Get user ranking history
+  app.get("/api/user/ranking-history", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      const rankingHistory = await storage.getUserRankingHistory(userId, limit);
+      res.json(rankingHistory);
+    } catch (error) {
+      res.status(500).json({ message: "Error retrieving ranking history" });
+    }
+  });
+  
+  // Record match result and update ranking points
+  app.post("/api/matches", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const { playerOneId, playerTwoId, playerOneScore, playerTwoScore, location, matchType } = req.body;
+      
+      if (!playerOneId || !playerTwoId || playerOneScore === undefined || playerTwoScore === undefined) {
+        return res.status(400).json({ message: "Missing required match information" });
+      }
+      
+      // Determine winner and loser
+      const playerOneWon = playerOneScore > playerTwoScore;
+      const winnerId = playerOneWon ? playerOneId : playerTwoId;
+      const loserId = playerOneWon ? playerTwoId : playerOneId;
+      
+      // Create the match record
+      const match = await storage.createMatch({
+        playerOneId,
+        playerTwoId,
+        winnerId,
+        scorePlayerOne: playerOneScore.toString(),
+        scorePlayerTwo: playerTwoScore.toString(),
+        pointsAwarded: 0, // Will be set based on match type
+        xpAwarded: 25, // Standard XP for playing a match
+        matchType: matchType || "casual",
+        location: location || null
+        // matchDate will be set to default now() by the database
+      });
+      
+      // Award points based on match type
+      let pointsForWinner = 0;
+      
+      switch (matchType) {
+        case "tournament":
+          pointsForWinner = 20;
+          break;
+        case "league":
+          pointsForWinner = 15;
+          break;
+        case "casual":
+        default:
+          pointsForWinner = 10;
+          break;
+      }
+      
+      // Update winner's ranking points and create ranking history
+      const updatedWinner = await storage.updateUserRankingPoints(winnerId, pointsForWinner);
+      
+      // Get the old and new ranking
+      const oldRanking = (updatedWinner?.rankingPoints || 0) - pointsForWinner;
+      const newRanking = updatedWinner?.rankingPoints || 0;
+      
+      await storage.recordRankingChange({
+        userId: winnerId,
+        oldRanking,
+        newRanking,
+        reason: `Won ${matchType || "casual"} match against player #${loserId}`,
+        matchId: match.id
+      });
+      
+      // Update match counts for both players
+      if (playerOneId === userId || playerTwoId === userId) {
+        const isWinner = userId === winnerId;
+        
+        await storage.updateUser(userId, {
+          totalMatches: (req.user as any).totalMatches + 1,
+          matchesWon: isWinner ? (req.user as any).matchesWon + 1 : (req.user as any).matchesWon
+        });
+        
+        // Create activity for the user recording the match
+        await storage.createActivity({
+          userId,
+          type: "match_played",
+          description: isWinner ? "Won a match" : "Played a match",
+          xpEarned: 25, // Award XP for playing a match regardless of outcome
+          metadata: { matchId: match.id }
+        });
+        
+        // Update user XP
+        await storage.updateUserXP(userId, 25);
+      }
+      
+      res.status(201).json({
+        match,
+        pointsAwarded: pointsForWinner,
+        xpAwarded: 25
+      });
+    } catch (error) {
+      console.error("Error recording match:", error);
+      res.status(500).json({ message: "Error recording match" });
     }
   });
 

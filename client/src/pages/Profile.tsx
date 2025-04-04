@@ -1,13 +1,18 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
-import { userApi } from "@/lib/apiClient";
-import { Card, CardContent } from "@/components/ui/card";
+import { userApi, leaderboardApi } from "@/lib/apiClient";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { QRCodeDisplay } from "@/components/QRCodeDisplay";
 import { CodeRedemptionForm } from "@/components/CodeRedemptionForm";
-import type { Activity } from "@/types";
+import { MatchRecordingForm } from "@/components/MatchRecordingForm";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { type Activity } from "@/types";
+import { PlusCircle, Award, TrendingUp, ArrowUp, ArrowDown } from "lucide-react";
 
 export default function Profile() {
   const { user, isAuthenticated } = useAuth();
@@ -20,12 +25,23 @@ export default function Profile() {
     }
   }, [isAuthenticated, user, setLocation]);
   
+  const [matchDialogOpen, setMatchDialogOpen] = useState(false);
+  
   // Fetch user activities for statistics
   const { 
     data: activities,
     isLoading: activitiesLoading
   } = useQuery<Activity[]>({
     queryKey: ["/api/user/activities"],
+    enabled: isAuthenticated,
+  });
+  
+  // Fetch user ranking history
+  const {
+    data: rankingHistory = [],
+    isLoading: rankingHistoryLoading
+  } = useQuery<any[]>({
+    queryKey: ["/api/user/ranking-history"],
     enabled: isAuthenticated,
   });
   
@@ -96,89 +112,211 @@ export default function Profile() {
         </CardContent>
       </Card>
       
-      {/* Statistics Section */}
-      <Card className="pickle-shadow">
+      {/* Match Recording Button */}
+      <div className="flex justify-end mb-6">
+        <Dialog open={matchDialogOpen} onOpenChange={setMatchDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-[#FF5722] flex items-center gap-2">
+              <PlusCircle size={16} /> Record Match
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Record Match Results</DialogTitle>
+              <DialogDescription>
+                Log your match results to earn XP and ranking points.
+              </DialogDescription>
+            </DialogHeader>
+            <MatchRecordingForm onSuccess={() => setMatchDialogOpen(false)} />
+          </DialogContent>
+        </Dialog>
+      </div>
+      
+      {/* Ranking Card */}
+      <Card className="mb-6 pickle-shadow">
         <CardContent className="p-6">
-          <h3 className="font-bold mb-3 font-product-sans">My Statistics</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            {/* Win/Loss Record */}
-            <div>
-              <h4 className="text-sm font-medium mb-2">Win/Loss Record</h4>
-              {activitiesLoading ? (
-                <Skeleton className="h-6 w-full" />
-              ) : (
-                <div className="flex">
-                  <div 
-                    className="flex-grow h-6 bg-[#4CAF50] rounded-l-full relative flex items-center pl-3"
-                    style={{ width: `${winPercentage}%` }}
-                  >
-                    <span className="text-xs text-white font-medium z-10">
-                      {user.matchesWon} Wins
-                    </span>
-                  </div>
-                  <div 
-                    className="h-6 bg-[#FF5722] rounded-r-full relative flex items-center justify-end pr-3"
-                    style={{ width: `${100 - winPercentage}%` }}
-                  >
-                    <span className="text-xs text-white font-medium z-10">
-                      {user.totalMatches - user.matchesWon} Losses
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            {/* Tournament Performance */}
-            <div>
-              <h4 className="text-sm font-medium mb-2">Tournament Performance</h4>
-              {activitiesLoading ? (
-                <Skeleton className="h-6 w-full" />
-              ) : (
-                <div className="flex h-6">
-                  <div className="w-1/5 h-full bg-[#2196F3] rounded-l-sm flex items-center justify-center">
-                    <span className="text-xs text-white">1st</span>
-                  </div>
-                  <div className="w-2/5 h-full bg-[#2196F3] opacity-80 flex items-center justify-center">
-                    <span className="text-xs text-white">2nd</span>
-                  </div>
-                  <div className="w-1/5 h-full bg-[#2196F3] opacity-60 flex items-center justify-center">
-                    <span className="text-xs text-white">3rd</span>
-                  </div>
-                  <div className="w-1/5 h-full bg-[#2196F3] opacity-40 rounded-r-sm flex items-center justify-center">
-                    <span className="text-xs text-white">Other</span>
-                  </div>
-                </div>
-              )}
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-bold font-product-sans">Ranking Status</h3>
+            <div className="flex items-center bg-[#FF5722] bg-opacity-10 text-[#FF5722] px-3 py-1 rounded-full">
+              <TrendingUp size={16} className="mr-1" /> 
+              <span className="font-bold">{user.rankingPoints || 0}</span>
+              <span className="text-xs ml-1">pts</span>
             </div>
           </div>
           
-          {/* XP Earned by Activity */}
-          <div>
-            <h4 className="text-sm font-medium mb-2">XP Earned by Activity</h4>
-            {activitiesLoading ? (
-              <div className="grid grid-cols-3 gap-2">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-20 w-full" />
+          <div className="border-t border-gray-100 pt-4">
+            <h4 className="text-sm font-medium mb-2 flex items-center">
+              <Award className="mr-1 h-4 w-4" /> Recent Ranking Changes
+            </h4>
+            
+            {rankingHistoryLoading ? (
+              <div className="space-y-2">
+                {[1, 2, 3].map(i => (
+                  <Skeleton key={i} className="h-12 w-full" />
                 ))}
               </div>
+            ) : rankingHistory && rankingHistory.length > 0 ? (
+              <div className="space-y-2">
+                {rankingHistory.slice(0, 5).map((item: any, index: number) => {
+                  const pointChange = item.newRanking - item.oldRanking;
+                  const isPositive = pointChange > 0;
+                  
+                  return (
+                    <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100">
+                      <div>
+                        <div className="text-sm font-medium">{item.reason}</div>
+                        <div className="text-xs text-gray-500">
+                          {new Date(item.createdAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <div className={`flex items-center ${isPositive ? 'text-[#4CAF50]' : 'text-[#FF5722]'}`}>
+                        {isPositive ? (
+                          <ArrowUp size={16} className="mr-1" />
+                        ) : (
+                          <ArrowDown size={16} className="mr-1" />
+                        )}
+                        <span className="font-bold">{isPositive ? '+' : ''}{pointChange}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             ) : (
-              <div className="grid grid-cols-3 gap-2">
-                <div className="bg-[#F5F5F5] rounded-lg p-3 text-center">
-                  <div className="text-[#FF5722] text-xl font-bold mb-1">{matchXP}</div>
-                  <div className="text-xs text-gray-500">Matches</div>
-                </div>
-                <div className="bg-[#F5F5F5] rounded-lg p-3 text-center">
-                  <div className="text-[#2196F3] text-xl font-bold mb-1">{tournamentXP}</div>
-                  <div className="text-xs text-gray-500">Tournaments</div>
-                </div>
-                <div className="bg-[#F5F5F5] rounded-lg p-3 text-center">
-                  <div className="text-[#4CAF50] text-xl font-bold mb-1">{achievementXP}</div>
-                  <div className="text-xs text-gray-500">Achievements</div>
-                </div>
+              <div className="text-center py-6 text-gray-400">
+                <TrendingUp className="mx-auto h-8 w-8 mb-2 opacity-40" />
+                <p>No ranking history yet</p>
+                <p className="text-xs">Play matches to earn ranking points</p>
               </div>
             )}
           </div>
+        </CardContent>
+      </Card>
+      
+      {/* Statistics Section */}
+      <Card className="mb-6 pickle-shadow">
+        <CardContent className="p-6">
+          <Tabs defaultValue="stats">
+            <TabsList className="grid grid-cols-2 mb-4">
+              <TabsTrigger value="stats">Statistics</TabsTrigger>
+              <TabsTrigger value="activity">Recent Activity</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="stats">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                {/* Win/Loss Record */}
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Win/Loss Record</h4>
+                  {activitiesLoading ? (
+                    <Skeleton className="h-6 w-full" />
+                  ) : (
+                    <div className="flex">
+                      <div 
+                        className="flex-grow h-6 bg-[#4CAF50] rounded-l-full relative flex items-center pl-3"
+                        style={{ width: `${winPercentage}%` }}
+                      >
+                        <span className="text-xs text-white font-medium z-10">
+                          {user.matchesWon} Wins
+                        </span>
+                      </div>
+                      <div 
+                        className="h-6 bg-[#FF5722] rounded-r-full relative flex items-center justify-end pr-3"
+                        style={{ width: `${100 - winPercentage}%` }}
+                      >
+                        <span className="text-xs text-white font-medium z-10">
+                          {user.totalMatches - user.matchesWon} Losses
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Tournament Performance */}
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Tournament Performance</h4>
+                  {activitiesLoading ? (
+                    <Skeleton className="h-6 w-full" />
+                  ) : (
+                    <div className="flex h-6">
+                      <div className="w-1/5 h-full bg-[#2196F3] rounded-l-sm flex items-center justify-center">
+                        <span className="text-xs text-white">1st</span>
+                      </div>
+                      <div className="w-2/5 h-full bg-[#2196F3] opacity-80 flex items-center justify-center">
+                        <span className="text-xs text-white">2nd</span>
+                      </div>
+                      <div className="w-1/5 h-full bg-[#2196F3] opacity-60 flex items-center justify-center">
+                        <span className="text-xs text-white">3rd</span>
+                      </div>
+                      <div className="w-1/5 h-full bg-[#2196F3] opacity-40 rounded-r-sm flex items-center justify-center">
+                        <span className="text-xs text-white">Other</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* XP Earned by Activity */}
+              <div>
+                <h4 className="text-sm font-medium mb-2">XP Earned by Activity</h4>
+                {activitiesLoading ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-20 w-full" />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-[#F5F5F5] rounded-lg p-3 text-center">
+                      <div className="text-[#FF5722] text-xl font-bold mb-1">{matchXP}</div>
+                      <div className="text-xs text-gray-500">Matches</div>
+                    </div>
+                    <div className="bg-[#F5F5F5] rounded-lg p-3 text-center">
+                      <div className="text-[#2196F3] text-xl font-bold mb-1">{tournamentXP}</div>
+                      <div className="text-xs text-gray-500">Tournaments</div>
+                    </div>
+                    <div className="bg-[#F5F5F5] rounded-lg p-3 text-center">
+                      <div className="text-[#4CAF50] text-xl font-bold mb-1">{achievementXP}</div>
+                      <div className="text-xs text-gray-500">Achievements</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="activity">
+              <div className="space-y-2">
+                {activitiesLoading ? (
+                  Array(5).fill(0).map((_, i) => (
+                    <Skeleton key={i} className="h-16 w-full" />
+                  ))
+                ) : activities && activities.length > 0 ? (
+                  activities.slice(0, 10).map((activity, index) => (
+                    <div key={index} className="flex items-start border-b border-gray-100 pb-3 last:border-0">
+                      <div className="p-2 rounded-full bg-[#F5F5F5] mr-3">
+                        {activity.type === 'match_played' ? (
+                          <TrendingUp className="h-4 w-4 text-[#FF5722]" />
+                        ) : activity.type === 'tournament' ? (
+                          <Award className="h-4 w-4 text-[#2196F3]" />
+                        ) : (
+                          <Award className="h-4 w-4 text-[#4CAF50]" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-sm font-medium">{activity.description}</div>
+                        <div className="text-xs text-gray-500 flex justify-between">
+                          <span>{new Date(activity.createdAt).toLocaleDateString()}</span>
+                          <span className="text-[#4CAF50]">+{activity.xpEarned} XP</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-6 text-gray-400">
+                    <p>No recent activity</p>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>

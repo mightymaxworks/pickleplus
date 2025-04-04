@@ -86,11 +86,26 @@ export const achievementApi = {
   }
 };
 
-// Leaderboard endpoint
+// Leaderboard endpoints
 export const leaderboardApi = {
+  // Get XP-based leaderboard
   getLeaderboard: async (limit?: number): Promise<User[]> => {
     const queryParam = limit ? `?limit=${limit}` : '';
     const res = await apiRequest("GET", `${API_BASE}/leaderboard${queryParam}`);
+    return res.json();
+  },
+  
+  // Get ranking points-based leaderboard
+  getRankingLeaderboard: async (limit?: number): Promise<User[]> => {
+    const queryParam = limit ? `?limit=${limit}` : '';
+    const res = await apiRequest("GET", `${API_BASE}/ranking-leaderboard${queryParam}`);
+    return res.json();
+  },
+  
+  // Get user's ranking history
+  getUserRankingHistory: async (limit?: number): Promise<any[]> => {
+    const queryParam = limit ? `?limit=${limit}` : '';
+    const res = await apiRequest("GET", `${API_BASE}/user/ranking-history${queryParam}`);
     return res.json();
   }
 };

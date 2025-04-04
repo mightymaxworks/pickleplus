@@ -7,6 +7,7 @@ export interface User {
   skillLevel?: string;
   level: number;
   xp: number;
+  rankingPoints?: number;
   avatarInitials: string;
   totalMatches: number;
   matchesWon: number;
