@@ -153,7 +153,6 @@ export interface RegisterFormData {
   playingSince?: string;
   skillLevel?: string;
   avatarInitials?: string;
-  passportId?: string;
   redemptionCode?: string;
   confirmPassword?: string; // Used in form validation, not sent to server
 }

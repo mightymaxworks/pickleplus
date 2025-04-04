@@ -116,10 +116,7 @@ export default function AuthPage() {
         ? (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase()
         : values.displayName.slice(0, 2).toUpperCase();
       
-      // Generate passportId in PKL-XXXX-YYY format
-      const randomChars = () => Math.random().toString(36).substring(2, 7).toUpperCase();
-      const passportId = `PKL-${randomChars().substring(0, 4)}-${randomChars().substring(0, 3)}`;
-
+      // Let the server generate the passportId
       // Create a properly typed object for registration
       await register({
         username: userData.username,
@@ -131,7 +128,6 @@ export default function AuthPage() {
         playingSince: userData.playingSince,
         skillLevel: userData.skillLevel,
         avatarInitials: avatarInitials,
-        passportId: passportId,
         redemptionCode: redemptionCode || undefined
       });
       
