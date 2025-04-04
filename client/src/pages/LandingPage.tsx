@@ -99,7 +99,7 @@ export default function LandingPage() {
                 <Button 
                   size="lg" 
                   variant="outline" 
-                  className="border-white text-white hover:bg-white/10 w-full sm:w-auto"
+                  className="border-white border-2 text-white hover:bg-white/10 hover:border-white w-full sm:w-auto bg-black/20"
                   onClick={() => {
                     document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
                   }}
@@ -114,42 +114,78 @@ export default function LandingPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <div className="relative w-full max-w-sm sm:max-w-md bg-white p-6 sm:p-8 rounded-xl shadow-xl">
-                <div className="absolute -top-8 sm:-top-10 left-1/2 transform -translate-x-1/2">
-                  <PicklePlusLogo className="h-16 sm:h-20" />
-                </div>
-                <div className="pt-10 sm:pt-12 pb-2 sm:pb-4">
-                  <div className="bg-gray-100 rounded-lg p-3 sm:p-4 mb-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <div className="font-bold">Level 5</div>
-                      <div className="text-[#FF5722]">520/1000 XP</div>
-                    </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div className="bg-[#FF5722] h-full" style={{ width: '52%' }}></div>
-                    </div>
+              <div className="relative w-full max-w-sm sm:max-w-md bg-white rounded-xl shadow-xl overflow-hidden">
+                {/* Header with logo */}
+                <div className="bg-gradient-to-r from-[#FF5722] to-[#FF9800] pt-3 pb-5 px-5 text-white">
+                  <div className="flex justify-between items-center">
+                    <div className="font-bold text-lg">Player Passport</div>
+                    <PicklePlusLogo className="h-8 w-auto" />
                   </div>
-                  <div className="flex gap-2 sm:gap-3 mb-4">
-                    <div className="bg-[#2196F3]/10 rounded-lg p-2 sm:p-3 flex-1 text-center">
-                      <div className="text-xl sm:text-2xl font-bold text-[#2196F3]">24</div>
-                      <div className="text-xs sm:text-sm text-gray-600">Matches</div>
-                    </div>
-                    <div className="bg-[#FF5722]/10 rounded-lg p-2 sm:p-3 flex-1 text-center">
-                      <div className="text-xl sm:text-2xl font-bold text-[#FF5722]">8</div>
-                      <div className="text-xs sm:text-sm text-gray-600">Achievements</div>
-                    </div>
-                    <div className="bg-[#4CAF50]/10 rounded-lg p-2 sm:p-3 flex-1 text-center">
-                      <div className="text-xl sm:text-2xl font-bold text-[#4CAF50]">3</div>
-                      <div className="text-xs sm:text-sm text-gray-600">Tournaments</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center mb-2">
-                    <div className="h-8 w-8 rounded-full bg-gradient-to-r from-[#FF5722] to-[#2196F3] mr-3 flex items-center justify-center text-white font-bold">
-                      JS
+                  
+                  {/* Player info */}
+                  <div className="flex items-center mt-2">
+                    <div className="h-14 w-14 rounded-full bg-white p-0.5 mr-3">
+                      <div className="h-full w-full rounded-full bg-gradient-to-r from-[#2196F3] to-[#03A9F4] flex items-center justify-center text-white font-bold text-xl">
+                        JS
+                      </div>
                     </div>
                     <div>
-                      <div className="font-bold">John Smith</div>
-                      <div className="text-sm text-gray-500">3.5 Intermediate+</div>
+                      <div className="font-bold text-xl">John Smith</div>
+                      <div className="flex items-center text-sm text-white/80 mt-0.5">
+                        <div className="font-medium bg-white/20 rounded-full px-2 py-0.5">3.5 Intermediate+</div>
+                      </div>
                     </div>
+                  </div>
+                </div>
+                
+                {/* Stats section */}
+                <div className="p-4 sm:p-6">
+                  {/* XP Progress */}
+                  <div className="bg-gray-50 rounded-lg p-3 mb-4 border border-gray-100">
+                    <div className="flex justify-between items-center mb-1">
+                      <div className="font-bold text-gray-700">Level 5</div>
+                      <div className="text-[#FF5722] font-medium text-sm">520/1000 XP</div>
+                    </div>
+                    <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="bg-[#FF5722] h-full rounded-full" style={{ width: '52%' }}></div>
+                    </div>
+                  </div>
+                  
+                  {/* Key stats in a grid */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="bg-[#2196F3]/10 border border-[#2196F3]/20 rounded-lg p-3 text-center">
+                      <div className="text-[#2196F3] font-bold text-xl mb-0.5">1,248</div>
+                      <div className="text-xs text-gray-600">Ranking Points</div>
+                    </div>
+                    <div className="bg-[#FF9800]/10 border border-[#FF9800]/20 rounded-lg p-3 text-center">
+                      <div className="text-[#FF9800] font-bold text-xl mb-0.5">24</div>
+                      <div className="text-xs text-gray-600">Matches Played</div>
+                    </div>
+                  </div>
+                  
+                  {/* Additional stats */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-[#FF5722]/10 border border-[#FF5722]/20 rounded-lg p-2 text-center">
+                      <div className="text-[#FF5722] font-bold text-lg">8</div>
+                      <div className="text-xs text-gray-600">Achievements</div>
+                    </div>
+                    <div className="bg-[#4CAF50]/10 border border-[#4CAF50]/20 rounded-lg p-2 text-center">
+                      <div className="text-[#4CAF50] font-bold text-lg">3</div>
+                      <div className="text-xs text-gray-600">Tournaments</div>
+                    </div>
+                    <div className="bg-[#673AB7]/10 border border-[#673AB7]/20 rounded-lg p-2 text-center">
+                      <div className="text-[#673AB7] font-bold text-lg">7</div>
+                      <div className="text-xs text-gray-600">Ranking</div>
+                    </div>
+                  </div>
+                  
+                  {/* Activity badge - latest achievement */}
+                  <div className="mt-4 flex items-center gap-2 bg-gradient-to-r from-[#2196F3]/5 to-[#03A9F4]/5 p-2 rounded-lg border border-[#2196F3]/10">
+                    <div className="bg-[#2196F3] rounded-full p-1 text-white">
+                      <Trophy size={16} />
+                    </div>
+                    <div className="text-xs text-gray-700">Won mixed doubles tournament at Willow Park</div>
+                    <div className="text-[10px] text-[#2196F3] ml-auto font-medium">+100 RP</div>
                   </div>
                 </div>
               </div>
@@ -597,7 +633,7 @@ export default function LandingPage() {
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="border-white border-2 text-white hover:bg-white/10 w-full font-medium text-base sm:text-lg"
+                className="border-white border-2 text-white hover:bg-white/10 w-full font-medium text-base sm:text-lg bg-black/20"
                 onClick={() => navigate("/login")}
               >
                 Sign In
