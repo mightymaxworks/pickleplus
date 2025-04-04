@@ -12,6 +12,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { RegisterFormData } from "@/types";
 // Fix import path
 import pickleLogoPath from "../assets/pickle-logo.png";
 
@@ -30,6 +31,9 @@ const registerSchema = z.object({
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
   confirmPassword: z.string(),
   yearOfBirth: z.number().optional().nullable(),
+  location: z.string().optional(),
+  playingSince: z.string().optional(),
+  skillLevel: z.string().optional(),
   redemptionCode: z.string().optional(),
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords do not match",
@@ -73,6 +77,9 @@ export default function AuthPage() {
       password: "",
       confirmPassword: "",
       yearOfBirth: null,
+      location: "",
+      playingSince: "",
+      skillLevel: "",
       redemptionCode: "",
     },
   });
@@ -113,12 +120,18 @@ export default function AuthPage() {
       const randomChars = () => Math.random().toString(36).substring(2, 7).toUpperCase();
       const passportId = `PKL-${randomChars().substring(0, 4)}-${randomChars().substring(0, 3)}`;
 
-      // @ts-ignore - The type system doesn't know we are adding these fields
+      // Create a properly typed object for registration
       await register({
-        ...userData,
-        avatarInitials,
-        passportId,
+        username: userData.username,
+        email: userData.email,
+        password: userData.password,
+        displayName: userData.displayName,
         yearOfBirth: values.yearOfBirth || null,
+        location: userData.location,
+        playingSince: userData.playingSince,
+        skillLevel: userData.skillLevel,
+        avatarInitials: avatarInitials,
+        passportId: passportId,
         redemptionCode: redemptionCode || undefined
       });
       
@@ -315,26 +328,125 @@ export default function AuthPage() {
                       />
                     </div>
                     
-                    <FormField
-                      control={registerForm.control}
-                      name="yearOfBirth"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Year of Birth</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number"
-                              placeholder="Optional: Your birth year"
-                              {...field}
-                              value={field.value || ''}
-                              onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
-                              disabled={isRegistering}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={registerForm.control}
+                        name="yearOfBirth"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Year of Birth</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number"
+                                placeholder="Optional: Your birth year"
+                                {...field}
+                                value={field.value || ''}
+                                onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
+                                disabled={isRegistering}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={registerForm.control}
+                        name="playingSince"
+                        render={({ field }) => (
+                          <FormItem>
+                            <div className="flex justify-between items-center">
+                              <FormLabel>Playing Since</FormLabel>
+                              <Badge variant="outline" className="text-xs font-normal">Optional</Badge>
+                            </div>
+                            <FormControl>
+                              <Input 
+                                placeholder="e.g. 2021"
+                                {...field}
+                                disabled={isRegistering}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={registerForm.control}
+                        name="location"
+                        render={({ field }) => (
+                          <FormItem>
+                            <div className="flex justify-between items-center">
+                              <FormLabel>Country</FormLabel>
+                              <Badge variant="outline" className="text-xs font-normal">Optional</Badge>
+                            </div>
+                            <FormControl>
+                              <select
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                {...field}
+                                disabled={isRegistering}
+                              >
+                                <option value="">Select country</option>
+                                <option value="United States">United States</option>
+                                <option value="Canada">Canada</option>
+                                <option value="United Kingdom">United Kingdom</option>
+                                <option value="Australia">Australia</option>
+                                <option value="Singapore">Singapore</option>
+                                <option value="Mexico">Mexico</option>
+                                <option value="Brazil">Brazil</option>
+                                <option value="India">India</option>
+                                <option value="Japan">Japan</option>
+                                <option value="Germany">Germany</option>
+                                <option value="France">France</option>
+                                <option value="Spain">Spain</option>
+                                <option value="Italy">Italy</option>
+                                <option value="Netherlands">Netherlands</option>
+                                <option value="Sweden">Sweden</option>
+                                <option value="New Zealand">New Zealand</option>
+                                <option value="South Korea">South Korea</option>
+                                <option value="China">China</option>
+                                <option value="Thailand">Thailand</option>
+                                <option value="Philippines">Philippines</option>
+                                <option value="Other">Other</option>
+                              </select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={registerForm.control}
+                        name="skillLevel"
+                        render={({ field }) => (
+                          <FormItem>
+                            <div className="flex justify-between items-center">
+                              <FormLabel>Skill Level</FormLabel>
+                              <Badge variant="outline" className="text-xs font-normal">Optional</Badge>
+                            </div>
+                            <FormControl>
+                              <select
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                {...field}
+                                disabled={isRegistering}
+                              >
+                                <option value="">Select level</option>
+                                <option value="2.0 Beginner">2.0 Beginner</option>
+                                <option value="2.5 Beginner+">2.5 Beginner+</option>
+                                <option value="3.0 Intermediate">3.0 Intermediate</option>
+                                <option value="3.5 Intermediate+">3.5 Intermediate+</option>
+                                <option value="4.0 Advanced">4.0 Advanced</option>
+                                <option value="4.5 Advanced+">4.5 Advanced+</option>
+                                <option value="5.0 Pro">5.0 Pro</option>
+                              </select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                     
                     <FormField
                       control={registerForm.control}
