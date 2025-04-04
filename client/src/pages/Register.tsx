@@ -215,7 +215,7 @@ export default function Register() {
             <CardFooter className="flex flex-col">
               <Button 
                 type="submit" 
-                className="w-full bg-[#FF5722] hover:bg-[#E64A19]"
+                className="w-full"
                 disabled={isRegistering}
               >
                 {isRegistering ? "Creating account..." : "Create Account"}
