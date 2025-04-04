@@ -44,26 +44,26 @@ export default function Login() {
   };
 
   return (
-    <div className="flex flex-col items-center">
-      <div className="mb-10 flex flex-col items-center">
-        <PicklePlusTextLogo className="h-32 w-auto" />
+    <div className="flex flex-col items-center max-w-md w-full mx-auto">
+      <div className="mb-6 flex flex-col items-center">
+        <PicklePlusTextLogo className="h-24 w-auto" />
       </div>
 
-      <Card className="w-full max-w-md">
-        <CardHeader>
+      <Card className="w-full shadow-md">
+        <CardHeader className="pb-4">
           <CardTitle className="text-2xl">Login</CardTitle>
           <CardDescription>
-            Enter your credentials to access your Pickle+ account
+            Enter your credentials to access your account
           </CardDescription>
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)}>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 pb-4">
               <FormField
                 control={form.control}
                 name="username"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="space-y-1">
                     <FormLabel>Username</FormLabel>
                     <FormControl>
                       <Input placeholder="Enter your username" {...field} />
@@ -77,7 +77,7 @@ export default function Login() {
                 control={form.control}
                 name="password"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="space-y-1">
                     <FormLabel>Password</FormLabel>
                     <FormControl>
                       <Input type="password" placeholder="••••••••" {...field} />
@@ -87,15 +87,15 @@ export default function Login() {
                 )}
               />
             </CardContent>
-            <CardFooter className="flex flex-col">
+            <CardFooter className="flex flex-col pt-0">
               <Button 
                 type="submit" 
-                className="w-full"
+                className="w-full bg-[#FF5722] hover:bg-[#E64A19]"
                 disabled={isLoggingIn}
               >
                 {isLoggingIn ? "Logging in..." : "Login"}
               </Button>
-              <p className="mt-4 text-sm text-center text-gray-500">
+              <p className="mt-3 text-sm text-center text-gray-500">
                 Don't have an account?{" "}
                 <a
                   href="/register"

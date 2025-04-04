@@ -28,11 +28,11 @@ export function AuthLayout({ children }: AuthLayoutProps) {
   
   // Render the auth pages if not authenticated
   return (
-    <div className="min-h-screen bg-[#F5F5F5] flex flex-col">
-      <div className="container mx-auto px-4 py-8 flex-grow flex items-center justify-center">
+    <div className="h-screen bg-[#F5F5F5] flex flex-col">
+      <div className="container mx-auto px-4 flex-grow flex items-center justify-center">
         {children}
       </div>
-      <footer className="py-4 text-center text-sm text-gray-500">
+      <footer className="py-3 text-center text-sm text-gray-500">
         <p>© {new Date().getFullYear()} Pickle+ | The Ultimate Pickleball Passport</p>
       </footer>
     </div>
