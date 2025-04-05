@@ -2,10 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertCircle, XCircle } from 'lucide-react';
 
+type PositionType = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+
 interface BounceMascotProps {
   className?: string;
   initialMessage?: string;
-  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  position?: PositionType;
 }
 
 // Facial expression types
@@ -400,54 +402,59 @@ export const BounceMascot: React.FC<BounceMascotProps> = ({
             initial={{ opacity: 0, scale: 0.8, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 10 }}
-            className={`
-              bg-white rounded-xl p-3 shadow-lg border-2 border-[#FF5722] 
-              mb-2 max-w-[250px] relative
-            `}
+            className="relative"
             style={{
-              marginLeft: currentPosition.includes('left') ? '0' : '8px',
-              marginRight: currentPosition.includes('left') ? '8px' : '0',
-              alignSelf: currentPosition.includes('top') ? 'flex-start' : 'flex-end',
+              alignSelf: 'flex-start',
+              maxWidth: '250px',
+              marginBottom: '8px',
             }}
           >
-            <div className="text-sm text-gray-700">
-              {message}
-              
-              {showXpCode && (
-                <div className="mt-2 bg-[#FF5722]/10 p-2 rounded-md border border-[#FF5722]/30">
-                  <div className="font-bold text-[#FF5722] flex items-center gap-1.5">
-                    <AlertCircle size={14} />
-                    <span>XP CODE</span>
+            {/* The actual bubble */}
+            <div className="bg-white rounded-xl p-3 shadow-lg border-2 border-[#FF5722] relative">
+              <div className="text-sm text-gray-700">
+                {message}
+                
+                {showXpCode && (
+                  <div className="mt-2 bg-[#FF5722]/10 p-2 rounded-md border border-[#FF5722]/30">
+                    <div className="font-bold text-[#FF5722] flex items-center gap-1.5">
+                      <AlertCircle size={14} />
+                      <span>XP CODE</span>
+                    </div>
+                    <div className="bg-black/5 text-center font-mono font-bold p-1 rounded mt-1">
+                      BOUNCE2025
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1 text-center">Worth 100 XP!</div>
                   </div>
-                  <div className="bg-black/5 text-center font-mono font-bold p-1 rounded mt-1">
-                    BOUNCE2025
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1 text-center">Worth 100 XP!</div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
             
-            {/* Triangle Pointer - Fixed positioning for different screen positions */}
-            <div 
-              className="absolute w-4 h-4 bg-white rotate-45 border-2 border-[#FF5722]"
+            {/* Triangle Pointer - Completely separate from bubble for better control */}
+            <div
+              className="w-0 h-0 absolute"
               style={{
-                // Bottom positions (triangle points down)
-                bottom: currentPosition.includes('top') ? 'auto' : '-8px',
-                top: currentPosition.includes('top') ? '-8px' : 'auto',
-                
-                // Adjust left/right position to line up with mascot
-                left: currentPosition === 'bottom-right' || currentPosition === 'top-right' 
-                  ? '12px' : 'auto',
-                right: currentPosition === 'bottom-left' || currentPosition === 'top-left'
-                  ? '12px' : 'auto',
-                
-                // Change which borders are visible based on pointer direction
-                borderLeftColor: currentPosition.includes('top') ? '#FF5722' : 'transparent',
-                borderTopColor: currentPosition.includes('top') ? '#FF5722' : 'transparent',
-                borderRightColor: currentPosition.includes('top') ? 'transparent' : '#FF5722',
-                borderBottomColor: currentPosition.includes('top') ? 'transparent' : '#FF5722',
+                // Position the triangle at the bottom center of the bubble
+                left: '36px',
+                bottom: '-10px',
+                // Create triangle with borders
+                borderLeft: '10px solid transparent', 
+                borderRight: '10px solid transparent',
+                borderTop: '10px solid #FF5722', // Same color as bubble border
               }}
-            ></div>
+            />
+            {/* White inner triangle (slightly smaller) */}
+            <div
+              className="w-0 h-0 absolute"
+              style={{
+                // Position slightly above the colored triangle
+                left: '36px',
+                bottom: '-7px',
+                // Create triangle with borders
+                borderLeft: '8px solid transparent', 
+                borderRight: '8px solid transparent',
+                borderTop: '8px solid white', // Same color as bubble background
+              }}
+            />
           </motion.div>
         )}
       </AnimatePresence>
