@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { motion } from 'framer-motion';
 
 // Version number to match with the banner
-const CURRENT_VERSION = '1.2';
+const CURRENT_VERSION = '0.8.0';
 
 export function RecentUpdatesSection() {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);

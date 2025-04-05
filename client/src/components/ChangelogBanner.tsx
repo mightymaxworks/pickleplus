@@ -13,7 +13,7 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Version number to identify this changelog
-const CURRENT_VERSION = '1.2';
+const CURRENT_VERSION = '0.8.0';
 const CHANGELOG_SEEN_KEY = 'pickle_plus_changelog_seen';
 
 export function ChangelogBanner() {

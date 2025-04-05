@@ -1,6 +1,6 @@
 # Pickle+ Changelog
 
-## v1.2.0 (April 5, 2025)
+## v0.8.0 (April 5, 2025)
 
 ### 🏆 Enhanced Player Passport System
 - **Digital Passport QR Codes**: Easily check in to tournaments and connect with other players by sharing your unique player passport QR code
@@ -17,7 +17,7 @@
 - **Simplified Navigation**: Streamlined profile interface with quick action buttons for common tasks
 - **Performance Optimizations**: Faster loading times for player statistics and match history
 
-## v1.1.0 (March 20, 2025)
+## v0.5.0 (March 20, 2025)
 
 ### 🎮 Core Platform Features
 - **Player Profiles**: Create and customize your pickleball player profile with skill levels, equipment preferences, and playing styles
@@ -30,7 +30,7 @@
 - **Leaderboards**: View top players ranked by XP and performance metrics
 - **Founding Member Program**: Special recognition and perks for early platform adopters
 
-## v1.0.0 (February 15, 2025)
+## v0.1.0 (February 15, 2025)
 
 ### 🚀 Initial Release
 - **Account Creation**: Email and username-based registration system
