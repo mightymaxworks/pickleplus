@@ -13,6 +13,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Activity, Achievement, Tournament } from "@/types";
 import { FoundingMemberBadge } from "@/components/ui/founding-member-badge";
 import { XpMultiplierIndicator } from "@/components/ui/xp-multiplier-indicator";
+import { ChangelogBanner } from "@/components/ChangelogBanner";
+import { useChangelogNotification } from "@/hooks/useChangelogNotification";
 
 // Define missing interfaces
 interface UserAchievementWithDetails {
@@ -42,6 +44,9 @@ export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();
   const { tierInfo, isLoading: tierLoading } = useXPTier();
   const [, setLocation] = useLocation();
+  
+  // Show changelog notification toast on login
+  useChangelogNotification();
   
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -95,6 +100,9 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-view pb-20 md:pb-6">
+      {/* Changelog Banner */}
+      <ChangelogBanner />
+      
       {/* Welcome Section */}
       <div className="mb-6">
         <div className="flex flex-col mb-2">

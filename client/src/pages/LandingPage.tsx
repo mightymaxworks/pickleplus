@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, Award, Calendar, BarChart, ArrowRight, Users, Trophy, Zap } from "lucide-react";
 import { useKonamiCode } from "@/hooks/useKonamiCode";
 import { EasterEggModal } from "@/components/EasterEggModal";
+import { RecentUpdatesSection } from "@/components/RecentUpdatesSection";
 import { useState, useEffect } from "react";
 
 // Animation variants
@@ -620,6 +621,9 @@ export default function LandingPage() {
           </motion.div>
         </div>
       </section>
+
+      {/* Recent Updates Section */}
+      <RecentUpdatesSection />
 
       {/* Final CTA Section */}
       <section className="py-14 sm:py-20 bg-gradient-to-br from-[#2196F3] to-[#1a75c9] text-white overflow-hidden">
