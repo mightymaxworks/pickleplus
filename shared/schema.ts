@@ -163,10 +163,12 @@ export const redemptionCodes = pgTable("redemption_codes", {
   isActive: boolean("is_active").default(true),
   isFoundingMemberCode: boolean("is_founding_member_code").default(false),
   isCoachAccessCode: boolean("is_coach_access_code").default(false),
-  codeType: text("code_type").default("xp"), // xp, founding, coach, special
+  codeType: text("code_type").default("xp"), // xp, founding, coach, special, multiplier
+  multiplierValue: integer("multiplier_value").default(100), // For "multiplier" type, stored as percentage (e.g., 150 = 1.5x)
+  multiplierDurationDays: integer("multiplier_duration_days"), // How many days the multiplier effect lasts
   maxRedemptions: integer("max_redemptions"), // Limit number of redemptions (40 for founding members)
   currentRedemptions: integer("current_redemptions").default(0),
-  expiresAt: timestamp("expires_at")
+  expiresAt: timestamp("expires_at") // When code itself expires and can no longer be redeemed
 });
 
 export const redemptionCodesRelations = relations(redemptionCodes, ({ many }) => ({
@@ -178,7 +180,9 @@ export const userRedemptions = pgTable("user_redemptions", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
   codeId: integer("code_id").notNull().references(() => redemptionCodes.id),
-  redeemedAt: timestamp("redeemed_at").defaultNow()
+  redeemedAt: timestamp("redeemed_at").defaultNow(),
+  multiplierExpiresAt: timestamp("multiplier_expires_at"), // For multiplier codes, when the effect expires
+  isMultiplierActive: boolean("is_multiplier_active").default(false) // Whether the multiplier effect is active
 });
 
 export const userRedemptionsRelations = relations(userRedemptions, ({ one }) => ({
@@ -397,7 +401,9 @@ export const insertRedemptionCodeSchema = createInsertSchema(redemptionCodes).om
 
 export const insertUserRedemptionSchema = createInsertSchema(userRedemptions).omit({ 
   id: true, 
-  redeemedAt: true 
+  redeemedAt: true,
+  multiplierExpiresAt: true,
+  isMultiplierActive: true
 });
 
 export const insertMatchSchema = createInsertSchema(matches).omit({

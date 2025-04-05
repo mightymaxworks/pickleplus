@@ -65,6 +65,7 @@ export interface IStorage {
   redeemCode(userRedemption: InsertUserRedemption): Promise<UserRedemption>;
   hasUserRedeemedCode(userId: number, codeId: number): Promise<boolean>;
   incrementRedemptionCodeCounter(codeId: number): Promise<RedemptionCode | undefined>;
+  updateUserRedemption(userId: number, codeId: number, updates: Partial<UserRedemption>): Promise<UserRedemption | undefined>;
   
   // Match operations
   createMatch(match: InsertMatch): Promise<Match>;
@@ -640,6 +641,21 @@ export class MemStorage implements IStorage {
     return Array.from(this.userRedemptions.values()).some(
       (ur) => ur.userId === userId && ur.codeId === codeId
     );
+  }
+  
+  async updateUserRedemption(userId: number, codeId: number, updates: Partial<UserRedemption>): Promise<UserRedemption | undefined> {
+    // Find the user redemption record
+    const userRedemption = Array.from(this.userRedemptions.values()).find(
+      (ur) => ur.userId === userId && ur.codeId === codeId
+    );
+    
+    if (!userRedemption) return undefined;
+    
+    // Update the redemption with the new values
+    const updatedRedemption = { ...userRedemption, ...updates };
+    this.userRedemptions.set(userRedemption.id, updatedRedemption);
+    
+    return updatedRedemption;
   }
   
   async incrementRedemptionCodeCounter(codeId: number): Promise<RedemptionCode | undefined> {
@@ -1760,6 +1776,64 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('[deleteRedemptionCode] Error:', error);
       return false;
+    }
+  }
+  
+  async hasUserRedeemedCode(userId: number, codeId: number): Promise<boolean> {
+    try {
+      const [redemption] = await db.select()
+        .from(userRedemptions)
+        .where(
+          and(
+            eq(userRedemptions.userId, userId),
+            eq(userRedemptions.codeId, codeId)
+          )
+        );
+      
+      return !!redemption;
+    } catch (error) {
+      console.error('[hasUserRedeemedCode] Error:', error);
+      return false;
+    }
+  }
+  
+  async updateUserRedemption(userId: number, codeId: number, updates: Partial<UserRedemption>): Promise<UserRedemption | undefined> {
+    try {
+      const [updatedRedemption] = await db.update(userRedemptions)
+        .set(updates)
+        .where(
+          and(
+            eq(userRedemptions.userId, userId),
+            eq(userRedemptions.codeId, codeId)
+          )
+        )
+        .returning();
+      
+      return updatedRedemption;
+    } catch (error) {
+      console.error('[updateUserRedemption] Error:', error);
+      return undefined;
+    }
+  }
+  
+  async incrementRedemptionCodeCounter(codeId: number): Promise<RedemptionCode | undefined> {
+    try {
+      const [code] = await db.select().from(redemptionCodes).where(eq(redemptionCodes.id, codeId));
+      
+      if (!code) return undefined;
+      
+      // Increment the current redemptions counter
+      const currentRedemptions = (code.currentRedemptions || 0) + 1;
+      
+      const [updatedCode] = await db.update(redemptionCodes)
+        .set({ currentRedemptions })
+        .where(eq(redemptionCodes.id, codeId))
+        .returning();
+      
+      return updatedCode;
+    } catch (error) {
+      console.error('[incrementRedemptionCodeCounter] Error:', error);
+      return undefined;
     }
   }
 

@@ -685,6 +685,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
           activityDescription = 'Became a Founding Member!';
           break;
           
+        case 'multiplier':
+          // Calculate expiration date based on duration
+          const multiplierDurationDays = redemptionCode.multiplierDurationDays || 7; // Default to 7 days
+          const multiplierValue = redemptionCode.multiplierValue || 150; // Default to 150% (1.5x)
+          const multiplierExpiresAt = new Date();
+          multiplierExpiresAt.setDate(multiplierExpiresAt.getDate() + multiplierDurationDays);
+          
+          // Update the user redemption with multiplier details
+          await storage.updateUserRedemption(userId, redemptionCode.id, {
+            multiplierExpiresAt,
+            isMultiplierActive: true
+          });
+          
+          // Add XP to user (if any XP reward in addition to the multiplier)
+          updatedUser = await storage.updateUserXP(userId, redemptionCode.xpReward);
+          
+          // Set temporary XP multiplier for the user
+          await storage.updateUser(userId, {
+            temporaryXpMultiplier: multiplierValue,
+            temporaryXpMultiplierExpiresAt: multiplierExpiresAt
+          });
+          
+          message = `Congratulations! You've activated a ${multiplierValue/100}x XP multiplier for ${multiplierDurationDays} days!`;
+          activityType = 'xp_multiplier_activated';
+          activityDescription = `Activated ${multiplierValue/100}x XP multiplier for ${multiplierDurationDays} days`;
+          break;
+          
         case 'coach':
           // Grant coach access if this is a coach access code
           if (redemptionCode.isCoachAccessCode) {
