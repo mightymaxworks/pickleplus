@@ -21,7 +21,7 @@ import ScanPage from "@/pages/ScanPage";
 import { MainLayout } from "@/components/MainLayout";
 import { AuthLayout } from "@/components/AuthLayout";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
-import QuickMatchFAB from "@/components/QuickMatchFAB";
+import { QrCodeFAB } from "@/components/QrCodeFAB";
 import { FeatureProtectedRoute } from "@/components/FeatureProtectedRoute";
 import { Features, useFeatureFlag } from "@/lib/featureFlags";
 
@@ -148,7 +148,7 @@ function AppRoutes() {
       </Switch>
       
       {/* Global Components */}
-      {showQuickMatchFAB && <QuickMatchFAB />}
+      {isAuthenticated && <QrCodeFAB />}
       <Toaster />
     </div>
   );
