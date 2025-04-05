@@ -69,7 +69,7 @@ export const BounceMascot: React.FC<BounceMascotProps> = ({
   ];
   
   // Position styles
-  const positionStyles = {
+  const positionStyles: Record<string, string> = {
     'bottom-right': 'bottom-4 right-4',
     'bottom-left': 'bottom-4 left-4',
     'top-right': 'top-4 right-4',
@@ -402,8 +402,13 @@ export const BounceMascot: React.FC<BounceMascotProps> = ({
             exit={{ opacity: 0, scale: 0.8, y: 10 }}
             className={`
               bg-white rounded-xl p-3 shadow-lg border-2 border-[#FF5722] 
-              mb-2 max-w-[250px] relative ${currentPosition.includes('left') ? 'mr-2' : 'ml-2'}
+              mb-2 max-w-[250px] relative
             `}
+            style={{
+              marginLeft: currentPosition.includes('left') ? '0' : '8px',
+              marginRight: currentPosition.includes('left') ? '8px' : '0',
+              alignSelf: currentPosition.includes('top') ? 'flex-start' : 'flex-end',
+            }}
           >
             <div className="text-sm text-gray-700">
               {message}
@@ -422,15 +427,26 @@ export const BounceMascot: React.FC<BounceMascotProps> = ({
               )}
             </div>
             
-            {/* Triangle Pointer */}
+            {/* Triangle Pointer - Fixed positioning for different screen positions */}
             <div 
-              className={`
-                absolute -bottom-2 w-4 h-4 bg-white rotate-45 border-r-2 border-b-2 border-[#FF5722]
-                ${currentPosition === 'bottom-right' ? 'left-3' : 
-                  currentPosition === 'bottom-left' ? 'right-3' : 
-                  currentPosition === 'top-right' ? 'left-3 -top-2 rotate-[225deg] border-l-2 border-t-2 border-r-0 border-b-0' :
-                  'right-3 -top-2 rotate-[225deg] border-l-2 border-t-2 border-r-0 border-b-0'}
-              `}
+              className="absolute w-4 h-4 bg-white rotate-45 border-2 border-[#FF5722]"
+              style={{
+                // Bottom positions (triangle points down)
+                bottom: currentPosition.includes('top') ? 'auto' : '-8px',
+                top: currentPosition.includes('top') ? '-8px' : 'auto',
+                
+                // Adjust left/right position to line up with mascot
+                left: currentPosition === 'bottom-right' || currentPosition === 'top-right' 
+                  ? '12px' : 'auto',
+                right: currentPosition === 'bottom-left' || currentPosition === 'top-left'
+                  ? '12px' : 'auto',
+                
+                // Change which borders are visible based on pointer direction
+                borderLeftColor: currentPosition.includes('top') ? '#FF5722' : 'transparent',
+                borderTopColor: currentPosition.includes('top') ? '#FF5722' : 'transparent',
+                borderRightColor: currentPosition.includes('top') ? 'transparent' : '#FF5722',
+                borderBottomColor: currentPosition.includes('top') ? 'transparent' : '#FF5722',
+              }}
             ></div>
           </motion.div>
         )}
