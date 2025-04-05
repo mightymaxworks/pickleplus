@@ -5,6 +5,7 @@ export interface User {
   avatarInitials: string;
   passportId: string | null;
   location: string | null;
+  yearOfBirth?: string | number | null;
   playingSince: string | null;
   skillLevel: string | null;
   level: number;
@@ -226,4 +227,16 @@ export interface ProfileUpdateFormData {
   mobilityLimitations?: string | null;
   preferredMatchDuration?: string | null;
   fitnessLevel?: string | null;
+}
+
+export interface ProfileCompletionData {
+  completionPercentage: number;
+  completedFields: string[];
+  missingFields: string[];
+  xpAwarded: number;
+  totalFields: number;
+  xpEligibleFields: number;
+  newFields: string[];
+  tierLevel: number;
+  tierName: string;
 }

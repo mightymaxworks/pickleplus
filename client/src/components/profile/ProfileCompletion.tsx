@@ -2,14 +2,10 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, CheckCircle2 } from "lucide-react";
 
+import { ProfileCompletionData } from "@/types";
+
 interface ProfileCompletionProps {
-  completionData: {
-    completionPercentage: number;
-    completedFields: string[];
-    incompleteFields: string[];
-    xpEarned: number;
-    potentialXp: number;
-  };
+  completionData: ProfileCompletionData;
 }
 
 // Helper to get the tier level based on completion percentage
@@ -21,8 +17,16 @@ function getRewardTier(percentage: number): { label: string; xp: number } {
 }
 
 export function ProfileCompletion({ completionData }: ProfileCompletionProps) {
-  const { completionPercentage, completedFields, incompleteFields, xpEarned, potentialXp } = completionData;
-  const tier = getRewardTier(completionPercentage);
+  const { 
+    completionPercentage, 
+    completedFields, 
+    missingFields: incompleteFields, 
+    xpAwarded: xpEarned, 
+    xpEligibleFields: potentialXp, 
+    tierLevel, 
+    tierName 
+  } = completionData;
+  const tier = { label: tierName, xp: getRewardTier(completionPercentage).xp };
   
   return (
     <div className="profile-completion">

@@ -1,33 +1,29 @@
-import { useState, useEffect } from "react";
+import { User, ProfileCompletionData } from "@/types";
+import { 
+  Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage 
+} from "@/components/ui/form";
+import { 
+  Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle 
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+import { ProfileCompletion } from "@/components/profile/ProfileCompletion";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormDescription, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { toast } from "@/hooks/use-toast";
-import { ProfileCompletion } from "./ProfileCompletion";
-import { Progress } from "@/components/ui/progress";
-import { apiRequest } from "@/lib/queryClient";
-import { 
-  User, Calendar, MapPin, Award, BarChart3, Users, TrendingUp,
-  Zap, Heart, Clock, Siren, Target, UserCircle, Medal, CircleEllipsis
-} from "lucide-react";
-import Racquet from "@/components/icons/Racquet";
-import { type ProfileUpdateFormData } from "@/types";
+import { useEffect, useState } from "react";
+import { Heart, Dumbbell, User as UserIcon, Users } from "lucide-react";
 
-// Form validation schema
+// Form schema using zod
 const profileFormSchema = z.object({
-  displayName: z.string().min(2, "Display name must be at least 2 characters"),
+  displayName: z.string().min(1, "Display name is required"),
   bio: z.string().optional(),
   location: z.string().optional(),
   yearOfBirth: z.string().optional(),
@@ -36,21 +32,21 @@ const profileFormSchema = z.object({
   preferredFormat: z.string().optional(),
   dominantHand: z.string().optional(),
   
-  // Pickleball specific fields
+  // Pickleball specific
   preferredPosition: z.string().optional(),
   paddleBrand: z.string().optional(),
   paddleModel: z.string().optional(),
   playingStyle: z.string().optional(),
   shotStrengths: z.string().optional(),
-  regularSchedule: z.array(z.string()).optional(),
+  regularSchedule: z.union([z.string(), z.array(z.string())]).optional(),
   lookingForPartners: z.string().optional(),
   
-  // Social fields
+  // Social
   coach: z.string().optional(),
   clubs: z.string().optional(),
   leagues: z.string().optional(),
   
-  // Health fields
+  // Health
   mobilityLimitations: z.string().optional(),
   preferredMatchDuration: z.string().optional(),
   fitnessLevel: z.string().optional(),
@@ -59,13 +55,20 @@ const profileFormSchema = z.object({
   playerGoals: z.string().optional(),
 });
 
+// Type for form values from schema
+type ProfileUpdateFormData = z.infer<typeof profileFormSchema>;
+
 export function ProfileForm() {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("basic");
+  const { toast } = useToast();
   
-  // Fetch profile completion data
-  const { data: profileCompletionData, isLoading: completionLoading } = useQuery<any>({
+  // Get current user data
+  const { data: user } = useQuery<User>({
+    queryKey: ["/api/auth/current-user"],
+  });
+  
+  // Get profile completion data
+  const { data: profileCompletionData, isLoading: completionLoading } = useQuery<ProfileCompletionData>({
     queryKey: ["/api/profile/completion"],
     enabled: !!user,
   });
@@ -216,10 +219,10 @@ export function ProfileForm() {
               <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
                 <TabsList className="grid grid-cols-4 p-1.5">
                   <TabsTrigger value="basic" className="flex items-center justify-center p-2">
-                    <User size={22} className="text-[#FF5722]" />
+                    <UserIcon size={22} className="text-[#FF5722]" />
                   </TabsTrigger>
                   <TabsTrigger value="pickleball" className="flex items-center justify-center p-2">
-                    <Racquet size={22} className="text-[#2196F3]" />
+                    <Dumbbell size={22} className="text-[#2196F3]" />
                   </TabsTrigger>
                   <TabsTrigger value="social" className="flex items-center justify-center p-2">
                     <Users size={22} className="text-[#4CAF50]" />
@@ -408,32 +411,6 @@ export function ProfileForm() {
                 
                 {/* Pickleball Tab */}
                 <TabsContent value="pickleball" className="space-y-4 mt-0">
-                  <FormField
-                    control={form.control}
-                    name="preferredPosition"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Preferred Court Position</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select preferred position" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="left">Left Side</SelectItem>
-                            <SelectItem value="right">Right Side</SelectItem>
-                            <SelectItem value="flexible">Flexible</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -564,10 +541,35 @@ export function ProfileForm() {
                     )}
                   />
                   
-
+                  <FormField
+                    control={form.control}
+                    name="preferredPosition"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Preferred Court Position</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value || undefined}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select preferred position" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="left">Left Side</SelectItem>
+                            <SelectItem value="right">Right Side</SelectItem>
+                            <SelectItem value="flexible">Flexible</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          Your preferred position when playing doubles
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   
-
-
                   <FormField
                     control={form.control}
                     name="regularSchedule"
@@ -665,9 +667,6 @@ export function ProfileForm() {
                 
                 {/* Social/Community Tab */}
                 <TabsContent value="social" className="space-y-4 mt-0">
-                  
-
-                  
                   <FormField
                     control={form.control}
                     name="clubs"
