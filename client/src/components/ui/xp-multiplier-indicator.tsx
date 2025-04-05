@@ -18,7 +18,8 @@ export function XpMultiplierIndicator({
   showTooltip = false,
   className
 }: XpMultiplierIndicatorProps) {
-  const formattedMultiplier = `${multiplier}x`;
+  // Convert from percentage (110) to decimal multiplier (1.1x)
+  const formattedMultiplier = `${(multiplier / 100).toFixed(1)}x`;
   
   const sizeClasses = {
     sm: "text-xs px-2 py-0.5",
