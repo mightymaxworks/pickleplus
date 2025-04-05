@@ -9,7 +9,8 @@ import {
   userRedemptions, type UserRedemption, type InsertUserRedemption,
   matches, type Match, type InsertMatch,
   rankingHistory, type RankingHistory, type InsertRankingHistory,
-  coachingProfiles, type CoachingProfile, type InsertCoachingProfile
+  coachingProfiles, type CoachingProfile, type InsertCoachingProfile,
+  connections, type Connection, type InsertConnection
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, desc, sql } from "drizzle-orm";
@@ -84,6 +85,15 @@ export interface IStorage {
   setPCPCertification(userId: number, isVerified: boolean): Promise<CoachingProfile | undefined>;
   setCoachingProfileActive(userId: number, isActive: boolean): Promise<CoachingProfile | undefined>;
   setAdminVerification(userId: number, isVerified: boolean): Promise<CoachingProfile | undefined>;
+  
+  // Connection operations (social features)
+  createConnection(connection: InsertConnection): Promise<Connection>;
+  getConnection(id: number): Promise<Connection | undefined>;
+  updateConnectionStatus(id: number, status: string, endDate?: Date): Promise<Connection | undefined>;
+  getUserSentConnections(userId: number, type?: string, status?: string): Promise<Connection[]>;
+  getUserReceivedConnections(userId: number, type?: string, status?: string): Promise<Connection[]>;
+  getActiveCoachingConnections(userId: number): Promise<{connection: Connection, user: User}[]>;
+  getConnectionByUsers(requesterId: number, recipientId: number, type: string): Promise<Connection | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -98,6 +108,7 @@ export class MemStorage implements IStorage {
   private matches: Map<number, Match>;
   private rankingHistories: Map<number, RankingHistory>;
   private coachingProfiles: Map<number, CoachingProfile>;
+  private connections: Map<number, Connection>;
   
   private userId: number;
   private tournamentId: number;
@@ -110,6 +121,7 @@ export class MemStorage implements IStorage {
   private matchId: number;
   private rankingHistoryId: number;
   private coachingProfileId: number;
+  private connectionId: number;
 
   constructor() {
     this.users = new Map();
@@ -123,6 +135,7 @@ export class MemStorage implements IStorage {
     this.matches = new Map();
     this.rankingHistories = new Map();
     this.coachingProfiles = new Map();
+    this.connections = new Map();
     
     this.userId = 1;
     this.tournamentId = 1;
@@ -135,6 +148,7 @@ export class MemStorage implements IStorage {
     this.matchId = 1;
     this.rankingHistoryId = 1;
     this.coachingProfileId = 1;
+    this.connectionId = 1;
     
     // Initialize with sample achievements and redemption codes
     this.initSampleData();
@@ -858,6 +872,234 @@ export class MemStorage implements IStorage {
     this.coachingProfiles.set(profile.id, updatedProfile);
     return updatedProfile;
   }
+
+  // Connection operations (social features)
+  async createConnection(connection: InsertConnection): Promise<Connection> {
+    const id = this.connectionId++;
+    const createdAt = new Date();
+    const updatedAt = new Date();
+    
+    // Handle the message field by setting it to notes if provided
+    const notes = connection.message || connection.notes || null;
+    
+    const conn: Connection = {
+      ...connection,
+      id,
+      createdAt,
+      updatedAt,
+      status: connection.status || 'pending',
+      metadata: connection.metadata || null,
+      notes,
+      // Handle optional fields with null defaults
+      startDate: null,
+      endDate: connection.endDate || null,
+    };
+    
+    // Create an activity for the connection request
+    if (connection.requesterId && connection.recipientId) {
+      try {
+        await this.createActivity({
+          userId: connection.requesterId,
+          type: `connection_request_${connection.type}`,
+          targetId: connection.recipientId,
+          metadata: {
+            recipientId: connection.recipientId,
+            connectionType: connection.type,
+            connectionId: id
+          }
+        });
+      } catch (error) {
+        console.error("Failed to record connection request activity:", error);
+      }
+    }
+    
+    this.connections.set(id, conn);
+    return conn;
+  }
+  
+  async getConnection(id: number): Promise<Connection | undefined> {
+    return this.connections.get(id);
+  }
+  
+  async updateConnectionStatus(id: number, status: string, endDate?: Date): Promise<Connection | undefined> {
+    const connection = await this.getConnection(id);
+    if (!connection) return undefined;
+    
+    const now = new Date();
+    const updatedConnection: Connection = { 
+      ...connection, 
+      status,
+      updatedAt: now
+    };
+    
+    // Update timestamps based on the new status
+    if (status === 'accepted') {
+      updatedConnection.startDate = now;
+      
+      // Create activity records for both users when connection is accepted
+      try {
+        // Activity for the requester (their request was accepted)
+        await this.createActivity({
+          userId: connection.requesterId,
+          type: `connection_${connection.type}_accepted`,
+          targetId: connection.recipientId,
+          metadata: {
+            connectionId: connection.id,
+            recipientId: connection.recipientId,
+            connectionType: connection.type
+          }
+        });
+        
+        // Activity for the recipient (they accepted the request)
+        await this.createActivity({
+          userId: connection.recipientId,
+          type: `connection_${connection.type}_accept`,
+          targetId: connection.requesterId,
+          metadata: {
+            connectionId: connection.id,
+            requesterId: connection.requesterId,
+            connectionType: connection.type
+          }
+        });
+      } catch (error) {
+        console.error("Failed to record connection acceptance activities:", error);
+      }
+    } else if (status === 'declined') {
+      // Create activity for the requester (their request was declined)
+      try {
+        await this.createActivity({
+          userId: connection.requesterId,
+          type: `connection_${connection.type}_declined`,
+          targetId: connection.recipientId,
+          metadata: {
+            connectionId: connection.id,
+            recipientId: connection.recipientId,
+            connectionType: connection.type
+          }
+        });
+      } catch (error) {
+        console.error("Failed to record connection declined activity:", error);
+      }
+    } else if (status === 'ended') {
+      updatedConnection.endDate = endDate || now;
+      
+      // Create activities for both users when connection is ended
+      try {
+        await this.createActivity({
+          userId: connection.requesterId,
+          type: `connection_${connection.type}_ended`,
+          targetId: connection.recipientId,
+          metadata: {
+            connectionId: connection.id,
+            recipientId: connection.recipientId,
+            connectionType: connection.type
+          }
+        });
+        
+        await this.createActivity({
+          userId: connection.recipientId,
+          type: `connection_${connection.type}_ended`,
+          targetId: connection.requesterId,
+          metadata: {
+            connectionId: connection.id,
+            requesterId: connection.requesterId,
+            connectionType: connection.type
+          }
+        });
+      } catch (error) {
+        console.error("Failed to record connection ended activities:", error);
+      }
+    }
+    
+    this.connections.set(id, updatedConnection);
+    return updatedConnection;
+  }
+  
+  async getUserSentConnections(userId: number, type?: string, status?: string): Promise<Connection[]> {
+    let connections = Array.from(this.connections.values())
+      .filter(connection => connection.requesterId === userId);
+    
+    // Apply type filter if specified
+    if (type) {
+      connections = connections.filter(connection => connection.type === type);
+    }
+    
+    // Apply status filter if specified
+    if (status) {
+      connections = connections.filter(connection => connection.status === status);
+    }
+    
+    // Sort by creation date, newest first
+    return connections.sort((a, b) => {
+      const aTime = a.createdAt ? a.createdAt.getTime() : 0;
+      const bTime = b.createdAt ? b.createdAt.getTime() : 0;
+      return bTime - aTime;
+    });
+  }
+  
+  async getUserReceivedConnections(userId: number, type?: string, status?: string): Promise<Connection[]> {
+    let connections = Array.from(this.connections.values())
+      .filter(connection => connection.recipientId === userId);
+    
+    // Apply type filter if specified
+    if (type) {
+      connections = connections.filter(connection => connection.type === type);
+    }
+    
+    // Apply status filter if specified
+    if (status) {
+      connections = connections.filter(connection => connection.status === status);
+    }
+    
+    // Sort by creation date, newest first
+    return connections.sort((a, b) => {
+      const aTime = a.createdAt ? a.createdAt.getTime() : 0;
+      const bTime = b.createdAt ? b.createdAt.getTime() : 0;
+      return bTime - aTime;
+    });
+  }
+  
+  async getActiveCoachingConnections(userId: number): Promise<{connection: Connection, user: User}[]> {
+    // Get all active coaching connections where this user is either the requester or recipient
+    const connections = Array.from(this.connections.values())
+      .filter(connection => 
+        connection.type === 'coach' && 
+        connection.status === 'accepted' && 
+        (connection.requesterId === userId || connection.recipientId === userId)
+      );
+    
+    // Create an array of connection+user pairs
+    return Promise.all(connections.map(async connection => {
+      let otherUserId: number;
+      
+      // Find the other user in the connection
+      if (connection.requesterId === userId) {
+        otherUserId = connection.recipientId;
+      } else {
+        otherUserId = connection.requesterId;
+      }
+      
+      const user = await this.getUser(otherUserId);
+      
+      if (!user) {
+        throw new Error(`User with ID ${otherUserId} not found`);
+      }
+      
+      return {
+        connection,
+        user
+      };
+    }));
+  }
+  
+  async getConnectionByUsers(requesterId: number, recipientId: number, type: string): Promise<Connection | undefined> {
+    return Array.from(this.connections.values()).find(
+      connection => 
+        connection.requesterId === requesterId && 
+        connection.recipientId === recipientId &&
+        connection.type === type
+    );
+  }
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1497,6 +1739,128 @@ export class DatabaseStorage implements IStorage {
       .where(eq(coachingProfiles.userId, userId))
       .returning();
     return updatedProfile;
+  }
+
+  // Connection operations (social features)
+  async createConnection(connection: InsertConnection): Promise<Connection> {
+    const [createdConnection] = await db.insert(connections)
+      .values({
+        ...connection,
+        requestedAt: new Date()
+      })
+      .returning();
+    
+    return createdConnection;
+  }
+  
+  async getConnection(id: number): Promise<Connection | undefined> {
+    const [connection] = await db.select().from(connections).where(eq(connections.id, id));
+    return connection;
+  }
+  
+  async updateConnectionStatus(id: number, status: string, endDate?: Date): Promise<Connection | undefined> {
+    const now = new Date();
+    const updates: any = { status };
+    
+    // Set the appropriate timestamp based on status
+    if (status === 'accepted') {
+      updates.acceptedAt = now;
+    } else if (status === 'declined') {
+      updates.declinedAt = now;
+    } else if (status === 'ended') {
+      updates.endedAt = now;
+      updates.endDate = endDate || now;
+    }
+    
+    const [updatedConnection] = await db.update(connections)
+      .set(updates)
+      .where(eq(connections.id, id))
+      .returning();
+    
+    return updatedConnection;
+  }
+  
+  async getUserSentConnections(userId: number, type?: string, status?: string): Promise<Connection[]> {
+    let query = db.select().from(connections).where(eq(connections.requesterId, userId));
+    
+    // Apply optional filters
+    if (type) {
+      query = query.where(eq(connections.type, type));
+    }
+    
+    if (status) {
+      query = query.where(eq(connections.status, status));
+    }
+    
+    // Sort by most recent first
+    query = query.orderBy(desc(connections.createdAt));
+    
+    return await query;
+  }
+  
+  async getUserReceivedConnections(userId: number, type?: string, status?: string): Promise<Connection[]> {
+    let query = db.select().from(connections).where(eq(connections.recipientId, userId));
+    
+    // Apply optional filters
+    if (type) {
+      query = query.where(eq(connections.type, type));
+    }
+    
+    if (status) {
+      query = query.where(eq(connections.status, status));
+    }
+    
+    // Sort by most recent first
+    query = query.orderBy(desc(connections.createdAt));
+    
+    return await query;
+  }
+  
+  async getActiveCoachingConnections(userId: number): Promise<{connection: Connection, user: User}[]> {
+    const activeConnections = await db.select({
+      connection: connections,
+      user: users
+    })
+    .from(connections)
+    .where(
+      and(
+        eq(connections.type, 'coach'),
+        eq(connections.status, 'accepted'),
+        or(
+          eq(connections.requesterId, userId),
+          eq(connections.recipientId, userId)
+        )
+      )
+    )
+    .innerJoin(
+      users,
+      or(
+        and(
+          eq(connections.requesterId, userId),
+          eq(connections.recipientId, users.id)
+        ),
+        and(
+          eq(connections.recipientId, userId),
+          eq(connections.requesterId, users.id)
+        )
+      )
+    );
+    
+    return activeConnections;
+  }
+  
+  async getConnectionByUsers(requesterId: number, recipientId: number, type: string): Promise<Connection | undefined> {
+    const [connection] = await db.select()
+      .from(connections)
+      .where(
+        and(
+          eq(connections.requesterId, requesterId),
+          eq(connections.recipientId, recipientId),
+          eq(connections.type, type)
+        )
+      );
+    
+    return connection;
   }
 }
 

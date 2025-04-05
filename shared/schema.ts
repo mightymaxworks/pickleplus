@@ -308,16 +308,44 @@ export const coachingProfiles = pgTable("coaching_profiles", {
   // Availability
   availabilitySchedule: json("availability_schedule").default({}), // Structured availability
   
-  // Success stories and profiles
+  // Fields for social features
+  acceptingNewStudents: boolean("accepting_new_students").default(true),
   studentSuccesses: json("student_successes").default([]),
-  
-  // Contact and booking preferences
   contactPreferences: json("contact_preferences").default({}),
   
   // Metadata and timestamps
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at")
 });
+
+// User connections table schema (for social features)
+export const connections = pgTable("connections", {
+  id: serial("id").primaryKey(),
+  requesterId: integer("requester_id").notNull().references(() => users.id),
+  recipientId: integer("recipient_id").notNull().references(() => users.id),
+  type: text("type").notNull(), // "coach", "partner", "friend", "teammate"
+  status: text("status").notNull().default("pending"), // "pending", "accepted", "declined", "ended"
+  startDate: timestamp("start_date"), // When the connection was accepted
+  endDate: timestamp("end_date"), // When the connection was ended (if applicable)
+  notes: text("notes"), // Additional details about the connection
+  metadata: json("metadata").default({}), // For type-specific data (coaching rates, playing preferences, etc.)
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at")
+});
+
+// Connection relations
+export const connectionsRelations = relations(connections, ({ one }) => ({
+  requester: one(users, {
+    fields: [connections.requesterId],
+    references: [users.id],
+    relationName: "connectionRequests"
+  }),
+  recipient: one(users, {
+    fields: [connections.recipientId],
+    references: [users.id],
+    relationName: "connectionReceived"
+  })
+}));
 
 // Coaching profiles relations
 export const coachingProfilesRelations = relations(coachingProfiles, ({ one }) => ({
@@ -388,6 +416,13 @@ export const insertCoachingProfileSchema = createInsertSchema(coachingProfiles).
   updatedAt: true
 });
 
+export const insertConnectionSchema = createInsertSchema(connections).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  startDate: true // This is set when the connection is accepted
+});
+
 // Schema for validating coach access requests
 export const coachAccessRequestSchema = z.object({
   accessMethod: z.enum(["code", "payment"]),
@@ -439,6 +474,9 @@ export type InsertCoachingProfile = z.infer<typeof insertCoachingProfileSchema>;
 export type CoachingProfile = typeof coachingProfiles.$inferSelect;
 export type CoachAccessRequest = z.infer<typeof coachAccessRequestSchema>;
 
+export type InsertConnection = z.infer<typeof insertConnectionSchema>;
+export type Connection = typeof connections.$inferSelect;
+
 export type RedeemCode = z.infer<typeof redeemCodeSchema>;
 export type Login = z.infer<typeof loginSchema>;
 
@@ -453,5 +491,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   matchesAsPlayerOnePartner: many(matches, { relationName: "playerOnePartner" }),
   matchesAsPlayerTwoPartner: many(matches, { relationName: "playerTwoPartner" }),
   rankingHistory: many(rankingHistory),
-  coachingProfile: one(coachingProfiles)
+  coachingProfile: one(coachingProfiles),
+  connectionRequestsSent: many(connections, { relationName: "connectionRequests" }),
+  connectionRequestsReceived: many(connections, { relationName: "connectionReceived" })
 }));

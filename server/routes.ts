@@ -856,6 +856,197 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Connection routes (social features)
+  app.post("/api/connections", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const { recipientId, type, message, metadata } = req.body;
+      
+      if (!recipientId || !type) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      // Check if connection already exists
+      const existingConnection = await storage.getConnectionByUsers(userId, recipientId, type);
+      if (existingConnection) {
+        return res.status(400).json({ 
+          message: "Connection already exists", 
+          connection: existingConnection 
+        });
+      }
+      
+      // Create the connection
+      const connection = await storage.createConnection({
+        requesterId: userId,
+        recipientId,
+        type,
+        status: "pending",
+        notes: message || null,
+        metadata: metadata || null
+      });
+      
+      // Create an activity for the requester
+      await storage.createActivity({
+        userId,
+        type: "connection_request_sent",
+        description: `Sent ${type} connection request`,
+        xpEarned: 5, // Small XP reward for social actions
+        metadata: { connectionId: connection.id, recipientId, connectionType: type }
+      });
+      
+      // Create an activity for the recipient
+      await storage.createActivity({
+        userId: recipientId,
+        type: "connection_request_received",
+        description: `Received ${type} connection request`,
+        xpEarned: 0, // No XP for receiving requests
+        metadata: { connectionId: connection.id, requesterId: userId, connectionType: type }
+      });
+      
+      res.status(201).json(connection);
+    } catch (error) {
+      console.error("Error creating connection:", error);
+      res.status(500).json({ message: "Error creating connection" });
+    }
+  });
+  
+  app.get("/api/connections/sent", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const { type, status } = req.query;
+      
+      const connections = await storage.getUserSentConnections(
+        userId, 
+        type as string | undefined, 
+        status as string | undefined
+      );
+      
+      res.json(connections);
+    } catch (error) {
+      console.error("Error retrieving sent connections:", error);
+      res.status(500).json({ message: "Error retrieving sent connections" });
+    }
+  });
+  
+  app.get("/api/connections/received", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const { type, status } = req.query;
+      
+      const connections = await storage.getUserReceivedConnections(
+        userId, 
+        type as string | undefined, 
+        status as string | undefined
+      );
+      
+      res.json(connections);
+    } catch (error) {
+      console.error("Error retrieving received connections:", error);
+      res.status(500).json({ message: "Error retrieving received connections" });
+    }
+  });
+  
+  app.patch("/api/connections/:id/status", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const connectionId = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      if (!status || !["accepted", "declined", "ended"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+      
+      // Verify the connection exists and the user is authorized to update it
+      const connection = await storage.getConnection(connectionId);
+      if (!connection) {
+        return res.status(404).json({ message: "Connection not found" });
+      }
+      
+      // Check if user is authorized (must be recipient for accept/decline, either party for ended)
+      if (status === "accepted" || status === "declined") {
+        if (connection.recipientId !== userId) {
+          return res.status(403).json({ message: "Only the recipient can accept or decline a connection" });
+        }
+      } else if (status === "ended") {
+        if (connection.requesterId !== userId && connection.recipientId !== userId) {
+          return res.status(403).json({ message: "Only participants can end a connection" });
+        }
+      }
+      
+      // Update the connection status
+      const updatedConnection = await storage.updateConnectionStatus(connectionId, status);
+      
+      // Create activities based on the status change
+      let requesterActivityType: string, requesterActivityDesc: string, recipientActivityType: string, recipientActivityDesc: string;
+      let requesterXP = 0, recipientXP = 0;
+      
+      if (status === "accepted") {
+        requesterActivityType = "connection_accepted";
+        requesterActivityDesc = `${connection.type} connection request was accepted`;
+        requesterXP = 10; // XP reward for successful connection
+        
+        recipientActivityType = "connection_accepted";
+        recipientActivityDesc = `Accepted ${connection.type} connection request`;
+        recipientXP = 10; // Both users get XP for a successful connection
+      } else if (status === "declined") {
+        requesterActivityType = "connection_declined";
+        requesterActivityDesc = `${connection.type} connection request was declined`;
+        
+        recipientActivityType = "connection_declined";
+        recipientActivityDesc = `Declined ${connection.type} connection request`;
+      } else if (status === "ended") {
+        const actorId = userId;
+        const otherId = userId === connection.requesterId ? connection.recipientId : connection.requesterId;
+        
+        requesterActivityType = "connection_ended";
+        requesterActivityDesc = userId === connection.requesterId 
+          ? `Ended ${connection.type} connection` 
+          : `${connection.type} connection was ended`;
+        
+        recipientActivityType = "connection_ended";
+        recipientActivityDesc = userId === connection.recipientId 
+          ? `Ended ${connection.type} connection` 
+          : `${connection.type} connection was ended`;
+      }
+      
+      // Create the activity records
+      await storage.createActivity({
+        userId: connection.requesterId,
+        type: requesterActivityType as "connection_accepted" | "connection_declined" | "connection_ended",
+        description: requesterActivityDesc,
+        xpEarned: requesterXP,
+        metadata: { connectionId, status }
+      });
+      
+      await storage.createActivity({
+        userId: connection.recipientId,
+        type: recipientActivityType as "connection_accepted" | "connection_declined" | "connection_ended",
+        description: recipientActivityDesc,
+        xpEarned: recipientXP,
+        metadata: { connectionId, status }
+      });
+      
+      res.json(updatedConnection);
+    } catch (error) {
+      console.error("Error updating connection status:", error);
+      res.status(500).json({ message: "Error updating connection status" });
+    }
+  });
+  
+  app.get("/api/connections/coaching", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      // Get active coaching connections with user info
+      const connections = await storage.getActiveCoachingConnections(userId);
+      
+      res.json(connections);
+    } catch (error) {
+      console.error("Error retrieving coaching connections:", error);
+      res.status(500).json({ message: "Error retrieving coaching connections" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
