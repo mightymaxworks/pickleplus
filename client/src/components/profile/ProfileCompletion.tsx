@@ -101,17 +101,19 @@ function TierMarker({
   tiers: Array<{ level: number, label: string, xp: number }> 
 }) {
   return (
-    <div className="relative h-8 mb-2">
+    <div className="relative h-12 mb-6 mt-4">
+      {/* Progress line */}
       <div className="absolute w-full h-1 bg-gray-200 top-3"></div>
       
+      {/* Tier markers */}
       {tiers.map((tier, index) => (
         <div 
           key={index} 
           className="absolute flex flex-col items-center" 
-          style={{ left: `${tier.level}%` }}
+          style={{ left: `calc(${tier.level}% - 20px)`, width: "40px" }}
         >
           <div className={`w-3 h-3 rounded-full ${percentage >= tier.level ? 'bg-amber-500' : 'bg-gray-300'} relative top-2`}></div>
-          <div className="text-xs mt-3 font-medium">
+          <div className="text-xs mt-3 text-center font-medium whitespace-nowrap">
             {tier.label}
             <span className="block text-gray-400 text-[10px]">+{tier.xp} XP</span>
           </div>
@@ -119,9 +121,9 @@ function TierMarker({
       ))}
       
       {/* Starting point */}
-      <div className="absolute left-0 flex flex-col items-center">
+      <div className="absolute left-0 flex flex-col items-center" style={{ width: "40px" }}>
         <div className={`w-3 h-3 rounded-full ${percentage > 0 ? 'bg-amber-500' : 'bg-gray-300'} relative top-2`}></div>
-        <div className="text-xs mt-3 font-medium">
+        <div className="text-xs mt-3 text-center font-medium whitespace-nowrap">
           0%
           <span className="block text-gray-400 text-[10px]">Start</span>
         </div>
@@ -131,16 +133,16 @@ function TierMarker({
       {percentage > 0 && percentage < 100 && (
         <div 
           className="absolute flex flex-col items-center" 
-          style={{ left: `${percentage}%` }}
+          style={{ left: `${percentage}%`, transform: 'translateX(-50%)' }}
         >
-          <div className="w-4 h-4 rounded-full bg-green-500 relative top-[6px] border-2 border-white"></div>
+          <div className="w-4 h-4 rounded-full bg-green-500 relative top-[6px] border-2 border-white shadow-sm"></div>
         </div>
       )}
       
       {/* End point - 100% */}
-      <div className="absolute right-0 flex flex-col items-center">
+      <div className="absolute right-0 flex flex-col items-center" style={{ width: "40px" }}>
         <div className={`w-3 h-3 rounded-full ${percentage >= 100 ? 'bg-amber-500' : 'bg-gray-300'} relative top-2`}></div>
-        <div className="text-xs mt-3 font-medium">
+        <div className="text-xs mt-3 text-center font-medium whitespace-nowrap">
           100%
           <span className="block text-gray-400 text-[10px]">Complete</span>
         </div>
