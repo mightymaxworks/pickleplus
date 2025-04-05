@@ -14,6 +14,7 @@ import LandingPage from "@/pages/LandingPage";
 import TournamentCheckIn from "@/pages/TournamentCheckIn";
 import AdminCodesPage from "@/pages/AdminCodesPage";
 import AdminDashboardPage from "@/pages/AdminDashboardPage";
+import AdminUsersPage from "@/pages/AdminUsersPage";
 import CoachingPage from "@/pages/CoachingPage";
 import ConnectionsPage from "@/pages/ConnectionsPage";
 import ComingSoonPage from "@/pages/ComingSoonPage";
@@ -158,6 +159,12 @@ function AppRoutes() {
         <Route path="/admin/codes">
           <MainLayout>
             <AdminCodesPage />
+          </MainLayout>
+        </Route>
+        
+        <Route path="/admin/users">
+          <MainLayout>
+            <AdminUsersPage />
           </MainLayout>
         </Route>
 

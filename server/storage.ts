@@ -13,7 +13,7 @@ import {
   connections, type Connection, type InsertConnection
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or, desc, sql } from "drizzle-orm";
+import { eq, and, or, desc, asc, sql } from "drizzle-orm";
 
 // Storage interface for all CRUD operations
 export interface IStorage {
@@ -28,6 +28,14 @@ export interface IStorage {
   searchUsers(query: string, excludeUserId?: number): Promise<User[]>;
   getUserCount(): Promise<number>;
   getActiveUserCount(): Promise<number>;
+  getUsers(options: { 
+    page?: number; 
+    limit?: number; 
+    sortBy?: string; 
+    sortDir?: string; 
+    search?: string; 
+    filter?: string 
+  }): Promise<{ users: User[]; totalUsers: number }>;
   
   // Profile operations
   updateUserProfile(userId: number, profileData: any): Promise<User | undefined>;
@@ -375,6 +383,74 @@ export class MemStorage implements IStorage {
       })
       // Limit to 10 results for performance
       .slice(0, 10);
+  }
+  
+  async getUsers({ page = 1, limit = 10, sortBy = "createdAt", sortDir = "desc", search = "", filter = "" }: {
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortDir?: string;
+    search?: string;
+    filter?: string;
+  }): Promise<{ users: User[]; totalUsers: number }> {
+    // Convert search query to lowercase for case-insensitive search
+    const lowercaseSearch = search.toLowerCase();
+    
+    // Filter users based on search and filter criteria
+    let filteredUsers = Array.from(this.users.values()).filter(user => {
+      // Apply search filter if provided
+      if (search) {
+        const matchesSearch = (
+          user.username.toLowerCase().includes(lowercaseSearch) ||
+          (user.displayName && user.displayName.toLowerCase().includes(lowercaseSearch)) ||
+          (user.email && user.email.toLowerCase().includes(lowercaseSearch))
+        );
+        
+        if (!matchesSearch) return false;
+      }
+      
+      // Apply role filter if provided
+      if (filter) {
+        switch (filter) {
+          case "admin":
+            if (!user.isAdmin) return false;
+            break;
+          case "coach":
+            if (!user.isCoach) return false;
+            break;
+          case "founding":
+            if (!user.isFoundingMember) return false;
+            break;
+        }
+      }
+      
+      return true;
+    });
+    
+    // Sort the filtered users
+    filteredUsers.sort((a, b) => {
+      const aValue = a[sortBy as keyof User];
+      const bValue = b[sortBy as keyof User];
+      
+      // Handle undefined or null values
+      if (aValue === undefined || aValue === null) return sortDir === "asc" ? -1 : 1;
+      if (bValue === undefined || bValue === null) return sortDir === "asc" ? 1 : -1;
+      
+      // Compare values based on sort direction
+      if (aValue < bValue) return sortDir === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+    
+    // Apply pagination
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+    
+    return {
+      users: paginatedUsers,
+      totalUsers: filteredUsers.length
+    };
   }
   
   // Profile operations
@@ -1347,6 +1423,90 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('[storage] getActiveUserCount error:', error);
       return 0;
+    }
+  }
+  
+  // Admin user management methods
+  async getUsers({ page = 1, limit = 10, sortBy = "createdAt", sortDir = "desc", search = "", filter = "" }: {
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortDir?: "asc" | "desc";
+    search?: string;
+    filter?: string;
+  }): Promise<{ users: User[]; totalUsers: number }> {
+    try {
+      const offset = (page - 1) * limit;
+      
+      // Build the base query
+      let query = db.select().from(users);
+      
+      // Apply search filter if provided
+      if (search) {
+        query = query.where(
+          or(
+            // Search by username, display name or email
+            sql`LOWER(${users.username}) LIKE LOWER(${'%' + search + '%'})`,
+            sql`LOWER(${users.displayName}) LIKE LOWER(${'%' + search + '%'})`,
+            sql`LOWER(${users.email}) LIKE LOWER(${'%' + search + '%'})`
+          )
+        );
+      }
+      
+      // Apply role filter if provided
+      if (filter) {
+        switch (filter) {
+          case "admin":
+            query = query.where(eq(users.isAdmin, true));
+            break;
+          case "coach":
+            query = query.where(eq(users.isCoach, true));
+            break;
+          case "founding":
+            query = query.where(eq(users.isFoundingMember, true));
+            break;
+          case "active":
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            query = query.where(
+              or(
+                sql`${users.lastLoginAt} > ${thirtyDaysAgo}`,
+                sql`${users.lastMatchDate} > ${thirtyDaysAgo}`
+              )
+            );
+            break;
+        }
+      }
+      
+      // Get total count for pagination
+      const countResult = await db.select({ count: sql<number>`count(*)` }).from(users);
+      const totalUsers = countResult[0].count;
+      
+      // Apply sorting
+      if (sortBy && users[sortBy as keyof typeof users]) {
+        query = query.orderBy(
+          sortDir === "asc" 
+            ? asc(users[sortBy as keyof typeof users]) 
+            : desc(users[sortBy as keyof typeof users])
+        );
+      } else {
+        // Default sort by createdAt
+        query = query.orderBy(desc(users.createdAt));
+      }
+      
+      // Apply pagination
+      query = query.limit(limit).offset(offset);
+      
+      // Execute the query
+      const result = await query;
+      
+      return {
+        users: result,
+        totalUsers
+      };
+    } catch (error) {
+      console.error('[storage] getUsers error:', error);
+      return { users: [], totalUsers: 0 };
     }
   }
 

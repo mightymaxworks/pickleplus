@@ -823,6 +823,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Admin User Management Endpoints
+  
+  // Get users with pagination, filtering and sorting
+  app.get("/api/admin/users", isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+    try {
+      const page = req.query.page ? parseInt(req.query.page as string) : 1;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      const sortBy = req.query.sortBy as string || "createdAt";
+      const sortDir = req.query.sortDir === "asc" ? "asc" : "desc";
+      const search = req.query.search as string || "";
+      const filter = req.query.filter as string || "";
+      
+      const result = await storage.getUsers({
+        page,
+        limit,
+        sortBy,
+        sortDir,
+        search,
+        filter
+      });
+      
+      // Remove sensitive data like passwords from the response
+      const usersWithoutPasswords = result.users.map(user => {
+        const { password, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+      });
+      
+      res.json({
+        users: usersWithoutPasswords,
+        totalUsers: result.totalUsers,
+        totalPages: Math.ceil(result.totalUsers / limit),
+        currentPage: page
+      });
+    } catch (error) {
+      console.error('[adminGetUsers] Error:', error);
+      res.status(500).json({ message: "Error retrieving users" });
+    }
+  });
+  
+  // Get a single user with detailed information
+  app.get("/api/admin/users/:id", isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      const user = await storage.getUser(id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Get additional user data
+      const activities = await storage.getUserActivities(id, 10);
+      const achievements = await storage.getUserAchievements(id);
+      
+      // Remove password from user object
+      const { password, ...userWithoutPassword } = user;
+      
+      res.json({
+        user: userWithoutPassword,
+        activities,
+        achievements
+      });
+    } catch (error) {
+      console.error('[adminGetUser] Error:', error);
+      res.status(500).json({ message: "Error retrieving user details" });
+    }
+  });
+  
+  // Update a user's information (admin)
+  app.patch("/api/admin/users/:id", isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      const user = await storage.getUser(id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // These are the fields that can be updated by an admin
+      const { 
+        displayName, email, isAdmin: makeAdmin, isCoach, hasCoachAccess,
+        isActive, isFoundingMember, level, xp, rankingPoints
+      } = req.body;
+      
+      // Create update object with only the fields that were provided
+      const updates: Record<string, any> = {};
+      
+      if (displayName !== undefined) updates.displayName = displayName;
+      if (email !== undefined) updates.email = email;
+      if (makeAdmin !== undefined) updates.isAdmin = makeAdmin;
+      if (isCoach !== undefined) updates.isCoach = isCoach;
+      if (hasCoachAccess !== undefined) updates.hasCoachAccess = hasCoachAccess;
+      if (isActive !== undefined) updates.isActive = isActive;
+      if (isFoundingMember !== undefined) updates.isFoundingMember = isFoundingMember;
+      if (level !== undefined) updates.level = level;
+      if (xp !== undefined) updates.xp = xp;
+      if (rankingPoints !== undefined) updates.rankingPoints = rankingPoints;
+      
+      // Update the user
+      const updatedUser = await storage.updateUser(id, updates);
+      if (!updatedUser) {
+        return res.status(500).json({ message: "Failed to update user" });
+      }
+      
+      // Remove password from response
+      const { password, ...userWithoutPassword } = updatedUser;
+      
+      // Create an admin activity log
+      await storage.createActivity({
+        userId: (req.user as any).id,
+        type: "admin_user_update",
+        description: `Updated user ${updatedUser.username}`,
+        xpEarned: 0,
+        metadata: { 
+          targetUserId: id,
+          updatedFields: Object.keys(updates)
+        }
+      });
+      
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error('[adminUpdateUser] Error:', error);
+      res.status(500).json({ message: "Error updating user" });
+    }
+  });
+  
   // Admin only redemption code routes
   app.get("/api/redemption-codes", isAuthenticated, isAdmin, async (req: Request, res: Response) => {
     try {
