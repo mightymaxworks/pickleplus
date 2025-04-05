@@ -287,7 +287,10 @@ export default function Profile() {
             </CardContent>
           </Card>
 
-          {/* Passport QR Card - removed in favor of global QR code button */}
+          {/* Passport QR Card */}
+          {showPassportQR && (
+            <PassportQrCodeCard user={user} />
+          )}
           
           {/* Upcoming Tournaments Card */}
           <UpcomingTournamentsCard 

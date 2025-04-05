@@ -21,15 +21,14 @@ export function QrCodeFAB() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   
+  // Generate a fixed passport ID if one doesn't exist (for demo purposes)
+  const passportId = user?.passportId || `PKL-${Math.floor(100000 + Math.random() * 900000)}`;
+  
   // Generate a connection token - in a real app, this would be secured with a server-side token
-  const connectionToken = user?.passportId 
-    ? btoa(`${user.passportId}:${Date.now()}`)
-    : '';
+  const connectionToken = btoa(`${passportId}:${Date.now()}`);
   
   // Include connection information in the URL
-  const passportUrl = user?.passportId 
-    ? `https://pickleplus.app/connect/${user.passportId}?token=${connectionToken}`
-    : '';
+  const passportUrl = `https://pickleplus.app/connect/${passportId}?token=${connectionToken}`;
   
   const handleScan = () => {
     setFabOpen(false);
@@ -119,52 +118,39 @@ export function QrCodeFAB() {
           
           <div className="flex flex-col items-center p-4">
             <div className={`p-3 rounded-xl mb-3 ${isFoundingMember ? 'bg-gradient-to-b from-amber-50 to-white border border-amber-300/50 shadow-sm dark:from-amber-950/10 dark:to-black/20 dark:border-amber-500/20' : 'bg-white border'}`}>
-              {user?.passportId ? (
-                <QRCodeSVG 
-                  value={passportUrl} 
-                  size={180} 
-                  bgColor={"#FFFFFF"}
-                  fgColor={isFoundingMember ? "#D97706" : "#000000"}
-                  level={"H"}
-                  includeMargin={false}
-                />
-              ) : (
-                <div className="flex items-center justify-center h-[180px] w-[180px] border border-dashed border-border rounded">
-                  <div className="text-center text-muted-foreground text-sm">
-                    <QrCode className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                    <p>No passport generated</p>
-                  </div>
-                </div>
-              )}
+              <QRCodeSVG 
+                value={passportUrl} 
+                size={180} 
+                bgColor={"#FFFFFF"}
+                fgColor={isFoundingMember ? "#D97706" : "#000000"}
+                level={"H"}
+                includeMargin={false}
+              />
             </div>
             
-            {user?.passportId && (
-              <div className="flex items-center gap-1 font-mono text-xs text-center text-muted-foreground mb-4">
-                <span>ID: {user.passportId}</span>
-                <button 
-                  onClick={() => {
-                    if (user.passportId) {
-                      navigator.clipboard.writeText(user.passportId);
-                      toast({
-                        title: "ID copied",
-                        description: "Passport ID has been copied to clipboard",
-                      });
-                    }
-                  }}
-                  className="inline-flex text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <Copy className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            )}
+            <div className="flex items-center gap-1 font-mono text-xs text-center text-muted-foreground mb-4">
+              <span>ID: {passportId}</span>
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(passportId);
+                  toast({
+                    title: "ID copied",
+                    description: "Passport ID has been copied to clipboard",
+                  });
+                }}
+                className="inline-flex text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Copy className="h-3.5 w-3.5" />
+              </button>
+            </div>
             
             {/* Player Level & Tier */}
             {user?.level && (
               <div className="w-full mb-4 px-3 py-2 bg-gradient-to-r from-indigo-50 to-white dark:from-indigo-950/20 dark:to-transparent rounded-lg border border-indigo-100 dark:border-indigo-900/30 text-center">
-                <div className="flex justify-center items-center gap-2 mb-1">
+                <div className="flex justify-center items-center gap-2 mb-1 flex-wrap">
                   <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">Level {user.level}</span>
                   <div className="h-3 w-3 rounded-full bg-indigo-600 dark:bg-indigo-400"></div>
-                  <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                  <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 truncate">
                     {user.level >= 1 && user.level <= 15 && "Dink Dabbler"}
                     {user.level >= 16 && user.level <= 30 && "Rally Rookie"}
                     {user.level >= 31 && user.level <= 45 && "Serve Specialist"}
@@ -175,7 +161,7 @@ export function QrCodeFAB() {
                   </span>
                 </div>
                 <div className="text-[10px] text-muted-foreground">
-                  {user.xp?.toLocaleString()} XP total
+                  {user.xp?.toLocaleString() || 0} XP total
                 </div>
               </div>
             )}
@@ -192,23 +178,26 @@ export function QrCodeFAB() {
                     });
                   }
                 }}
-                className={isFoundingMember ? 'border-amber-200 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 dark:border-amber-900 dark:hover:bg-amber-950 dark:hover:border-amber-700' : ''}
+                className={`text-xs flex-col h-auto py-3 ${isFoundingMember ? 'border-amber-200 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 dark:border-amber-900 dark:hover:bg-amber-950 dark:hover:border-amber-700' : ''}`}
               >
-                <LinkIcon className="h-4 w-4 mr-2" /> 
-                Copy Link
+                <LinkIcon className="h-4 w-4 mb-1" /> 
+                <span className="truncate">Copy Link</span>
               </Button>
               <Button 
                 variant="outline" 
                 onClick={() => setLocation('/scan')}
+                className="text-xs flex-col h-auto py-3"
               >
-                <Scan className="h-4 w-4 mr-2" />
-                Scan
+                <Scan className="h-4 w-4 mb-1" />
+                <span className="truncate">Scan</span>
               </Button>
               <Button 
                 variant="outline" 
                 onClick={() => setOpen(false)}
+                className="text-xs flex-col h-auto py-3"
               >
-                Close
+                <X className="h-4 w-4 mb-1" />
+                <span className="truncate">Close</span>
               </Button>
             </div>
           </div>

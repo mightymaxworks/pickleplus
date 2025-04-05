@@ -20,16 +20,14 @@ export function PassportQrCodeCard({ user }: PassportQrCodeCardProps) {
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedId, setCopiedId] = useState(false);
   
-  // Generate a random passport ID if one doesn't exist
+  // Generate a fixed passport ID if one doesn't exist (for demo purposes)
   const passportId = user.passportId || `PKL-${Math.floor(100000 + Math.random() * 900000)}`;
   
   // Generate a connection token - in a real app, this would be secured with a server-side token
   const connectionToken = btoa(`${passportId}:${Date.now()}`);
   
   // Include connection information in the URL
-  const passportUrl = passportId 
-    ? `https://pickleplus.app/connect/${passportId}?token=${connectionToken}`
-    : '';
+  const passportUrl = `https://pickleplus.app/connect/${passportId}?token=${connectionToken}`;
     
   const handleCopyLink = () => {
     if (passportUrl) {
@@ -88,40 +86,29 @@ export function PassportQrCodeCard({ user }: PassportQrCodeCardProps) {
       </CardHeader>
       <CardContent className="flex flex-col items-center">
         <div className={`p-3 rounded-xl mb-3 ${isFoundingMember ? 'bg-gradient-to-b from-amber-50 to-white border border-amber-300/50 shadow-sm dark:from-amber-950/10 dark:to-black/20 dark:border-amber-500/20' : 'bg-white border'}`}>
-          {passportId ? (
-            <QRCodeSVG 
-              value={passportUrl} 
-              size={180} 
-              bgColor={"#FFFFFF"}
-              fgColor={isFoundingMember ? "#D97706" : "#000000"}
-              level={"H"}
-              includeMargin={false}
-            />
-          ) : (
-            <div className="flex items-center justify-center h-[180px] w-[180px] border border-dashed border-border rounded">
-              <div className="text-center text-muted-foreground text-sm">
-                <QrCode className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                <p>No passport generated</p>
-              </div>
-            </div>
-          )}
+          <QRCodeSVG 
+            value={passportUrl} 
+            size={180} 
+            bgColor={"#FFFFFF"}
+            fgColor={isFoundingMember ? "#D97706" : "#000000"}
+            level={"H"}
+            includeMargin={false}
+          />
         </div>
         
-        {passportId && (
-          <div className="flex items-center gap-1 font-mono text-xs text-center text-muted-foreground mb-4">
-            <span>ID: {passportId}</span>
-            <button 
-              onClick={handleCopyId}
-              className="inline-flex text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {copiedId ? (
-                <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
-              ) : (
-                <Copy className="h-3.5 w-3.5" />
-              )}
-            </button>
-          </div>
-        )}
+        <div className="flex items-center gap-1 font-mono text-xs text-center text-muted-foreground mb-4">
+          <span>ID: {passportId}</span>
+          <button 
+            onClick={handleCopyId}
+            className="inline-flex text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {copiedId ? (
+              <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+            ) : (
+              <Copy className="h-3.5 w-3.5" />
+            )}
+          </button>
+        </div>
         
         <div className="grid grid-cols-3 gap-2 w-full">
           <Button 
