@@ -8,7 +8,8 @@ import {
   redemptionCodes, type RedemptionCode, type InsertRedemptionCode,
   userRedemptions, type UserRedemption, type InsertUserRedemption,
   matches, type Match, type InsertMatch,
-  rankingHistory, type RankingHistory, type InsertRankingHistory
+  rankingHistory, type RankingHistory, type InsertRankingHistory,
+  coachingProfiles, type CoachingProfile, type InsertCoachingProfile
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, desc, sql } from "drizzle-orm";
@@ -72,6 +73,16 @@ export interface IStorage {
   // Leaderboard operations
   getLeaderboard(limit: number): Promise<User[]>;
   getRankingLeaderboard(limit: number): Promise<User[]>;
+  
+  // Coaching profile operations
+  getCoachingProfile(userId: number): Promise<CoachingProfile | undefined>;
+  createCoachingProfile(profile: InsertCoachingProfile): Promise<CoachingProfile>;
+  updateCoachingProfile(userId: number, updates: Partial<InsertCoachingProfile>): Promise<CoachingProfile | undefined>;
+  getCoachingProfiles(limit: number, offset: number): Promise<CoachingProfile[]>;
+  getVerifiedCoachingProfiles(limit: number, offset: number): Promise<CoachingProfile[]>;
+  setPCPCertification(userId: number, isVerified: boolean): Promise<CoachingProfile | undefined>;
+  setCoachingProfileActive(userId: number, isActive: boolean): Promise<CoachingProfile | undefined>;
+  setAdminVerification(userId: number, isVerified: boolean): Promise<CoachingProfile | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -85,6 +96,7 @@ export class MemStorage implements IStorage {
   private userRedemptions: Map<number, UserRedemption>;
   private matches: Map<number, Match>;
   private rankingHistories: Map<number, RankingHistory>;
+  private coachingProfiles: Map<number, CoachingProfile>;
   
   private userId: number;
   private tournamentId: number;
@@ -96,6 +108,7 @@ export class MemStorage implements IStorage {
   private userRedemptionId: number;
   private matchId: number;
   private rankingHistoryId: number;
+  private coachingProfileId: number;
 
   constructor() {
     this.users = new Map();
@@ -108,6 +121,7 @@ export class MemStorage implements IStorage {
     this.userRedemptions = new Map();
     this.matches = new Map();
     this.rankingHistories = new Map();
+    this.coachingProfiles = new Map();
     
     this.userId = 1;
     this.tournamentId = 1;
@@ -119,6 +133,7 @@ export class MemStorage implements IStorage {
     this.userRedemptionId = 1;
     this.matchId = 1;
     this.rankingHistoryId = 1;
+    this.coachingProfileId = 1;
     
     // Initialize with sample achievements and redemption codes
     this.initSampleData();
@@ -710,6 +725,134 @@ export class MemStorage implements IStorage {
       .sort((a, b) => (b.rankingPoints || 0) - (a.rankingPoints || 0))
       .slice(0, limit);
   }
+  
+  // Coaching profile operations
+  async getCoachingProfile(userId: number): Promise<CoachingProfile | undefined> {
+    return Array.from(this.coachingProfiles.values()).find(
+      (profile) => profile.userId === userId
+    );
+  }
+
+  async createCoachingProfile(insertProfile: InsertCoachingProfile): Promise<CoachingProfile> {
+    const id = this.coachingProfileId++;
+    const createdAt = new Date();
+    const profile: CoachingProfile = {
+      ...insertProfile,
+      id,
+      createdAt,
+      isActive: insertProfile.isActive || false,
+      accessType: insertProfile.accessType,
+      accessGrantedAt: insertProfile.accessGrantedAt || createdAt,
+      isPCPCertified: insertProfile.isPCPCertified || false,
+      isAdminVerified: insertProfile.isAdminVerified || false,
+      yearsCoaching: insertProfile.yearsCoaching || null,
+      certifications: insertProfile.certifications || [],
+      teachingPhilosophy: insertProfile.teachingPhilosophy || null,
+      hourlyRate: insertProfile.hourlyRate || null,
+      packagePricing: insertProfile.packagePricing || [],
+      specializations: insertProfile.specializations || [],
+      coachingFormats: insertProfile.coachingFormats || [],
+      country: insertProfile.country || null,
+      stateProvince: insertProfile.stateProvince || null,
+      city: insertProfile.city || null,
+      facilities: insertProfile.facilities || [],
+      travelRadius: insertProfile.travelRadius || null,
+      availabilitySchedule: insertProfile.availabilitySchedule || {},
+      studentSuccesses: insertProfile.studentSuccesses || [],
+      contactPreferences: insertProfile.contactPreferences || {},
+      updatedAt: null
+    };
+    
+    this.coachingProfiles.set(id, profile);
+    return profile;
+  }
+
+  async updateCoachingProfile(userId: number, updates: Partial<InsertCoachingProfile>): Promise<CoachingProfile | undefined> {
+    const profile = await this.getCoachingProfile(userId);
+    if (!profile) return undefined;
+    
+    const updatedProfile = { ...profile, ...updates };
+    this.coachingProfiles.set(profile.id, updatedProfile);
+    return updatedProfile;
+  }
+
+  async getCoachingProfiles(limit: number = 10, offset: number = 0): Promise<CoachingProfile[]> {
+    return Array.from(this.coachingProfiles.values())
+      .filter(profile => profile.isActive)
+      .sort((a, b) => {
+        // Sort by verified status first (verified coaches first)
+        if (a.isAdminVerified !== b.isAdminVerified) {
+          return a.isAdminVerified ? -1 : 1;
+        }
+        
+        // Then by PCP certification (certified coaches first)
+        if (a.isPCPCertified !== b.isPCPCertified) {
+          return a.isPCPCertified ? -1 : 1;
+        }
+        
+        // Then by creation date (newest first)
+        const aDate = a.createdAt ? a.createdAt.getTime() : 0;
+        const bDate = b.createdAt ? b.createdAt.getTime() : 0;
+        return bDate - aDate;
+      })
+      .slice(offset, offset + limit);
+  }
+
+  async getVerifiedCoachingProfiles(limit: number = 10, offset: number = 0): Promise<CoachingProfile[]> {
+    return Array.from(this.coachingProfiles.values())
+      .filter(profile => profile.isActive && profile.isAdminVerified)
+      .sort((a, b) => {
+        // Sort by PCP certification first (certified coaches first)
+        if (a.isPCPCertified !== b.isPCPCertified) {
+          return a.isPCPCertified ? -1 : 1;
+        }
+        
+        // Then by creation date (newest first)
+        const aDate = a.createdAt ? a.createdAt.getTime() : 0;
+        const bDate = b.createdAt ? b.createdAt.getTime() : 0;
+        return bDate - aDate;
+      })
+      .slice(offset, offset + limit);
+  }
+
+  async setPCPCertification(userId: number, isVerified: boolean): Promise<CoachingProfile | undefined> {
+    const profile = await this.getCoachingProfile(userId);
+    if (!profile) return undefined;
+    
+    const updatedProfile = { 
+      ...profile, 
+      isPCPCertified: isVerified,
+      updatedAt: new Date()
+    };
+    this.coachingProfiles.set(profile.id, updatedProfile);
+    return updatedProfile;
+  }
+
+  async setCoachingProfileActive(userId: number, isActive: boolean): Promise<CoachingProfile | undefined> {
+    const profile = await this.getCoachingProfile(userId);
+    if (!profile) return undefined;
+    
+    const updatedProfile = { 
+      ...profile, 
+      isActive,
+      updatedAt: new Date()
+    };
+    this.coachingProfiles.set(profile.id, updatedProfile);
+    return updatedProfile;
+  }
+  
+  async setAdminVerification(userId: number, isVerified: boolean): Promise<CoachingProfile | undefined> {
+    const profile = await this.getCoachingProfile(userId);
+    if (!profile) return undefined;
+    
+    const updatedProfile = { 
+      ...profile, 
+      isAdminVerified: isVerified,
+      updatedAt: new Date()
+    };
+    this.coachingProfiles.set(profile.id, updatedProfile);
+    return updatedProfile;
+  }
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1182,6 +1325,108 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(users.rankingPoints))
       .limit(limit);
     return rankingLeaderboard;
+  }
+  
+  // Coaching profile operations
+  async getCoachingProfile(userId: number): Promise<CoachingProfile | undefined> {
+    const [profile] = await db.select()
+      .from(coachingProfiles)
+      .where(eq(coachingProfiles.userId, userId));
+    return profile;
+  }
+
+  async createCoachingProfile(insertProfile: InsertCoachingProfile): Promise<CoachingProfile> {
+    const now = new Date();
+    const defaultedProfile = {
+      ...insertProfile,
+      createdAt: now,
+      isActive: insertProfile.isActive ?? false,
+      accessGrantedAt: insertProfile.accessGrantedAt || now,
+      isPCPCertified: insertProfile.isPCPCertified ?? false,
+      isAdminVerified: insertProfile.isAdminVerified ?? false
+    };
+    
+    const [profile] = await db.insert(coachingProfiles)
+      .values(defaultedProfile)
+      .returning();
+    return profile;
+  }
+
+  async updateCoachingProfile(userId: number, updates: Partial<InsertCoachingProfile>): Promise<CoachingProfile | undefined> {
+    const [updatedProfile] = await db.update(coachingProfiles)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(eq(coachingProfiles.userId, userId))
+      .returning();
+    return updatedProfile;
+  }
+
+  async getCoachingProfiles(limit: number = 10, offset: number = 0): Promise<CoachingProfile[]> {
+    return await db.select()
+      .from(coachingProfiles)
+      .where(eq(coachingProfiles.isActive, true))
+      .orderBy(
+        desc(coachingProfiles.isAdminVerified),
+        desc(coachingProfiles.isPCPCertified),
+        desc(coachingProfiles.createdAt)
+      )
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async getVerifiedCoachingProfiles(limit: number = 10, offset: number = 0): Promise<CoachingProfile[]> {
+    return await db.select()
+      .from(coachingProfiles)
+      .where(
+        and(
+          eq(coachingProfiles.isActive, true),
+          eq(coachingProfiles.isAdminVerified, true)
+        )
+      )
+      .orderBy(
+        desc(coachingProfiles.isPCPCertified),
+        desc(coachingProfiles.createdAt)
+      )
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async setPCPCertification(userId: number, isVerified: boolean): Promise<CoachingProfile | undefined> {
+    const now = new Date();
+    const [updatedProfile] = await db.update(coachingProfiles)
+      .set({ 
+        isPCPCertified: isVerified,
+        updatedAt: now
+      })
+      .where(eq(coachingProfiles.userId, userId))
+      .returning();
+    return updatedProfile;
+  }
+
+  async setCoachingProfileActive(userId: number, isActive: boolean): Promise<CoachingProfile | undefined> {
+    const now = new Date();
+    const [updatedProfile] = await db.update(coachingProfiles)
+      .set({ 
+        isActive,
+        updatedAt: now
+      })
+      .where(eq(coachingProfiles.userId, userId))
+      .returning();
+    return updatedProfile;
+  }
+  
+  async setAdminVerification(userId: number, isVerified: boolean): Promise<CoachingProfile | undefined> {
+    const now = new Date();
+    const [updatedProfile] = await db.update(coachingProfiles)
+      .set({ 
+        isAdminVerified: isVerified,
+        updatedAt: now
+      })
+      .where(eq(coachingProfiles.userId, userId))
+      .returning();
+    return updatedProfile;
   }
 }
 

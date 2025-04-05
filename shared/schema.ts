@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json, date } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, date, varchar, decimal } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -161,6 +161,8 @@ export const redemptionCodes = pgTable("redemption_codes", {
   description: text("description"),
   isActive: boolean("is_active").default(true),
   isFoundingMemberCode: boolean("is_founding_member_code").default(false),
+  isCoachAccessCode: boolean("is_coach_access_code").default(false),
+  codeType: text("code_type").default("xp"), // xp, founding, coach, special
   maxRedemptions: integer("max_redemptions"), // Limit number of redemptions (40 for founding members)
   currentRedemptions: integer("current_redemptions").default(0),
   expiresAt: timestamp("expires_at")
@@ -270,6 +272,60 @@ export const rankingHistoryRelations = relations(rankingHistory, ({ one }) => ({
   })
 }));
 
+// Coaching profiles table schema
+export const coachingProfiles = pgTable("coaching_profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id).unique(),
+  isActive: boolean("is_active").default(true),
+  
+  // Coach access control
+  accessType: text("access_type").notNull(), // "paid", "code", "admin"
+  accessGrantedAt: timestamp("access_granted_at").defaultNow(),
+  
+  // Admin verification fields
+  isPCPCertified: boolean("is_pcp_certified").default(false),
+  isAdminVerified: boolean("is_admin_verified").default(false),
+  
+  // Qualification details
+  yearsCoaching: integer("years_coaching"),
+  certifications: json("certifications").default([]), // Array of certification objects
+  teachingPhilosophy: text("teaching_philosophy"),
+  
+  // Service details
+  hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }),
+  packagePricing: json("package_pricing").default([]), // Array of package offerings
+  specializations: json("specializations").default([]), // Array of specializations
+  coachingFormats: json("coaching_formats").default([]), // Array of formats (private, group, clinics)
+  
+  // Location details
+  country: text("country"),
+  stateProvince: text("state_province"),
+  city: text("city"),
+  facilities: json("facilities").default([]), // Array of facility names
+  travelRadius: integer("travel_radius"), // in miles/km
+  
+  // Availability
+  availabilitySchedule: json("availability_schedule").default({}), // Structured availability
+  
+  // Success stories and profiles
+  studentSuccesses: json("student_successes").default([]),
+  
+  // Contact and booking preferences
+  contactPreferences: json("contact_preferences").default({}),
+  
+  // Metadata and timestamps
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at")
+});
+
+// Coaching profiles relations
+export const coachingProfilesRelations = relations(coachingProfiles, ({ one }) => ({
+  user: one(users, {
+    fields: [coachingProfiles.userId],
+    references: [users.id]
+  })
+}));
+
 // Insert schema definitions using drizzle-zod
 // Schema for validating user registration
 export const registerUserSchema = createInsertSchema(users)
@@ -325,6 +381,19 @@ export const insertRankingHistorySchema = createInsertSchema(rankingHistory).omi
   createdAt: true
 });
 
+export const insertCoachingProfileSchema = createInsertSchema(coachingProfiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+// Schema for validating coach access requests
+export const coachAccessRequestSchema = z.object({
+  accessMethod: z.enum(["code", "payment"]),
+  redemptionCode: z.string().optional(),
+  paymentIntentId: z.string().optional(),
+});
+
 export const redeemCodeSchema = z.object({
   code: z.string().min(1)
 });
@@ -365,11 +434,15 @@ export type Match = typeof matches.$inferSelect;
 export type InsertRankingHistory = z.infer<typeof insertRankingHistorySchema>;
 export type RankingHistory = typeof rankingHistory.$inferSelect;
 
+export type InsertCoachingProfile = z.infer<typeof insertCoachingProfileSchema>;
+export type CoachingProfile = typeof coachingProfiles.$inferSelect;
+export type CoachAccessRequest = z.infer<typeof coachAccessRequestSchema>;
+
 export type RedeemCode = z.infer<typeof redeemCodeSchema>;
 export type Login = z.infer<typeof loginSchema>;
 
 // Now define user relations after all tables are defined
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ many, one }) => ({
   tournamentRegistrations: many(tournamentRegistrations),
   userAchievements: many(userAchievements),
   activities: many(activities),
@@ -378,5 +451,6 @@ export const usersRelations = relations(users, ({ many }) => ({
   matchesAsPlayerTwo: many(matches, { relationName: "playerTwo" }),
   matchesAsPlayerOnePartner: many(matches, { relationName: "playerOnePartner" }),
   matchesAsPlayerTwoPartner: many(matches, { relationName: "playerTwoPartner" }),
-  rankingHistory: many(rankingHistory)
+  rankingHistory: many(rankingHistory),
+  coachingProfile: one(coachingProfiles)
 }));
