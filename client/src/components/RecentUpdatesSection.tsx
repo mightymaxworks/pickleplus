@@ -34,23 +34,23 @@ export function RecentUpdatesSection() {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <FeatureCard 
-            title="Coaching Connections"
-            description="Connect with coaches, request sessions, and build your dream coaching team."
-            icon="👨‍🏫"
+            title="Tournament Passport"
+            description="Check in to tournaments with QR codes and track your event history with enhanced details."
+            icon="🎫"
             delay={0.4}
           />
           
           <FeatureCard 
-            title="Enhanced Social"
-            description="Build your pickleball network with our new connection system and player discovery."
+            title="Player Connections"
+            description="Connect with fellow players, find practice partners, and build your pickleball network."
             icon="🤝"
             delay={0.5}
           />
           
           <FeatureCard 
-            title="XP Progression"
-            description="Enjoy refined progression with better tier indicators and balanced XP distribution."
-            icon="⭐"
+            title="Achievement System"
+            description="Unlock new achievements, earn XP rewards, and showcase your accomplishments."
+            icon="🏆"
             delay={0.6}
           />
         </div>
@@ -118,32 +118,32 @@ function FullChangelogDialog({ isOpen, setIsOpen }: FullChangelogDialogProps) {
             
             <div className="space-y-4">
               <div>
-                <h4 className="text-lg font-semibold text-[#FF5722]">Coaching Connections</h4>
+                <h4 className="text-lg font-semibold text-[#FF5722]">Tournament Passport System</h4>
                 <ul className="list-disc pl-5 mt-1 space-y-1 text-gray-700">
-                  <li>Connect with coaches directly within the Pickle+ platform</li>
-                  <li>Request coaching sessions from verified pickleball experts</li>
-                  <li>View your active coaching relationships in one convenient place</li>
-                  <li>Build your dream team of coaches for different aspects of your game</li>
+                  <li>QR code check-ins for swift tournament registration</li>
+                  <li>Enhanced tournament history tracking</li>
+                  <li>Improved tournament leaderboards with real-time updates</li>
+                  <li>Tournament notifications for upcoming events</li>
                 </ul>
               </div>
               
               <div>
-                <h4 className="text-lg font-semibold text-[#FF5722]">Enhanced Social Experience</h4>
+                <h4 className="text-lg font-semibold text-[#FF5722]">Player Connections</h4>
                 <ul className="list-disc pl-5 mt-1 space-y-1 text-gray-700">
-                  <li>New connection system for building your pickleball network</li>
-                  <li>Real-time connection notifications keep you in the loop</li>
-                  <li>Improved player discovery to find partners and coaches</li>
-                  <li>Track your social connections with activity history</li>
+                  <li>Connect with other players to build your pickleball network</li>
+                  <li>Find practice partners based on skill level and location</li>
+                  <li>Track matches played with your connections</li>
+                  <li>See connection activity in your timeline</li>
                 </ul>
               </div>
               
               <div>
-                <h4 className="text-lg font-semibold text-[#FF5722]">XP Progression Refinements</h4>
+                <h4 className="text-lg font-semibold text-[#FF5722]">Achievement System Expansion</h4>
                 <ul className="list-disc pl-5 mt-1 space-y-1 text-gray-700">
-                  <li>More balanced XP distribution for various activities</li>
-                  <li>Enhanced tier progression visual indicators</li>
-                  <li>Clear pathways from Dink Dabbler to Pickleball Pro</li>
-                  <li>Animated level-up notifications celebrate your progress</li>
+                  <li>New achievements for tournament participation</li>
+                  <li>Skills-based achievement pathways</li>
+                  <li>Improved visual badges for your profile</li>
+                  <li>XP rewards for completing achievements</li>
                 </ul>
               </div>
             </div>
@@ -158,30 +158,30 @@ function FullChangelogDialog({ isOpen, setIsOpen }: FullChangelogDialogProps) {
               <div>
                 <h4 className="text-lg font-semibold text-[#FF5722]">Profile Enhancements</h4>
                 <ul className="list-disc pl-5 mt-1 space-y-1 text-gray-700">
-                  <li>Redesigned profile pages showcase your pickleball journey</li>
-                  <li>More customization options to express your playing style</li>
-                  <li>Improved stat tracking and visualization</li>
-                  <li>Enhanced privacy controls for your profile information</li>
+                  <li>Improved profile statistics dashboard</li>
+                  <li>Match history with detailed results</li>
+                  <li>Achievement showcase section</li>
+                  <li>Enhanced privacy controls for profile information</li>
                 </ul>
               </div>
               
               <div>
-                <h4 className="text-lg font-semibold text-[#FF5722]">Tournament Experience</h4>
+                <h4 className="text-lg font-semibold text-[#FF5722]">Match Recording</h4>
                 <ul className="list-disc pl-5 mt-1 space-y-1 text-gray-700">
-                  <li>Streamlined tournament check-in process</li>
-                  <li>Improved tournament discovery based on your skill level</li>
-                  <li>Enhanced tournament detail pages with more participant information</li>
-                  <li>Quick access to upcoming tournaments right from your dashboard</li>
+                  <li>Streamlined match entry process</li>
+                  <li>Support for multiple scoring formats</li>
+                  <li>Partner selection from your connections</li>
+                  <li>Match validation improvements</li>
                 </ul>
               </div>
               
               <div>
-                <h4 className="text-lg font-semibold text-[#FF5722]">Performance & Reliability</h4>
+                <h4 className="text-lg font-semibold text-[#FF5722]">XP & Ranking System</h4>
                 <ul className="list-disc pl-5 mt-1 space-y-1 text-gray-700">
-                  <li>Faster page loading throughout the application</li>
-                  <li>Improved mobile responsiveness for on-the-go access</li>
-                  <li>Enhanced data synchronization for real-time updates</li>
-                  <li>More robust error handling for uninterrupted play</li>
+                  <li>Clearer tier progression visualization</li>
+                  <li>Balanced XP distribution for activities</li>
+                  <li>New ranking system based on match performance</li>
+                  <li>Seasonal leaderboards implementation</li>
                 </ul>
               </div>
             </div>
@@ -189,37 +189,37 @@ function FullChangelogDialog({ isOpen, setIsOpen }: FullChangelogDialogProps) {
           
           <section>
             <h3 className="text-xl font-bold mb-3 flex items-center">
-              <span className="text-[#FF5722] mr-2">🔮</span> Coming Soon
+              <span className="text-[#FF5722] mr-2">📱</span> User Experience
             </h3>
             
             <div className="space-y-4">
               <div>
-                <h4 className="text-lg font-semibold text-[#FF5722]">Messaging System</h4>
+                <h4 className="text-lg font-semibold text-[#FF5722]">Mobile Improvements</h4>
                 <ul className="list-disc pl-5 mt-1 space-y-1 text-gray-700">
-                  <li>Direct messaging with coaches and partners</li>
-                  <li>Group chats for teams and communities</li>
-                  <li>Media sharing capabilities for technique videos</li>
+                  <li>Redesigned mobile navigation</li>
+                  <li>Optimized layouts for all screen sizes</li>
+                  <li>Touch-friendly interface elements</li>
+                  <li>Improved performance on mobile devices</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h4 className="text-lg font-semibold text-[#FF5722]">Notification System</h4>
+                <ul className="list-disc pl-5 mt-1 space-y-1 text-gray-700">
+                  <li>Real-time notifications for important events</li>
                   <li>Customizable notification preferences</li>
+                  <li>Activity feed with chronological updates</li>
+                  <li>Tournament reminder notifications</li>
                 </ul>
               </div>
               
               <div>
-                <h4 className="text-lg font-semibold text-[#FF5722]">Advanced Match Analytics</h4>
+                <h4 className="text-lg font-semibold text-[#FF5722]">Dashboard Refinements</h4>
                 <ul className="list-disc pl-5 mt-1 space-y-1 text-gray-700">
-                  <li>Detailed performance breakdowns after each match</li>
-                  <li>Track your improvement over time with trend analysis</li>
-                  <li>Compare your stats with players in your tier</li>
-                  <li>Identify areas for improvement with AI-powered insights</li>
-                </ul>
-              </div>
-              
-              <div>
-                <h4 className="text-lg font-semibold text-[#FF5722]">Content Library</h4>
-                <ul className="list-disc pl-5 mt-1 space-y-1 text-gray-700">
-                  <li>Training materials from top coaches</li>
-                  <li>Technique videos for all skill levels</li>
-                  <li>Strategy guides for competitive play</li>
-                  <li>Community-contributed drills and exercises</li>
+                  <li>At-a-glance stats on main dashboard</li>
+                  <li>Recent activity highlights</li>
+                  <li>Quick access to upcoming tournaments</li>
+                  <li>Achievement progress indicators</li>
                 </ul>
               </div>
             </div>
