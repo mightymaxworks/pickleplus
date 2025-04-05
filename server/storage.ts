@@ -2349,6 +2349,75 @@ export class DatabaseStorage implements IStorage {
     
     return { total, byType };
   }
+  
+  // Dashboard statistics methods
+  async getActiveUserCount(): Promise<number> {
+    // Get users active in the last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const result = await db.select({ count: sql<number>`count(*)` })
+      .from(users)
+      .where(
+        or(
+          // Active if they've logged in recently
+          sql`${users.lastLoginAt} > ${thirtyDaysAgo}`,
+          // Or if they've played a match recently
+          sql`${users.lastMatchDate} > ${thirtyDaysAgo}`
+        )
+      );
+    
+    return result[0].count;
+  }
+  
+  async getActiveRedemptionCodesCount(): Promise<number> {
+    // Count active redemption codes that haven't expired
+    const now = new Date();
+    
+    const result = await db.select({ count: sql<number>`count(*)` })
+      .from(redemptionCodes)
+      .where(
+        and(
+          eq(redemptionCodes.isActive, true),
+          or(
+            sql`${redemptionCodes.expiresAt} IS NULL`,
+            sql`${redemptionCodes.expiresAt} > ${now}`
+          )
+        )
+      );
+    
+    return result[0].count;
+  }
+  
+  async getRecentlyRedeemedCodes(limit: number = 5): Promise<{code: RedemptionCode, user: User, redeemedAt: Date}[]> {
+    // Get recently redeemed codes with user info
+    const result = await db.select({
+      code: redemptionCodes,
+      user: users,
+      redeemedAt: userRedemptions.redeemedAt
+    })
+    .from(userRedemptions)
+    .innerJoin(redemptionCodes, eq(userRedemptions.codeId, redemptionCodes.id))
+    .innerJoin(users, eq(userRedemptions.userId, users.id))
+    .orderBy(desc(userRedemptions.redeemedAt))
+    .limit(limit);
+    
+    return result.map(item => ({
+      code: item.code,
+      user: item.user,
+      redeemedAt: item.redeemedAt || new Date() // Fallback in case redeemedAt is null
+    }));
+  }
+  
+  async getTotalXpAwarded(): Promise<number> {
+    // Calculate total XP awarded from redemption codes
+    const result = await db.select({
+      total: sql<number>`COALESCE(SUM(${redemptionCodes.xpReward} * ${redemptionCodes.currentRedemptions}), 0)`
+    })
+    .from(redemptionCodes);
+    
+    return result[0].total || 0;
+  }
 }
 
 // Initialize sample data
@@ -2440,81 +2509,9 @@ async function initSampleData() {
     
     await db.insert(tournaments).values(sampleTournament);
   }
-  
-  // Dashboard statistics methods
-  async getUserCount(): Promise<number> {
-    const result = await db.select({ count: sql<number>`count(*)` }).from(users);
-    return result[0].count;
-  }
-  
-  async getActiveUserCount(): Promise<number> {
-    // Get users active in the last 30 days
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
-    const result = await db.select({ count: sql<number>`count(*)` })
-      .from(users)
-      .where(
-        or(
-          // Active if they've logged in recently
-          sql`${users.lastLoginAt} > ${thirtyDaysAgo}`,
-          // Or if they've played a match recently
-          sql`${users.lastMatchDate} > ${thirtyDaysAgo}`
-        )
-      );
-    
-    return result[0].count;
-  }
-  
-  async getActiveRedemptionCodesCount(): Promise<number> {
-    // Count active redemption codes that haven't expired
-    const now = new Date();
-    
-    const result = await db.select({ count: sql<number>`count(*)` })
-      .from(redemptionCodes)
-      .where(
-        and(
-          eq(redemptionCodes.isActive, true),
-          or(
-            sql`${redemptionCodes.expiresAt} IS NULL`,
-            sql`${redemptionCodes.expiresAt} > ${now}`
-          )
-        )
-      );
-    
-    return result[0].count;
-  }
-  
-  async getRecentlyRedeemedCodes(limit: number = 5): Promise<{code: RedemptionCode, user: User, redeemedAt: Date}[]> {
-    // Get recently redeemed codes with user info
-    const result = await db.select({
-      code: redemptionCodes,
-      user: users,
-      redeemedAt: userRedemptions.redeemedAt
-    })
-    .from(userRedemptions)
-    .innerJoin(redemptionCodes, eq(userRedemptions.codeId, redemptionCodes.id))
-    .innerJoin(users, eq(userRedemptions.userId, users.id))
-    .orderBy(desc(userRedemptions.redeemedAt))
-    .limit(limit);
-    
-    return result.map(item => ({
-      code: item.code,
-      user: item.user,
-      redeemedAt: item.redeemedAt || new Date() // Fallback in case redeemedAt is null
-    }));
-  }
-  
-  async getTotalXpAwarded(): Promise<number> {
-    // Calculate total XP awarded from redemption codes
-    const result = await db.select({
-      total: sql<number>`COALESCE(SUM(${redemptionCodes.xpReward} * ${redemptionCodes.currentRedemptions}), 0)`
-    })
-    .from(redemptionCodes);
-    
-    return result[0].total || 0;
-  }
 }
+
+// Dashboard statistics methods moved into the DatabaseStorage class
 
 // Initialize the database with sample data
 initSampleData().catch(console.error);
