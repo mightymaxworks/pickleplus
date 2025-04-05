@@ -18,6 +18,9 @@ export interface User {
   isFoundingMember?: boolean;
   xpMultiplier?: number;
   isAdmin?: boolean;
+  isCoach?: boolean;
+  hasCoachAccess?: boolean;
+  avatarUrl?: string | null;
   
   // Pickleball-specific fields
   bio?: string | null;

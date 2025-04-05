@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,6 +13,15 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { type Activity } from "@/types";
+
+// Define the tournament registration interface
+interface TournamentRegistration {
+  id: number;
+  name: string;
+  date: string;
+  location: string;
+  checkedIn: boolean;
+}
 import { 
   PlusCircle, Award, TrendingUp, ArrowUp, ArrowDown, UserCog, Megaphone, 
   ChevronRight, User, MapPin, Calendar, Clock, Trophy, Activity as ActivityIcon,
@@ -109,18 +118,29 @@ export default function Profile() {
 
   // Fetch user tournaments
   const {
-    data: userTournaments = [],
+    data: userTournamentsRaw = [] as any[],
     isLoading: tournamentsLoading
-  } = useQuery({
+  } = useQuery<any[]>({
     queryKey: ["/api/user/tournaments"],
     enabled: isAuthenticated,
   });
+
+  // Transform user tournaments to match what the UpcomingTournamentsCard component expects
+  const userTournaments = useMemo(() => {
+    return userTournamentsRaw.map(t => ({
+      id: t.id,
+      name: t.name,
+      date: t.startDate ? new Date(t.startDate).toLocaleDateString() : 'TBD',
+      location: t.location,
+      checkedIn: t.checkedIn,
+    })) as TournamentRegistration[];
+  }, [userTournamentsRaw]);
   
   // Fetch user achievements
   const { 
-    data: achievements = [],
+    data: achievements = [] as any[],
     isLoading: achievementsLoading 
-  } = useQuery({
+  } = useQuery<any[]>({
     queryKey: ["/api/user/achievements"],
     enabled: isAuthenticated,
   });
@@ -175,7 +195,8 @@ export default function Profile() {
             <div className="px-6 pb-6 relative">
               <div className="flex justify-center">
                 <div className="h-24 w-24 rounded-full bg-white p-1 shadow-md -mt-12 overflow-hidden">
-                  {user.avatarUrl ? (
+                  {/* Using optional chaining for avatarUrl since it's now properly typed as optional */}
+                  {user?.avatarUrl ? (
                     <img 
                       src={user.avatarUrl} 
                       alt={user.username} 
@@ -201,7 +222,7 @@ export default function Profile() {
                 <p className="text-muted-foreground text-sm">@{user.username}</p>
                 
                 <div className="mt-4 flex flex-wrap justify-center gap-2">
-                  {user.isCoach && (
+                  {user?.isCoach && (
                     <Badge className="bg-[#2196F3] hover:bg-[#1E88E5]" onClick={() => setLocation('/coaching')}>
                       Coach
                     </Badge>
@@ -224,7 +245,7 @@ export default function Profile() {
                     onClick={() => setLocation('/coaching')}
                   >
                     <UserCog className="mr-1 h-3 w-3" />
-                    {user.isCoach ? 'Manage Coaching Profile' : 'Become a Coach'}
+                    {user?.isCoach ? 'Manage Coaching Profile' : 'Become a Coach'}
                   </Button>
                 </div>
                 

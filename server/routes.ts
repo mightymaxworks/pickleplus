@@ -1097,10 +1097,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = (req.user as any).id;
       
-      // Get active coaching connections with user info
-      const connections = await storage.getActiveCoachingConnections(userId);
-      
-      res.json(connections);
+      try {
+        // Get active coaching connections with user info
+        const connections = await storage.getActiveCoachingConnections(userId);
+        res.json(connections);
+      } catch (dbError: any) {
+        // Check if this is a "relation does not exist" error (common during initial setup)
+        if (dbError.code === '42P01') { // PostgreSQL code for undefined_table
+          // Return empty array instead of an error for better UX during development
+          console.log("Connections table not yet created, returning empty array");
+          return res.json([]);
+        }
+        // Re-throw for other errors
+        throw dbError;
+      }
     } catch (error) {
       console.error("Error retrieving coaching connections:", error);
       res.status(500).json({ message: "Error retrieving coaching connections" });

@@ -264,6 +264,9 @@ export function QrCodeFAB() {
               <CalendarClock className="h-5 w-5" /> 
               Coming April 12th, 2025
             </DialogTitle>
+            <DialogDescription>
+              QR code scanning features will be available soon
+            </DialogDescription>
           </DialogHeader>
           
           <div className="relative overflow-hidden">
