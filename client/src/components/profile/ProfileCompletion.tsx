@@ -18,15 +18,21 @@ function getRewardTier(percentage: number): { label: string; xp: number } {
 
 export function ProfileCompletion({ completionData }: ProfileCompletionProps) {
   const { 
-    completionPercentage, 
-    completedFields, 
-    missingFields: incompleteFields, 
-    xpAwarded: xpEarned, 
-    xpEligibleFields: potentialXp, 
-    tierLevel, 
-    tierName 
-  } = completionData;
-  const tier = { label: tierName, xp: getRewardTier(completionPercentage).xp };
+    completionPercentage = 0, 
+    completedFields = [], 
+    missingFields = [], 
+    xpAwarded = 0, 
+    xpEligibleFields = 0, 
+    tierLevel = 0, 
+    tierName = 'Basic' 
+  } = completionData || {};
+  
+  // Use missingFields as incompleteFields for compatibility
+  const incompleteFields = missingFields;
+  const xpEarned = xpAwarded;
+  const potentialXp = xpEligibleFields;
+  
+  const tier = { label: tierName || 'Basic', xp: getRewardTier(completionPercentage || 0).xp };
   
   return (
     <div className="profile-completion">
