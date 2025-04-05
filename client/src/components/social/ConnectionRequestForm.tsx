@@ -2,14 +2,19 @@ import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useDebounce } from "../../hooks/useDebounce";
 
+// Add this for TypeScript
+declare global {
+  interface Window {
+    apiRequest?: (method: string, url: string, data?: any) => Promise<Response>;
+  }
+}
+
 // Define the schema for the connection request form
 const connectionFormSchema = z.object({
   recipientId: z.number({
     required_error: "Please select a player",
   }),
-  type: z.string({
-    required_error: "Please select a connection type",
-  }),
+  // Type is now hardcoded to "friend" and no longer needed in the form
   notes: z.string().optional(),
 });
 
@@ -32,31 +37,33 @@ export function ConnectionRequestForm() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
-  // Effect for debounced search
+  // Effect for debounced search to find users with API
   useEffect(() => {
-    if (debouncedSearchQuery && debouncedSearchQuery.length >= 2) {
-      // Mock search results for now
-      setIsSearching(true);
-      setTimeout(() => {
-        setSearchResults([
-          {
-            id: 1,
-            username: "picklemaster",
-            displayName: "Pickle Master",
-            avatarInitials: "PM"
-          },
-          {
-            id: 2,
-            username: "dinkstar",
-            displayName: "Dink Star",
-            avatarInitials: "DS"
+    const searchUsers = async () => {
+      if (debouncedSearchQuery && debouncedSearchQuery.length >= 2) {
+        setIsSearching(true);
+        try {
+          const response = await fetch(`/api/users/search?q=${encodeURIComponent(debouncedSearchQuery)}`);
+          
+          if (response.ok) {
+            const users = await response.json();
+            setSearchResults(users);
+          } else {
+            console.error("Error searching users:", await response.text());
+            setSearchResults([]);
           }
-        ]);
-        setIsSearching(false);
-      }, 500);
-    } else {
-      setSearchResults([]);
-    }
+        } catch (error) {
+          console.error("Failed to search users:", error);
+          setSearchResults([]);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults([]);
+      }
+    };
+    
+    searchUsers();
   }, [debouncedSearchQuery]);
 
   // Handle selecting a user from the search results
@@ -74,13 +81,44 @@ export function ConnectionRequestForm() {
     setSelectedUser(null);
   };
 
-  // Handle form submission
-  const onSubmit = (e: React.FormEvent) => {
+  // Handle form submission - make it async
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Sending connection request to", selectedUser);
-    // Show success message
-    alert("Connection request sent!");
-    handleReset();
+    
+    if (!selectedUser) return;
+    
+    const formData = {
+      recipientId: selectedUser.id,
+      // Always use "friend" as the connection type
+      type: "friend",
+      notes: (e.target as HTMLFormElement).querySelector('textarea')?.value || ""
+    };
+    
+    console.log("Sending connection request to", selectedUser, "with data:", formData);
+    
+    // Make the API call to create the connection
+    try {
+      // Make a simple fetch request
+      const response = await fetch("/api/connections", {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to send connection request");
+      }
+      
+      // Show success message
+      alert("Connection request sent!");
+      handleReset();
+    } catch (error) {
+      console.error("Error sending connection request:", error);
+      alert(`Error: ${error instanceof Error ? error.message : "Failed to send connection request"}`);
+    }
   };
 
   return (
@@ -89,13 +127,13 @@ export function ConnectionRequestForm() {
         onClick={() => setOpen(true)}
         className="bg-[#FF5722] text-white px-4 py-2 rounded-full text-sm font-medium"
       >
-        Connect with Player
+        Add Friend
       </button>
 
       {open && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg w-full max-w-md p-4">
-            <h2 className="text-xl font-bold mb-4">Send Connection Request</h2>
+            <h2 className="text-xl font-bold mb-4">Connect with a Player</h2>
             
             <form onSubmit={onSubmit} className="space-y-4">
               {/* User selection section */}
@@ -162,20 +200,7 @@ export function ConnectionRequestForm() {
                 )}
               </div>
 
-              {/* Connection type selection */}
-              <div>
-                <label className="block text-sm font-medium mb-1">Connection Type</label>
-                <select 
-                  className="w-full border rounded-md px-3 py-2"
-                  required
-                >
-                  <option value="">Select connection type</option>
-                  <option value="partner">Playing Partner</option>
-                  <option value="friend">Friend</option>
-                  <option value="coach">Coach</option>
-                  <option value="teammate">Teammate</option>
-                </select>
-              </div>
+              {/* Connection type is now hardcoded to "friend" */}
 
               {/* Notes field */}
               <div>

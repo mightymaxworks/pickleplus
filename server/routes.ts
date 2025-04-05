@@ -920,10 +920,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/connections", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const { recipientId, type, message, metadata } = req.body;
+      const { recipientId, type = "friend", message, metadata } = req.body;
       
-      if (!recipientId || !type) {
-        return res.status(400).json({ message: "Missing required fields" });
+      if (!recipientId) {
+        return res.status(400).json({ message: "Missing recipient ID" });
+      }
+      
+      // Document that coach connections are a paid feature
+      if (type === "coach") {
+        return res.status(403).json({ 
+          message: "Coach connections are a premium feature that will be available in a future update" 
+        });
       }
       
       // Check if connection already exists
@@ -1130,6 +1137,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error retrieving social activities:", error);
       res.status(500).json({ message: "Error retrieving social activities" });
+    }
+  });
+  
+  // User search for connections feature
+  app.get("/api/users/search", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const currentUserId = (req.user as any).id;
+      const query = req.query.q as string;
+      
+      if (!query || query.length < 2) {
+        return res.status(400).json({ message: "Search query must be at least 2 characters" });
+      }
+      
+      // Search users based on username or display name
+      const users = await storage.searchUsers(query, currentUserId);
+      
+      // Return a limited list with specific fields to avoid oversharing data
+      const sanitizedUsers = users.map(user => ({
+        id: user.id,
+        username: user.username,
+        displayName: user.displayName || user.username,
+        avatarInitials: user.avatarInitials || user.username.substring(0, 2).toUpperCase()
+      }));
+      
+      res.json(sanitizedUsers);
+    } catch (error) {
+      console.error("Error searching users:", error);
+      res.status(500).json({ message: "Error searching users" });
     }
   });
 

@@ -25,6 +25,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, update: Partial<InsertUser>): Promise<User | undefined>;
   updateUserXP(id: number, xpToAdd: number): Promise<User | undefined>;
+  searchUsers(query: string, excludeUserId?: number): Promise<User[]>;
   
   // Profile operations
   updateUserProfile(userId: number, profileData: any): Promise<User | undefined>;
@@ -335,6 +336,29 @@ export class MemStorage implements IStorage {
     
     this.users.set(id, updatedUser);
     return updatedUser;
+  }
+  
+  async searchUsers(query: string, excludeUserId?: number): Promise<User[]> {
+    // Convert query to lowercase for case-insensitive search
+    const lowercaseQuery = query.toLowerCase();
+    
+    // Search through all users
+    return Array.from(this.users.values())
+      .filter(user => {
+        // Skip the current user if excludeUserId is provided
+        if (excludeUserId && user.id === excludeUserId) {
+          return false;
+        }
+        
+        // Search by username, displayName, or email
+        return (
+          user.username.toLowerCase().includes(lowercaseQuery) ||
+          (user.displayName && user.displayName.toLowerCase().includes(lowercaseQuery)) ||
+          (user.email && user.email.toLowerCase().includes(lowercaseQuery))
+        );
+      })
+      // Limit to 10 results for performance
+      .slice(0, 10);
   }
   
   // Profile operations
@@ -1260,6 +1284,30 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return updatedUser;
+  }
+  
+  async searchUsers(query: string, excludeUserId?: number): Promise<User[]> {
+    // Convert query to lowercase for case-insensitive search with SQL ILIKE
+    const searchPattern = `%${query}%`;
+    
+    // Create the base query
+    let usersQuery = db.select().from(users)
+      .where(
+        or(
+          sql`LOWER(${users.username}) LIKE LOWER(${searchPattern})`,
+          sql`LOWER(${users.displayName}) LIKE LOWER(${searchPattern})`,
+          sql`LOWER(${users.email}) LIKE LOWER(${searchPattern})`
+        )
+      );
+    
+    // Add exclusion of current user if provided
+    if (excludeUserId) {
+      usersQuery = usersQuery.where(sql`${users.id} <> ${excludeUserId}`);
+    }
+    
+    // Execute query with limit
+    const results = await usersQuery.limit(10);
+    return results;
   }
 
   // Profile operations
