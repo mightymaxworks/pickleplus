@@ -1117,6 +1117,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Social activity feed (for the dashboard)
+  app.get("/api/social/activities", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      
+      // Get social activities from connections and related users
+      const activities = await storage.getSocialActivityFeed(userId, limit);
+      
+      res.json(activities);
+    } catch (error) {
+      console.error("Error retrieving social activities:", error);
+      res.status(500).json({ message: "Error retrieving social activities" });
+    }
+  });
+
+  // Connection statistics for dashboard widget
+  app.get("/api/connections/stats", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const stats = await storage.getConnectionStats(userId);
+      
+      res.json(stats);
+    } catch (error) {
+      console.error("Error retrieving connection stats:", error);
+      res.status(500).json({ message: "Error retrieving connection stats" });
+    }
+  });
+
   // Coach Profile API endpoints
   app.get("/api/coach/profile", isAuthenticated, async (req: Request, res: Response) => {
     try {

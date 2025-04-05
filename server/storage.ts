@@ -94,6 +94,10 @@ export interface IStorage {
   getUserReceivedConnections(userId: number, type?: string, status?: string): Promise<Connection[]>;
   getActiveCoachingConnections(userId: number): Promise<{connection: Connection, user: User}[]>;
   getConnectionByUsers(requesterId: number, recipientId: number, type: string): Promise<Connection | undefined>;
+  
+  // Social features (for the dashboard)
+  getSocialActivityFeed(userId: number, limit?: number): Promise<any[]>; // We'll define a more specific return type later
+  getConnectionStats(userId: number): Promise<{total: number, byType: Record<string, number>}>;
 }
 
 export class MemStorage implements IStorage {
@@ -1100,6 +1104,89 @@ export class MemStorage implements IStorage {
         connection.type === type
     );
   }
+  
+  // Social features (for the dashboard)
+  async getSocialActivityFeed(userId: number, limit: number = 10): Promise<any[]> {
+    // First, get all connections for this user
+    const sentConnections = await this.getUserSentConnections(userId);
+    const receivedConnections = await this.getUserReceivedConnections(userId);
+    const allConnections = [...sentConnections, ...receivedConnections];
+    
+    // Get the IDs of users this person is connected with
+    const connectedUserIds = new Set<number>();
+    allConnections.forEach(connection => {
+      if (connection.requesterId !== userId) {
+        connectedUserIds.add(connection.requesterId);
+      }
+      if (connection.recipientId !== userId) {
+        connectedUserIds.add(connection.recipientId);
+      }
+    });
+    
+    // Get activities for the user and their connections
+    let relevantActivities = Array.from(this.activities.values()).filter(activity => {
+      // Include activities from the user and their connections
+      return activity.userId === userId || connectedUserIds.has(activity.userId);
+    });
+    
+    // Sort activities by date (newest first)
+    relevantActivities.sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    
+    // Limit the number of activities
+    relevantActivities = relevantActivities.slice(0, limit);
+    
+    // Transform activities to the format expected by the frontend
+    return Promise.all(relevantActivities.map(async activity => {
+      const user = await this.getUser(activity.userId);
+      
+      if (!user) {
+        throw new Error(`User with ID ${activity.userId} not found`);
+      }
+      
+      // Map the activity type to the frontend's SocialActivityType
+      let type: string = activity.type;
+      if (activity.type === 'connection_request_sent') type = 'connection_request';
+      if (activity.type === 'connection_accepted') type = 'connection_accepted';
+      if (activity.type.includes('match')) type = 'match_played';
+      if (activity.type.includes('tournament')) type = 'tournament_joined';
+      if (activity.type.includes('achievement')) type = 'achievement_unlocked';
+      
+      // Create activity object with the format expected by the frontend
+      return {
+        id: activity.id,
+        type,
+        createdAt: activity.createdAt.toISOString(),
+        actors: [{
+          id: user.id,
+          displayName: user.displayName,
+          username: user.username,
+          avatarInitials: user.avatarInitials
+        }],
+        contextData: activity.metadata || {}
+      };
+    }));
+  }
+  
+  async getConnectionStats(userId: number): Promise<{total: number, byType: Record<string, number>}> {
+    const acceptedConnections = Array.from(this.connections.values()).filter(
+      connection => 
+        (connection.requesterId === userId || connection.recipientId === userId) &&
+        connection.status === 'accepted'
+    );
+    
+    const total = acceptedConnections.length;
+    
+    // Count connections by type
+    const byType: Record<string, number> = {};
+    acceptedConnections.forEach(connection => {
+      const type = connection.type;
+      byType[type] = (byType[type] || 0) + 1;
+    });
+    
+    return { total, byType };
+  }
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1861,6 +1948,97 @@ export class DatabaseStorage implements IStorage {
       );
     
     return connection;
+  }
+
+  // Social features implementation
+  async getSocialActivityFeed(userId: number, limit: number = 10): Promise<any[]> {
+    // First, get all connections for this user
+    const sentConnections = await this.getUserSentConnections(userId);
+    const receivedConnections = await this.getUserReceivedConnections(userId);
+    const allConnections = [...sentConnections, ...receivedConnections];
+    
+    // Get the IDs of users this person is connected with
+    const connectedUserIds = new Set<number>();
+    allConnections.forEach(connection => {
+      if (connection.requesterId !== userId) {
+        connectedUserIds.add(connection.requesterId);
+      }
+      if (connection.recipientId !== userId) {
+        connectedUserIds.add(connection.recipientId);
+      }
+    });
+    
+    // Add the user's own ID to include their activities as well
+    connectedUserIds.add(userId);
+    
+    // Convert Set to array for the SQL query
+    const userIdsArray = Array.from(connectedUserIds);
+    
+    // Get activities for the user and their connections
+    const relevantActivities = await db.select()
+      .from(activities)
+      .where(sql`${activities.userId} IN (${sql.join(userIdsArray, sql`, `)})`)
+      .orderBy(desc(activities.createdAt))
+      .limit(limit);
+    
+    // Transform activities to the format expected by the frontend
+    const activityPromises = relevantActivities.map(async activity => {
+      const user = await this.getUser(activity.userId);
+      
+      if (!user) {
+        throw new Error(`User with ID ${activity.userId} not found`);
+      }
+      
+      // Map the activity type to the frontend's SocialActivityType
+      let type: string = activity.type;
+      if (activity.type === 'connection_request_sent') type = 'connection_request';
+      if (activity.type === 'connection_accepted') type = 'connection_accepted';
+      if (activity.type.includes('match')) type = 'match_played';
+      if (activity.type.includes('tournament')) type = 'tournament_joined';
+      if (activity.type.includes('achievement')) type = 'achievement_unlocked';
+      
+      // Create activity object with the format expected by the frontend
+      return {
+        id: activity.id,
+        type,
+        createdAt: activity.createdAt.toISOString(),
+        actors: [{
+          id: user.id,
+          displayName: user.displayName,
+          username: user.username,
+          avatarInitials: user.avatarInitials
+        }],
+        contextData: activity.metadata || {}
+      };
+    });
+    
+    return Promise.all(activityPromises);
+  }
+  
+  async getConnectionStats(userId: number): Promise<{total: number, byType: Record<string, number>}> {
+    // Get all accepted connections for this user
+    const acceptedConnections = await db.select()
+      .from(connections)
+      .where(
+        and(
+          or(
+            eq(connections.requesterId, userId),
+            eq(connections.recipientId, userId)
+          ),
+          eq(connections.status, 'accepted')
+        )
+      );
+    
+    const total = acceptedConnections.length;
+    
+    // Count connections by type
+    const byType: Record<string, number> = {};
+    acceptedConnections.forEach(connection => {
+      const type = connection.type;
+      byType[type] = (byType[type] || 0) + 1;
+    });
+    
+    return { total, byType };
   }
 }
 
