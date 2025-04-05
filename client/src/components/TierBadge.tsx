@@ -1,13 +1,8 @@
 import React from "react";
+import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { TierProgressBar } from "@/components/TierProgressBar";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
-import { 
-  Tooltip, 
-  TooltipContent, 
-  TooltipProvider, 
-  TooltipTrigger 
-} from "@/components/ui/tooltip";
 
 interface TierBadgeProps {
   tier: string;
@@ -82,7 +77,6 @@ export function TierBadge({
         </TooltipProvider>
       </div>
       
-      {/* Current tier badge */}
       <div className="mb-4">
         <Badge className={`${getTierColorClasses()} text-sm px-3 py-1.5 mb-2 font-semibold`}>
           {tier}
@@ -90,17 +84,21 @@ export function TierBadge({
         <p className="text-sm text-gray-600 mt-1">{tierDescription}</p>
       </div>
       
-      {/* Improved tier progress visualization */}
-      <TierProgressBar
-        currentTier={tier}
-        tierProgress={tierProgress}
-        nextTier={nextTier}
-      />
-      
       {nextTier && (
-        <p className="text-sm text-gray-500 mt-2">
-          {levelUntilNextTier} more {levelUntilNextTier === 1 ? 'level' : 'levels'} until <span className="font-medium">{nextTier}</span>
-        </p>
+        <div className="space-y-2">
+          <div className="flex justify-between mb-1">
+            <span className="text-sm font-medium">Tier progress</span>
+            <span className="text-sm text-gray-500">{tierProgress}%</span>
+          </div>
+          <Progress value={tierProgress} className="h-2 mb-3" />
+          <p className="text-sm text-gray-500">
+            {levelUntilNextTier} more {levelUntilNextTier === 1 ? 'level' : 'levels'} until <span className="font-medium">{nextTier}</span>
+          </p>
+        </div>
+      )}
+      
+      {!nextTier && (
+        <p className="text-sm text-emerald-600 font-medium">You've reached the highest tier! Congratulations!</p>
       )}
     </div>
   );
