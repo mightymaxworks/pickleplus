@@ -131,7 +131,7 @@ export default function RedemptionCodeForm({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto px-4 sm:px-6">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? "Edit Redemption Code" : "Create New Redemption Code"}
@@ -140,7 +140,7 @@ export default function RedemptionCodeForm({
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="code"
@@ -193,7 +193,7 @@ export default function RedemptionCodeForm({
               )}
             />
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="codeType"
@@ -239,7 +239,7 @@ export default function RedemptionCodeForm({
                         }}
                       />
                     </FormControl>
-                    <FormDescription>
+                    <FormDescription className="text-xs">
                       Leave empty for unlimited redemptions
                     </FormDescription>
                     <FormMessage />
@@ -248,7 +248,7 @@ export default function RedemptionCodeForm({
               />
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <FormField
                 control={form.control}
                 name="expiresAt"
@@ -285,7 +285,7 @@ export default function RedemptionCodeForm({
                         />
                       </PopoverContent>
                     </Popover>
-                    <FormDescription>
+                    <FormDescription className="text-xs">
                       Set a date when this code will expire
                     </FormDescription>
                     <FormMessage />
@@ -293,7 +293,7 @@ export default function RedemptionCodeForm({
                 )}
               />
               
-              <div className="grid grid-rows-3 gap-2 mt-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-2">
                 <FormField
                   control={form.control}
                   name="isActive"
@@ -307,8 +307,8 @@ export default function RedemptionCodeForm({
                       </FormControl>
                       <div className="space-y-1 leading-none">
                         <FormLabel>Active</FormLabel>
-                        <FormDescription>
-                          Code can be redeemed when active
+                        <FormDescription className="text-xs">
+                          Code can be redeemed
                         </FormDescription>
                       </div>
                     </FormItem>
@@ -328,8 +328,8 @@ export default function RedemptionCodeForm({
                       </FormControl>
                       <div className="space-y-1 leading-none">
                         <FormLabel>Founding Member</FormLabel>
-                        <FormDescription>
-                          Grants founding member status
+                        <FormDescription className="text-xs">
+                          Grants founding status
                         </FormDescription>
                       </div>
                     </FormItem>
@@ -349,7 +349,7 @@ export default function RedemptionCodeForm({
                       </FormControl>
                       <div className="space-y-1 leading-none">
                         <FormLabel>Coach Access</FormLabel>
-                        <FormDescription>
+                        <FormDescription className="text-xs">
                           Grants coaching access
                         </FormDescription>
                       </div>
@@ -359,16 +359,21 @@ export default function RedemptionCodeForm({
               </div>
             </div>
             
-            <DialogFooter>
+            <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0 mt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
                 disabled={isSubmitting}
+                className="w-full sm:w-auto"
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="w-full sm:w-auto"
+              >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
