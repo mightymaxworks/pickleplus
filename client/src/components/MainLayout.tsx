@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Header } from "@/components/Header";
 import { TabNavigation } from "@/components/TabNavigation";
 import { BottomNavigation } from "@/components/BottomNavigation";
-import { FloatingActionButton } from "@/components/FloatingActionButton";
+import { QrCodeFAB } from "@/components/QrCodeFAB";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -47,7 +47,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       </main>
       
       <BottomNavigation />
-      <FloatingActionButton />
+      <QrCodeFAB />
     </div>
   );
 }
