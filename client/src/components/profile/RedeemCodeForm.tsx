@@ -1,133 +1,121 @@
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { TicketIcon, LockIcon, KeyIcon, ShieldCheckIcon } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Gift, Loader2 } from "lucide-react";
 
 const formSchema = z.object({
-  code: z.string().min(6, {
-    message: "Redemption code must be at least 6 characters",
-  }),
+  code: z.string().min(1, "Redemption code is required")
 });
 
-type FormValues = z.infer<typeof formSchema>;
-
 interface RedeemCodeFormProps {
-  codeType?: string;
-  onSuccess?: (data: { message: string; xpEarned: number }) => void;
+  title?: string;
+  description?: string;
+  endpoint?: string;
   buttonText?: string;
+  onSuccess?: () => void;
 }
 
-export function RedeemCodeForm({ codeType = "coach", onSuccess, buttonText = "Unlock Coaching Access" }: RedeemCodeFormProps) {
-  const [isRedeemed, setIsRedeemed] = useState(false);
+export function RedeemCodeForm({
+  title = "Redeem Code",
+  description = "Enter your redemption code to claim rewards",
+  endpoint = "/api/redeem-code",
+  buttonText = "Redeem Code",
+  onSuccess
+}: RedeemCodeFormProps) {
   const { toast } = useToast();
+  const [serverError, setServerError] = useState<string | null>(null);
   
-  const form = useForm<FormValues>({
+  const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      code: "",
-    },
+      code: ""
+    }
   });
-
+  
   const redeemMutation = useMutation({
-    mutationFn: async (data: FormValues) => {
-      const response = await apiRequest("POST", "/api/coach/redeem-code", data);
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to redeem code");
+    mutationFn: async (code: string) => {
+      try {
+        const res = await apiRequest("POST", endpoint, { code });
+        
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.message || "Failed to redeem code");
+        }
+        
+        return await res.json();
+      } catch (err) {
+        if (err instanceof Error) {
+          throw new Error(err.message);
+        }
+        throw new Error("An unexpected error occurred");
       }
-      return response.json();
     },
     onSuccess: (data) => {
+      setServerError(null);
       toast({
         title: "Success!",
-        description: data.message,
-        variant: "success",
+        description: data.message || "Code redeemed successfully",
+        variant: "default"
       });
-      setIsRedeemed(true);
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/current-user"] });
+      
+      if (data.xpEarned) {
+        toast({
+          title: "XP Earned!",
+          description: `You earned ${data.xpEarned} XP from this code`,
+          variant: "default"
+        });
+      }
+      
+      form.reset();
       
       if (onSuccess) {
-        onSuccess(data);
+        onSuccess();
       }
     },
     onError: (error: Error) => {
+      let errorMessage = error.message;
+      
+      // Check for specific error messages that indicate the feature is not ready
+      if (errorMessage.includes("not available") || 
+          errorMessage.includes("database_setup_incomplete")) {
+        errorMessage = "This feature is not available yet. Please try again later.";
+      }
+      
+      setServerError(errorMessage);
       toast({
         title: "Error",
-        description: error.message,
-        variant: "destructive",
+        description: errorMessage,
+        variant: "destructive"
       });
-    },
+    }
   });
-
-  const onSubmit = (data: FormValues) => {
-    redeemMutation.mutate(data);
-  };
-
-  if (isRedeemed) {
-    return (
-      <Card className="shadow-md">
-        <CardHeader className="bg-green-50 dark:bg-green-900/20 border-b">
-          <CardTitle className="flex items-center">
-            <ShieldCheckIcon className="w-5 h-5 mr-2 text-green-600 dark:text-green-400" />
-            Code Redeemed Successfully!
-          </CardTitle>
-          <CardDescription>
-            Your coaching access has been activated
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <div className="text-center">
-            <div className="bg-green-100 dark:bg-green-900/30 rounded-full p-6 inline-flex mx-auto mb-4">
-              <ShieldCheckIcon className="w-12 h-12 text-green-600 dark:text-green-400" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">All Set!</h3>
-            <p className="text-muted-foreground mb-4">
-              Your coach profile is now accessible. Start building your coach profile to attract students.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
+  
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    setServerError(null);
+    redeemMutation.mutate(values.code);
   }
-
+  
   return (
-    <Card className="shadow-md">
-      <CardHeader className="bg-orange-50 dark:bg-orange-900/20 border-b">
-        <CardTitle className="flex items-center">
-          <KeyIcon className="w-5 h-5 mr-2 text-orange-600 dark:text-orange-400" />
-          Redeem Coaching Access Code
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Gift className="h-5 w-5" /> 
+          {title}
         </CardTitle>
-        <CardDescription>
-          Enter your code to unlock coaching features
-        </CardDescription>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent className="pt-6">
+      <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="code"
@@ -135,48 +123,43 @@ export function RedeemCodeForm({ codeType = "coach", onSuccess, buttonText = "Un
                 <FormItem>
                   <FormLabel>Redemption Code</FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                        <TicketIcon className="h-5 w-5" />
-                      </span>
-                      <Input 
-                        placeholder="Enter your code" 
-                        className="pl-10" 
-                        {...field} 
-                      />
-                    </div>
+                    <Input 
+                      placeholder="Enter code" 
+                      {...field} 
+                      className="uppercase"
+                      autoComplete="off"
+                      onChange={(e) => {
+                        // Convert input to uppercase
+                        field.onChange(e.target.value.toUpperCase());
+                      }}
+                    />
                   </FormControl>
-                  <FormDescription>
-                    Enter the coaching access code you received
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            
+            {serverError && (
+              <div className="text-sm text-destructive">{serverError}</div>
+            )}
+            
             <Button 
               type="submit" 
-              className="w-full"
-              size="lg"
+              className="w-full" 
               disabled={redeemMutation.isPending}
             >
               {redeemMutation.isPending ? (
-                <div className="flex items-center">
-                  <div className="animate-spin mr-2 h-4 w-4 border-2 border-current border-t-transparent rounded-full"></div>
-                  Redeeming...
-                </div>
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
               ) : (
-                <div className="flex items-center">
-                  <LockIcon className="mr-2 h-4 w-4" />
-                  {buttonText}
-                </div>
+                buttonText
               )}
             </Button>
           </form>
         </Form>
       </CardContent>
-      <CardFooter className="bg-muted/50 border-t flex justify-center text-sm text-muted-foreground">
-        <p>Need a code? Contact support for assistance</p>
-      </CardFooter>
     </Card>
   );
 }

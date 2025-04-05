@@ -15,6 +15,7 @@ import { type Activity } from "@/types";
 import { PlusCircle, Award, TrendingUp, ArrowUp, ArrowDown, UserCog, Megaphone, ChevronRight } from "lucide-react";
 import { Features, useFeatureFlag } from "@/lib/featureFlags";
 import { ProfileForm } from "@/components/profile/ProfileForm";
+import { Link } from "wouter";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -105,11 +106,11 @@ export default function Profile() {
                     Edit Profile
                   </Button>
                   
-                  <Button 
+                  <Button
                     variant="secondary"
                     size="default" 
                     className="flex items-center gap-2 shadow-sm bg-[#4CAF50]/15 text-[#4CAF50] hover:bg-[#4CAF50]/25 border border-[#4CAF50]/30 font-medium"
-                    onClick={() => setLocation("/coach/profile")}
+                    onClick={() => setLocation("/coach/profile/edit")}
                   >
                     <Megaphone size={18} />
                     Coach Profile

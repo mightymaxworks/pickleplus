@@ -1052,14 +1052,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = (req.user as any).id;
       
-      // Get coach profile if exists
-      const coachProfile = await storage.getCoachingProfile(userId);
-      
-      if (!coachProfile) {
-        return res.status(404).json({ message: "Coach profile not found" });
+      try {
+        // Get coach profile if exists
+        const coachProfile = await storage.getCoachingProfile(userId);
+        
+        if (!coachProfile) {
+          return res.status(404).json({ message: "Coach profile not found" });
+        }
+        
+        res.json(coachProfile);
+      } catch (err) {
+        // Specific handling for database table not existing
+        if (err instanceof Error && 
+            (err.message.includes("relation") || 
+             err.message.includes("does not exist") ||
+             err.message.includes("coaching_profiles"))) {
+          console.warn("Coaching profiles table not available:", err.message);
+          // Return an empty profile with a specific status code
+          return res.status(503).json({ 
+            message: "Coaching feature not available yet",
+            error: "database_setup_incomplete" 
+          });
+        }
+        throw err; // Re-throw if it's not the specific error we want to handle
       }
-      
-      res.json(coachProfile);
     } catch (error) {
       console.error("Error retrieving coach profile:", error);
       res.status(500).json({ message: "Error retrieving coach profile" });
@@ -1077,25 +1093,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
-      // Check if coach profile already exists
-      let coachProfile = await storage.getCoachingProfile(userId);
-      
-      if (coachProfile) {
-        // Update existing profile
-        coachProfile = await storage.updateCoachingProfile(userId, profileData);
-      } else {
-        // Create new profile
-        const newProfileData = {
-          ...profileData,
-          userId,
-          accessType: "code", // Default access type
-          accessGrantedAt: new Date(),
-          isActive: true,
-        };
-        coachProfile = await storage.createCoachingProfile(newProfileData);
+      try {
+        // Check if coach profile already exists
+        let coachProfile = await storage.getCoachingProfile(userId);
+        
+        if (coachProfile) {
+          // Update existing profile
+          coachProfile = await storage.updateCoachingProfile(userId, profileData);
+        } else {
+          // Create new profile
+          const newProfileData = {
+            ...profileData,
+            userId,
+            accessType: "code", // Default access type
+            accessGrantedAt: new Date(),
+            isActive: true,
+          };
+          coachProfile = await storage.createCoachingProfile(newProfileData);
+        }
+        
+        res.json(coachProfile);
+      } catch (err) {
+        // Specific handling for database table not existing
+        if (err instanceof Error && 
+            (err.message.includes("relation") || 
+             err.message.includes("does not exist") ||
+             err.message.includes("coaching_profiles"))) {
+          console.warn("Coaching profiles table not available:", err.message);
+          return res.status(503).json({ 
+            message: "Coaching feature not available yet",
+            error: "database_setup_incomplete" 
+          });
+        }
+        throw err; // Re-throw if it's not the specific error we want to handle
       }
-      
-      res.json(coachProfile);
     } catch (error) {
       console.error("Error creating/updating coach profile:", error);
       res.status(500).json({ message: "Error creating/updating coach profile" });
@@ -1111,64 +1142,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Redemption code is required" });
       }
       
-      // Check if code exists and is valid coach access code
-      const redemptionCode = await storage.getRedemptionCodeByCode(code);
-      
-      if (!redemptionCode || !redemptionCode.isCoachAccessCode) {
-        return res.status(400).json({ message: "Invalid coaching access code" });
+      try {
+        // Check if code exists and is valid coach access code
+        const redemptionCode = await storage.getRedemptionCodeByCode(code);
+        
+        if (!redemptionCode || !redemptionCode.isCoachAccessCode) {
+          return res.status(400).json({ message: "Invalid coaching access code" });
+        }
+        
+        if (redemptionCode.isActive === false) {
+          return res.status(400).json({ message: "This code is no longer active" });
+        }
+        
+        if (redemptionCode.expiresAt && new Date(redemptionCode.expiresAt) < new Date()) {
+          return res.status(400).json({ message: "This code has expired" });
+        }
+        
+        if (redemptionCode.maxRedemptions && 
+            redemptionCode.currentRedemptions && 
+            redemptionCode.currentRedemptions >= redemptionCode.maxRedemptions) {
+          return res.status(400).json({ message: "This code has reached its maximum redemptions" });
+        }
+        
+        // Check if user has already redeemed this code
+        const hasRedeemed = await storage.hasUserRedeemedCode(userId, redemptionCode.id);
+        if (hasRedeemed) {
+          return res.status(400).json({ message: "You have already redeemed this code" });
+        }
+        
+        // Get the user to update
+        const user = await storage.getUser(userId);
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        
+        // Update user with coach access flag
+        await storage.updateUser(userId, { hasCoachAccess: true });
+        
+        // Record redemption
+        await storage.redeemCode({
+          userId,
+          redemptionCodeId: redemptionCode.id
+        });
+        
+        // Update redemption count
+        await storage.incrementRedemptionCodeCounter(redemptionCode.id);
+        
+        // Create activity record
+        await storage.createActivity({
+          userId,
+          type: "code_redemption",
+          description: "Redeemed coach access code",
+          xpEarned: redemptionCode.xpReward || 0,
+          metadata: { codeId: redemptionCode.id, codeType: "coach_access" }
+        });
+        
+        res.json({ 
+          message: "Coach access code redeemed successfully",
+          xpEarned: redemptionCode.xpReward || 0
+        });
+      } catch (err) {
+        // Specific handling for database table not existing
+        if (err instanceof Error && 
+            (err.message.includes("relation") || 
+             err.message.includes("does not exist") ||
+             err.message.includes("coaching_profiles") ||
+             err.message.includes("code_redemptions"))) {
+          console.warn("Coaching database structures not available:", err.message);
+          return res.status(503).json({ 
+            message: "Coaching feature not available yet",
+            error: "database_setup_incomplete" 
+          });
+        }
+        throw err; // Re-throw if it's not the specific error we want to handle
       }
-      
-      if (redemptionCode.isActive === false) {
-        return res.status(400).json({ message: "This code is no longer active" });
-      }
-      
-      if (redemptionCode.expiresAt && new Date(redemptionCode.expiresAt) < new Date()) {
-        return res.status(400).json({ message: "This code has expired" });
-      }
-      
-      if (redemptionCode.maxRedemptions && 
-          redemptionCode.currentRedemptions && 
-          redemptionCode.currentRedemptions >= redemptionCode.maxRedemptions) {
-        return res.status(400).json({ message: "This code has reached its maximum redemptions" });
-      }
-      
-      // Check if user has already redeemed this code
-      const hasRedeemed = await storage.hasUserRedeemedCode(userId, redemptionCode.id);
-      if (hasRedeemed) {
-        return res.status(400).json({ message: "You have already redeemed this code" });
-      }
-      
-      // Get the user to update
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      // Update user with coach access flag
-      await storage.updateUser(userId, { hasCoachAccess: true });
-      
-      // Record redemption
-      await storage.redeemCode({
-        userId,
-        redemptionCodeId: redemptionCode.id
-      });
-      
-      // Update redemption count
-      await storage.incrementRedemptionCodeCounter(redemptionCode.id);
-      
-      // Create activity record
-      await storage.createActivity({
-        userId,
-        type: "code_redemption",
-        description: "Redeemed coach access code",
-        xpEarned: redemptionCode.xpReward || 0,
-        metadata: { codeId: redemptionCode.id, codeType: "coach_access" }
-      });
-      
-      res.json({ 
-        message: "Coach access code redeemed successfully",
-        xpEarned: redemptionCode.xpReward || 0
-      });
     } catch (error) {
       console.error("Error redeeming coach access code:", error);
       res.status(500).json({ message: "Error redeeming coach access code" });
