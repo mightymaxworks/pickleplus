@@ -62,6 +62,13 @@ export function Header() {
                 <DropdownMenuItem onClick={() => setLocation("/profile")}>
                   Profile
                 </DropdownMenuItem>
+                {user?.isAdmin && (
+                  <>
+                    <DropdownMenuItem onClick={() => setLocation("/admin/codes")}>
+                      Admin Panel
+                    </DropdownMenuItem>
+                  </>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   Logout

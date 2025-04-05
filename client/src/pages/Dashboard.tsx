@@ -97,33 +97,32 @@ export default function Dashboard() {
     <div className="dashboard-view pb-20 md:pb-6">
       {/* Welcome Section */}
       <div className="mb-6">
-        <div className="flex items-center mb-2">
-          <h2 className="text-xl font-bold font-product-sans mr-2">Welcome back, {user.displayName.split(' ')[0]}!</h2>
-          {tierInfo && !tierLoading && (
-            <TierBadge 
-              tier={tierInfo.tier}
-              tierDescription={tierInfo.tierDescription}
-              tierProgress={tierInfo.tierProgress}
-              nextTier={tierInfo.nextTier}
-              levelUntilNextTier={tierInfo.levelUntilNextTier}
-              showDetails={false}
-            />
-          )}
-          {user.isFoundingMember && <FoundingMemberBadge size="sm" showText={true} className="ml-2" />}
-          {user.isAdmin && (
-            <span
-              className="ml-2 px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full cursor-pointer"
-              onClick={() => setLocation("/admin/codes")}
-            >
-              Admin Panel
-            </span>
-          )}
-        </div>
-        <div className="flex items-center">
-          <p className="text-gray-500 mr-3">Ready to elevate your pickleball game?</p>
-          {user.isFoundingMember && user.xpMultiplier && (
-            <XpMultiplierIndicator multiplier={user.xpMultiplier} size="sm" showLabel={true} showTooltip={true} />
-          )}
+        <div className="flex flex-col mb-2">
+          <div className="flex items-center">
+            <h2 className="text-xl font-bold font-product-sans mr-3">Welcome back, {user.displayName.split(' ')[0]}!</h2>
+            {tierInfo && !tierLoading && (
+              <TierBadge 
+                tier={tierInfo.tier}
+                tierDescription={tierInfo.tierDescription}
+                tierProgress={tierInfo.tierProgress}
+                nextTier={tierInfo.nextTier}
+                levelUntilNextTier={tierInfo.levelUntilNextTier}
+                showDetails={false}
+              />
+            )}
+          </div>
+          
+          <div className="flex items-center mt-2">
+            <p className="text-gray-500 mr-3">Ready to elevate your pickleball game?</p>
+            <div className="flex items-center gap-2">
+              {user.isFoundingMember && (
+                <FoundingMemberBadge size="sm" showText={false} className="ml-2" />
+              )}
+              {user.isFoundingMember && user.xpMultiplier && (
+                <XpMultiplierIndicator multiplier={user.xpMultiplier} size="sm" showLabel={true} showTooltip={true} />
+              )}
+            </div>
+          </div>
         </div>
       </div>
       
