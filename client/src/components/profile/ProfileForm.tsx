@@ -214,17 +214,21 @@ export function ProfileForm() {
             <CardContent>
               <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
                 <TabsList className="grid grid-cols-4">
-                  <TabsTrigger value="basic" className="flex items-center gap-1">
-                    <User size={14} /> Basic
+                  <TabsTrigger value="basic" className="flex flex-col items-center py-2">
+                    <User size={20} className="mb-1" />
+                    <span className="text-xs">Basic</span>
                   </TabsTrigger>
-                  <TabsTrigger value="pickleball" className="flex items-center gap-1">
-                    <Racquet size={14} /> Play Style
+                  <TabsTrigger value="pickleball" className="flex flex-col items-center py-2">
+                    <Racquet size={20} className="mb-1" />
+                    <span className="text-xs">Play</span>
                   </TabsTrigger>
-                  <TabsTrigger value="social" className="flex items-center gap-1">
-                    <Users size={14} /> Community
+                  <TabsTrigger value="social" className="flex flex-col items-center py-2">
+                    <Users size={20} className="mb-1" />
+                    <span className="text-xs">Social</span>
                   </TabsTrigger>
-                  <TabsTrigger value="health" className="flex items-center gap-1">
-                    <Heart size={14} /> Health
+                  <TabsTrigger value="health" className="flex flex-col items-center py-2">
+                    <Heart size={20} className="mb-1" />
+                    <span className="text-xs">Health</span>
                   </TabsTrigger>
                 </TabsList>
                 
