@@ -13,6 +13,7 @@ import AuthPage from "@/pages/auth-page";
 import LandingPage from "@/pages/LandingPage";
 import TournamentCheckIn from "@/pages/TournamentCheckIn";
 import AdminCodesPage from "@/pages/AdminCodesPage";
+import CoachingPage from "@/pages/CoachingPage";
 import { MainLayout } from "@/components/MainLayout";
 import { AuthLayout } from "@/components/AuthLayout";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
@@ -104,6 +105,12 @@ function AppRoutes() {
         <Route path="/profile/edit">
           <MainLayout>
             <ProfileEdit />
+          </MainLayout>
+        </Route>
+
+        <Route path="/coaching">
+          <MainLayout>
+            <CoachingPage />
           </MainLayout>
         </Route>
         

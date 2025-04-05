@@ -20,6 +20,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useEffect, useState } from "react";
 import { Heart, Dumbbell, User as UserIcon, Users } from "lucide-react";
+import { Link } from "wouter";
 
 // Form schema using zod
 const profileFormSchema = z.object({
@@ -670,6 +671,23 @@ export function ProfileForm() {
                 <TabsContent value="social" className="space-y-4 mt-0">
                   <FormField
                     control={form.control}
+                    name="coach"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Coach</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Your coach's name (optional)" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Enter your coach's name or leave blank. You can also connect with coaches through the Coaching Connections feature.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
                     name="clubs"
                     render={({ field }) => (
                       <FormItem>
@@ -695,6 +713,23 @@ export function ProfileForm() {
                       </FormItem>
                     )}
                   />
+
+                  {/* Link to coaching connections */}
+                  <div className="pt-2">
+                    <div className="bg-muted/50 rounded-lg p-4">
+                      <h4 className="font-medium text-sm mb-1">Coaching Connections</h4>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Connect with coaches or become a coach to help others improve their pickleball skills.
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        className="text-sm"
+                        asChild
+                      >
+                        <Link to="/coaching">Manage Coaching Connections</Link>
+                      </Button>
+                    </div>
+                  </div>
                 </TabsContent>
                 
                 {/* Health Tab */}

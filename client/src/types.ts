@@ -258,3 +258,28 @@ export interface UserTournament extends Tournament {
 export interface UserAchievementWithDetails extends Achievement {
   unlockedAt: Date;
 }
+
+export interface Coach {
+  id: number;
+  userId: number;
+  username: string;
+  displayName?: string;
+  email?: string;
+  profilePicture?: string;
+  bio?: string;
+  level?: number;
+  skillLevel?: string;
+  yearsCoaching?: number;
+  isPCPCertified?: boolean;
+  isAdminVerified?: boolean;
+  certifications?: string[];
+  teachingPhilosophy?: string;
+  specialties?: string[];
+  specializations?: string[];
+  coachingFormats?: string[];
+  hourlyRate?: number;
+  location?: string;
+  availabilitySchedule?: Record<string, any>;
+  acceptingNewStudents?: boolean;
+  studentSuccesses?: any[];
+}
