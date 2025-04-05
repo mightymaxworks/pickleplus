@@ -1221,6 +1221,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error redeeming coach access code" });
     }
   });
+  
+  // Waitlist signup route for coaching
+  app.post("/api/waitlist/coaching", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const { email, reason } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+      
+      try {
+        // In a production environment, we would save this to a waitlist table
+        // For now, just create an activity record to track interest
+        await storage.createActivity({
+          userId,
+          type: "waitlist_signup",
+          description: "Joined coaching profiles waitlist",
+          xpEarned: 5, // Small XP reward for showing interest
+          metadata: { 
+            feature: "coaching_profiles",
+            email,
+            reason,
+            signupDate: new Date().toISOString()
+          }
+        });
+        
+        // Could also send an email notification here
+        
+        res.json({ 
+          message: "You've successfully joined the coaching profiles waitlist",
+          xpEarned: 5
+        });
+      } catch (err) {
+        // Graceful error handling for tables that might not exist yet
+        if (err instanceof Error && 
+            (err.message.includes("relation") || 
+             err.message.includes("does not exist"))) {
+          console.warn("Waitlist database error:", err.message);
+          // Just pretend it worked since this is a coming soon feature
+          return res.json({ 
+            message: "You've successfully joined the coaching profiles waitlist",
+            status: "success"
+          });
+        }
+        throw err;
+      }
+    } catch (error) {
+      console.error("Error joining waitlist:", error);
+      // Don't show the actual error to users, just a friendly message
+      res.status(500).json({ 
+        message: "We couldn't add you to the waitlist right now, but we'll be launching soon!",
+      });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

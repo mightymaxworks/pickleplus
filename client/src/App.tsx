@@ -14,6 +14,7 @@ import LandingPage from "@/pages/LandingPage";
 import TournamentCheckIn from "@/pages/TournamentCheckIn";
 import AdminCodesPage from "@/pages/AdminCodesPage";
 import CoachingPage from "@/pages/CoachingPage";
+import ComingSoonPage from "@/pages/ComingSoonPage";
 import CoachProfilePage from "@/pages/CoachProfilePage";
 import CoachProfileEditPage from "@/pages/CoachProfileEditPage";
 import { MainLayout } from "@/components/MainLayout";
@@ -118,13 +119,13 @@ function AppRoutes() {
 
         <Route path="/coach/profile">
           <MainLayout>
-            <CoachProfilePage />
+            <ComingSoonPage />
           </MainLayout>
         </Route>
 
         <Route path="/coach/profile/edit">
           <MainLayout>
-            <CoachProfileEditPage />
+            <ComingSoonPage />
           </MainLayout>
         </Route>
         
