@@ -94,24 +94,24 @@ export default function Profile() {
                     {user.location} • Playing since {user.playingSince || "recently"}
                   </p>
                 </div>
-                <div className="flex flex-col md:flex-row gap-2">
+                <div className="flex flex-col md:flex-row gap-3 mt-1">
                   <Button 
                     variant="outline" 
-                    size="sm" 
-                    className="flex items-center gap-1"
+                    size="default" 
+                    className="flex items-center gap-2 shadow-sm"
                     onClick={() => setLocation("/profile/edit")}
                   >
-                    <UserCog size={16} />
+                    <UserCog size={18} />
                     Edit Profile
                   </Button>
                   
                   <Button 
                     variant="secondary"
-                    size="sm" 
-                    className="flex items-center gap-1 bg-[#4CAF50]/10 text-[#4CAF50] hover:bg-[#4CAF50]/20 border-[#4CAF50]/20"
+                    size="default" 
+                    className="flex items-center gap-2 shadow-sm bg-[#4CAF50]/15 text-[#4CAF50] hover:bg-[#4CAF50]/25 border border-[#4CAF50]/30 font-medium"
                     onClick={() => setLocation("/coach/profile")}
                   >
-                    <Megaphone size={16} />
+                    <Megaphone size={18} />
                     Coach Profile
                   </Button>
                 </div>
