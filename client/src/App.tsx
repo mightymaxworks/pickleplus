@@ -109,7 +109,9 @@ function AppRoutes() {
         
         {/* Admin Routes */}
         <Route path="/admin/codes">
-          <AdminCodesPage />
+          <MainLayout>
+            <AdminCodesPage />
+          </MainLayout>
         </Route>
 
         {/* 404 Route */}
