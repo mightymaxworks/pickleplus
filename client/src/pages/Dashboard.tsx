@@ -15,6 +15,8 @@ import { FoundingMemberBadge } from "@/components/ui/founding-member-badge";
 import { XpMultiplierIndicator } from "@/components/ui/xp-multiplier-indicator";
 import { ChangelogBanner } from "@/components/ChangelogBanner";
 import { useChangelogNotification } from "@/hooks/useChangelogNotification";
+import { ConnectionStatsWidget } from "@/components/social/ConnectionStatsWidget";
+import { SocialActivityFeed } from "@/components/social/SocialActivityFeed";
 
 // Define missing interfaces
 interface UserAchievementWithDetails {
@@ -80,6 +82,86 @@ export default function Dashboard() {
   } = useQuery<UserAchievementWithDetails[]>({
     queryKey: ["/api/user/achievements"],
     enabled: isAuthenticated,
+  });
+
+  // Fetch connection statistics
+  const {
+    data: connectionStats,
+    isLoading: connectionStatsLoading
+  } = useQuery({
+    queryKey: ["/api/connections/stats"],
+    enabled: isAuthenticated,
+    // Temporary mock data until API endpoint is available
+    queryFn: async () => {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return {
+        total: 4,
+        byType: {
+          partner: 2,
+          friend: 1,
+          coach: 1,
+          teammate: 0
+        }
+      };
+    }
+  });
+
+  // Fetch social activity feed
+  const {
+    data: socialActivities,
+    isLoading: socialActivitiesLoading
+  } = useQuery({
+    queryKey: ["/api/connections/activities"],
+    enabled: isAuthenticated,
+    // Temporary mock data until API endpoint is available
+    queryFn: async () => {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 700));
+      return [
+        {
+          id: 1,
+          type: "connection_accepted",
+          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
+          actors: [{
+            id: 2,
+            displayName: "Dink Star",
+            username: "dinkstar",
+            avatarInitials: "DS"
+          }]
+        },
+        {
+          id: 2,
+          type: "match_played",
+          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2 days ago
+          actors: [{
+            id: 3,
+            displayName: "Slice Queen",
+            username: "slicequeen",
+            avatarInitials: "SQ"
+          }],
+          contextData: {
+            matchId: 123,
+            matchType: "doubles"
+          }
+        },
+        {
+          id: 3,
+          type: "tournament_joined",
+          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(), // 5 days ago
+          actors: [{
+            id: 4,
+            displayName: "Top Spinner",
+            username: "topspinner",
+            avatarInitials: "TS"
+          }],
+          contextData: {
+            tournamentId: 1,
+            tournamentName: "Spring Championship 2025"
+          }
+        }
+      ];
+    }
   });
   
   // Find upcoming tournaments
@@ -202,6 +284,18 @@ export default function Dashboard() {
           showDetails={true}
         />
       )}
+      
+      {/* Connection Stats Widget - New Social Feature */}
+      <ConnectionStatsWidget 
+        stats={connectionStats}
+        isLoading={connectionStatsLoading}
+      />
+      
+      {/* Social Activity Feed - New Social Feature */}
+      <SocialActivityFeed 
+        activities={socialActivities}
+        isLoading={socialActivitiesLoading}
+      />
       
       {/* Recent Activity Section */}
       <div className="mb-6">
