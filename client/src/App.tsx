@@ -14,6 +14,8 @@ import LandingPage from "@/pages/LandingPage";
 import TournamentCheckIn from "@/pages/TournamentCheckIn";
 import AdminCodesPage from "@/pages/AdminCodesPage";
 import CoachingPage from "@/pages/CoachingPage";
+import CoachProfilePage from "@/pages/CoachProfilePage";
+import CoachProfileEditPage from "@/pages/CoachProfileEditPage";
 import { MainLayout } from "@/components/MainLayout";
 import { AuthLayout } from "@/components/AuthLayout";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
@@ -111,6 +113,18 @@ function AppRoutes() {
         <Route path="/coaching">
           <MainLayout>
             <CoachingPage />
+          </MainLayout>
+        </Route>
+
+        <Route path="/coach/profile">
+          <MainLayout>
+            <CoachProfilePage />
+          </MainLayout>
+        </Route>
+
+        <Route path="/coach/profile/edit">
+          <MainLayout>
+            <CoachProfileEditPage />
           </MainLayout>
         </Route>
         

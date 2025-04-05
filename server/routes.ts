@@ -1047,6 +1047,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Coach Profile API endpoints
+  app.get("/api/coach/profile", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      // Get coach profile if exists
+      const coachProfile = await storage.getCoachProfile(userId);
+      
+      if (!coachProfile) {
+        return res.status(404).json({ message: "Coach profile not found" });
+      }
+      
+      res.json(coachProfile);
+    } catch (error) {
+      console.error("Error retrieving coach profile:", error);
+      res.status(500).json({ message: "Error retrieving coach profile" });
+    }
+  });
+  
+  app.post("/api/coach/profile", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const profileData = req.body;
+      
+      // Check if user is eligible to create a coach profile
+      const user = await storage.getUser(userId);
+      if (!user.isCoach && !user.hasCoachAccess) {
+        return res.status(403).json({ 
+          message: "You don't have permission to create a coach profile. Subscribe or enter a valid code."
+        });
+      }
+      
+      // Create or update coach profile
+      const coachProfile = await storage.createOrUpdateCoachProfile(userId, profileData);
+      
+      res.json(coachProfile);
+    } catch (error) {
+      console.error("Error creating/updating coach profile:", error);
+      res.status(500).json({ message: "Error creating/updating coach profile" });
+    }
+  });
+  
+  app.post("/api/coach/redeem-code", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const { code } = req.body;
+      
+      if (!code) {
+        return res.status(400).json({ message: "Redemption code is required" });
+      }
+      
+      // Check if code exists and is valid coach access code
+      const redemptionCode = await storage.getRedemptionCodeByCode(code);
+      
+      if (!redemptionCode || !redemptionCode.isCoachAccessCode) {
+        return res.status(400).json({ message: "Invalid coaching access code" });
+      }
+      
+      if (redemptionCode.isActive === false) {
+        return res.status(400).json({ message: "This code is no longer active" });
+      }
+      
+      if (redemptionCode.expiresAt && new Date(redemptionCode.expiresAt) < new Date()) {
+        return res.status(400).json({ message: "This code has expired" });
+      }
+      
+      if (redemptionCode.maxRedemptions && 
+          redemptionCode.currentRedemptions && 
+          redemptionCode.currentRedemptions >= redemptionCode.maxRedemptions) {
+        return res.status(400).json({ message: "This code has reached its maximum redemptions" });
+      }
+      
+      // Check if user has already redeemed this code
+      const hasRedeemed = await storage.hasUserRedeemedCode(userId, redemptionCode.id);
+      if (hasRedeemed) {
+        return res.status(400).json({ message: "You have already redeemed this code" });
+      }
+      
+      // Update user to have coach access
+      await storage.updateUserCoachAccess(userId, true);
+      
+      // Record redemption
+      await storage.createRedemption({
+        userId,
+        redemptionCodeId: redemptionCode.id
+      });
+      
+      // Update redemption count
+      if (redemptionCode.currentRedemptions !== null) {
+        await storage.incrementRedemptionCount(redemptionCode.id);
+      }
+      
+      // Create activity record
+      await storage.createActivity({
+        userId,
+        type: "code_redemption",
+        description: "Redeemed coach access code",
+        xpEarned: redemptionCode.xpReward || 0,
+        metadata: { codeId: redemptionCode.id, codeType: "coach_access" }
+      });
+      
+      res.json({ 
+        message: "Coach access code redeemed successfully",
+        xpEarned: redemptionCode.xpReward || 0
+      });
+    } catch (error) {
+      console.error("Error redeeming coach access code:", error);
+      res.status(500).json({ message: "Error redeeming coach access code" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
