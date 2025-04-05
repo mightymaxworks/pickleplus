@@ -23,8 +23,12 @@ export function PassportQrCodeCard({ user }: PassportQrCodeCardProps) {
   // Generate a random passport ID if one doesn't exist
   const passportId = user.passportId || `PKL-${Math.floor(100000 + Math.random() * 900000)}`;
   
+  // Generate a connection token - in a real app, this would be secured with a server-side token
+  const connectionToken = btoa(`${passportId}:${Date.now()}`);
+  
+  // Include connection information in the URL
   const passportUrl = passportId 
-    ? `https://pickleplus.app/passport/${passportId}`
+    ? `https://pickleplus.app/connect/${passportId}?token=${connectionToken}`
     : '';
     
   const handleCopyLink = () => {
@@ -79,7 +83,7 @@ export function PassportQrCodeCard({ user }: PassportQrCodeCardProps) {
           )}
         </div>
         <CardDescription>
-          Use this QR code to check into tournaments and track your achievements
+          Use this QR code to check into tournaments, connect with other players, and track your achievements
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center">
@@ -119,7 +123,7 @@ export function PassportQrCodeCard({ user }: PassportQrCodeCardProps) {
           </div>
         )}
         
-        <div className="grid grid-cols-2 gap-2 w-full">
+        <div className="grid grid-cols-3 gap-2 w-full">
           <Button 
             variant="outline" 
             onClick={handlePrintPassport} 
@@ -134,6 +138,14 @@ export function PassportQrCodeCard({ user }: PassportQrCodeCardProps) {
           >
             <LinkIcon className="h-4 w-4 mr-2" /> 
             {copiedLink ? 'Copied' : 'Copy Link'}
+          </Button>
+          {/* Import for scan button component - this will be below */}
+          <Button
+            variant="default"
+            onClick={() => window.location.href = "/scan"}
+            className={`bg-indigo-600 hover:bg-indigo-700 text-white ${isFoundingMember ? 'bg-amber-500 hover:bg-amber-600' : ''}`}
+          >
+            <QrCode className="h-4 w-4 mr-2" /> Scan
           </Button>
         </div>
       </CardContent>

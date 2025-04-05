@@ -17,6 +17,7 @@ import CoachingPage from "@/pages/CoachingPage";
 import ComingSoonPage from "@/pages/ComingSoonPage";
 import CoachProfilePage from "@/pages/CoachProfilePage";
 import CoachProfileEditPage from "@/pages/CoachProfileEditPage";
+import ScanPage from "@/pages/ScanPage";
 import { MainLayout } from "@/components/MainLayout";
 import { AuthLayout } from "@/components/AuthLayout";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
@@ -109,6 +110,10 @@ function AppRoutes() {
           <MainLayout>
             <ProfileEdit />
           </MainLayout>
+        </Route>
+        
+        <Route path="/scan">
+          <ScanPage />
         </Route>
 
         <Route path="/coaching">

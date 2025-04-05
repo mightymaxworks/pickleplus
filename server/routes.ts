@@ -394,6 +394,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error retrieving user by passport ID" });
     }
   });
+  
+  // QR Code Connection - Parse connection QR code and get user info
+  app.get("/api/connect/:passportId", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { passportId } = req.params;
+      const { token } = req.query;
+      
+      if (!passportId || !token) {
+        return res.status(400).json({ error: 'Missing required parameters' });
+      }
+      
+      // Validate passport ID format
+      if (!validatePassportId(passportId)) {
+        return res.status(400).json({ message: "Invalid passport ID format" });
+      }
+      
+      // Validate the token (in a real app, this would be a more secure validation)
+      try {
+        const decodedToken = Buffer.from(token as string, 'base64').toString();
+        const [tokenPassportId, timestamp] = decodedToken.split(':');
+        
+        // Check if token is valid
+        if (tokenPassportId !== passportId) {
+          return res.status(400).json({ error: 'Invalid token' });
+        }
+        
+        // Check if token is expired (tokens valid for 5 minutes)
+        const tokenTime = parseInt(timestamp);
+        const now = Date.now();
+        if (now - tokenTime > 5 * 60 * 1000) {
+          return res.status(400).json({ error: 'Token expired' });
+        }
+      } catch (error) {
+        return res.status(400).json({ error: 'Invalid token format' });
+      }
+      
+      // Get user by passport ID
+      const user = await storage.getUserByPassportId(passportId);
+      
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      // Don't return sensitive user data
+      const safeUser = {
+        id: user.id,
+        username: user.username,
+        displayName: user.displayName,
+        skillLevel: user.skillLevel,
+        avatarInitials: user.avatarInitials,
+        passportId: user.passportId,
+        level: user.level
+      };
+      
+      res.status(200).json(safeUser);
+    } catch (error) {
+      console.error('Error processing connect request:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
 
   // Tournament routes
   app.get("/api/tournaments", async (req: Request, res: Response) => {
