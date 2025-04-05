@@ -8,6 +8,8 @@ import { useKonamiCode } from "@/hooks/useKonamiCode";
 import { EasterEggModal } from "@/components/EasterEggModal";
 import { RecentUpdatesSection } from "@/components/RecentUpdatesSection";
 import { useState, useEffect } from "react";
+import { Features, useFeatureFlag } from "@/lib/featureFlags";
+import BounceMascot from "@/modules/guidance-mini/components/BounceMascot";
 
 // Animation variants
 const fadeIn = {
@@ -73,6 +75,7 @@ const HowItWorksStep = ({ number, title, description }: {
 export default function LandingPage() {
   const [, navigate] = useLocation();
   const [isEasterEggModalOpen, setIsEasterEggModalOpen] = useState(false);
+  const showMascot = useFeatureFlag(Features.GUIDANCE_MASCOT);
   
   // Set up Konami code detection
   const { konamiDetected, reset } = useKonamiCode();
@@ -715,6 +718,9 @@ export default function LandingPage() {
         isOpen={isEasterEggModalOpen}
         onClose={() => setIsEasterEggModalOpen(false)}
       />
+      
+      {/* Bounce Mascot */}
+      {showMascot && <BounceMascot position="bottom-right" />}
     </div>
   );
 }
