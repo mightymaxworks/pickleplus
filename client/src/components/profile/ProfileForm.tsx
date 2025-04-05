@@ -566,36 +566,7 @@ export function ProfileForm() {
                     )}
                   />
                   
-                  <FormField
-                    control={form.control}
-                    name="preferredPosition"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Preferred Court Position</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          defaultValue={field.value || undefined}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select preferred position" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="left">Left Side</SelectItem>
-                            <SelectItem value="right">Right Side</SelectItem>
-                            <SelectItem value="backline">Back Line</SelectItem>
-                            <SelectItem value="net">Net Player</SelectItem>
-                            <SelectItem value="flexible">Flexible/No Preference</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>
-                          Your preferred position when playing doubles
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+
                   
                   <FormField
                     control={form.control}
@@ -678,19 +649,7 @@ export function ProfileForm() {
                 {/* Social/Community Tab */}
                 <TabsContent value="social" className="space-y-4 mt-0">
                   
-                  <FormField
-                    control={form.control}
-                    name="coach"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Coach or Instructor</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Name of your coach/instructor (if any)" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+
                   
                   <FormField
                     control={form.control}
