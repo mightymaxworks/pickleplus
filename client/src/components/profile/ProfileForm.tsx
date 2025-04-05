@@ -672,23 +672,6 @@ export function ProfileForm() {
                 <TabsContent value="social" className="space-y-4 mt-0">
                   {/* Social coming soon component */}
                   <SocialComingSoon />
-                  
-                  {/* Link to coaching connections */}
-                  <div className="pt-2">
-                    <div className="bg-muted/50 rounded-lg p-4">
-                      <h4 className="font-medium text-sm mb-1">Coaching Connections</h4>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        Connect with coaches or become a coach to help others improve their pickleball skills.
-                      </p>
-                      <Button 
-                        variant="outline" 
-                        className="text-sm"
-                        asChild
-                      >
-                        <Link to="/coaching">Manage Coaching Connections</Link>
-                      </Button>
-                    </div>
-                  </div>
                 </TabsContent>
                 
                 {/* Health Tab */}
