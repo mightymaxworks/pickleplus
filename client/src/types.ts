@@ -127,6 +127,10 @@ export interface RedemptionCode {
   currentRedemptions: number | null;
   expiresAt: Date | null;
   createdAt?: Date;
+  
+  // For multiplier codes
+  multiplierValue?: number | null;
+  multiplierDurationDays?: number | null;
 }
 
 export interface UserRedemption {

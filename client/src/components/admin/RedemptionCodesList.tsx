@@ -66,7 +66,9 @@ const RedemptionCodesList = () => {
 
   const { data: codes, isLoading, error } = useQuery({
     queryKey: ["/api/redemption-codes"],
-    queryFn: codeApi.getAllRedemptionCodes
+    queryFn: codeApi.getAllRedemptionCodes,
+    refetchOnMount: true,
+    staleTime: 0 // Always consider this data stale to ensure fresh data
   });
 
   const deleteMutation = useMutation({
@@ -273,6 +275,10 @@ const RedemptionCodesList = () => {
           code={selectedCode}
           isOpen={formOpen}
           onClose={() => setFormOpen(false)}
+          onSuccess={() => {
+            // Force refresh the code list
+            queryClient.invalidateQueries({ queryKey: ["/api/redemption-codes"] });
+          }}
         />
       )}
 

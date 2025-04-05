@@ -138,6 +138,7 @@ export default function RedemptionCodeForm({
       
       // Invalidate the redemption codes query to refresh the list
       queryClient.invalidateQueries({ queryKey: ["/api/redemption-codes"] });
+      console.log("Invalidating redemption codes query");
       
       // Close the dialog and reset the form
       if (onSuccess) onSuccess();
