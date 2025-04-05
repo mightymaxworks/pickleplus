@@ -5,10 +5,27 @@ import { eq } from "drizzle-orm";
 import { IXPService } from "./interfaces";
 
 // XP required for each level
-// Uses a formula: (level^2) * 50
-const LEVEL_THRESHOLDS = Array(100).fill(0).map((_, i) => {
+// Uses an exponential formula: base * 1.5^(level-1)
+// With base starting at 100 XP
+// This creates an exponential curve that requires more XP for each level
+const MAX_LEVEL = 100;
+const BASE_XP = 100;
+const GROWTH_FACTOR = 1.15; // Each level requires 15% more XP than the previous
+
+const LEVEL_THRESHOLDS = Array(MAX_LEVEL).fill(0).map((_, i) => {
   const level = i + 1;
-  return level * level * 50;
+  
+  // For level 1, the threshold is simply BASE_XP
+  if (level === 1) return BASE_XP;
+  
+  // For subsequent levels, we use the exponential formula
+  // The total XP required is the sum of all previous levels plus this level
+  let totalXP = 0;
+  for (let l = 1; l <= level; l++) {
+    totalXP += Math.floor(BASE_XP * Math.pow(GROWTH_FACTOR, l - 1));
+  }
+  
+  return totalXP;
 });
 
 export class XPService implements IXPService {

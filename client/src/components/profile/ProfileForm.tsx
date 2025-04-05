@@ -470,6 +470,7 @@ export function ProfileForm() {
                               <SelectItem value="yonex">Yonex</SelectItem>
                               <SelectItem value="crbn">CRBN</SelectItem>
                               <SelectItem value="adidas">Adidas</SelectItem>
+                              <SelectItem value="shot3">SHOT3</SelectItem>
                               <SelectItem value="other">Other</SelectItem>
                             </SelectContent>
                           </Select>
@@ -567,13 +568,63 @@ export function ProfileForm() {
                   
                   <FormField
                     control={form.control}
+                    name="preferredPosition"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Preferred Court Position</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value || undefined}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select preferred position" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="left">Left Side</SelectItem>
+                            <SelectItem value="right">Right Side</SelectItem>
+                            <SelectItem value="backline">Back Line</SelectItem>
+                            <SelectItem value="net">Net Player</SelectItem>
+                            <SelectItem value="flexible">Flexible/No Preference</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          Your preferred position when playing doubles
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
                     name="regularSchedule"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Regular Playing Schedule</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g. Weekday mornings, Sunday afternoons" {...field} />
-                        </FormControl>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value || undefined}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select when you typically play" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="weekday-mornings">Weekday Mornings</SelectItem>
+                            <SelectItem value="weekday-afternoons">Weekday Afternoons</SelectItem>
+                            <SelectItem value="weekday-evenings">Weekday Evenings</SelectItem>
+                            <SelectItem value="weekend-mornings">Weekend Mornings</SelectItem>
+                            <SelectItem value="weekend-afternoons">Weekend Afternoons</SelectItem>
+                            <SelectItem value="weekend-evenings">Weekend Evenings</SelectItem>
+                            <SelectItem value="varies">Schedule Varies</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          When you're most likely to be playing
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -626,34 +677,6 @@ export function ProfileForm() {
                 
                 {/* Social/Community Tab */}
                 <TabsContent value="social" className="space-y-4 mt-0">
-                  {/* Coaching Profile Toggle */}
-                  <Card className="mb-4 bg-amber-50 border-amber-200">
-                    <CardContent className="pt-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="text-lg font-semibold text-amber-800">Coaching Profile</h3>
-                          <p className="text-sm text-amber-700">Enable your coaching profile to offer lessons</p>
-                        </div>
-                        <Switch 
-                          id="coaching-profile-toggle" 
-                          onCheckedChange={(checked) => {
-                            // Call API to toggle coaching profile
-                            toast({
-                              title: checked ? "Coaching Profile Activated" : "Coaching Profile Deactivated",
-                              description: checked 
-                                ? "You can now manage your coaching details in the coaching dashboard." 
-                                : "Your coaching profile has been hidden from public view.",
-                            });
-                            
-                            // Redirect to coaching profile setup if needed
-                            if (checked) {
-                              window.location.href = "/coach-profile";
-                            }
-                          }}
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
                   
                   <FormField
                     control={form.control}
