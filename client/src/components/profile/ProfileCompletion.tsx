@@ -102,8 +102,35 @@ function TierMarker({
 }) {
   return (
     <div className="relative h-10 mb-4 mt-4">
+      {/* Tier labels above progress line */}
+      {tiers.map((tier, index) => (
+        <div 
+          key={index} 
+          className="absolute flex flex-col items-center" 
+          style={{ left: `${tier.level}%`, transform: 'translateX(-50%)' }}
+        >
+          <div className="text-xs mb-1.5 text-center font-medium whitespace-nowrap">
+            {tier.label}
+          </div>
+        </div>
+      ))}
+      
+      {/* Start label */}
+      <div className="absolute left-0 flex flex-col items-center">
+        <div className="text-xs mb-1.5 text-center font-medium">
+          0%
+        </div>
+      </div>
+      
+      {/* End label */}
+      <div className="absolute right-0 flex flex-col items-center">
+        <div className="text-xs mb-1.5 text-center font-medium">
+          100%
+        </div>
+      </div>
+      
       {/* Progress line */}
-      <div className="absolute w-full h-1 bg-gray-200 top-3"></div>
+      <div className="absolute w-full h-1 bg-gray-200 top-6"></div>
       
       {/* Tier markers */}
       {tiers.map((tier, index) => (
@@ -112,19 +139,13 @@ function TierMarker({
           className="absolute flex flex-col items-center" 
           style={{ left: `${tier.level}%`, transform: 'translateX(-50%)' }}
         >
-          <div className={`w-3 h-3 rounded-full ${percentage >= tier.level ? 'bg-amber-500' : 'bg-gray-300'} relative top-2`}></div>
-          <div className="text-xs mt-3 text-center font-medium whitespace-nowrap">
-            {tier.label}
-          </div>
+          <div className={`w-3 h-3 rounded-full ${percentage >= tier.level ? 'bg-amber-500' : 'bg-gray-300'} relative top-5`}></div>
         </div>
       ))}
       
       {/* Starting point */}
       <div className="absolute left-0 flex flex-col items-center">
-        <div className={`w-3 h-3 rounded-full ${percentage > 0 ? 'bg-amber-500' : 'bg-gray-300'} relative top-2`}></div>
-        <div className="text-xs mt-3 text-center font-medium">
-          0%
-        </div>
+        <div className={`w-3 h-3 rounded-full ${percentage > 0 ? 'bg-amber-500' : 'bg-gray-300'} relative top-5`}></div>
       </div>
       
       {/* Current position indicator */}
@@ -133,16 +154,13 @@ function TierMarker({
           className="absolute flex flex-col items-center" 
           style={{ left: `${percentage}%`, transform: 'translateX(-50%)' }}
         >
-          <div className="w-4 h-4 rounded-full bg-green-500 relative top-[6px] border-2 border-white shadow-sm"></div>
+          <div className="w-4 h-4 rounded-full bg-green-500 relative top-[19px] border-2 border-white shadow-sm"></div>
         </div>
       )}
       
       {/* End point - 100% */}
       <div className="absolute right-0 flex flex-col items-center">
-        <div className={`w-3 h-3 rounded-full ${percentage >= 100 ? 'bg-amber-500' : 'bg-gray-300'} relative top-2`}></div>
-        <div className="text-xs mt-3 text-center font-medium">
-          100%
-        </div>
+        <div className={`w-3 h-3 rounded-full ${percentage >= 100 ? 'bg-amber-500' : 'bg-gray-300'} relative top-5`}></div>
       </div>
     </div>
   );
