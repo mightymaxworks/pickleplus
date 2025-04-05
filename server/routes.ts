@@ -799,6 +799,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Admin dashboard stats endpoint
+  app.get("/api/admin/dashboard", isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+    try {
+      // Fetch various stats for the dashboard
+      const userCount = await storage.getUserCount();
+      const activeUserCount = await storage.getActiveUserCount(); // Users active in the last 30 days
+      const activeCodesCount = await storage.getActiveRedemptionCodesCount();
+      const totalXpAwarded = await storage.getTotalXpAwarded();
+      const recentlyRedeemedCodes = await storage.getRecentlyRedeemedCodes(5);
+      
+      // Return all stats
+      res.json({
+        userCount,
+        activeUserCount,
+        activeCodesCount,
+        totalXpAwarded,
+        recentlyRedeemedCodes
+      });
+    } catch (error) {
+      console.error('[adminDashboard] Error:', error);
+      res.status(500).json({ message: "Failed to fetch dashboard statistics" });
+    }
+  });
+  
   // Admin only redemption code routes
   app.get("/api/redemption-codes", isAuthenticated, isAdmin, async (req: Request, res: Response) => {
     try {

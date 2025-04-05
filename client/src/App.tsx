@@ -13,6 +13,7 @@ import AuthPage from "@/pages/auth-page";
 import LandingPage from "@/pages/LandingPage";
 import TournamentCheckIn from "@/pages/TournamentCheckIn";
 import AdminCodesPage from "@/pages/AdminCodesPage";
+import AdminDashboardPage from "@/pages/AdminDashboardPage";
 import CoachingPage from "@/pages/CoachingPage";
 import ConnectionsPage from "@/pages/ConnectionsPage";
 import ComingSoonPage from "@/pages/ComingSoonPage";
@@ -144,6 +145,12 @@ function AppRoutes() {
         </Route>
         
         {/* Admin Routes */}
+        <Route path="/admin">
+          <MainLayout>
+            <AdminDashboardPage />
+          </MainLayout>
+        </Route>
+        
         <Route path="/admin/codes">
           <MainLayout>
             <AdminCodesPage />
