@@ -22,7 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
-import RedemptionCodeForm from "./RedemptionCodeForm";
+import RedemptionCodeForm from "./RedemptionCodeFormNew";
 import {
   AlertDialog,
   AlertDialogAction,
