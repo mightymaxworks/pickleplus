@@ -6,6 +6,7 @@ import Tournaments from "@/pages/Tournaments";
 import Achievements from "@/pages/Achievements";
 import Leaderboard from "@/pages/Leaderboard";
 import Profile from "@/pages/Profile";
+import ProfileEdit from "@/pages/ProfileEdit";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import AuthPage from "@/pages/auth-page";
@@ -96,6 +97,12 @@ function AppRoutes() {
         <Route path="/profile">
           <MainLayout>
             <Profile />
+          </MainLayout>
+        </Route>
+        
+        <Route path="/profile/edit">
+          <MainLayout>
+            <ProfileEdit />
           </MainLayout>
         </Route>
 

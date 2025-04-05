@@ -14,9 +14,41 @@ export interface User {
   matchesWon: number;
   totalTournaments: number;
   lastMatchDate: Date | null;
-  createdAt: Date;
   isFoundingMember?: boolean;
   xpMultiplier?: number;
+  
+  // Pickleball-specific fields
+  bio?: string | null;
+  preferredPosition?: string | null;
+  paddleBrand?: string | null;
+  paddleModel?: string | null;
+  playingStyle?: string | null;
+  shotStrengths?: string | null;
+  preferredFormat?: string | null;
+  dominantHand?: string | null;
+  regularSchedule?: string | null;
+  lookingForPartners?: boolean;
+  partnerPreferences?: string | null;
+  playerGoals?: string | null;
+  
+  // Social/Community fields
+  coach?: string | null;
+  clubs?: string | null;
+  leagues?: string | null;
+  socialHandles?: Record<string, string>;
+  willingToMentor?: boolean;
+  
+  // Physical/Health information
+  mobilityLimitations?: string | null;
+  preferredMatchDuration?: string | null;
+  fitnessLevel?: string | null;
+  
+  // Profile completion tracking
+  profileCompletionPct?: number;
+  profileLastUpdated?: Date | null;
+  profileSetupStep?: number;
+  
+  createdAt: Date;
 }
 
 export interface Tournament {
@@ -154,4 +186,44 @@ export interface RegisterFormData {
   skillLevel?: string;
   redemptionCode?: string;
   confirmPassword: string; // Required by the server validation
+  
+  // Optional fields that can be collected during registration
+  bio?: string;
+  preferredFormat?: string;
+  dominantHand?: string;
+  lookingForPartners?: boolean;
+}
+
+export interface ProfileUpdateFormData {
+  displayName?: string;
+  yearOfBirth?: number | null;
+  location?: string | null;
+  playingSince?: string | null;
+  skillLevel?: string | null;
+  
+  // Pickleball-specific fields
+  bio?: string | null;
+  preferredPosition?: string | null;
+  paddleBrand?: string | null;
+  paddleModel?: string | null;
+  playingStyle?: string | null;
+  shotStrengths?: string | null; 
+  preferredFormat?: string | null;
+  dominantHand?: string | null;
+  regularSchedule?: string | null;
+  lookingForPartners?: boolean;
+  partnerPreferences?: string | null;
+  playerGoals?: string | null;
+  
+  // Social/Community fields
+  coach?: string | null;
+  clubs?: string | null;
+  leagues?: string | null;
+  socialHandles?: Record<string, string>;
+  willingToMentor?: boolean;
+  
+  // Physical/Health information
+  mobilityLimitations?: string | null;
+  preferredMatchDuration?: string | null;
+  fitnessLevel?: string | null;
 }

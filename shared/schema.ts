@@ -25,6 +25,38 @@ export const users = pgTable("users", {
   totalTournaments: integer("total_tournaments").default(0),
   isFoundingMember: boolean("is_founding_member").default(false),
   xpMultiplier: integer("xp_multiplier").default(100), // Store as an integer representing percentage (100 = 1.0x, 110 = 1.1x)
+  
+  // Pickleball-specific fields
+  bio: text("bio"), // Short player bio or status
+  preferredPosition: text("preferred_position"), // Forehand, Backhand, Either
+  paddleBrand: text("paddle_brand"), // Brand of paddle used
+  paddleModel: text("paddle_model"), // Model of paddle
+  playingStyle: text("playing_style"), // Aggressive, Defensive, All-court
+  shotStrengths: text("shot_strengths"), // Dinking, Third-shot drops, etc.
+  preferredFormat: text("preferred_format"), // Singles, Doubles, Mixed Doubles
+  dominantHand: text("dominant_hand"), // Left, Right, Ambidextrous
+  regularSchedule: text("regular_schedule"), // When they typically play
+  lookingForPartners: boolean("looking_for_partners").default(false),
+  partnerPreferences: text("partner_preferences"), // What they look for in partners
+  playerGoals: text("player_goals"), // Competitive, recreational, etc.
+  
+  // Social/Community fields
+  coach: text("coach"), // Coach or instructor name
+  clubs: text("clubs"), // Club memberships
+  leagues: text("leagues"), // Leagues they participate in
+  socialHandles: json("social_handles"), // JSON object with social media handles
+  willingToMentor: boolean("willing_to_mentor").default(false),
+  
+  // Physical/Health information
+  mobilityLimitations: text("mobility_limitations"),
+  preferredMatchDuration: text("preferred_match_duration"), // Short, Medium, Extended
+  fitnessLevel: text("fitness_level"), // Casual, Moderate, High
+  
+  // Profile completion tracking
+  profileCompletionPct: integer("profile_completion_pct").default(0), // 0-100
+  profileLastUpdated: timestamp("profile_last_updated"),
+  profileSetupStep: integer("profile_setup_step").default(0), // For multi-step setup tracking
+  
   createdAt: timestamp("created_at").defaultNow()
 });
 

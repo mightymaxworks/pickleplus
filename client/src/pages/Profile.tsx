@@ -12,8 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { type Activity } from "@/types";
-import { PlusCircle, Award, TrendingUp, ArrowUp, ArrowDown } from "lucide-react";
+import { PlusCircle, Award, TrendingUp, ArrowUp, ArrowDown, UserCog, ChevronRight } from "lucide-react";
 import { Features, useFeatureFlag } from "@/lib/featureFlags";
+import { ProfileForm } from "@/components/profile/ProfileForm";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -85,11 +86,24 @@ export default function Profile() {
               </div>
               <div className="absolute -bottom-2 -right-2 player-level">{user.level}</div>
             </div>
-            <div className="text-center md:text-left">
-              <h2 className="text-2xl font-bold mb-1 font-product-sans">{user.displayName}</h2>
-              <p className="text-gray-500 mb-2">
-                {user.location} • Playing since {user.playingSince || "recently"}
-              </p>
+            <div className="text-center md:text-left flex-1">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold mb-1 font-product-sans">{user.displayName}</h2>
+                  <p className="text-gray-500 mb-2">
+                    {user.location} • Playing since {user.playingSince || "recently"}
+                  </p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex items-center gap-1 mb-2 md:mb-0"
+                  onClick={() => setLocation("/profile/edit")}
+                >
+                  <UserCog size={16} />
+                  Edit Profile
+                </Button>
+              </div>
               <div className="flex flex-wrap justify-center md:justify-start">
                 {user.skillLevel && (
                   <span className="bg-[#FF5722] bg-opacity-10 text-[#FF5722] text-xs px-3 py-1 rounded-full mr-2 mb-2">
@@ -102,6 +116,11 @@ export default function Profile() {
                 <span className="bg-[#4CAF50] bg-opacity-10 text-[#4CAF50] text-xs px-3 py-1 rounded-full mb-2">
                   {user.totalTournaments} Tournaments
                 </span>
+                {user.profileCompletionPct ? (
+                  <span className="bg-purple-100 text-purple-600 text-xs px-3 py-1 rounded-full mb-2">
+                    {user.profileCompletionPct}% Profile Complete
+                  </span>
+                ) : null}
               </div>
             </div>
           </div>

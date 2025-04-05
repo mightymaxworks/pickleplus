@@ -212,6 +212,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(401).json({ message: "Not logged in" });
     }
   });
+  
+  // Profile operations
+  app.get("/api/profile/completion", isAuthenticated, async (req: Request, res: Response) => {
+    if (!req.user) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    const percentage = await storage.calculateProfileCompletion(req.user.id);
+    const completedFields = await storage.getCompletedProfileFields(req.user.id);
+    
+    // Get all possible profile fields
+    const allFields = [
+      'bio', 'location', 'skillLevel', 'playingSince', 
+      'preferredPosition', 'paddleBrand', 'paddleModel', 
+      'playingStyle', 'shotStrengths', 'preferredFormat', 
+      'dominantHand', 'regularSchedule', 'lookingForPartners',
+      'partnerPreferences', 'playerGoals', 'coach', 'clubs',
+      'leagues', 'socialHandles', 'mobilityLimitations',
+      'preferredMatchDuration', 'fitnessLevel'
+    ];
+    
+    // Determine incomplete fields
+    const incompleteFields = allFields.filter(field => !completedFields.includes(field));
+    
+    res.json({
+      completionPercentage: percentage,
+      completedFields,
+      incompleteFields,
+      xpEarned: 0, // Will be calculated in a future implementation
+      potentialXp: 250 // Total possible XP for completing profile
+    });
+  });
+  
+  app.patch("/api/profile/update", isAuthenticated, async (req: Request, res: Response) => {
+    if (!req.user) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    try {
+      // Get the current user data to compare later for XP rewards
+      const oldUser = await storage.getUser(req.user.id);
+      if (!oldUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Update the user's profile
+      const updatedUser = await storage.updateUserProfile(req.user.id, req.body);
+      if (!updatedUser) {
+        return res.status(404).json({ error: "Failed to update profile" });
+      }
+      
+      // Check if profile completion crossed a threshold to award XP
+      const oldCompletion = oldUser.profileCompletionPct || 0;
+      const newCompletion = updatedUser.profileCompletionPct || 0;
+      
+      let xpAwarded = 0;
+      
+      // XP thresholds: award XP at 25%, 50%, 75%, and 100% completion
+      const thresholds = [
+        { threshold: 25, reward: 25 },
+        { threshold: 50, reward: 50 },
+        { threshold: 75, reward: 75 },
+        { threshold: 100, reward: 100 }
+      ];
+      
+      // Check if any thresholds were crossed
+      for (const tier of thresholds) {
+        if (oldCompletion < tier.threshold && newCompletion >= tier.threshold) {
+          xpAwarded += tier.reward;
+          
+          // Record activity
+          await storage.createActivity({
+            userId: req.user.id,
+            type: 'profile_update',
+            description: `Profile ${tier.threshold}% complete: +${tier.reward}XP`,
+            xpEarned: tier.reward,
+            metadata: { 
+              oldCompletion, 
+              newCompletion,
+              threshold: tier.threshold 
+            }
+          });
+          
+          // Award XP
+          await storage.updateUserXP(req.user.id, tier.reward);
+        }
+      }
+      
+      // Get the latest user data after possible XP awards
+      const finalUser = await storage.getUser(req.user.id);
+      
+      res.json({
+        user: finalUser,
+        xpAwarded
+      });
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
 
   // User routes
   app.get("/api/users/:id", isAuthenticated, async (req: Request, res: Response) => {

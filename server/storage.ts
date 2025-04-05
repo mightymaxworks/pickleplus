@@ -24,6 +24,12 @@ export interface IStorage {
   updateUser(id: number, update: Partial<InsertUser>): Promise<User | undefined>;
   updateUserXP(id: number, xpToAdd: number): Promise<User | undefined>;
   
+  // Profile operations
+  updateUserProfile(userId: number, profileData: any): Promise<User | undefined>;
+  calculateProfileCompletion(userId: number): Promise<number>;
+  updateProfileCompletionPercentage(userId: number, percentage: number): Promise<User | undefined>;
+  getCompletedProfileFields(userId: number): Promise<string[]>;
+  
   // Tournament operations
   getTournament(id: number): Promise<Tournament | undefined>;
   getAllTournaments(): Promise<Tournament[]>;
@@ -247,7 +253,9 @@ export class MemStorage implements IStorage {
       lastMatchDate: insertUser.lastMatchDate || null,
       totalMatches: insertUser.totalMatches || 0,
       matchesWon: insertUser.matchesWon || 0,
-      totalTournaments: insertUser.totalTournaments || 0
+      totalTournaments: insertUser.totalTournaments || 0,
+      profileCompletionPct: insertUser.profileCompletionPct || 0,
+      isFoundingMember: insertUser.isFoundingMember || false
     };
     
     this.users.set(id, user);
@@ -293,6 +301,113 @@ export class MemStorage implements IStorage {
     
     this.users.set(id, updatedUser);
     return updatedUser;
+  }
+  
+  // Profile operations
+  async updateUserProfile(userId: number, profileData: any): Promise<User | undefined> {
+    const user = await this.getUser(userId);
+    if (!user) return undefined;
+    
+    // Record the profile update time
+    const profileLastUpdated = new Date();
+    
+    // Update the user with profile data
+    const updatedUser = { 
+      ...user, 
+      ...profileData,
+      profileLastUpdated
+    };
+    
+    // Calculate the new profile completion percentage
+    const completionPct = await this.calculateProfileCompletion(userId);
+    updatedUser.profileCompletionPct = completionPct;
+    
+    this.users.set(userId, updatedUser);
+    return updatedUser;
+  }
+  
+  async calculateProfileCompletion(userId: number): Promise<number> {
+    const user = await this.getUser(userId);
+    if (!user) return 0;
+    
+    // Define the fields that contribute to profile completion
+    const profileFields = [
+      'bio', 'location', 'skillLevel', 'playingSince', 
+      'preferredPosition', 'paddleBrand', 'paddleModel', 
+      'playingStyle', 'shotStrengths', 'preferredFormat', 
+      'dominantHand', 'regularSchedule', 'lookingForPartners',
+      'partnerPreferences', 'playerGoals', 'coach', 'clubs',
+      'leagues', 'socialHandles', 'mobilityLimitations',
+      'preferredMatchDuration', 'fitnessLevel'
+    ];
+    
+    // Count how many fields are completed
+    let completedFields = 0;
+    for (const field of profileFields) {
+      const value = user[field as keyof User];
+      if (value !== undefined && value !== null && value !== '') {
+        // For objects like socialHandles, check if there's at least one property
+        if (typeof value === 'object' && !Array.isArray(value)) {
+          const obj = value as Record<string, any>;
+          if (Object.keys(obj).length > 0) {
+            completedFields++;
+          }
+        } else {
+          completedFields++;
+        }
+      }
+    }
+    
+    // Calculate percentage (0-100)
+    return Math.round((completedFields / profileFields.length) * 100);
+  }
+  
+  async updateProfileCompletionPercentage(userId: number, percentage: number): Promise<User | undefined> {
+    const user = await this.getUser(userId);
+    if (!user) return undefined;
+    
+    const updatedUser = { 
+      ...user, 
+      profileCompletionPct: percentage 
+    };
+    
+    this.users.set(userId, updatedUser);
+    return updatedUser;
+  }
+  
+  async getCompletedProfileFields(userId: number): Promise<string[]> {
+    const user = await this.getUser(userId);
+    if (!user) return [];
+    
+    // Define the fields that contribute to profile completion
+    const profileFields = [
+      'bio', 'location', 'skillLevel', 'playingSince', 
+      'preferredPosition', 'paddleBrand', 'paddleModel', 
+      'playingStyle', 'shotStrengths', 'preferredFormat', 
+      'dominantHand', 'regularSchedule', 'lookingForPartners',
+      'partnerPreferences', 'playerGoals', 'coach', 'clubs',
+      'leagues', 'socialHandles', 'mobilityLimitations',
+      'preferredMatchDuration', 'fitnessLevel'
+    ];
+    
+    // Check which fields are completed
+    const completedFields: string[] = [];
+    for (const field of profileFields) {
+      const value = user[field as keyof User];
+      if (value !== undefined && value !== null && value !== '') {
+        // For objects like socialHandles, check if there's at least one property
+        if (typeof value === 'object' && !Array.isArray(value)) {
+          const obj = value as Record<string, any>;
+          if (Object.keys(obj).length > 0) {
+            completedFields.push(field);
+          }
+        } else {
+          completedFields.push(field);
+        }
+      }
+    }
+    
+    return completedFields;
   }
 
   // Tournament operations
@@ -668,6 +783,123 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return updatedUser;
+  }
+
+  // Profile operations
+  async updateUserProfile(userId: number, profileData: any): Promise<User | undefined> {
+    const user = await this.getUser(userId);
+    if (!user) return undefined;
+    
+    // Record the profile update time
+    const profileLastUpdated = new Date();
+    
+    // Update the user with profile data
+    const [updatedUser] = await db.update(users)
+      .set({
+        ...profileData,
+        profileLastUpdated
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    
+    // Calculate the new profile completion percentage
+    const completionPct = await this.calculateProfileCompletion(userId);
+    
+    // Update profile completion if it changed
+    if (completionPct !== (user.profileCompletionPct || 0)) {
+      const [finalUser] = await db.update(users)
+        .set({
+          profileCompletionPct: completionPct
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      return finalUser;
+    }
+    
+    return updatedUser;
+  }
+  
+  async calculateProfileCompletion(userId: number): Promise<number> {
+    const user = await this.getUser(userId);
+    if (!user) return 0;
+    
+    // Define the fields that contribute to profile completion
+    const profileFields = [
+      'bio', 'location', 'skillLevel', 'playingSince', 
+      'preferredPosition', 'paddleBrand', 'paddleModel', 
+      'playingStyle', 'shotStrengths', 'preferredFormat', 
+      'dominantHand', 'regularSchedule', 'lookingForPartners',
+      'partnerPreferences', 'playerGoals', 'coach', 'clubs',
+      'leagues', 'socialHandles', 'mobilityLimitations',
+      'preferredMatchDuration', 'fitnessLevel'
+    ];
+    
+    // Count how many fields are completed
+    let completedFields = 0;
+    for (const field of profileFields) {
+      const value = user[field as keyof User];
+      if (value !== undefined && value !== null && value !== '') {
+        // For objects like socialHandles, check if there's at least one property
+        if (typeof value === 'object' && !Array.isArray(value)) {
+          const obj = value as Record<string, any>;
+          if (Object.keys(obj).length > 0) {
+            completedFields++;
+          }
+        } else {
+          completedFields++;
+        }
+      }
+    }
+    
+    // Calculate percentage (0-100)
+    return Math.round((completedFields / profileFields.length) * 100);
+  }
+  
+  async updateProfileCompletionPercentage(userId: number, percentage: number): Promise<User | undefined> {
+    const [updatedUser] = await db.update(users)
+      .set({ 
+        profileCompletionPct: percentage 
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    
+    return updatedUser;
+  }
+  
+  async getCompletedProfileFields(userId: number): Promise<string[]> {
+    const user = await this.getUser(userId);
+    if (!user) return [];
+    
+    // Define the fields that contribute to profile completion
+    const profileFields = [
+      'bio', 'location', 'skillLevel', 'playingSince', 
+      'preferredPosition', 'paddleBrand', 'paddleModel', 
+      'playingStyle', 'shotStrengths', 'preferredFormat', 
+      'dominantHand', 'regularSchedule', 'lookingForPartners',
+      'partnerPreferences', 'playerGoals', 'coach', 'clubs',
+      'leagues', 'socialHandles', 'mobilityLimitations',
+      'preferredMatchDuration', 'fitnessLevel'
+    ];
+    
+    // Check which fields are completed
+    const completedFields: string[] = [];
+    for (const field of profileFields) {
+      const value = user[field as keyof User];
+      if (value !== undefined && value !== null && value !== '') {
+        // For objects like socialHandles, check if there's at least one property
+        if (typeof value === 'object' && !Array.isArray(value)) {
+          const obj = value as Record<string, any>;
+          if (Object.keys(obj).length > 0) {
+            completedFields.push(field);
+          }
+        } else {
+          completedFields.push(field);
+        }
+      }
+    }
+    
+    return completedFields;
   }
 
   // Tournament operations
