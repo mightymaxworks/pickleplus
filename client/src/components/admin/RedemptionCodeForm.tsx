@@ -161,8 +161,13 @@ export default function RedemptionCodeForm({
 
   // Step navigation functions
   const nextStep = () => {
+    console.log("nextStep called, current step:", step);
+    
     if (step === 1) {
+      console.log("Processing step 1 validation");
       const basicInfo = form.getValues(["code", "description", "codeType"]);
+      console.log("Basic info values:", basicInfo);
+      
       const codeResult = z.object({
         code: z.string().min(3),
         description: z.string().nullable().optional(),
@@ -170,34 +175,45 @@ export default function RedemptionCodeForm({
       }).safeParse(basicInfo);
       
       if (!codeResult.success) {
+        console.log("Validation failed:", codeResult.error);
         form.trigger(["code", "description", "codeType"]);
         return;
       }
+      console.log("Setting step to 2");
       setStep(2);
     } else if (step === 2) {
+      console.log("Processing step 2 validation, codeType:", codeType);
+      
       // Validate reward fields based on code type
       if (codeType === "multiplier") {
         const rewardFields = form.getValues(["multiplierValue", "multiplierDurationDays"]);
+        console.log("Multiplier fields:", rewardFields);
+        
         const rewardResult = z.object({
           multiplierValue: z.number().min(101),
           multiplierDurationDays: z.number().min(1),
         }).safeParse(rewardFields);
         
         if (!rewardResult.success) {
+          console.log("Multiplier validation failed:", rewardResult.error);
           form.trigger(["multiplierValue", "multiplierDurationDays"]);
           return;
         }
       } else {
         const rewardFields = form.getValues(["xpReward"]);
+        console.log("XP reward fields:", rewardFields);
+        
         const rewardResult = z.object({
           xpReward: z.number().min(1),
         }).safeParse(rewardFields);
         
         if (!rewardResult.success) {
+          console.log("XP validation failed:", rewardResult.error);
           form.trigger(["xpReward"]);
           return;
         }
       }
+      console.log("Setting step to 3");
       setStep(3);
     }
   };
@@ -282,7 +298,10 @@ export default function RedemptionCodeForm({
         <Button 
           variant="ghost" 
           size="sm" 
-          onClick={nextStep}
+          onClick={() => {
+            console.log("StepIndicator Next button clicked, current step:", step);
+            nextStep();
+          }}
         >
           Next
           <ArrowRight className="ml-2 h-4 w-4" />
@@ -422,7 +441,10 @@ export default function RedemptionCodeForm({
                 <div className="pt-4">
                   <Button 
                     type="button" 
-                    onClick={nextStep}
+                    onClick={() => {
+                      console.log("Next Step button clicked in step 1");
+                      nextStep();
+                    }}
                     className="w-full"
                   >
                     Next Step
@@ -586,7 +608,10 @@ export default function RedemptionCodeForm({
                   </Button>
                   <Button 
                     type="button" 
-                    onClick={nextStep}
+                    onClick={() => {
+                      console.log("Next button clicked in step 2");
+                      nextStep();
+                    }}
                     className="w-full"
                   >
                     Next
