@@ -87,14 +87,14 @@ export default function Profile() {
               <div className="absolute -bottom-2 -right-2 player-level">{user.level}</div>
             </div>
             <div className="text-center md:text-left flex-1">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-col md:flex-row md:items-start md:justify-between">
                 <div>
                   <h2 className="text-2xl font-bold mb-1 font-product-sans">{user.displayName}</h2>
                   <p className="text-gray-500 mb-2">
                     {user.location} • Playing since {user.playingSince || "recently"}
                   </p>
                 </div>
-                <div className="flex flex-col md:flex-row gap-3 mt-1">
+                <div className="flex flex-col md:flex-row gap-3 mt-1 mb-4">
                   <Button 
                     variant="outline" 
                     size="default" 
@@ -116,7 +116,7 @@ export default function Profile() {
                   </Button>
                 </div>
               </div>
-              <div className="flex flex-wrap justify-center md:justify-start">
+              <div className="flex flex-wrap justify-center md:justify-start mt-2">
                 {user.skillLevel && (
                   <span className="bg-[#FF5722] bg-opacity-10 text-[#FF5722] text-xs px-3 py-1 rounded-full mr-2 mb-2">
                     {user.skillLevel} Skill Level
