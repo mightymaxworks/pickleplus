@@ -15,8 +15,8 @@ export function BottomNavigation() {
   const navItems: NavItem[] = [
     { label: "Dashboard", icon: "dashboard", path: "/dashboard" },
     { label: "Tournaments", icon: "emoji_events", path: "/tournaments" },
+    { label: "Connections", icon: "people", path: "/connections" },
     { label: "Achievements", icon: "military_tech", path: "/achievements" },
-    { label: "Leaderboard", icon: "leaderboard", path: "/leaderboard" },
     { label: "Profile", icon: "person", path: "/profile" }
   ];
   

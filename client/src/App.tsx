@@ -14,6 +14,7 @@ import LandingPage from "@/pages/LandingPage";
 import TournamentCheckIn from "@/pages/TournamentCheckIn";
 import AdminCodesPage from "@/pages/AdminCodesPage";
 import CoachingPage from "@/pages/CoachingPage";
+import ConnectionsPage from "@/pages/ConnectionsPage";
 import ComingSoonPage from "@/pages/ComingSoonPage";
 import CoachProfilePage from "@/pages/CoachProfilePage";
 import CoachProfileEditPage from "@/pages/CoachProfileEditPage";
@@ -121,6 +122,12 @@ function AppRoutes() {
         <Route path="/coaching">
           <MainLayout>
             <CoachingPage />
+          </MainLayout>
+        </Route>
+
+        <Route path="/connections">
+          <MainLayout>
+            <ConnectionsPage />
           </MainLayout>
         </Route>
 

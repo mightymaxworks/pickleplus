@@ -20,6 +20,7 @@ export function TabNavigation() {
   const tabs: Tab[] = [
     { label: "Dashboard", path: "/" },
     { label: "Tournaments", path: "/tournaments" },
+    { label: "Connections", path: "/connections" },
     { label: "Achievements", path: "/achievements" },
     { label: "Leaderboard", path: "/leaderboard" },
     { label: "Profile", path: "/profile" }
