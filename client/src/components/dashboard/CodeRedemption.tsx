@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
+import { codeApi } from "@/lib/apiClient";
 
 const CodeRedemption = () => {
   const [code, setCode] = useState("");
@@ -21,11 +21,11 @@ const CodeRedemption = () => {
     setIsRedeeming(true);
     
     try {
-      const result = await apiRequest("POST", "/api/xp-codes/redeem", { code });
+      const result = await codeApi.redeemCode({ code });
       
       toast({
         title: "Success!",
-        description: `You've redeemed ${result.xpValue} XP!`,
+        description: `You've redeemed ${result.xpEarned} XP!`,
         variant: "default",
       });
       
@@ -33,7 +33,8 @@ const CodeRedemption = () => {
       setCode("");
       
       // Refresh the user data to update XP
-      queryClient.invalidateQueries({ queryKey: ['/api/users/current'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/current-user'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/activities'] });
     } catch (error: any) {
       toast({
         title: "Error",

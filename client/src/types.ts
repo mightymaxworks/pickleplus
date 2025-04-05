@@ -240,3 +240,7 @@ export interface ProfileCompletionData {
   tierLevel: number;
   tierName: string;
 }
+
+export interface RedeemCodeFormData {
+  code: string;
+}
