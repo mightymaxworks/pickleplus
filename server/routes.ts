@@ -697,8 +697,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/redemption-codes", async (req: Request, res: Response) => {
+  app.get("/api/redemption-codes", isAuthenticated, async (req: Request, res: Response) => {
     try {
+      // Check if user is admin
+      if (!(req.user as any).isAdmin) {
+        return res.status(403).json({ message: "Unauthorized: Admin access required" });
+      }
+      
       const codes = await storage.getAllRedemptionCodes();
       res.json(codes);
     } catch (error) {

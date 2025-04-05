@@ -24,6 +24,7 @@ export const users = pgTable("users", {
   matchesWon: integer("matches_won").default(0),
   totalTournaments: integer("total_tournaments").default(0),
   isFoundingMember: boolean("is_founding_member").default(false),
+  isAdmin: boolean("is_admin").default(false),
   xpMultiplier: integer("xp_multiplier").default(100), // Store as an integer representing percentage (100 = 1.0x, 110 = 1.1x)
   
   // Pickleball-specific fields

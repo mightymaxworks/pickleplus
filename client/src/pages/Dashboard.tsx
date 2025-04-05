@@ -97,6 +97,14 @@ export default function Dashboard() {
         <div className="flex items-center mb-2">
           <h2 className="text-xl font-bold font-product-sans mr-2">Welcome back, {user.displayName.split(' ')[0]}!</h2>
           {user.isFoundingMember && <FoundingMemberBadge size="sm" showText={true} />}
+          {user.isAdmin && (
+            <span
+              className="ml-2 px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full cursor-pointer"
+              onClick={() => setLocation("/admin/codes")}
+            >
+              Admin Panel
+            </span>
+          )}
         </div>
         <div className="flex items-center">
           <p className="text-gray-500 mr-3">Ready to elevate your pickleball game?</p>
