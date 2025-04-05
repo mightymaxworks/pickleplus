@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { type Activity } from "@/types";
-import { PlusCircle, Award, TrendingUp, ArrowUp, ArrowDown, UserCog, ChevronRight } from "lucide-react";
+import { PlusCircle, Award, TrendingUp, ArrowUp, ArrowDown, UserCog, Megaphone, ChevronRight } from "lucide-react";
 import { Features, useFeatureFlag } from "@/lib/featureFlags";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 
@@ -94,15 +94,27 @@ export default function Profile() {
                     {user.location} • Playing since {user.playingSince || "recently"}
                   </p>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex items-center gap-1 mb-2 md:mb-0"
-                  onClick={() => setLocation("/profile/edit")}
-                >
-                  <UserCog size={16} />
-                  Edit Profile
-                </Button>
+                <div className="flex flex-col md:flex-row gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex items-center gap-1"
+                    onClick={() => setLocation("/profile/edit")}
+                  >
+                    <UserCog size={16} />
+                    Edit Profile
+                  </Button>
+                  
+                  <Button 
+                    variant="secondary"
+                    size="sm" 
+                    className="flex items-center gap-1 bg-[#4CAF50]/10 text-[#4CAF50] hover:bg-[#4CAF50]/20 border-[#4CAF50]/20"
+                    onClick={() => setLocation("/coach/profile")}
+                  >
+                    <Megaphone size={16} />
+                    Coach Profile
+                  </Button>
+                </div>
               </div>
               <div className="flex flex-wrap justify-center md:justify-start">
                 {user.skillLevel && (
