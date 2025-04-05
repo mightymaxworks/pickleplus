@@ -1,5 +1,5 @@
 import { apiRequest } from "./queryClient";
-import type { User, Tournament, Achievement, Activity, UserTournament, UserAchievementWithDetails, RegisterFormData, LoginFormData, RedeemCodeFormData } from "@/types";
+import type { User, Tournament, Achievement, Activity, TournamentRegistration, RegisterFormData, LoginFormData, RedeemCodeFormData, RedemptionCode } from "@/types";
 
 const API_BASE = "/api";
 
@@ -51,7 +51,7 @@ export const tournamentApi = {
     return res.json();
   },
   
-  getUserTournaments: async (): Promise<UserTournament[]> => {
+  getUserTournaments: async (): Promise<TournamentRegistration[]> => {
     const res = await apiRequest("GET", `${API_BASE}/user/tournaments`);
     return res.json();
   },
@@ -80,7 +80,7 @@ export const achievementApi = {
     return res.json();
   },
   
-  getUserAchievements: async (): Promise<UserAchievementWithDetails[]> => {
+  getUserAchievements: async (): Promise<Achievement[]> => {
     const res = await apiRequest("GET", `${API_BASE}/user/achievements`);
     return res.json();
   }
@@ -114,6 +114,10 @@ export const leaderboardApi = {
 export const codeApi = {
   redeemCode: async (data: RedeemCodeFormData) => {
     const res = await apiRequest("POST", `${API_BASE}/redeem-code`, data);
+    return res.json();
+  },
+  getAllRedemptionCodes: async (): Promise<RedemptionCode[]> => {
+    const res = await apiRequest("GET", `${API_BASE}/redemption-codes`);
     return res.json();
   }
 };

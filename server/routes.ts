@@ -552,6 +552,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Invalid or expired code" });
       }
       
+      // Check if code is active
+      if (!redemptionCode.isActive) {
+        return res.status(400).json({ message: "This code is no longer active" });
+      }
+      
+      // Check if the code has expired
+      if (redemptionCode.expiresAt && new Date(redemptionCode.expiresAt) < new Date()) {
+        return res.status(400).json({ message: "This code has expired" });
+      }
+      
       // Check if the code has reached its maximum number of redemptions
       const currentRedemptions = redemptionCode.currentRedemptions || 0;
       if (redemptionCode.maxRedemptions && redemptionCode.maxRedemptions <= currentRedemptions) {
@@ -565,8 +575,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Code already redeemed" });
       }
       
-      // Check if this is a founding member code
-      const isFoundingMemberCode = redemptionCode.isFoundingMemberCode || false;
+      // Get the code type and founding status
+      const codeType = redemptionCode.codeType || 'xp';  // Default to 'xp' if not specified
+      const isFoundingMemberCode = redemptionCode.isFoundingMemberCode || codeType === 'founding';
       
       // Update redemption code counter
       await storage.incrementRedemptionCodeCounter(redemptionCode.id);
@@ -577,43 +588,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
         codeId: redemptionCode.id
       });
       
-      // If it's a founding member code, update the user's founding member status
-      if (isFoundingMemberCode) {
-        await storage.updateUser(userId, {
-          isFoundingMember: true,
-          xpMultiplier: 110 // 1.1x multiplier (stored as percentage)
-        });
-      }
+      let updatedUser;
+      let message = '';
+      let activityType = 'code_redemption';
+      let activityDescription = `Redeemed code: ${redemptionCode.description || code}`;
       
-      // Add XP to user
-      const updatedUser = await storage.updateUserXP(userId, redemptionCode.xpReward);
+      // Handle different code types
+      switch (codeType) {
+        case 'founding':
+          // Update founding member status
+          await storage.updateUser(userId, {
+            isFoundingMember: true,
+            xpMultiplier: 110 // 1.1x multiplier (stored as percentage)
+          });
+          
+          // Add XP to user
+          updatedUser = await storage.updateUserXP(userId, redemptionCode.xpReward);
+          
+          message = `Congratulations! You are now a Founding Member with a permanent 1.1x XP boost!`;
+          activityType = 'founding_member';
+          activityDescription = 'Became a Founding Member!';
+          break;
+          
+        case 'coach':
+          // Grant coach access if this is a coach access code
+          if (redemptionCode.isCoachAccessCode) {
+            // Create/update coaching profile
+            const coachingProfile = await storage.getCoachingProfile(userId);
+            
+            if (!coachingProfile) {
+              await storage.createCoachingProfile({
+                userId,
+                accessType: 'code',
+                isActive: true
+              });
+            } else {
+              await storage.updateCoachingProfile(userId, { 
+                accessType: 'code',
+                isActive: true
+              });
+            }
+            
+            // Add XP as well
+            updatedUser = await storage.updateUserXP(userId, redemptionCode.xpReward);
+            
+            message = `Congratulations! You now have coach access to the platform!`;
+            activityType = 'coach_access_granted';
+            activityDescription = 'Gained coach access to platform';
+          } else {
+            // If not a proper coach code, just add XP
+            updatedUser = await storage.updateUserXP(userId, redemptionCode.xpReward);
+            message = `Successfully redeemed code for ${redemptionCode.xpReward} XP`;
+          }
+          break;
+          
+        case 'xp':
+        default:
+          // Just add XP for regular codes
+          updatedUser = await storage.updateUserXP(userId, redemptionCode.xpReward);
+          message = `Successfully redeemed code for ${redemptionCode.xpReward} XP`;
+          break;
+      }
       
       // Create an activity for this redemption
       await storage.createActivity({
         userId,
-        type: isFoundingMemberCode ? "founding_member" : "code_redemption",
-        description: isFoundingMemberCode 
-          ? "Became a Founding Member!" 
-          : `Redeemed code: ${redemptionCode.description || code}`,
+        type: activityType,
+        description: activityDescription,
         xpEarned: redemptionCode.xpReward,
-        metadata: { code }
+        metadata: { code, codeType }
       });
       
       // Remove password from the response
       const { password, ...userWithoutPassword } = updatedUser!;
       
       res.json({
-        message: isFoundingMemberCode 
-          ? `Congratulations! You are now a Founding Member with a permanent 1.1x XP boost!` 
-          : `Successfully redeemed code for ${redemptionCode.xpReward} XP`,
+        message,
         user: userWithoutPassword,
         xpEarned: redemptionCode.xpReward,
-        isFoundingMember: isFoundingMemberCode
+        isFoundingMember: isFoundingMemberCode,
+        codeType
       });
     } catch (error) {
       if (error instanceof ZodError) {
         res.status(400).json({ message: "Validation error", errors: error.errors });
       } else {
+        console.error('[redemption] Error redeeming code:', error);
         res.status(500).json({ message: "Error redeeming code" });
       }
     }
@@ -634,6 +694,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(leaderboardWithoutPasswords);
     } catch (error) {
       res.status(500).json({ message: "Error retrieving leaderboard" });
+    }
+  });
+  
+  app.get("/api/redemption-codes", async (req: Request, res: Response) => {
+    try {
+      const codes = await storage.getAllRedemptionCodes();
+      res.json(codes);
+    } catch (error) {
+      console.error('[getAllRedemptionCodes] Error:', error);
+      res.status(500).json({ message: "Failed to fetch redemption codes" });
     }
   });
 

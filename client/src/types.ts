@@ -17,6 +17,7 @@ export interface User {
   lastMatchDate: Date | null;
   isFoundingMember?: boolean;
   xpMultiplier?: number;
+  isAdmin?: boolean;
   
   // Pickleball-specific fields
   bio?: string | null;
@@ -113,15 +114,16 @@ export interface Activity {
 export interface RedemptionCode {
   id: number;
   code: string;
-  description: string;
+  description: string | null;
   xpReward: number;
-  rankingPointsReward: number | null;
-  achievementId: number | null;
-  expiresAt: Date | null;
-  isActive: boolean;
+  isActive: boolean | null;
+  isFoundingMemberCode: boolean | null;
+  isCoachAccessCode: boolean | null;
+  codeType: string | null;
   maxRedemptions: number | null;
-  currentRedemptions: number;
-  createdAt: Date;
+  currentRedemptions: number | null;
+  expiresAt: Date | null;
+  createdAt?: Date;
 }
 
 export interface UserRedemption {
@@ -243,4 +245,16 @@ export interface ProfileCompletionData {
 
 export interface RedeemCodeFormData {
   code: string;
+}
+
+export interface UserTournament extends Tournament {
+  registrationId: number;
+  registeredAt: Date;
+  checkedIn: boolean;
+  checkedInAt: Date | null;
+  placement: number | null;
+}
+
+export interface UserAchievementWithDetails extends Achievement {
+  unlockedAt: Date;
 }

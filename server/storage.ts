@@ -55,6 +55,7 @@ export interface IStorage {
   
   // Redemption code operations
   getRedemptionCodeByCode(code: string): Promise<RedemptionCode | undefined>;
+  getAllRedemptionCodes(): Promise<RedemptionCode[]>;
   createRedemptionCode(redemptionCode: InsertRedemptionCode): Promise<RedemptionCode>;
   redeemCode(userRedemption: InsertUserRedemption): Promise<UserRedemption>;
   hasUserRedeemedCode(userId: number, codeId: number): Promise<boolean>;
@@ -563,6 +564,10 @@ export class MemStorage implements IStorage {
     return Array.from(this.redemptionCodes.values()).find(
       (rc) => rc.code === code && rc.isActive && (rc.expiresAt ? rc.expiresAt > new Date() : true)
     );
+  }
+  
+  async getAllRedemptionCodes(): Promise<RedemptionCode[]> {
+    return Array.from(this.redemptionCodes.values()).sort((a, b) => b.id - a.id);
   }
 
   async createRedemptionCode(insertRedemptionCode: InsertRedemptionCode): Promise<RedemptionCode> {
@@ -1160,23 +1165,78 @@ export class DatabaseStorage implements IStorage {
 
   // Redemption code operations
   async getRedemptionCodeByCode(code: string): Promise<RedemptionCode | undefined> {
-    // Make the code lookup case-insensitive by converting both sides to uppercase
-    const [redemptionCode] = await db.select()
+    try {
+      // Make the code lookup case-insensitive by converting both sides to uppercase
+      // Explicitly select only columns that exist in the database
+      const [redemptionCode] = await db.select({
+        id: redemptionCodes.id,
+        code: redemptionCodes.code,
+        xpReward: redemptionCodes.xpReward,
+        description: redemptionCodes.description,
+        isActive: redemptionCodes.isActive,
+        expiresAt: redemptionCodes.expiresAt,
+        isFoundingMemberCode: redemptionCodes.isFoundingMemberCode,
+        maxRedemptions: redemptionCodes.maxRedemptions,
+        currentRedemptions: redemptionCodes.currentRedemptions
+      })
       .from(redemptionCodes)
       .where(sql`UPPER(${redemptionCodes.code}) = UPPER(${code})`);
 
-    if (!redemptionCode) return undefined;
-    
-    // Then check if it's active and not expired
-    if (!redemptionCode.isActive) return undefined;
-    
-    // If there's an expiry date, check if it's in the future
-    if (redemptionCode.expiresAt) {
-      const now = new Date();
-      if (redemptionCode.expiresAt < now) return undefined;
+      if (!redemptionCode) return undefined;
+      
+      // Then check if it's active and not expired
+      if (!redemptionCode.isActive) return undefined;
+      
+      // If there's an expiry date, check if it's in the future
+      if (redemptionCode.expiresAt) {
+        const now = new Date();
+        if (redemptionCode.expiresAt < now) return undefined;
+      }
+      
+      // Add default values for missing fields to make it match the schema
+      const completeRedemptionCode = {
+        ...redemptionCode,
+        isCoachAccessCode: false, // Default value
+        codeType: "xp" // Default value
+      };
+      
+      return completeRedemptionCode as RedemptionCode;
+    } catch (error) {
+      console.error('[getRedemptionCodeByCode] Error:', error);
+      return undefined;
     }
-    
-    return redemptionCode;
+  }
+  
+  async getAllRedemptionCodes(): Promise<RedemptionCode[]> {
+    try {
+      const allCodes = await db.select({
+        id: redemptionCodes.id,
+        code: redemptionCodes.code,
+        xpReward: redemptionCodes.xpReward,
+        description: redemptionCodes.description,
+        isActive: redemptionCodes.isActive,
+        expiresAt: redemptionCodes.expiresAt,
+        isFoundingMemberCode: redemptionCodes.isFoundingMemberCode,
+        isCoachAccessCode: redemptionCodes.isCoachAccessCode,
+        codeType: redemptionCodes.codeType,
+        maxRedemptions: redemptionCodes.maxRedemptions,
+        currentRedemptions: redemptionCodes.currentRedemptions
+      })
+      .from(redemptionCodes)
+      .orderBy(desc(redemptionCodes.id));
+      
+      return allCodes.map(code => {
+        // Ensure all codes have proper defaults for any missing fields
+        return {
+          ...code,
+          isCoachAccessCode: code.isCoachAccessCode || false,
+          codeType: code.codeType || "xp"
+        } as RedemptionCode;
+      });
+    } catch (error) {
+      console.error('[getAllRedemptionCodes] Error:', error);
+      return [];
+    }
   }
 
   async createRedemptionCode(insertRedemptionCode: InsertRedemptionCode): Promise<RedemptionCode> {
@@ -1206,23 +1266,33 @@ export class DatabaseStorage implements IStorage {
   }
   
   async incrementRedemptionCodeCounter(codeId: number): Promise<RedemptionCode | undefined> {
-    // Get current counter value
-    const [redemptionCode] = await db.select()
-      .from(redemptionCodes)
-      .where(eq(redemptionCodes.id, codeId));
-    
-    if (!redemptionCode) return undefined;
-    
-    // Increment the counter
-    const currentRedemptions = (redemptionCode.currentRedemptions || 0) + 1;
-    
-    // Update the code
-    const [updatedCode] = await db.update(redemptionCodes)
-      .set({ currentRedemptions })
-      .where(eq(redemptionCodes.id, codeId))
-      .returning();
-    
-    return updatedCode;
+    try {
+      // Get current counter value
+      const [redemptionCode] = await db.select({
+        id: redemptionCodes.id,
+        currentRedemptions: redemptionCodes.currentRedemptions
+      })
+        .from(redemptionCodes)
+        .where(eq(redemptionCodes.id, codeId));
+      
+      if (!redemptionCode) return undefined;
+      
+      // Increment the counter
+      const currentRedemptions = (redemptionCode.currentRedemptions || 0) + 1;
+      
+      // Update the code and return all fields
+      const [updatedCode] = await db.update(redemptionCodes)
+        .set({ currentRedemptions })
+        .where(eq(redemptionCodes.id, codeId))
+        .returning();
+      
+      if (!updatedCode) return undefined;
+      
+      return updatedCode;
+    } catch (error) {
+      console.error('[incrementRedemptionCodeCounter] Error:', error);
+      return undefined;
+    }
   }
 
   // Match operations
