@@ -42,7 +42,7 @@ const profileFormSchema = z.object({
   paddleModel: z.string().optional(),
   playingStyle: z.string().optional(),
   shotStrengths: z.string().optional(),
-  regularSchedule: z.string().optional(),
+  regularSchedule: z.array(z.string()).optional(),
   lookingForPartners: z.string().optional(),
   
   // Social fields
@@ -89,7 +89,7 @@ export function ProfileForm() {
       paddleModel: user?.paddleModel || "",
       playingStyle: user?.playingStyle || "",
       shotStrengths: user?.shotStrengths || "",
-      regularSchedule: user?.regularSchedule || "",
+      regularSchedule: user?.regularSchedule ? (Array.isArray(user.regularSchedule) ? user.regularSchedule : [user.regularSchedule]) : [],
       lookingForPartners: user?.lookingForPartners ? "yes" : "",
       
       // Social fields
@@ -126,7 +126,7 @@ export function ProfileForm() {
         paddleModel: user?.paddleModel || "",
         playingStyle: user?.playingStyle || "",
         shotStrengths: user?.shotStrengths || "",
-        regularSchedule: user?.regularSchedule || "",
+        regularSchedule: user?.regularSchedule ? (Array.isArray(user.regularSchedule) ? user.regularSchedule : [user.regularSchedule]) : [],
         lookingForPartners: user?.lookingForPartners ? "yes" : "",
         
         // Social fields
@@ -426,8 +426,6 @@ export function ProfileForm() {
                           <SelectContent>
                             <SelectItem value="left">Left Side</SelectItem>
                             <SelectItem value="right">Right Side</SelectItem>
-                            <SelectItem value="even">Even Side</SelectItem>
-                            <SelectItem value="odd">Odd Side</SelectItem>
                             <SelectItem value="flexible">Flexible</SelectItem>
                           </SelectContent>
                         </Select>
@@ -568,33 +566,52 @@ export function ProfileForm() {
                   
 
                   
+
+
                   <FormField
                     control={form.control}
                     name="regularSchedule"
-                    render={({ field }) => (
+                    render={({ field: { onChange, value = [] } }) => (
                       <FormItem>
                         <FormLabel>Regular Playing Schedule</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          defaultValue={field.value || undefined}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select when you typically play" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="weekday-mornings">Weekday Mornings</SelectItem>
-                            <SelectItem value="weekday-afternoons">Weekday Afternoons</SelectItem>
-                            <SelectItem value="weekday-evenings">Weekday Evenings</SelectItem>
-                            <SelectItem value="weekend-mornings">Weekend Mornings</SelectItem>
-                            <SelectItem value="weekend-afternoons">Weekend Afternoons</SelectItem>
-                            <SelectItem value="weekend-evenings">Weekend Evenings</SelectItem>
-                            <SelectItem value="varies">Schedule Varies</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <div className="space-y-2">
+                          <div className="grid grid-cols-2 gap-2">
+                            {[
+                              { label: "Weekday Mornings", value: "weekday-mornings" },
+                              { label: "Weekday Afternoons", value: "weekday-afternoons" },
+                              { label: "Weekday Evenings", value: "weekday-evenings" },
+                              { label: "Weekend Mornings", value: "weekend-mornings" },
+                              { label: "Weekend Afternoons", value: "weekend-afternoons" },
+                              { label: "Weekend Evenings", value: "weekend-evenings" }
+                            ].map((option) => (
+                              <label
+                                key={option.value}
+                                className={`flex items-center space-x-2 border rounded p-2 cursor-pointer transition-colors ${
+                                  Array.isArray(value) && value.includes(option.value)
+                                    ? "bg-orange-100 border-orange-300"
+                                    : "hover:bg-gray-50"
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={Array.isArray(value) && value.includes(option.value)}
+                                  onChange={(e) => {
+                                    const newValue = e.target.checked
+                                      ? [...(Array.isArray(value) ? value : []), option.value]
+                                      : (Array.isArray(value) ? value : []).filter(
+                                          (val) => val !== option.value
+                                        );
+                                    onChange(newValue);
+                                  }}
+                                  className="hidden"
+                                />
+                                <span className="text-sm">{option.label}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
                         <FormDescription>
-                          When you're most likely to be playing
+                          Select all times when you typically play
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
