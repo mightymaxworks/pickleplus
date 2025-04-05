@@ -443,9 +443,36 @@ export function ProfileForm() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Paddle Brand</FormLabel>
-                          <FormControl>
-                            <Input placeholder="e.g. Selkirk, Joola, etc." {...field} />
-                          </FormControl>
+                          <Select 
+                            onValueChange={field.onChange} 
+                            defaultValue={field.value || undefined}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select paddle brand" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="selkirk">Selkirk</SelectItem>
+                              <SelectItem value="paddletek">Paddletek</SelectItem>
+                              <SelectItem value="engage">Engage</SelectItem>
+                              <SelectItem value="joola">JOOLA</SelectItem>
+                              <SelectItem value="franklin">Franklin</SelectItem>
+                              <SelectItem value="prolite">ProLite</SelectItem>
+                              <SelectItem value="gamma">Gamma</SelectItem>
+                              <SelectItem value="oneshot">OneShot</SelectItem>
+                              <SelectItem value="onix">Onix</SelectItem>
+                              <SelectItem value="diadem">Diadem</SelectItem>
+                              <SelectItem value="head">HEAD</SelectItem>
+                              <SelectItem value="gearbox">Gearbox</SelectItem>
+                              <SelectItem value="prince">Prince</SelectItem>
+                              <SelectItem value="warrior">Warrior</SelectItem>
+                              <SelectItem value="yonex">Yonex</SelectItem>
+                              <SelectItem value="crbn">CRBN</SelectItem>
+                              <SelectItem value="adidas">Adidas</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -502,8 +529,37 @@ export function ProfileForm() {
                       <FormItem>
                         <FormLabel>Shot Strengths</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g. Drop shots, dinks, third shot drops" {...field} />
+                          <Select 
+                            onValueChange={field.onChange} 
+                            defaultValue={field.value || undefined}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select your strongest shots" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="dinks">Dinks</SelectItem>
+                              <SelectItem value="serves">Serves</SelectItem>
+                              <SelectItem value="returns">Returns</SelectItem>
+                              <SelectItem value="third-shot-drops">Third Shot Drops</SelectItem>
+                              <SelectItem value="volleys">Volleys</SelectItem>
+                              <SelectItem value="bangers">Bangers/Drive Shots</SelectItem>
+                              <SelectItem value="overhead-smash">Overhead Smash</SelectItem>
+                              <SelectItem value="atp">Around-the-Post (ATP)</SelectItem>
+                              <SelectItem value="erne">Erne Shots</SelectItem>
+                              <SelectItem value="backhand">Backhand</SelectItem>
+                              <SelectItem value="forehand">Forehand</SelectItem>
+                              <SelectItem value="lobs">Lobs</SelectItem>
+                              <SelectItem value="drop-shots">Drop Shots</SelectItem>
+                              <SelectItem value="slice">Slice</SelectItem>
+                              <SelectItem value="topspin">Topspin</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </FormControl>
+                        <FormDescription>
+                          Select your strongest shot(s)
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
