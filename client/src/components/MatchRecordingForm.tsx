@@ -185,6 +185,8 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
       queryClient.invalidateQueries({ queryKey: ["/api/ranking-leaderboard"] });
       queryClient.invalidateQueries({ queryKey: ["/api/leaderboard"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/activities"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/xp-tier"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/current-user"] });
       
       // Show success toast
       toast({

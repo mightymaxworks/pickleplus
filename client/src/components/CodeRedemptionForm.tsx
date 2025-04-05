@@ -52,9 +52,10 @@ export function CodeRedemptionForm() {
       // Reset the form
       form.reset();
       
-      // Invalidate user data and activities queries to refresh
+      // Invalidate user data, activities, and XP tier queries to refresh
       queryClient.invalidateQueries({ queryKey: ["/api/auth/current-user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/activities"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/xp-tier"] });
       
     } catch (error) {
       toast({

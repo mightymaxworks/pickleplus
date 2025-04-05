@@ -158,6 +158,7 @@ export function ProfileForm() {
       // Invalidate queries that depend on user data
       queryClient.setQueryData(["/api/auth/current-user"], data.user);
       queryClient.invalidateQueries({ queryKey: ["/api/profile/completion"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/xp-tier"] });
       
       // Display success message with XP if awarded
       if (data.xpAwarded > 0) {
