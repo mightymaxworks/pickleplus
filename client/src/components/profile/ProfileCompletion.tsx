@@ -101,7 +101,7 @@ function TierMarker({
   tiers: Array<{ level: number, label: string, xp: number }> 
 }) {
   return (
-    <div className="relative h-10 mb-4 mt-4">
+    <div className="relative h-12 mb-4 mt-4">
       {/* Tier labels above progress line */}
       {tiers.map((tier, index) => (
         <div 
@@ -114,20 +114,6 @@ function TierMarker({
           </div>
         </div>
       ))}
-      
-      {/* Start label */}
-      <div className="absolute left-0 flex flex-col items-center">
-        <div className="text-xs mb-1.5 text-center font-medium">
-          0%
-        </div>
-      </div>
-      
-      {/* End label */}
-      <div className="absolute right-0 flex flex-col items-center">
-        <div className="text-xs mb-1.5 text-center font-medium">
-          100%
-        </div>
-      </div>
       
       {/* Progress line */}
       <div className="absolute w-full h-1 bg-gray-200 top-6"></div>
@@ -146,6 +132,9 @@ function TierMarker({
       {/* Starting point */}
       <div className="absolute left-0 flex flex-col items-center">
         <div className={`w-3 h-3 rounded-full ${percentage > 0 ? 'bg-amber-500' : 'bg-gray-300'} relative top-5`}></div>
+        <div className="text-xs mt-5 text-center font-medium">
+          0%
+        </div>
       </div>
       
       {/* Current position indicator */}
@@ -161,6 +150,9 @@ function TierMarker({
       {/* End point - 100% */}
       <div className="absolute right-0 flex flex-col items-center">
         <div className={`w-3 h-3 rounded-full ${percentage >= 100 ? 'bg-amber-500' : 'bg-gray-300'} relative top-5`}></div>
+        <div className="text-xs mt-5 text-center font-medium">
+          100%
+        </div>
       </div>
     </div>
   );
