@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { QrCode, Scan, X, Copy, Crown, Link as LinkIcon, CheckCheck } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { QrCode, Scan, X, Copy, Crown, Link as LinkIcon, CheckCheck, CalendarClock, Rocket, Timer } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
 import { Badge } from "@/components/ui/badge";
@@ -14,10 +15,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { QRCodeSVG } from 'qrcode.react';
 import { useLocation } from 'wouter';
 import { toast } from "@/hooks/use-toast";
+import { Progress } from "@/components/ui/progress";
 
 export function QrCodeFAB() {
   const [open, setOpen] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
+  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [showCountdown, setShowCountdown] = useState(false);
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   
@@ -30,14 +34,62 @@ export function QrCodeFAB() {
   // Include connection information in the URL
   const passportUrl = `https://pickleplus.app/connect/${passportId}?token=${connectionToken}`;
   
+  // Calculate countdown to April 12th
+  useEffect(() => {
+    const launchDate = new Date("April 12, 2025 12:00:00").getTime();
+    
+    const updateCountdown = () => {
+      const now = new Date().getTime();
+      const distance = launchDate - now;
+      
+      // If launch date has passed, enable features
+      if (distance <= 0) {
+        setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        return;
+      }
+      
+      // Calculate days, hours, minutes, seconds
+      setCountdown({
+        days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((distance % (1000 * 60)) / 1000)
+      });
+    };
+    
+    // Update countdown immediately and then every second
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+  
   const handleScan = () => {
     setFabOpen(false);
-    setLocation('/scan');
+    
+    // If before launch date, show countdown instead
+    const launchDate = new Date("April 12, 2025 12:00:00").getTime();
+    const now = new Date().getTime();
+    
+    if (now < launchDate) {
+      setShowCountdown(true);
+    } else {
+      setLocation('/scan');
+    }
   };
   
   const handleShowQR = () => {
     setFabOpen(false);
-    setOpen(true);
+    
+    // If before launch date, show countdown instead
+    const launchDate = new Date("April 12, 2025 12:00:00").getTime();
+    const now = new Date().getTime();
+    
+    if (now < launchDate) {
+      setShowCountdown(true);
+    } else {
+      setOpen(true);
+    }
   };
   
   const isFoundingMember = user?.isFoundingMember;
@@ -201,6 +253,125 @@ export function QrCodeFAB() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Countdown Marketing Dialog */}
+      <Dialog open={showCountdown} onOpenChange={setShowCountdown}>
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-auto">
+          <DialogHeader className="pb-2 bg-gradient-to-r from-orange-100/50 to-transparent dark:from-orange-950/20 dark:to-transparent rounded-t-lg">
+            <DialogTitle className="flex items-center gap-2 text-orange-600">
+              <CalendarClock className="h-5 w-5" /> 
+              Coming April 12th, 2025
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="relative overflow-hidden">
+            {/* Background decoration */}
+            <div className="absolute -right-12 -top-12 opacity-5 w-48 h-48 bg-orange-500 rounded-full"></div>
+            <div className="absolute -left-12 -bottom-12 opacity-5 w-40 h-40 bg-orange-500 rounded-full"></div>
+            
+            <div className="relative z-10 py-6">
+              <div className="mb-4 text-center">
+                <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">QR Code Connect Feature</h2>
+                <p className="text-muted-foreground text-sm px-4">
+                  Our new QR code connection system is launching soon! Experience seamless player connections, tournament check-ins, and achievement tracking.
+                </p>
+              </div>
+              
+              {/* Countdown timer */}
+              <div className="grid grid-cols-4 gap-2 mb-6 px-2 py-4 rounded-lg">
+                <div className="flex flex-col items-center">
+                  <div className="bg-gradient-to-b from-orange-50 to-white dark:from-orange-950/20 dark:to-black/20 w-full aspect-square rounded-lg border border-orange-200 dark:border-orange-900/30 flex items-center justify-center">
+                    <span className="text-2xl font-bold text-orange-600">{countdown.days}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground mt-1">Days</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="bg-gradient-to-b from-orange-50 to-white dark:from-orange-950/20 dark:to-black/20 w-full aspect-square rounded-lg border border-orange-200 dark:border-orange-900/30 flex items-center justify-center">
+                    <span className="text-2xl font-bold text-orange-600">{countdown.hours}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground mt-1">Hours</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="bg-gradient-to-b from-orange-50 to-white dark:from-orange-950/20 dark:to-black/20 w-full aspect-square rounded-lg border border-orange-200 dark:border-orange-900/30 flex items-center justify-center">
+                    <span className="text-2xl font-bold text-orange-600">{countdown.minutes}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground mt-1">Minutes</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="bg-gradient-to-b from-orange-50 to-white dark:from-orange-950/20 dark:to-black/20 w-full aspect-square rounded-lg border border-orange-200 dark:border-orange-900/30 flex items-center justify-center">
+                    <span className="text-2xl font-bold text-orange-600">{countdown.seconds}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground mt-1">Seconds</span>
+                </div>
+              </div>
+              
+              <div className="space-y-4 px-2">
+                <div className="flex items-start gap-3">
+                  <div className="bg-orange-100 dark:bg-orange-950/20 p-2 mt-0.5 rounded-lg">
+                    <QrCode className="h-5 w-5 text-orange-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-sm">Instant Player Connections</h3>
+                    <p className="text-xs text-muted-foreground">Scan QR codes to instantly connect with other players and track your matches together</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3">
+                  <div className="bg-orange-100 dark:bg-orange-950/20 p-2 mt-0.5 rounded-lg">
+                    <Timer className="h-5 w-5 text-orange-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-sm">Quick Tournament Check-ins</h3>
+                    <p className="text-xs text-muted-foreground">Skip the lines with rapid QR code tournament check-ins</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3">
+                  <div className="bg-orange-100 dark:bg-orange-950/20 p-2 mt-0.5 rounded-lg">
+                    <Rocket className="h-5 w-5 text-orange-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-sm">Exclusive Launch Bonuses</h3>
+                    <p className="text-xs text-muted-foreground">Early adopters will receive special XP rewards and achievement badges</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-6 px-2">
+                <div className="w-full bg-gray-200 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-gradient-to-r from-orange-600 to-orange-400 h-full" style={{ width: `${(1 - (countdown.days / 7))*100}%` }}></div>
+                </div>
+                <div className="flex justify-between text-xs mt-1 text-muted-foreground">
+                  <span>Development in progress</span>
+                  <span>Launch day</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter className="sm:justify-center gap-2 mt-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowCountdown(false)}
+              className="flex-1"
+            >
+              I'll Check Back Later
+            </Button>
+            <Button
+              className="flex-1 bg-orange-600 hover:bg-orange-700"
+              onClick={() => {
+                toast({
+                  title: "Reminder Set",
+                  description: "We'll notify you when QR code features launch!",
+                });
+                setShowCountdown(false);
+              }}
+            >
+              Remind Me at Launch
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

@@ -216,6 +216,18 @@ export default function Profile() {
                   </Badge>
                 </div>
                 
+                <div className="mt-5">
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    className="text-xs border-orange-400 text-orange-500 hover:bg-orange-50 hover:text-orange-600"
+                    onClick={() => setLocation('/coaching')}
+                  >
+                    <UserCog className="mr-1 h-3 w-3" />
+                    {user.isCoach ? 'Manage Coaching Profile' : 'Become a Coach'}
+                  </Button>
+                </div>
+                
                 <div className="mt-6 text-sm text-muted-foreground">
                   {tierInfo.description}
                 </div>
