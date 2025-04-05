@@ -1,38 +1,64 @@
-# Pickle+ Changelog
+# Changelog
 
-## v0.8.0 (April 5, 2025)
+All notable changes to the Pickle+ project will be documented in this file.
 
-### 🏆 Enhanced Player Passport System
-- **Digital Passport QR Codes**: Easily check in to tournaments and connect with other players by sharing your unique player passport QR code
-- **Gold Accented Passports**: Founding members now receive exclusive gold-accented passport displays with special crown badge recognition
-- **Quick Access**: Access your passport instantly from anywhere in the app with the floating QR button
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### 📊 Profile Improvements
-- **Tournament Integration**: Seamlessly view all your registered tournaments with check-in status directly on your profile
-- **Performance Dashboard**: Track your win ratio, ranking points, and tournament participation all in one place
-- **Tier Progression**: Clear visualization of your progress through the 7-tier player progression system from Dink Dabbler to Pickleball Pro
+## [0.8.0] - 2025-04-05
 
-### 🔄 Experience Enhancements
-- **Improved Data Display**: More reliable tournament data synchronization and display
-- **Simplified Navigation**: Streamlined profile interface with quick action buttons for common tasks
-- **Performance Optimizations**: Faster loading times for player statistics and match history
+### Added
+- Modular architecture implementation
+- Event bus system for cross-module communication
+- Feature toggle system for gradual rollout
+- Module registry system for loose coupling
+- Comprehensive module structure (user, match, tournament, achievement, social, coaching)
+- Server-side event bus and feature toggle systems
+- Authentication middleware
+- Module interfaces and type definitions
+- Implementation plan with clear phases
 
-## v0.5.0 (March 20, 2025)
+### Changed
+- Restructured project folders for modularity
+- Updated version numbering from 1.2.0 to 0.8.0 to reflect pre-1.0 state
 
-### 🎮 Core Platform Features
-- **Player Profiles**: Create and customize your pickleball player profile with skill levels, equipment preferences, and playing styles
-- **Match Recording**: Log matches with scores, locations, and opponents to track your progress
-- **XP System**: Earn experience points through matches, tournaments, and profile completion
-- **Level Progression**: Advance through player levels by earning XP and unlocking new tiers
+## [0.7.0] - 2025-03-30
 
-### 🏅 Community Features
-- **Tournament Registration**: Browse and register for upcoming pickleball tournaments
-- **Leaderboards**: View top players ranked by XP and performance metrics
-- **Founding Member Program**: Special recognition and perks for early platform adopters
+### Added
+- Profile completion percentage tracking
+- Coaching profile creation and management
+- Tournament check-in via QR code
+- Redemption code system with XP rewards
+- Social connection features
+- Achievement tracking system
 
-## v0.1.0 (February 15, 2025)
+### Changed
+- Improved UI for profile pages
+- Enhanced navigation system
 
-### 🚀 Initial Release
-- **Account Creation**: Email and username-based registration system
-- **Basic Profiles**: Simple player profiles with essential information
-- **Mobile-Responsive Design**: Fully functional on smartphones, tablets, and desktops
+## [0.6.0] - 2025-03-15
+
+### Added
+- Tournament registration
+- Player passport with QR code generation
+- XP and tier system
+- Initial achievement framework
+- Match recording form (basic version)
+
+### Changed
+- Streamlined authentication flow
+- Updated profile data structure
+- Improved dashboard layout
+
+## [0.5.0] - 2025-03-01
+
+### Added
+- User profile creation
+- Basic authentication system
+- Dashboard scaffolding
+- Database schema and models
+- API routes for core functionality
+
+### Changed
+- Initial project structure
+- Development environment setup
