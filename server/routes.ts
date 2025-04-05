@@ -222,24 +222,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const percentage = await storage.calculateProfileCompletion(req.user.id);
     const completedFields = await storage.getCompletedProfileFields(req.user.id);
     
+    // Field name mapping for more user-friendly display
+    const fieldNameMapping: Record<string, string> = {
+      'bio': 'Bio',
+      'location': 'Location',
+      'skillLevel': 'Skill Level',
+      'playingSince': 'Playing Since',
+      'preferredPosition': 'Court Position',
+      'paddleBrand': 'Paddle Brand',
+      'paddleModel': 'Paddle Model',
+      'playingStyle': 'Playing Style',
+      'shotStrengths': 'Shot Strengths',
+      'preferredFormat': 'Game Format',
+      'dominantHand': 'Dominant Hand',
+      'regularSchedule': 'Playing Schedule',
+      'lookingForPartners': 'Partner Status',
+      'partnerPreferences': 'Partner Preferences',
+      'playerGoals': 'Goals',
+      'coach': 'Coach',
+      'clubs': 'Clubs',
+      'leagues': 'Leagues',
+      'socialHandles': 'Social Media',
+      'mobilityLimitations': 'Mobility Considerations',
+      'preferredMatchDuration': 'Match Duration',
+      'fitnessLevel': 'Fitness Level'
+    };
+    
     // Get all possible profile fields
-    const allFields = [
-      'bio', 'location', 'skillLevel', 'playingSince', 
-      'preferredPosition', 'paddleBrand', 'paddleModel', 
-      'playingStyle', 'shotStrengths', 'preferredFormat', 
-      'dominantHand', 'regularSchedule', 'lookingForPartners',
-      'partnerPreferences', 'playerGoals', 'coach', 'clubs',
-      'leagues', 'socialHandles', 'mobilityLimitations',
-      'preferredMatchDuration', 'fitnessLevel'
-    ];
+    const allFields = Object.keys(fieldNameMapping);
     
     // Determine incomplete fields
     const incompleteFields = allFields.filter(field => !completedFields.includes(field));
     
+    // Map the field names to their user-friendly versions
+    const mappedCompletedFields = completedFields.map(field => fieldNameMapping[field] || field);
+    const mappedIncompleteFields = incompleteFields.map(field => fieldNameMapping[field] || field);
+    
     res.json({
       completionPercentage: percentage,
-      completedFields,
-      incompleteFields,
+      completedFields: mappedCompletedFields,
+      incompleteFields: mappedIncompleteFields,
       xpEarned: 0, // Will be calculated in a future implementation
       potentialXp: 250 // Total possible XP for completing profile
     });
