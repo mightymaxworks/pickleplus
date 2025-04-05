@@ -18,13 +18,11 @@ import {
 } from "@/components/ui/dialog";
 
 interface QuickActionsCardProps {
-  showQuickMatch: boolean;
   matchDialogOpen: boolean;
   setMatchDialogOpen: (open: boolean) => void;
 }
 
 export function QuickActionsCard({ 
-  showQuickMatch, 
   matchDialogOpen, 
   setMatchDialogOpen 
 }: QuickActionsCardProps) {
@@ -52,29 +50,22 @@ export function QuickActionsCard({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {showQuickMatch ? (
-            <Dialog open={matchDialogOpen} onOpenChange={setMatchDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="w-full bg-[#2196F3] hover:bg-[#1976D2]">
-                  <PlusCircle size={16} className="mr-2" /> Log Match Results
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                  <DialogTitle>Record Match Results</DialogTitle>
-                  <DialogDescription>
-                    Log your match results to earn XP and ranking points.
-                  </DialogDescription>
-                </DialogHeader>
-                <MatchRecordingForm onSuccess={() => setMatchDialogOpen(false)} />
-              </DialogContent>
-            </Dialog>
-          ) : (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
-              <div className="text-[#2196F3] font-semibold mb-1">Feature Coming Soon!</div>
-              <p className="text-sm text-gray-600">Quick match recording will be available on April 8, 2025!</p>
-            </div>
-          )}
+          <Dialog open={matchDialogOpen} onOpenChange={setMatchDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="w-full bg-[#2196F3] hover:bg-[#1976D2]">
+                <PlusCircle size={16} className="mr-2" /> Log Match Results
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Record Match Results</DialogTitle>
+                <DialogDescription>
+                  Log your match results to earn XP and ranking points.
+                </DialogDescription>
+              </DialogHeader>
+              <MatchRecordingForm onSuccess={() => setMatchDialogOpen(false)} />
+            </DialogContent>
+          </Dialog>
         </CardContent>
       </Card>
     </div>

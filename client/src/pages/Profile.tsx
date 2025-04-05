@@ -79,7 +79,6 @@ export default function Profile() {
   
   // Check feature flags
   const showPassportQR = useFeatureFlag(Features.PASSPORT_QR);
-  const showQuickMatch = useFeatureFlag(Features.QUICK_MATCH);
   
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -288,10 +287,7 @@ export default function Profile() {
             </CardContent>
           </Card>
 
-          {/* Passport QR Card */}
-          {showPassportQR && (
-            <PassportQrCodeCard user={user} />
-          )}
+          {/* Passport QR Card - removed in favor of global QR code button */}
           
           {/* Upcoming Tournaments Card */}
           <UpcomingTournamentsCard 
@@ -301,7 +297,6 @@ export default function Profile() {
           
           {/* Quick Actions Card */}
           <QuickActionsCard 
-            showQuickMatch={showQuickMatch}
             matchDialogOpen={matchDialogOpen}
             setMatchDialogOpen={setMatchDialogOpen}
           />

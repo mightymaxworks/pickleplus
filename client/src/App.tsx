@@ -39,7 +39,6 @@ function App() {
 function AppRoutes() {
   const { user } = useAuth();
   const isAuthenticated = !!user;
-  const showQuickMatchFAB = useFeatureFlag(Features.QUICK_MATCH);
   
   return (
     <div className="font-pairing-default">
