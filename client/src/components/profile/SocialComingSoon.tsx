@@ -95,16 +95,36 @@ export function SocialComingSoon() {
       </CardContent>
       <CardFooter>
         <div className="w-full">
-          <p className="text-sm text-muted-foreground text-center mb-4">
-            We're working on exciting social features to help you connect with the pickleball community.
-            Full coaching features will be available with the social module launch in April 2025.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-2">
-            <Button disabled variant="default" className="w-full sm:max-w-[180px]">
+          <div className="mb-4 p-4 bg-primary/5 rounded-lg">
+            <h4 className="font-semibold text-center mb-2">Benefits of Our Social Connections</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
+              <div>
+                <h5 className="text-sm font-medium text-primary">For Players</h5>
+                <ul className="text-sm space-y-1 list-disc list-inside text-muted-foreground">
+                  <li>Find certified coaches that match your play style</li>
+                  <li>Discover players at your exact skill level</li>
+                  <li>Connect with local clubs and organized play</li>
+                  <li>Build your tournament network</li>
+                </ul>
+              </div>
+              <div>
+                <h5 className="text-sm font-medium text-[#4CAF50]">For Coaches</h5>
+                <ul className="text-sm space-y-1 list-disc list-inside text-muted-foreground">
+                  <li>Showcase your certifications and specialties</li>
+                  <li>Build your student roster with matching tools</li>
+                  <li>Schedule sessions and manage availability</li>
+                  <li>Share success stories and build your reputation</li>
+                </ul>
+              </div>
+            </div>
+            <p className="text-xs text-center text-muted-foreground">
+              We're working on exciting social features to help you connect with the pickleball community.
+              Full coaching and social features will be available in April 2025.
+            </p>
+          </div>
+          <div className="flex justify-center">
+            <Button disabled variant="default" className="w-full max-w-xs">
               Join the Waitlist
-            </Button>
-            <Button variant="outline" className="w-full sm:max-w-[180px]" asChild>
-              <Link to="/coaching">Basic Coaching Preview</Link>
             </Button>
           </div>
         </div>
