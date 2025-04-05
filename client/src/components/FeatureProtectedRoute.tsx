@@ -3,6 +3,10 @@ import { Route, Redirect } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { useFeatureFlag } from '@/lib/featureFlags';
 import ComingSoonPage from '@/pages/ComingSoonPage';
+import TournamentsComingSoon from '@/pages/TournamentsComingSoon';
+import AchievementsComingSoon from '@/pages/AchievementsComingSoon';
+import LeaderboardComingSoon from '@/pages/LeaderboardComingSoon';
+import { Features } from '@/lib/featureFlags';
 import { Loader2 } from 'lucide-react';
 import { MainLayout } from './MainLayout';
 
@@ -41,12 +45,28 @@ export function FeatureProtectedRoute({
     );
   }
   
-  // If feature is not enabled, show coming soon page
+  // If feature is not enabled, show appropriate coming soon page
   if (!isFeatureEnabled) {
+    let ComingSoonComponent;
+    
+    switch (featureFlag) {
+      case Features.TOURNAMENTS:
+        ComingSoonComponent = TournamentsComingSoon;
+        break;
+      case Features.ACHIEVEMENTS:
+        ComingSoonComponent = AchievementsComingSoon;
+        break;
+      case Features.LEADERBOARD:
+        ComingSoonComponent = LeaderboardComingSoon;
+        break;
+      default:
+        ComingSoonComponent = ComingSoonPage;
+    }
+    
     return (
       <Route path={path}>
         <MainLayout>
-          <ComingSoonPage />
+          <ComingSoonComponent />
         </MainLayout>
       </Route>
     );
