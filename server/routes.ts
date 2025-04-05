@@ -1053,7 +1053,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req.user as any).id;
       
       // Get coach profile if exists
-      const coachProfile = await storage.getCoachProfile(userId);
+      const coachProfile = await storage.getCoachingProfile(userId);
       
       if (!coachProfile) {
         return res.status(404).json({ message: "Coach profile not found" });
@@ -1073,14 +1073,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if user is eligible to create a coach profile
       const user = await storage.getUser(userId);
-      if (!user.isCoach && !user.hasCoachAccess) {
-        return res.status(403).json({ 
-          message: "You don't have permission to create a coach profile. Subscribe or enter a valid code."
-        });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
       }
+
+      // Check if coach profile already exists
+      let coachProfile = await storage.getCoachingProfile(userId);
       
-      // Create or update coach profile
-      const coachProfile = await storage.createOrUpdateCoachProfile(userId, profileData);
+      if (coachProfile) {
+        // Update existing profile
+        coachProfile = await storage.updateCoachingProfile(userId, profileData);
+      } else {
+        // Create new profile
+        const newProfileData = {
+          ...profileData,
+          userId,
+          accessType: "code", // Default access type
+          accessGrantedAt: new Date(),
+          isActive: true,
+        };
+        coachProfile = await storage.createCoachingProfile(newProfileData);
+      }
       
       res.json(coachProfile);
     } catch (error) {
@@ -1125,19 +1138,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "You have already redeemed this code" });
       }
       
-      // Update user to have coach access
-      await storage.updateUserCoachAccess(userId, true);
+      // Get the user to update
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Update user with coach access flag
+      await storage.updateUser(userId, { hasCoachAccess: true });
       
       // Record redemption
-      await storage.createRedemption({
+      await storage.redeemCode({
         userId,
         redemptionCodeId: redemptionCode.id
       });
       
       // Update redemption count
-      if (redemptionCode.currentRedemptions !== null) {
-        await storage.incrementRedemptionCount(redemptionCode.id);
-      }
+      await storage.incrementRedemptionCodeCounter(redemptionCode.id);
       
       // Create activity record
       await storage.createActivity({
