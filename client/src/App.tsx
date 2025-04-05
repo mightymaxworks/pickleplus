@@ -125,11 +125,11 @@ function AppRoutes() {
           </MainLayout>
         </Route>
 
-        <Route path="/connections">
-          <MainLayout>
-            <ConnectionsPage />
-          </MainLayout>
-        </Route>
+        <FeatureProtectedRoute 
+          path="/connections" 
+          component={ConnectionsPage} 
+          featureFlag={Features.SOCIAL_CONNECTIONS} 
+        />
 
         <Route path="/coach/profile">
           <MainLayout>

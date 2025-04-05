@@ -13,9 +13,9 @@ export function BottomNavigation() {
   const isMobile = useIsMobile();
   
   const navItems: NavItem[] = [
-    { label: "Dashboard", icon: "dashboard", path: "/dashboard" },
-    { label: "Tournaments", icon: "emoji_events", path: "/tournaments" },
-    { label: "Connections", icon: "people", path: "/connections" },
+    { label: "Home", icon: "home", path: "/" },
+    { label: "Play", icon: "sports_tennis", path: "/tournaments" },
+    { label: "Community", icon: "groups", path: "/connections" },
     { label: "Achievements", icon: "military_tech", path: "/achievements" },
     { label: "Profile", icon: "person", path: "/profile" }
   ];

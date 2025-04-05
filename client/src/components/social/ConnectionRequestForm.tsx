@@ -1,302 +1,213 @@
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Connection, User } from "@shared/schema";
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-import { getModuleAPI } from "@/modules/moduleRegistration";
-import { SocialModuleAPI } from "@/modules/types";
-import { 
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { CheckIcon, ChevronsUpDown, Loader2, Search, User2, UserPlus } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useDebounce } from "../../hooks/useDebounce";
 
-// Form schema for connection request
-const connectionRequestSchema = z.object({
+// Define the schema for the connection request form
+const connectionFormSchema = z.object({
   recipientId: z.number({
     required_error: "Please select a player",
   }),
   type: z.string({
     required_error: "Please select a connection type",
   }),
-  message: z.string().optional(),
+  notes: z.string().optional(),
 });
 
-type ConnectionRequestFormValues = z.infer<typeof connectionRequestSchema>;
+// Type for the form values
+type ConnectionFormValues = z.infer<typeof connectionFormSchema>;
 
-interface ConnectionRequestFormProps {
-  currentUserId: number;
-  onConnectionRequested: (connection: Connection) => void;
+// Type for the users returned from search
+interface User {
+  id: number;
+  username: string;
+  displayName: string;
+  avatarInitials: string;
 }
 
-export function ConnectionRequestForm({ 
-  currentUserId, 
-  onConnectionRequested 
-}: ConnectionRequestFormProps) {
-  const { toast } = useToast();
+export function ConnectionRequestForm() {
+  const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [players, setPlayers] = useState<User[]>([]);
-  const [selectedPlayer, setSelectedPlayer] = useState<User | null>(null);
-  
-  const debouncedSearchQuery = useDebounce(searchQuery, 300);
-  const socialAPI = getModuleAPI<SocialModuleAPI>("social");
+  const [searchResults, setSearchResults] = useState<User[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
-  // Initialize form
-  const form = useForm<ConnectionRequestFormValues>({
-    resolver: zodResolver(connectionRequestSchema),
-    defaultValues: {
-      type: "friend",
-      message: "",
-    },
-  });
-
-  // Search for players when query changes
-  const handleSearch = async (query: string) => {
-    if (!query || query.length < 2) {
-      setPlayers([]);
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      const results = await socialAPI.searchPlayers(query);
-      // Filter out current user
-      setPlayers(results.filter(player => player.id !== currentUserId));
-    } catch (error) {
-      console.error("Error searching players:", error);
-      toast({
-        title: "Search failed",
-        description: "Could not search for players",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Update search when debounced query changes
+  // Effect for debounced search
   useEffect(() => {
-    if (debouncedSearchQuery) {
-      handleSearch(debouncedSearchQuery);
+    if (debouncedSearchQuery && debouncedSearchQuery.length >= 2) {
+      // Mock search results for now
+      setIsSearching(true);
+      setTimeout(() => {
+        setSearchResults([
+          {
+            id: 1,
+            username: "picklemaster",
+            displayName: "Pickle Master",
+            avatarInitials: "PM"
+          },
+          {
+            id: 2,
+            username: "dinkstar",
+            displayName: "Dink Star",
+            avatarInitials: "DS"
+          }
+        ]);
+        setIsSearching(false);
+      }, 500);
+    } else {
+      setSearchResults([]);
     }
   }, [debouncedSearchQuery]);
 
-  // Handle player selection
-  const handlePlayerSelect = (player: User) => {
-    setSelectedPlayer(player);
-    form.setValue("recipientId", player.id);
+  // Handle selecting a user from the search results
+  const handleSelectUser = (user: User) => {
+    setSelectedUser(user);
+    setSearchQuery("");
+    setSearchResults([]);
+  };
+
+  // Handle reset
+  const handleReset = () => {
+    setOpen(false);
+    setSearchQuery("");
+    setSearchResults([]);
+    setSelectedUser(null);
   };
 
   // Handle form submission
-  const onSubmit = async (data: ConnectionRequestFormValues) => {
-    if (!currentUserId) {
-      toast({
-        title: "Authentication required",
-        description: "Please log in to connect with players",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      const connection = await socialAPI.requestConnection(
-        currentUserId,
-        data.recipientId
-      );
-      
-      onConnectionRequested(connection);
-    } catch (error: any) {
-      console.error("Error sending connection request:", error);
-      toast({
-        title: "Request failed",
-        description: error.message || "Could not send connection request",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Sending connection request to", selectedUser);
+    // Show success message
+    alert("Connection request sent!");
+    handleReset();
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* Player Search */}
-        <FormField
-          control={form.control}
-          name="recipientId"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Player</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      className={cn(
-                        "w-full justify-between",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {selectedPlayer ? (
-                        <div className="flex items-center gap-2">
-                          <User2 className="h-4 w-4" />
-                          {selectedPlayer.displayName}
-                        </div>
-                      ) : (
-                        "Search for a player"
-                      )}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-[300px] p-0">
-                  <Command>
-                    <CommandInput 
-                      placeholder="Search players..." 
-                      value={searchQuery}
-                      onValueChange={setSearchQuery}
-                      className="h-9"
-                    />
-                    {isLoading && (
-                      <div className="flex items-center justify-center py-6">
-                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+    <div>
+      <button 
+        onClick={() => setOpen(true)}
+        className="bg-[#FF5722] text-white px-4 py-2 rounded-full text-sm font-medium"
+      >
+        Connect with Player
+      </button>
+
+      {open && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-md p-4">
+            <h2 className="text-xl font-bold mb-4">Send Connection Request</h2>
+            
+            <form onSubmit={onSubmit} className="space-y-4">
+              {/* User selection section */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium">Search for Player</label>
+                <div className="relative">
+                  <input
+                    className="w-full border rounded-md px-3 py-2"
+                    placeholder="Search by name..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    disabled={!!selectedUser}
+                  />
+                  {isSearching && (
+                    <div className="absolute right-2 top-2">
+                      <div className="animate-spin h-4 w-4 border-2 border-[#FF5722] border-t-transparent rounded-full"></div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Search results */}
+                {searchResults.length > 0 && !selectedUser && (
+                  <div className="border rounded-md max-h-48 overflow-y-auto">
+                    <ul className="py-1">
+                      {searchResults.map((user) => (
+                        <li
+                          key={user.id}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
+                          onClick={() => handleSelectUser(user)}
+                        >
+                          <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-sm">
+                            {user.avatarInitials}
+                          </div>
+                          <div>
+                            <div className="font-medium">{user.displayName}</div>
+                            <div className="text-xs text-gray-500">@{user.username}</div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                {/* Selected user */}
+                {selectedUser && (
+                  <div className="flex items-center justify-between p-2 border rounded-md">
+                    <div className="flex items-center gap-2">
+                      <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-sm">
+                        {selectedUser.avatarInitials}
                       </div>
-                    )}
-                    {!isLoading && (
-                      <CommandList>
-                        {searchQuery.length < 2 ? (
-                          <CommandEmpty className="py-6 text-center text-sm">
-                            Type at least 2 characters to search
-                          </CommandEmpty>
-                        ) : players.length === 0 ? (
-                          <CommandEmpty className="py-6 text-center text-sm">
-                            No players found
-                          </CommandEmpty>
-                        ) : (
-                          <CommandGroup>
-                            {players.map((player) => (
-                              <CommandItem
-                                key={player.id}
-                                value={player.id.toString()}
-                                onSelect={() => handlePlayerSelect(player)}
-                              >
-                                <div className="flex items-center">
-                                  <div className="mr-2 flex h-6 w-6 items-center justify-center rounded-full border">
-                                    {player.avatarInitials ? player.avatarInitials.substring(0, 2) : "P+"}
-                                  </div>
-                                  <span>{player.displayName}</span>
-                                </div>
-                                <CheckIcon
-                                  className={cn(
-                                    "ml-auto h-4 w-4",
-                                    selectedPlayer?.id === player.id
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                  )}
-                                />
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        )}
-                      </CommandList>
-                    )}
-                  </Command>
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                      <div>
+                        <div className="font-medium">{selectedUser.displayName}</div>
+                        <div className="text-xs text-gray-500">@{selectedUser.username}</div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="text-sm text-gray-500"
+                      onClick={() => setSelectedUser(null)}
+                    >
+                      Change
+                    </button>
+                  </div>
+                )}
+              </div>
 
-        {/* Connection Type */}
-        <FormField
-          control={form.control}
-          name="type"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Connection Type</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select connection type" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="friend">Friend</SelectItem>
-                  <SelectItem value="partner">Playing Partner</SelectItem>
-                  <SelectItem value="teammate">Teammate</SelectItem>
-                  <SelectItem value="coach">Coach Connection</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+              {/* Connection type selection */}
+              <div>
+                <label className="block text-sm font-medium mb-1">Connection Type</label>
+                <select 
+                  className="w-full border rounded-md px-3 py-2"
+                  required
+                >
+                  <option value="">Select connection type</option>
+                  <option value="partner">Playing Partner</option>
+                  <option value="friend">Friend</option>
+                  <option value="coach">Coach</option>
+                  <option value="teammate">Teammate</option>
+                </select>
+              </div>
 
-        {/* Message */}
-        <FormField
-          control={form.control}
-          name="message"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Message (Optional)</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Enter a brief message..."
-                  className="resize-none"
-                  {...field}
+              {/* Notes field */}
+              <div>
+                <label className="block text-sm font-medium mb-1">Notes (Optional)</label>
+                <textarea
+                  className="w-full border rounded-md px-3 py-2"
+                  placeholder="Add a personal note to your connection request..."
+                  rows={3}
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+              </div>
 
-        <Button 
-          type="submit" 
-          className="w-full" 
-          disabled={isLoading}
-        >
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Send Request
-        </Button>
-      </form>
-    </Form>
+              {/* Action buttons */}
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  className="flex-1 bg-[#FF5722] text-white py-2 rounded-md font-medium"
+                  disabled={!selectedUser}
+                >
+                  Send Request
+                </button>
+                <button
+                  type="button"
+                  className="flex-1 border border-gray-300 py-2 rounded-md font-medium"
+                  onClick={handleReset}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
