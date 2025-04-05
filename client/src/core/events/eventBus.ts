@@ -78,4 +78,11 @@ export const Events = {
   
   // Coaching module events
   COACHING_SESSION_BOOKED: 'coaching:session_booked',
+  
+  // Admin module events
+  USER_ROLE_UPDATED: 'admin:user_role_updated',
+  COACH_VERIFIED: 'admin:coach_verified',
+  REDEMPTION_CODE_CREATED: 'admin:redemption_code_created',
+  REDEMPTION_CODE_UPDATED: 'admin:redemption_code_updated',
+  FEATURE_FLAG_UPDATED: 'admin:feature_flag_updated',
 };

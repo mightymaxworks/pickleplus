@@ -5,7 +5,7 @@
  * It serves as a contract between modules
  */
 
-import { User, Tournament, Match, Achievement, Connection, CoachProfile } from '@shared/schema';
+import { User, Tournament, Match, Achievement, Connection, CoachingProfile, RedemptionCode } from '@shared/schema';
 
 // User Module Interface
 export interface UserModuleAPI {
@@ -72,13 +72,35 @@ export interface SocialModuleAPI {
 // Coaching Module Interface
 export interface CoachModuleAPI {
   // Coach profiles
-  getCoachProfile: (userId: number) => Promise<CoachProfile | null>;
-  createCoachProfile: (profileData: any) => Promise<CoachProfile>;
-  updateCoachProfile: (profileData: any) => Promise<CoachProfile>;
+  getCoachProfile: (userId: number) => Promise<CoachingProfile | null>;
+  createCoachProfile: (profileData: any) => Promise<CoachingProfile>;
+  updateCoachProfile: (profileData: any) => Promise<CoachingProfile>;
   
   // Coach access
   requestCoachAccess: (userId: number) => Promise<void>;
   
   // Coaching sessions
   bookCoachingSession: (coachId: number, studentId: number, sessionData: any) => Promise<any>;
+}
+
+// Admin Module Interface
+export interface AdminModuleAPI {
+  // User management
+  getUsers: () => Promise<User[]>;
+  updateUserRole: (userId: number, isAdmin: boolean) => Promise<User>;
+  
+  // Coach management
+  verifyCoach: (coachId: number) => Promise<CoachingProfile>;
+  
+  // Redemption code management
+  getRedemptionCodes: () => Promise<RedemptionCode[]>;
+  createRedemptionCode: (codeData: any) => Promise<RedemptionCode>;
+  updateRedemptionCode: (codeId: number, codeData: any) => Promise<RedemptionCode>;
+  
+  // Feature flag management
+  getFeatureFlags: () => Promise<Record<string, boolean>>;
+  updateFeatureFlag: (flagName: string, enabled: boolean) => Promise<void>;
+  
+  // Dashboard access
+  getDashboardStats: () => Promise<any>;
 }

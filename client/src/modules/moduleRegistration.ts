@@ -15,6 +15,7 @@ import { achievementModule } from './achievement';
 import { socialModule } from './social';
 import { coachingModule } from './coaching';
 import { guidanceMiniModule } from './guidance-mini';
+import { adminModule } from './admin';
 
 /**
  * Register all modules with the module registry
@@ -28,6 +29,7 @@ export function registerAllModules(): void {
   moduleRegistry.registerModule(socialModule);
   moduleRegistry.registerModule(coachingModule);
   moduleRegistry.registerModule(guidanceMiniModule);
+  moduleRegistry.registerModule(adminModule);
   
   console.log('All modules registered successfully.');
   console.log('Registered modules:', moduleRegistry.getAllModules().map(m => `${m.name}@${m.version}`));
