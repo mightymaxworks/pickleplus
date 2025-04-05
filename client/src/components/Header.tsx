@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
-import { Menu } from "lucide-react";
+import { Menu, Bell } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,15 +13,26 @@ import { Button } from "@/components/ui/button";
 import { PicklePlusLogo } from "@/components/icons/PicklePlusLogo";
 import { PickleGoldLogo } from "@/components/icons/PickleGoldLogo";
 import { FoundingMemberBadge } from "@/components/ui/founding-member-badge";
+import { useToast } from "@/hooks/use-toast";
 
 export function Header() {
   const { user, logout } = useAuth();
   const [, setLocation] = useLocation();
   const [notificationCount] = useState(3);
+  const { toast } = useToast();
   
   const handleLogout = async () => {
     await logout();
     setLocation("/login");
+  };
+  
+  const handleNotificationClick = () => {
+    toast({
+      title: "Coming April 15th!",
+      description: "Stay tuned! Our personalized notification system is launching soon with match alerts, tournament invites, and achievement updates.",
+      variant: "default",
+      duration: 5000,
+    });
   };
   
   const initials = user?.avatarInitials || user?.displayName?.split(" ")
@@ -43,8 +54,8 @@ export function Header() {
         
         {user ? (
           <div className="flex items-center">
-            <div className="relative mr-4">
-              <span className="material-icons text-gray-500">notifications</span>
+            <div className="relative mr-4 cursor-pointer" onClick={handleNotificationClick}>
+              <Bell className="h-5 w-5 text-gray-500" />
               {notificationCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-[#FF5722] text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
                   {notificationCount}
