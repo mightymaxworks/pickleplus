@@ -1,6 +1,6 @@
 import { ProfileService } from './profile-service';
 import { XPService } from './xp-service';
-import { IProfileService, IXPService } from './interfaces';
+import type { IProfileService, IXPService } from './interfaces';
 
 // Create singleton instances of services
 const profileService: IProfileService = new ProfileService();

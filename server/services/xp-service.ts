@@ -3,6 +3,7 @@ import { db } from "../db";
 import { users, activities } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { IXPService } from "./interfaces";
+import { getTierByLevel, getTierProgress, getNextTier, getLevelsUntilNextTier } from "@shared/xp-tiers";
 
 // XP required for each level
 // Uses an exponential formula: base * 1.5^(level-1)
@@ -127,5 +128,42 @@ export class XPService implements IXPService {
     // Apply multiplier if it exists
     const multiplier = user.xpMultiplier || 100;
     return Math.round(amount * (multiplier / 100));
+  }
+  
+  /**
+   * Get tier information for a user
+   */
+  async getUserTier(userId: number): Promise<{
+    tier: string;
+    tierDescription: string;
+    tierProgress: number;
+    nextTier: string | null;
+    levelUntilNextTier: number;
+  }> {
+    // Get user's level
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId));
+      
+    if (!user) {
+      throw new Error(`User with ID ${userId} not found`);
+    }
+    
+    const level = user.level || 1;
+    
+    // Get tier information
+    const tier = getTierByLevel(level);
+    const tierProgress = getTierProgress(level);
+    const nextTierObj = getNextTier(level);
+    const levelUntilNextTier = getLevelsUntilNextTier(level);
+    
+    return {
+      tier: tier.name,
+      tierDescription: tier.description,
+      tierProgress,
+      nextTier: nextTierObj ? nextTierObj.name : null,
+      levelUntilNextTier
+    };
   }
 }

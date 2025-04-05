@@ -26,6 +26,15 @@ export interface IXPService {
   
   // Apply XP multiplier
   applyMultiplier(userId: number, amount: number): Promise<number>;
+  
+  // Get tier information for a user
+  getUserTier(userId: number): Promise<{
+    tier: string;
+    tierDescription: string;
+    tierProgress: number;
+    nextTier: string | null;
+    levelUntilNextTier: number;
+  }>;
 }
 
 // Interface for the User API Service

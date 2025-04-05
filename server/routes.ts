@@ -16,6 +16,7 @@ import {
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { generatePassportId, validatePassportId } from "./utils/passport-id";
+import { xpService } from "./services";
 
 const SessionStore = MemoryStore(session);
 
@@ -348,6 +349,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(userWithoutPassword);
     } catch (error) {
       res.status(500).json({ message: "Error retrieving user" });
+    }
+  });
+  
+  // XP tier information
+  app.get("/api/user/xp-tier", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const tierInfo = await xpService.getUserTier(userId);
+      res.json(tierInfo);
+    } catch (error) {
+      console.error("Error retrieving XP tier information:", error);
+      res.status(500).json({ message: "Error retrieving XP tier information" });
     }
   });
   

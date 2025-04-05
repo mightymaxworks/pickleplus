@@ -2,11 +2,13 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { useXPTier } from "@/hooks/useXPTier";
 import { userApi, tournamentApi, achievementApi } from "@/lib/apiClient";
 import { StatCard } from "@/components/StatCard";
 import { ActivityCard } from "@/components/ActivityCard";
 import { TournamentCard } from "@/components/TournamentCard";
 import { AchievementBadge } from "@/components/AchievementBadge";
+import { TierBadge } from "@/components/TierBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Activity, Achievement, Tournament } from "@/types";
 import { FoundingMemberBadge } from "@/components/ui/founding-member-badge";
@@ -38,6 +40,7 @@ interface UserTournament {
 
 export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();
+  const { tierInfo, isLoading: tierLoading } = useXPTier();
   const [, setLocation] = useLocation();
   
   // Redirect to login if not authenticated
@@ -96,7 +99,17 @@ export default function Dashboard() {
       <div className="mb-6">
         <div className="flex items-center mb-2">
           <h2 className="text-xl font-bold font-product-sans mr-2">Welcome back, {user.displayName.split(' ')[0]}!</h2>
-          {user.isFoundingMember && <FoundingMemberBadge size="sm" showText={true} />}
+          {tierInfo && !tierLoading && (
+            <TierBadge 
+              tier={tierInfo.tier}
+              tierDescription={tierInfo.tierDescription}
+              tierProgress={tierInfo.tierProgress}
+              nextTier={tierInfo.nextTier}
+              levelUntilNextTier={tierInfo.levelUntilNextTier}
+              showDetails={false}
+            />
+          )}
+          {user.isFoundingMember && <FoundingMemberBadge size="sm" showText={true} className="ml-2" />}
           {user.isAdmin && (
             <span
               className="ml-2 px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full cursor-pointer"
@@ -168,6 +181,20 @@ export default function Dashboard() {
         </div>
         <p className="text-sm text-gray-500">{xpNeeded} XP until Level {(user.level || 1) + 1}</p>
       </div>
+      
+      {/* XP Tier Section */}
+      {tierLoading ? (
+        <Skeleton className="h-40 w-full rounded-lg mb-6" />
+      ) : tierInfo && (
+        <TierBadge 
+          tier={tierInfo.tier}
+          tierDescription={tierInfo.tierDescription}
+          tierProgress={tierInfo.tierProgress}
+          nextTier={tierInfo.nextTier}
+          levelUntilNextTier={tierInfo.levelUntilNextTier}
+          showDetails={true}
+        />
+      )}
       
       {/* Recent Activity Section */}
       <div className="mb-6">
