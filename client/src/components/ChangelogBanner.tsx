@@ -113,37 +113,25 @@ function ChangelogDialog({ isOpen, setIsOpen }: ChangelogDialogProps) {
         <div className="space-y-6 pt-4">
           <section>
             <h3 className="text-xl font-bold mb-3 flex items-center">
-              <span className="text-[#FF5722] mr-2">🌟</span> Major Features
+              <span className="text-[#FF5722] mr-2">🏆</span> Enhanced Player Passport System
             </h3>
             
             <div className="space-y-4">
               <div>
-                <h4 className="text-lg font-semibold text-[#FF5722]">Tournament Passport System</h4>
+                <h4 className="text-lg font-semibold text-[#FF5722]">Digital Passport QR Codes</h4>
                 <ul className="list-disc pl-5 mt-1 space-y-1 text-gray-700">
-                  <li>QR code check-ins for swift tournament registration</li>
-                  <li>Enhanced tournament history tracking</li>
-                  <li>Improved tournament leaderboards with real-time updates</li>
-                  <li>Tournament notifications for upcoming events</li>
+                  <li>Easily check in to tournaments with your unique QR code</li>
+                  <li>Connect with other players by sharing your player passport</li>
+                  <li>Quick access to your passport from anywhere in the app</li>
                 </ul>
               </div>
               
               <div>
-                <h4 className="text-lg font-semibold text-[#FF5722]">Player Connections</h4>
+                <h4 className="text-lg font-semibold text-[#FF5722]">Gold Accented Passports</h4>
                 <ul className="list-disc pl-5 mt-1 space-y-1 text-gray-700">
-                  <li>Connect with other players to build your pickleball network</li>
-                  <li>Find practice partners based on skill level and location</li>
-                  <li>Track matches played with your connections</li>
-                  <li>See connection activity in your timeline</li>
-                </ul>
-              </div>
-              
-              <div>
-                <h4 className="text-lg font-semibold text-[#FF5722]">Achievement System Expansion</h4>
-                <ul className="list-disc pl-5 mt-1 space-y-1 text-gray-700">
-                  <li>New achievements for tournament participation</li>
-                  <li>Skills-based achievement pathways</li>
-                  <li>Improved visual badges for your profile</li>
-                  <li>XP rewards for completing achievements</li>
+                  <li>Founding members receive exclusive gold-accented passport displays</li>
+                  <li>Special crown badge recognition for founding members</li>
+                  <li>Enhanced visual design for member passports</li>
                 </ul>
               </div>
             </div>
@@ -151,37 +139,34 @@ function ChangelogDialog({ isOpen, setIsOpen }: ChangelogDialogProps) {
           
           <section>
             <h3 className="text-xl font-bold mb-3 flex items-center">
-              <span className="text-[#FF5722] mr-2">🛠️</span> Improvements
+              <span className="text-[#FF5722] mr-2">📊</span> Profile Improvements
             </h3>
             
             <div className="space-y-4">
               <div>
-                <h4 className="text-lg font-semibold text-[#FF5722]">Profile Enhancements</h4>
+                <h4 className="text-lg font-semibold text-[#FF5722]">Tournament Integration</h4>
                 <ul className="list-disc pl-5 mt-1 space-y-1 text-gray-700">
-                  <li>Improved profile statistics dashboard</li>
-                  <li>Match history with detailed results</li>
-                  <li>Achievement showcase section</li>
-                  <li>Enhanced privacy controls for profile information</li>
+                  <li>View all your registered tournaments directly on your profile</li>
+                  <li>See tournament check-in status at a glance</li>
+                  <li>Get quick access to upcoming tournament details</li>
                 </ul>
               </div>
               
               <div>
-                <h4 className="text-lg font-semibold text-[#FF5722]">Match Recording</h4>
+                <h4 className="text-lg font-semibold text-[#FF5722]">Performance Dashboard</h4>
                 <ul className="list-disc pl-5 mt-1 space-y-1 text-gray-700">
-                  <li>Streamlined match entry process</li>
-                  <li>Support for multiple scoring formats</li>
-                  <li>Partner selection from your connections</li>
-                  <li>Match validation improvements</li>
+                  <li>Track your win ratio with improved visualizations</li>
+                  <li>Monitor ranking points and progression over time</li>
+                  <li>View comprehensive tournament participation statistics</li>
                 </ul>
               </div>
               
               <div>
-                <h4 className="text-lg font-semibold text-[#FF5722]">XP & Ranking System</h4>
+                <h4 className="text-lg font-semibold text-[#FF5722]">Tier Progression</h4>
                 <ul className="list-disc pl-5 mt-1 space-y-1 text-gray-700">
-                  <li>Clearer tier progression visualization</li>
-                  <li>Balanced XP distribution for activities</li>
-                  <li>New ranking system based on match performance</li>
-                  <li>Seasonal leaderboards implementation</li>
+                  <li>Clear visualization of your progress through the 7-tier player system</li>
+                  <li>From Dink Dabbler to Pickleball Pro with descriptive tier badges</li>
+                  <li>XP progress bar to show advancement to the next level</li>
                 </ul>
               </div>
             </div>
@@ -189,37 +174,34 @@ function ChangelogDialog({ isOpen, setIsOpen }: ChangelogDialogProps) {
           
           <section>
             <h3 className="text-xl font-bold mb-3 flex items-center">
-              <span className="text-[#FF5722] mr-2">📱</span> User Experience
+              <span className="text-[#FF5722] mr-2">🔄</span> Experience Enhancements
             </h3>
             
             <div className="space-y-4">
               <div>
-                <h4 className="text-lg font-semibold text-[#FF5722]">Mobile Improvements</h4>
+                <h4 className="text-lg font-semibold text-[#FF5722]">Improved Data Display</h4>
                 <ul className="list-disc pl-5 mt-1 space-y-1 text-gray-700">
-                  <li>Redesigned mobile navigation</li>
-                  <li>Optimized layouts for all screen sizes</li>
-                  <li>Touch-friendly interface elements</li>
-                  <li>Improved performance on mobile devices</li>
+                  <li>More reliable tournament data synchronization</li>
+                  <li>Enhanced player statistics and match history visualizations</li>
+                  <li>Optimized data loading for faster performance</li>
                 </ul>
               </div>
               
               <div>
-                <h4 className="text-lg font-semibold text-[#FF5722]">Notification System</h4>
+                <h4 className="text-lg font-semibold text-[#FF5722]">Simplified Navigation</h4>
                 <ul className="list-disc pl-5 mt-1 space-y-1 text-gray-700">
-                  <li>Real-time notifications for important events</li>
-                  <li>Customizable notification preferences</li>
-                  <li>Activity feed with chronological updates</li>
-                  <li>Tournament reminder notifications</li>
+                  <li>Streamlined profile interface with quick action buttons</li>
+                  <li>Floating QR button for instant passport access</li>
+                  <li>Improved mobile responsive design for all screen sizes</li>
                 </ul>
               </div>
               
               <div>
-                <h4 className="text-lg font-semibold text-[#FF5722]">Dashboard Refinements</h4>
+                <h4 className="text-lg font-semibold text-[#FF5722]">Performance Optimizations</h4>
                 <ul className="list-disc pl-5 mt-1 space-y-1 text-gray-700">
-                  <li>At-a-glance stats on main dashboard</li>
-                  <li>Recent activity highlights</li>
-                  <li>Quick access to upcoming tournaments</li>
-                  <li>Achievement progress indicators</li>
+                  <li>Faster loading times for player statistics</li>
+                  <li>Optimized match history and tournament data retrieval</li>
+                  <li>Smoother transitions and animations throughout the app</li>
                 </ul>
               </div>
             </div>
