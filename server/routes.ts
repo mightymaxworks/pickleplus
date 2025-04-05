@@ -12,11 +12,13 @@ import {
   loginSchema, 
   insertTournamentRegistrationSchema, 
   redeemCodeSchema,
-  insertMatchSchema
+  insertMatchSchema,
+  insertRedemptionCodeSchema
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { generatePassportId, validatePassportId } from "./utils/passport-id";
 import { xpService } from "./services";
+import { isAdmin } from "./core/middleware/auth";
 
 const SessionStore = MemoryStore(session);
 
@@ -770,18 +772,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/redemption-codes", isAuthenticated, async (req: Request, res: Response) => {
+  // Admin only redemption code routes
+  app.get("/api/redemption-codes", isAuthenticated, isAdmin, async (req: Request, res: Response) => {
     try {
-      // Check if user is admin
-      if (!(req.user as any).isAdmin) {
-        return res.status(403).json({ message: "Unauthorized: Admin access required" });
-      }
-      
       const codes = await storage.getAllRedemptionCodes();
       res.json(codes);
     } catch (error) {
       console.error('[getAllRedemptionCodes] Error:', error);
       res.status(500).json({ message: "Failed to fetch redemption codes" });
+    }
+  });
+  
+  // Get a single redemption code by ID
+  app.get("/api/redemption-codes/:id", isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid code ID" });
+      }
+      
+      const code = await storage.getRedemptionCode(id);
+      if (!code) {
+        return res.status(404).json({ message: "Redemption code not found" });
+      }
+      
+      res.json(code);
+    } catch (error) {
+      console.error('[getRedemptionCode] Error:', error);
+      res.status(500).json({ message: "Failed to retrieve redemption code" });
+    }
+  });
+  
+  // Create a new redemption code
+  app.post("/api/redemption-codes", isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+    try {
+      // Validate the input data
+      let codeData;
+      try {
+        codeData = insertRedemptionCodeSchema.parse(req.body);
+      } catch (error) {
+        return res.status(400).json({ 
+          message: "Invalid redemption code data", 
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
+      
+      // Create the code
+      const code = await storage.createRedemptionCode(codeData);
+      res.status(201).json(code);
+    } catch (error) {
+      console.error('[createRedemptionCode] Error:', error);
+      res.status(500).json({ message: "Failed to create redemption code" });
+    }
+  });
+
+  // Update a redemption code
+  app.patch("/api/redemption-codes/:id", isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid code ID" });
+      }
+      
+      // Get the code first to check if it exists
+      const existingCode = await storage.getRedemptionCode(id);
+      if (!existingCode) {
+        return res.status(404).json({ message: "Redemption code not found" });
+      }
+      
+      // Validate and sanitize the update fields
+      const updates = req.body;
+      
+      // Update the code
+      const updatedCode = await storage.updateRedemptionCode(id, updates);
+      if (!updatedCode) {
+        return res.status(500).json({ message: "Failed to update redemption code" });
+      }
+      
+      res.json(updatedCode);
+    } catch (error) {
+      console.error('[updateRedemptionCode] Error:', error);
+      res.status(500).json({ message: "Failed to update redemption code" });
+    }
+  });
+  
+  // Delete a redemption code
+  app.delete("/api/redemption-codes/:id", isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid code ID" });
+      }
+      
+      // Get the code first to check if it exists
+      const existingCode = await storage.getRedemptionCode(id);
+      if (!existingCode) {
+        return res.status(404).json({ message: "Redemption code not found" });
+      }
+      
+      // Delete the code
+      const success = await storage.deleteRedemptionCode(id);
+      if (!success) {
+        return res.status(500).json({ message: "Failed to delete redemption code" });
+      }
+      
+      res.json({ message: "Redemption code deleted successfully" });
+    } catch (error) {
+      console.error('[deleteRedemptionCode] Error:', error);
+      res.status(500).json({ message: "Failed to delete redemption code" });
     }
   });
 

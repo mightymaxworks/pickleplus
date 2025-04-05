@@ -119,5 +119,21 @@ export const codeApi = {
   getAllRedemptionCodes: async (): Promise<RedemptionCode[]> => {
     const res = await apiRequest("GET", `${API_BASE}/redemption-codes`);
     return res.json();
+  },
+  getRedemptionCode: async (id: number): Promise<RedemptionCode> => {
+    const res = await apiRequest("GET", `${API_BASE}/redemption-codes/${id}`);
+    return res.json();
+  },
+  createRedemptionCode: async (data: Partial<RedemptionCode>): Promise<RedemptionCode> => {
+    const res = await apiRequest("POST", `${API_BASE}/redemption-codes`, data);
+    return res.json();
+  },
+  updateRedemptionCode: async (id: number, data: Partial<RedemptionCode>): Promise<RedemptionCode> => {
+    const res = await apiRequest("PATCH", `${API_BASE}/redemption-codes/${id}`, data);
+    return res.json();
+  },
+  deleteRedemptionCode: async (id: number): Promise<{ message: string }> => {
+    const res = await apiRequest("DELETE", `${API_BASE}/redemption-codes/${id}`);
+    return res.json();
   }
 };

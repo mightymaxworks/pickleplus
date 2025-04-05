@@ -57,8 +57,11 @@ export interface IStorage {
   
   // Redemption code operations
   getRedemptionCodeByCode(code: string): Promise<RedemptionCode | undefined>;
+  getRedemptionCode(id: number): Promise<RedemptionCode | undefined>;
   getAllRedemptionCodes(): Promise<RedemptionCode[]>;
   createRedemptionCode(redemptionCode: InsertRedemptionCode): Promise<RedemptionCode>;
+  updateRedemptionCode(id: number, updates: Partial<InsertRedemptionCode>): Promise<RedemptionCode | undefined>;
+  deleteRedemptionCode(id: number): Promise<boolean>;
   redeemCode(userRedemption: InsertUserRedemption): Promise<UserRedemption>;
   hasUserRedeemedCode(userId: number, codeId: number): Promise<boolean>;
   incrementRedemptionCodeCounter(codeId: number): Promise<RedemptionCode | undefined>;
@@ -648,6 +651,40 @@ export class MemStorage implements IStorage {
     const updatedCode = { ...code, currentRedemptions };
     this.redemptionCodes.set(codeId, updatedCode);
     return updatedCode;
+  }
+  
+  async getRedemptionCode(id: number): Promise<RedemptionCode | undefined> {
+    return this.redemptionCodes.get(id);
+  }
+  
+  async updateRedemptionCode(id: number, updates: Partial<InsertRedemptionCode>): Promise<RedemptionCode | undefined> {
+    const code = this.redemptionCodes.get(id);
+    if (!code) return undefined;
+    
+    const updatedCode = { ...code, ...updates };
+    this.redemptionCodes.set(id, updatedCode);
+    return updatedCode;
+  }
+  
+  async deleteRedemptionCode(id: number): Promise<boolean> {
+    // Check if the code has been redeemed by anyone
+    const hasBeenRedeemed = Array.from(this.userRedemptions.values()).some(
+      (redemption) => redemption.codeId === id
+    );
+    
+    if (hasBeenRedeemed) {
+      // If redeemed, just mark as inactive instead of deleting
+      const code = this.redemptionCodes.get(id);
+      if (code) {
+        const updatedCode = { ...code, isActive: false };
+        this.redemptionCodes.set(id, updatedCode);
+      }
+    } else {
+      // If not redeemed, delete the code
+      this.redemptionCodes.delete(id);
+    }
+    
+    return true;
   }
 
   // Match operations
@@ -1669,6 +1706,60 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('[incrementRedemptionCodeCounter] Error:', error);
       return undefined;
+    }
+  }
+  
+  async getRedemptionCode(id: number): Promise<RedemptionCode | undefined> {
+    try {
+      const [redemptionCode] = await db.select()
+        .from(redemptionCodes)
+        .where(eq(redemptionCodes.id, id));
+      
+      return redemptionCode;
+    } catch (error) {
+      console.error('[getRedemptionCode] Error:', error);
+      return undefined;
+    }
+  }
+  
+  async updateRedemptionCode(id: number, updates: Partial<InsertRedemptionCode>): Promise<RedemptionCode | undefined> {
+    try {
+      const [updatedCode] = await db.update(redemptionCodes)
+        .set(updates)
+        .where(eq(redemptionCodes.id, id))
+        .returning();
+      
+      return updatedCode;
+    } catch (error) {
+      console.error('[updateRedemptionCode] Error:', error);
+      return undefined;
+    }
+  }
+  
+  async deleteRedemptionCode(id: number): Promise<boolean> {
+    try {
+      // First check if there are any redemptions for this code
+      const [usageResult] = await db.select({ count: sql<number>`count(*)` })
+        .from(userRedemptions)
+        .where(eq(userRedemptions.codeId, id));
+      
+      if (usageResult.count > 0) {
+        // If code has been used, just mark it as inactive instead of deleting
+        await db.update(redemptionCodes)
+          .set({ isActive: false })
+          .where(eq(redemptionCodes.id, id));
+          
+        return true;
+      }
+      
+      // If no redemptions, we can safely delete the code
+      const result = await db.delete(redemptionCodes)
+        .where(eq(redemptionCodes.id, id));
+      
+      return true;
+    } catch (error) {
+      console.error('[deleteRedemptionCode] Error:', error);
+      return false;
     }
   }
 
