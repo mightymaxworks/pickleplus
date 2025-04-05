@@ -101,7 +101,7 @@ function TierMarker({
   tiers: Array<{ level: number, label: string, xp: number }> 
 }) {
   return (
-    <div className="relative h-12 mb-6 mt-4">
+    <div className="relative h-10 mb-4 mt-4">
       {/* Progress line */}
       <div className="absolute w-full h-1 bg-gray-200 top-3"></div>
       
@@ -110,22 +110,20 @@ function TierMarker({
         <div 
           key={index} 
           className="absolute flex flex-col items-center" 
-          style={{ left: `calc(${tier.level}% - 20px)`, width: "40px" }}
+          style={{ left: `${tier.level}%`, transform: 'translateX(-50%)' }}
         >
           <div className={`w-3 h-3 rounded-full ${percentage >= tier.level ? 'bg-amber-500' : 'bg-gray-300'} relative top-2`}></div>
           <div className="text-xs mt-3 text-center font-medium whitespace-nowrap">
             {tier.label}
-            <span className="block text-gray-400 text-[10px]">+{tier.xp} XP</span>
           </div>
         </div>
       ))}
       
       {/* Starting point */}
-      <div className="absolute left-0 flex flex-col items-center" style={{ width: "40px" }}>
+      <div className="absolute left-0 flex flex-col items-center">
         <div className={`w-3 h-3 rounded-full ${percentage > 0 ? 'bg-amber-500' : 'bg-gray-300'} relative top-2`}></div>
-        <div className="text-xs mt-3 text-center font-medium whitespace-nowrap">
+        <div className="text-xs mt-3 text-center font-medium">
           0%
-          <span className="block text-gray-400 text-[10px]">Start</span>
         </div>
       </div>
       
@@ -140,11 +138,10 @@ function TierMarker({
       )}
       
       {/* End point - 100% */}
-      <div className="absolute right-0 flex flex-col items-center" style={{ width: "40px" }}>
+      <div className="absolute right-0 flex flex-col items-center">
         <div className={`w-3 h-3 rounded-full ${percentage >= 100 ? 'bg-amber-500' : 'bg-gray-300'} relative top-2`}></div>
-        <div className="text-xs mt-3 text-center font-medium whitespace-nowrap">
+        <div className="text-xs mt-3 text-center font-medium">
           100%
-          <span className="block text-gray-400 text-[10px]">Complete</span>
         </div>
       </div>
     </div>

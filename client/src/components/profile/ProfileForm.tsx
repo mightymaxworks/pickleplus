@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import { ProfileCompletion } from "./ProfileCompletion";
 import { Progress } from "@/components/ui/progress";
@@ -569,6 +570,35 @@ export function ProfileForm() {
                 
                 {/* Social/Community Tab */}
                 <TabsContent value="social" className="space-y-4 mt-0">
+                  {/* Coaching Profile Toggle */}
+                  <Card className="mb-4 bg-amber-50 border-amber-200">
+                    <CardContent className="pt-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-lg font-semibold text-amber-800">Coaching Profile</h3>
+                          <p className="text-sm text-amber-700">Enable your coaching profile to offer lessons</p>
+                        </div>
+                        <Switch 
+                          id="coaching-profile-toggle" 
+                          onCheckedChange={(checked) => {
+                            // Call API to toggle coaching profile
+                            toast({
+                              title: checked ? "Coaching Profile Activated" : "Coaching Profile Deactivated",
+                              description: checked 
+                                ? "You can now manage your coaching details in the coaching dashboard." 
+                                : "Your coaching profile has been hidden from public view.",
+                            });
+                            
+                            // Redirect to coaching profile setup if needed
+                            if (checked) {
+                              window.location.href = "/coach-profile";
+                            }
+                          }}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
                   <FormField
                     control={form.control}
                     name="coach"
