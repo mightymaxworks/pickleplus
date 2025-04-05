@@ -32,7 +32,7 @@ const UserManagementPage = () => {
   // State for pagination, sorting, and filtering
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filter, setFilter] = useState('');
+  const [filter, setFilter] = useState('all');
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortDir, setSortDir] = useState('desc');
   
@@ -46,7 +46,7 @@ const UserManagementPage = () => {
         sortBy,
         sortDir,
         ...(searchQuery && { search: searchQuery }),
-        ...(filter && { filter })
+        ...(filter && filter !== 'all' && { filter })
       });
       
       const response = await fetch(`/api/admin/users?${params.toString()}`);
@@ -126,7 +126,7 @@ const UserManagementPage = () => {
                 <SelectValue placeholder="Filter by role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Users</SelectItem>
+                <SelectItem value="all">All Users</SelectItem>
                 <SelectItem value="admin">Admins</SelectItem>
                 <SelectItem value="coach">Coaches</SelectItem>
                 <SelectItem value="founding">Founding Members</SelectItem>
