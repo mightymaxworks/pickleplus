@@ -409,7 +409,7 @@ export const BounceMascot: React.FC<BounceMascotProps> = ({
               marginBottom: '8px',
             }}
           >
-            {/* The actual bubble */}
+            {/* Clean speech bubble without arrow */}
             <div className="bg-white rounded-xl p-3 shadow-lg border-2 border-[#FF5722] relative">
               <div className="text-sm text-gray-700">
                 {message}
@@ -428,33 +428,6 @@ export const BounceMascot: React.FC<BounceMascotProps> = ({
                 )}
               </div>
             </div>
-            
-            {/* Triangle Pointer - Completely separate from bubble for better control */}
-            <div
-              className="w-0 h-0 absolute"
-              style={{
-                // Position the triangle at the bottom center of the bubble
-                left: '36px',
-                bottom: '-10px',
-                // Create triangle with borders
-                borderLeft: '10px solid transparent', 
-                borderRight: '10px solid transparent',
-                borderTop: '10px solid #FF5722', // Same color as bubble border
-              }}
-            />
-            {/* White inner triangle (slightly smaller) */}
-            <div
-              className="w-0 h-0 absolute"
-              style={{
-                // Position slightly above the colored triangle
-                left: '36px',
-                bottom: '-7px',
-                // Create triangle with borders
-                borderLeft: '8px solid transparent', 
-                borderRight: '8px solid transparent',
-                borderTop: '8px solid white', // Same color as bubble background
-              }}
-            />
           </motion.div>
         )}
       </AnimatePresence>
