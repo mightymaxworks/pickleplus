@@ -146,6 +146,10 @@ function AppRoutes() {
         
         {/* Admin Routes */}
         <Route path="/admin">
+          <Redirect to="/admin/dashboard" />
+        </Route>
+        
+        <Route path="/admin/dashboard">
           <MainLayout>
             <AdminDashboardPage />
           </MainLayout>

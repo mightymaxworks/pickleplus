@@ -75,7 +75,7 @@ export function Header() {
                 </DropdownMenuItem>
                 {user?.isAdmin && (
                   <>
-                    <DropdownMenuItem onClick={() => setLocation("/admin/codes")}>
+                    <DropdownMenuItem onClick={() => setLocation("/admin/dashboard")}>
                       Admin Panel
                     </DropdownMenuItem>
                   </>
