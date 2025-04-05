@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { ProfileCompletion } from "@/components/profile/ProfileCompletion";
+import { SocialComingSoon } from "@/components/profile/SocialComingSoon";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -669,51 +670,9 @@ export function ProfileForm() {
                 
                 {/* Social/Community Tab */}
                 <TabsContent value="social" className="space-y-4 mt-0">
-                  <FormField
-                    control={form.control}
-                    name="coach"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Coach</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Your coach's name (optional)" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Enter your coach's name or leave blank. You can also connect with coaches through the Coaching Connections feature.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="clubs"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Clubs or Facilities</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Clubs or facilities you play at" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {/* Social coming soon component */}
+                  <SocialComingSoon />
                   
-                  <FormField
-                    control={form.control}
-                    name="leagues"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Leagues or Groups</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Leagues or groups you participate in" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
                   {/* Link to coaching connections */}
                   <div className="pt-2">
                     <div className="bg-muted/50 rounded-lg p-4">
