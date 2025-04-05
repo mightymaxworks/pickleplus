@@ -36,10 +36,12 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface RedeemCodeFormProps {
-  onCodeRedeemed?: (data: { message: string; xpEarned: number }) => void;
+  codeType?: string;
+  onSuccess?: (data: { message: string; xpEarned: number }) => void;
+  buttonText?: string;
 }
 
-export default function RedeemCodeForm({ onCodeRedeemed }: RedeemCodeFormProps) {
+export function RedeemCodeForm({ codeType = "coach", onSuccess, buttonText = "Unlock Coaching Access" }: RedeemCodeFormProps) {
   const [isRedeemed, setIsRedeemed] = useState(false);
   const { toast } = useToast();
   
@@ -68,8 +70,8 @@ export default function RedeemCodeForm({ onCodeRedeemed }: RedeemCodeFormProps) 
       setIsRedeemed(true);
       queryClient.invalidateQueries({ queryKey: ["/api/auth/current-user"] });
       
-      if (onCodeRedeemed) {
-        onCodeRedeemed(data);
+      if (onSuccess) {
+        onSuccess(data);
       }
     },
     onError: (error: Error) => {
@@ -165,7 +167,7 @@ export default function RedeemCodeForm({ onCodeRedeemed }: RedeemCodeFormProps) 
               ) : (
                 <div className="flex items-center">
                   <LockIcon className="mr-2 h-4 w-4" />
-                  Unlock Coaching Access
+                  {buttonText}
                 </div>
               )}
             </Button>
