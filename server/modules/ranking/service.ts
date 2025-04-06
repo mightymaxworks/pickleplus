@@ -190,8 +190,7 @@ export class MultiDimensionalRankingService {
       username: users.username,
       displayName: users.displayName,
       rankingPoints: playerRankings.rankingPoints,
-      avatarInitials: users.avatarInitials,
-      avatarUrl: users.avatarUrl
+      avatarInitials: users.avatarInitials
     })
     .from(playerRankings)
     .innerJoin(users, eq(playerRankings.userId, users.id))
