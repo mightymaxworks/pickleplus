@@ -498,7 +498,8 @@ export default function LandingPage() {
             viewport={{ once: true }}
             variants={fadeIn}
           >
-            <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">CourtIQ™ Intelligence System</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-1">CourtIQ™ Intelligence System</h2>
+            <div className="text-base font-semibold text-[#2196F3] mb-4">Powered by CourtIQ™</div>
             <p className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto">
               Your complete pickleball intelligence system that measures what matters through three interconnected metrics
             </p>
