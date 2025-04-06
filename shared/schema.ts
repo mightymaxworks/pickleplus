@@ -487,6 +487,15 @@ export type RedeemCode = z.infer<typeof redeemCodeSchema>;
 export type Login = z.infer<typeof loginSchema>;
 
 // Now define user relations after all tables are defined
+// Import CourtIQ relations for users
+import { 
+  playerRatings, 
+  playerRivals, 
+  rankingPoints, 
+  pointsHistory, 
+  ratingProtections 
+} from './courtiq-schema';
+
 export const usersRelations = relations(users, ({ many, one }) => ({
   tournamentRegistrations: many(tournamentRegistrations),
   userAchievements: many(userAchievements),
@@ -499,5 +508,13 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   rankingHistory: many(rankingHistory),
   coachingProfile: one(coachingProfiles),
   connectionRequestsSent: many(connections, { relationName: "connectionRequests" }),
-  connectionRequestsReceived: many(connections, { relationName: "connectionReceived" })
+  connectionRequestsReceived: many(connections, { relationName: "connectionReceived" }),
+  
+  // CourtIQ relations
+  playerRatings: many(playerRatings),
+  playerRivalsAsUser: many(playerRivals, { relationName: "userRivalries" }),
+  playerRivalsAsRival: many(playerRivals, { relationName: "rivalOf" }),
+  rankingPoints: many(rankingPoints),
+  pointsHistory: many(pointsHistory),
+  ratingProtections: many(ratingProtections)
 }));

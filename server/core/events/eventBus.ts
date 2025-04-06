@@ -1,84 +1,112 @@
 /**
- * Server-side EventBus
+ * Server Event Bus System
  * 
- * This provides similar functionality to the client-side EventBus
- * but is designed for server-side use.
+ * This provides a pub/sub event system for server-side module communication.
+ * It allows for loose coupling between modules and enables event-driven architecture.
  */
 
-type EventCallback = (data: any) => void | Promise<void>;
+// Type for event handler functions
+type EventHandler = (data: any) => Promise<void> | void;
+
+// Define standard server events
+export enum ServerEvents {
+  USER_CREATED = "user:created",
+  USER_UPDATED = "user:updated",
+  USER_DELETED = "user:deleted",
+  
+  MATCH_RECORDED = "match:recorded",
+  MATCH_UPDATED = "match:updated",
+  
+  TOURNAMENT_CREATED = "tournament:created",
+  TOURNAMENT_STARTED = "tournament:started",
+  TOURNAMENT_COMPLETED = "tournament:completed",
+  
+  ACHIEVEMENT_UNLOCKED = "achievement:unlocked",
+  
+  REDEMPTION_CODE_USED = "redemption_code:used",
+  
+  PLAYER_CONNECTED = "player:connected",
+  
+  SYSTEM_INITIALIZED = "system:initialized"
+}
 
 class EventBus {
-  private events: Map<string, EventCallback[]> = new Map();
+  private handlers: Map<string, EventHandler[]> = new Map();
 
   /**
    * Subscribe to an event
-   * @param event The event name to subscribe to
-   * @param callback The callback function to execute when the event occurs
-   * @returns A function to unsubscribe from the event
+   * @param event The event name or type
+   * @param handler The handler function
    */
-  subscribe(event: string, callback: EventCallback): () => void {
-    if (!this.events.has(event)) {
-      this.events.set(event, []);
+  subscribe(event: string | ServerEvents, handler: EventHandler): void {
+    const eventName = typeof event === 'string' ? event : event.toString();
+    
+    if (!this.handlers.has(eventName)) {
+      this.handlers.set(eventName, []);
     }
     
-    this.events.get(event)!.push(callback);
+    this.handlers.get(eventName)!.push(handler);
+  }
+
+  /**
+   * Unsubscribe from an event
+   * @param event The event name or type
+   * @param handler The handler function to remove
+   */
+  unsubscribe(event: string | ServerEvents, handler: EventHandler): void {
+    const eventName = typeof event === 'string' ? event : event.toString();
     
-    // Return unsubscribe function
-    return () => {
-      const callbacks = this.events.get(event);
-      if (!callbacks) return;
-      
-      const index = callbacks.indexOf(callback);
-      if (index > -1) {
-        callbacks.splice(index, 1);
-      }
-    };
+    if (!this.handlers.has(eventName)) {
+      return;
+    }
+    
+    const handlers = this.handlers.get(eventName)!;
+    const index = handlers.indexOf(handler);
+    
+    if (index !== -1) {
+      handlers.splice(index, 1);
+    }
   }
 
   /**
    * Publish an event
-   * @param event The event name to publish
-   * @param data The data to pass to event subscribers
+   * @param event The event name or type
+   * @param data The event data
    */
-  async publish(event: string, data: any): Promise<void> {
-    if (!this.events.has(event)) return;
+  async publish(event: string | ServerEvents, data: any = {}): Promise<void> {
+    const eventName = typeof event === 'string' ? event : event.toString();
     
-    const callbacks = this.events.get(event)!;
-    
-    for (const callback of callbacks) {
-      try {
-        await Promise.resolve(callback(data));
-      } catch (error) {
-        console.error(`Error in server event subscriber for "${event}":`, error);
-      }
+    if (!this.handlers.has(eventName)) {
+      return;
     }
+    
+    const handlers = this.handlers.get(eventName)!;
+    
+    // Execute all handlers in parallel
+    await Promise.all(handlers.map(handler => {
+      try {
+        return Promise.resolve(handler(data));
+      } catch (error) {
+        console.error(`Error in event handler for ${eventName}:`, error);
+        return Promise.resolve();
+      }
+    }));
+  }
+
+  /**
+   * Clear all event handlers
+   */
+  clear(): void {
+    this.handlers.clear();
+  }
+
+  /**
+   * Get all event types currently registered
+   */
+  getRegisteredEvents(): string[] {
+    return Array.from(this.handlers.keys());
   }
 }
 
-// Create a singleton instance
+// Create and export a singleton instance
 export const serverEventBus = new EventBus();
-
-// Export common event names as constants
-export const ServerEvents = {
-  // User events
-  USER_CREATED: 'user:created',
-  USER_UPDATED: 'user:updated',
-  USER_LOGGED_IN: 'user:logged_in',
-  
-  // Match events
-  MATCH_RECORDED: 'match:recorded',
-  
-  // Achievement events
-  ACHIEVEMENT_UNLOCKED: 'achievement:unlocked',
-  XP_EARNED: 'xp:earned',
-  
-  // Tournament events
-  TOURNAMENT_REGISTERED: 'tournament:registered',
-  TOURNAMENT_CHECKED_IN: 'tournament:checked_in',
-  
-  // Code redemption events
-  CODE_REDEEMED: 'code:redeemed',
-  
-  // Coaching events
-  COACHING_SESSION_BOOKED: 'coaching:session_booked',
-};
