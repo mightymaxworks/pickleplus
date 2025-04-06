@@ -1083,45 +1083,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.query.userId ? parseInt(req.query.userId as string) : (req.user as any).id;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
       
-      // Try to get data from storage
-      let rankingHistory = await storage.getUserRankingHistory(userId, limit);
-      
-      // If no data is available, generate mock data
-      if (!rankingHistory || rankingHistory.length === 0) {
-        const now = new Date();
-        const mockHistory = [];
+      // Get data from the multi-dimensional ranking system
+      // This is now a redirect to the new API endpoint
+      try {
+        const history = await multiDimensionalRankingService.getUserRankingHistory(userId);
         
-        // Generate entries going back in time (newest first)
-        let currentPoints = 750; // Current point value
+        // Take only the most recent entries if limit is specified
+        const limitedHistory = limit ? history.slice(0, limit) : history;
         
-        for (let i = 0; i < limit; i++) {
-          const daysAgo = i * 3; // Each entry is 3 days apart
-          const entryDate = new Date(now.getTime() - (daysAgo * 24 * 60 * 60 * 1000));
-          
-          // Randomly determine point change (-5 to +20)
-          const pointChange = Math.floor(Math.random() * 26) - 5;
-          const oldPoints = currentPoints - pointChange;
-          
-          // Create history entry
-          mockHistory.push({
-            id: 1000 + i,
-            userId,
-            oldRanking: oldPoints,
-            newRanking: currentPoints,
-            changeDate: entryDate.toISOString(),
-            reason: getRandomReason(pointChange),
-            matchId: Math.random() > 0.3 ? 2000 + i : null // 70% chance to have a match
-          });
-          
-          // Set up for next entry
-          currentPoints = oldPoints;
-        }
+        // Format the response to maintain backward compatibility with the old API
+        const formattedHistory = limitedHistory.map(entry => ({
+          id: entry.id,
+          userId: entry.userId,
+          oldRanking: entry.oldRanking,
+          newRanking: entry.newRanking,
+          changeDate: entry.createdAt,
+          reason: entry.reason,
+          matchId: entry.matchId,
+          format: entry.format,
+          ageDivision: entry.ageDivision,
+          ratingTierId: entry.ratingTierId
+        }));
         
-        // Reverse to get oldest first
-        rankingHistory = mockHistory.reverse();
+        res.json(formattedHistory);
+      } catch (err) {
+        console.error("Error retrieving multi-dimensional ranking history:", err);
+        res.status(500).json({ message: "Error retrieving ranking history" });
       }
-      
-      res.json(rankingHistory);
     } catch (error) {
       console.error("Error retrieving ranking history:", error);
       res.status(500).json({ message: "Error retrieving ranking history" });
