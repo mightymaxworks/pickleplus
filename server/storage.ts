@@ -1559,8 +1559,20 @@ export class MemStorage implements IStorage {
 export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      
+      // If the 'avatarUrl' column doesn't exist in the database, Postgres would throw an error
+      // So we'll add the property manually here
+      if (user && !('avatarUrl' in user)) {
+        (user as any).avatarUrl = null; 
+      }
+      
+      return user;
+    } catch (error) {
+      console.error('[Storage] getUser error:', error);
+      return undefined;
+    }
   }
   
   async getUserCount(): Promise<number> {
@@ -1682,23 +1694,59 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user;
+    try {
+      const [user] = await db.select().from(users).where(eq(users.username, username));
+      
+      // If the 'avatarUrl' column doesn't exist in the database, Postgres would throw an error
+      // So we'll add the property manually here
+      if (user && !('avatarUrl' in user)) {
+        (user as any).avatarUrl = null; 
+      }
+      
+      return user;
+    } catch (error) {
+      console.error('[Storage] getUserByUsername error:', error);
+      return undefined;
+    }
   }
   
   async getUserByIdentifier(identifier: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(
-      or(
-        eq(users.username, identifier),
-        eq(users.email, identifier)
-      )
-    );
-    return user;
+    try {
+      const [user] = await db.select().from(users).where(
+        or(
+          eq(users.username, identifier),
+          eq(users.email, identifier)
+        )
+      );
+      
+      // If the 'avatarUrl' column doesn't exist in the database, Postgres would throw an error
+      // So we'll add the property manually here
+      if (user && !('avatarUrl' in user)) {
+        (user as any).avatarUrl = null; 
+      }
+      
+      return user;
+    } catch (error) {
+      console.error('[Storage] getUserByIdentifier error:', error);
+      return undefined;
+    }
   }
   
   async getUserByPassportId(passportId: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.passportId, passportId));
-    return user;
+    try {
+      const [user] = await db.select().from(users).where(eq(users.passportId, passportId));
+      
+      // If the 'avatarUrl' column doesn't exist in the database, Postgres would throw an error
+      // So we'll add the property manually here
+      if (user && !('avatarUrl' in user)) {
+        (user as any).avatarUrl = null; 
+      }
+      
+      return user;
+    } catch (error) {
+      console.error('[Storage] getUserByPassportId error:', error);
+      return undefined;
+    }
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
