@@ -266,6 +266,78 @@ export const insertRatingProtectionSchema = createInsertSchema(ratingProtections
 export const insertTournamentEligibilitySchema = createInsertSchema(tournamentEligibility)
   .omit({ id: true, createdAt: true, updatedAt: true });
 
+// XP Levels table
+// Defines the level thresholds and unlocks
+export const xpLevels = pgTable("xp_levels", {
+  id: serial("id").primaryKey(),
+  level: integer("level").notNull().unique(),
+  name: text("name").notNull(),
+  minXP: integer("min_xp").notNull(),
+  maxXP: integer("max_xp").notNull(),
+  badgeUrl: text("badge_url"),
+  colorCode: text("color_code"),
+  description: text("description"),
+  unlocks: json("unlocks").default([]) // Features or privileges unlocked at this level
+});
+
+// XP History table
+// Tracks all XP transactions
+export const xpHistory = pgTable("xp_history", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  amount: integer("amount").notNull(), // Can be positive or negative
+  source: text("source").notNull(), // "match_played", "match_won", "achievement", "tournament_checkin", "code_redemption", etc.
+  sourceId: integer("source_id"), // ID of the source (match ID, achievement ID, etc.)
+  multiplier: integer("multiplier").default(100), // 100 = 1.0x, 110 = 1.1x, etc.
+  newTotal: integer("new_total").notNull(), // Total XP after this transaction
+  newLevel: integer("new_level").notNull(), // Level after this transaction
+  wasLevelUp: boolean("was_level_up").default(false), // Whether this transaction caused a level up
+  notes: text("notes"),
+  metadata: json("metadata").default({}), // Additional context about the transaction
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// XP Multipliers table
+// Tracks active XP multipliers
+export const xpMultipliers = pgTable("xp_multipliers", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  value: integer("value").notNull().default(100), // 100 = 1.0x, 150 = 1.5x, etc.
+  reason: text("reason").notNull(), // "founding_member", "special_code", "event", etc.
+  sourceId: integer("source_id"), // ID of the source (code ID, event ID, etc.)
+  startDate: timestamp("start_date").defaultNow(),
+  endDate: timestamp("end_date"), // When the multiplier expires
+  isActive: boolean("is_active").default(true),
+  stackable: boolean("stackable").default(false), // Whether this multiplier can stack with others
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Create insert schemas for XP tables
+export const insertXpLevelSchema = createInsertSchema(xpLevels)
+  .omit({ id: true });
+
+export const insertXpHistorySchema = createInsertSchema(xpHistory)
+  .omit({ id: true, createdAt: true });
+  
+export const insertXpMultiplierSchema = createInsertSchema(xpMultipliers)
+  .omit({ id: true, createdAt: true });
+
+// Relations for XP tables
+export const xpHistoryRelations = relations(xpHistory, ({ one }) => ({
+  user: one(users, {
+    fields: [xpHistory.userId],
+    references: [users.id]
+  })
+}));
+
+export const xpMultipliersRelations = relations(xpMultipliers, ({ one }) => ({
+  user: one(users, {
+    fields: [xpMultipliers.userId],
+    references: [users.id]
+  })
+}));
+
 // Types
 
 export type PlayerRating = typeof playerRatings.$inferSelect;
@@ -294,3 +366,12 @@ export type InsertRatingProtection = z.infer<typeof insertRatingProtectionSchema
 
 export type TournamentEligibility = typeof tournamentEligibility.$inferSelect;
 export type InsertTournamentEligibility = z.infer<typeof insertTournamentEligibilitySchema>;
+
+export type XpLevel = typeof xpLevels.$inferSelect;
+export type InsertXpLevel = z.infer<typeof insertXpLevelSchema>;
+
+export type XpHistory = typeof xpHistory.$inferSelect;
+export type InsertXpHistory = z.infer<typeof insertXpHistorySchema>;
+
+export type XpMultiplier = typeof xpMultipliers.$inferSelect;
+export type InsertXpMultiplier = z.infer<typeof insertXpMultiplierSchema>;
