@@ -1078,9 +1078,12 @@ export class CourtIQService {
    * @param matchData Match data including players, outcome, context
    * @returns Object containing point calculation details
    */
+  /**
+   * Calculate ranking points for a match with updated conservative point allocation
+   */
   async calculateRankingPointsForMatch(matchData: {
-    matchType: string;            // "casual", "league", "tournament"
-    eventTier?: string;           // "local", "regional", "national", "international"
+    matchType: string;                      // "casual", "league", "tournament"
+    eventTier?: string;                     // "local", "regional", "national", "international"
     winner: {
       userId: number;
       division: string;
@@ -1091,13 +1094,25 @@ export class CourtIQService {
       division: string;
       format: string;
     };
-    isTournamentFinal?: boolean;  // Whether this is a tournament final match
-    isTournamentSemiFinal?: boolean; // Whether this is a tournament semi-final
-    participantCount?: number;    // Number of participants in the event
+    tournamentFormat?: {                    // New tournament format information
+      stageType?: string;                   // "round_robin", "qualifying", "knockout", "consolation"
+      isFirstRound?: boolean;               // Whether this is a first round match
+      isFinal?: boolean;                    // Whether this is a tournament final match
+      isSemiFinal?: boolean;                // Whether this is a tournament semi-final
+      roundNumber?: number;                 // Round number in the tournament
+      stageCompleted?: boolean;             // Whether a complete stage was completed (e.g., qualified for main draw)
+    };
+    participantCount?: number;              // Number of participants in the event
+    matchQuality?: {                        // Match quality information
+      scorePointDifferential?: number;      // Point differential in the final game
+      qualityMultiplier?: number;           // Pre-calculated match quality multiplier (0.9, 1.0, 1.1)
+    };
   }): Promise<{
     total: number;
     base: number;
     ratingBonus: number;
+    stageMultiplier: number;
+    qualityMultiplier: number;
     basePointsExplanation: string;
     bonusExplanation: string;
     contextualFactors: string[];
@@ -1119,171 +1134,254 @@ export class CourtIQService {
       throw new Error("Player ratings not found");
     }
     
-    // Base points based on match type and event tier
+    // Base points based on match type and event tier with the new conservative values
     let basePoints: number;
     let basePointsExplanation: string;
     
-    // Base point structure from our established guidelines
+    // Base point structure from our updated conservative guidelines
     switch (matchData.matchType) {
       case "casual":
-        basePoints = 10;
+        basePoints = 2; // Reduced from 10 to 2
         basePointsExplanation = "Casual match victory";
         break;
       case "league":
-        if (matchData.eventTier === "regional") {
-          basePoints = 30;
-          basePointsExplanation = "Regional league match victory";
+        if (matchData.eventTier === "premium" || matchData.eventTier === "regional") {
+          basePoints = 10; // Reduced from 30 to 10
+          basePointsExplanation = "Premium/Regional league match victory";
         } else {
-          basePoints = 20;
+          basePoints = 5; // Reduced from 20 to 5
           basePointsExplanation = "Local league match victory";
         }
         break;
       case "tournament":
         switch (matchData.eventTier) {
           case "local":
-            basePoints = 25;
+            basePoints = 8; // Reduced from 25 to 8
             basePointsExplanation = "Local tournament match victory";
             break;
           case "regional":
-            basePoints = 40;
+            basePoints = 15; // Reduced from 40 to 15
             basePointsExplanation = "Regional tournament match victory";
             break;
           case "national":
-            basePoints = 70;
+            basePoints = 30; // Reduced from 70 to 30
             basePointsExplanation = "National tournament match victory";
             break;
           case "international":
-            basePoints = 100;
+            basePoints = 60; // Reduced from 100 to 60
             basePointsExplanation = "International tournament match victory";
             break;
           default:
-            basePoints = 25;
+            basePoints = 8; // Default to local tournament
             basePointsExplanation = "Tournament match victory";
         }
         break;
       default:
-        basePoints = 10;
+        basePoints = 2; // Default to casual match
         basePointsExplanation = "Match victory";
     }
     
     // Calculate rating differential bonus
     const ratingDiff = Math.max(0, loserRating.rating - winnerRating.rating);
     
-    // Determine bonus multiplier based on match type
-    let bonusMultiplier: number;
-    switch (matchData.matchType) {
-      case "casual":
-        bonusMultiplier = 1; // +1 per 100 rating diff
-        break;
-      case "league":
-        bonusMultiplier = 2; // +2 per 100 rating diff
-        break;
-      case "tournament":
-        switch (matchData.eventTier) {
-          case "local":
-            bonusMultiplier = 3; // +3 per 100 rating diff
-            break;
-          case "regional":
-            bonusMultiplier = 4; // +4 per 100 rating diff
-            break;
-          case "national":
-            bonusMultiplier = 5; // +5 per 100 rating diff
-            break;
-          case "international":
-            bonusMultiplier = 8; // +8 per 100 rating diff
-            break;
-          default:
-            bonusMultiplier = 3;
-        }
-        break;
-      default:
-        bonusMultiplier = 1;
-    }
-    
-    // Calculate bonus points from rating differential
-    const ratingBonus = Math.floor(ratingDiff / 100) * bonusMultiplier;
+    // Apply the reduced rating differential bonus (0.5 per 50 points)
+    const ratingBonus = Math.floor(ratingDiff / 50) * 0.5;
+    const roundedRatingBonus = Math.round(ratingBonus * 2) / 2; // Round to nearest 0.5
     
     // Generate explanation for the bonus
     let bonusExplanation = "";
-    if (ratingBonus > 0) {
-      bonusExplanation = `Upset bonus: +${ratingBonus} points for defeating a player rated ${ratingDiff} points higher`;
+    if (roundedRatingBonus > 0) {
+      bonusExplanation = `Upset bonus: +${roundedRatingBonus} points for defeating a player rated ${ratingDiff} points higher`;
     } else {
       bonusExplanation = "No rating differential bonus";
     }
     
+    // Stage multiplier for tournament format types
+    let stageMultiplier = 1.0;
+    const isTournament = matchData.matchType === "tournament";
+    const tournamentFormat = matchData.tournamentFormat || {};
+    const isTournamentFinal = tournamentFormat.isFinal || false;
+    const isSemiFinal = tournamentFormat.isSemiFinal || false;
+    
     // Additional contextual factors
     const contextualFactors: string[] = [];
-    let contextBonus = 0;
     
-    // Tournament finals/semifinals bonus
-    if (matchData.isTournamentFinal) {
-      let finalBonus = 0;
-      switch (matchData.eventTier) {
-        case "local":
-          finalBonus = 10;
-          break;
-        case "regional":
-          finalBonus = 15;
-          break;
-        case "national":
-          finalBonus = 30;
-          break;
-        case "international":
-          finalBonus = 50;
-          break;
-        default:
-          finalBonus = 10;
-      }
-      contextBonus += finalBonus;
-      contextualFactors.push(`Tournament final: +${finalBonus} points`);
-    } else if (matchData.isTournamentSemiFinal) {
-      let semiBonus = 0;
-      switch (matchData.eventTier) {
-        case "regional":
-          semiBonus = 5;
-          break;
-        case "national":
-          semiBonus = 15;
-          break;
-        case "international":
-          semiBonus = 25;
-          break;
-        default:
-          semiBonus = 0;
-      }
-      
-      if (semiBonus > 0) {
-        contextBonus += semiBonus;
-        contextualFactors.push(`Tournament semi-final: +${semiBonus} points`);
+    // Apply tournament stage multipliers
+    if (isTournament) {
+      if (tournamentFormat.stageType === "round_robin") {
+        stageMultiplier = 0.5; // 50% of base points for round robin matches
+        contextualFactors.push(`Round robin match: base points × 0.5`);
+      } else if (tournamentFormat.stageType === "qualifying") {
+        stageMultiplier = 0.4; // 40% of base points for qualifying matches
+        contextualFactors.push(`Qualifying match: base points × 0.4`);
+        
+        // Add qualifying bonus if applicable
+        if (tournamentFormat.stageCompleted) {
+          // This would be handled separately in a different method that awards a one-time bonus
+          contextualFactors.push(`Qualified for main draw (bonus awarded separately)`);
+        }
+      } else if (tournamentFormat.stageType === "consolation") {
+        stageMultiplier = 0.3; // 30% of base points for consolation matches
+        contextualFactors.push(`Consolation match: base points × 0.3`);
+      } else if (isTournamentFinal) {
+        stageMultiplier = 2.0; // 200% for finals
+        contextualFactors.push(`Tournament final: base points × 2.0`);
+      } else if (isSemiFinal) {
+        stageMultiplier = 1.5; // 150% for semifinals
+        contextualFactors.push(`Tournament semi-final: base points × 1.5`);
+      } else if (tournamentFormat.roundNumber) {
+        // Apply round-based multipliers for knockout stages
+        const roundNumber = tournamentFormat.roundNumber;
+        if (roundNumber >= 3) { // Quarterfinals or later
+          stageMultiplier = 1.2; // 120% for quarterfinals and beyond
+          contextualFactors.push(`Advanced tournament round: base points × 1.2`);
+        }
       }
     }
     
-    // Participant count scaling
+    // Apply match quality multiplier
+    let qualityMultiplier = 1.0;
+    if (matchData.matchQuality) {
+      if (matchData.matchQuality.qualityMultiplier) {
+        qualityMultiplier = matchData.matchQuality.qualityMultiplier;
+      } else if (matchData.matchQuality.scorePointDifferential !== undefined) {
+        const differential = matchData.matchQuality.scorePointDifferential;
+        if (differential <= 2) {
+          qualityMultiplier = 1.1; // Close match bonus
+          contextualFactors.push(`Close match: total points × 1.1`);
+        } else if (differential >= 7) {
+          qualityMultiplier = 0.9; // Decisive victory adjustment
+          contextualFactors.push(`Decisive victory: total points × 0.9`);
+        }
+      }
+    }
+    
+    // Participant count scaling (retained from previous implementation)
     if (matchData.participantCount && matchData.participantCount > 20) {
-      const participantMultiplier = Math.min(0.8 + (matchData.participantCount / 100), 1.5);
-      const originalTotal = basePoints + ratingBonus + contextBonus;
-      const newTotal = Math.round(originalTotal * participantMultiplier);
-      const participantBonus = newTotal - originalTotal;
-      
-      if (participantBonus > 0) {
-        contextBonus += participantBonus;
-        contextualFactors.push(`Large event bonus: +${participantBonus} points (${matchData.participantCount} participants)`);
+      const sizeMultiplier = Math.min(0.8 + (matchData.participantCount / 100), 1.2);
+      if (sizeMultiplier > 1.0) {
+        contextualFactors.push(`Large event bonus: total points × ${sizeMultiplier.toFixed(2)} (${matchData.participantCount} participants)`);
+        qualityMultiplier *= sizeMultiplier;
       }
     }
     
-    // Calculate total points
-    const total = basePoints + ratingBonus + contextBonus;
+    // Calculate adjusted base points with stage multiplier
+    const adjustedBasePoints = basePoints * stageMultiplier;
+    
+    // Calculate total points before quality multiplier
+    const subtotal = adjustedBasePoints + roundedRatingBonus;
+    
+    // Apply quality multiplier to the total
+    const total = Math.round(subtotal * qualityMultiplier * 10) / 10; // Round to nearest 0.1
     
     return {
       total,
       base: basePoints,
-      ratingBonus,
+      ratingBonus: roundedRatingBonus,
+      stageMultiplier,
+      qualityMultiplier,
       basePointsExplanation,
       bonusExplanation,
       contextualFactors
     };
   }
 
+  /**
+   * Calculate and award points for a losing player
+   * Implements the losers points system for inclusivity
+   */
+  async calculateLoserPoints(
+    matchData: {
+      matchType: string;                  // "casual", "league", "tournament"
+      eventTier?: string;                 // "local", "regional", "national", "international"
+      winnerId: number;                   // ID of the winning player (needed for reference)
+      loserId: number;                    // ID of the losing player
+      division: string;                   // Age division
+      format: string;                     // Format type (singles, doubles, etc.)
+      pointsWinnerReceived: number;       // How many points the winner received
+      tournamentFormat?: {
+        stageType?: string;               // "round_robin", "qualifying", "knockout", "consolation"
+        isFirstRound?: boolean;           // Whether this is a first round match
+        isFinal?: boolean;                // Whether this is a tournament final match
+      };
+      matchQuality?: {
+        scorePointDifferential?: number;  // Score differential
+        qualityMultiplier?: number;       // Pre-calculated quality multiplier
+      };
+    }
+  ): Promise<{
+    points: number;
+    explanation: string;
+  }> {
+    let basePoints = 0;
+    let pointsExplanation = "";
+    let loserRatio = 0; // Percentage of winner's points
+    
+    // Determine percentage of winner's points based on match context
+    if (matchData.tournamentFormat?.isFinal) {
+      // Tournament runner-up gets significant points
+      loserRatio = 0.6; // 60% of winner's points
+      pointsExplanation = "Tournament runner-up";
+    } else if (matchData.matchType === "casual") {
+      loserRatio = 0.25; // 25% of winner's points (0.5 points for 2-point casual matches)
+      pointsExplanation = "Casual match participation";
+    } else if (matchData.matchType === "league") {
+      loserRatio = 0.2; // 20% of winner's points
+      pointsExplanation = "League match participation";
+    } else if (matchData.matchType === "tournament") {
+      if (matchData.tournamentFormat?.isFirstRound) {
+        loserRatio = 0.2; // 20% for first round loss
+        pointsExplanation = "Tournament first round participation";
+      } else {
+        loserRatio = 0.25; // 25% for later round loss
+        pointsExplanation = "Tournament match participation";
+      }
+    }
+    
+    // Calculate base points
+    basePoints = matchData.pointsWinnerReceived * loserRatio;
+    
+    // Apply match quality multiplier for losers if available
+    let qualityMultiplier = 1.0;
+    if (matchData.matchQuality) {
+      if (matchData.matchQuality.qualityMultiplier) {
+        qualityMultiplier = matchData.matchQuality.qualityMultiplier;
+      } else if (matchData.matchQuality.scorePointDifferential !== undefined) {
+        const differential = matchData.matchQuality.scorePointDifferential;
+        if (differential <= 2) {
+          // Close match - both players get bonus
+          qualityMultiplier = 1.1;
+          pointsExplanation += " (close match bonus +10%)";
+        } else if (differential >= 7) {
+          // Decisive loss - loser actually gets a bonus for learning opportunity
+          qualityMultiplier = 1.1;
+          pointsExplanation += " (competitive learning bonus +10%)";
+        }
+      }
+    }
+    
+    // Calculate final points with multiplier
+    const points = Math.round(basePoints * qualityMultiplier * 10) / 10; // Round to nearest 0.1
+    
+    // Award the points to the loser
+    await this.awardRankingPoints(
+      matchData.loserId,
+      points,
+      matchData.division,
+      matchData.format,
+      "match_participation",
+      matchData.matchType,
+      matchData.eventTier,
+      undefined, // winType
+      undefined, // sourceId
+      undefined, // ratingDifferential
+      qualityMultiplier,
+      pointsExplanation
+    );
+    
+    return { points, explanation: pointsExplanation };
+  }
+  
   /**
    * Award ranking points with enhanced tracking of rating differentials
    * Extended version of the basic awardRankingPoints method
@@ -1412,6 +1510,58 @@ export class CourtIQService {
     if (points < 1000) return "Elite";
     if (points < 2000) return "Master";
     return "Champion";
+  }
+  
+  /**
+   * Calculate match quality multiplier based on score differential
+   * @param scoreWinner The score of the winning player/team
+   * @param scoreLoser The score of the losing player/team  
+   * @param isWinner Whether this calculation is for the winner (affects multiplier value)
+   * @returns Match quality multiplier (0.9, 1.0, or 1.1)
+   */
+  calculateMatchQualityMultiplier(
+    scoreWinner: string,
+    scoreLoser: string,
+    isWinner: boolean
+  ): number {
+    try {
+      // Parse scores to get the final game difference
+      const parseGameScore = (scoreStr: string): number[] => {
+        return scoreStr.split('-').map(s => {
+          const num = parseInt(s.trim(), 10);
+          return isNaN(num) ? 0 : num;
+        });
+      };
+      
+      const winnerGames = parseGameScore(scoreWinner);
+      const loserGames = parseGameScore(scoreLoser);
+      
+      if (winnerGames.length === 0 || loserGames.length === 0) {
+        return 1.0; // Default multiplier if parsing fails
+      }
+      
+      // Get the last game scores (final game of the match)
+      const lastGameWinner = winnerGames[winnerGames.length - 1] || 0;
+      const lastGameLoser = loserGames[loserGames.length - 1] || 0;
+      
+      // Calculate point differential in the final game
+      const differential = Math.abs(lastGameWinner - lastGameLoser);
+      
+      if (differential <= 2) {
+        // Close match: Both players get 1.1x (winner and loser)
+        return 1.1;
+      } else if (differential >= 7) {
+        // Decisive victory:
+        // Winner gets 0.9x (slightly reduced as it wasn't highly competitive)
+        // Loser gets 1.1x (learning bonus for playing a much better opponent)
+        return isWinner ? 0.9 : 1.1;
+      }
+      
+      return 1.0; // Default: no adjustment for normal matches
+    } catch (error) {
+      console.error("Error calculating match quality multiplier:", error);
+      return 1.0; // Default to no adjustment on error
+    }
   }
 
   /**

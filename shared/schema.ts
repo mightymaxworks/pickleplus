@@ -72,7 +72,17 @@ export const tournaments = pgTable("tournaments", {
   endDate: timestamp("end_date").notNull(),
   location: text("location").notNull(),
   description: text("description"),
-  imageUrl: text("image_url")
+  imageUrl: text("image_url"),
+  
+  // Tournament format fields
+  hasQualifying: boolean("has_qualifying").default(false),
+  hasRoundRobin: boolean("has_round_robin").default(false),
+  hasConsolation: boolean("has_consolation").default(false),
+  knockoutRounds: integer("knockout_rounds").default(1),
+  
+  // Tournament categorization
+  eventTier: text("event_tier").default("local"), // local, regional, national, international
+  maxParticipants: integer("max_participants")
 });
 
 export const tournamentsRelations = relations(tournaments, ({ many }) => ({
@@ -212,11 +222,28 @@ export const matches = pgTable("matches", {
   formatType: text("format_type").notNull().default("singles"), // singles, doubles
   scoringSystem: text("scoring_system").notNull().default("traditional"), // traditional, rally
   pointsToWin: integer("points_to_win").notNull().default(11), // 11, 15, 21
+  
+  // Tournament-related fields
   tournamentId: integer("tournament_id").references(() => tournaments.id),
+  eventTier: text("event_tier"), // local, regional, national, international
+  
+  // Tournament stage information
+  stageType: text("stage_type"), // round_robin, qualifying, knockout, consolation
+  roundNumber: integer("round_number"), // 1 for first round, increases with each round
+  isFirstRound: boolean("is_first_round").default(false),
+  isFinal: boolean("is_final").default(false), 
+  isSemiFinal: boolean("is_semi_final").default(false),
+  
+  // Other match fields
   matchDate: timestamp("match_date").defaultNow(),
   location: text("location"),
   notes: text("notes"),
   gameScores: json("game_scores").default([]), // Array of game scores for multi-game matches
+  division: text("division"), // Age division for the match
+  
+  // Match quality indicators for later analytics
+  scorePointDifferential: integer("score_point_differential"), // Final point differential
+  matchQualityMultiplier: decimal("match_quality_multiplier", { precision: 3, scale: 2 }).default("1.00"), // 0.9, 1.0, 1.1
 });
 
 export const matchesRelations = relations(matches, ({ one }) => ({
