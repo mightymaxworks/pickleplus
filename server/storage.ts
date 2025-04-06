@@ -19,7 +19,12 @@ import { db } from "./db";
 import { eq, and, or, desc, asc, sql } from "drizzle-orm";
 
 // Storage interface for all CRUD operations
+import session from "express-session";
+import connectPg from "connect-pg-simple";
+import MemoryStore from "memorystore";
+
 export interface IStorage {
+  sessionStore: session.SessionStore;
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -150,6 +155,7 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
+  sessionStore: session.SessionStore;
   private users: Map<number, User>;
   private tournaments: Map<number, Tournament>;
   private tournamentRegistrations: Map<number, TournamentRegistration>;
@@ -183,6 +189,10 @@ export class MemStorage implements IStorage {
   private userBlockListId: number;
 
   constructor() {
+    const MemoryStore = MemoryStore(session);
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000, // Prune expired entries every 24h
+    });
     this.users = new Map();
     this.tournaments = new Map();
     this.tournamentRegistrations = new Map();
@@ -1557,6 +1567,18 @@ export class MemStorage implements IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  sessionStore: session.SessionStore;
+  
+  constructor() {
+    const PostgresSessionStore = connectPg(session);
+    this.sessionStore = new PostgresSessionStore({
+      conObject: {
+        connectionString: process.env.DATABASE_URL,
+      },
+      createTableIfMissing: true
+    });
+  }
+  
   // User operations
   async getUser(id: number): Promise<User | undefined> {
     try {

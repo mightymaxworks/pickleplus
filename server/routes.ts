@@ -1,15 +1,14 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import passport from "passport";
+import bcrypt from "bcryptjs";
 import session from "express-session";
 import MemoryStore from "memorystore";
-import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import bcrypt from "bcryptjs";
 import { 
   insertUserSchema,
   registerUserSchema,
-  loginSchema, 
   insertTournamentRegistrationSchema, 
   redeemCodeSchema,
   insertMatchSchema,
@@ -18,7 +17,7 @@ import {
 import { ZodError } from "zod";
 import { generatePassportId, validatePassportId } from "./utils/passport-id";
 import { xpService } from "./services";
-import { isAdmin } from "./core/middleware/auth";
+import { setupAuth, isAuthenticated, isAdmin, loginSchema, registerSchema, hashPassword } from "./auth";
 
 // Import CourtIQ and XP systems
 import { courtIQService as courtIQSystem } from "./modules/rating/courtiq";
@@ -51,94 +50,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const userRouter = initializeUserModule();
   app.use("/api/user", userRouter);
   
-  // Set up session middleware
-  // Configure session with clear settings for cookie handling
-  const sessionConfig = {
-    store: new SessionStore({
-      checkPeriod: 86400000, // prune expired entries every 24h
-    }),
-    secret: process.env.SESSION_SECRET || "pickle-plus-secret",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      secure: false, // Set to true in production with HTTPS
-      httpOnly: true,
-      sameSite: "lax" as const, // TypeScript needs this cast for Express session options
-      path: '/',
-      domain: undefined // Let browser determine domain for best compatibility
-    },
-    name: 'connect.sid' // Use default Express session cookie name for better compatibility
-  };
-  
-  console.log("Session configuration:", {
-    ...sessionConfig,
-    secret: "[REDACTED]", // Don't log secret
-    store: "SessionStore instance", // Don't log full store
-  });
-  
-  app.use(session(sessionConfig));
-  
   // Trust proxy - important for secure cookies in production
   app.set('trust proxy', 1);
 
-  // Set up passport
-  app.use(passport.initialize());
-  app.use(passport.session());
-
-  // Define passport strategies
-  passport.use(
-    new LocalStrategy({
-      usernameField: 'username', // Use the 'username' field from the login request
-      passwordField: 'password'
-    }, async (username, password, done) => {
-      try {
-        // Try to find user by either username or email
-        const user = await storage.getUserByIdentifier(username);
-        if (!user) {
-          return done(null, false, { message: "User not found" });
-        }
-
-        // Verify password
-        const passwordMatch = await bcrypt.compare(password, user.password);
-        if (!passwordMatch) {
-          return done(null, false, { message: "Incorrect password" });
-        }
-
-        // Remove password before returning user object
-        const { password: _, ...userWithoutPassword } = user;
-        return done(null, userWithoutPassword);
-      } catch (error) {
-        return done(error);
-      }
-    })
-  );
-
-  passport.serializeUser((user: any, done) => {
-    done(null, user.id);
-  });
-
-  passport.deserializeUser(async (id: number, done) => {
-    try {
-      const user = await storage.getUser(id);
-      if (!user) {
-        return done(null, false);
-      }
-      // Remove password before returning user object
-      const { password, ...userWithoutPassword } = user;
-      done(null, userWithoutPassword);
-    } catch (error) {
-      done(error);
-    }
-  });
-
-  // Middleware to check if user is authenticated
-  const isAuthenticated = (req: Request, res: Response, next: any) => {
-    if (req.isAuthenticated()) {
-      return next();
-    }
-    res.status(401).json({ message: "Unauthorized" });
-  };
+  // Set up authentication (including session, passport initialization, and strategies)
+  setupAuth(app);
 
   // Auth routes
   app.post("/api/auth/register", async (req: Request, res: Response) => {

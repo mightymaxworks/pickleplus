@@ -7,8 +7,9 @@ interface AuthLayoutProps {
 }
 
 export function AuthLayout({ children }: AuthLayoutProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const [, navigate] = useLocation();
+  const isAuthenticated = !!user;
   
   // Redirect to dashboard if already authenticated
   useEffect(() => {

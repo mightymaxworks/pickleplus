@@ -42,11 +42,11 @@ type RegisterData = {
   username: string;
   email: string;
   password: string;
-  displayName?: string;
+  displayName: string;
   yearOfBirth?: number | null;
-  location?: string;
-  playingSince?: string;
-  skillLevel?: string;
+  location?: string | null;
+  playingSince?: string | null;
+  skillLevel?: string | null;
 };
 
 // Create auth context

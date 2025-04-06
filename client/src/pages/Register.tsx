@@ -64,13 +64,13 @@ export default function Register() {
       // Create a properly formatted registration object matching RegisterData type
       const registrationData = {
         username: formData.username,
-        email: formData.email || "",
+        email: formData.email,
         password: formData.password,
         displayName: formData.displayName, // Make sure to include displayName
-        firstName,
-        lastName,
         yearOfBirth: formData.yearOfBirth || null,
         location: formData.location || null,
+        playingSince: formData.playingSince || null,
+        skillLevel: formData.skillLevel || null,
       };
       
       console.log("Submitting registration data:", {...registrationData, password: '[REDACTED]'});
