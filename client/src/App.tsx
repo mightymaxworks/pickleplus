@@ -27,7 +27,7 @@ import LeaderboardComingSoon from "@/pages/LeaderboardComingSoon";
 import PreferencesPage from "@/pages/PreferencesPage";
 import { MainLayout } from "@/components/MainLayout";
 import { AuthLayout } from "@/components/AuthLayout";
-import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import { AuthProvider, useAuth } from "@/hooks/useAuth.tsx";
 import { QrCodeFAB } from "@/components/QrCodeFAB";
 import { FeatureProtectedRoute } from "@/components/FeatureProtectedRoute";
 import { Features, useFeatureFlag } from "@/lib/featureFlags";

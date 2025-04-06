@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth.tsx";
 import { PicklePlusTextLogo } from "@/components/icons/PicklePlusTextLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,9 +23,8 @@ const registerSchema = insertUserSchema.extend({
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function Register() {
-  const { register } = useAuth();
+  const { registerMutation } = useAuth();
   const [, navigate] = useLocation();
-  const [isRegistering, setIsRegistering] = useState(false);
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -48,23 +47,23 @@ export default function Register() {
     },
   });
 
-  const handleSubmit = async (data: RegisterFormData) => {
-    setIsRegistering(true);
+  const handleSubmit = async (formData: RegisterFormData) => {
     try {
       // Generate initials if not provided
-      if (!data.avatarInitials) {
-        const nameParts = data.displayName.split(" ");
-        data.avatarInitials = nameParts.length > 1
+      if (!formData.avatarInitials) {
+        const nameParts = formData.displayName.split(" ");
+        formData.avatarInitials = nameParts.length > 1
           ? (nameParts[0][0] + nameParts[1][0]).toUpperCase()
-          : data.displayName.substring(0, 2).toUpperCase();
+          : formData.displayName.substring(0, 2).toUpperCase();
       }
       
-      await register(data);
+      // Remove confirmPassword as it's not in the schema
+      const { confirmPassword, ...data } = formData;
+      
+      await registerMutation.mutateAsync(data);
       navigate("/dashboard");
     } catch (error) {
       console.error("Registration error:", error);
-    } finally {
-      setIsRegistering(false);
     }
   };
 
@@ -272,9 +271,9 @@ export default function Register() {
               <Button 
                 type="submit" 
                 className="w-full bg-[#FF5722] hover:bg-[#E64A19]"
-                disabled={isRegistering}
+                disabled={registerMutation.isPending}
               >
-                {isRegistering ? "Creating account..." : "Create Account"}
+                {registerMutation.isPending ? "Creating account..." : "Create Account"}
               </Button>
               <p className="mt-3 text-sm text-center text-gray-500">
                 Already have an account?{" "}

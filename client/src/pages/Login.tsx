@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth.tsx";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,9 +19,8 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function Login() {
-  const { login } = useAuth();
+  const { loginMutation } = useAuth();
   const [, navigate] = useLocation();
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -32,14 +31,14 @@ export default function Login() {
   });
 
   const handleSubmit = async (data: LoginFormData) => {
-    setIsLoggingIn(true);
     try {
-      await login(data.identifier, data.password);
+      await loginMutation.mutateAsync({
+        username: data.identifier,
+        password: data.password
+      });
       navigate("/dashboard");
     } catch (error) {
       console.error("Login error:", error);
-    } finally {
-      setIsLoggingIn(false);
     }
   };
 
@@ -98,9 +97,9 @@ export default function Login() {
               <Button 
                 type="submit" 
                 className="w-full bg-[#FF5722] hover:bg-[#E64A19]"
-                disabled={isLoggingIn}
+                disabled={loginMutation.isPending}
               >
-                {isLoggingIn ? "Logging in..." : "Login"}
+                {loginMutation.isPending ? "Logging in..." : "Login"}
               </Button>
               <p className="mt-3 text-sm text-center text-gray-500">
                 Don't have an account?{" "}

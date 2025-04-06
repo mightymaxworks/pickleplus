@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth.tsx";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -45,11 +45,9 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
-  const { user, login, register } = useAuth();
+  const { user, loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("login");
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
 
   // Handle redirect using useEffect
   useEffect(() => {
@@ -86,70 +84,37 @@ export default function AuthPage() {
 
   // Handle login form submission
   const onLoginSubmit = async (values: LoginFormValues) => {
-    setIsLoggingIn(true);
     try {
-      await login(values.identifier, values.password);
-      
-      toast({
-        title: "Login successful",
-        description: "Welcome back!",
+      await loginMutation.mutateAsync({
+        username: values.identifier,
+        password: values.password
       });
       
-      setLocation("/dashboard");
+      // Success case is handled by the mutation's onSuccess
     } catch (error) {
       console.error("Login error:", error);
-      // Error toast is shown in the login function
-    } finally {
-      setIsLoggingIn(false);
+      // Error is handled by the mutation's onError
     }
   };
 
   // Handle registration form submission
   const onRegisterSubmit = async (values: RegisterFormValues) => {
-    setIsRegistering(true);
     try {
-      const { confirmPassword, redemptionCode, ...userData } = values;
+      const { confirmPassword, redemptionCode, displayName, yearOfBirth, location, playingSince, skillLevel, ...credentials } = values;
       
-      // Log what's being sent to the server
+      // Create a properly formatted registration object matching RegisterData type
       const registrationData = {
-        username: userData.username,
-        email: userData.email,
-        password: userData.password,
-        confirmPassword: values.confirmPassword, // Add required confirmPassword field
-        displayName: userData.displayName,
-        yearOfBirth: values.yearOfBirth || null,
-        location: userData.location,
-        playingSince: userData.playingSince,
-        skillLevel: userData.skillLevel,
-        redemptionCode: redemptionCode || undefined
+        username: credentials.username,
+        email: credentials.email,
+        password: credentials.password,
+        firstName: displayName.split(' ')[0] || undefined,
+        lastName: displayName.split(' ').slice(1).join(' ') || undefined,
       };
       
-      console.log("Sending registration data:", JSON.stringify(registrationData));
-      
-      // Let the server generate both the passportId and avatarInitials
-      // Create a properly typed object for registration
-      await register(registrationData);
-      
-      toast({
-        title: "Registration successful",
-        description: "Your account has been created! Welcome to Pickle+.",
-      });
-      
-      setLocation("/dashboard");
+      await registerMutation.mutateAsync(registrationData);
+      // Success and error are handled by the mutation
     } catch (error: any) {
       console.error("Registration error:", error);
-      // Log more details if available
-      if (error && error.response) {
-        try {
-          const errorData = await error.response.json();
-          console.error("Error response:", errorData);
-        } catch (e) {
-          console.error("Could not parse error response");
-        }
-      }
-      // Error toast is shown in the register function
-    } finally {
-      setIsRegistering(false);
     }
   };
 
@@ -192,7 +157,7 @@ export default function AuthPage() {
                             <Input 
                               placeholder="Enter your username or email"
                               {...field}
-                              disabled={isLoggingIn}
+                              disabled={loginMutation.isPending}
                             />
                           </FormControl>
                           <FormMessage />
@@ -211,7 +176,7 @@ export default function AuthPage() {
                               type="password" 
                               placeholder="Enter your password"
                               {...field}
-                              disabled={isLoggingIn}
+                              disabled={loginMutation.isPending}
                             />
                           </FormControl>
                           <FormMessage />
@@ -222,9 +187,9 @@ export default function AuthPage() {
                     <Button 
                       type="submit" 
                       className="w-full" 
-                      disabled={isLoggingIn}
+                      disabled={loginMutation.isPending}
                     >
-                      {isLoggingIn ? "Logging in..." : "Login"}
+                      {loginMutation.isPending ? "Logging in..." : "Login"}
                     </Button>
                   </form>
                 </Form>
@@ -247,7 +212,7 @@ export default function AuthPage() {
                             <Input 
                               placeholder="Enter your full name"
                               {...field}
-                              disabled={isRegistering}
+                              disabled={registerMutation.isPending}
                             />
                           </FormControl>
                           <FormMessage />
@@ -265,7 +230,7 @@ export default function AuthPage() {
                             <Input 
                               placeholder="Choose a unique username"
                               {...field}
-                              disabled={isRegistering}
+                              disabled={registerMutation.isPending}
                             />
                           </FormControl>
                           <FormMessage />
@@ -284,7 +249,7 @@ export default function AuthPage() {
                               type="email"
                               placeholder="Enter your email address"
                               {...field}
-                              disabled={isRegistering}
+                              disabled={registerMutation.isPending}
                             />
                           </FormControl>
                           <FormMessage />
@@ -304,7 +269,7 @@ export default function AuthPage() {
                                 type="password"
                                 placeholder="Create a password"
                                 {...field}
-                                disabled={isRegistering}
+                                disabled={registerMutation.isPending}
                               />
                             </FormControl>
                             <FormMessage />
@@ -323,7 +288,7 @@ export default function AuthPage() {
                                 type="password"
                                 placeholder="Confirm your password"
                                 {...field}
-                                disabled={isRegistering}
+                                disabled={registerMutation.isPending}
                               />
                             </FormControl>
                             <FormMessage />
@@ -346,7 +311,7 @@ export default function AuthPage() {
                                 {...field}
                                 value={field.value || ''}
                                 onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
-                                disabled={isRegistering}
+                                disabled={registerMutation.isPending}
                               />
                             </FormControl>
                             <FormMessage />
@@ -367,7 +332,7 @@ export default function AuthPage() {
                               <Input 
                                 placeholder="e.g. 2021"
                                 {...field}
-                                disabled={isRegistering}
+                                disabled={registerMutation.isPending}
                               />
                             </FormControl>
                             <FormMessage />
@@ -390,7 +355,7 @@ export default function AuthPage() {
                               <select
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                 {...field}
-                                disabled={isRegistering}
+                                disabled={registerMutation.isPending}
                               >
                                 <option value="">Select country</option>
                                 <option value="United States">United States</option>
@@ -434,7 +399,7 @@ export default function AuthPage() {
                               <select
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                 {...field}
-                                disabled={isRegistering}
+                                disabled={registerMutation.isPending}
                               >
                                 <option value="">Select level</option>
                                 <option value="2.0 Beginner">2.0 Beginner</option>
@@ -465,7 +430,7 @@ export default function AuthPage() {
                             <Input 
                               placeholder="Enter if you have a code"
                               {...field}
-                              disabled={isRegistering}
+                              disabled={registerMutation.isPending}
                             />
                           </FormControl>
                           <FormMessage />
@@ -476,9 +441,9 @@ export default function AuthPage() {
                     <Button 
                       type="submit" 
                       className="w-full" 
-                      disabled={isRegistering}
+                      disabled={registerMutation.isPending}
                     >
-                      {isRegistering ? "Creating Account..." : "Create Account"}
+                      {registerMutation.isPending ? "Creating account..." : "Create Account"}
                     </Button>
                   </form>
                 </Form>
