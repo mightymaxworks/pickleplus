@@ -2,8 +2,7 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Express, Request, Response } from "express";
 import session from "express-session";
-import { scrypt, randomBytes, timingSafeEqual } from "crypto";
-import { promisify } from "util";
+import bcryptjs from "bcryptjs";
 import { storage } from "./storage";
 import { User, insertUserSchema } from "@shared/schema";
 import { z } from "zod";
@@ -16,8 +15,6 @@ declare global {
     }
   }
 }
-
-const scryptAsync = promisify(scrypt);
 
 // Login schema for validating login requests
 export const loginSchema = z.object({
@@ -35,19 +32,15 @@ export const registerSchema = insertUserSchema
 // Also export registerUserSchema for backward compatibility
 export const registerUserSchema = registerSchema;
 
-// Hash a password using scrypt and a random salt
+// Hash a password using bcryptjs
 export async function hashPassword(password: string): Promise<string> {
-  const salt = randomBytes(16).toString("hex");
-  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${buf.toString("hex")}.${salt}`;
+  const salt = await bcryptjs.genSalt(10);
+  return await bcryptjs.hash(password, salt);
 }
 
 // Compare a plaintext password with a stored hash
 async function comparePasswords(supplied: string, stored: string): Promise<boolean> {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  return await bcryptjs.compare(supplied, stored);
 }
 
 // Middleware to check if a user is authenticated
