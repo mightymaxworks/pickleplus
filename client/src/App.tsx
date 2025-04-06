@@ -24,6 +24,7 @@ import ScanPage from "@/pages/ScanPage";
 import TournamentsComingSoon from "@/pages/TournamentsComingSoon";
 import AchievementsComingSoon from "@/pages/AchievementsComingSoon";
 import LeaderboardComingSoon from "@/pages/LeaderboardComingSoon";
+import PreferencesPage from "@/pages/PreferencesPage";
 import { MainLayout } from "@/components/MainLayout";
 import { AuthLayout } from "@/components/AuthLayout";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
@@ -143,6 +144,10 @@ function AppRoutes() {
           <MainLayout>
             <ComingSoonPage />
           </MainLayout>
+        </Route>
+        
+        <Route path="/preferences">
+          <PreferencesPage />
         </Route>
         
         {/* Admin Routes */}
