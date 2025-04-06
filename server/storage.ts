@@ -20,11 +20,12 @@ import { eq, and, or, desc, asc, sql } from "drizzle-orm";
 
 // Storage interface for all CRUD operations
 import session from "express-session";
+import { Store } from "express-session";
 import connectPg from "connect-pg-simple";
-import MemoryStore from "memorystore";
+import memorystore from "memorystore";
 
 export interface IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: Store;
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -155,7 +156,7 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: Store;
   private users: Map<number, User>;
   private tournaments: Map<number, Tournament>;
   private tournamentRegistrations: Map<number, TournamentRegistration>;
@@ -189,7 +190,7 @@ export class MemStorage implements IStorage {
   private userBlockListId: number;
 
   constructor() {
-    const MemoryStore = MemoryStore(session);
+    const MemoryStore = memorystore(session);
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000, // Prune expired entries every 24h
     });

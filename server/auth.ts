@@ -10,7 +10,10 @@ import { z } from "zod";
 
 declare global {
   namespace Express {
-    interface User extends User {}
+    // Use the User type from shared schema as the Express.User type
+    interface User extends Omit<import('@shared/schema').User, 'id'> {
+      id: number;
+    }
   }
 }
 
@@ -57,7 +60,7 @@ export function isAuthenticated(req: Request, res: Response, next: any) {
 
 // Middleware to check if a user is an admin
 export function isAdmin(req: Request, res: Response, next: any) {
-  if (req.isAuthenticated() && req.user.isAdmin) {
+  if (req.isAuthenticated() && (req.user as any).isAdmin) {
     return next();
   }
   res.status(403).json({ message: "Forbidden" });
@@ -104,7 +107,10 @@ export function setupAuth(app: Express) {
   );
 
   // Configure Passport serialization and deserialization
-  passport.serializeUser((user, done) => done(null, user.id));
+  passport.serializeUser((user: Express.User, done) => {
+    done(null, (user as any).id);
+  });
+  
   passport.deserializeUser(async (id: number, done) => {
     try {
       const user = await storage.getUser(id);
@@ -160,7 +166,7 @@ export function setupAuth(app: Express) {
       // Validate login data
       loginSchema.parse(req.body);
       
-      passport.authenticate("local", (err, user, info) => {
+      passport.authenticate("local", (err: any, user: any, info: any) => {
         if (err) return next(err);
         if (!user) {
           return res.status(401).json({ message: "Invalid username or password" });

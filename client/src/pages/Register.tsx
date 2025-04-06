@@ -64,7 +64,7 @@ export default function Register() {
       // Create a properly formatted registration object matching RegisterData type
       const registrationData = {
         username: formData.username,
-        email: formData.email,
+        email: formData.email || "",  // Ensure email is never null or undefined
         password: formData.password,
         displayName: formData.displayName, // Make sure to include displayName
         yearOfBirth: formData.yearOfBirth || null,

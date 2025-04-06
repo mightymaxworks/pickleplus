@@ -1,14 +1,8 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import passport from "passport";
-import bcrypt from "bcryptjs";
-import session from "express-session";
-import MemoryStore from "memorystore";
-import { Strategy as LocalStrategy } from "passport-local";
+import { setupAuth, isAuthenticated, isAdmin } from "./auth";
 import { 
-  insertUserSchema,
-  registerUserSchema,
   insertTournamentRegistrationSchema, 
   redeemCodeSchema,
   insertMatchSchema,
@@ -17,13 +11,11 @@ import {
 import { ZodError } from "zod";
 import { generatePassportId, validatePassportId } from "./utils/passport-id";
 import { xpService } from "./services";
-import { setupAuth, isAuthenticated, isAdmin, loginSchema, registerSchema, hashPassword } from "./auth";
 
 // Import CourtIQ and XP systems
 import { courtIQService as courtIQSystem } from "./modules/rating/courtiq";
 import { xpSystem } from "./modules/xp/xpSystem";
 import { multiDimensionalRankingService } from "./modules/ranking/service";
-import { initializeUserModule } from "./modules/user";
 
 // Import database and query helpers
 import { db } from "./db";
@@ -43,176 +35,27 @@ import {
   PlayerRanking
 } from "../shared/multi-dimensional-rankings";
 
-const SessionStore = MemoryStore(session);
+// Session handling is now in auth.ts
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Initialize user module and mount its routes
-  const userRouter = initializeUserModule();
-  app.use("/api/user", userRouter);
-  
   // Trust proxy - important for secure cookies in production
   app.set('trust proxy', 1);
 
   // Set up authentication (including session, passport initialization, and strategies)
+  // This will set up the following routes:
+  // - POST /api/auth/register
+  // - POST /api/auth/login
+  // - POST /api/auth/logout
+  // - GET /api/auth/current-user
   setupAuth(app);
-
-  // Auth routes
-  app.post("/api/auth/register", async (req: Request, res: Response) => {
-    try {
-      console.log("Registration payload:", JSON.stringify(req.body));
-      
-      // Validate the full registration data (including password confirmation)
-      const registrationData = await (async () => {
-        try {
-          const data = registerUserSchema.parse(req.body);
-          
-          // Check if username already exists
-          const existingUser = await storage.getUserByUsername(data.username);
-          if (existingUser) {
-            res.status(400).json({ message: "Username already exists" });
-            return null;
-          }
-          return data;
-        } catch (validationError) {
-          console.error("Validation error:", validationError);
-          throw validationError;
-        }
-      })();
-      
-      // If validation failed or user already exists, exit early
-      if (!registrationData) return;
-
-      // Hash the password
-      const hashedPassword = await bcrypt.hash(registrationData.password, 10);
-      
-      // Generate a unique passport ID
-      const passportId = await generatePassportId();
-      
-      // Generate avatar initials from display name (first letter of each word, up to 2)
-      const nameParts = registrationData.displayName.trim().split(/\s+/);
-      const avatarInitials = nameParts.length > 1 
-        ? (nameParts[0][0] + nameParts[1][0]).toUpperCase()
-        : (nameParts[0].length > 1 
-            ? (nameParts[0][0] + nameParts[0][1]).toUpperCase() 
-            : nameParts[0][0].toUpperCase());
-      
-      // Create the user with hashed password, removing the confirmPassword field
-      // Extract only the fields needed for the database and replace with hashed password
-      const newUser = await storage.createUser({
-        username: registrationData.username,
-        email: registrationData.email,
-        password: hashedPassword,
-        displayName: registrationData.displayName,
-        passportId, // Add the passport ID
-        yearOfBirth: registrationData.yearOfBirth || null,
-        location: registrationData.location || null,
-        playingSince: registrationData.playingSince || null,
-        skillLevel: registrationData.skillLevel || null,
-        level: registrationData.level || 1,
-        xp: registrationData.xp || 0,
-        avatarInitials: avatarInitials,
-        totalMatches: registrationData.totalMatches || 0,
-        matchesWon: registrationData.matchesWon || 0,
-        totalTournaments: registrationData.totalTournaments || 0
-      });
-
-      // Remove password from the response
-      const { password, ...userWithoutPassword } = newUser;
-      
-      res.status(201).json(userWithoutPassword);
-    } catch (error) {
-      console.error("Registration error:", error);
-      if (error instanceof ZodError) {
-        console.error("Validation errors:", error.errors);
-        res.status(400).json({ message: "Validation error", errors: error.errors });
-      } else {
-        console.error("Failed to register user:", error instanceof Error ? error.message : String(error));
-        res.status(500).json({ message: "Failed to register user" });
-      }
+  
+  // Add a logging middleware for debugging authentication
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (req.path.startsWith('/api/auth')) {
+      console.log(`${req.method} ${req.path} - Session ID: ${req.sessionID}`);
+      console.log(`Is authenticated: ${req.isAuthenticated()}`);
     }
-  });
-
-  app.post("/api/auth/login", (req: Request, res: Response, next: any) => {
-    try {
-      console.log("Login request body:", JSON.stringify(req.body));
-      console.log("Session before login:", req.session);
-      console.log("Session ID before login:", req.sessionID);
-      console.log("Cookies received:", req.headers.cookie);
-      
-      loginSchema.parse(req.body);
-      
-      passport.authenticate("local", (err: any, user: any, info: any) => {
-        console.log("Passport authenticate result:", { 
-          err, 
-          user: user ? 'User found' : 'No user', 
-          userDetails: user ? `ID: ${user.id}, Username: ${user.username}` : null,
-          info 
-        });
-        
-        if (err) {
-          console.error("Passport authenticate error:", err);
-          return next(err);
-        }
-        
-        if (!user) {
-          console.log("Authentication failed:", info);
-          return res.status(401).json({ message: info?.message || "Authentication failed" });
-        }
-        
-        req.logIn(user, (err) => {
-          if (err) {
-            console.error("Login error:", err);
-            return next(err);
-          }
-          
-          console.log("User logged in successfully, session established.");
-          console.log("Session ID:", req.sessionID);
-          console.log("Session after login:", req.session);
-          console.log("Is Authenticated:", req.isAuthenticated());
-          console.log("User in session:", req.user);
-          
-          // Don't manually set cookies - let Express session handle it
-          res.set({
-            "Cache-Control": "no-cache, no-store",
-            "Pragma": "no-cache",
-          });
-          
-          console.log("Response headers:", res.getHeaders());
-          
-          return res.json(user);
-        });
-      })(req, res, next);
-    } catch (error) {
-      console.error("Login route error:", error);
-      if (error instanceof ZodError) {
-        res.status(400).json({ message: "Validation error", errors: error.errors });
-      } else {
-        res.status(500).json({ message: "Login error" });
-      }
-    }
-  });
-
-  app.post("/api/auth/logout", (req: Request, res: Response) => {
-    req.logout((err) => {
-      if (err) {
-        return res.status(500).json({ message: "Error logging out" });
-      }
-      res.json({ message: "Logged out successfully" });
-    });
-  });
-
-  app.get("/api/auth/current-user", (req: Request, res: Response) => {
-    console.log("Current user check - Is authenticated:", req.isAuthenticated());
-    console.log("Current user check - Session ID:", req.sessionID);
-    console.log("Current user check - Cookie:", req.headers.cookie);
-    
-    if (req.isAuthenticated()) {
-      console.log("User is authenticated, returning user:", req.user);
-      res.json(req.user);
-    } else {
-      console.log("User is not authenticated");
-      res.status(401).json({ message: "Not logged in" });
-    }
+    next();
   });
   
   // Profile operations
@@ -537,22 +380,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/user/tournaments", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      console.log('Fetching tournaments for user ID:', userId);
-      
-      if (!userId) {
-        return res.status(400).json({ message: "Invalid user ID" });
-      }
-      
       const userTournaments = await storage.getUserTournaments(userId);
-      console.log('User tournaments retrieved successfully:', userTournaments ? userTournaments.length : 0, 'tournaments found');
-      
       res.json(userTournaments);
     } catch (error) {
-      console.error('Error in /api/user/tournaments endpoint:', error);
-      res.status(500).json({ 
-        message: "Error retrieving user tournaments", 
-        error: error instanceof Error ? error.message : String(error)
-      });
+      res.status(500).json({ message: "Error retrieving user tournaments" });
     }
   });
 
@@ -1301,14 +1132,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
       
       // Validate parameters
-      const validFormats: PlayFormat[] = ['singles', 'doubles', 'mixed'];
-      if (!validFormats.includes(format)) {
+      if (!Object.values(playFormat.enumValues).includes(format)) {
         return res.status(400).json({ message: "Invalid format. Must be 'singles', 'doubles', or 'mixed'" });
       }
       
-      const validAgeDivisions: AgeDivision[] = ['U12', 'U14', 'U16', 'U19', '19plus', '35plus', '50plus', '60plus', '70plus'];
-      if (!validAgeDivisions.includes(ageDivision)) {
-        return res.status(400).json({ message: "Invalid age division. Must be one of: 'U12', 'U14', 'U16', 'U19', '19plus', '35plus', '50plus', '60plus', '70plus'" });
+      if (!Object.values(ageDivision.enumValues).includes(ageDivision)) {
+        return res.status(400).json({ message: "Invalid age division. Must be '19plus', '35plus', or '50plus'" });
       }
       
       const leaderboard = await multiDimensionalRankingService.getLeaderboard(
@@ -1335,14 +1164,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const ratingTierId = req.query.ratingTierId ? parseInt(req.query.ratingTierId as string) : undefined;
       
       // Validate parameters
-      const validFormats: PlayFormat[] = ['singles', 'doubles', 'mixed'];
-      if (!validFormats.includes(format)) {
+      if (!Object.values(playFormat.enumValues).includes(format)) {
         return res.status(400).json({ message: "Invalid format. Must be 'singles', 'doubles', or 'mixed'" });
       }
       
-      const validAgeDivisions: AgeDivision[] = ['U12', 'U14', 'U16', 'U19', '19plus', '35plus', '50plus', '60plus', '70plus'];
-      if (!validAgeDivisions.includes(ageDivision)) {
-        return res.status(400).json({ message: "Invalid age division. Must be one of: 'U12', 'U14', 'U16', 'U19', '19plus', '35plus', '50plus', '60plus', '70plus'" });
+      if (!Object.values(ageDivision.enumValues).includes(ageDivision)) {
+        return res.status(400).json({ message: "Invalid age division. Must be '19plus', '35plus', or '50plus'" });
       }
       
       const ranking = await multiDimensionalRankingService.getUserRanking(userId, format, ageDivision, ratingTierId);
@@ -1398,14 +1225,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Validate parameters
-      const validFormats: PlayFormat[] = ['singles', 'doubles', 'mixed'];
-      if (!validFormats.includes(format)) {
+      if (!Object.values(playFormat.enumValues).includes(format)) {
         return res.status(400).json({ message: "Invalid format. Must be 'singles', 'doubles', or 'mixed'" });
       }
       
-      const validAgeDivisions: AgeDivision[] = ['U12', 'U14', 'U16', 'U19', '19plus', '35plus', '50plus', '60plus', '70plus'];
-      if (!validAgeDivisions.includes(ageDivision)) {
-        return res.status(400).json({ message: "Invalid age division. Must be one of: 'U12', 'U14', 'U16', 'U19', '19plus', '35plus', '50plus', '60plus', '70plus'" });
+      if (!Object.values(ageDivision.enumValues).includes(ageDivision)) {
+        return res.status(400).json({ message: "Invalid age division. Must be '19plus', '35plus', or '50plus'" });
       }
       
       // Get current ranking

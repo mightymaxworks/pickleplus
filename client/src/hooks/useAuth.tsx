@@ -7,19 +7,9 @@ import {
 import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { User } from "@shared/schema";
 
-// Define User type
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  courtiqRating?: number;
-  role?: string;
-  profilePictureUrl?: string;
-  profileComplete?: boolean;
-}
+// Use the User type directly from shared schema
 
 // Define auth context type
 type AuthContextType = {
