@@ -143,7 +143,7 @@ export default function LeaderboardView({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>CourtIQ Leaderboard</CardTitle>
+          <CardTitle>CourtIQ™ Rankings</CardTitle>
           <CardDescription>Loading leaderboard data...</CardDescription>
         </CardHeader>
         <CardContent>
@@ -185,7 +185,7 @@ export default function LeaderboardView({
       <CardHeader>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <CardTitle>CourtIQ™ Leaderboard</CardTitle>
+            <CardTitle>CourtIQ™ Rankings</CardTitle>
             <CardDescription>
               {type === 'rating' ? 'Player ratings based on match performance' : 'Seasonal points earned from matches and tournaments'}
             </CardDescription>
@@ -346,8 +346,8 @@ export default function LeaderboardView({
         <div className="mt-4 text-xs text-muted-foreground">
           <p>
             {type === 'rating' 
-              ? 'Ratings are calculated using the CourtIQ algorithm based on match results.'
-              : 'Points are earned from match wins, tournament participation, and achievements.'}
+              ? 'Ratings are calculated using the CourtIQ™ intelligence system based on match results.'
+              : 'CourtIQ™ ranking points are earned from match wins, tournament participation, and achievements.'}
           </p>
         </div>
       </CardContent>

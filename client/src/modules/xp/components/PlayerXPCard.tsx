@@ -135,7 +135,7 @@ export default function PlayerXPCard({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>XP Level</CardTitle>
+          <CardTitle>CourtIQ XP Level</CardTitle>
           <CardDescription>Loading player experience...</CardDescription>
         </CardHeader>
         <CardContent>
@@ -173,7 +173,7 @@ export default function PlayerXPCard({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>XP Level</CardTitle>
+          <CardTitle>CourtIQ XP Level</CardTitle>
           <CardDescription>No experience data available</CardDescription>
         </CardHeader>
         <CardContent>
@@ -223,7 +223,7 @@ export default function PlayerXPCard({
       <CardHeader>
         <div className="flex justify-between items-start">
           <div>
-            <CardTitle>Experience Level</CardTitle>
+            <CardTitle>CourtIQ XP Level</CardTitle>
             <CardDescription>
               {xpInfo.levelName}
             </CardDescription>
@@ -267,7 +267,7 @@ export default function PlayerXPCard({
             <div>
               <h4 className="font-medium mb-2">Features Unlocked</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {xpInfo.unlocks.map((feature, i) => (
+                {xpInfo.unlocks.map((feature: string, i: number) => (
                   <div key={i} className="flex items-center gap-2 bg-muted/50 p-2 rounded-md">
                     <Unlock className="h-4 w-4 text-green-500" />
                     <span className="text-sm">{feature}</span>

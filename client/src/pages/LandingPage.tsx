@@ -102,10 +102,10 @@ export default function LandingPage() {
               transition={{ duration: 0.8 }}
             >
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 leading-tight">
-                Level Up Your Pickleball Game with Pickle+
+                Your Pickleball Journey, Powered by Intelligence
               </h1>
               <p className="text-lg sm:text-xl mb-6 md:mb-8 text-white/90">
-                Track your progress, compete in tournaments, and unlock achievements in the ultimate pickleball companion app
+                Pickle+ Passport with CourtIQ™ analytics tracks your progress, connects you with the community, and elevates your game
               </p>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center md:justify-start">
                 <Button 
@@ -140,6 +140,11 @@ export default function LandingPage() {
                     <div className="font-bold text-lg">Player Passport</div>
                     <PicklePlusLogo className="h-8 w-auto" />
                   </div>
+                  {/* CourtIQ badge */}
+                  <div className="absolute top-2 right-2 bg-black/20 px-2 py-1 rounded text-xs font-medium flex items-center">
+                    <div className="w-2 h-2 bg-blue-300 rounded-full mr-1"></div>
+                    Powered by CourtIQ™
+                  </div>
                   
                   {/* Player info */}
                   <div className="flex items-center mt-2">
@@ -170,31 +175,31 @@ export default function LandingPage() {
                     </div>
                   </div>
                   
-                  {/* Key stats in a grid */}
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-[#2196F3]/10 border border-[#2196F3]/20 rounded-lg p-3 text-center">
-                      <div className="text-[#2196F3] font-bold text-xl mb-0.5">1,248</div>
-                      <div className="text-xs text-gray-600">Ranking Points</div>
+                  {/* CourtIQ metrics in a grid */}
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                    <div className="bg-[#FF5722]/10 border border-[#FF5722]/20 rounded-lg p-3 text-center">
+                      <div className="text-[#FF5722] font-bold text-lg mb-0.5">Lvl 5</div>
+                      <div className="text-xs text-gray-600">CourtIQ XP</div>
                     </div>
-                    <div className="bg-[#FF9800]/10 border border-[#FF9800]/20 rounded-lg p-3 text-center">
-                      <div className="text-[#FF9800] font-bold text-xl mb-0.5">24</div>
-                      <div className="text-xs text-gray-600">Matches Played</div>
+                    <div className="bg-[#2196F3]/10 border border-[#2196F3]/20 rounded-lg p-3 text-center">
+                      <div className="text-[#2196F3] font-bold text-lg mb-0.5">1,248</div>
+                      <div className="text-xs text-gray-600">CourtIQ Rating</div>
+                    </div>
+                    <div className="bg-[#673AB7]/10 border border-[#673AB7]/20 rounded-lg p-3 text-center">
+                      <div className="text-[#673AB7] font-bold text-lg mb-0.5">7th</div>
+                      <div className="text-xs text-gray-600">CourtIQ Rank</div>
                     </div>
                   </div>
                   
                   {/* Additional stats */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="bg-[#FF5722]/10 border border-[#FF5722]/20 rounded-lg p-2 text-center">
-                      <div className="text-[#FF5722] font-bold text-lg">8</div>
-                      <div className="text-xs text-gray-600">Achievements</div>
-                    </div>
+                  <div className="grid grid-cols-2 gap-3">
                     <div className="bg-[#4CAF50]/10 border border-[#4CAF50]/20 rounded-lg p-2 text-center">
                       <div className="text-[#4CAF50] font-bold text-lg">3</div>
                       <div className="text-xs text-gray-600">Tournaments</div>
                     </div>
-                    <div className="bg-[#673AB7]/10 border border-[#673AB7]/20 rounded-lg p-2 text-center">
-                      <div className="text-[#673AB7] font-bold text-lg">7</div>
-                      <div className="text-xs text-gray-600">Ranking</div>
+                    <div className="bg-[#FF9800]/10 border border-[#FF9800]/20 rounded-lg p-2 text-center">
+                      <div className="text-[#FF9800] font-bold text-lg">24</div>
+                      <div className="text-xs text-gray-600">Matches Played</div>
                     </div>
                   </div>
                   
@@ -226,9 +231,9 @@ export default function LandingPage() {
             viewport={{ once: true }}
             variants={fadeIn}
           >
-            <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Elevate Your Pickleball Experience</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Intelligent Passport for the Modern Player</h2>
             <p className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto">
-              Pickle+ brings your pickleball journey to life with powerful features designed to help you track, improve, and enjoy the game like never before.
+              Pickle+ brings your pickleball journey to life with CourtIQ™ analytics designed to help you track, improve, and enjoy the game.
             </p>
           </motion.div>
           
@@ -493,9 +498,9 @@ export default function LandingPage() {
             viewport={{ once: true }}
             variants={fadeIn}
           >
-            <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Triple-Threat Progression System</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">CourtIQ™ Intelligence System</h2>
             <p className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto">
-              Pickle+ offers a unique three-tiered progression system that rewards every aspect of your pickleball journey
+              Your complete pickleball intelligence system that measures what matters through three interconnected metrics
             </p>
           </motion.div>
 
@@ -510,9 +515,9 @@ export default function LandingPage() {
               <div className="w-16 h-16 rounded-full bg-[#FF5722]/10 flex items-center justify-center mx-auto mb-4">
                 <Award className="text-[#FF5722]" size={28} />
               </div>
-              <h3 className="font-bold text-xl mb-2 text-[#FF5722]">XP Points</h3>
+              <h3 className="font-bold text-xl mb-2 text-[#FF5722]">CourtIQ XP</h3>
               <p className="text-sm sm:text-base text-gray-600 mb-4">
-                Earned for participation and achievements. XP determines your player level and unlocks features and cosmetics.
+                Your experience progression tracks your overall journey and unlocks new features and achievements as you level up.
               </p>
               <div className="bg-[#FF5722]/5 rounded-lg p-3 mb-2">
                 <div className="text-[#FF5722] font-bold mb-1 text-sm">How to earn XP:</div>
@@ -544,9 +549,9 @@ export default function LandingPage() {
               <div className="w-16 h-16 rounded-full bg-[#2196F3]/10 flex items-center justify-center mx-auto mb-4">
                 <Trophy className="text-[#2196F3]" size={28} />
               </div>
-              <h3 className="font-bold text-xl mb-2 text-[#2196F3]">Ranking Points</h3>
+              <h3 className="font-bold text-xl mb-2 text-[#2196F3]">CourtIQ Rankings</h3>
               <p className="text-sm sm:text-base text-gray-600 mb-4">
-                Competitive score that rises and falls based on match performance. Determines your position on the leaderboard.
+                Your competitive standing based on match performance, tournament results, and quality of play.
               </p>
               <div className="bg-[#2196F3]/5 rounded-lg p-3 mb-2">
                 <div className="text-[#2196F3] font-bold mb-1 text-sm">How ranking changes:</div>
@@ -578,9 +583,9 @@ export default function LandingPage() {
               <div className="w-16 h-16 rounded-full bg-[#4CAF50]/10 flex items-center justify-center mx-auto mb-4">
                 <Users className="text-[#4CAF50]" size={28} />
               </div>
-              <h3 className="font-bold text-xl mb-2 text-[#4CAF50]">Skill Rating</h3>
+              <h3 className="font-bold text-xl mb-2 text-[#4CAF50]">CourtIQ Rating</h3>
               <p className="text-sm sm:text-base text-gray-600 mb-4">
-                Standard pickleball skill classification (1.0 - 5.0+) used to find appropriate competition and training partners.
+                Accurate skill measurement specific to your age division and play format, helping you find ideal competition.
               </p>
               <div className="bg-[#4CAF50]/5 rounded-lg p-3 mb-2">
                 <div className="text-[#4CAF50] font-bold mb-1 text-sm">Rating indicators:</div>
@@ -612,14 +617,14 @@ export default function LandingPage() {
           >
             <div className="flex items-center justify-center gap-2 sm:gap-4 mb-4">
               <div className="h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-[#FF5722]"></div>
-              <div className="text-xs sm:text-sm text-gray-500">XP for participation</div>
+              <div className="text-xs sm:text-sm text-gray-500">CourtIQ XP for progression</div>
               <div className="h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-[#2196F3]"></div>
-              <div className="text-xs sm:text-sm text-gray-500">Ranking for competition</div>
+              <div className="text-xs sm:text-sm text-gray-500">CourtIQ Rankings for competition</div>
               <div className="h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-[#4CAF50]"></div>
-              <div className="text-xs sm:text-sm text-gray-500">Rating for matchmaking</div>
+              <div className="text-xs sm:text-sm text-gray-500">CourtIQ Rating for matchmaking</div>
             </div>
             <p className="text-center text-sm sm:text-base text-gray-600">
-              Our triple system ensures players of all skill levels have meaningful progression paths regardless of their competitive focus.
+              The CourtIQ Intelligence System ensures players of all skill levels have meaningful progression paths regardless of their competitive focus.
             </p>
           </motion.div>
         </div>
