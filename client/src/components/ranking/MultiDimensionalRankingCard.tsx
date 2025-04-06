@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/useAuth";
 import { useMultiDimensionalRankingData } from "@/hooks/use-multi-dimensional-rankings";
-import { PlayFormat, AgeDivision } from "../../../shared/multi-dimensional-rankings";
+import { PlayFormat, AgeDivision, LeaderboardEntry } from "../../../shared/multi-dimensional-rankings";
+import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -59,23 +60,59 @@ export function MultiDimensionalRankingCard() {
   ];
 
   // For history chart
-  const chartData = history.map((entry) => ({
+  const chartData = history.map((entry, index) => ({
     date: new Date(entry.createdAt || "").toLocaleDateString(),
     points: entry.newRanking,
+    change: entry.newRanking - entry.oldRanking,
+    previousPoints: entry.oldRanking,
+    tooltipContent: `${entry.reason} (${entry.newRanking - entry.oldRanking >= 0 ? '+' : ''}${entry.newRanking - entry.oldRanking} pts)`
   }));
 
   // User's current rank display
   const rankDisplay = position ? (
-    <div className="flex flex-col items-center justify-center p-4">
-      <div className="text-4xl font-bold">#{position.rank}</div>
+    <motion.div 
+      className="flex flex-col items-center justify-center p-6 rounded-lg border shadow-sm"
+      initial={{ scale: 0.9, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ duration: 0.5, type: "spring" }}
+    >
+      <div className="relative mb-2">
+        <motion.div 
+          className="text-5xl font-bold text-primary" 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
+        >
+          #{position.rank}
+        </motion.div>
+        {position.rank <= 3 && (
+          <motion.div 
+            className="absolute -top-6 -right-6"
+            initial={{ rotate: -30, scale: 0 }}
+            animate={{ rotate: 0, scale: 1 }}
+            transition={{ delay: 0.5, duration: 0.5, type: "spring" }}
+          >
+            {position.rank === 1 ? '🏆' : position.rank === 2 ? '🥈' : '🥉'}
+          </motion.div>
+        )}
+      </div>
       <div className="text-sm text-muted-foreground">
         of {position.totalPlayers} players
       </div>
-      <div className="mt-2 text-lg">
-        <span className="font-bold">{position.rankingPoints}</span> points
-      </div>
+      <motion.div 
+        className="mt-4 px-3 py-1 bg-muted rounded-full"
+        initial={{ x: -20, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ delay: 0.3, duration: 0.4 }}
+      >
+        <span className="font-bold text-lg">{position.rankingPoints}</span> points
+      </motion.div>
+    </motion.div>
+  ) : (
+    <div className="flex items-center justify-center p-6 text-muted-foreground">
+      No ranking data available yet
     </div>
-  ) : null;
+  );
 
   if (isLoading) {
     return (
@@ -167,34 +204,56 @@ export function MultiDimensionalRankingCard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {leaderboard.map((player) => (
-                    <TableRow
-                      key={player.id}
-                      className={player.userId === user?.id ? "bg-muted/50" : ""}
-                    >
-                      <TableCell className="font-medium">{player.rank}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>
-                              {player.avatarInitials || player.displayName?.substring(0, 2) || "?"}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span>
-                            {player.displayName || player.username}
-                            {player.userId === user?.id && (
-                              <Badge variant="outline" className="ml-2">
-                                You
-                              </Badge>
+                  <AnimatePresence>
+                    {leaderboard.map((player) => (
+                      <motion.tr
+                        key={player.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className={player.userId === user?.id ? "bg-muted/50" : ""}
+                      >
+                        <TableCell className="font-medium">
+                          <div className="flex items-center">
+                            {player.rank <= 3 && (
+                              <span className="mr-2">
+                                {player.rank === 1 ? '🥇' : player.rank === 2 ? '🥈' : '🥉'}
+                              </span>
                             )}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        {player.rankingPoints}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                            {player.rank}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-8 w-8 border-2" style={{ borderColor: player.userId === user?.id ? 'var(--primary)' : 'transparent' }}>
+                              <AvatarFallback>
+                                {player.avatarInitials || player.displayName?.substring(0, 2) || "?"}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex flex-col">
+                              <span className="font-medium">
+                                {player.displayName || player.username}
+                                {player.userId === user?.id && (
+                                  <Badge variant="outline" className="ml-2">
+                                    You
+                                  </Badge>
+                                )}
+                              </span>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Badge 
+                            variant="secondary" 
+                            className="font-semibold px-2 py-1"
+                          >
+                            {player.rankingPoints} pts
+                          </Badge>
+                        </TableCell>
+                      </motion.tr>
+                    ))}
+                  </AnimatePresence>
                   {leaderboard.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={3} className="h-24 text-center">
@@ -226,12 +285,38 @@ export function MultiDimensionalRankingCard() {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="date" />
                       <YAxis />
-                      <Tooltip />
+                      <Tooltip 
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            const data = payload[0].payload;
+                            return (
+                              <div className="rounded-md border bg-background p-2 shadow-md">
+                                <p className="font-semibold">{data.date}</p>
+                                <p className="text-sm">
+                                  <span className="text-muted-foreground">Points: </span>
+                                  <span className="font-semibold">{data.points}</span>
+                                </p>
+                                {data.change !== 0 && (
+                                  <p className={`text-sm ${data.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                    {data.change > 0 ? '+' : ''}{data.change} points
+                                  </p>
+                                )}
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {data.tooltipContent}
+                                </p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
                       <Line
                         type="monotone"
                         dataKey="points"
-                        stroke="#8884d8"
-                        activeDot={{ r: 8 }}
+                        stroke="var(--primary)"
+                        strokeWidth={2}
+                        dot={{ r: 4, strokeWidth: 2, fill: 'white' }}
+                        activeDot={{ r: 8, fill: 'var(--primary)' }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
