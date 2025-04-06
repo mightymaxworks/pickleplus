@@ -39,6 +39,9 @@ import { PassportQrCodeCard } from "@/components/profile/PassportQrCodeCard";
 import { QuickActionsCard } from "@/components/profile/QuickActionsCard";
 import { UpcomingTournamentsCard } from "@/components/profile/UpcomingTournamentsCard";
 
+// Import CourtIQ Design System components
+import { RatingCard } from "@/core/design-system";
+
 // Helper function to calculate profile completion percentage
 function calculateProfileCompletion(user: any): number {
   const requiredFields = [
@@ -340,6 +343,19 @@ export default function Profile() {
         
         {/* Right Column - Main content */}
         <div className="md:col-span-2 space-y-6">
+          {/* CourtIQ™ Ratings Section - New */}
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold mb-4 flex items-center">
+              <Trophy className="h-5 w-5 mr-2 text-secondary-DEFAULT" />
+              CourtIQ™ Insights
+            </h2>
+            <RatingCard 
+              userId={user.id} 
+              showDetailed={true}
+              initialFormat="Mixed Doubles"
+            />
+          </div>
+          
           {/* Personal info cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-6 col-span-2 md:col-span-1">
