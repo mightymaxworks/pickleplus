@@ -5,14 +5,13 @@
 import { desc, eq, and, sql } from "drizzle-orm";
 import { db } from "../../db";
 import { 
-  PlayerRanking,
-  RankingHistoryEntry,
   LeaderboardEntry,
   PlayFormat,
   AgeDivision
 } from "../../../shared/multi-dimensional-rankings";
 import { users } from "../../../shared/schema";
 import { ratingTiers } from "../../../shared/courtiq-schema";
+import { playerRankings, rankingHistory } from "./schema";
 
 export class MultiDimensionalRankingService {
   /**
