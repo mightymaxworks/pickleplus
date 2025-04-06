@@ -561,10 +561,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/user/tournaments", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
+      console.log('Fetching tournaments for user ID:', userId);
+      
+      if (!userId) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
       const userTournaments = await storage.getUserTournaments(userId);
+      console.log('User tournaments retrieved successfully:', userTournaments ? userTournaments.length : 0, 'tournaments found');
+      
       res.json(userTournaments);
     } catch (error) {
-      res.status(500).json({ message: "Error retrieving user tournaments" });
+      console.error('Error in /api/user/tournaments endpoint:', error);
+      res.status(500).json({ 
+        message: "Error retrieving user tournaments", 
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 

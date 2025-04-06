@@ -1756,15 +1756,54 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserTournaments(userId: number): Promise<{tournament: Tournament, registration: TournamentRegistration}[]> {
-    const results = await db.select({
-      tournament: tournaments,
-      registration: tournamentRegistrations
-    })
-    .from(tournamentRegistrations)
-    .innerJoin(tournaments, eq(tournamentRegistrations.tournamentId, tournaments.id))
-    .where(eq(tournamentRegistrations.userId, userId));
-    
-    return results;
+    try {
+      console.log('getUserTournaments: Starting query for userId:', userId);
+      
+      // First verify the user exists
+      const user = await this.getUser(userId);
+      if (!user) {
+        console.error('getUserTournaments: User not found with ID:', userId);
+        return []; // Return empty array instead of throwing an error
+      }
+      
+      // First, let's check if the user has any tournament registrations
+      const registrations = await db.select()
+        .from(tournamentRegistrations)
+        .where(eq(tournamentRegistrations.userId, userId));
+        
+      console.log(`getUserTournaments: Found ${registrations.length} registrations for user ${userId}`);
+      
+      if (registrations.length === 0) {
+        return []; // No tournaments registered
+      }
+      
+      // Now get the full tournament data with registrations
+      const results = await db.select({
+        tournament: tournaments,
+        registration: tournamentRegistrations
+      })
+      .from(tournamentRegistrations)
+      .innerJoin(tournaments, eq(tournamentRegistrations.tournamentId, tournaments.id))
+      .where(eq(tournamentRegistrations.userId, userId));
+      
+      console.log('getUserTournaments: Full query results count:', results.length);
+      
+      // Validate the results - make sure each result has the expected structure
+      const validatedResults = results.filter(result => {
+        if (!result.tournament || !result.registration) {
+          console.warn('getUserTournaments: Found incomplete result:', result);
+          return false;
+        }
+        return true;
+      });
+      
+      console.log('getUserTournaments: Valid results count:', validatedResults.length);
+      return validatedResults;
+    } catch (error) {
+      console.error('Error in getUserTournaments:', error);
+      // Return empty array to avoid breaking the API
+      return [];
+    }
   }
 
   async checkInUserForTournament(userId: number, tournamentId: number): Promise<TournamentRegistration | undefined> {
