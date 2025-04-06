@@ -247,9 +247,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log("Is Authenticated:", req.isAuthenticated());
           console.log("User in session:", req.user);
           
-          // Set cookies explicitly to help ensure they're properly set
+          // Don't manually set cookies - let Express session handle it
           res.set({
-            "Set-Cookie": `pickle.sid=${req.sessionID}; Path=/; HttpOnly; SameSite=Lax`,
             "Cache-Control": "no-cache, no-store",
             "Pragma": "no-cache",
           });
