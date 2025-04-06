@@ -1313,13 +1313,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
       
       // Validate parameters
-      const validFormats: PlayFormat[] = ['singles', 'doubles', 'mixed'];
-      if (!validFormats.includes(format)) {
+      if (!Object.values(playFormat.enumValues).includes(format)) {
         return res.status(400).json({ message: "Invalid format. Must be 'singles', 'doubles', or 'mixed'" });
       }
       
-      const validAgeDivisions: AgeDivision[] = ['19plus', '35plus', '50plus'];
-      if (!validAgeDivisions.includes(ageDivision)) {
+      if (!Object.values(ageDivision.enumValues).includes(ageDivision)) {
         return res.status(400).json({ message: "Invalid age division. Must be '19plus', '35plus', or '50plus'" });
       }
       
@@ -1347,13 +1345,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const ratingTierId = req.query.ratingTierId ? parseInt(req.query.ratingTierId as string) : undefined;
       
       // Validate parameters
-      const validFormats: PlayFormat[] = ['singles', 'doubles', 'mixed'];
-      if (!validFormats.includes(format)) {
+      if (!Object.values(playFormat.enumValues).includes(format)) {
         return res.status(400).json({ message: "Invalid format. Must be 'singles', 'doubles', or 'mixed'" });
       }
       
-      const validAgeDivisions: AgeDivision[] = ['19plus', '35plus', '50plus'];
-      if (!validAgeDivisions.includes(ageDivision)) {
+      if (!Object.values(ageDivision.enumValues).includes(ageDivision)) {
         return res.status(400).json({ message: "Invalid age division. Must be '19plus', '35plus', or '50plus'" });
       }
       
@@ -1410,13 +1406,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Validate parameters
-      const validFormats: PlayFormat[] = ['singles', 'doubles', 'mixed'];
-      if (!validFormats.includes(format)) {
+      if (!Object.values(playFormat.enumValues).includes(format)) {
         return res.status(400).json({ message: "Invalid format. Must be 'singles', 'doubles', or 'mixed'" });
       }
       
-      const validAgeDivisions: AgeDivision[] = ['19plus', '35plus', '50plus'];
-      if (!validAgeDivisions.includes(ageDivision)) {
+      if (!Object.values(ageDivision.enumValues).includes(ageDivision)) {
         return res.status(400).json({ message: "Invalid age division. Must be '19plus', '35plus', or '50plus'" });
       }
       

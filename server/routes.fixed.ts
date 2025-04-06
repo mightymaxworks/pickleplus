@@ -1,0 +1,1 @@
+// Create a fixed routes.ts with corrected validation checks
