@@ -62,7 +62,16 @@ export const rankingPoints = pgTable("ranking_points", {
   season: text("season").notNull(), // e.g., "2025-S1" for 2025 Season 1
   division: text("division").notNull().default("19+"),
   format: text("format").notNull().default("singles"),
-  lastUpdated: timestamp("last_updated").defaultNow()
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  // New fields
+  totalMatches: integer("total_matches").notNull().default(0),
+  tournamentCount: integer("tournament_count").notNull().default(0),
+  winsCount: integer("wins_count").notNull().default(0),
+  lossesCount: integer("losses_count").notNull().default(0),
+  decayProtectedUntil: timestamp("decay_protected_until"), // For returning players protection
+  tier: text("competitive_tier"), // Competitive tier based on points (different from skill tier)
+  seasonHighPoints: integer("season_high_points"), // Season high watermark for points
+  allTimeHighPoints: integer("all_time_high_points") // All-time high watermark
 });
 
 // Define composite unique constraint for user, season, division and format
@@ -88,7 +97,15 @@ export const pointsHistory = pgTable("points_history", {
   sourceId: integer("source_id"), // ID of the source (match ID, tournament ID, etc.)
   multiplier: decimal("multiplier", { precision: 4, scale: 2 }).default("1.00"), // Any multipliers applied
   notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow()
+  createdAt: timestamp("created_at").defaultNow(),
+  // New fields for enhanced tracking
+  basePoints: integer("base_points").notNull().default(0), // Base points before modifiers
+  ratingDifferential: integer("rating_differential"), // Rating difference that affected points
+  bonusPoints: integer("bonus_points").default(0), // Additional bonus points
+  bonusSource: text("bonus_source"), // Source of bonus ("rating_diff", "tournament_size", etc.)
+  eventTier: text("event_tier"), // "local", "regional", "national", "international"
+  matchType: text("match_type"), // "casual", "league", "tournament"
+  winType: text("win_type") // "expected", "upset", "blowout", etc.
 });
 
 // Tiers configuration table
@@ -146,6 +163,25 @@ export const ratingProtections = pgTable("rating_protections", {
   refreshDate: timestamp("refresh_date"), // When more uses will be granted
   expirationDate: timestamp("expiration_date"), // When this protection expires
   notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Tournament eligibility configuration table
+// Defines the rating and ranking point requirements for tournament tiers
+export const tournamentEligibility = pgTable("tournament_eligibility", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // Name of the tournament tier (e.g., "Open", "Regional Championship")
+  level: text("level").notNull(), // Level code ("open", "local", "regional", "national", "premier")
+  ratingRequirement: integer("rating_requirement"), // Minimum rating required
+  pointsRequirement: integer("points_requirement"), // Minimum ranking points required
+  // Alternative qualification paths
+  exceptionalSkillRatingBonus: integer("exceptional_skill_rating_bonus").default(200), // Rating bonus for exceptional skill path
+  exceptionalSkillPointsPercentage: integer("exceptional_skill_points_percentage").default(60), // Percentage of points required for exceptional skill path
+  provenCompetitorPointsBonus: integer("proven_competitor_points_bonus").default(150), // Percentage of extra points for proven competitor path
+  provenCompetitorRatingPercentage: integer("proven_competitor_rating_percentage").default(80), // Percentage of rating required for proven competitor path
+  wildCardSlotsAvailable: integer("wild_card_slots_available").default(0), // Number of wild card slots (director's invitation)
+  description: text("description"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
@@ -227,6 +263,9 @@ export const insertPlayerRivalSchema = createInsertSchema(playerRivals)
 export const insertRatingProtectionSchema = createInsertSchema(ratingProtections)
   .omit({ id: true, createdAt: true, updatedAt: true });
 
+export const insertTournamentEligibilitySchema = createInsertSchema(tournamentEligibility)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
 // Types
 
 export type PlayerRating = typeof playerRatings.$inferSelect;
@@ -252,3 +291,6 @@ export type InsertPlayerRival = z.infer<typeof insertPlayerRivalSchema>;
 
 export type RatingProtection = typeof ratingProtections.$inferSelect;
 export type InsertRatingProtection = z.infer<typeof insertRatingProtectionSchema>;
+
+export type TournamentEligibility = typeof tournamentEligibility.$inferSelect;
+export type InsertTournamentEligibility = z.infer<typeof insertTournamentEligibilitySchema>;

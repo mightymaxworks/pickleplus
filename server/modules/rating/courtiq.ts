@@ -1072,6 +1072,575 @@ export class CourtIQService {
       );
     }
   }
+
+  /**
+   * Calculate ranking points for a match based on match type, event tier, and rating differential
+   * @param matchData Match data including players, outcome, context
+   * @returns Object containing point calculation details
+   */
+  async calculateRankingPointsForMatch(matchData: {
+    matchType: string;            // "casual", "league", "tournament"
+    eventTier?: string;           // "local", "regional", "national", "international"
+    winner: {
+      userId: number;
+      division: string;
+      format: string;
+    };
+    loser: {
+      userId: number;
+      division: string;
+      format: string;
+    };
+    isTournamentFinal?: boolean;  // Whether this is a tournament final match
+    isTournamentSemiFinal?: boolean; // Whether this is a tournament semi-final
+    participantCount?: number;    // Number of participants in the event
+  }): Promise<{
+    total: number;
+    base: number;
+    ratingBonus: number;
+    basePointsExplanation: string;
+    bonusExplanation: string;
+    contextualFactors: string[];
+  }> {
+    // Get player ratings
+    const winnerRating = await this.getPlayerRating(
+      matchData.winner.userId,
+      matchData.winner.division,
+      matchData.winner.format
+    );
+    
+    const loserRating = await this.getPlayerRating(
+      matchData.loser.userId,
+      matchData.loser.division,
+      matchData.loser.format
+    );
+    
+    if (!winnerRating || !loserRating) {
+      throw new Error("Player ratings not found");
+    }
+    
+    // Base points based on match type and event tier
+    let basePoints: number;
+    let basePointsExplanation: string;
+    
+    // Base point structure from our established guidelines
+    switch (matchData.matchType) {
+      case "casual":
+        basePoints = 10;
+        basePointsExplanation = "Casual match victory";
+        break;
+      case "league":
+        if (matchData.eventTier === "regional") {
+          basePoints = 30;
+          basePointsExplanation = "Regional league match victory";
+        } else {
+          basePoints = 20;
+          basePointsExplanation = "Local league match victory";
+        }
+        break;
+      case "tournament":
+        switch (matchData.eventTier) {
+          case "local":
+            basePoints = 25;
+            basePointsExplanation = "Local tournament match victory";
+            break;
+          case "regional":
+            basePoints = 40;
+            basePointsExplanation = "Regional tournament match victory";
+            break;
+          case "national":
+            basePoints = 70;
+            basePointsExplanation = "National tournament match victory";
+            break;
+          case "international":
+            basePoints = 100;
+            basePointsExplanation = "International tournament match victory";
+            break;
+          default:
+            basePoints = 25;
+            basePointsExplanation = "Tournament match victory";
+        }
+        break;
+      default:
+        basePoints = 10;
+        basePointsExplanation = "Match victory";
+    }
+    
+    // Calculate rating differential bonus
+    const ratingDiff = Math.max(0, loserRating.rating - winnerRating.rating);
+    
+    // Determine bonus multiplier based on match type
+    let bonusMultiplier: number;
+    switch (matchData.matchType) {
+      case "casual":
+        bonusMultiplier = 1; // +1 per 100 rating diff
+        break;
+      case "league":
+        bonusMultiplier = 2; // +2 per 100 rating diff
+        break;
+      case "tournament":
+        switch (matchData.eventTier) {
+          case "local":
+            bonusMultiplier = 3; // +3 per 100 rating diff
+            break;
+          case "regional":
+            bonusMultiplier = 4; // +4 per 100 rating diff
+            break;
+          case "national":
+            bonusMultiplier = 5; // +5 per 100 rating diff
+            break;
+          case "international":
+            bonusMultiplier = 8; // +8 per 100 rating diff
+            break;
+          default:
+            bonusMultiplier = 3;
+        }
+        break;
+      default:
+        bonusMultiplier = 1;
+    }
+    
+    // Calculate bonus points from rating differential
+    const ratingBonus = Math.floor(ratingDiff / 100) * bonusMultiplier;
+    
+    // Generate explanation for the bonus
+    let bonusExplanation = "";
+    if (ratingBonus > 0) {
+      bonusExplanation = `Upset bonus: +${ratingBonus} points for defeating a player rated ${ratingDiff} points higher`;
+    } else {
+      bonusExplanation = "No rating differential bonus";
+    }
+    
+    // Additional contextual factors
+    const contextualFactors: string[] = [];
+    let contextBonus = 0;
+    
+    // Tournament finals/semifinals bonus
+    if (matchData.isTournamentFinal) {
+      let finalBonus = 0;
+      switch (matchData.eventTier) {
+        case "local":
+          finalBonus = 10;
+          break;
+        case "regional":
+          finalBonus = 15;
+          break;
+        case "national":
+          finalBonus = 30;
+          break;
+        case "international":
+          finalBonus = 50;
+          break;
+        default:
+          finalBonus = 10;
+      }
+      contextBonus += finalBonus;
+      contextualFactors.push(`Tournament final: +${finalBonus} points`);
+    } else if (matchData.isTournamentSemiFinal) {
+      let semiBonus = 0;
+      switch (matchData.eventTier) {
+        case "regional":
+          semiBonus = 5;
+          break;
+        case "national":
+          semiBonus = 15;
+          break;
+        case "international":
+          semiBonus = 25;
+          break;
+        default:
+          semiBonus = 0;
+      }
+      
+      if (semiBonus > 0) {
+        contextBonus += semiBonus;
+        contextualFactors.push(`Tournament semi-final: +${semiBonus} points`);
+      }
+    }
+    
+    // Participant count scaling
+    if (matchData.participantCount && matchData.participantCount > 20) {
+      const participantMultiplier = Math.min(0.8 + (matchData.participantCount / 100), 1.5);
+      const originalTotal = basePoints + ratingBonus + contextBonus;
+      const newTotal = Math.round(originalTotal * participantMultiplier);
+      const participantBonus = newTotal - originalTotal;
+      
+      if (participantBonus > 0) {
+        contextBonus += participantBonus;
+        contextualFactors.push(`Large event bonus: +${participantBonus} points (${matchData.participantCount} participants)`);
+      }
+    }
+    
+    // Calculate total points
+    const total = basePoints + ratingBonus + contextBonus;
+    
+    return {
+      total,
+      base: basePoints,
+      ratingBonus,
+      basePointsExplanation,
+      bonusExplanation,
+      contextualFactors
+    };
+  }
+
+  /**
+   * Award ranking points with enhanced tracking of rating differentials
+   * Extended version of the basic awardRankingPoints method
+   */
+  async awardEnhancedRankingPoints(
+    userId: number,
+    pointsDetails: {
+      total: number;
+      base: number;
+      ratingBonus: number;
+      basePointsExplanation: string;
+      bonusExplanation: string;
+      contextualFactors: string[];
+    },
+    division: string,
+    format: string,
+    source: string,
+    matchType: string,
+    eventTier?: string,
+    winType?: string,
+    sourceId?: number,
+    ratingDifferential?: number,
+    multiplier: number = 1.0,
+    notes?: string
+  ): Promise<void> {
+    // Get current season
+    const currentSeason = await this.getCurrentSeason();
+    
+    if (!currentSeason) {
+      throw new Error("No active season found");
+    }
+    
+    // Calculate points with multiplier (if any additional multiplier is applied)
+    const adjustedTotal = Math.round(pointsDetails.total * multiplier);
+    
+    // Record enhanced points history
+    const pointsRecord: InsertPointsHistory = {
+      userId,
+      points: adjustedTotal,
+      season: currentSeason.code,
+      division,
+      format,
+      source,
+      sourceId,
+      multiplier,
+      notes,
+      // Enhanced fields
+      basePoints: pointsDetails.base,
+      ratingDifferential,
+      bonusPoints: pointsDetails.ratingBonus,
+      bonusSource: pointsDetails.bonusExplanation,
+      eventTier,
+      matchType,
+      winType
+    };
+    
+    await db.insert(pointsHistory).values(pointsRecord);
+    
+    // Update total points for the season
+    const existingPoints = await db.query.rankingPoints.findFirst({
+      where: and(
+        eq(rankingPoints.userId, userId),
+        eq(rankingPoints.season, currentSeason.code),
+        eq(rankingPoints.division, division),
+        eq(rankingPoints.format, format)
+      )
+    });
+    
+    if (existingPoints) {
+      // Update existing record with enhanced tracking
+      await db.update(rankingPoints)
+        .set({
+          points: existingPoints.points + adjustedTotal,
+          lastUpdated: new Date(),
+          totalMatches: existingPoints.totalMatches + 1,
+          winsCount: existingPoints.winsCount + 1,
+          // Update tournament count if this is a tournament match
+          tournamentCount: matchType === "tournament" 
+            ? (existingPoints.tournamentCount || 0) + 1 
+            : existingPoints.tournamentCount || 0,
+          // Update high watermarks if applicable
+          seasonHighPoints: Math.max(existingPoints.points + adjustedTotal, existingPoints.seasonHighPoints || 0),
+          allTimeHighPoints: Math.max(existingPoints.points + adjustedTotal, existingPoints.allTimeHighPoints || 0)
+        })
+        .where(eq(rankingPoints.id, existingPoints.id));
+    } else {
+      // Create new record with enhanced fields
+      const newPoints: InsertRankingPoints = {
+        userId,
+        points: adjustedTotal,
+        season: currentSeason.code,
+        division,
+        format,
+        totalMatches: 1,
+        winsCount: 1,
+        lossesCount: 0,
+        tournamentCount: matchType === "tournament" ? 1 : 0,
+        seasonHighPoints: adjustedTotal,
+        allTimeHighPoints: adjustedTotal,
+        tier: this.getCompetitiveTierForPoints(adjustedTotal)
+      };
+      
+      await db.insert(rankingPoints).values(newPoints);
+    }
+    
+    // Fire event
+    await serverEventBus.publish(CourtIQEvents.POINTS_EARNED, {
+      userId,
+      points: adjustedTotal,
+      season: currentSeason.code,
+      division,
+      format,
+      source,
+      details: pointsDetails
+    });
+  }
+
+  /**
+   * Determine competitive tier based on accumulated points
+   * This is different from rating tiers and used for ranking displays
+   */
+  private getCompetitiveTierForPoints(points: number): string {
+    if (points < 100) return "Novice";
+    if (points < 250) return "Contender";
+    if (points < 500) return "Competitor";
+    if (points < 1000) return "Elite";
+    if (points < 2000) return "Master";
+    return "Champion";
+  }
+
+  /**
+   * Check if a player is eligible for a tournament based on their rating and ranking points
+   */
+  async checkTournamentEligibility(
+    userId: number,
+    tournamentData: {
+      id: number;
+      name: string;
+      division: string;
+      format: string;
+      level: string; // "open", "local", "regional", "national", "premier"
+      ratingRequirement?: number;
+      pointsRequirement?: number;
+    }
+  ): Promise<{
+    isEligible: boolean;
+    meetsRatingReq: boolean;
+    meetsPointsReq: boolean;
+    qualifiesByExceptionalSkill: boolean;
+    qualifiesByProvenCompetitor: boolean;
+    userRating: number;
+    userRankingPoints: number;
+    qualificationPath: string;
+    requirementDetails: {
+      ratingRequirement: number;
+      pointsRequirement: number;
+      exceptionalSkillRatingBonus: number;
+      exceptionalSkillPointsPercentage: number;
+      provenCompetitorPointsBonus: number;
+      provenCompetitorRatingPercentage: number;
+    };
+  }> {
+    // If no specific requirements provided, check the tournament eligibility table
+    let eligibilityConfig;
+    
+    if (!tournamentData.ratingRequirement || !tournamentData.pointsRequirement) {
+      eligibilityConfig = await db.query.tournamentEligibility.findFirst({
+        where: eq(tournamentEligibility.level, tournamentData.level)
+      });
+      
+      if (!eligibilityConfig) {
+        // No configuration found, use default requirements based on level
+        eligibilityConfig = this.getDefaultTournamentRequirements(tournamentData.level);
+      }
+    } else {
+      // Use provided requirements
+      eligibilityConfig = {
+        ratingRequirement: tournamentData.ratingRequirement,
+        pointsRequirement: tournamentData.pointsRequirement,
+        exceptionalSkillRatingBonus: 200,
+        exceptionalSkillPointsPercentage: 60,
+        provenCompetitorPointsBonus: 150,
+        provenCompetitorRatingPercentage: 80,
+        name: tournamentData.name,
+        level: tournamentData.level
+      };
+    }
+    
+    // Get player rating
+    const playerRating = await this.getPlayerRating(
+      userId, 
+      tournamentData.division, 
+      tournamentData.format
+    );
+    
+    if (!playerRating) {
+      throw new Error(`Rating not found for player ${userId} in ${tournamentData.division} ${tournamentData.format}`);
+    }
+    
+    // Get current season
+    const currentSeason = await this.getCurrentSeason();
+    
+    if (!currentSeason) {
+      throw new Error("No active season found");
+    }
+    
+    // Get player ranking points
+    const playerRankingPoints = await db.query.rankingPoints.findFirst({
+      where: and(
+        eq(rankingPoints.userId, userId),
+        eq(rankingPoints.season, currentSeason.code),
+        eq(rankingPoints.division, tournamentData.division),
+        eq(rankingPoints.format, tournamentData.format)
+      )
+    });
+    
+    const points = playerRankingPoints?.points || 0;
+    
+    // Check standard eligibility
+    const meetsRatingReq = playerRating.rating >= eligibilityConfig.ratingRequirement;
+    const meetsPointsReq = points >= eligibilityConfig.pointsRequirement;
+    
+    // Check exceptional skill path - high rating can compensate for lower points
+    const exceptionalSkillRatingReq = eligibilityConfig.ratingRequirement + eligibilityConfig.exceptionalSkillRatingBonus;
+    const exceptionalSkillPointsReq = Math.floor(eligibilityConfig.pointsRequirement * (eligibilityConfig.exceptionalSkillPointsPercentage / 100));
+    
+    const qualifiesByExceptionalSkill = 
+      (playerRating.rating >= exceptionalSkillRatingReq) && 
+      (points >= exceptionalSkillPointsReq);
+    
+    // Check proven competitor path - high points can compensate for lower rating
+    const provenCompetitorPointsReq = Math.floor(eligibilityConfig.pointsRequirement * (1 + eligibilityConfig.provenCompetitorPointsBonus / 100));
+    const provenCompetitorRatingReq = Math.floor(eligibilityConfig.ratingRequirement * (eligibilityConfig.provenCompetitorRatingPercentage / 100));
+    
+    const qualifiesByProvenCompetitor = 
+      (points >= provenCompetitorPointsReq) && 
+      (playerRating.rating >= provenCompetitorRatingReq);
+    
+    // Overall eligibility
+    const isEligible = 
+      (meetsRatingReq && meetsPointsReq) || 
+      qualifiesByExceptionalSkill || 
+      qualifiesByProvenCompetitor;
+    
+    // Determine qualification path for display
+    let qualificationPath = "Not Eligible";
+    
+    if (meetsRatingReq && meetsPointsReq) {
+      qualificationPath = "Standard Qualification";
+    } else if (qualifiesByExceptionalSkill) {
+      qualificationPath = "Exceptional Skill Qualification";
+    } else if (qualifiesByProvenCompetitor) {
+      qualificationPath = "Proven Competitor Qualification";
+    }
+    
+    return {
+      isEligible,
+      meetsRatingReq,
+      meetsPointsReq,
+      qualifiesByExceptionalSkill,
+      qualifiesByProvenCompetitor,
+      userRating: playerRating.rating,
+      userRankingPoints: points,
+      qualificationPath,
+      requirementDetails: {
+        ratingRequirement: eligibilityConfig.ratingRequirement,
+        pointsRequirement: eligibilityConfig.pointsRequirement,
+        exceptionalSkillRatingBonus: eligibilityConfig.exceptionalSkillRatingBonus,
+        exceptionalSkillPointsPercentage: eligibilityConfig.exceptionalSkillPointsPercentage,
+        provenCompetitorPointsBonus: eligibilityConfig.provenCompetitorPointsBonus,
+        provenCompetitorRatingPercentage: eligibilityConfig.provenCompetitorRatingPercentage
+      }
+    };
+  }
+
+  /**
+   * Get default tournament requirements when no specific configuration exists
+   */
+  private getDefaultTournamentRequirements(level: string): {
+    ratingRequirement: number;
+    pointsRequirement: number;
+    exceptionalSkillRatingBonus: number;
+    exceptionalSkillPointsPercentage: number;
+    provenCompetitorPointsBonus: number;
+    provenCompetitorRatingPercentage: number;
+    name: string;
+    level: string;
+  } {
+    switch (level) {
+      case "open":
+        return {
+          ratingRequirement: 0,
+          pointsRequirement: 0,
+          exceptionalSkillRatingBonus: 0,
+          exceptionalSkillPointsPercentage: 0,
+          provenCompetitorPointsBonus: 0,
+          provenCompetitorRatingPercentage: 0,
+          name: "Open Play",
+          level: "open"
+        };
+      case "local":
+        return {
+          ratingRequirement: 1300,
+          pointsRequirement: 100,
+          exceptionalSkillRatingBonus: 200,
+          exceptionalSkillPointsPercentage: 60,
+          provenCompetitorPointsBonus: 150,
+          provenCompetitorRatingPercentage: 80,
+          name: "Local Championship",
+          level: "local"
+        };
+      case "regional":
+        return {
+          ratingRequirement: 1500,
+          pointsRequirement: 250,
+          exceptionalSkillRatingBonus: 200,
+          exceptionalSkillPointsPercentage: 60,
+          provenCompetitorPointsBonus: 150,
+          provenCompetitorRatingPercentage: 80,
+          name: "Regional Championship",
+          level: "regional"
+        };
+      case "national":
+        return {
+          ratingRequirement: 1800,
+          pointsRequirement: 600,
+          exceptionalSkillRatingBonus: 200,
+          exceptionalSkillPointsPercentage: 60,
+          provenCompetitorPointsBonus: 150,
+          provenCompetitorRatingPercentage: 80,
+          name: "National Championship",
+          level: "national"
+        };
+      case "premier":
+        return {
+          ratingRequirement: 2000,
+          pointsRequirement: 1000,
+          exceptionalSkillRatingBonus: 200,
+          exceptionalSkillPointsPercentage: 60,
+          provenCompetitorPointsBonus: 150,
+          provenCompetitorRatingPercentage: 80,
+          name: "Premier Invitational",
+          level: "premier"
+        };
+      default:
+        return {
+          ratingRequirement: 0,
+          pointsRequirement: 0,
+          exceptionalSkillRatingBonus: 200,
+          exceptionalSkillPointsPercentage: 60,
+          provenCompetitorPointsBonus: 150,
+          provenCompetitorRatingPercentage: 80,
+          name: "Default Tournament",
+          level: level
+        };
+    }
+  }
 }
 
 // Export singleton instance

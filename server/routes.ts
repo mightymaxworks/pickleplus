@@ -560,6 +560,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check tournament eligibility based on player ratings and ranking points
+  app.get("/api/tournament/eligibility", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const { tournamentId } = req.query;
+      
+      if (!tournamentId) {
+        return res.status(400).json({ message: "Tournament ID is required" });
+      }
+      
+      // Get the tournament
+      const tournament = await storage.getTournament(Number(tournamentId));
+      if (!tournament) {
+        return res.status(404).json({ message: "Tournament not found" });
+      }
+      
+      // Get user details including age for age division checks
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Determine player age (default to 30 if yearOfBirth is not set)
+      const currentYear = new Date().getFullYear();
+      const playerAge = user.yearOfBirth ? currentYear - user.yearOfBirth : 30;
+      
+      let eligibilityResults;
+      
+      try {
+        // Check eligibility using CourtIQ system
+        eligibilityResults = await courtIQSystem.checkTournamentEligibility({
+          userId,
+          tournamentId: Number(tournamentId),
+          tournamentLevel: tournament.level || 'local',
+          division: tournament.ageDivision || 'open',
+          format: tournament.format || 'singles',
+          playerAge,
+          // Tournament-specific requirements can be passed here
+          minimumRating: tournament.minimumRating, 
+          minimumPoints: tournament.minimumPoints,
+          tournamentTier: tournament.tier || 'standard'
+        });
+      } catch (eligibilityError) {
+        console.error("Error checking eligibility via CourtIQ:", eligibilityError);
+        // Fallback to basic eligibility check
+        eligibilityResults = {
+          eligible: true,  // Default to eligible if CourtIQ check fails
+          pathways: ['system_fallback'],
+          currentRating: null,
+          currentPoints: null,
+          ratingRequirement: tournament.minimumRating || 0,
+          pointsRequirement: tournament.minimumPoints || 0,
+          message: "Basic eligibility check passed. Advanced criteria could not be verified."
+        };
+      }
+      
+      res.json(eligibilityResults);
+    } catch (error) {
+      console.error("Error checking tournament eligibility:", error);
+      res.status(500).json({ message: "Error checking tournament eligibility" });
+    }
+  });
+
   app.post("/api/tournament-check-in", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const { tournamentId, passportId } = req.body;
@@ -593,6 +656,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if already checked in
       if (registration.checkedIn) {
         return res.status(400).json({ message: "User is already checked in to this tournament" });
+      }
+      
+      // Verify eligibility before check-in (if tournament requires it)
+      if (tournament.enforceEligibility) {
+        try {
+          // Calculate player age for age-based divisions
+          const currentYear = new Date().getFullYear();
+          const playerAge = user.yearOfBirth ? currentYear - user.yearOfBirth : 30; // Default to 30 if not set
+          
+          // Check eligibility using the CourtIQ system
+          const eligibilityCheck = await courtIQSystem.checkTournamentEligibility({
+            userId: user.id,
+            tournamentId,
+            tournamentLevel: tournament.level || 'local',
+            division: tournament.ageDivision || 'open',
+            format: tournament.format || 'singles',
+            playerAge,
+            minimumRating: tournament.minimumRating,
+            minimumPoints: tournament.minimumPoints,
+            tournamentTier: tournament.tier || 'standard'
+          });
+          
+          // If not eligible, prevent check-in
+          if (!eligibilityCheck.eligible) {
+            return res.status(403).json({
+              message: "Player does not meet the eligibility requirements for this tournament",
+              eligibilityDetails: eligibilityCheck
+            });
+          }
+        } catch (eligibilityError) {
+          console.error("Error checking eligibility for tournament check-in:", eligibilityError);
+          // Continue with check-in if eligibility check fails to avoid blocking users
+        }
       }
       
       // Check-in the user
@@ -1308,8 +1404,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Process the match in CourtIQ system (if available)
       let ratingResults;
+      let rankingPointsResult;
       try {
         if (typeof courtIQSystem !== 'undefined') {
+          // Process match in CourtIQ for rating changes
           ratingResults = await courtIQSystem.processMatch({
             matchId: match.id,
             players,
@@ -1318,35 +1416,136 @@ export async function registerRoutes(app: Express): Promise<Server> {
             matchType: matchData.matchType,
             eventTier: matchData.eventTier
           });
+          
+          // Calculate ranking points based on match context and rating differential
+          if (matchData.formatType === "singles") {
+            // For singles matches
+            rankingPointsResult = await courtIQSystem.calculateRankingPointsForMatch({
+              matchType: matchData.matchType,
+              eventTier: matchData.eventTier,
+              winner: {
+                userId: matchData.winnerId,
+                division: matchData.division,
+                format: matchData.formatType
+              },
+              loser: {
+                userId: loserId,
+                division: matchData.division,
+                format: matchData.formatType
+              },
+              // Additional context for point calculation
+              isTournamentFinal: matchData.isTournamentFinal || false,
+              isTournamentSemiFinal: matchData.isTournamentSemiFinal || false,
+              participantCount: matchData.participantCount
+            });
+            
+            // Award enhanced ranking points to the winner
+            await courtIQSystem.awardEnhancedRankingPoints(
+              matchData.winnerId,
+              rankingPointsResult,
+              matchData.division,
+              matchData.formatType,
+              "match_victory",
+              matchData.matchType,
+              matchData.eventTier,
+              matchData.scorePlayerOne > matchData.scorePlayerTwo ? "decisive" : "close",
+              match.id,
+              ratingResults?.playerOneRatingChange?.ratingDifferential,
+              1.0, // No additional multiplier
+              `Match victory against player #${loserId}`
+            );
+          } else {
+            // For doubles matches - simplified point calculation for now
+            rankingPointsResult = await courtIQSystem.calculateRankingPointsForMatch({
+              matchType: matchData.matchType,
+              eventTier: matchData.eventTier,
+              winner: {
+                userId: matchData.winnerId,
+                division: matchData.division,
+                format: matchData.formatType
+              },
+              loser: {
+                userId: loserId,
+                division: matchData.division,
+                format: matchData.formatType
+              },
+              isTournamentFinal: matchData.isTournamentFinal || false,
+              isTournamentSemiFinal: matchData.isTournamentSemiFinal || false,
+              participantCount: matchData.participantCount
+            });
+            
+            // Award points to the winning team
+            await courtIQSystem.awardEnhancedRankingPoints(
+              matchData.winnerId,
+              rankingPointsResult,
+              matchData.division,
+              matchData.formatType,
+              "match_victory",
+              matchData.matchType,
+              matchData.eventTier,
+              undefined,
+              match.id,
+              undefined,
+              1.0,
+              `Doubles victory with partner #${matchData.playerOnePartnerId || matchData.playerTwoPartnerId}`
+            );
+            
+            // If there's a partner, also award them points
+            const partnerId = matchData.winnerId === matchData.playerOneId 
+              ? matchData.playerOnePartnerId 
+              : matchData.playerTwoPartnerId;
+              
+            if (partnerId) {
+              await courtIQSystem.awardEnhancedRankingPoints(
+                partnerId,
+                rankingPointsResult,
+                matchData.division,
+                matchData.formatType,
+                "match_victory",
+                matchData.matchType,
+                matchData.eventTier,
+                undefined,
+                match.id,
+                undefined,
+                1.0,
+                `Doubles victory with partner #${matchData.winnerId}`
+              );
+            }
+          }
         }
       } catch (courtiqError) {
         console.error("Error processing match in CourtIQ system:", courtiqError);
-        // Continue without CourtIQ updates - we'll still award XP and points
+        // Continue with legacy point system as fallback
       }
       
-      // Fixed points for casual matches (for backward compatibility)
-      const pointsForWinner = 10;
-      
-      // Update winner's ranking points and create ranking history
-      const updatedWinner = await storage.updateUserRankingPoints(matchData.winnerId, pointsForWinner);
-      
-      // Get the old and new ranking
-      const oldRanking = (updatedWinner?.rankingPoints || 0) - pointsForWinner;
-      const newRanking = updatedWinner?.rankingPoints || 0;
-      
-      // Determine opponent(s) for the ranking history reason text
-      let opponentText = `player #${loserId}`;
-      if (matchData.formatType === "doubles") {
-        opponentText = `players #${loserId}${matchData.playerTwoPartnerId ? ` and #${matchData.playerTwoPartnerId}` : ''}`;
+      // Fixed points as a fallback if CourtIQ system fails
+      let pointsForWinner = 10;
+      if (rankingPointsResult) {
+        pointsForWinner = rankingPointsResult.total;
+      } else {
+        // Legacy point system as fallback
+        // Update winner's ranking points using the old system
+        const updatedWinner = await storage.updateUserRankingPoints(matchData.winnerId, pointsForWinner);
+        
+        // Get the old and new ranking
+        const oldRanking = (updatedWinner?.rankingPoints || 0) - pointsForWinner;
+        const newRanking = updatedWinner?.rankingPoints || 0;
+        
+        // Determine opponent(s) for the ranking history reason text
+        let opponentText = `player #${loserId}`;
+        if (matchData.formatType === "doubles") {
+          opponentText = `players #${loserId}${matchData.playerTwoPartnerId ? ` and #${matchData.playerTwoPartnerId}` : ''}`;
+        }
+        
+        // Record ranking change in legacy system
+        await storage.recordRankingChange({
+          userId: matchData.winnerId,
+          oldRanking,
+          newRanking,
+          reason: `Won ${matchData.matchType} ${matchData.formatType} match against ${opponentText}`,
+          matchId: match.id
+        });
       }
-      
-      await storage.recordRankingChange({
-        userId: matchData.winnerId,
-        oldRanking,
-        newRanking,
-        reason: `Won ${matchData.matchType} ${matchData.formatType} match against ${opponentText}`,
-        matchId: match.id
-      });
       
       // Update match counts for the current user
       const isWinner = userId === matchData.winnerId;
@@ -1389,6 +1588,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add CourtIQ results if available
       if (ratingResults) {
         response.ratingChanges = ratingResults;
+      }
+      
+      // Add ranking points breakdown if available
+      if (rankingPointsResult) {
+        response.rankingPoints = {
+          total: rankingPointsResult.total,
+          basePoints: rankingPointsResult.base,
+          ratingBonus: rankingPointsResult.ratingBonus,
+          explanation: rankingPointsResult.basePointsExplanation,
+          bonusExplanation: rankingPointsResult.bonusExplanation,
+          contextualFactors: rankingPointsResult.contextualFactors
+        };
       }
       
       res.status(201).json(response);
