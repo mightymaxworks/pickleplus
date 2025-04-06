@@ -83,11 +83,11 @@ export function XPCard({ className, userId }: XPCardProps) {
             variant="outline"
             className="rounded-md text-xs px-2 py-1"
             style={{ 
-              borderColor: xpData.levelInfo.colorCode || '#4CAF50', 
-              color: xpData.levelInfo.colorCode || '#4CAF50' 
+              borderColor: xpData?.levelInfo?.colorCode || '#4CAF50', 
+              color: xpData?.levelInfo?.colorCode || '#4CAF50' 
             }}
           >
-            Level {xpData.levelInfo.level}
+            Level {xpData?.levelInfo?.level || 1}
           </Badge>
         </CardTitle>
       </CardHeader>
@@ -95,43 +95,43 @@ export function XPCard({ className, userId }: XPCardProps) {
         <div className="space-y-4">
           {/* Current XP */}
           <div className="flex flex-col">
-            <span className="text-3xl font-bold">{xpData.currentXP}</span>
+            <span className="text-3xl font-bold">{xpData?.currentXP || 0}</span>
             <span className="text-xs text-muted-foreground">Total experience points</span>
           </div>
 
           {/* Progress to next level */}
-          {xpData.nextLevelInfo && (
+          {xpData?.nextLevelInfo && (
             <div className="space-y-1">
               <div className="flex justify-between text-xs">
-                <span>Level {xpData.levelInfo.level}</span>
-                <span>Level {xpData.nextLevelInfo.level}</span>
+                <span>Level {xpData?.levelInfo?.level || 1}</span>
+                <span>Level {xpData?.nextLevelInfo?.level || 2}</span>
               </div>
               <Progress value={progressToNextLevel()} className="h-2" />
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{xpData.levelInfo.minXP}</span>
-                <span>{xpData.nextLevelInfo.minXP}</span>
+                <span>{xpData?.levelInfo?.minXP || 0}</span>
+                <span>{xpData?.nextLevelInfo?.minXP || 1000}</span>
               </div>
             </div>
           )}
 
           {/* XP Multipliers and Boosters */}
-          {xpData.activeMultipliers && xpData.activeMultipliers.length > 0 && (
+          {xpData?.activeMultipliers && xpData?.activeMultipliers.length > 0 && (
             <div className="pt-2">
               <div className="text-sm font-medium flex items-center gap-1 mb-2">
                 <Zap className="h-4 w-4 text-yellow-500" />
                 <span>Active Boosters</span>
               </div>
               <div className="space-y-1">
-                {xpData.activeMultipliers.map((multiplier, index) => (
+                {xpData?.activeMultipliers.map((multiplier, index) => (
                   <div key={index} className="text-sm flex justify-between items-center py-1 border-b border-dashed last:border-0">
                     <div className="flex-1">
-                      <div className="font-medium text-xs">{multiplier.name}</div>
+                      <div className="font-medium text-xs">{multiplier?.name}</div>
                       <div className="text-xs text-muted-foreground">
-                        Expires in {multiplier.remainingTime}
+                        Expires in {multiplier?.remainingTime}
                       </div>
                     </div>
                     <Badge variant="secondary" className="text-xs">
-                      {multiplier.value}x
+                      {multiplier?.value}x
                     </Badge>
                   </div>
                 ))}
@@ -143,15 +143,15 @@ export function XPCard({ className, userId }: XPCardProps) {
           <div className="pt-2">
             <div className="text-sm font-medium flex items-center gap-1 mb-2">
               <Trophy className="h-4 w-4" />
-              <span>Level {xpData.levelInfo.level} Benefits</span>
+              <span>Level {xpData?.levelInfo?.level || 1} Benefits</span>
             </div>
             <div className="bg-muted/50 p-2 rounded-md">
-              <p className="text-xs">{xpData.levelInfo.description || 'Progress through levels to unlock special benefits and features.'}</p>
+              <p className="text-xs">{xpData?.levelInfo?.description || 'Progress through levels to unlock special benefits and features.'}</p>
               
-              {xpData.levelInfo.unlocks && (
+              {xpData?.levelInfo?.unlocks && (
                 <div className="mt-2 space-y-1">
-                  {Array.isArray(xpData.levelInfo.unlocks) ? (
-                    xpData.levelInfo.unlocks.map((unlock, index) => (
+                  {Array.isArray(xpData?.levelInfo?.unlocks) ? (
+                    xpData?.levelInfo?.unlocks.map((unlock, index) => (
                       <div key={index} className="flex items-center gap-1 text-xs">
                         <Medal className="h-3 w-3 text-primary" />
                         <span>{unlock}</span>
@@ -160,7 +160,7 @@ export function XPCard({ className, userId }: XPCardProps) {
                   ) : (
                     <div className="flex items-center gap-1 text-xs">
                       <Medal className="h-3 w-3 text-primary" />
-                      <span>{xpData.levelInfo.unlocks}</span>
+                      <span>{xpData?.levelInfo?.unlocks}</span>
                     </div>
                   )}
                 </div>
@@ -169,23 +169,23 @@ export function XPCard({ className, userId }: XPCardProps) {
           </div>
 
           {/* Recent XP Gains */}
-          {xpData.recentActivities && xpData.recentActivities.length > 0 && (
+          {xpData?.recentActivities && xpData?.recentActivities.length > 0 && (
             <div className="pt-2">
               <div className="text-sm font-medium flex items-center gap-1 mb-2">
                 <Activity className="h-4 w-4" />
                 <span>Recent XP Gains</span>
               </div>
               <div className="space-y-1">
-                {xpData.recentActivities.slice(0, 3).map((activity, index) => (
+                {xpData?.recentActivities.slice(0, 3).map((activity, index) => (
                   <div key={index} className="text-sm flex justify-between items-center py-1 border-b border-dashed last:border-0">
                     <div className="flex-1">
-                      <div className="font-medium text-xs">{activity.description}</div>
+                      <div className="font-medium text-xs">{activity?.description}</div>
                       <div className="text-xs text-muted-foreground">
-                        {activity.date}
+                        {activity?.date}
                       </div>
                     </div>
                     <Badge variant="outline" className="text-xs text-primary">
-                      +{activity.xpEarned} XP
+                      +{activity?.xpEarned} XP
                     </Badge>
                   </div>
                 ))}
