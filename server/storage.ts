@@ -10,7 +10,10 @@ import {
   matches, type Match, type InsertMatch,
   rankingHistory, type RankingHistory, type InsertRankingHistory,
   coachingProfiles, type CoachingProfile, type InsertCoachingProfile,
-  connections, type Connection, type InsertConnection
+  connections, type Connection, type InsertConnection,
+  profileThemes, type ProfileTheme, type InsertProfileTheme,
+  externalAccounts, type ExternalAccount, type InsertExternalAccount,
+  userBlockList, type UserBlockList, type InsertUserBlockList
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, desc, asc, sql } from "drizzle-orm";
@@ -42,6 +45,26 @@ export interface IStorage {
   calculateProfileCompletion(userId: number): Promise<number>;
   updateProfileCompletionPercentage(userId: number, percentage: number): Promise<User | undefined>;
   getCompletedProfileFields(userId: number): Promise<string[]>;
+  
+  // Profile Customization operations
+  getProfileThemes(): Promise<ProfileTheme[]>;
+  getProfileThemeByName(name: string): Promise<ProfileTheme | undefined>;
+  createProfileTheme(theme: InsertProfileTheme): Promise<ProfileTheme>;
+  updateProfileTheme(id: number, theme: Partial<ProfileTheme>): Promise<ProfileTheme>;
+  
+  // External Accounts operations
+  getUserExternalAccounts(userId: number): Promise<ExternalAccount[]>;
+  getExternalAccount(id: number): Promise<ExternalAccount | undefined>;
+  createExternalAccount(account: InsertExternalAccount): Promise<ExternalAccount>;
+  updateExternalAccount(id: number, updates: Partial<ExternalAccount>): Promise<ExternalAccount>;
+  deleteExternalAccount(id: number): Promise<void>;
+  
+  // User Blocking operations
+  getUserBlock(userId: number, blockedUserId: number): Promise<UserBlockList | undefined>;
+  getBlockedUsers(userId: number): Promise<UserBlockList[]>;
+  getBlockedByUsers(userId: number): Promise<UserBlockList[]>;
+  createUserBlock(block: InsertUserBlockList): Promise<UserBlockList>;
+  deleteUserBlock(userId: number, blockedUserId: number): Promise<void>;
   
   // Tournament operations
   getTournament(id: number): Promise<Tournament | undefined>;
@@ -139,6 +162,9 @@ export class MemStorage implements IStorage {
   private rankingHistories: Map<number, RankingHistory>;
   private coachingProfiles: Map<number, CoachingProfile>;
   private connections: Map<number, Connection>;
+  private profileThemes: Map<number, ProfileTheme>;
+  private externalAccounts: Map<number, ExternalAccount>;
+  private userBlockLists: Map<number, UserBlockList>;
   
   private userId: number;
   private tournamentId: number;
@@ -152,6 +178,9 @@ export class MemStorage implements IStorage {
   private rankingHistoryId: number;
   private coachingProfileId: number;
   private connectionId: number;
+  private profileThemeId: number;
+  private externalAccountId: number;
+  private userBlockListId: number;
 
   constructor() {
     this.users = new Map();
@@ -166,6 +195,9 @@ export class MemStorage implements IStorage {
     this.rankingHistories = new Map();
     this.coachingProfiles = new Map();
     this.connections = new Map();
+    this.profileThemes = new Map();
+    this.externalAccounts = new Map();
+    this.userBlockLists = new Map();
     
     this.userId = 1;
     this.tournamentId = 1;
@@ -179,6 +211,9 @@ export class MemStorage implements IStorage {
     this.rankingHistoryId = 1;
     this.coachingProfileId = 1;
     this.connectionId = 1;
+    this.profileThemeId = 1;
+    this.externalAccountId = 1;
+    this.userBlockListId = 1;
     
     // Initialize with sample achievements and redemption codes
     this.initSampleData();
@@ -1362,6 +1397,131 @@ export class MemStorage implements IStorage {
     });
     
     return { total, byType };
+  }
+  
+  // Profile Theme methods
+  async getProfileThemes(): Promise<ProfileTheme[]> {
+    return Array.from(this.profileThemes.values());
+  }
+  
+  async getProfileThemeByName(name: string): Promise<ProfileTheme | undefined> {
+    return Array.from(this.profileThemes.values()).find(theme => theme.name === name);
+  }
+  
+  async createProfileTheme(theme: InsertProfileTheme): Promise<ProfileTheme> {
+    const id = this.profileThemeId++;
+    const createdAt = new Date();
+    
+    const newTheme: ProfileTheme = {
+      ...theme,
+      id,
+      createdAt,
+      isActive: theme.isActive ?? true,
+      usersCount: 0
+    };
+    
+    this.profileThemes.set(id, newTheme);
+    return newTheme;
+  }
+  
+  async updateProfileTheme(id: number, updates: Partial<ProfileTheme>): Promise<ProfileTheme> {
+    const theme = this.profileThemes.get(id);
+    if (!theme) {
+      throw new Error(`Theme with ID ${id} not found`);
+    }
+    
+    const updatedTheme = { ...theme, ...updates };
+    this.profileThemes.set(id, updatedTheme);
+    return updatedTheme;
+  }
+  
+  // External Account methods
+  async getUserExternalAccounts(userId: number): Promise<ExternalAccount[]> {
+    return Array.from(this.externalAccounts.values())
+      .filter(account => account.userId === userId);
+  }
+  
+  async getExternalAccount(id: number): Promise<ExternalAccount | undefined> {
+    return this.externalAccounts.get(id);
+  }
+  
+  async createExternalAccount(account: InsertExternalAccount): Promise<ExternalAccount> {
+    const id = this.externalAccountId++;
+    const createdAt = new Date();
+    
+    const newAccount: ExternalAccount = {
+      ...account,
+      id,
+      createdAt,
+      lastSynced: account.lastSynced || null,
+      isVerified: account.isVerified ?? false
+    };
+    
+    this.externalAccounts.set(id, newAccount);
+    return newAccount;
+  }
+  
+  async updateExternalAccount(id: number, updates: Partial<ExternalAccount>): Promise<ExternalAccount> {
+    const account = this.externalAccounts.get(id);
+    if (!account) {
+      throw new Error(`External account with ID ${id} not found`);
+    }
+    
+    const updatedAccount = { ...account, ...updates };
+    this.externalAccounts.set(id, updatedAccount);
+    return updatedAccount;
+  }
+  
+  async deleteExternalAccount(id: number): Promise<void> {
+    if (!this.externalAccounts.has(id)) {
+      throw new Error(`External account with ID ${id} not found`);
+    }
+    
+    this.externalAccounts.delete(id);
+  }
+  
+  // User Block methods
+  async getUserBlock(userId: number, blockedUserId: number): Promise<UserBlockList | undefined> {
+    return Array.from(this.userBlockLists.values()).find(
+      block => block.userId === userId && block.blockedUserId === blockedUserId && block.isActive
+    );
+  }
+  
+  async getBlockedUsers(userId: number): Promise<UserBlockList[]> {
+    return Array.from(this.userBlockLists.values())
+      .filter(block => block.userId === userId && block.isActive);
+  }
+  
+  async getBlockedByUsers(userId: number): Promise<UserBlockList[]> {
+    return Array.from(this.userBlockLists.values())
+      .filter(block => block.blockedUserId === userId && block.isActive);
+  }
+  
+  async createUserBlock(block: InsertUserBlockList): Promise<UserBlockList> {
+    const id = this.userBlockListId++;
+    const createdAt = new Date();
+    
+    const newBlock: UserBlockList = {
+      ...block,
+      id,
+      createdAt,
+      isActive: block.isActive ?? true,
+      reason: block.reason || null
+    };
+    
+    this.userBlockLists.set(id, newBlock);
+    return newBlock;
+  }
+  
+  async deleteUserBlock(userId: number, blockedUserId: number): Promise<void> {
+    const block = await this.getUserBlock(userId, blockedUserId);
+    if (!block) {
+      throw new Error(`Block not found for user ${userId} blocking user ${blockedUserId}`);
+    }
+    
+    // Soft delete by setting isActive to false
+    const updatedBlock = { ...block, isActive: false };
+    this.userBlockLists.set(block.id, updatedBlock);
   }
   
   // Dashboard statistics methods

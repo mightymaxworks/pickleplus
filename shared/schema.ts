@@ -27,6 +27,15 @@ export const users = pgTable("users", {
   isAdmin: boolean("is_admin").default(false),
   xpMultiplier: integer("xp_multiplier").default(100), // Store as an integer representing percentage (100 = 1.0x, 110 = 1.1x)
   
+  // Profile Visual Customization
+  avatarUrl: text("avatar_url"), // URL to user's profile avatar image
+  profileTheme: text("profile_theme").default("default"), // Theme name or ID
+  profileAccentColor: text("profile_accent_color").default("#FF5722"), // Hex color code
+  bannerImageUrl: text("banner_image_url"), // URL to profile banner/header image
+  badgeDisplayPreference: text("badge_display_preference").default("grid"), // grid, carousel, list, etc.
+  profileLayout: text("profile_layout").default("standard"), // standard, compact, featured, etc.
+  customCss: text("custom_css"), // Optional custom CSS for premium users
+  
   // Pickleball-specific fields
   bio: text("bio"), // Short player bio or status
   preferredPosition: text("preferred_position"), // Forehand, Backhand, Either
@@ -47,6 +56,23 @@ export const users = pgTable("users", {
   leagues: text("leagues"), // Leagues they participate in
   socialHandles: json("social_handles"), // JSON object with social media handles
   willingToMentor: boolean("willing_to_mentor").default(false),
+  socialMediaConsent: boolean("social_media_consent").default(false), // Consent to share achievements on social media
+  
+  // Advanced Profile Customization
+  bioFormatted: text("bio_formatted"), // Rich text formatted bio (HTML or markdown)
+  featuredAchievements: json("featured_achievements"), // Array of achievement IDs to feature
+  seasonalPreference: text("seasonal_preference").default("all_time"), // Current, all-time, by year, etc.
+  customSections: json("custom_sections"), // User-defined profile sections
+  highlightedMatches: json("highlighted_matches"), // Array of match IDs to highlight
+  
+  // Partner Preferences System (expanded)
+  partnerSkillRange: json("partner_skill_range"), // Min/max skill level for partners
+  partnerAgeRange: json("partner_age_range"), // Min/max age for partners
+  partnerPlayingStyles: json("partner_playing_styles"), // Array of compatible playing styles
+  availabilitySchedule: json("availability_schedule"), // Structured weekly availability
+  partnerMatchingEnabled: boolean("partner_matching_enabled").default(false), // Allow automatic matching
+  partnerLocationMaxDistance: integer("partner_location_max_distance"), // Max distance in miles/km
+  partnerLanguages: json("partner_languages"), // Languages spoken
   
   // Physical/Health information
   mobilityLimitations: text("mobility_limitations"),
@@ -403,6 +429,82 @@ export const connectionsRelations = relations(connections, ({ one }) => ({
   })
 }));
 
+// Profile Themes table schema
+export const profileThemes = pgTable("profile_themes", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  displayName: text("display_name").notNull(),
+  description: text("description"),
+  primaryColor: text("primary_color").notNull(),
+  secondaryColor: text("secondary_color").notNull(),
+  accentColor: text("accent_color"),
+  textColor: text("text_color").notNull(),
+  backgroundPattern: text("background_pattern"),
+  cardStyle: text("card_style"),
+  isDefault: boolean("is_default").default(false),
+  isEnabled: boolean("is_enabled").default(true),
+  previewImageUrl: text("preview_image_url"),
+  cssVariables: json("css_variables").default({}),
+  customCss: text("custom_css"),
+  isPremium: boolean("is_premium").default(false),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const profileThemesRelations = relations(profileThemes, ({ many }) => ({
+  users: many(users)
+}));
+
+// External Social Accounts table schema
+export const externalAccounts = pgTable("external_accounts", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  platform: text("platform").notNull(), // instagram, facebook, twitter, tiktok, youtube, etc.
+  username: text("username").notNull(),
+  displayName: text("display_name"),
+  accountId: text("account_id"), // Platform-specific ID 
+  accessToken: text("access_token"), // Encrypted token for API access
+  refreshToken: text("refresh_token"), // Encrypted refresh token if applicable
+  tokenExpiresAt: timestamp("token_expires_at"),
+  isVerified: boolean("is_verified").default(false), // Whether the account is verified
+  isActive: boolean("is_active").default(true), // Whether the connection is active
+  lastSyncAt: timestamp("last_sync_at"), // Last time data was synced
+  metadata: json("metadata").default({}), // Additional platform-specific data
+  sharingEnabled: boolean("sharing_enabled").default(false), // Whether to share achievements to this account
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at")
+});
+
+export const externalAccountsRelations = relations(externalAccounts, ({ one }) => ({
+  user: one(users, {
+    fields: [externalAccounts.userId],
+    references: [users.id]
+  })
+}));
+
+// User Block List table schema
+export const userBlockList = pgTable("user_block_list", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  blockedUserId: integer("blocked_user_id").notNull().references(() => users.id),
+  reason: text("reason"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at")
+});
+
+export const userBlockListRelations = relations(userBlockList, ({ one }) => ({
+  user: one(users, {
+    fields: [userBlockList.userId],
+    references: [users.id],
+    relationName: "userBlocks"
+  }),
+  blockedUser: one(users, {
+    fields: [userBlockList.blockedUserId],
+    references: [users.id],
+    relationName: "blockedBy"
+  })
+}));
+
 // Coaching profiles relations
 export const coachingProfilesRelations = relations(coachingProfiles, ({ one }) => ({
   user: one(users, {
@@ -535,8 +637,36 @@ export type CoachAccessRequest = z.infer<typeof coachAccessRequestSchema>;
 export type InsertConnection = z.infer<typeof insertConnectionSchema>;
 export type Connection = typeof connections.$inferSelect;
 
+// Insert schemas for the new profile-related tables
+export const insertProfileThemeSchema = createInsertSchema(profileThemes).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertExternalAccountSchema = createInsertSchema(externalAccounts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  lastSyncAt: true
+});
+
+export const insertUserBlockListSchema = createInsertSchema(userBlockList).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
 export type RedeemCode = z.infer<typeof redeemCodeSchema>;
 export type Login = z.infer<typeof loginSchema>;
+
+export type InsertProfileTheme = z.infer<typeof insertProfileThemeSchema>;
+export type ProfileTheme = typeof profileThemes.$inferSelect;
+
+export type InsertExternalAccount = z.infer<typeof insertExternalAccountSchema>;
+export type ExternalAccount = typeof externalAccounts.$inferSelect;
+
+export type InsertUserBlockList = z.infer<typeof insertUserBlockListSchema>;
+export type UserBlockList = typeof userBlockList.$inferSelect;
 
 // Now define user relations after all tables are defined
 // Import CourtIQ relations for users
@@ -561,6 +691,11 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   coachingProfile: one(coachingProfiles),
   connectionRequestsSent: many(connections, { relationName: "connectionRequests" }),
   connectionRequestsReceived: many(connections, { relationName: "connectionReceived" }),
+  
+  // Profile features relations
+  externalAccounts: many(externalAccounts),
+  blockedUsers: many(userBlockList, { relationName: "userBlocks" }),
+  blockedByUsers: many(userBlockList, { relationName: "blockedBy" }),
   
   // CourtIQ relations
   playerRatings: many(playerRatings),

@@ -1,180 +1,250 @@
+/**
+ * PrivacyService
+ * 
+ * Provides functionality for checking user privacy preferences and content visibility:
+ * - Check if content is visible to a user based on privacy settings
+ * - Enforce privacy rules across the platform
+ * - Handle blocked users visibility
+ */
+
+import { IStorage } from "../../../storage";
 import { User } from "@shared/schema";
-import { db } from "../../../db";
-import { users } from "@shared/schema";
-import { eq } from "drizzle-orm";
-import { storage } from "../../../storage";
+import { EventBus } from "../../../core/events/event-bus";
+import { IUserBlockService } from "./user-block-service";
 
-/**
- * Interface for the Privacy Service
- */
+// Enum for privacy levels
+export enum PrivacyLevel {
+  PUBLIC = "public",       // Visible to everyone
+  CONNECTIONS = "connections", // Visible to connections only
+  PRIVATE = "private"      // Visible to self only
+}
+
+// Content types that can have privacy settings
+export enum ContentType {
+  PROFILE = "profile",
+  ACTIVITY = "activity",
+  STATS = "stats",
+  MATCHES = "matches",
+  ACHIEVEMENTS = "achievements",
+  CONNECTIONS = "connections"
+}
+
 export interface IPrivacyService {
-  /**
-   * Check if specific content is visible to a viewer based on privacy settings
-   */
-  isContentVisibleToUser(contentOwner: User, viewer: User | null, contentType: string): Promise<boolean>;
+  // Check if content is visible to a viewer
+  isContentVisibleToUser(
+    contentOwnerId: number, 
+    viewerId: number | null, 
+    contentType: ContentType
+  ): Promise<boolean>;
   
-  /**
-   * Update user's privacy settings
-   */
-  updatePrivacySettings(userId: number, settings: any): Promise<User | undefined>;
+  // Get a user's privacy settings
+  getUserPrivacySettings(userId: number): Promise<Record<ContentType, PrivacyLevel>>;
   
-  /**
-   * Update user's communication preferences
-   */
-  updateCommunicationPreferences(userId: number, preferences: any): Promise<User | undefined>;
+  // Update a user's privacy settings
+  updateUserPrivacySettings(
+    userId: number, 
+    settings: Partial<Record<ContentType, PrivacyLevel>>
+  ): Promise<User>;
   
-  /**
-   * Get user's privacy settings
-   */
-  getPrivacySettings(userId: number): Promise<any>;
+  // Check if a user is blocked by another
+  isUserBlocked(userId: number, potentiallyBlockedUserId: number): Promise<boolean>;
   
-  /**
-   * Get user's communication preferences
-   */
-  getCommunicationPreferences(userId: number): Promise<any>;
+  // Get content visibility explanation for debugging/explanation
+  getContentVisibilityExplanation(
+    contentOwnerId: number, 
+    viewerId: number | null, 
+    contentType: ContentType
+  ): Promise<string>;
 }
 
-/**
- * Service for managing user privacy and communication settings
- */
 export class PrivacyService implements IPrivacyService {
+  constructor(
+    private storage: IStorage,
+    private userBlockService: IUserBlockService,
+    private eventBus: EventBus
+  ) {}
+
   /**
-   * Check if specific content is visible to a viewer based on privacy settings
+   * Check if content is visible to a viewer
+   * @param contentOwnerId The ID of the user who owns the content
+   * @param viewerId The ID of the user viewing the content (null for unauthenticated)
+   * @param contentType The type of content being checked
+   * @returns Whether the content is visible
    */
-  async isContentVisibleToUser(contentOwner: User, viewer: User | null, contentType: string): Promise<boolean> {
-    // Default to profile visibility if specific content type not found
-    const defaultVisibility = 'public';
-    const privacySettings = contentOwner.privacySettings || {};
-    
-    const settingKey = `${contentType}Visibility`;
-    // Safely access properties that might not exist
-    const profileVisibilitySetting = privacySettings && 'profileVisibility' in privacySettings 
-      ? (privacySettings as any).profileVisibility 
-      : defaultVisibility;
-    
-    const contentVisibilitySetting = privacySettings && settingKey in privacySettings
-      ? (privacySettings as any)[settingKey]
-      : null;
-      
-    const visibilitySetting = contentVisibilitySetting || profileVisibilitySetting || defaultVisibility;
-    
-    if (visibilitySetting === 'public') return true;
-    if (!viewer) return false; // Not logged in
-    if (contentOwner.id === viewer.id) return true; // Owner can always see own content
-    if (visibilitySetting === 'private') return false;
-    
-    // For 'connections' visibility, check if users are connected
-    return await this.areUsersConnected(contentOwner.id, viewer.id);
-  }
-  
-  /**
-   * Check if two users are connected (friends, coach/student, etc.)
-   * @private
-   */
-  private async areUsersConnected(userId1: number, userId2: number): Promise<boolean> {
-    // Call storage service to check for active connections
-    const connection = await storage.getUserConnection(userId1, userId2);
-    return !!connection && connection.status === 'accepted';
-  }
-  
-  /**
-   * Update user's privacy settings
-   */
-  async updatePrivacySettings(userId: number, settings: any): Promise<User | undefined> {
-    try {
-      const user = await storage.getUser(userId);
-      if (!user) return undefined;
-      
-      // Update only the privacy settings, preserving other JSON fields
-      const [updatedUser] = await db.update(users)
-        .set({ 
-          privacySettings: settings
-        })
-        .where(eq(users.id, userId))
-        .returning();
-      
-      return updatedUser;
-    } catch (error) {
-      console.error('Error updating privacy settings:', error);
-      return undefined;
+  async isContentVisibleToUser(
+    contentOwnerId: number, 
+    viewerId: number | null, 
+    contentType: ContentType
+  ): Promise<boolean> {
+    // Owner can always view their own content
+    if (viewerId !== null && contentOwnerId === viewerId) {
+      return true;
     }
-  }
-  
-  /**
-   * Update user's communication preferences
-   */
-  async updateCommunicationPreferences(userId: number, preferences: any): Promise<User | undefined> {
-    try {
-      const user = await storage.getUser(userId);
-      if (!user) return undefined;
-      
-      // Update communication preferences and notification delivery
-      const [updatedUser] = await db.update(users)
-        .set({ 
-          communicationPreferences: preferences.communicationPreferences,
-          notificationDelivery: preferences.notificationDelivery
-        })
-        .where(eq(users.id, userId))
-        .returning();
-      
-      return updatedUser;
-    } catch (error) {
-      console.error('Error updating communication preferences:', error);
-      return undefined;
+
+    // Check if the viewer is blocked by the content owner
+    if (viewerId !== null) {
+      const isBlocked = await this.userBlockService.isUserBlocked(contentOwnerId, viewerId);
+      if (isBlocked) {
+        return false;
+      }
     }
-  }
-  
-  /**
-   * Get user's privacy settings
-   */
-  async getPrivacySettings(userId: number): Promise<any> {
-    try {
-      const user = await storage.getUser(userId);
-      if (!user) return null;
-      
-      return user.privacySettings || {
-        profileVisibility: "public",
-        locationVisibility: "public",
-        skillLevelVisibility: "public",
-        matchHistoryVisibility: "connections",
-        achievementsVisibility: "public",
-        socialHandlesVisibility: "connections"
-      };
-    } catch (error) {
-      console.error('Error getting privacy settings:', error);
-      return null;
-    }
-  }
-  
-  /**
-   * Get user's communication preferences
-   */
-  async getCommunicationPreferences(userId: number): Promise<any> {
-    try {
-      const user = await storage.getUser(userId);
-      if (!user) return null;
-      
-      return {
-        communicationPreferences: user.communicationPreferences || {
-          matchInvitations: true,
-          tournamentNotifications: true,
-          achievementAlerts: true,
-          connectionRequests: true,
-          marketingEmails: false,
-          newsAndUpdates: true
-        },
-        notificationDelivery: user.notificationDelivery || {
-          email: true,
-          inApp: true,
-          pushNotifications: false
+
+    // Get user's privacy settings
+    const privacySettings = await this.getUserPrivacySettings(contentOwnerId);
+    const privacyLevel = privacySettings[contentType];
+
+    // Apply privacy rules based on level
+    switch (privacyLevel) {
+      case PrivacyLevel.PUBLIC:
+        return true;
+
+      case PrivacyLevel.PRIVATE:
+        return false;
+
+      case PrivacyLevel.CONNECTIONS:
+        // Unauthenticated users can't be connections
+        if (viewerId === null) {
+          return false;
         }
-      };
-    } catch (error) {
-      console.error('Error getting communication preferences:', error);
-      return null;
+
+        // Check if the users are connected
+        const connection = await this.storage.getUserConnection(contentOwnerId, viewerId);
+        return connection !== undefined;
+
+      default:
+        // Default to private if unknown privacy level
+        return false;
+    }
+  }
+
+  /**
+   * Get a user's privacy settings
+   * @param userId The ID of the user
+   * @returns Record of privacy settings by content type
+   */
+  async getUserPrivacySettings(userId: number): Promise<Record<ContentType, PrivacyLevel>> {
+    const user = await this.storage.getUser(userId);
+    
+    if (!user) {
+      throw new Error(`User with ID ${userId} not found`);
+    }
+
+    // Get the user's privacy settings from their profile or use defaults
+    const defaultPrivacy: Record<ContentType, PrivacyLevel> = {
+      [ContentType.PROFILE]: PrivacyLevel.PUBLIC,
+      [ContentType.ACTIVITY]: PrivacyLevel.CONNECTIONS,
+      [ContentType.STATS]: PrivacyLevel.PUBLIC,
+      [ContentType.MATCHES]: PrivacyLevel.PUBLIC,
+      [ContentType.ACHIEVEMENTS]: PrivacyLevel.PUBLIC,
+      [ContentType.CONNECTIONS]: PrivacyLevel.CONNECTIONS
+    };
+
+    // If user has saved privacy settings, use those
+    if (user.privacySettings) {
+      // Parse if stored as string, or use the object directly
+      const userSettings = typeof user.privacySettings === 'string' 
+        ? JSON.parse(user.privacySettings) 
+        : user.privacySettings;
+      
+      // Merge with defaults to ensure all content types have a setting
+      return { ...defaultPrivacy, ...userSettings };
+    }
+
+    return defaultPrivacy;
+  }
+
+  /**
+   * Update a user's privacy settings
+   * @param userId The ID of the user
+   * @param settings Partial record of privacy settings to update
+   * @returns The updated user
+   */
+  async updateUserPrivacySettings(
+    userId: number, 
+    settings: Partial<Record<ContentType, PrivacyLevel>>
+  ): Promise<User> {
+    // Get current settings
+    const currentSettings = await this.getUserPrivacySettings(userId);
+    
+    // Merge with new settings
+    const updatedSettings = { ...currentSettings, ...settings };
+    
+    // Update user
+    const user = await this.storage.updateUser(userId, {
+      privacySettings: updatedSettings
+    });
+    
+    if (!user) {
+      throw new Error(`User with ID ${userId} not found`);
+    }
+    
+    // Publish privacy settings update event
+    this.eventBus.publish("user.privacy.updated", {
+      userId,
+      settings: updatedSettings
+    });
+    
+    return user;
+  }
+
+  /**
+   * Check if a user is blocked by another
+   * @param userId The ID of the potential blocker
+   * @param potentiallyBlockedUserId The ID of the potentially blocked user
+   * @returns Whether the user is blocked
+   */
+  async isUserBlocked(userId: number, potentiallyBlockedUserId: number): Promise<boolean> {
+    return this.userBlockService.isUserBlocked(userId, potentiallyBlockedUserId);
+  }
+
+  /**
+   * Get a human-readable explanation of content visibility
+   * @param contentOwnerId The ID of the user who owns the content
+   * @param viewerId The ID of the user viewing the content (null for unauthenticated)
+   * @param contentType The type of content being checked
+   * @returns Explanation of visibility decision
+   */
+  async getContentVisibilityExplanation(
+    contentOwnerId: number, 
+    viewerId: number | null, 
+    contentType: ContentType
+  ): Promise<string> {
+    const isVisible = await this.isContentVisibleToUser(contentOwnerId, viewerId, contentType);
+    const privacySettings = await this.getUserPrivacySettings(contentOwnerId);
+    const privacyLevel = privacySettings[contentType];
+    
+    if (viewerId !== null && contentOwnerId === viewerId) {
+      return "Content is visible because you are the owner.";
+    }
+    
+    if (viewerId !== null) {
+      const isBlocked = await this.userBlockService.isUserBlocked(contentOwnerId, viewerId);
+      if (isBlocked) {
+        return "Content is not visible because you have been blocked by the content owner.";
+      }
+    }
+    
+    switch (privacyLevel) {
+      case PrivacyLevel.PUBLIC:
+        return "Content is visible because it has public privacy settings.";
+        
+      case PrivacyLevel.PRIVATE:
+        return "Content is not visible because it has private privacy settings.";
+        
+      case PrivacyLevel.CONNECTIONS:
+        if (viewerId === null) {
+          return "Content is not visible because it requires authentication and connection with the owner.";
+        }
+        
+        const connection = await this.storage.getUserConnection(contentOwnerId, viewerId);
+        if (connection) {
+          return "Content is visible because you are connected with the content owner.";
+        } else {
+          return "Content is not visible because it requires a connection with the owner.";
+        }
+        
+      default:
+        return "Content visibility cannot be determined due to unknown privacy settings.";
     }
   }
 }
-
-// Create and export a singleton instance of the privacy service
-export const privacyService = new PrivacyService();
