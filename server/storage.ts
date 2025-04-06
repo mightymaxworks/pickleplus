@@ -1560,12 +1560,42 @@ export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: number): Promise<User | undefined> {
     try {
-      const [user] = await db.select().from(users).where(eq(users.id, id));
+      const [user] = await db.select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        password: users.password,
+        displayName: users.displayName,
+        yearOfBirth: users.yearOfBirth,
+        passportId: users.passportId,
+        location: users.location,
+        playingSince: users.playingSince,
+        skillLevel: users.skillLevel,
+        level: users.level,
+        xp: users.xp,
+        rankingPoints: users.rankingPoints,
+        lastMatchDate: users.lastMatchDate,
+        avatarInitials: users.avatarInitials,
+        totalMatches: users.totalMatches,
+        matchesWon: users.matchesWon,
+        totalTournaments: users.totalTournaments,
+        isFoundingMember: users.isFoundingMember,
+        isAdmin: users.isAdmin,
+        xpMultiplier: users.xpMultiplier,
+        bio: users.bio,
+        preferredPosition: users.preferredPosition,
+        paddleBrand: users.paddleBrand,
+        paddleModel: users.paddleModel,
+        playingStyle: users.playingStyle,
+        shotStrengths: users.shotStrengths,
+        preferredFormat: users.preferredFormat,
+        dominantHand: users.dominantHand,
+        createdAt: users.createdAt,
+      }).from(users).where(eq(users.id, id));
       
-      // If the 'avatarUrl' column doesn't exist in the database, Postgres would throw an error
-      // So we'll add the property manually here
-      if (user && !('avatarUrl' in user)) {
-        (user as any).avatarUrl = null; 
+      // Add the missing fields that are expected in the User type
+      if (user) {
+        (user as any).avatarUrl = null;
       }
       
       return user;
@@ -1695,12 +1725,42 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     try {
-      const [user] = await db.select().from(users).where(eq(users.username, username));
+      const [user] = await db.select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        password: users.password,
+        displayName: users.displayName,
+        yearOfBirth: users.yearOfBirth,
+        passportId: users.passportId,
+        location: users.location,
+        playingSince: users.playingSince,
+        skillLevel: users.skillLevel,
+        level: users.level,
+        xp: users.xp,
+        rankingPoints: users.rankingPoints,
+        lastMatchDate: users.lastMatchDate,
+        avatarInitials: users.avatarInitials,
+        totalMatches: users.totalMatches,
+        matchesWon: users.matchesWon,
+        totalTournaments: users.totalTournaments,
+        isFoundingMember: users.isFoundingMember,
+        isAdmin: users.isAdmin,
+        xpMultiplier: users.xpMultiplier,
+        bio: users.bio,
+        preferredPosition: users.preferredPosition,
+        paddleBrand: users.paddleBrand,
+        paddleModel: users.paddleModel,
+        playingStyle: users.playingStyle,
+        shotStrengths: users.shotStrengths,
+        preferredFormat: users.preferredFormat,
+        dominantHand: users.dominantHand,
+        createdAt: users.createdAt,
+      }).from(users).where(eq(users.username, username));
       
-      // If the 'avatarUrl' column doesn't exist in the database, Postgres would throw an error
-      // So we'll add the property manually here
-      if (user && !('avatarUrl' in user)) {
-        (user as any).avatarUrl = null; 
+      // Add the missing fields that are expected in the User type
+      if (user) {
+        (user as any).avatarUrl = null;
       }
       
       return user;
@@ -1712,17 +1772,47 @@ export class DatabaseStorage implements IStorage {
   
   async getUserByIdentifier(identifier: string): Promise<User | undefined> {
     try {
-      const [user] = await db.select().from(users).where(
+      const [user] = await db.select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        password: users.password,
+        displayName: users.displayName,
+        yearOfBirth: users.yearOfBirth,
+        passportId: users.passportId,
+        location: users.location,
+        playingSince: users.playingSince,
+        skillLevel: users.skillLevel,
+        level: users.level,
+        xp: users.xp,
+        rankingPoints: users.rankingPoints,
+        lastMatchDate: users.lastMatchDate,
+        avatarInitials: users.avatarInitials,
+        totalMatches: users.totalMatches,
+        matchesWon: users.matchesWon,
+        totalTournaments: users.totalTournaments,
+        isFoundingMember: users.isFoundingMember,
+        isAdmin: users.isAdmin,
+        xpMultiplier: users.xpMultiplier,
+        bio: users.bio,
+        preferredPosition: users.preferredPosition,
+        paddleBrand: users.paddleBrand,
+        paddleModel: users.paddleModel,
+        playingStyle: users.playingStyle,
+        shotStrengths: users.shotStrengths,
+        preferredFormat: users.preferredFormat,
+        dominantHand: users.dominantHand,
+        createdAt: users.createdAt,
+      }).from(users).where(
         or(
           eq(users.username, identifier),
           eq(users.email, identifier)
         )
       );
       
-      // If the 'avatarUrl' column doesn't exist in the database, Postgres would throw an error
-      // So we'll add the property manually here
-      if (user && !('avatarUrl' in user)) {
-        (user as any).avatarUrl = null; 
+      // Add the missing fields that are expected in the User type
+      if (user) {
+        (user as any).avatarUrl = null;
       }
       
       return user;
@@ -1734,12 +1824,42 @@ export class DatabaseStorage implements IStorage {
   
   async getUserByPassportId(passportId: string): Promise<User | undefined> {
     try {
-      const [user] = await db.select().from(users).where(eq(users.passportId, passportId));
+      const [user] = await db.select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        password: users.password,
+        displayName: users.displayName,
+        yearOfBirth: users.yearOfBirth,
+        passportId: users.passportId,
+        location: users.location,
+        playingSince: users.playingSince,
+        skillLevel: users.skillLevel,
+        level: users.level,
+        xp: users.xp,
+        rankingPoints: users.rankingPoints,
+        lastMatchDate: users.lastMatchDate,
+        avatarInitials: users.avatarInitials,
+        totalMatches: users.totalMatches,
+        matchesWon: users.matchesWon,
+        totalTournaments: users.totalTournaments,
+        isFoundingMember: users.isFoundingMember,
+        isAdmin: users.isAdmin,
+        xpMultiplier: users.xpMultiplier,
+        bio: users.bio,
+        preferredPosition: users.preferredPosition,
+        paddleBrand: users.paddleBrand,
+        paddleModel: users.paddleModel,
+        playingStyle: users.playingStyle,
+        shotStrengths: users.shotStrengths,
+        preferredFormat: users.preferredFormat,
+        dominantHand: users.dominantHand,
+        createdAt: users.createdAt,
+      }).from(users).where(eq(users.passportId, passportId));
       
-      // If the 'avatarUrl' column doesn't exist in the database, Postgres would throw an error
-      // So we'll add the property manually here
-      if (user && !('avatarUrl' in user)) {
-        (user as any).avatarUrl = null; 
+      // Add the missing fields that are expected in the User type
+      if (user) {
+        (user as any).avatarUrl = null;
       }
       
       return user;
