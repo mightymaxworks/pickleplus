@@ -42,8 +42,11 @@ type RegisterData = {
   username: string;
   email: string;
   password: string;
-  firstName?: string;
-  lastName?: string;
+  displayName?: string;
+  yearOfBirth?: number | null;
+  location?: string;
+  playingSince?: string;
+  skillLevel?: string;
 };
 
 // Create auth context
@@ -78,21 +81,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Login mutation
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
+      console.log("Login attempt with credentials:", credentials);
       const res = await apiRequest("POST", "/api/auth/login", credentials);
+      console.log("Login response status:", res.status);
+      console.log("Login response headers:", 
+        Array.from(res.headers.entries()).reduce((obj, [key, value]) => {
+          obj[key] = value;
+          return obj;
+        }, {} as Record<string, string>)
+      );
+      
       if (!res.ok) {
         const errorData = await res.json();
+        console.error("Login error response:", errorData);
         throw new Error(errorData.message || "Login failed");
       }
-      return await res.json();
+      
+      const data = await res.json();
+      console.log("Login success response:", data);
+      return data;
     },
     onSuccess: (data: User) => {
+      console.log("Login mutation success, setting user data");
       queryClient.setQueryData(["/api/auth/current-user"], data);
+      
+      // Force a refetch of the current user to ensure the session is properly established
+      queryClient.invalidateQueries({queryKey: ["/api/auth/current-user"]});
+      
       toast({
         title: "Login successful",
         description: `Welcome back, ${data.username}!`,
       });
     },
     onError: (error: Error) => {
+      console.error("Login mutation error:", error);
       toast({
         title: "Login failed",
         description: error.message || "Could not log you in. Please try again.",

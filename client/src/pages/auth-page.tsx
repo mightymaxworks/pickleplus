@@ -102,15 +102,19 @@ export default function AuthPage() {
     try {
       const { confirmPassword, redemptionCode, displayName, yearOfBirth, location, playingSince, skillLevel, ...credentials } = values;
       
-      // Create a properly formatted registration object matching RegisterData type
+      // Create a properly formatted registration object matching server expectations
       const registrationData = {
         username: credentials.username,
         email: credentials.email,
         password: credentials.password,
-        firstName: displayName.split(' ')[0] || undefined,
-        lastName: displayName.split(' ').slice(1).join(' ') || undefined,
+        displayName: displayName, // Server expects displayName, not firstName/lastName
+        yearOfBirth: yearOfBirth || undefined,
+        location: location || undefined,
+        playingSince: playingSince || undefined,
+        skillLevel: skillLevel || undefined,
       };
       
+      console.log("Sending registration data:", { ...registrationData, password: "[REDACTED]" });
       await registerMutation.mutateAsync(registrationData);
       // Success and error are handled by the mutation
     } catch (error: any) {

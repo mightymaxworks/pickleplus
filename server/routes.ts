@@ -62,9 +62,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       saveUninitialized: false,
       cookie: {
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        secure: false, // Set to true in production with HTTPS
+        httpOnly: true,
+        sameSite: 'lax', // Helps with CSRF protection
+        path: '/'
       },
+      name: 'pickle.sid' // Custom name helps avoid conflicts
     })
   );
+  
+  // Trust proxy - important for secure cookies in production
+  app.set('trust proxy', 1);
 
   // Set up passport
   app.use(passport.initialize());
@@ -202,23 +210,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/auth/login", (req: Request, res: Response, next: any) => {
     try {
+      console.log("Login request body:", JSON.stringify(req.body));
+      console.log("Session before login:", req.session);
+      console.log("Session ID before login:", req.sessionID);
+      console.log("Cookies received:", req.headers.cookie);
+      
       loginSchema.parse(req.body);
       
       passport.authenticate("local", (err: any, user: any, info: any) => {
+        console.log("Passport authenticate result:", { 
+          err, 
+          user: user ? 'User found' : 'No user', 
+          userDetails: user ? `ID: ${user.id}, Username: ${user.username}` : null,
+          info 
+        });
+        
         if (err) {
+          console.error("Passport authenticate error:", err);
           return next(err);
         }
+        
         if (!user) {
-          return res.status(401).json({ message: info.message || "Authentication failed" });
+          console.log("Authentication failed:", info);
+          return res.status(401).json({ message: info?.message || "Authentication failed" });
         }
+        
         req.logIn(user, (err) => {
           if (err) {
+            console.error("Login error:", err);
             return next(err);
           }
+          
+          console.log("User logged in successfully, session established.");
+          console.log("Session ID:", req.sessionID);
+          console.log("Session after login:", req.session);
+          console.log("Is Authenticated:", req.isAuthenticated());
+          console.log("User in session:", req.user);
+          
+          // Set cookies explicitly to help ensure they're properly set
+          res.set({
+            "Set-Cookie": `pickle.sid=${req.sessionID}; Path=/; HttpOnly; SameSite=Lax`,
+            "Cache-Control": "no-cache, no-store",
+            "Pragma": "no-cache",
+          });
+          
+          console.log("Response headers:", res.getHeaders());
+          
           return res.json(user);
         });
       })(req, res, next);
     } catch (error) {
+      console.error("Login route error:", error);
       if (error instanceof ZodError) {
         res.status(400).json({ message: "Validation error", errors: error.errors });
       } else {
@@ -237,9 +279,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/auth/current-user", (req: Request, res: Response) => {
+    console.log("Current user check - Is authenticated:", req.isAuthenticated());
+    console.log("Current user check - Session ID:", req.sessionID);
+    console.log("Current user check - Cookie:", req.headers.cookie);
+    
     if (req.isAuthenticated()) {
+      console.log("User is authenticated, returning user:", req.user);
       res.json(req.user);
     } else {
+      console.log("User is not authenticated");
       res.status(401).json({ message: "Not logged in" });
     }
   });
