@@ -73,12 +73,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Define passport strategies
   passport.use(
     new LocalStrategy({
-      usernameField: 'identifier', // Use the 'identifier' field from the login request
+      usernameField: 'username', // Use the 'username' field from the login request
       passwordField: 'password'
-    }, async (identifier, password, done) => {
+    }, async (username, password, done) => {
       try {
         // Try to find user by either username or email
-        const user = await storage.getUserByIdentifier(identifier);
+        const user = await storage.getUserByIdentifier(username);
         if (!user) {
           return done(null, false, { message: "User not found" });
         }
