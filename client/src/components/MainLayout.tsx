@@ -8,10 +8,14 @@ import {
   UserCircle, 
   BookOpen, 
   Settings, 
-  LogOut 
+  LogOut,
+  Menu
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
+import pickleLogoPath from "../assets/Pickle (2).png";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from '@/components/ui/badge';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -20,6 +24,7 @@ interface MainLayoutProps {
 export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const { user, logoutMutation } = useAuth();
   const [location] = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -35,14 +40,30 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     { name: 'Preferences', path: '/preferences', icon: <Settings className="h-5 w-5" /> },
   ];
 
+  // Generate initials for avatar
+  const initials = user?.displayName
+    ?.split(' ')
+    .map(name => name[0])
+    .join('')
+    .toUpperCase() || user?.avatarInitials || 'P+';
+
+  // Gold border for founding members
+  const avatarBorderClass = user?.isFoundingMember 
+    ? "ring-2 ring-[#FFD700] ring-offset-1" 
+    : "ring-2 ring-primary/20 ring-offset-1";
+
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
       <div className="w-64 bg-card shadow-md border-r hidden md:block">
-        <div className="px-6 py-6">
+        <div className="px-6 py-4">
           <Link href="/">
-            <div className="flex items-center space-x-2 cursor-pointer">
-              <span className="font-bold text-2xl text-primary">Pickle+</span>
+            <div className="flex items-center cursor-pointer">
+              <img 
+                src={pickleLogoPath} 
+                alt="Pickle+ Logo" 
+                className="h-12 object-contain" 
+              />
             </div>
           </Link>
         </div>
@@ -53,11 +74,14 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 <Link href={item.path}>
                   <a 
                     className={`flex items-center p-3 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors ${
-                      location === item.path ? 'bg-primary/10 text-primary' : 'text-foreground'
+                      location === item.path ? 'bg-primary/10 text-primary font-medium' : 'text-foreground'
                     }`}
                   >
                     {item.icon}
                     <span className="ml-3">{item.name}</span>
+                    {item.name === 'Tournaments' && (
+                      <Badge className="ml-auto bg-primary/90 text-white text-xs">New</Badge>
+                    )}
                   </a>
                 </Link>
               </li>
@@ -66,12 +90,18 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         </nav>
         <div className="absolute bottom-0 w-64 border-t p-4">
           <div className="flex items-center space-x-3 mb-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
-              {user?.username?.charAt(0).toUpperCase()}
-            </div>
+            <Avatar className={`w-10 h-10 ${avatarBorderClass}`}>
+              <AvatarFallback 
+                className={user?.isFoundingMember ? "bg-gradient-to-br from-yellow-300 to-yellow-600 text-white" : undefined}
+              >
+                {initials}
+              </AvatarFallback>
+            </Avatar>
             <div>
-              <p className="font-medium">{user?.username}</p>
-              <p className="text-xs text-muted-foreground">CourtIQ: {user?.courtiqRating?.toFixed(1) || 'N/A'}</p>
+              <p className="font-medium">{user?.displayName || user?.username}</p>
+              <p className="text-xs text-muted-foreground">
+                Level {user?.level || 1} • {user?.xp?.toLocaleString() || 0} XP
+              </p>
             </div>
           </div>
           <Button 
@@ -89,10 +119,60 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       {/* Mobile header */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-card border-b z-30 flex items-center justify-between px-4">
         <Link href="/">
-          <div className="font-bold text-xl text-primary">Pickle+</div>
+          <div className="flex items-center cursor-pointer">
+            <img 
+              src={pickleLogoPath} 
+              alt="Pickle+ Logo" 
+              className="h-8 object-contain" 
+            />
+          </div>
         </Link>
-        {/* Mobile menu button would go here */}
+        <Button 
+          variant="ghost" 
+          size="icon"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        >
+          <Menu className="h-6 w-6" />
+        </Button>
       </div>
+
+      {/* Mobile menu overlay */}
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 bg-background/80 backdrop-blur-sm z-40" onClick={() => setMobileMenuOpen(false)}>
+          <div className="fixed top-16 right-0 w-64 h-[calc(100vh-4rem)] bg-card shadow-lg p-4 overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <nav>
+              <ul className="space-y-2">
+                {navigationItems.map((item) => (
+                  <li key={item.name}>
+                    <Link href={item.path}>
+                      <a 
+                        className={`flex items-center p-3 rounded-md hover:bg-accent hover:text-accent-foreground ${
+                          location === item.path ? 'bg-primary/10 text-primary font-medium' : 'text-foreground'
+                        }`}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {item.icon}
+                        <span className="ml-3">{item.name}</span>
+                      </a>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+            <div className="border-t mt-4 pt-4">
+              <Button 
+                variant="outline" 
+                className="w-full flex items-center justify-center" 
+                onClick={handleLogout}
+                disabled={logoutMutation.isPending}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                <span>Logout</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">

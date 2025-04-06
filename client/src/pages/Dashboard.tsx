@@ -10,7 +10,7 @@ import { TournamentCard } from "@/components/TournamentCard";
 import { AchievementBadge } from "@/components/AchievementBadge";
 import { TierBadge } from "@/components/TierBadge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Activity, Achievement, Tournament } from "@/types";
+import { Activity, Achievement, Tournament, User as UserType } from "@/types";
 import { FoundingMemberBadge } from "@/components/ui/founding-member-badge";
 import { XpMultiplierIndicator } from "@/components/ui/xp-multiplier-indicator";
 import { ChangelogBanner } from "@/components/ChangelogBanner";
@@ -52,19 +52,19 @@ interface UserTournament {
 }
 
 export default function Dashboard() {
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const { tierInfo, isLoading: tierLoading } = useXPTier();
   const [, setLocation] = useLocation();
   
   // Show changelog notification toast on login
   useChangelogNotification();
   
-  // Redirect to login if not authenticated
+  // Redirect to login if no user
   useEffect(() => {
-    if (!isAuthenticated && !user) {
+    if (!user) {
       setLocation("/login");
     }
-  }, [isAuthenticated, user, setLocation]);
+  }, [user, setLocation]);
   
   // Fetch user activities
   const { 
@@ -72,7 +72,7 @@ export default function Dashboard() {
     isLoading: activitiesLoading
   } = useQuery<Activity[]>({
     queryKey: ["/api/user/activities"],
-    enabled: isAuthenticated,
+    enabled: !!user,
   });
   
   // Fetch user tournaments
@@ -81,7 +81,7 @@ export default function Dashboard() {
     isLoading: tournamentsLoading
   } = useQuery<UserTournament[]>({
     queryKey: ["/api/user/tournaments"],
-    enabled: isAuthenticated,
+    enabled: !!user,
   });
   
   // Fetch user achievements
@@ -90,7 +90,7 @@ export default function Dashboard() {
     isLoading: achievementsLoading
   } = useQuery<UserAchievementWithDetails[]>({
     queryKey: ["/api/user/achievements"],
-    enabled: isAuthenticated,
+    enabled: !!user,
   });
 
   // Fetch connection statistics
@@ -99,7 +99,7 @@ export default function Dashboard() {
     isLoading: connectionStatsLoading
   } = useQuery({
     queryKey: ["/api/connections/stats"],
-    enabled: isAuthenticated,
+    enabled: !!user,
     // Temporary mock data until API endpoint is available
     queryFn: async () => {
       // Simulate API delay
@@ -143,7 +143,7 @@ export default function Dashboard() {
     isLoading: socialActivitiesLoading
   } = useQuery<SocialActivity[]>({
     queryKey: ["/api/connections/activities"],
-    enabled: isAuthenticated,
+    enabled: !!user,
     // Temporary mock data until API endpoint is available
     queryFn: async () => {
       // Simulate API delay
@@ -381,8 +381,8 @@ export default function Dashboard() {
     }
     
     // Ensure we have valid dates by providing fallbacks
-    const startDate = new Date(tournament.startDate as string);
-    const endDate = new Date(tournament.endDate as string);
+    const startDate = new Date(tournament.startDate as unknown as string);
+    const endDate = new Date(tournament.endDate as unknown as string);
     const today = new Date();
     const daysUntil = Math.ceil((startDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
     
@@ -507,225 +507,348 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="dashboard-view pb-20 md:pb-6">
+    <div className="dashboard-view p-3 md:p-8 pb-20 md:pb-8">
       {/* Changelog Banner */}
       <ChangelogBanner />
       
-      {/* Top Action Bar */}
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-bold font-product-sans">Welcome back, {user.displayName.split(' ')[0]}!</h2>
-          <p className="text-muted-foreground">Ready to elevate your pickleball game?</p>
-        </div>
-        <div className="flex gap-2 flex-wrap justify-end">
-          <QuickAction 
-            icon={<QrCode className="h-4 w-4" />} 
-            label="My QR Passport" 
-            onClick={() => setLocation("/profile")}
-          />
-          <QuickAction 
-            icon={<Scan className="h-4 w-4" />} 
-            label="Scan Code" 
-            onClick={() => setLocation("/scan")}
-            className="bg-primary text-white hover:bg-primary/90 hover:text-white"
-          />
-          <QuickAction 
-            icon={<Plus className="h-4 w-4" />} 
-            label="Record Match" 
-            onClick={() => setLocation("/matches/new")}
-          />
-        </div>
-      </div>
-      
-      {/* Main Dashboard Grid Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Left Column */}
-        <div className="md:col-span-1 space-y-6">
-          {/* Player Card */}
-          <PlayerCard user={user} rating={1845} />
-          
-          {/* Activity Feed */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center">
-                <Zap className="h-5 w-5 mr-2 text-primary" />
-                Activity Feed
-              </CardTitle>
-              <CardDescription>
-                Recent matches, achievements, and social activity
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-              {activitiesLoading ? (
-                Array(3).fill(0).map((_, index) => (
-                  <div key={index} className="mb-3">
-                    <Skeleton className="h-24 w-full rounded-lg" />
-                  </div>
-                ))
-              ) : activities && activities.length > 0 ? (
-                activities.map((activity) => (
-                  <ActivityCard key={activity.id} activity={activity} />
-                ))
-              ) : (
-                <p className="text-muted-foreground text-center py-4">No recent activities</p>
-              )}
-              
-              {socialActivities && !socialActivitiesLoading && (
-                <SocialActivityFeed 
-                  activities={socialActivities}
-                  isLoading={socialActivitiesLoading}
-                />
-              )}
-            </CardContent>
-          </Card>
-          
-          {/* Community Insights Section */}
-          <CommunityInsights />
-        </div>
-        
-        {/* Center Column */}
-        <div className="md:col-span-1 space-y-6">
-          {/* XP Level Progress */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center">
-                <Zap className="h-5 w-5 mr-2 text-primary" />
-                Level Progress
-              </CardTitle>
-              <CardDescription>
-                Your progress towards the next level
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center mb-4">
-                <div className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xl mr-4">
-                  {user.level || 1}
-                </div>
-                <div className="flex-grow">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-sm font-medium">{currentXP} / {nextLevelXP} XP</span>
-                    <span className="text-sm text-muted-foreground">{xpPercentage.toFixed(0)}%</span>
-                  </div>
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-primary" 
-                      style={{ width: `${xpPercentage}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between text-sm">
-                <span>{xpNeeded} XP until Level {(user.level || 1) + 1}</span>
-                
-                {user.xpMultiplier && (
+      {/* Hero Header */}
+      <div className="mb-8 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 rounded-2xl p-6 md:p-8 border border-primary/20">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          {/* Welcome message */}
+          <div className="space-y-2">
+            <h1 className="text-2xl md:text-3xl font-bold">
+              Welcome back, {user.displayName?.split(' ')[0] || user.username}!
+            </h1>
+            <p className="text-muted-foreground md:text-lg">
+              Ready to elevate your pickleball game today?
+            </p>
+            {user.isFoundingMember && (
+              <div className="flex items-center pt-1">
+                <FoundingMemberBadge size="md" showText={true} className="mr-3" />
+                {user.xpMultiplier && user.xpMultiplier > 100 && (
                   <XpMultiplierIndicator 
                     multiplier={user.xpMultiplier} 
-                    size="sm" 
+                    size="md" 
                     showLabel={true}
                     showTooltip={true} 
                   />
                 )}
               </div>
-              
-              {tierInfo && !tierLoading && (
-                <div className="mt-4 border-t pt-4">
-                  <div className="flex items-center mb-2">
-                    <span className="text-sm font-medium mr-2">Current Tier:</span>
-                    <TierBadge 
-                      tier={tierInfo.tier}
-                      tierDescription={tierInfo.tierDescription}
-                      tierProgress={tierInfo.tierProgress}
-                      nextTier={tierInfo.nextTier}
-                      levelUntilNextTier={tierInfo.levelUntilNextTier}
-                      showDetails={false}
-                    />
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {tierInfo.levelUntilNextTier > 0 
-                      ? `${tierInfo.levelUntilNextTier} more levels until ${tierInfo.nextTier}`
-                      : `You're at the highest tier!`}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            )}
+          </div>
           
-          {/* Partner Matching Section */}
-          <PartnerMatchingSection />
-          
-          {/* Achievements Display */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center">
-                <Award className="h-5 w-5 mr-2 text-primary" />
-                Recent Achievements
-              </CardTitle>
-              <CardDescription>
-                Badges and rewards you've unlocked recently
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {achievementsLoading ? (
-                <div className="grid grid-cols-3 gap-4">
-                  {Array(3).fill(0).map((_, index) => (
-                    <div key={index} className="flex flex-col items-center">
-                      <Skeleton className="h-16 w-16 rounded-full mb-2" />
-                      <Skeleton className="h-3 w-16 mb-1" />
-                      <Skeleton className="h-2 w-24" />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-3 gap-4 pb-2">
-                  {achievements && achievements.length > 0 ? (
-                    achievements.slice(0, 3).map(({ achievement, userAchievement }) => (
-                      <AchievementBadge 
-                        key={achievement.id} 
-                        achievement={achievement} 
-                        unlocked={true}
-                      />
-                    ))
-                  ) : (
-                    <div className="col-span-3 py-4 text-center text-sm text-muted-foreground">
-                      Play matches and tournaments to earn achievements
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              <div className="mt-4 pt-4 border-t">
-                <Button 
-                  variant="outline" 
-                  className="w-full text-sm" 
-                  size="sm"
-                  onClick={() => setLocation("/achievements")}
-                >
-                  View All Achievements
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        {/* Right Column */}
-        <div className="md:col-span-1 space-y-6">
-          {/* PCP Global Rankings Card */}
-          <PCPGlobalRankingCard />
-          
-          {/* Tournament Spotlight */}
-          {upcomingTournament && (
-            <TournamentSpotlight 
-              tournament={upcomingTournament.tournament} 
-              registration={upcomingTournament.registration}
-              isLoading={tournamentsLoading}
+          {/* Quick actions */}
+          <div className="flex flex-wrap gap-2 mt-4 md:mt-0">
+            <QuickAction 
+              icon={<QrCode className="h-4 w-4" />} 
+              label="My QR Passport" 
+              onClick={() => setLocation("/profile")}
             />
-          )}
-          
-          {/* Skill Development Section */}
-          <SkillDevelopmentSection />
+            <QuickAction 
+              icon={<Scan className="h-4 w-4" />} 
+              label="Scan Code" 
+              onClick={() => setLocation("/scan")}
+              className="bg-primary text-white hover:bg-primary/90 hover:text-white"
+            />
+            <QuickAction 
+              icon={<Plus className="h-4 w-4" />} 
+              label="Record Match" 
+              onClick={() => setLocation("/matches/new")}
+            />
+          </div>
         </div>
       </div>
+      
+      {/* Main Dashboard Tabs */}
+      <Tabs defaultValue="overview" className="mb-6">
+        <TabsList className="mb-6">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="performance">Performance</TabsTrigger>
+          <TabsTrigger value="social">Social</TabsTrigger>
+          <TabsTrigger value="training">Training</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="overview" className="mt-0">
+          {/* Main Dashboard Grid Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Left Column */}
+            <div className="md:col-span-1 space-y-6">
+              {/* Player Card */}
+              <PlayerCard user={user as any} rating={1845} />
+              
+              {/* Activity Feed */}
+              <Card className="overflow-hidden">
+                <CardHeader className="pb-3 bg-muted/30">
+                  <CardTitle className="text-base flex items-center">
+                    <Zap className="h-5 w-5 mr-2 text-primary" />
+                    Activity Feed
+                  </CardTitle>
+                  <CardDescription>
+                    Recent matches, achievements, and social activity
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="max-h-[400px] overflow-y-auto p-5 space-y-4">
+                    {activitiesLoading ? (
+                      Array(3).fill(0).map((_, index) => (
+                        <div key={index} className="mb-3">
+                          <Skeleton className="h-24 w-full rounded-lg" />
+                        </div>
+                      ))
+                    ) : activities && activities.length > 0 ? (
+                      activities.map((activity) => (
+                        <ActivityCard key={activity.id} activity={activity} />
+                      ))
+                    ) : (
+                      <p className="text-muted-foreground text-center py-4">No recent activities</p>
+                    )}
+                    
+                    {socialActivities && !socialActivitiesLoading && (
+                      <SocialActivityFeed 
+                        activities={socialActivities}
+                        isLoading={socialActivitiesLoading}
+                      />
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            {/* Center Column */}
+            <div className="md:col-span-1 space-y-6">
+              {/* XP Level Progress */}
+              <Card className="overflow-hidden">
+                <CardHeader className="pb-3 bg-muted/30">
+                  <CardTitle className="text-base flex items-center">
+                    <Zap className="h-5 w-5 mr-2 text-primary" />
+                    Level Progress
+                  </CardTitle>
+                  <CardDescription>
+                    Your progress towards the next level
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center mb-4">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primary/70 text-white flex items-center justify-center font-bold text-xl mr-4 shadow-sm">
+                      {user.level || 1}
+                    </div>
+                    <div className="flex-grow">
+                      <div className="flex justify-between mb-2">
+                        <span className="text-sm font-medium">{currentXP.toLocaleString()} / {nextLevelXP.toLocaleString()} XP</span>
+                        <span className="text-sm text-muted-foreground">{xpPercentage.toFixed(0)}%</span>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-primary/80 to-primary" 
+                          style={{ width: `${xpPercentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between text-sm">
+                    <span>{xpNeeded.toLocaleString()} XP until Level {(user.level || 1) + 1}</span>
+                    
+                    {user.xpMultiplier && user.xpMultiplier > 100 && (
+                      <XpMultiplierIndicator 
+                        multiplier={user.xpMultiplier} 
+                        size="sm" 
+                        showLabel={true}
+                        showTooltip={true} 
+                      />
+                    )}
+                  </div>
+                  
+                  {tierInfo && !tierLoading && (
+                    <div className="mt-4 border-t pt-4">
+                      <div className="flex items-center mb-2">
+                        <span className="text-sm font-medium mr-2">Current Tier:</span>
+                        <TierBadge 
+                          tier={tierInfo.tier}
+                          tierDescription={tierInfo.tierDescription}
+                          tierProgress={tierInfo.tierProgress}
+                          nextTier={tierInfo.nextTier}
+                          levelUntilNextTier={tierInfo.levelUntilNextTier}
+                          showDetails={false}
+                        />
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {tierInfo.levelUntilNextTier > 0 
+                          ? `${tierInfo.levelUntilNextTier} more levels until ${tierInfo.nextTier}`
+                          : `You're at the highest tier!`}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+              
+              {/* Partner Matching Section */}
+              <PartnerMatchingSection />
+              
+              {/* Community Insights Section */}
+              <CommunityInsights />
+            </div>
+            
+            {/* Right Column */}
+            <div className="md:col-span-1 space-y-6">
+              {/* PCP Global Rankings Card */}
+              <PCPGlobalRankingCard />
+              
+              {/* Tournament Spotlight */}
+              {upcomingTournament && (
+                <TournamentSpotlight 
+                  tournament={upcomingTournament.tournament} 
+                  registration={upcomingTournament.registration}
+                  isLoading={tournamentsLoading}
+                />
+              )}
+              
+              {/* Achievements Display */}
+              <Card className="overflow-hidden">
+                <CardHeader className="pb-3 bg-muted/30">
+                  <CardTitle className="text-base flex items-center">
+                    <Award className="h-5 w-5 mr-2 text-primary" />
+                    Recent Achievements
+                  </CardTitle>
+                  <CardDescription>
+                    Badges and rewards you've unlocked recently
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {achievementsLoading ? (
+                    <div className="grid grid-cols-3 gap-4">
+                      {Array(3).fill(0).map((_, index) => (
+                        <div key={index} className="flex flex-col items-center">
+                          <Skeleton className="h-16 w-16 rounded-full mb-2" />
+                          <Skeleton className="h-3 w-16 mb-1" />
+                          <Skeleton className="h-2 w-24" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-4 pb-2">
+                      {achievements && achievements.length > 0 ? (
+                        achievements.slice(0, 3).map(({ achievement, userAchievement }) => (
+                          <AchievementBadge 
+                            key={achievement.id} 
+                            achievement={achievement} 
+                            unlocked={true}
+                          />
+                        ))
+                      ) : (
+                        <div className="col-span-3 py-4 text-center text-sm text-muted-foreground">
+                          Play matches and tournaments to earn achievements
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  <div className="mt-4 pt-4 border-t">
+                    <Button 
+                      variant="outline" 
+                      className="w-full text-sm" 
+                      size="sm"
+                      onClick={() => setLocation("/achievements")}
+                    >
+                      View All Achievements
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="performance" className="mt-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <SkillDevelopmentSection />
+            <Card className="md:col-span-1">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center">
+                  <TrendingUp className="h-5 w-5 mr-2 text-primary" />
+                  Performance Stats
+                </CardTitle>
+                <CardDescription>
+                  Your match history and performance metrics
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-center py-10 text-muted-foreground">
+                  Detailed performance analytics are coming soon!
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="social" className="mt-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center">
+                  <Users className="h-5 w-5 mr-2 text-primary" />
+                  My Connections
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ConnectionStatsWidget 
+                  stats={connectionStats} 
+                  isLoading={connectionStatsLoading}
+                />
+                <div className="mt-4 pt-4 border-t">
+                  <Button 
+                    variant="outline" 
+                    className="w-full" 
+                    size="sm"
+                    onClick={() => setLocation("/connections")}
+                  >
+                    Manage Connections
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center">
+                  <BookOpen className="h-5 w-5 mr-2 text-primary" />
+                  Coaching
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-center py-10 text-muted-foreground">
+                  Coaching features are coming soon!
+                </p>
+                <Button 
+                  variant="outline" 
+                  className="w-full" 
+                  size="sm"
+                  onClick={() => setLocation("/coaching")}
+                >
+                  Explore Coaching
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="training" className="mt-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="md:col-span-2">
+              <CardHeader>
+                <CardTitle className="text-base flex items-center">
+                  <Target className="h-5 w-5 mr-2 text-primary" />
+                  Training Programs
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-center py-10 text-muted-foreground">
+                  Personalized training programs are coming soon!
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

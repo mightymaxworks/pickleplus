@@ -1,0 +1,300 @@
+            Browse All Tournaments
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  };
+  
+  // Main Community Insights Component
+  const CommunityInsights = () => {
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center">
+            <TrendingUp className="h-5 w-5 mr-2 text-primary" />
+            Community Insights
+          </CardTitle>
+          <CardDescription>
+            Local pickleball activity and trends
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <div className="flex justify-between text-sm">
+                <span>Active Players</span>
+                <span className="font-medium">
+                  128 <span className="text-xs text-green-600">↑ 12%</span>
+                </span>
+              </div>
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-green-500" style={{ width: "72%" }}></div>
+              </div>
+            </div>
+            
+            <div className="space-y-1">
+              <div className="flex justify-between text-sm">
+                <span>Court Availability</span>
+                <span className="font-medium">
+                  Medium <span className="text-xs text-yellow-600">~45%</span>
+                </span>
+              </div>
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-yellow-500" style={{ width: "45%" }}></div>
+              </div>
+            </div>
+            
+            <div className="space-y-1">
+              <div className="flex justify-between text-sm">
+                <span>Tournament Activity</span>
+                <span className="font-medium">
+                  High <span className="text-xs text-green-600">↑ 32%</span>
+                </span>
+              </div>
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-green-500" style={{ width: "85%" }}></div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-muted/30 rounded-lg p-3">
+            <h4 className="text-sm font-medium mb-1">Popular Playing Times</h4>
+            <div className="text-xs text-muted-foreground">
+              <div className="flex justify-between mb-1">
+                <span>Weekdays:</span>
+                <span className="font-medium">5:30 PM - 8:30 PM</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Weekends:</span>
+                <span className="font-medium">9:00 AM - 12:00 PM</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  return (
+    <div className="dashboard-view pb-20 md:pb-6">
+      {/* Changelog Banner */}
+      <ChangelogBanner />
+      
+      {/* Top Action Bar */}
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h2 className="text-xl font-bold font-product-sans">Welcome back, {user.displayName.split(' ')[0]}!</h2>
+          <p className="text-muted-foreground">Ready to elevate your pickleball game?</p>
+        </div>
+        <div className="flex gap-2 flex-wrap justify-end">
+          <QuickAction 
+            icon={<QrCode className="h-4 w-4" />} 
+            label="My QR Passport" 
+            onClick={() => setLocation("/profile")}
+          />
+          <QuickAction 
+            icon={<Scan className="h-4 w-4" />} 
+            label="Scan Code" 
+            onClick={() => setLocation("/scan")}
+            className="bg-primary text-white hover:bg-primary/90 hover:text-white"
+          />
+          <QuickAction 
+            icon={<Plus className="h-4 w-4" />} 
+            label="Record Match" 
+            onClick={() => setLocation("/matches/new")}
+          />
+        </div>
+      </div>
+      
+      {/* Main Dashboard Grid Layout */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Left Column */}
+        <div className="md:col-span-1 space-y-6">
+          {/* Player Card */}
+          <PlayerCard user={user} rating={1845} />
+          
+          {/* Activity Feed */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center">
+                <Zap className="h-5 w-5 mr-2 text-primary" />
+                Activity Feed
+              </CardTitle>
+              <CardDescription>
+                Recent matches, achievements, and social activity
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+              {activitiesLoading ? (
+                Array(3).fill(0).map((_, index) => (
+                  <div key={index} className="mb-3">
+                    <Skeleton className="h-24 w-full rounded-lg" />
+                  </div>
+                ))
+              ) : activities && activities.length > 0 ? (
+                activities.map((activity) => (
+                  <ActivityCard key={activity.id} activity={activity} />
+                ))
+              ) : (
+                <p className="text-muted-foreground text-center py-4">No recent activities</p>
+              )}
+              
+              {socialActivities && !socialActivitiesLoading && (
+                <SocialActivityFeed 
+                  activities={socialActivities}
+                  isLoading={socialActivitiesLoading}
+                />
+              )}
+            </CardContent>
+          </Card>
+          
+          {/* Community Insights Section */}
+          <CommunityInsights />
+        </div>
+        
+        {/* Center Column */}
+        <div className="md:col-span-1 space-y-6">
+          {/* XP Level Progress */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center">
+                <Zap className="h-5 w-5 mr-2 text-primary" />
+                Level Progress
+              </CardTitle>
+              <CardDescription>
+                Your progress towards the next level
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center mb-4">
+                <div className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xl mr-4">
+                  {user.level || 1}
+                </div>
+                <div className="flex-grow">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm font-medium">{currentXP} / {nextLevelXP} XP</span>
+                    <span className="text-sm text-muted-foreground">{xpPercentage.toFixed(0)}%</span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-primary" 
+                      style={{ width: `${xpPercentage}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between text-sm">
+                <span>{xpNeeded} XP until Level {(user.level || 1) + 1}</span>
+                
+                {user.xpMultiplier && (
+                  <XpMultiplierIndicator 
+                    multiplier={user.xpMultiplier} 
+                    size="sm" 
+                    showLabel={true}
+                    showTooltip={true} 
+                  />
+                )}
+              </div>
+              
+              {tierInfo && !tierLoading && (
+                <div className="mt-4 border-t pt-4">
+                  <div className="flex items-center mb-2">
+                    <span className="text-sm font-medium mr-2">Current Tier:</span>
+                    <TierBadge 
+                      tier={tierInfo.tier}
+                      tierDescription={tierInfo.tierDescription}
+                      tierProgress={tierInfo.tierProgress}
+                      nextTier={tierInfo.nextTier}
+                      levelUntilNextTier={tierInfo.levelUntilNextTier}
+                      showDetails={false}
+                    />
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {tierInfo.levelUntilNextTier > 0 
+                      ? `${tierInfo.levelUntilNextTier} more levels until ${tierInfo.nextTier}`
+                      : `You're at the highest tier!`}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          
+          {/* Partner Matching Section */}
+          <PartnerMatchingSection />
+          
+          {/* Achievements Display */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center">
+                <Award className="h-5 w-5 mr-2 text-primary" />
+                Recent Achievements
+              </CardTitle>
+              <CardDescription>
+                Badges and rewards you've unlocked recently
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {achievementsLoading ? (
+                <div className="grid grid-cols-3 gap-4">
+                  {Array(3).fill(0).map((_, index) => (
+                    <div key={index} className="flex flex-col items-center">
+                      <Skeleton className="h-16 w-16 rounded-full mb-2" />
+                      <Skeleton className="h-3 w-16 mb-1" />
+                      <Skeleton className="h-2 w-24" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-4 pb-2">
+                  {achievements && achievements.length > 0 ? (
+                    achievements.slice(0, 3).map(({ achievement, userAchievement }) => (
+                      <AchievementBadge 
+                        key={achievement.id} 
+                        achievement={achievement} 
+                        unlocked={true}
+                      />
+                    ))
+                  ) : (
+                    <div className="col-span-3 py-4 text-center text-sm text-muted-foreground">
+                      Play matches and tournaments to earn achievements
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              <div className="mt-4 pt-4 border-t">
+                <Button 
+                  variant="outline" 
+                  className="w-full text-sm" 
+                  size="sm"
+                  onClick={() => setLocation("/achievements")}
+                >
+                  View All Achievements
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        {/* Right Column */}
+        <div className="md:col-span-1 space-y-6">
+          {/* PCP Global Rankings Card */}
+          <PCPGlobalRankingCard />
+          
+          {/* Tournament Spotlight */}
+          {upcomingTournament && (
+            <TournamentSpotlight 
+              tournament={upcomingTournament.tournament} 
+              registration={upcomingTournament.registration}
+              isLoading={tournamentsLoading}
+            />
+          )}
+          
+          {/* Skill Development Section */}
+          <SkillDevelopmentSection />
+        </div>
+      </div>
+    </div>
+  );
+}
