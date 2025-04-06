@@ -140,8 +140,8 @@ export default function LandingPage() {
                     <div className="font-bold text-lg">Player Passport</div>
                     <PicklePlusLogo className="h-8 w-auto" />
                   </div>
-                  {/* CourtIQ badge */}
-                  <div className="absolute top-2 right-2 bg-black/20 px-2 py-1 rounded text-xs font-medium flex items-center">
+                  {/* CourtIQ badge - repositioned */}
+                  <div className="absolute top-16 right-2 bg-black/20 px-2 py-1 rounded text-xs font-medium flex items-center">
                     <div className="w-2 h-2 bg-blue-300 rounded-full mr-1"></div>
                     Powered by CourtIQ™
                   </div>
