@@ -9,8 +9,11 @@ export type PlayFormat = 'singles' | 'doubles' | 'mixed';
 
 /**
  * Age division enum type
+ * Junior divisions: U12, U14, U16, U19
+ * Adult divisions: 19plus (Open), 35plus, 50plus
+ * Senior divisions: 60plus, 70plus
  */
-export type AgeDivision = '19plus' | '35plus' | '50plus';
+export type AgeDivision = 'U12' | 'U14' | 'U16' | 'U19' | '19plus' | '35plus' | '50plus' | '60plus' | '70plus';
 
 /**
  * Player ranking in the database

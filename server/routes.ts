@@ -1330,9 +1330,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid format. Must be 'singles', 'doubles', or 'mixed'" });
       }
       
-      const validAgeDivisions: AgeDivision[] = ['19plus', '35plus', '50plus'];
+      const validAgeDivisions: AgeDivision[] = ['U12', 'U14', 'U16', 'U19', '19plus', '35plus', '50plus', '60plus', '70plus'];
       if (!validAgeDivisions.includes(ageDivision)) {
-        return res.status(400).json({ message: "Invalid age division. Must be '19plus', '35plus', or '50plus'" });
+        return res.status(400).json({ message: "Invalid age division. Must be one of: 'U12', 'U14', 'U16', 'U19', '19plus', '35plus', '50plus', '60plus', '70plus'" });
       }
       
       const leaderboard = await multiDimensionalRankingService.getLeaderboard(
@@ -1364,9 +1364,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid format. Must be 'singles', 'doubles', or 'mixed'" });
       }
       
-      const validAgeDivisions: AgeDivision[] = ['19plus', '35plus', '50plus'];
+      const validAgeDivisions: AgeDivision[] = ['U12', 'U14', 'U16', 'U19', '19plus', '35plus', '50plus', '60plus', '70plus'];
       if (!validAgeDivisions.includes(ageDivision)) {
-        return res.status(400).json({ message: "Invalid age division. Must be '19plus', '35plus', or '50plus'" });
+        return res.status(400).json({ message: "Invalid age division. Must be one of: 'U12', 'U14', 'U16', 'U19', '19plus', '35plus', '50plus', '60plus', '70plus'" });
       }
       
       const ranking = await multiDimensionalRankingService.getUserRanking(userId, format, ageDivision, ratingTierId);
@@ -1427,9 +1427,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid format. Must be 'singles', 'doubles', or 'mixed'" });
       }
       
-      const validAgeDivisions: AgeDivision[] = ['19plus', '35plus', '50plus'];
+      const validAgeDivisions: AgeDivision[] = ['U12', 'U14', 'U16', 'U19', '19plus', '35plus', '50plus', '60plus', '70plus'];
       if (!validAgeDivisions.includes(ageDivision)) {
-        return res.status(400).json({ message: "Invalid age division. Must be '19plus', '35plus', or '50plus'" });
+        return res.status(400).json({ message: "Invalid age division. Must be one of: 'U12', 'U14', 'U16', 'U19', '19plus', '35plus', '50plus', '60plus', '70plus'" });
       }
       
       // Get current ranking

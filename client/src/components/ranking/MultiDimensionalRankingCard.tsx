@@ -54,9 +54,18 @@ export function MultiDimensionalRankingCard() {
 
   // Age division options for dropdown
   const divisionOptions = [
+    // Junior divisions
+    { value: "U12", label: "Junior U12" },
+    { value: "U14", label: "Junior U14" },
+    { value: "U16", label: "Junior U16" },
+    { value: "U19", label: "Junior U19" },
+    // Adult divisions
     { value: "19plus", label: "Open (19+)" },
     { value: "35plus", label: "35+" },
     { value: "50plus", label: "50+" },
+    // Senior divisions
+    { value: "60plus", label: "60+" },
+    { value: "70plus", label: "70+" },
   ];
 
   // For history chart
