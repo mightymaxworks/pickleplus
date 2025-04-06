@@ -3,6 +3,10 @@ import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Import and re-export communication and partner preference schemas
+export * from "./schema/communication-preferences";
+export * from "./schema/partner-preferences";
+
 // User table schema
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -689,6 +693,16 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   matchesAsPlayerTwoPartner: many(matches, { relationName: "playerTwoPartner" }),
   rankingHistory: many(rankingHistory),
   coachingProfile: one(coachingProfiles),
+  // Communication preferences relations
+  communicationChannels: many(communicationChannels),
+  notificationPreferences: many(userNotificationPreferences),
+  communicationLogs: many(communicationLogs),
+  // Partner preferences relations
+  partnerCriteria: many(partnerCriteria),
+  partnerAvailability: many(partnerAvailability),
+  specialAvailability: many(specialAvailability),
+  partnerSuggestionsAsUser: many(partnerSuggestions, { relationName: "user" }),
+  partnerSuggestionsAsPartner: many(partnerSuggestions, { relationName: "suggestedPartner" }),
   connectionRequestsSent: many(connections, { relationName: "connectionRequests" }),
   connectionRequestsReceived: many(connections, { relationName: "connectionReceived" }),
   

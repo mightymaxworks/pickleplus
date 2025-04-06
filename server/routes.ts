@@ -24,6 +24,7 @@ import { isAdmin } from "./core/middleware/auth";
 import { courtIQService as courtIQSystem } from "./modules/rating/courtiq";
 import { xpSystem } from "./modules/xp/xpSystem";
 import { multiDimensionalRankingService } from "./modules/ranking/service";
+import { initializeUserModule } from "./modules/user";
 
 // Import database and query helpers
 import { db } from "./db";
@@ -46,6 +47,10 @@ import {
 const SessionStore = MemoryStore(session);
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize user module and mount its routes
+  const userRouter = initializeUserModule();
+  app.use("/api/user", userRouter);
+  
   // Set up session middleware
   app.use(
     session({
