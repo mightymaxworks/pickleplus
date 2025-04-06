@@ -2,7 +2,7 @@
  * Hook for interacting with the Multi-Dimensional Ranking System API
  */
 import { useQuery } from "@tanstack/react-query";
-import { AgeDivision, PlayFormat, LeaderboardEntry, PlayerRanking, RankingHistoryEntry } from "../../shared/multi-dimensional-rankings";
+import { AgeDivision, PlayFormat, LeaderboardEntry, PlayerRanking, RankingHistoryEntry } from "@shared/multi-dimensional-rankings";
 
 interface RankingPosition {
   userId: number;
@@ -45,7 +45,28 @@ export function useMultiDimensionalLeaderboard(
       limit,
       offset
     ],
-    keepPreviousData: true,
+    queryFn: async ({ queryKey }) => {
+      const url = queryKey[0] as string;
+      const currentFormat = queryKey[1] as string;
+      const currentAgeDivision = queryKey[2] as string;
+      const currentRatingTierId = queryKey[3] as number | undefined;
+      const currentLimit = queryKey[4] as number;
+      const currentOffset = queryKey[5] as number;
+      
+      const queryParams = new URLSearchParams();
+      queryParams.append('format', currentFormat);
+      queryParams.append('ageDivision', currentAgeDivision);
+      if (currentRatingTierId !== undefined) queryParams.append('ratingTierId', currentRatingTierId.toString());
+      queryParams.append('limit', currentLimit.toString());
+      queryParams.append('offset', currentOffset.toString());
+      
+      const response = await fetch(`${url}?${queryParams.toString()}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch leaderboard data');
+      }
+      return response.json();
+    },
+    placeholderData: previousData => previousData,
   });
 }
 
@@ -66,6 +87,25 @@ export function useUserRankingPosition(
       ageDivision,
       ratingTierId
     ],
+    queryFn: async ({ queryKey }) => {
+      const url = queryKey[0] as string;
+      const currentUserId = queryKey[1] as number | undefined;
+      const currentFormat = queryKey[2] as string;
+      const currentAgeDivision = queryKey[3] as string; 
+      const currentRatingTierId = queryKey[4] as number | undefined;
+      
+      const queryParams = new URLSearchParams();
+      if (currentUserId !== undefined) queryParams.append('userId', currentUserId.toString());
+      queryParams.append('format', currentFormat);
+      queryParams.append('ageDivision', currentAgeDivision);
+      if (currentRatingTierId !== undefined) queryParams.append('ratingTierId', currentRatingTierId.toString());
+      
+      const response = await fetch(`${url}?${queryParams.toString()}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch ranking position');
+      }
+      return response.json();
+    },
     enabled: userId !== undefined,
   });
 }
@@ -76,6 +116,19 @@ export function useUserRankingPosition(
 export function useUserRankingHistory(userId?: number) {
   return useQuery<RankingHistoryEntry[]>({
     queryKey: ['/api/multi-rankings/history', userId],
+    queryFn: async ({ queryKey }) => {
+      const url = queryKey[0] as string;
+      const currentUserId = queryKey[1] as number | undefined;
+      
+      const queryParams = new URLSearchParams();
+      if (currentUserId !== undefined) queryParams.append('userId', currentUserId.toString());
+      
+      const response = await fetch(`${url}?${queryParams.toString()}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch ranking history');
+      }
+      return response.json();
+    },
     enabled: userId !== undefined,
   });
 }
@@ -86,6 +139,13 @@ export function useUserRankingHistory(userId?: number) {
 export function useRatingTiers() {
   return useQuery<RatingTier[]>({
     queryKey: ['/api/multi-rankings/rating-tiers'],
+    queryFn: async () => {
+      const response = await fetch('/api/multi-rankings/rating-tiers');
+      if (!response.ok) {
+        throw new Error('Failed to fetch rating tiers');
+      }
+      return response.json();
+    },
   });
 }
 
