@@ -1,29 +1,16 @@
 /**
- * useRatingData Hook
+ * Rating Data Hook
  * 
- * Custom hook for fetching and managing player rating data from the CourtIQ™ Rating System.
+ * Custom hooks for accessing user rating data from the CourtIQ™ system.
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 
-export interface RatingData {
-  id: number;
-  userId: number;
-  rating: number;
-  format: string;
-  tier: string;
-  confidenceLevel: number;
-  matchesPlayed: number;
-  lastMatchDate: string | null;
-  createdAt: string | null;
-  updatedAt: string | null;
-}
-
+// Types
 export interface RatingTier {
   id: number;
-  order: number;
   name: string;
+  order: number;
   description: string | null;
   minRating: number;
   maxRating: number;
@@ -32,79 +19,66 @@ export interface RatingTier {
   protectionLevel: number;
 }
 
-export interface RatingWithHistory extends Omit<RatingData, 'tier'> {
+export interface RatingData {
+  id: number;
+  userId: number;
+  format: string;
+  rating: number;
+  tier: string;
+  confidenceLevel: number;
+  matchesPlayed: number;
+  lastMatchDate: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+  peakRating: number | null;
+  allTimeHighRating: number | null;
+  currentSeasonHighRating: number | null;
+  currentSeasonLowRating: number | null;
+}
+
+export interface RatingWithHistory extends RatingData {
   history: {
-    id: number;
-    userId: number;
-    ratingId: number;
-    previousRating: number;
-    newRating: number;
-    matchId: number;
-    ratingChange: number;
-    format: string;
-    opponentRating: number;
-    createdAt: string;
+    date: string;
+    rating: number;
+    change: number;
+    matchId?: number;
   }[];
-  tier: RatingTier;
 }
 
 /**
- * Fetches a player's rating data for a specific format
+ * Hook to fetch all ratings for the current user
  */
-export function useRatingData(userId: number, format?: string) {
-  return useQuery({
-    queryKey: ['user-rating', userId, format],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (userId) params.append('userId', userId.toString());
-      if (format) params.append('format', format);
-      
-      const response = await apiRequest(
-        'GET', 
-        `/api/user/ratings?${params.toString()}`
-      );
-      const data = await response.json();
-      return data as RatingData[];
-    },
-    enabled: !!userId,
+export function useRatingData() {
+  return useQuery<RatingData[]>({
+    queryKey: ['/api/user/ratings'],
+    retry: false,
   });
 }
 
 /**
- * Fetches detailed rating data including history
+ * Hook to fetch detailed rating info with history for a specific format
  */
-export function useRatingDetail(userId: number, format?: string) {
-  return useQuery({
-    queryKey: ['user-rating-detail', userId, format],
+export function useRatingDetail(format: string) {
+  return useQuery<RatingWithHistory>({
+    queryKey: ['/api/user/rating-detail', format],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      if (userId) params.append('userId', userId.toString());
-      if (format) params.append('format', format);
-      
-      const response = await apiRequest(
-        'GET', 
-        `/api/user/rating-detail?${params.toString()}`
-      );
-      const data = await response.json();
-      return data as RatingWithHistory;
+      const response = await fetch(`/api/user/rating-detail?format=${format}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch rating detail');
+      }
+      return response.json();
     },
-    enabled: !!userId,
+    enabled: !!format,
+    retry: false,
   });
 }
 
 /**
- * Fetches all rating tiers
+ * Hook to fetch all available rating tiers
  */
 export function useRatingTiers() {
-  return useQuery({
-    queryKey: ['rating-tiers'],
-    queryFn: async () => {
-      const response = await apiRequest(
-        'GET', 
-        '/api/courtiq/tiers'
-      );
-      const data = await response.json();
-      return data as RatingTier[];
-    },
+  return useQuery<RatingTier[]>({
+    queryKey: ['/api/courtiq/tiers'],
+    retry: false,
   });
 }

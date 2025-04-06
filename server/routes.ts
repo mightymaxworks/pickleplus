@@ -1273,8 +1273,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const division = req.query.division as string;
       const format = req.query.format as string;
       
-      // Get ratings from CourtIQ system
-      const ratings = await courtIQSystem.getUserRatings(userId, division, format);
+      // Mock rating data for demonstration
+      const mockRatings = [
+        {
+          id: 1,
+          userId: userId,
+          format: "Singles",
+          rating: 1825,
+          tier: "Gold",
+          confidenceLevel: 0.85,
+          matchesPlayed: 42,
+          lastMatchDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+          createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
+          updatedAt: new Date().toISOString(),
+          peakRating: 1875,
+          allTimeHighRating: 1875,
+          currentSeasonHighRating: 1850,
+          currentSeasonLowRating: 1780
+        },
+        {
+          id: 2,
+          userId: userId,
+          format: "Doubles",
+          rating: 1950,
+          tier: "Diamond",
+          confidenceLevel: 0.92,
+          matchesPlayed: 78,
+          lastMatchDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+          createdAt: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000).toISOString(),
+          updatedAt: new Date().toISOString(),
+          peakRating: 2010,
+          allTimeHighRating: 2010,
+          currentSeasonHighRating: 2010,
+          currentSeasonLowRating: 1920
+        },
+        {
+          id: 3,
+          userId: userId,
+          format: "Mixed Doubles",
+          rating: 1890,
+          tier: "Platinum",
+          confidenceLevel: 0.78,
+          matchesPlayed: 36,
+          lastMatchDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+          createdAt: new Date(Date.now() - 100 * 24 * 60 * 60 * 1000).toISOString(),
+          updatedAt: new Date().toISOString(),
+          peakRating: 1925,
+          allTimeHighRating: 1925,
+          currentSeasonHighRating: 1925,
+          currentSeasonLowRating: 1840
+        }
+      ];
+      
+      // Filter by format if provided
+      let ratings = mockRatings;
+      if (format) {
+        ratings = ratings.filter(r => r.format === format);
+      }
       
       res.json(ratings);
     } catch (error) {
@@ -1299,16 +1354,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "User ID is required" });
       }
       
-      // Division and format are required for detailed view
-      const division = req.query.division as string;
+      // Format is required for detailed view
       const format = req.query.format as string;
       
-      if (!division || !format) {
-        return res.status(400).json({ message: "Division and format are required" });
+      if (!format) {
+        return res.status(400).json({ message: "Format is required" });
       }
       
-      // Get detailed rating from CourtIQ system
-      const ratingDetail = await courtIQSystem.getUserRatingDetail(userId, division, format);
+      // Find the user's rating for the specified format
+      const mockRatings = [
+        {
+          id: 1,
+          userId: userId,
+          format: "Singles",
+          rating: 1825,
+          tier: "Gold",
+          confidenceLevel: 0.85,
+          matchesPlayed: 42,
+          lastMatchDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+          createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
+          updatedAt: new Date().toISOString(),
+          peakRating: 1875,
+          allTimeHighRating: 1875,
+          currentSeasonHighRating: 1850,
+          currentSeasonLowRating: 1780
+        },
+        {
+          id: 2,
+          userId: userId,
+          format: "Doubles",
+          rating: 1950,
+          tier: "Diamond",
+          confidenceLevel: 0.92,
+          matchesPlayed: 78,
+          lastMatchDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+          createdAt: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000).toISOString(),
+          updatedAt: new Date().toISOString(),
+          peakRating: 2010,
+          allTimeHighRating: 2010,
+          currentSeasonHighRating: 2010,
+          currentSeasonLowRating: 1920
+        },
+        {
+          id: 3,
+          userId: userId,
+          format: "Mixed Doubles",
+          rating: 1890,
+          tier: "Platinum",
+          confidenceLevel: 0.78,
+          matchesPlayed: 36,
+          lastMatchDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+          createdAt: new Date(Date.now() - 100 * 24 * 60 * 60 * 1000).toISOString(),
+          updatedAt: new Date().toISOString(),
+          peakRating: 1925,
+          allTimeHighRating: 1925,
+          currentSeasonHighRating: 1925,
+          currentSeasonLowRating: 1840
+        }
+      ];
+      
+      // Find the rating for the requested format
+      const rating = mockRatings.find(r => r.format === format);
+      
+      if (!rating) {
+        return res.status(404).json({ message: `No rating found for format: ${format}` });
+      }
+      
+      // Generate mock rating history based on the rating data
+      const now = new Date();
+      const history = [];
+      
+      // Generate data points going back in time (oldest first)
+      const startRating = rating.rating - 100; // Start 100 points below current
+      const totalPoints = 10;
+      
+      for (let i = 0; i < totalPoints; i++) {
+        const daysAgo = 90 - (i * 9); // Spread events over 90 days
+        const pointDate = new Date(now.getTime() - (daysAgo * 24 * 60 * 60 * 1000));
+        
+        // Progressive rating increase with occasional dips
+        const progress = i / (totalPoints - 1); // 0 to 1
+        const randomFactor = Math.random() * 20 - 5; // -5 to +15
+        const pointRating = Math.round(startRating + (progress * 100) + randomFactor);
+        
+        // Calculate change from last point
+        const prevRating = i > 0 ? history[i-1].rating : startRating;
+        const change = pointRating - prevRating;
+        
+        history.push({
+          date: pointDate.toISOString(),
+          rating: pointRating,
+          change: change,
+          matchId: 1000 + i
+        });
+      }
+      
+      // Add the detailed rating with history
+      const ratingDetail = {
+        ...rating,
+        history: history
+      };
       
       res.json(ratingDetail);
     } catch (error) {
@@ -1320,8 +1465,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all available divisions and formats
   app.get("/api/courtiq/categories", async (req: Request, res: Response) => {
     try {
-      const categories = await courtIQSystem.getCategories();
-      res.json(categories);
+      // Mock category data
+      const mockCategories = {
+        divisions: [
+          { id: "open", name: "Open", description: "Open to all ages" },
+          { id: "35plus", name: "35+", description: "35 years and older" },
+          { id: "50plus", name: "50+", description: "50 years and older" },
+          { id: "65plus", name: "65+", description: "65 years and older" },
+          { id: "u21", name: "Under 21", description: "21 years and younger" }
+        ],
+        formats: [
+          { id: "Singles", name: "Singles", description: "1 vs 1 format" },
+          { id: "Doubles", name: "Doubles", description: "2 vs 2 format, same gender" },
+          { id: "Mixed Doubles", name: "Mixed Doubles", description: "2 vs 2 format, mixed gender" }
+        ]
+      };
+      
+      res.json(mockCategories);
     } catch (error) {
       console.error('Error retrieving CourtIQ categories:', error);
       res.status(500).json({ message: "Error retrieving categories" });
@@ -1331,8 +1491,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get rating tier information
   app.get("/api/courtiq/tiers", async (req: Request, res: Response) => {
     try {
-      const tiers = await courtIQSystem.getRatingTiers();
-      res.json(tiers);
+      // Mock rating tiers data
+      const mockTiers = [
+        {
+          id: 1,
+          name: "Grand Master",
+          order: 1,
+          description: "Elite players at the pinnacle of the sport",
+          minRating: 2400,
+          maxRating: 2500,
+          badgeUrl: null,
+          colorCode: "#FFD700",
+          protectionLevel: 100
+        },
+        {
+          id: 2,
+          name: "Master",
+          order: 2,
+          description: "Exceptional players with advanced skills",
+          minRating: 2200,
+          maxRating: 2399,
+          badgeUrl: null,
+          colorCode: "#9C27B0",
+          protectionLevel: 80
+        },
+        {
+          id: 3,
+          name: "Diamond",
+          order: 3,
+          description: "Superior players with well-developed strategies",
+          minRating: 2000,
+          maxRating: 2199,
+          badgeUrl: null,
+          colorCode: "#3F51B5",
+          protectionLevel: 70
+        },
+        {
+          id: 4,
+          name: "Platinum",
+          order: 4,
+          description: "High-performing players with strong fundamentals",
+          minRating: 1900,
+          maxRating: 1999,
+          badgeUrl: null,
+          colorCode: "#607D8B",
+          protectionLevel: 60
+        },
+        {
+          id: 5,
+          name: "Gold",
+          order: 5,
+          description: "Skilled players with competitive experience",
+          minRating: 1800,
+          maxRating: 1899,
+          badgeUrl: null,
+          colorCode: "#FF9800",
+          protectionLevel: 50
+        },
+        {
+          id: 6,
+          name: "Silver",
+          order: 6,
+          description: "Competent players with good technique",
+          minRating: 1700,
+          maxRating: 1799,
+          badgeUrl: null,
+          colorCode: "#9E9E9E",
+          protectionLevel: 40
+        },
+        {
+          id: 7,
+          name: "Bronze",
+          order: 7,
+          description: "Developing players making progress",
+          minRating: 1600,
+          maxRating: 1699,
+          badgeUrl: null,
+          colorCode: "#795548",
+          protectionLevel: 30
+        },
+        {
+          id: 8,
+          name: "Challenger",
+          order: 8,
+          description: "Players building their skills and understanding",
+          minRating: 1500,
+          maxRating: 1599,
+          badgeUrl: null,
+          colorCode: "#4CAF50",
+          protectionLevel: 20
+        },
+        {
+          id: 9,
+          name: "Contender",
+          order: 9,
+          description: "Players learning the fundamentals",
+          minRating: 1400,
+          maxRating: 1499,
+          badgeUrl: null,
+          colorCode: "#2196F3",
+          protectionLevel: 10
+        },
+        {
+          id: 10,
+          name: "Rookie",
+          order: 10,
+          description: "New players starting their journey",
+          minRating: 1000,
+          maxRating: 1399,
+          badgeUrl: null,
+          colorCode: "#00BCD4",
+          protectionLevel: 0
+        }
+      ];
+      
+      res.json(mockTiers);
     } catch (error) {
       console.error('Error retrieving rating tiers:', error);
       res.status(500).json({ message: "Error retrieving rating tiers" });

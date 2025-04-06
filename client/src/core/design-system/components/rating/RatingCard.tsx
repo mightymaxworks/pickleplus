@@ -1,302 +1,258 @@
 /**
  * RatingCard Component
  * 
- * A comprehensive card displaying a player's rating information with history and trends.
- * Part of the CourtIQ™ Design System.
+ * A card displaying a player's rating information from the CourtIQ™ system.
  */
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RatingBadge } from "./RatingBadge";
-import { useRatingData, useRatingDetail } from "../../hooks/useRatingData";
-import { colors } from "../../tokens/colors";
-import { textStyles } from "../../tokens/typography";
-import { cn } from "@/lib/utils";
-import { TrendingUp, TrendingDown, Minus, Medal, Trophy, ChevronRight, Calendar } from "lucide-react";
-import { format } from "date-fns";
+import React, { useState } from "react";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from "@/components/ui/tabs";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/components/ui/tooltip";
 import { Progress } from "@/components/ui/progress";
+import { 
+  InfoIcon, 
+  TrendingUpIcon, 
+  TrendingDownIcon,
+  HistoryIcon,
+  AlertCircleIcon
+} from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+
+import { colors } from "../../tokens/colors";
+import { RatingBadge } from "./RatingBadge";
+import { useRatingData, useRatingTiers } from "../../hooks/useRatingData";
+import type { RatingData, RatingTier } from "../../hooks/useRatingData";
+
+// Helper function for formatting dates
+const formatDate = (date: Date): string => {
+  if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+    return "N/A";
+  }
+  
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  }).format(date);
+};
 
 interface RatingCardProps {
-  userId: number;
   className?: string;
-  showDetailed?: boolean;
-  initialFormat?: string;
+  userId?: number;
 }
 
-/**
- * A detailed card component for displaying a player's rating information.
- * 
- * Features:
- * - Multiple format support (Singles, Doubles, Mixed)
- * - Rating history visualization
- * - Tier progression indicators
- * - Confidence level display
- */
-export function RatingCard({
-  userId,
-  className,
-  showDetailed = true,
-  initialFormat = "Mixed Doubles",
-}: RatingCardProps) {
-  // Get all ratings for this user
-  const { data: ratings, isLoading: ratingsLoading } = useRatingData(userId);
+export function RatingCard({ className }: RatingCardProps) {
+  const [activeFormat, setActiveFormat] = useState<string>("Singles");
+  const { data: ratings, isLoading: ratingsLoading, error: ratingsError } = useRatingData();
+  const { data: tiers, isLoading: tiersLoading } = useRatingTiers();
   
-  // State for the currently selected format
-  const [selectedFormat, setSelectedFormat] = React.useState(initialFormat);
+  // Group ratings by format
+  const formatMap: Record<string, RatingData> = {};
+  if (ratings) {
+    ratings.forEach(rating => {
+      formatMap[rating.format] = rating;
+    });
+  }
   
-  // Get detailed rating info for the selected format
-  const { data: ratingDetail, isLoading: detailLoading } = useRatingDetail(
-    userId, 
-    selectedFormat
-  );
-  
-  // Find the selected rating from all ratings
-  const selectedRating = ratings?.find((r: any) => r.format === selectedFormat);
-  
-  // Format options for the tabs
-  const formatOptions = [
-    { value: "Singles", label: "Singles" },
-    { value: "Doubles", label: "Doubles" },
-    { value: "Mixed Doubles", label: "Mixed" },
-  ];
-
-  // Calculate rating trend (up, down, or neutral)
-  const calculateTrend = () => {
-    if (!ratingDetail?.history || ratingDetail.history.length < 2) return "neutral";
+  // Calculate tier progress
+  const calculateTierProgress = (rating: RatingData): number => {
+    if (!tiers) return 0;
     
-    // Sort history by date
-    const sortedHistory = [...ratingDetail.history]
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      
-    // Get last two ratings
-    const lastTwo = sortedHistory.slice(0, 2);
-    if (lastTwo.length < 2) return "neutral";
+    const currentTier = tiers.find(t => t.name === rating.tier);
+    if (!currentTier) return 0;
     
-    const diff = lastTwo[0].newRating - lastTwo[1].newRating;
-    if (diff > 0) return "up";
-    if (diff < 0) return "down";
-    return "neutral";
+    const nextTier = tiers.find(t => t.order === currentTier.order - 1);
+    if (!nextTier) return 100; // Already at highest tier
+    
+    const tierRange = nextTier.minRating - currentTier.minRating;
+    const playerProgress = rating.rating - currentTier.minRating;
+    
+    return Math.min(100, Math.max(0, (playerProgress / tierRange) * 100));
   };
   
-  const ratingTrend = calculateTrend();
-  
-  // Get the trend icon based on the current trend
-  const getTrendIcon = () => {
-    switch (ratingTrend) {
-      case "up":
-        return <TrendingUp size={16} className="text-accent-DEFAULT" />;
-      case "down":
-        return <TrendingDown size={16} className="text-error-DEFAULT" />;
-      default:
-        return <Minus size={16} className="text-gray-400" />;
-    }
+  // Format dates for display
+  const formatDisplayDate = (dateString: string | null): string => {
+    if (!dateString) return "N/A";
+    return formatDate(new Date(dateString));
   };
   
-  // Calculate progress to next tier
-  const calculateNextTierProgress = () => {
-    if (!selectedRating || !ratingDetail) return 0;
-    
-    const currentRating = selectedRating.rating;
-    const currentTier = ratingDetail.tier;
-    
-    // If we're at the max rating tier
-    if (!currentTier.maxRating) return 100;
-    
-    const tierRange = currentTier.maxRating - currentTier.minRating;
-    const playerProgress = currentRating - currentTier.minRating;
-    
-    return Math.min(Math.round((playerProgress / tierRange) * 100), 100);
-  };
-  
-  // Get next tier info
-  const getNextTier = () => {
-    if (!ratingDetail) return null;
-    
-    // This would require querying all tiers and finding the next one
-    // For now, we'll return a placeholder
-    const currentTierOrder = ratingDetail.tier.order;
-    const nextTierOrder = currentTierOrder + 1;
-    
-    // Placeholder until we have the tiers API endpoint
-    return {
-      name: "Next Tier",
-      minRating: ratingDetail.tier.maxRating,
-      pointsNeeded: ratingDetail.tier.maxRating - (selectedRating?.rating || 0),
-    };
-  };
-  
-  // Format the last match date
-  const formatLastMatchDate = () => {
-    if (!selectedRating?.lastMatchDate) return "No matches yet";
-    return format(new Date(selectedRating.lastMatchDate), "MMM d, yyyy");
-  };
-  
-  // Loading state
-  if (ratingsLoading) {
+  if (ratingsLoading || tiersLoading) {
     return (
-      <Card className={cn("border-l-4 border-l-secondary-DEFAULT", className)}>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-semibold">Rating</CardTitle>
+      <Card className={className}>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">CourtIQ™ Ratings</CardTitle>
+          <CardDescription>Loading rating data...</CardDescription>
         </CardHeader>
-        <CardContent>
-          <Skeleton className="h-8 w-24 mb-2" />
-          <Skeleton className="h-4 w-full mb-1" />
-          <Skeleton className="h-4 w-2/3" />
+        <CardContent className="flex justify-center items-center h-40">
+          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
         </CardContent>
       </Card>
     );
   }
   
-  // No rating data
-  if (!ratings || ratings.length === 0) {
+  if (ratingsError || !ratings || ratings.length === 0) {
     return (
-      <Card className={cn("border-l-4 border-l-secondary-DEFAULT", className)}>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-semibold">Rating</CardTitle>
+      <Card className={className}>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">CourtIQ™ Ratings</CardTitle>
+          <CardDescription>Player rating information</CardDescription>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm text-gray-500">No rating data available yet.</p>
-          <p className="text-sm mt-2">Play matches to earn your first rating!</p>
+        <CardContent className="flex flex-col items-center justify-center h-40 gap-3">
+          <AlertCircleIcon className="w-10 h-10 text-muted-foreground" />
+          <p className="text-sm text-center text-muted-foreground max-w-xs">
+            No rating data available. Ratings are calculated after you play matches.
+          </p>
         </CardContent>
       </Card>
     );
   }
   
-  // Simplified version of the card
-  if (!showDetailed) {
-    return (
-      <Card className={cn("border-l-4 border-l-secondary-DEFAULT", className)}>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-semibold">Rating</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div>
-              <RatingBadge 
-                tier={selectedRating?.tier || "Unrated"} 
-                rating={selectedRating?.rating || 0}
-                format={selectedFormat}
-                size="lg"
-                showRating
-              />
-              <p className="text-sm text-gray-500 mt-1">
-                {selectedRating?.matchesPlayed || 0} matches played
-              </p>
-            </div>
-            <div className="flex items-center">
-              {getTrendIcon()}
-              <ChevronRight size={16} className="ml-1 text-gray-400" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  // Get active rating data
+  const activeRating = formatMap[activeFormat] || ratings[0];
   
-  // Full detailed card
+  // Get available formats from ratings
+  const formats = ratings.map(r => r.format);
+  
+  // Calculate tier progress for the active rating
+  const tierProgress = calculateTierProgress(activeRating);
+  
   return (
-    <Card className={cn("border-l-4 border-l-secondary-DEFAULT", className)}>
+    <Card className={className}>
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold flex items-center justify-between">
-          <span>CourtIQ™ Rating</span>
-          <Trophy className="h-5 w-5 text-secondary-DEFAULT" />
-        </CardTitle>
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle className="text-lg">CourtIQ™ Ratings</CardTitle>
+            <CardDescription>Player rating information</CardDescription>
+          </div>
+          <RatingBadge 
+            tier={activeRating.tier} 
+            rating={activeRating.rating} 
+            format={activeRating.format}
+            showRating 
+            showFormat
+            size="lg"
+          />
+        </div>
       </CardHeader>
+      
       <CardContent className="pb-2">
-        <Tabs defaultValue={selectedFormat} onValueChange={setSelectedFormat}>
-          <TabsList className="mb-3 w-full grid grid-cols-3">
-            {formatOptions.map(format => (
-              <TabsTrigger key={format.value} value={format.value}>
-                {format.label}
+        <Tabs defaultValue={activeFormat} onValueChange={setActiveFormat}>
+          <TabsList className="w-full mb-4">
+            {formats.map(format => (
+              <TabsTrigger key={format} value={format} className="flex-1">
+                {format}
               </TabsTrigger>
             ))}
           </TabsList>
           
-          {formatOptions.map(format => (
-            <TabsContent key={format.value} value={format.value}>
-              <div className="space-y-4">
-                {/* Rating and tier */}
+          {formats.map(format => {
+            const rating = formatMap[format];
+            return (
+              <TabsContent key={format} value={format} className="space-y-4">
                 <div className="flex justify-between items-center">
                   <div>
-                    <div className="flex items-center">
-                      <span className="text-3xl font-bold mr-2">
-                        {selectedRating?.rating || "---"}
-                      </span>
-                      {getTrendIcon()}
-                    </div>
-                    <RatingBadge 
-                      tier={selectedRating?.tier || "Unrated"} 
-                      rating={selectedRating?.rating || 0}
-                      format={selectedFormat}
-                      size="md"
-                    />
+                    <h4 className="text-sm font-medium mb-1">Current Rating</h4>
+                    <div className="text-2xl font-bold text-primary">{rating.rating}</div>
                   </div>
+                  
                   <div className="text-right">
-                    <div className="flex items-center justify-end">
-                      <Medal className="h-4 w-4 mr-1 text-secondary-400" />
-                      <span className="text-sm font-medium">
-                        Confidence: {selectedRating?.confidenceLevel || 0}%
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500 flex items-center justify-end mt-1">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      {formatLastMatchDate()}
-                    </p>
+                    <h4 className="text-sm font-medium mb-1">Matches Played</h4>
+                    <div className="text-xl font-medium">{rating.matchesPlayed}</div>
                   </div>
                 </div>
                 
-                {/* Tier progress */}
-                {!detailLoading && ratingDetail && (
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <h4 className="text-sm font-medium">Progress to Next Tier</h4>
+                    <span className="text-xs text-muted-foreground">{Math.round(tierProgress)}%</span>
+                  </div>
+                  <Progress value={tierProgress} className="h-2" />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-muted/50 p-3 rounded-md">
+                    <h4 className="text-xs font-medium mb-1 flex items-center">
+                      <TrendingUpIcon className="w-3 h-3 mr-1" />
+                      Season High
+                    </h4>
+                    <div className="font-medium">
+                      {rating.currentSeasonHighRating || "N/A"}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-muted/50 p-3 rounded-md">
+                    <h4 className="text-xs font-medium mb-1 flex items-center">
+                      <TrendingDownIcon className="w-3 h-3 mr-1" />
+                      Season Low
+                    </h4>
+                    <div className="font-medium">
+                      {rating.currentSeasonLowRating || "N/A"}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-center">
                   <div>
-                    <div className="flex justify-between items-center text-sm mb-1">
-                      <span className="font-medium">Tier progress</span>
-                      <span className="text-gray-500">{calculateNextTierProgress()}%</span>
-                    </div>
-                    <Progress 
-                      value={calculateNextTierProgress()} 
-                      className="h-2" 
-                    />
-                    
-                    <div className="flex justify-between text-xs mt-2">
-                      <span>{ratingDetail.tier.minRating}</span>
-                      <span className="font-medium text-secondary-DEFAULT">
-                        {selectedRating?.rating || 0}
-                      </span>
-                      <span>{ratingDetail.tier.maxRating || "∞"}</span>
-                    </div>
-                    
-                    {getNextTier() && (
-                      <p className="text-xs text-gray-500 mt-2">
-                        {getNextTier()?.pointsNeeded} points until <span className="font-medium">{getNextTier()?.name}</span>
-                      </p>
-                    )}
-                  </div>
-                )}
-                
-                {/* Matches played */}
-                <div className="bg-gray-50 rounded-md p-3 mt-3">
-                  <div className="grid grid-cols-2 gap-2 text-center">
-                    <div>
-                      <p className="text-xl font-bold">{selectedRating?.matchesPlayed || 0}</p>
-                      <p className="text-xs text-gray-500">Matches</p>
-                    </div>
-                    <div>
-                      <p className="text-xl font-bold">
-                        {ratingDetail?.history?.length || 0}
-                      </p>
-                      <p className="text-xs text-gray-500">Rating Changes</p>
+                    <h4 className="text-xs font-medium mb-1 flex items-center">
+                      <HistoryIcon className="w-3 h-3 mr-1" />
+                      Last Match Date
+                    </h4>
+                    <div className="text-sm">
+                      {formatDisplayDate(rating.lastMatchDate)}
                     </div>
                   </div>
+                  
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center space-x-1">
+                          <h4 className="text-xs font-medium">Confidence</h4>
+                          <InfoIcon className="w-3 h-3 text-muted-foreground" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">
+                          Confidence level indicates how accurate your rating is. 
+                          It increases as you play more matches.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
-              </div>
-            </TabsContent>
-          ))}
+                
+                <div>
+                  <Progress 
+                    value={rating.confidenceLevel * 100} 
+                    className="h-1"
+                  />
+                </div>
+              </TabsContent>
+            );
+          })}
         </Tabs>
       </CardContent>
-      <CardFooter className="text-xs text-gray-500 pt-0">
-        <p>Updated automatically after every match</p>
+      
+      <CardFooter className="pt-2 text-xs text-muted-foreground">
+        <p>
+          Powered by CourtIQ™ Rating Algorithm
+        </p>
       </CardFooter>
     </Card>
   );

@@ -350,9 +350,7 @@ export default function Profile() {
               CourtIQ™ Insights
             </h2>
             <RatingCard 
-              userId={user.id} 
-              showDetailed={true}
-              initialFormat="Mixed Doubles"
+              className="w-full"
             />
           </div>
           
