@@ -18,7 +18,7 @@ import { useChangelogNotification } from "@/hooks/useChangelogNotification";
 import { ConnectionStatsWidget } from "@/components/social/ConnectionStatsWidget";
 import { SocialActivityFeed } from "@/components/social/SocialActivityFeed";
 import type { SocialActivityType } from "@/components/social/SocialActivityFeed";
-import { MultiDimensionalRankingCard } from "@/components/ranking/MultiDimensionalRankingCard";
+import { PCPGlobalRankingCard } from "@/components/ranking/PCPGlobalRankingCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -710,8 +710,8 @@ export default function Dashboard() {
         
         {/* Right Column */}
         <div className="md:col-span-1 space-y-6">
-          {/* Multi-Dimensional Rankings Card */}
-          <MultiDimensionalRankingCard />
+          {/* PCP Global Rankings Card */}
+          <PCPGlobalRankingCard />
           
           {/* Tournament Spotlight */}
           {upcomingTournament && (

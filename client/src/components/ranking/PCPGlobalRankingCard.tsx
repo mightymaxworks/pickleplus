@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
-import { useMultiDimensionalRankingData } from "@/hooks/use-multi-dimensional-rankings";
+import { usePCPGlobalRankingData } from "@/hooks/use-pcp-global-rankings";
 import { PlayFormat, AgeDivision, LeaderboardEntry } from "../../../shared/multi-dimensional-rankings";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +29,7 @@ import {
 } from "recharts";
 import { formatDistanceToNow } from "date-fns";
 
-export function MultiDimensionalRankingCard() {
+export function PCPGlobalRankingCard() {
   const { user } = useAuth();
   const [format, setFormat] = useState<PlayFormat>("singles");
   const [ageDivision, setAgeDivision] = useState<AgeDivision>("19plus");
@@ -43,7 +43,7 @@ export function MultiDimensionalRankingCard() {
     isLoading,
     isError,
     error,
-  } = useMultiDimensionalRankingData(user?.id, format, ageDivision);
+  } = usePCPGlobalRankingData(user?.id, format, ageDivision);
 
   // Format options for dropdown
   const formatOptions = [
