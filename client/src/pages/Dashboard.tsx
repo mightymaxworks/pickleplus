@@ -17,7 +17,15 @@ import { ChangelogBanner } from "@/components/ChangelogBanner";
 import { useChangelogNotification } from "@/hooks/useChangelogNotification";
 import { ConnectionStatsWidget } from "@/components/social/ConnectionStatsWidget";
 import { SocialActivityFeed } from "@/components/social/SocialActivityFeed";
+import type { SocialActivityType } from "@/components/social/SocialActivityFeed";
 import { MultiDimensionalRankingCard } from "@/components/ranking/MultiDimensionalRankingCard";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { PlayerCard } from "@/components/dashboard/PlayerCard";
+import { QrCode, MapPin, Zap, Award, Calendar, Users, TrendingUp, Target, Settings, Scan, BookOpen, Plus, ArrowRight } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 // Define missing interfaces
 interface UserAchievementWithDetails {
@@ -108,21 +116,43 @@ export default function Dashboard() {
     }
   });
 
+  // Define SocialActivity interface to match the import type
+  interface SocialActivity {
+    id: number;
+    type: SocialActivityType;
+    createdAt: string;
+    actors: {
+      id: number;
+      displayName: string;
+      username: string;
+      avatarInitials: string;
+    }[];
+    contextData?: {
+      matchId?: number;
+      matchType?: string;
+      tournamentId?: number;
+      tournamentName?: string;
+      achievementId?: number;
+      achievementName?: string;
+    };
+  }
+
   // Fetch social activity feed
   const {
     data: socialActivities,
     isLoading: socialActivitiesLoading
-  } = useQuery({
+  } = useQuery<SocialActivity[]>({
     queryKey: ["/api/connections/activities"],
     enabled: isAuthenticated,
     // Temporary mock data until API endpoint is available
     queryFn: async () => {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 700));
+      // Cast the types to match SocialActivityType
       return [
         {
           id: 1,
-          type: "connection_accepted",
+          type: "connection_accepted" as SocialActivityType,
           createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
           actors: [{
             id: 2,
@@ -133,7 +163,7 @@ export default function Dashboard() {
         },
         {
           id: 2,
-          type: "match_played",
+          type: "match_played" as SocialActivityType,
           createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2 days ago
           actors: [{
             id: 3,
@@ -148,7 +178,7 @@ export default function Dashboard() {
         },
         {
           id: 3,
-          type: "tournament_joined",
+          type: "tournament_joined" as SocialActivityType,
           createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(), // 5 days ago
           actors: [{
             id: 4,
@@ -181,246 +211,520 @@ export default function Dashboard() {
   const xpNeeded = nextLevelXP - currentXP;
   const xpPercentage = (currentXP % xpPerLevel) / xpPerLevel * 100;
 
+  // Quick Action Component for Dashboard
+  const QuickAction = ({ icon, label, onClick, className = "" }: { 
+    icon: React.ReactNode, 
+    label: string, 
+    onClick: () => void,
+    className?: string 
+  }) => (
+    <Button 
+      variant="outline" 
+      className={`flex items-center gap-2 px-3 py-2 h-auto ${className}`}
+      onClick={onClick}
+    >
+      {icon}
+      <span className="text-sm font-medium">{label}</span>
+    </Button>
+  );
+  
+  // Partner Matching Section Component
+  const PartnerMatchingSection = () => {
+    // This would be connected to real data in a full implementation
+    const suggestedPartners = [
+      { id: 1, name: "Sarah M.", compatibility: 85, avatarInitials: "SM", playingStyle: "Aggressive" },
+      { id: 2, name: "David K.", compatibility: 79, avatarInitials: "DK", playingStyle: "Defensive" },
+      { id: 3, name: "Jamie L.", compatibility: 92, avatarInitials: "JL", playingStyle: "All-Court" },
+    ];
+    
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center">
+            <Users className="h-5 w-5 mr-2 text-primary" />
+            Partner Matching
+          </CardTitle>
+          <CardDescription>
+            Find players that match your style and availability
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium">Looking for Partners</span>
+            {/* Toggle button would be functional in full implementation */}
+            <div className="h-6 w-12 rounded-full bg-primary/90 relative flex items-center px-1">
+              <div className="h-4 w-4 rounded-full bg-white absolute right-1 transition-all"></div>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            {suggestedPartners.map(partner => (
+              <div key={partner.id} className="flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mr-3 text-sm font-medium">
+                    {partner.avatarInitials}
+                  </div>
+                  <div>
+                    <div className="font-medium">{partner.name}</div>
+                    <div className="text-xs text-muted-foreground">{partner.playingStyle} Player</div>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end">
+                  <Badge variant="outline" className="bg-primary/10 text-primary border-0">
+                    {partner.compatibility}% Match
+                  </Badge>
+                  <span className="text-xs text-muted-foreground mt-1">3 mutual connections</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <Button className="w-full" size="sm">
+            <Calendar className="h-4 w-4 mr-2" />
+            Schedule a Match
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  };
+  
+  // Skill Development Section Component
+  const SkillDevelopmentSection = () => {
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center">
+            <Target className="h-5 w-5 mr-2 text-primary" />
+            Skill Development
+          </CardTitle>
+          <CardDescription>
+            Personalized recommendations to improve your game
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex flex-col">
+              <div className="text-sm font-medium mb-2">Skill Breakdown</div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span>Serving</span>
+                    <span className="font-medium">75%</span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full bg-primary" style={{ width: "75%" }}></div>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span>Return</span>
+                    <span className="font-medium">82%</span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full bg-primary" style={{ width: "82%" }}></div>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span>Dinking</span>
+                    <span className="font-medium">65%</span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full bg-primary" style={{ width: "65%" }}></div>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span>Volleys</span>
+                    <span className="font-medium">69%</span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full bg-primary" style={{ width: "69%" }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="pt-2">
+              <div className="text-sm font-medium mb-2">Recommended Focus</div>
+              <div className="bg-muted/30 rounded-lg p-3">
+                <div className="flex items-start gap-3">
+                  <div className="bg-primary/10 text-primary rounded-full p-2">
+                    <BookOpen className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-sm">Dinking Consistency</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Practice controlled dinks to all areas of the kitchen to improve your soft game.
+                    </p>
+                    <Button variant="link" className="h-8 px-0 text-xs text-primary" onClick={() => setLocation("/guidance")}>
+                      View Tutorial <ArrowRight className="h-3 w-3 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+  
+  // Tournament Spotlight Component
+  const TournamentSpotlight = ({ tournament, registration, isLoading }: { 
+    tournament: Tournament, 
+    registration: { checkedIn: boolean },
+    isLoading: boolean
+  }) => {
+    if (isLoading) {
+      return <Skeleton className="h-64 w-full rounded-lg" />;
+    }
+    
+    // Ensure we have valid dates by providing fallbacks
+    const startDate = new Date(tournament.startDate as string);
+    const endDate = new Date(tournament.endDate as string);
+    const today = new Date();
+    const daysUntil = Math.ceil((startDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
+    
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center">
+            <Award className="h-5 w-5 mr-2 text-primary" />
+            Tournament Spotlight
+          </CardTitle>
+          <CardDescription>
+            Upcoming tournaments and your registrations
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="bg-primary/5 rounded-lg p-4 border border-primary/10">
+            <div className="flex items-start justify-between">
+              <div>
+                <h4 className="font-bold">{tournament.name}</h4>
+                <div className="text-sm text-muted-foreground">
+                  {startDate.toLocaleDateString()} - {endDate.toLocaleDateString()}
+                </div>
+                <div className="flex items-center mt-1">
+                  <MapPin className="h-3 w-3 mr-1 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">{tournament.location}</span>
+                </div>
+              </div>
+              
+              <Badge variant={daysUntil <= 3 ? "destructive" : "outline"}>
+                {daysUntil <= 0 ? "Today" : `${daysUntil} days left`}
+              </Badge>
+            </div>
+            
+            <div className="mt-4 flex items-center justify-between">
+              <Badge variant={registration.checkedIn ? "default" : "secondary"}>
+                {registration.checkedIn ? "Checked In" : "Not Checked In"}
+              </Badge>
+              
+              <Button size="sm" variant="outline">
+                <QrCode className="h-4 w-4 mr-2" />
+                Check In
+              </Button>
+            </div>
+          </div>
+          
+          <Button variant="outline" className="w-full" size="sm" onClick={() => setLocation("/tournaments")}>
+            Browse All Tournaments
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  };
+  
+  // Main Community Insights Component
+  const CommunityInsights = () => {
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center">
+            <TrendingUp className="h-5 w-5 mr-2 text-primary" />
+            Community Insights
+          </CardTitle>
+          <CardDescription>
+            Local pickleball activity and trends
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <div className="flex justify-between text-sm">
+                <span>Active Players</span>
+                <span className="font-medium">
+                  128 <span className="text-xs text-green-600">↑ 12%</span>
+                </span>
+              </div>
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-green-500" style={{ width: "72%" }}></div>
+              </div>
+            </div>
+            
+            <div className="space-y-1">
+              <div className="flex justify-between text-sm">
+                <span>Court Availability</span>
+                <span className="font-medium">
+                  Medium <span className="text-xs text-yellow-600">~45%</span>
+                </span>
+              </div>
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-yellow-500" style={{ width: "45%" }}></div>
+              </div>
+            </div>
+            
+            <div className="space-y-1">
+              <div className="flex justify-between text-sm">
+                <span>Tournament Activity</span>
+                <span className="font-medium">
+                  High <span className="text-xs text-green-600">↑ 32%</span>
+                </span>
+              </div>
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-green-500" style={{ width: "85%" }}></div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-muted/30 rounded-lg p-3">
+            <h4 className="text-sm font-medium mb-1">Popular Playing Times</h4>
+            <div className="text-xs text-muted-foreground">
+              <div className="flex justify-between mb-1">
+                <span>Weekdays:</span>
+                <span className="font-medium">5:30 PM - 8:30 PM</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Weekends:</span>
+                <span className="font-medium">9:00 AM - 12:00 PM</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
   return (
     <div className="dashboard-view pb-20 md:pb-6">
       {/* Changelog Banner */}
       <ChangelogBanner />
       
-      {/* Welcome Section */}
-      <div className="mb-6">
-        <div className="flex flex-col mb-2">
-          <div className="flex items-center">
-            <h2 className="text-xl font-bold font-product-sans mr-3">Welcome back, {user.displayName.split(' ')[0]}!</h2>
-            {tierInfo && !tierLoading && (
-              <TierBadge 
-                tier={tierInfo.tier}
-                tierDescription={tierInfo.tierDescription}
-                tierProgress={tierInfo.tierProgress}
-                nextTier={tierInfo.nextTier}
-                levelUntilNextTier={tierInfo.levelUntilNextTier}
-                showDetails={false}
-              />
-            )}
-          </div>
-          
-          <div className="flex items-center mt-2">
-            <p className="text-gray-500 mr-3">Ready to elevate your pickleball game?</p>
-            <div className="flex items-center gap-2">
-              {user.isFoundingMember && (
-                <FoundingMemberBadge size="sm" showText={false} className="ml-2" />
-              )}
-              {user.isFoundingMember && user.xpMultiplier && (
-                <XpMultiplierIndicator multiplier={user.xpMultiplier} size="sm" showLabel={true} showTooltip={true} />
-              )}
-            </div>
-          </div>
+      {/* Top Action Bar */}
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h2 className="text-xl font-bold font-product-sans">Welcome back, {user.displayName.split(' ')[0]}!</h2>
+          <p className="text-muted-foreground">Ready to elevate your pickleball game?</p>
         </div>
-      </div>
-      
-      {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <StatCard 
-          title="Level" 
-          value={user.level || 1} 
-          icon="emoji_events"
-          iconColor="text-[#FF5722]"
-          badge="+1 this week"
-        />
-        <StatCard 
-          title="XP Points" 
-          value={user.xp || 0} 
-          icon="bolt"
-          iconColor="text-[#2196F3]"
-          badge={activities && activities.length > 0 ? `+${activities[0].xpEarned}` : undefined}
-        />
-        <StatCard 
-          title="Matches" 
-          value={user.totalMatches || 0} 
-          icon="sports"
-          iconColor="text-[#FF5722]"
-          badge={`Won ${user.matchesWon || 0}`}
-        />
-        <StatCard 
-          title="Tournaments" 
-          value={user.totalTournaments || 0} 
-          icon="workspace_premium"
-          iconColor="text-[#2196F3]"
-          badge={upcomingTournament ? "1 upcoming" : undefined}
-        />
-      </div>
-      
-      {/* Level Progress Section */}
-      <div className="bg-white rounded-lg p-4 mb-6 pickle-shadow">
-        <h3 className="font-bold mb-3 font-product-sans">Level Progress</h3>
-        <div className="flex items-center mb-2">
-          <div className="w-12 h-12 rounded-full bg-[#FF5722] text-white flex items-center justify-center font-bold text-xl mr-3">
-            {user.level || 1}
-          </div>
-          <div className="flex-grow">
-            <div className="flex justify-between mb-1">
-              <span className="text-sm font-medium">{currentXP} / {nextLevelXP} XP</span>
-              <span className="text-sm text-gray-500">{xpPercentage.toFixed(0)}%</span>
-            </div>
-            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-[#FF5722]" 
-                style={{ width: `${xpPercentage}%` }}
-              />
-            </div>
-          </div>
-        </div>
-        <p className="text-sm text-gray-500">{xpNeeded} XP until Level {(user.level || 1) + 1}</p>
-      </div>
-      
-      {/* XP Tier Section */}
-      {tierLoading ? (
-        <Skeleton className="h-40 w-full rounded-lg mb-6" />
-      ) : tierInfo && (
-        <TierBadge 
-          tier={tierInfo.tier}
-          tierDescription={tierInfo.tierDescription}
-          tierProgress={tierInfo.tierProgress}
-          nextTier={tierInfo.nextTier}
-          levelUntilNextTier={tierInfo.levelUntilNextTier}
-          showDetails={true}
-        />
-      )}
-      
-      {/* Multi-Dimensional Rankings Section */}
-      <div className="mb-6">
-        <MultiDimensionalRankingCard />
-      </div>
-      
-      {/* Connection Stats Widget - New Social Feature */}
-      <ConnectionStatsWidget 
-        stats={connectionStats}
-        isLoading={connectionStatsLoading}
-      />
-      
-      {/* Social Activity Feed - New Social Feature */}
-      <SocialActivityFeed 
-        activities={socialActivities}
-        isLoading={socialActivitiesLoading}
-      />
-      
-      {/* Recent Activity Section */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="font-bold font-product-sans">Recent Activity</h3>
-          <span 
-            className="text-[#2196F3] text-sm cursor-pointer"
+        <div className="flex gap-2 flex-wrap justify-end">
+          <QuickAction 
+            icon={<QrCode className="h-4 w-4" />} 
+            label="My QR Passport" 
             onClick={() => setLocation("/profile")}
-          >
-            View All
-          </span>
+          />
+          <QuickAction 
+            icon={<Scan className="h-4 w-4" />} 
+            label="Scan Code" 
+            onClick={() => setLocation("/scan")}
+            className="bg-primary text-white hover:bg-primary/90 hover:text-white"
+          />
+          <QuickAction 
+            icon={<Plus className="h-4 w-4" />} 
+            label="Record Match" 
+            onClick={() => setLocation("/matches/new")}
+          />
+        </div>
+      </div>
+      
+      {/* Main Dashboard Grid Layout */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Left Column */}
+        <div className="md:col-span-1 space-y-6">
+          {/* Player Card */}
+          <PlayerCard user={user} rating={1845} />
+          
+          {/* Activity Feed */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center">
+                <Zap className="h-5 w-5 mr-2 text-primary" />
+                Activity Feed
+              </CardTitle>
+              <CardDescription>
+                Recent matches, achievements, and social activity
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+              {activitiesLoading ? (
+                Array(3).fill(0).map((_, index) => (
+                  <div key={index} className="mb-3">
+                    <Skeleton className="h-24 w-full rounded-lg" />
+                  </div>
+                ))
+              ) : activities && activities.length > 0 ? (
+                activities.map((activity) => (
+                  <ActivityCard key={activity.id} activity={activity} />
+                ))
+              ) : (
+                <p className="text-muted-foreground text-center py-4">No recent activities</p>
+              )}
+              
+              {socialActivities && !socialActivitiesLoading && (
+                <SocialActivityFeed 
+                  activities={socialActivities}
+                  isLoading={socialActivitiesLoading}
+                />
+              )}
+            </CardContent>
+          </Card>
+          
+          {/* Community Insights Section */}
+          <CommunityInsights />
         </div>
         
-        {activitiesLoading ? (
-          Array(3).fill(0).map((_, index) => (
-            <div key={index} className="mb-3">
-              <Skeleton className="h-24 w-full rounded-lg" />
-            </div>
-          ))
-        ) : activities && activities.length > 0 ? (
-          activities.slice(0, 3).map((activity) => (
-            <ActivityCard key={activity.id} activity={activity} />
-          ))
-        ) : (
-          <p className="text-gray-500 text-center py-4">No recent activities</p>
-        )}
-      </div>
-      
-      {/* Upcoming Tournaments Section */}
-      {upcomingTournament && (
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-bold font-product-sans">Upcoming Tournaments</h3>
-            <span 
-              className="text-[#2196F3] text-sm cursor-pointer"
-              onClick={() => setLocation("/tournaments")}
-            >
-              View All
-            </span>
-          </div>
+        {/* Center Column */}
+        <div className="md:col-span-1 space-y-6">
+          {/* XP Level Progress */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center">
+                <Zap className="h-5 w-5 mr-2 text-primary" />
+                Level Progress
+              </CardTitle>
+              <CardDescription>
+                Your progress towards the next level
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center mb-4">
+                <div className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xl mr-4">
+                  {user.level || 1}
+                </div>
+                <div className="flex-grow">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm font-medium">{currentXP} / {nextLevelXP} XP</span>
+                    <span className="text-sm text-muted-foreground">{xpPercentage.toFixed(0)}%</span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-primary" 
+                      style={{ width: `${xpPercentage}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between text-sm">
+                <span>{xpNeeded} XP until Level {(user.level || 1) + 1}</span>
+                
+                {user.xpMultiplier && (
+                  <XpMultiplierIndicator 
+                    multiplier={user.xpMultiplier} 
+                    size="sm" 
+                    showLabel={true}
+                    showTooltip={true} 
+                  />
+                )}
+              </div>
+              
+              {tierInfo && !tierLoading && (
+                <div className="mt-4 border-t pt-4">
+                  <div className="flex items-center mb-2">
+                    <span className="text-sm font-medium mr-2">Current Tier:</span>
+                    <TierBadge 
+                      tier={tierInfo.tier}
+                      tierDescription={tierInfo.tierDescription}
+                      tierProgress={tierInfo.tierProgress}
+                      nextTier={tierInfo.nextTier}
+                      levelUntilNextTier={tierInfo.levelUntilNextTier}
+                      showDetails={false}
+                    />
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {tierInfo.levelUntilNextTier > 0 
+                      ? `${tierInfo.levelUntilNextTier} more levels until ${tierInfo.nextTier}`
+                      : `You're at the highest tier!`}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
           
-          {tournamentsLoading ? (
-            <Skeleton className="h-64 w-full rounded-lg" />
-          ) : (
-            <TournamentCard 
+          {/* Partner Matching Section */}
+          <PartnerMatchingSection />
+          
+          {/* Achievements Display */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center">
+                <Award className="h-5 w-5 mr-2 text-primary" />
+                Recent Achievements
+              </CardTitle>
+              <CardDescription>
+                Badges and rewards you've unlocked recently
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {achievementsLoading ? (
+                <div className="grid grid-cols-3 gap-4">
+                  {Array(3).fill(0).map((_, index) => (
+                    <div key={index} className="flex flex-col items-center">
+                      <Skeleton className="h-16 w-16 rounded-full mb-2" />
+                      <Skeleton className="h-3 w-16 mb-1" />
+                      <Skeleton className="h-2 w-24" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-4 pb-2">
+                  {achievements && achievements.length > 0 ? (
+                    achievements.slice(0, 3).map(({ achievement, userAchievement }) => (
+                      <AchievementBadge 
+                        key={achievement.id} 
+                        achievement={achievement} 
+                        unlocked={true}
+                      />
+                    ))
+                  ) : (
+                    <div className="col-span-3 py-4 text-center text-sm text-muted-foreground">
+                      Play matches and tournaments to earn achievements
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              <div className="mt-4 pt-4 border-t">
+                <Button 
+                  variant="outline" 
+                  className="w-full text-sm" 
+                  size="sm"
+                  onClick={() => setLocation("/achievements")}
+                >
+                  View All Achievements
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        {/* Right Column */}
+        <div className="md:col-span-1 space-y-6">
+          {/* Multi-Dimensional Rankings Card */}
+          <MultiDimensionalRankingCard />
+          
+          {/* Tournament Spotlight */}
+          {upcomingTournament && (
+            <TournamentSpotlight 
               tournament={upcomingTournament.tournament} 
               registration={upcomingTournament.registration}
+              isLoading={tournamentsLoading}
             />
           )}
+          
+          {/* Skill Development Section */}
+          <SkillDevelopmentSection />
         </div>
-      )}
-      
-      {/* Recent Achievements Section */}
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="font-bold font-product-sans">Recent Achievements</h3>
-          <span 
-            className="text-[#2196F3] text-sm cursor-pointer"
-            onClick={() => setLocation("/achievements")}
-          >
-            View All
-          </span>
-        </div>
-        
-        {achievementsLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {Array(4).fill(0).map((_, index) => (
-              <div key={index} className="flex flex-col items-center">
-                <Skeleton className="h-20 w-20 rounded-full mb-2" />
-                <Skeleton className="h-4 w-24 mb-1" />
-                <Skeleton className="h-3 w-32" />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {achievements && achievements.length > 0 ? (
-              achievements.slice(0, 3).map(({ achievement, userAchievement }) => (
-                <AchievementBadge 
-                  key={achievement.id} 
-                  achievement={achievement} 
-                  unlocked={true}
-                />
-              ))
-            ) : (
-              // Show sample locked achievement if none unlocked
-              <AchievementBadge 
-                achievement={{
-                  id: 0,
-                  name: "Champion",
-                  description: "Win a tournament",
-                  xpReward: 500,
-                  category: "tournament",
-                  difficulty: "hard",
-                  badgeImageUrl: null,
-                  criteria: "Win a tournament",
-                  createdAt: new Date()
-                }} 
-                unlocked={false}
-              />
-            )}
-            
-            {/* Always show at least one locked achievement */}
-            <AchievementBadge 
-              achievement={{
-                id: 0,
-                name: "Champion",
-                description: "Win a tournament",
-                xpReward: 500,
-                category: "tournament",
-                difficulty: "hard",
-                badgeImageUrl: null,
-                criteria: "Win a tournament",
-                createdAt: new Date()
-              }} 
-              unlocked={false}
-            />
-          </div>
-        )}
       </div>
     </div>
   );
