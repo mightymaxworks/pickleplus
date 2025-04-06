@@ -17,6 +17,7 @@ import { ChangelogBanner } from "@/components/ChangelogBanner";
 import { useChangelogNotification } from "@/hooks/useChangelogNotification";
 import { ConnectionStatsWidget } from "@/components/social/ConnectionStatsWidget";
 import { SocialActivityFeed } from "@/components/social/SocialActivityFeed";
+import { MultiDimensionalRankingCard } from "@/components/ranking/MultiDimensionalRankingCard";
 
 // Define missing interfaces
 interface UserAchievementWithDetails {
@@ -284,6 +285,11 @@ export default function Dashboard() {
           showDetails={true}
         />
       )}
+      
+      {/* Multi-Dimensional Rankings Section */}
+      <div className="mb-6">
+        <MultiDimensionalRankingCard />
+      </div>
       
       {/* Connection Stats Widget - New Social Feature */}
       <ConnectionStatsWidget 
