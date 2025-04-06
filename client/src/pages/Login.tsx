@@ -33,7 +33,7 @@ export default function Login() {
   const handleSubmit = async (data: LoginFormData) => {
     try {
       await loginMutation.mutateAsync({
-        username: data.identifier,
+        identifier: data.identifier,
         password: data.password
       });
       navigate("/dashboard");

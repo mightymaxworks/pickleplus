@@ -33,7 +33,7 @@ type AuthContextType = {
 
 // Define login data type
 type LoginData = {
-  username: string;
+  identifier: string;
   password: string;
 };
 

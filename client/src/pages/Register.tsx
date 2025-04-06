@@ -49,18 +49,21 @@ export default function Register() {
 
   const handleSubmit = async (formData: RegisterFormData) => {
     try {
-      // Generate initials if not provided
-      if (!formData.avatarInitials) {
-        const nameParts = formData.displayName.split(" ");
-        formData.avatarInitials = nameParts.length > 1
-          ? (nameParts[0][0] + nameParts[1][0]).toUpperCase()
-          : formData.displayName.substring(0, 2).toUpperCase();
-      }
+      // Get first and last name from display name
+      const nameParts = formData.displayName ? formData.displayName.split(" ") : [];
+      const firstName = nameParts.length > 0 ? nameParts[0] : undefined;
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : undefined;
       
-      // Remove confirmPassword as it's not in the schema
-      const { confirmPassword, ...data } = formData;
+      // Create a properly formatted registration object matching RegisterData type
+      const registrationData = {
+        username: formData.username || "",
+        email: formData.email || "",
+        password: formData.password || "",
+        firstName,
+        lastName
+      };
       
-      await registerMutation.mutateAsync(data);
+      await registerMutation.mutateAsync(registrationData);
       navigate("/dashboard");
     } catch (error) {
       console.error("Registration error:", error);
@@ -112,7 +115,7 @@ export default function Register() {
                     <FormItem className="space-y-1">
                       <FormLabel>Display Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Full name" {...field} />
+                        <Input placeholder="Full name" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -128,7 +131,7 @@ export default function Register() {
                     <FormItem className="space-y-1">
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="you@example.com" {...field} />
+                        <Input type="email" placeholder="you@example.com" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -169,7 +172,7 @@ export default function Register() {
                     <FormItem className="space-y-1">
                       <FormLabel>Location</FormLabel>
                       <FormControl>
-                        <Input placeholder="City, State" {...field} />
+                        <Input placeholder="City, State" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -183,7 +186,7 @@ export default function Register() {
                     <FormItem className="space-y-1">
                       <FormLabel>Playing Since</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. 2021" {...field} />
+                        <Input placeholder="e.g. 2021" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -229,7 +232,7 @@ export default function Register() {
                     <FormItem className="space-y-1">
                       <FormLabel>Avatar Initials</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. JS" maxLength={2} {...field} />
+                        <Input placeholder="e.g. JS" maxLength={2} {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -245,7 +248,7 @@ export default function Register() {
                     <FormItem className="space-y-1">
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} />
+                        <Input type="password" placeholder="••••••••" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -259,7 +262,7 @@ export default function Register() {
                     <FormItem className="space-y-1">
                       <FormLabel>Confirm Password</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} />
+                        <Input type="password" placeholder="••••••••" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

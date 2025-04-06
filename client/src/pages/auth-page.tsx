@@ -86,7 +86,7 @@ export default function AuthPage() {
   const onLoginSubmit = async (values: LoginFormValues) => {
     try {
       await loginMutation.mutateAsync({
-        username: values.identifier,
+        identifier: values.identifier,
         password: values.password
       });
       
