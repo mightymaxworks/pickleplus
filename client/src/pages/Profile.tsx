@@ -40,7 +40,7 @@ import { QuickActionsCard } from "@/components/profile/QuickActionsCard";
 import { UpcomingTournamentsCard } from "@/components/profile/UpcomingTournamentsCard";
 
 // Import CourtIQ Design System components
-import { RatingCard } from "@/core/design-system";
+import { RatingCard, CourtIQDashboard } from "@/core/design-system";
 
 // Helper function to calculate profile completion percentage
 function calculateProfileCompletion(user: any): number {
@@ -343,13 +343,14 @@ export default function Profile() {
         
         {/* Right Column - Main content */}
         <div className="md:col-span-2 space-y-6">
-          {/* CourtIQ™ Ratings Section - New */}
+          {/* CourtIQ™ Dashboard Section */}
           <div className="mb-6">
             <h2 className="text-xl font-semibold mb-4 flex items-center">
               <Trophy className="h-5 w-5 mr-2 text-secondary-DEFAULT" />
-              CourtIQ™ Insights
+              CourtIQ™ Intelligence System
             </h2>
-            <RatingCard 
+            <CourtIQDashboard 
+              userId={user.id}
               className="w-full"
             />
           </div>
