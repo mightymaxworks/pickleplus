@@ -49,6 +49,31 @@ export interface User {
   preferredMatchDuration?: string | null;
   fitnessLevel?: string | null;
   
+  // Privacy and communication settings
+  privacySettings?: {
+    profileVisibility: 'public' | 'connections' | 'private';
+    locationVisibility: 'public' | 'connections' | 'private';
+    skillLevelVisibility: 'public' | 'connections' | 'private';
+    matchHistoryVisibility: 'public' | 'connections' | 'private';
+    achievementsVisibility: 'public' | 'connections' | 'private';
+    socialHandlesVisibility: 'public' | 'connections' | 'private';
+  };
+  
+  communicationPreferences?: {
+    matchInvitations: boolean;
+    tournamentNotifications: boolean;
+    achievementAlerts: boolean;
+    connectionRequests: boolean;
+    marketingEmails: boolean;
+    newsAndUpdates: boolean;
+  };
+  
+  notificationDelivery?: {
+    email: boolean;
+    inApp: boolean;
+    pushNotifications: boolean;
+  };
+  
   // Profile completion tracking
   profileCompletionPct?: number;
   profileLastUpdated?: Date | null;
@@ -237,6 +262,31 @@ export interface ProfileUpdateFormData {
   mobilityLimitations?: string | null;
   preferredMatchDuration?: string | null;
   fitnessLevel?: string | null;
+  
+  // Privacy and communication settings
+  privacySettings?: {
+    profileVisibility?: 'public' | 'connections' | 'private';
+    locationVisibility?: 'public' | 'connections' | 'private';
+    skillLevelVisibility?: 'public' | 'connections' | 'private';
+    matchHistoryVisibility?: 'public' | 'connections' | 'private';
+    achievementsVisibility?: 'public' | 'connections' | 'private';
+    socialHandlesVisibility?: 'public' | 'connections' | 'private';
+  };
+  
+  communicationPreferences?: {
+    matchInvitations?: boolean;
+    tournamentNotifications?: boolean;
+    achievementAlerts?: boolean;
+    connectionRequests?: boolean;
+    marketingEmails?: boolean;
+    newsAndUpdates?: boolean;
+  };
+  
+  notificationDelivery?: {
+    email?: boolean;
+    inApp?: boolean;
+    pushNotifications?: boolean;
+  };
 }
 
 export interface ProfileCompletionData {

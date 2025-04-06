@@ -112,6 +112,7 @@ export interface IStorage {
   getUserReceivedConnections(userId: number, type?: string, status?: string): Promise<Connection[]>;
   getActiveCoachingConnections(userId: number): Promise<{connection: Connection, user: User}[]>;
   getConnectionByUsers(requesterId: number, recipientId: number, type: string): Promise<Connection | undefined>;
+  getUserConnection(userId1: number, userId2: number): Promise<Connection | undefined>;
   
   // Social features (for the dashboard)
   getSocialActivityFeed(userId: number, limit?: number): Promise<any[]>; // We'll define a more specific return type later
@@ -1267,6 +1268,16 @@ export class MemStorage implements IStorage {
         connection.requesterId === requesterId && 
         connection.recipientId === recipientId &&
         connection.type === type
+    );
+  }
+  
+  async getUserConnection(userId1: number, userId2: number): Promise<Connection | undefined> {
+    // Check for any active connection between these users (regardless of type or direction)
+    return Array.from(this.connections.values()).find(
+      connection => 
+        ((connection.requesterId === userId1 && connection.recipientId === userId2) || 
+         (connection.requesterId === userId2 && connection.recipientId === userId1)) && 
+        connection.status === 'accepted'
     );
   }
   
@@ -2433,6 +2444,29 @@ export class DatabaseStorage implements IStorage {
           eq(connections.requesterId, requesterId),
           eq(connections.recipientId, recipientId),
           eq(connections.type, type)
+        )
+      );
+    
+    return connection;
+  }
+  
+  async getUserConnection(userId1: number, userId2: number): Promise<Connection | undefined> {
+    // Check for any active connection between these users, regardless of type or direction
+    const [connection] = await db.select()
+      .from(connections)
+      .where(
+        and(
+          or(
+            and(
+              eq(connections.requesterId, userId1),
+              eq(connections.recipientId, userId2)
+            ),
+            and(
+              eq(connections.requesterId, userId2),
+              eq(connections.recipientId, userId1)
+            )
+          ),
+          eq(connections.status, 'accepted')
         )
       );
     

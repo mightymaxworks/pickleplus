@@ -53,6 +53,31 @@ export const users = pgTable("users", {
   preferredMatchDuration: text("preferred_match_duration"), // Short, Medium, Extended
   fitnessLevel: text("fitness_level"), // Casual, Moderate, High
   
+  // Privacy and communication settings
+  privacySettings: json("privacy_settings").default({
+    profileVisibility: "public", // public, connections, private
+    locationVisibility: "public",
+    skillLevelVisibility: "public",
+    matchHistoryVisibility: "connections",
+    achievementsVisibility: "public",
+    socialHandlesVisibility: "connections"
+  }),
+  
+  communicationPreferences: json("communication_preferences").default({
+    matchInvitations: true,
+    tournamentNotifications: true,
+    achievementAlerts: true,
+    connectionRequests: true,
+    marketingEmails: false,
+    newsAndUpdates: true
+  }),
+  
+  notificationDelivery: json("notification_delivery").default({
+    email: true,
+    inApp: true,
+    pushNotifications: false
+  }),
+  
   // Profile completion tracking
   profileCompletionPct: integer("profile_completion_pct").default(0), // 0-100
   profileLastUpdated: timestamp("profile_last_updated"),
