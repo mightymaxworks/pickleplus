@@ -35,6 +35,15 @@ import {
   PlayerRanking
 } from "../shared/multi-dimensional-rankings";
 
+// Define enums for validation
+const playFormat = {
+  enumValues: ['singles', 'doubles', 'mixed'] as PlayFormat[]
+};
+
+const ageDivision = {
+  enumValues: ['U12', 'U14', 'U16', 'U19', '19plus', '35plus', '50plus', '60plus', '70plus'] as AgeDivision[]
+};
+
 // Session handling is now in auth.ts
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -1132,12 +1141,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
       
       // Validate parameters
-      if (!Object.values(playFormat.enumValues).includes(format)) {
+      if (!playFormat.enumValues.includes(format)) {
         return res.status(400).json({ message: "Invalid format. Must be 'singles', 'doubles', or 'mixed'" });
       }
       
-      if (!Object.values(ageDivision.enumValues).includes(ageDivision)) {
-        return res.status(400).json({ message: "Invalid age division. Must be '19plus', '35plus', or '50plus'" });
+      if (!ageDivision.enumValues.includes(ageDivision)) {
+        return res.status(400).json({ message: "Invalid age division. Must be one of the valid age divisions" });
       }
       
       const leaderboard = await multiDimensionalRankingService.getLeaderboard(
@@ -1164,12 +1173,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const ratingTierId = req.query.ratingTierId ? parseInt(req.query.ratingTierId as string) : undefined;
       
       // Validate parameters
-      if (!Object.values(playFormat.enumValues).includes(format)) {
+      if (!playFormat.enumValues.includes(format)) {
         return res.status(400).json({ message: "Invalid format. Must be 'singles', 'doubles', or 'mixed'" });
       }
       
-      if (!Object.values(ageDivision.enumValues).includes(ageDivision)) {
-        return res.status(400).json({ message: "Invalid age division. Must be '19plus', '35plus', or '50plus'" });
+      if (!ageDivision.enumValues.includes(ageDivision)) {
+        return res.status(400).json({ message: "Invalid age division. Must be one of the valid age divisions" });
       }
       
       const ranking = await multiDimensionalRankingService.getUserRanking(userId, format, ageDivision, ratingTierId);
@@ -1225,12 +1234,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Validate parameters
-      if (!Object.values(playFormat.enumValues).includes(format)) {
+      if (!playFormat.enumValues.includes(format)) {
         return res.status(400).json({ message: "Invalid format. Must be 'singles', 'doubles', or 'mixed'" });
       }
       
-      if (!Object.values(ageDivision.enumValues).includes(ageDivision)) {
-        return res.status(400).json({ message: "Invalid age division. Must be '19plus', '35plus', or '50plus'" });
+      if (!ageDivision.enumValues.includes(ageDivision)) {
+        return res.status(400).json({ message: "Invalid age division. Must be one of the valid age divisions" });
       }
       
       // Get current ranking
