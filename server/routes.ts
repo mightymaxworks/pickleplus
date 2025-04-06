@@ -20,6 +20,21 @@ import { generatePassportId, validatePassportId } from "./utils/passport-id";
 import { xpService } from "./services";
 import { isAdmin } from "./core/middleware/auth";
 
+// Import CourtIQ and XP systems
+import { courtIQService as courtIQSystem } from "./modules/rating/courtiq";
+import { xpSystem } from "./modules/xp/xpSystem";
+
+// Import database and query helpers
+import { db } from "./db";
+import { eq, and, or, sql, desc, asc, inArray, lt, between } from "drizzle-orm";
+import { 
+  playerRatings, 
+  ratingHistory,
+  rankingPoints,
+  seasons, 
+  ratingTiers 
+} from "../shared/courtiq-schema";
+
 const SessionStore = MemoryStore(session);
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -354,15 +369,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // XP tier information
+  // XP tier information - user level and XP
   app.get("/api/user/xp-tier", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const tierInfo = await xpService.getUserTier(userId);
-      res.json(tierInfo);
+      
+      // Get detailed XP info from our XP system
+      const xpDetails = await xpSystem.getUserLevelDetails(userId);
+      res.json(xpDetails);
     } catch (error) {
       console.error("Error retrieving XP tier information:", error);
       res.status(500).json({ message: "Error retrieving XP tier information" });
+    }
+  });
+  
+  // Get XP tier for any user (public facing with less detail)
+  app.get("/api/user/xp-tier/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      // Get basic XP info
+      const level = await xpSystem.getUserLevel(userId);
+      const xp = await xpSystem.getUserXP(userId);
+      const levelDetails = xpSystem.getLevelDetails(level);
+      
+      res.json({
+        level,
+        xp,
+        levelName: levelDetails.name
+      });
+    } catch (error) {
+      console.error("Error retrieving user XP information:", error);
+      res.status(500).json({ message: "Error retrieving user XP information" });
     }
   });
   
@@ -1065,28 +1106,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Ranking leaderboard route (sorted by ranking points instead of XP)
+  // CourtIQ ranking leaderboard route
   app.get("/api/ranking-leaderboard", async (req: Request, res: Response) => {
     try {
+      // Extract query parameters
+      const division = req.query.division as string || 'open'; // 'open', '35+', '50+', etc.
+      const format = req.query.format as string || 'singles'; // 'singles', 'doubles', 'mixed'
+      const season = req.query.season as string || 'current'; // 'current', 'all-time', '2025-spring', etc.
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
-      const leaderboard = await storage.getRankingLeaderboard(limit);
+      const type = req.query.type as string || 'rating'; // 'rating' or 'points'
+      const userId = req.isAuthenticated() ? (req.user as any).id : undefined;
       
-      // Remove passwords from the response
-      const leaderboardWithoutPasswords = leaderboard.map(user => {
-        const { password, ...userWithoutPassword } = user;
-        return userWithoutPassword;
+      // Get leaderboard from CourtIQ system
+      const leaderboardData = await courtIQSystem.getLeaderboard({
+        division,
+        format,
+        season,
+        type,
+        limit,
+        currentUserId: userId
       });
       
-      res.json(leaderboardWithoutPasswords);
+      res.json(leaderboardData);
     } catch (error) {
+      console.error('Error retrieving CourtIQ leaderboard:', error);
       res.status(500).json({ message: "Error retrieving ranking leaderboard" });
+    }
+  });
+  
+  // Get available divisions, formats, and seasons for leaderboard filters
+  app.get("/api/leaderboard-filters", async (req: Request, res: Response) => {
+    try {
+      const filters = await courtIQSystem.getLeaderboardFilters();
+      res.json(filters);
+    } catch (error) {
+      console.error('Error retrieving leaderboard filters:', error);
+      res.status(500).json({ message: "Error retrieving leaderboard filters" });
     }
   });
   
   // Get user ranking history
   app.get("/api/user/ranking-history", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = (req.user as any).id;
+      const userId = req.query.userId ? parseInt(req.query.userId as string) : (req.user as any).id;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
       const rankingHistory = await storage.getUserRankingHistory(userId, limit);
       res.json(rankingHistory);
@@ -1095,7 +1157,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Record match result and update ranking points
+  // Get a user's CourtIQ ratings (with optional filter parameters)
+  app.get("/api/user/ratings", async (req: Request, res: Response) => {
+    try {
+      // Get userId from query or current user
+      let userId: number;
+      if (req.query.userId) {
+        userId = parseInt(req.query.userId as string);
+        if (isNaN(userId)) {
+          return res.status(400).json({ message: "Invalid user ID" });
+        }
+      } else if (req.isAuthenticated()) {
+        userId = (req.user as any).id;
+      } else {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+      
+      // Extract optional filters
+      const division = req.query.division as string;
+      const format = req.query.format as string;
+      
+      // Get ratings from CourtIQ system
+      const ratings = await courtIQSystem.getUserRatings(userId, division, format);
+      
+      res.json(ratings);
+    } catch (error) {
+      console.error('Error retrieving user ratings:', error);
+      res.status(500).json({ message: "Error retrieving user ratings" });
+    }
+  });
+  
+  // Get a user's CourtIQ rating details for a specific division and format
+  app.get("/api/user/rating-detail", async (req: Request, res: Response) => {
+    try {
+      // Get userId from query or current user
+      let userId: number;
+      if (req.query.userId) {
+        userId = parseInt(req.query.userId as string);
+        if (isNaN(userId)) {
+          return res.status(400).json({ message: "Invalid user ID" });
+        }
+      } else if (req.isAuthenticated()) {
+        userId = (req.user as any).id;
+      } else {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+      
+      // Division and format are required for detailed view
+      const division = req.query.division as string;
+      const format = req.query.format as string;
+      
+      if (!division || !format) {
+        return res.status(400).json({ message: "Division and format are required" });
+      }
+      
+      // Get detailed rating from CourtIQ system
+      const ratingDetail = await courtIQSystem.getUserRatingDetail(userId, division, format);
+      
+      res.json(ratingDetail);
+    } catch (error) {
+      console.error('Error retrieving rating detail:', error);
+      res.status(500).json({ message: "Error retrieving rating detail" });
+    }
+  });
+  
+  // Get all available divisions and formats
+  app.get("/api/courtiq/categories", async (req: Request, res: Response) => {
+    try {
+      const categories = await courtIQSystem.getCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error('Error retrieving CourtIQ categories:', error);
+      res.status(500).json({ message: "Error retrieving categories" });
+    }
+  });
+  
+  // Get rating tier information
+  app.get("/api/courtiq/tiers", async (req: Request, res: Response) => {
+    try {
+      const tiers = await courtIQSystem.getRatingTiers();
+      res.json(tiers);
+    } catch (error) {
+      console.error('Error retrieving rating tiers:', error);
+      res.status(500).json({ message: "Error retrieving rating tiers" });
+    }
+  });
+  
+  // Record match result and update CourtIQ ratings
   app.post("/api/matches", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
@@ -1113,9 +1261,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         playerOnePartnerId: req.body.playerOnePartnerId || undefined,
         playerTwoPartnerId: req.body.playerTwoPartnerId || undefined,
         formatType: req.body.formatType || "singles",
+        division: req.body.division || "open", // Age division (open, 35+, 50+, etc.)
         scoringSystem: req.body.scoringSystem || "traditional",
         pointsToWin: req.body.pointsToWin || 11,
-        matchType: "casual", // Always casual for this version
+        matchType: req.body.matchType || "casual", // casual, league, tournament
+        eventTier: req.body.eventTier || "local", // local, regional, national, international
         notes: req.body.notes || null,
         location: req.body.location || null,
         pointsAwarded: 10, // Fixed points for casual matches
@@ -1131,7 +1281,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Winner is already determined before validation
-      
       const loserId = matchData.winnerId === matchData.playerOneId ? matchData.playerTwoId : matchData.playerOneId;
       
       // Create the match record
@@ -1141,7 +1290,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         xpAwarded: 25 // Standard XP for playing a match
       });
       
-      // Fixed points for casual matches
+      // Prepare player data for CourtIQ processing
+      const players = [
+        { 
+          userId: matchData.playerOneId, 
+          partnerId: matchData.playerOnePartnerId,
+          score: matchData.scorePlayerOne,
+          isWinner: matchData.winnerId === matchData.playerOneId
+        },
+        { 
+          userId: matchData.playerTwoId, 
+          partnerId: matchData.playerTwoPartnerId,
+          score: matchData.scorePlayerTwo,
+          isWinner: matchData.winnerId === matchData.playerTwoId
+        }
+      ];
+      
+      // Process the match in CourtIQ system (if available)
+      let ratingResults;
+      try {
+        if (typeof courtIQSystem !== 'undefined') {
+          ratingResults = await courtIQSystem.processMatch({
+            matchId: match.id,
+            players,
+            format: matchData.formatType,
+            division: matchData.division,
+            matchType: matchData.matchType,
+            eventTier: matchData.eventTier
+          });
+        }
+      } catch (courtiqError) {
+        console.error("Error processing match in CourtIQ system:", courtiqError);
+        // Continue without CourtIQ updates - we'll still award XP and points
+      }
+      
+      // Fixed points for casual matches (for backward compatibility)
       const pointsForWinner = 10;
       
       // Update winner's ranking points and create ranking history
@@ -1161,7 +1344,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId: matchData.winnerId,
         oldRanking,
         newRanking,
-        reason: `Won casual ${matchData.formatType} match against ${opponentText}`,
+        reason: `Won ${matchData.matchType} ${matchData.formatType} match against ${opponentText}`,
         matchId: match.id
       });
       
@@ -1182,14 +1365,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadata: { matchId: match.id }
       });
       
-      // Update user XP
-      await storage.updateUserXP(userId, 25);
+      // Award XP with the XP system
+      try {
+        await xpSystem.awardXP(
+          userId,
+          isWinner ? "match_won" : "match_recorded",
+          undefined,
+          match.id
+        );
+      } catch (xpError) {
+        console.error("Error awarding XP:", xpError);
+        // Continue without XP system - we'll still use the old method
+        await storage.updateUserXP(userId, isWinner ? 50 : 25);
+      }
       
-      res.status(201).json({
+      // Prepare response
+      const response: any = {
         match,
         pointsAwarded: pointsForWinner,
-        xpAwarded: 25
-      });
+        xpAwarded: isWinner ? 50 : 25
+      };
+      
+      // Add CourtIQ results if available
+      if (ratingResults) {
+        response.ratingChanges = ratingResults;
+      }
+      
+      res.status(201).json(response);
     } catch (error) {
       console.error("Error recording match:", error);
       res.status(500).json({ message: "Error recording match" });

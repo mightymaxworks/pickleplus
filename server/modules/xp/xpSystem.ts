@@ -99,88 +99,149 @@ export class XPSystem {
    * Initialize the XP level structure
    */
   private initializeLevels(): void {
-    this.levels = [
+    // Define initial levels (1-49)
+    // Levels 50-100 are reserved for future unlocks
+    const definedLevels: XPLevel[] = [
+      // Beginner tier (1-10)
       {
         level: 1,
-        name: "Paddle Beginner",
+        name: "Paddle Novice",
         minXP: 0,
-        maxXP: 499,
-        unlocks: ["Basic profile customization"],
+        maxXP: 99,
+        unlocks: ["Basic profile"],
         color: "#8D99AE" // Slate Gray
       },
       {
         level: 2,
-        name: "Rally Rookie",
-        minXP: 500,
-        maxXP: 1499,
+        name: "Court Rookie",
+        minXP: 100,
+        maxXP: 249,
         unlocks: ["Friend connections"],
-        color: "#2B2D42" // Dark Blue
+        color: "#8D99AE" 
       },
       {
         level: 3,
-        name: "Court Contender",
-        minXP: 1500,
-        maxXP: 2999,
-        unlocks: ["Tournament registration"],
-        color: "#EF233C" // Red
+        name: "Rally Beginner",
+        minXP: 250,
+        maxXP: 499,
+        unlocks: ["Activity feed"],
+        color: "#8D99AE" 
       },
       {
         level: 4,
-        name: "League Luminary",
-        minXP: 3000,
-        maxXP: 5999,
-        unlocks: ["Match recording", "Community feed posting"],
-        color: "#D90429" // Crimson
+        name: "Serve Starter",
+        minXP: 500,
+        maxXP: 749,
+        unlocks: ["Custom profile picture"],
+        color: "#8D99AE" 
       },
       {
         level: 5,
-        name: "Volley Veteran",
-        minXP: 6000,
-        maxXP: 9999,
-        unlocks: ["Match insights", "Advanced statistics"],
-        color: "#E76F51" // Orange
+        name: "Dink Dabbler",
+        minXP: 750,
+        maxXP: 999,
+        unlocks: ["Match recording"],
+        color: "#8D99AE" 
+      },
+      
+      // Intermediate tier (6-15)
+      {
+        level: 10,
+        name: "Volley Apprentice",
+        minXP: 1000,
+        maxXP: 1999,
+        unlocks: ["Tournament registration"],
+        color: "#2B2D42" // Dark Blue
       },
       {
-        level: 6,
+        level: 15,
+        name: "Kitchen Keeper",
+        minXP: 2000,
+        maxXP: 3999,
+        unlocks: ["Community feed posting"],
+        color: "#2B2D42"
+      },
+      
+      // Advanced tier (16-25)
+      {
+        level: 20,
+        name: "Spin Specialist",
+        minXP: 4000,
+        maxXP: 6999,
+        unlocks: ["Match insights", "Advanced statistics"],
+        color: "#EF233C" // Red
+      },
+      {
+        level: 25,
+        name: "Volley Virtuoso",
+        minXP: 7000,
+        maxXP: 9999,
+        unlocks: ["Custom avatars"],
+        color: "#EF233C"
+      },
+      
+      // Expert tier (26-35)
+      {
+        level: 30,
         name: "Dink Dynamo",
         minXP: 10000,
         maxXP: 14999,
-        unlocks: ["Custom avatars", "Profile backgrounds"],
-        color: "#F4A261" // Sandy
+        unlocks: ["Profile backgrounds"],
+        color: "#D90429" // Crimson
       },
       {
-        level: 7,
+        level: 35,
         name: "Smash Specialist",
         minXP: 15000,
-        maxXP: 24999,
-        unlocks: ["Coaching access", "Private tournaments"],
-        color: "#E9C46A" // Gold
+        maxXP: 19999,
+        unlocks: ["Coaching access"],
+        color: "#D90429"
       },
+      
+      // Elite tier (36-45)
       {
-        level: 8,
+        level: 40,
         name: "Court Commander",
-        minXP: 25000,
-        maxXP: 39999,
+        minXP: 20000,
+        maxXP: 29999,
         unlocks: ["Host tournaments", "Team captain features"],
-        color: "#2A9D8F" // Teal
+        color: "#E76F51" // Orange
       },
       {
-        level: 9,
+        level: 45,
         name: "Pickleball Pro",
-        minXP: 40000,
-        maxXP: 69999,
+        minXP: 30000,
+        maxXP: 39999,
         unlocks: ["League commissioner", "Beta feature access"],
-        color: "#264653" // Dark Teal
+        color: "#E76F51"
       },
+      
+      // Champion tier (46-49)
       {
-        level: 10,
+        level: 49,
         name: "Legendary Competitor",
-        minXP: 70000,
-        maxXP: Number.MAX_SAFE_INTEGER,
+        minXP: 40000,
+        maxXP: 49999,
         unlocks: ["Community moderator", "Feature input panel"],
-        color: "#540D6E" // Purple
+        color: "#F4A261" // Sandy
       }
     ];
+    
+    // Create a placeholder for future levels (50-100)
+    const futureLevels: XPLevel[] = [];
+    for (let i = 50; i <= 100; i++) {
+      futureLevels.push({
+        level: i,
+        name: i == 100 ? "Grandmaster" : `Level ${i}`,
+        minXP: 50000 + (i - 50) * 2000, // Increment by 2000 XP per level
+        maxXP: 50000 + (i - 50 + 1) * 2000 - 1,
+        unlocks: ["Coming soon"],
+        color: i == 100 ? "#540D6E" : "#264653" // Special color for level 100
+      });
+    }
+    
+    // Combine all levels
+    this.levels = [...definedLevels, ...futureLevels];
   }
   
   /**
