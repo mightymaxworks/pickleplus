@@ -210,10 +210,37 @@ export function ProfileCompletenessCard({ user, profileCompletion }: ProfileComp
     return CATEGORY_INFO[category as keyof typeof CATEGORY_INFO]?.color || "#909090";
   }
 
+  // Animation keyframes for the progress circles
+  const progressCircleKeyframes = `
+    @keyframes progressCircle {
+      0% {
+        stroke-dashoffset: ${2 * Math.PI * 45};
+      }
+      100% {
+        stroke-dashoffset: ${2 * Math.PI * 45 * (1 - profileCompletion / 100)};
+      }
+    }
+    
+    @keyframes progressCircleComplete {
+      0% {
+        stroke-dashoffset: ${2 * Math.PI * 45};
+      }
+      70% {
+        stroke-dashoffset: 0;
+      }
+      80% {
+        stroke-dashoffset: 20;
+      }
+      90% {
+        stroke-dashoffset: 0;
+      }
+    }
+  `;
+  
   // Animation for the progress indicator
   const circleAnimation = profileCompletion < 100 
-    ? "progress-circle-animation" 
-    : "progress-circle-complete-animation";
+    ? "animate-progress-circle" 
+    : "animate-progress-circle-complete";
 
   return (
     <Card className={cn(
@@ -538,37 +565,7 @@ export function ProfileCompletenessCard({ user, profileCompletion }: ProfileComp
         </Button>
       </CardFooter>
       
-      {/* Global styles for circle animations */}
-      <style jsx global>{`
-        @keyframes progress-circle {
-          0% {
-            stroke-dashoffset: ${2 * Math.PI * 45};
-          }
-        }
-        
-        @keyframes progress-circle-complete {
-          0% {
-            stroke-dashoffset: ${2 * Math.PI * 45};
-          }
-          70% {
-            stroke-dashoffset: 0;
-          }
-          80% {
-            stroke-dashoffset: 20;
-          }
-          90% {
-            stroke-dashoffset: 0;
-          }
-        }
-        
-        .progress-circle-animation {
-          animation: progress-circle 1.5s ease-out forwards;
-        }
-        
-        .progress-circle-complete-animation {
-          animation: progress-circle-complete 2s ease-out forwards;
-        }
-      `}</style>
+      {/* Add keyframes for circle animations via React's style approach instead */}
     </Card>
   );
 }

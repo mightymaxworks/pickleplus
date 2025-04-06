@@ -11,26 +11,33 @@ export const users = pgTable("users", {
   email: varchar("email", { length: 255 }).unique(),
   password: text("password").notNull(),
   displayName: varchar("display_name", { length: 255 }),
-  firstName: varchar("first_name", { length: 255 }),
-  lastName: varchar("last_name", { length: 255 }),
-  dateOfBirth: date("date_of_birth"),
-  gender: varchar("gender", { length: 50 }),
   location: varchar("location", { length: 255 }),
   bio: text("bio"),
-  avatarUrl: text("avatar_url"),
-  bannerUrl: text("banner_url"),
-  currentRating: integer("current_rating").default(1000),
-  xpPoints: integer("xp_points").default(0),
-  xpLevel: integer("xp_level").default(1),
-  profileCompletionPercentage: integer("profile_completion_percentage").default(0),
-  isCoach: boolean("is_coach").default(false),
-  isAdmin: boolean("is_admin").default(false),
-  isVerified: boolean("is_verified").default(false),
+  yearOfBirth: integer("year_of_birth"),
   passportId: varchar("passport_id", { length: 50 }).unique(),
-  isActive: boolean("is_active").default(true),
-  lastLogin: timestamp("last_login"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow()
+  level: integer("level").default(1),
+  xp: integer("xp").default(0),
+  avatarInitials: varchar("avatar_initials", { length: 10 }),
+  lastMatchDate: timestamp("last_match_date"),
+  totalMatches: integer("total_matches").default(0),
+  matchesWon: integer("matches_won").default(0),
+  totalTournaments: integer("total_tournaments").default(0),
+  isFoundingMember: boolean("is_founding_member").default(false),
+  isAdmin: boolean("is_admin").default(false),
+  xpMultiplier: integer("xp_multiplier").default(100),
+  profileCompletionPct: integer("profile_completion_pct").default(0),
+  rankingPoints: integer("ranking_points").default(0),
+  playingSince: varchar("playing_since", { length: 50 }),
+  skillLevel: varchar("skill_level", { length: 50 }),
+  preferredPosition: varchar("preferred_position", { length: 50 }),
+  paddleBrand: varchar("paddle_brand", { length: 50 }),
+  paddleModel: varchar("paddle_model", { length: 50 }),
+  playingStyle: varchar("playing_style", { length: 50 }),
+  shotStrengths: varchar("shot_strengths", { length: 100 }),
+  preferredFormat: varchar("preferred_format", { length: 50 }),
+  dominantHand: varchar("dominant_hand", { length: 20 }),
+  regularSchedule: varchar("regular_schedule", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow()
 });
 
 // Tournaments table
@@ -258,13 +265,10 @@ export const userRelations = relations(users, ({ many }) => ({
 
 // Create insert schema for user validation
 export const insertUserSchema = createInsertSchema(users)
-  .omit({ 
-    id: true, 
-    createdAt: true, 
-    updatedAt: true,
-    passportId: true,
-    isActive: true,
-    lastLogin: true
+  .omit({
+    id: true,
+    createdAt: true,
+    passportId: true
   });
 
 // Create insert schemas for validation
@@ -362,10 +366,15 @@ export const loginSchema = z.object({
   password: z.string().min(6)
 });
 
-// Registration schema that extends insertUserSchema
+// Registration schema that extends insertUserSchema with password confirmation
 export const registerUserSchema = insertUserSchema.extend({
   confirmPassword: z.string().min(6)
-}).refine(data => data.password === data.confirmPassword, {
+}).refine(data => {
+  if (typeof data.password === 'string' && typeof data.confirmPassword === 'string') {
+    return data.password === data.confirmPassword;
+  }
+  return false;
+}, {
   message: "Passwords do not match",
   path: ["confirmPassword"]
 });

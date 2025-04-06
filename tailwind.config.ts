@@ -96,10 +96,34 @@ export default {
             height: "0",
           },
         },
+        "progress-circle": {
+          "0%": {
+            strokeDashoffset: "282.74",
+          },
+          "100%": {
+            strokeDashoffset: "0",
+          },
+        },
+        "progress-circle-complete": {
+          "0%": {
+            strokeDashoffset: "282.74",
+          },
+          "70%": {
+            strokeDashoffset: "0",
+          },
+          "80%": {
+            strokeDashoffset: "20",
+          },
+          "90%": {
+            strokeDashoffset: "0",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "progress-circle": "progress-circle 1.5s ease-out forwards",
+        "progress-circle-complete": "progress-circle-complete 2s ease-out forwards",
       },
     },
   },
