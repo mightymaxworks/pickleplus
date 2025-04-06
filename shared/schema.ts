@@ -7,6 +7,10 @@ import { z } from "zod";
 export * from "./schema/communication-preferences";
 export * from "./schema/partner-preferences";
 
+// Import modules
+import * as communicationChannels from "./schema/communication-preferences";
+import * as partnerPreferences from "./schema/partner-preferences";
+
 // User table schema
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -694,15 +698,15 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   rankingHistory: many(rankingHistory),
   coachingProfile: one(coachingProfiles),
   // Communication preferences relations
-  communicationChannels: many(communicationChannels),
-  notificationPreferences: many(userNotificationPreferences),
-  communicationLogs: many(communicationLogs),
+  communicationChannels: many(communicationChannels.communicationChannels),
+  notificationPreferences: many(communicationChannels.userNotificationPreferences),
+  communicationLogs: many(communicationChannels.communicationLogs),
   // Partner preferences relations
-  partnerCriteria: many(partnerCriteria),
-  partnerAvailability: many(partnerAvailability),
-  specialAvailability: many(specialAvailability),
-  partnerSuggestionsAsUser: many(partnerSuggestions, { relationName: "user" }),
-  partnerSuggestionsAsPartner: many(partnerSuggestions, { relationName: "suggestedPartner" }),
+  partnerCriteria: many(partnerPreferences.partnerCriteria),
+  partnerAvailability: many(partnerPreferences.partnerAvailability),
+  specialAvailability: many(partnerPreferences.specialAvailability),
+  partnerSuggestionsAsUser: many(partnerPreferences.partnerSuggestions, { relationName: "user" }),
+  partnerSuggestionsAsPartner: many(partnerPreferences.partnerSuggestions, { relationName: "suggestedPartner" }),
   connectionRequestsSent: many(connections, { relationName: "connectionRequests" }),
   connectionRequestsReceived: many(connections, { relationName: "connectionReceived" }),
   

@@ -13,9 +13,11 @@ import {
   insertPartnerAvailabilitySchema,
   insertSpecialAvailabilitySchema,
   insertPartnerSuggestionSchema,
+} from "../../../../shared/schema/partner-preferences";
+import {
   users
 } from "../../../../shared/schema";
-import { eq, and, desc, asc, gte, lte, between, or, inArray, sql } from "drizzle-orm";
+import { eq, and, desc, asc, gte, lte, between, or, inArray, sql, not } from "drizzle-orm";
 import { z } from "zod";
 
 /**
@@ -46,7 +48,7 @@ export class PartnerPreferencesService {
     });
 
     // Schedule daily partner suggestion generation
-    this.eventBus.on("system.daily.maintenance", async () => {
+    this.eventBus.subscribe("system.daily.maintenance", async () => {
       await this.generatePartnerSuggestions();
     });
   }
@@ -189,7 +191,7 @@ export class PartnerPreferencesService {
         .where(
           and(
             eq(partnerCriteria.userId, currentCriteria[0].userId),
-            eq(partnerCriteria.id, criteriaId).not()
+            not(eq(partnerCriteria.id, criteriaId))
           )
         );
     }
@@ -511,7 +513,7 @@ export class PartnerPreferencesService {
     // Build a query based on criteria
     let query = and(
       eq(users.lookingForPartners, true),
-      eq(users.id, userId).not() // Exclude the user themselves
+      not(eq(users.id, userId)) // Exclude the user themselves
     );
 
     // Add skill level criteria if specified
