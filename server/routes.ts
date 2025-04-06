@@ -1135,7 +1135,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Extract query parameters with defaults
       const format = (req.query.format as PlayFormat) || 'singles';
-      const ageDivision = (req.query.ageDivision as AgeDivision) || '19plus';
+      const ageDiv = (req.query.ageDivision as AgeDivision) || '19plus';
       const ratingTierId = req.query.ratingTierId ? parseInt(req.query.ratingTierId as string) : undefined;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
       const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
@@ -1145,13 +1145,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid format. Must be 'singles', 'doubles', or 'mixed'" });
       }
       
-      if (!ageDivision.enumValues.includes(ageDivision)) {
+      if (!ageDivision.enumValues.includes(ageDiv)) {
         return res.status(400).json({ message: "Invalid age division. Must be one of the valid age divisions" });
       }
       
       const leaderboard = await multiDimensionalRankingService.getLeaderboard(
         format,
-        ageDivision,
+        ageDiv,
         ratingTierId,
         limit,
         offset
@@ -1169,7 +1169,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.query.userId ? parseInt(req.query.userId as string) : (req.user as any).id;
       const format = (req.query.format as PlayFormat) || 'singles';
-      const ageDivision = (req.query.ageDivision as AgeDivision) || '19plus';
+      const ageDiv = (req.query.ageDivision as AgeDivision) || '19plus';
       const ratingTierId = req.query.ratingTierId ? parseInt(req.query.ratingTierId as string) : undefined;
       
       // Validate parameters
@@ -1177,17 +1177,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid format. Must be 'singles', 'doubles', or 'mixed'" });
       }
       
-      if (!ageDivision.enumValues.includes(ageDivision)) {
+      if (!ageDivision.enumValues.includes(ageDiv)) {
         return res.status(400).json({ message: "Invalid age division. Must be one of the valid age divisions" });
       }
       
-      const ranking = await multiDimensionalRankingService.getUserRanking(userId, format, ageDivision, ratingTierId);
-      const position = await multiDimensionalRankingService.getUserRankingPosition(userId, format, ageDivision, ratingTierId);
+      const ranking = await multiDimensionalRankingService.getUserRanking(userId, format, ageDiv, ratingTierId);
+      const position = await multiDimensionalRankingService.getUserRankingPosition(userId, format, ageDiv, ratingTierId);
       
       res.json({
         userId,
         format,
-        ageDivision,
+        ageDivision: ageDiv,
         ratingTierId,
         rankingPoints: ranking?.rankingPoints || 0,
         rank: position.rank,
@@ -1227,9 +1227,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update user's multi-dimensional ranking (admin only)
   app.patch("/api/multi-rankings/update", isAuthenticated, isAdmin, async (req: Request, res: Response) => {
     try {
-      const { userId, format, ageDivision, ratingTierId, points, reason } = req.body;
+      const { userId, format, ageDivision: ageDiv, ratingTierId, points, reason } = req.body;
       
-      if (!userId || !format || !ageDivision || points === undefined) {
+      if (!userId || !format || !ageDiv || points === undefined) {
         return res.status(400).json({ message: "Missing required parameters" });
       }
       
@@ -1238,19 +1238,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid format. Must be 'singles', 'doubles', or 'mixed'" });
       }
       
-      if (!ageDivision.enumValues.includes(ageDivision)) {
+      if (!ageDivision.enumValues.includes(ageDiv)) {
         return res.status(400).json({ message: "Invalid age division. Must be one of the valid age divisions" });
       }
       
       // Get current ranking
-      const currentRanking = await multiDimensionalRankingService.getUserRanking(userId, format, ageDivision, ratingTierId);
+      const currentRanking = await multiDimensionalRankingService.getUserRanking(userId, format, ageDiv, ratingTierId);
       const oldPoints = currentRanking?.rankingPoints || 0;
       
       // Update ranking
       const updatedRanking = await multiDimensionalRankingService.updateUserRanking(
         userId,
         format,
-        ageDivision,
+        ageDiv,
         ratingTierId || null,
         points
       );
@@ -1259,7 +1259,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await multiDimensionalRankingService.addRankingHistoryEntry(
         userId,
         format,
-        ageDivision,
+        ageDiv,
         ratingTierId || null,
         oldPoints,
         points,
@@ -1270,7 +1270,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         userId,
         format,
-        ageDivision,
+        ageDivision: ageDiv,
         ratingTierId,
         oldPoints,
         newPoints: points,
