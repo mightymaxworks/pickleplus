@@ -49,21 +49,33 @@ export default function Register() {
 
   const handleSubmit = async (formData: RegisterFormData) => {
     try {
+      console.log("Attempting registration with form data:", formData);
+      
+      if (!formData.username || !formData.password || !formData.displayName) {
+        console.error("Registration error: Missing required fields");
+        return;
+      }
+      
       // Get first and last name from display name
-      const nameParts = formData.displayName ? formData.displayName.split(" ") : [];
+      const nameParts = formData.displayName.split(" ");
       const firstName = nameParts.length > 0 ? nameParts[0] : undefined;
       const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : undefined;
       
       // Create a properly formatted registration object matching RegisterData type
       const registrationData = {
-        username: formData.username || "",
+        username: formData.username,
         email: formData.email || "",
-        password: formData.password || "",
+        password: formData.password,
+        displayName: formData.displayName, // Make sure to include displayName
         firstName,
-        lastName
+        lastName,
+        yearOfBirth: formData.yearOfBirth || null,
+        location: formData.location || null,
       };
       
+      console.log("Submitting registration data:", {...registrationData, password: '[REDACTED]'});
       await registerMutation.mutateAsync(registrationData);
+      console.log("Registration successful, redirecting to dashboard");
       navigate("/dashboard");
     } catch (error) {
       console.error("Registration error:", error);

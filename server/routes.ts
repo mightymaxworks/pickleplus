@@ -52,24 +52,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/user", userRouter);
   
   // Set up session middleware
-  app.use(
-    session({
-      store: new SessionStore({
-        checkPeriod: 86400000, // prune expired entries every 24h
-      }),
-      secret: process.env.SESSION_SECRET || "pickle-plus-secret",
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        secure: false, // Set to true in production with HTTPS
-        httpOnly: true,
-        sameSite: 'lax', // Helps with CSRF protection
-        path: '/'
-      },
-      name: 'pickle.sid' // Custom name helps avoid conflicts
-    })
-  );
+  // Configure session with clear settings for cookie handling
+  const sessionConfig = {
+    store: new SessionStore({
+      checkPeriod: 86400000, // prune expired entries every 24h
+    }),
+    secret: process.env.SESSION_SECRET || "pickle-plus-secret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      secure: false, // Set to true in production with HTTPS
+      httpOnly: true,
+      sameSite: "lax" as const, // TypeScript needs this cast for Express session options
+      path: '/',
+      domain: undefined // Let browser determine domain for best compatibility
+    },
+    name: 'connect.sid' // Use default Express session cookie name for better compatibility
+  };
+  
+  console.log("Session configuration:", {
+    ...sessionConfig,
+    secret: "[REDACTED]", // Don't log secret
+    store: "SessionStore instance", // Don't log full store
+  });
+  
+  app.use(session(sessionConfig));
   
   // Trust proxy - important for secure cookies in production
   app.set('trust proxy', 1);

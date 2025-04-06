@@ -22,15 +22,26 @@ export async function apiRequest(
     method,
     headers: {
       "Content-Type": "application/json",
+      // Make sure cache control headers are consistent with server
+      "Cache-Control": "no-cache, no-store",
+      "Pragma": "no-cache",
     },
-    credentials: "include",
+    credentials: "include", // Critical for cookie-based auth
+    cache: "no-store", // Prevent caching of authenticated requests
   };
 
   if (data) {
     options.body = JSON.stringify(data);
   }
 
-  return fetch(url, options);
+  console.log(`Making ${method} request to ${url} with credentials included`);
+  const response = await fetch(url, options);
+  
+  // Log the cookies that were sent with the request (will show in browser console for debugging)
+  console.log(`${method} ${url} response status:`, response.status);
+  console.log("Response cookies present:", document.cookie ? "Yes" : "No");
+  
+  return response;
 }
 
 // Default fetcher function for useQuery

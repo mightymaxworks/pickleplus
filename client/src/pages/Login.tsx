@@ -32,10 +32,20 @@ export default function Login() {
 
   const handleSubmit = async (data: LoginFormData) => {
     try {
+      // Log attempt for debugging
+      console.log("Attempting login with username:", data.username);
+      
+      if (!data.username || !data.password) {
+        console.error("Login error: Missing username or password");
+        return;
+      }
+      
       await loginMutation.mutateAsync({
         username: data.username,
         password: data.password
       });
+      
+      console.log("Login successful, redirecting to dashboard");
       navigate("/dashboard");
     } catch (error) {
       console.error("Login error:", error);
