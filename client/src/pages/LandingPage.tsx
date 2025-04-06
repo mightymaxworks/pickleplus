@@ -586,26 +586,26 @@ export default function LandingPage() {
               </div>
               <h3 className="font-bold text-xl mb-2 text-[#4CAF50]">CourtIQ Rating</h3>
               <p className="text-sm sm:text-base text-gray-600 mb-4">
-                Our proprietary rating system works alongside existing rating systems while providing format-specific insights.
+                Our proprietary 1000-2500 rating system works alongside existing rating systems while providing format-specific insights.
               </p>
               <div className="bg-[#4CAF50]/5 rounded-lg p-3 mb-2">
-                <div className="text-[#4CAF50] font-bold mb-1 text-sm">Compatible with:</div>
+                <div className="text-[#4CAF50] font-bold mb-1 text-sm">CourtIQ Rating Features:</div>
                 <ul className="text-left text-sm text-gray-600 space-y-1">
                   <li className="flex items-center gap-1.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-[#4CAF50]"></div>
-                    <div>Standard 2.0-5.0+ scale</div>
-                  </li>
-                  <li className="flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#4CAF50]"></div>
-                    <div>Import from DUPR, UTPR, etc.</div>
+                    <div>1000-2500 scale with 10 pickleball-themed tiers</div>
                   </li>
                   <li className="flex items-center gap-1.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-[#4CAF50]"></div>
                     <div>Format-specific ratings (singles, doubles, mixed)</div>
                   </li>
+                  <li className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#4CAF50]"></div>
+                    <div>Age division adjustments (19+, 35+, 50+, etc.)</div>
+                  </li>
                 </ul>
               </div>
-              <div className="text-xs text-gray-500">CourtIQ Rating enhances existing systems with more precise performance data</div>
+              <div className="text-xs text-gray-500">Can be used alongside other rating systems while offering more detailed insights</div>
             </motion.div>
           </div>
 
