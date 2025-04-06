@@ -7,7 +7,7 @@ import { xpSystem } from "./server/modules/xp/xpSystem";
 import { db } from "./server/db";
 import { xpMultipliers } from "./shared/courtiq-schema";
 import { users } from "./shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 
 async function testXPSystem() {
   try {
