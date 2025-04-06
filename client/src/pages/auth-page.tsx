@@ -14,7 +14,7 @@ import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { RegisterFormData } from "@/types";
 // Fix import path
-import pickleLogoPath from "../assets/pickle-logo.png";
+import pickleLogoPath from "../assets/Pickle (2).png";
 
 // Login form schema
 const loginSchema = z.object({
