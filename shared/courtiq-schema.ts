@@ -167,6 +167,22 @@ export const ratingProtections = pgTable("rating_protections", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
+// Ranking Tiers table
+// Defines the tiers for the competitive ranking system
+export const rankingTiers = pgTable("ranking_tiers", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // tier name
+  description: text("description"),
+  minPoints: integer("min_points").notNull(), // Minimum points required for this tier
+  maxPoints: integer("max_points").notNull(), // Maximum points for this tier
+  badgeUrl: text("badge_url"), // URL to badge image
+  colorCode: text("color_code"), // Color code for UI
+  order: integer("order").notNull(), // For sorting (1 = lowest tier, 5 = highest tier)
+  benefits: text("benefits").array().notNull() // Array of benefits for this tier
+});
+
+// No need to define RankingTier type separately since we'll use the inferred type
+
 // Tournament eligibility configuration table
 // Defines the rating and ranking point requirements for tournament tiers
 export const tournamentEligibility = pgTable("tournament_eligibility", {
@@ -265,6 +281,9 @@ export const insertRatingProtectionSchema = createInsertSchema(ratingProtections
 
 export const insertTournamentEligibilitySchema = createInsertSchema(tournamentEligibility)
   .omit({ id: true, createdAt: true, updatedAt: true });
+
+export const insertRankingTierSchema = createInsertSchema(rankingTiers)
+  .omit({ id: true });
 
 // XP Levels table
 // Defines the level thresholds and unlocks
@@ -375,3 +394,6 @@ export type InsertXpHistory = z.infer<typeof insertXpHistorySchema>;
 
 export type XpMultiplier = typeof xpMultipliers.$inferSelect;
 export type InsertXpMultiplier = z.infer<typeof insertXpMultiplierSchema>;
+
+export type RankingTier = typeof rankingTiers.$inferSelect;
+export type InsertRankingTier = z.infer<typeof insertRankingTierSchema>;
