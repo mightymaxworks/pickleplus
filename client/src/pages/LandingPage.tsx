@@ -586,26 +586,26 @@ export default function LandingPage() {
               </div>
               <h3 className="font-bold text-xl mb-2 text-[#4CAF50]">CourtIQ Rating</h3>
               <p className="text-sm sm:text-base text-gray-600 mb-4">
-                Accurate skill measurement specific to your age division and play format, helping you find ideal competition.
+                Our proprietary rating system works alongside existing rating systems while providing format-specific insights.
               </p>
               <div className="bg-[#4CAF50]/5 rounded-lg p-3 mb-2">
-                <div className="text-[#4CAF50] font-bold mb-1 text-sm">Rating indicators:</div>
+                <div className="text-[#4CAF50] font-bold mb-1 text-sm">Compatible with:</div>
                 <ul className="text-left text-sm text-gray-600 space-y-1">
                   <li className="flex items-center gap-1.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-[#4CAF50]"></div>
-                    <div>2.0-2.5: Beginner</div>
+                    <div>Standard 2.0-5.0+ scale</div>
                   </li>
                   <li className="flex items-center gap-1.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-[#4CAF50]"></div>
-                    <div>3.0-3.5: Intermediate</div>
+                    <div>Import from DUPR, UTPR, etc.</div>
                   </li>
                   <li className="flex items-center gap-1.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-[#4CAF50]"></div>
-                    <div>4.0-5.0+: Advanced/Pro</div>
+                    <div>Format-specific ratings (singles, doubles, mixed)</div>
                   </li>
                 </ul>
               </div>
-              <div className="text-xs text-gray-500">Self-reported, but verified through app challenges and tournaments</div>
+              <div className="text-xs text-gray-500">CourtIQ Rating enhances existing systems with more precise performance data</div>
             </motion.div>
           </div>
 
