@@ -18,7 +18,7 @@ import pickleLogoPath from "../assets/pickle-logo.png";
 
 // Login form schema
 const loginSchema = z.object({
-  identifier: z.string().min(1, { message: "Username or email is required" }),
+  username: z.string().min(1, { message: "Username or email is required" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
 });
 
@@ -60,7 +60,7 @@ export default function AuthPage() {
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      identifier: "",
+      username: "",
       password: "",
     },
   });
@@ -86,7 +86,7 @@ export default function AuthPage() {
   const onLoginSubmit = async (values: LoginFormValues) => {
     try {
       await loginMutation.mutateAsync({
-        identifier: values.identifier,
+        username: values.username,
         password: values.password
       });
       
@@ -149,7 +149,7 @@ export default function AuthPage() {
                   <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6">
                     <FormField
                       control={loginForm.control}
-                      name="identifier"
+                      name="username"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Username or Email</FormLabel>
