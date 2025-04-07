@@ -49,7 +49,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
-import { SearchablePlayerSelect } from "../player-search/SearchablePlayerSelect";
+import { DialogPlayerSelect } from "../player-search/DialogPlayerSelect";
 import { MultiGameScoreInput } from "./MultiGameScoreInput";
 
 // Game schema for a single game in a match
@@ -596,7 +596,7 @@ export function NewMatchRecordingForm({ onSuccess }: NewMatchRecordingFormProps)
               <Separator />
 
               {/* Player One (Current User) */}
-              <SearchablePlayerSelect
+              <DialogPlayerSelect
                 form={form}
                 fieldName="playerOneId"
                 label="Player 1 (You)"
@@ -607,7 +607,7 @@ export function NewMatchRecordingForm({ onSuccess }: NewMatchRecordingFormProps)
               />
 
               {/* Player Two */}
-              <SearchablePlayerSelect
+              <DialogPlayerSelect
                 form={form}
                 fieldName="playerTwoId"
                 label="Player 2 (Opponent)"
@@ -624,7 +624,7 @@ export function NewMatchRecordingForm({ onSuccess }: NewMatchRecordingFormProps)
                   <Separator />
                   <div className="text-sm font-medium">Team Members</div>
                   
-                  <SearchablePlayerSelect
+                  <DialogPlayerSelect
                     form={form}
                     fieldName="playerOnePartnerId"
                     label="Your Partner"
@@ -635,7 +635,7 @@ export function NewMatchRecordingForm({ onSuccess }: NewMatchRecordingFormProps)
                     required
                   />
 
-                  <SearchablePlayerSelect
+                  <DialogPlayerSelect
                     form={form}
                     fieldName="playerTwoPartnerId"
                     label="Opponent's Partner"
