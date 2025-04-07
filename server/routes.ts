@@ -2828,8 +2828,22 @@ function getRandomReason(pointChange: number): string {
           sql`SELECT column_name FROM information_schema.columns WHERE table_name = 'matches'`
         );
         
-        // Extract column names from the result
-        const existingColumns = columnsQuery.rows.map((row: any) => row.column_name);
+        // Handle different response formats from database drivers
+        let existingColumns: string[] = [];
+        if (columnsQuery && columnsQuery.rows) {
+          existingColumns = columnsQuery.rows.map((row: any) => row.column_name);
+        } else if (Array.isArray(columnsQuery)) {
+          existingColumns = columnsQuery.map((row: any) => row.column_name);
+        } else {
+          console.log('[Match API] Could not determine column names for match recording, using default columns');
+          // Default to basic columns that should always exist
+          existingColumns = [
+            'id', 'player_one_id', 'player_two_id', 'winner_id', 
+            'player_one_partner_id', 'player_two_partner_id',
+            'score_player_one', 'score_player_two', 'match_date',
+            'format_type', 'match_type', 'scoring_system', 'points_to_win'
+          ];
+        }
         console.log('[Match API] Existing columns in matches table:', existingColumns);
         
         // Filter the matchData to only include fields that exist in the database
@@ -2845,8 +2859,11 @@ function getRandomReason(pointChange: number): string {
         console.log('[Match API] Filtered match data:', filteredMatchData);
         
         // Insert the filtered data
-        const [created] = await db.insert(matches).values(filteredMatchData).returning();
-        match = created;
+        // Make sure the values are properly formatted as an array for the insert
+        const created = await db.insert(matches).values([filteredMatchData as any]).returning();
+        
+        // Handle different response formats from the database driver
+        const match = Array.isArray(created) && created.length > 0 ? created[0] : created;
       } catch (dbError) {
         console.error("[Match API] Database error creating match:", dbError);
         return res.status(500).json({ error: "Database error creating match" });
@@ -2964,7 +2981,24 @@ function getRandomReason(pointChange: number): string {
       const columnsQuery = await db.execute(
         sql`SELECT column_name FROM information_schema.columns WHERE table_name = 'matches'`
       );
-      const existingColumns = columnsQuery.rows.map((row: any) => row.column_name);
+      
+      // Handle different response formats from database drivers
+      let existingColumns: string[] = [];
+      if (columnsQuery && columnsQuery.rows) {
+        existingColumns = columnsQuery.rows.map((row: any) => row.column_name);
+      } else if (Array.isArray(columnsQuery)) {
+        existingColumns = columnsQuery.map((row: any) => row.column_name);
+      } else {
+        console.log('[Match API] Could not determine column names, using default columns');
+        // Default to basic columns that should always exist
+        existingColumns = [
+          'id', 'player_one_id', 'player_two_id', 'winner_id', 
+          'player_one_partner_id', 'player_two_partner_id',
+          'score_player_one', 'score_player_two', 'match_date',
+          'format_type', 'match_type', 'scoring_system', 'points_to_win'
+        ];
+      }
+      
       console.log('[Match API] Existing columns in matches table for recent endpoint:', existingColumns);
       
       // Dynamically create the select object based on existing columns
@@ -3124,7 +3158,24 @@ function getRandomReason(pointChange: number): string {
       const columnsQuery = await db.execute(
         sql`SELECT column_name FROM information_schema.columns WHERE table_name = 'matches'`
       );
-      const existingColumns = columnsQuery.rows.map((row: any) => row.column_name);
+      
+      // Handle different response formats from database drivers
+      let existingColumns: string[] = [];
+      if (columnsQuery && columnsQuery.rows) {
+        existingColumns = columnsQuery.rows.map((row: any) => row.column_name);
+      } else if (Array.isArray(columnsQuery)) {
+        existingColumns = columnsQuery.map((row: any) => row.column_name);
+      } else {
+        console.log('[Match API] Could not determine column names, using default columns for stats');
+        // Default to basic columns that should always exist
+        existingColumns = [
+          'id', 'player_one_id', 'player_two_id', 'winner_id', 
+          'player_one_partner_id', 'player_two_partner_id',
+          'score_player_one', 'score_player_two', 'match_date',
+          'format_type', 'match_type', 'scoring_system', 'points_to_win'
+        ];
+      }
+      
       console.log('[Match API] Existing columns in matches table for stats endpoint:', existingColumns);
       
       // Dynamically create the select object based on existing columns
