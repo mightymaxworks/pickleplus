@@ -21,9 +21,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+// Make sure our interface matches the one from playerSDK
 interface UserSearchResult {
   id: number;
-  displayName: string;
+  displayName: string | null;
   username: string;
   passportId?: string | null;
   avatarUrl?: string | null;
@@ -82,50 +83,34 @@ export function DialogPlayerSelect({
     isFetching,
     error,
   } = useQuery<UserSearchResult[]>({
-    queryKey: ["/api/users/search", debouncedQuery],
+    queryKey: ["/api/player/search", debouncedQuery, excludePlayerIds],
     queryFn: async () => {
-      console.log("Search query triggered with:", debouncedQuery);
+      console.log("Dialog search query triggered with:", debouncedQuery);
       if (!debouncedQuery || debouncedQuery.length < 2) return [];
-
+      
       try {
-        const params = new URLSearchParams({
-          q: debouncedQuery,
-        });
-
-        const url = `/api/users/search?${params.toString()}`;
-        console.log("Making API request to:", url);
+        // Import and use the playerSDK
+        const { searchPlayers } = await import("@/lib/sdk/playerSDK");
         
-        const response = await apiRequest("GET", url);
-        console.log("Search API response status:", response.status);
+        // Call the SDK function
+        console.log("Dialog using playerSDK.searchPlayers with query:", debouncedQuery);
+        const results = await searchPlayers(debouncedQuery);
+        console.log("Dialog search results received:", results.length);
         
-        if (response.status === 401) {
-          console.log("Authentication required for player search. Returning empty results.");
-          return []; // Handle authentication errors gracefully
-        }
-        
-        if (!response.ok) {
-          console.error("Search API error:", response.status);
-          const errorText = await response.text();
-          console.error("Error details:", errorText);
-          return [];
-        }
-        
-        const data = await response.json();
-        console.log("Search results received:", data);
-
         // Filter out excluded player IDs
-        const filteredResults = data.filter((user: UserSearchResult) => 
+        const filteredResults = results.filter((user: UserSearchResult) => 
           !excludePlayerIds.includes(user.id)
         );
-        console.log("Filtered results:", filteredResults);
+        console.log("Dialog filtered results:", filteredResults.length);
         
         return filteredResults;
       } catch (error) {
-        console.error("Error searching for players:", error);
+        console.error("Dialog search error:", error);
         return [];
       }
     },
     enabled: debouncedQuery.length >= 2 && open,
+    retry: 1,
   });
   
   // Log any errors from the query
@@ -140,12 +125,13 @@ export function DialogPlayerSelect({
     console.log("Selecting player:", playerData);
     form.setValue(fieldName, playerData.id);
     
-    // Construct player data with avatar initials as fallback
+    // Construct player data with avatar initials as fallback, using username as backup for displayName
+    const displayName = playerData.displayName || playerData.username;
     const selectedPlayerData = {
       id: playerData.id,
-      displayName: playerData.displayName,
+      displayName: displayName,
       avatarUrl: playerData.avatarUrl,
-      avatarInitials: playerData.avatarInitials || playerData.displayName.charAt(0)
+      avatarInitials: playerData.avatarInitials || displayName.charAt(0)
     };
     
     // Update the formState with the complete player data
@@ -210,7 +196,7 @@ export function DialogPlayerSelect({
                             className="h-6 w-6 rounded-full"
                           />
                         ) : (
-                          selectedPlayer.avatarInitials || selectedPlayer.displayName.charAt(0)
+                          selectedPlayer.avatarInitials || (selectedPlayer.displayName ? selectedPlayer.displayName.charAt(0) : "?")
                         )}
                       </div>
                       {selectedPlayer.displayName}
@@ -283,15 +269,15 @@ export function DialogPlayerSelect({
                             {player.avatarUrl ? (
                               <img
                                 src={player.avatarUrl}
-                                alt={player.displayName}
+                                alt={player.displayName || player.username}
                                 className="h-8 w-8 rounded-full"
                               />
                             ) : (
-                              player.avatarInitials || player.displayName.charAt(0)
+                              player.avatarInitials || (player.displayName ? player.displayName.charAt(0) : player.username.charAt(0))
                             )}
                           </div>
                           <div className="flex flex-col text-left">
-                            <span className="font-medium">{player.displayName}</span>
+                            <span className="font-medium">{player.displayName || player.username}</span>
                             <span className="text-xs text-muted-foreground">@{player.username}</span>
                           </div>
                         </div>

@@ -172,7 +172,7 @@ export function SearchablePlayerSelect({
                                 className="h-6 w-6 rounded-full"
                               />
                             ) : (
-                              selectedPlayer.avatarInitials || selectedPlayer.displayName.charAt(0)
+                              selectedPlayer.avatarInitials || (selectedPlayer.displayName ? selectedPlayer.displayName.charAt(0) : "?")
                             )}
                           </div>
                           {selectedPlayer.displayName}
@@ -231,15 +231,15 @@ export function SearchablePlayerSelect({
                               {player.avatarUrl ? (
                                 <img
                                   src={player.avatarUrl}
-                                  alt={player.displayName}
+                                  alt={player.displayName || player.username}
                                   className="h-7 w-7 rounded-full"
                                 />
                               ) : (
-                                player.avatarInitials || player.displayName.charAt(0)
+                                player.avatarInitials || (player.displayName ? player.displayName.charAt(0) : player.username.charAt(0))
                               )}
                             </div>
                             <div className="flex flex-col">
-                              <span className="font-medium">{player.displayName}</span>
+                              <span className="font-medium">{player.displayName || player.username}</span>
                               <span className="text-xs text-muted-foreground">@{player.username}</span>
                             </div>
                           </div>
