@@ -1,27 +1,20 @@
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
-import { NewMatchRecordingForm } from "@/components/match/NewMatchRecordingForm";
 import { useAuth } from "@/hooks/useAuth";
-import { useLocation } from "wouter";
+import { useLocation, useRoute } from "wouter";
 
 /**
  * Bottom action bar with quick match recording button
  * Appears on all main app pages when user is authenticated
+ * Opens the match recording dialog in the match page or navigates to the match page
  */
 export default function QuickMatchFAB() {
-  const [matchDialogOpen, setMatchDialogOpen] = useState(false);
   const { user } = useAuth();
-  const [location, setLocation] = useLocation();
+  const [, navigate] = useLocation();
+  const [isOnMatchPage] = useRoute('/matches');
   
-  if (!user) {
-    return null;
-  }
-
-  // Check if we're already on the matches page
-  if (location === "/matches") {
-    return null;
+  if (!user || isOnMatchPage) {
+    return null; // Don't show FAB on match page or if not logged in
   }
 
   // Determine if user is a founding member for special styling
@@ -32,22 +25,24 @@ export default function QuickMatchFAB() {
     ? "bg-gradient-to-br from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 focus:ring-green-500"
     : "bg-[#4CAF50] hover:bg-[#388E3C] focus:ring-[#4CAF50]";
 
+  // Handle record match button click
+  const handleRecordMatch = () => {
+    navigate('/matches?dialog=open');
+  };
+
   return (
-    <>
-      {/* Sticky bottom navigation bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 shadow-lg border-t border-gray-200 bg-white px-2 py-2">
-        <div className="px-2">
-          {/* Full-width Record Match Button */}
-          <Button 
-            onClick={() => setLocation("/matches")}
-            size="lg"
-            className={`flex items-center justify-center h-16 rounded-xl w-full gap-2 ${buttonClass}`}
-          >
-            <PlusCircle className="h-6 w-6" />
-            <span className="text-base font-medium">Match Center</span>
-          </Button>
-        </div>
+    <div className="fixed bottom-0 left-0 right-0 z-50 shadow-lg border-t border-gray-200 bg-white px-2 py-2">
+      <div className="px-2">
+        {/* Full-width Record Match Button */}
+        <Button 
+          onClick={handleRecordMatch}
+          size="lg"
+          className={`flex items-center justify-center h-16 rounded-xl w-full gap-2 ${buttonClass}`}
+        >
+          <PlusCircle className="h-6 w-6" />
+          <span className="text-base font-medium">Record Match</span>
+        </Button>
       </div>
-    </>
+    </div>
   );
 }

@@ -6,7 +6,8 @@ import {
   insertTournamentRegistrationSchema, 
   redeemCodeSchema,
   insertMatchSchema,
-  insertRedemptionCodeSchema
+  insertRedemptionCodeSchema,
+  matches
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { generatePassportId, validatePassportId } from "./utils/passport-id";
