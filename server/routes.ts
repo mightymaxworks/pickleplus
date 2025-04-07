@@ -2933,14 +2933,19 @@ function getRandomReason(pointChange: number): string {
         const sqlCommand = db.insert(matches).values(matchValues as any).toSQL();
         console.log('[Match API] Insert SQL command:', sqlCommand);
         
-        // Create a custom SQL query that only includes the columns we know exist in the database
-        // This fixes the issue with columns like "round_number" and "stage_type" that are in the schema but not in the database
+        // The problem is not just filtering the values, but the SQL template itself is including columns
+        // that don't exist in the database. Let's create a completely custom SQL query instead.
+        
+        // Build a map of filtered fields and their values
         const existingColumnsValues: Record<string, any> = {};
+        const snakeCaseMap: Record<string, string> = {}; // Maps camelCase keys to snake_case
+        
         Object.keys(matchValues).forEach(key => {
-          // Convert camelCase to snake_case
+          // Convert camelCase to snake_case for DB column name
           const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
           if (existingColumns.includes(snakeKey)) {
             existingColumnsValues[key] = matchValues[key];
+            snakeCaseMap[key] = snakeKey;
           } else {
             console.log(`[Match API] Skipping field "${key}" (as "${snakeKey}") - column does not exist in database`);
           }
@@ -2948,11 +2953,33 @@ function getRandomReason(pointChange: number): string {
         
         console.log('[Match API] Using filtered values with only existing columns:', Object.keys(existingColumnsValues));
         
-        // We need to explicitly type assert since the compiler doesn't know the exact structure
-        const result = await db.insert(matches).values(existingColumnsValues as any).returning();
+        // Build our own SQL INSERT statement as a raw query
+        // This avoids Drizzle's auto-generation which includes all schema fields regardless of filtering
+        const columnNames = Object.keys(existingColumnsValues).map(key => `"${snakeCaseMap[key]}"`).join(', ');
+        const placeholders = Object.keys(existingColumnsValues).map((_, i) => `$${i + 1}`).join(', ');
+        const values = Object.values(existingColumnsValues);
+        
+        console.log(`[Match API] Custom SQL INSERT: columns: [${columnNames}], values: [${values.join(', ')}]`);
+        
+        // Execute the raw SQL query
+        const insertQuery = `
+          INSERT INTO "matches" (${columnNames}) 
+          VALUES (${placeholders})
+          RETURNING *
+        `;
+        
+        const result = await db.execute(sql.raw(insertQuery, ...values));
         console.log('[Match API] Insert operation completed, result:', result);
         
-        match = Array.isArray(result) && result.length > 0 ? result[0] : result;
+        // Handle the raw query response which might have a different structure
+        if (result && result.rows && result.rows.length > 0) {
+          match = result.rows[0];
+        } else if (Array.isArray(result) && result.length > 0) {
+          match = result[0];
+        } else {
+          console.log('[Match API] Unable to extract match data from result:', result);
+          match = null;
+        }
       } catch (dbError) {
         console.error("[Match API] Database error creating match:", dbError);
         return res.status(500).json({ error: "Database error creating match" });
