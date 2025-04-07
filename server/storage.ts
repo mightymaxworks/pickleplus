@@ -16,7 +16,7 @@ import {
   userBlockList, type UserBlockList, type InsertUserBlockList
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or, desc, asc, sql } from "drizzle-orm";
+import { eq, ne, and, or, desc, asc, sql } from "drizzle-orm";
 
 // Storage interface for all CRUD operations
 import session from "express-session";
@@ -1942,38 +1942,58 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log("Storage searchUsers called with query:", query, "excludeUserId:", excludeUserId);
       
+      // Input validation for query
+      if (!query || typeof query !== 'string') {
+        console.log("Invalid query:", query, "Returning empty array");
+        return [];
+      }
+      
       // Check if excludeUserId is valid
-      if (excludeUserId !== undefined && (isNaN(excludeUserId) || !Number.isFinite(excludeUserId))) {
-        console.log("Invalid excludeUserId:", excludeUserId, "Using no exclusion");
-        excludeUserId = undefined;
+      if (excludeUserId !== undefined) {
+        // Convert to number if it's a string
+        if (typeof excludeUserId === 'string') {
+          excludeUserId = Number(excludeUserId);
+        }
+        
+        // Validate it's a proper number
+        if (isNaN(excludeUserId) || !Number.isFinite(excludeUserId) || excludeUserId < 0) {
+          console.log("Invalid excludeUserId:", excludeUserId, "Using no exclusion");
+          excludeUserId = undefined;
+        } else {
+          console.log("Valid excludeUserId:", excludeUserId);
+        }
       }
       
       // Convert query to lowercase for case-insensitive search with SQL ILIKE
       const searchPattern = `%${query}%`;
+      console.log("Search pattern:", searchPattern);
       
       // Create the base query
-      let usersQuery = db.select(
-          users.id,
-          users.username,
-          users.displayName,
-          users.email,
-          users.passportId,
-          users.avatarUrl,
-          users.avatarInitials
-        ).from(users)
+      let usersQuery = db.select({
+          id: users.id,
+          username: users.username,
+          displayName: users.displayName,
+          email: users.email,
+          passportId: users.passportId,
+          avatarUrl: users.avatarUrl,
+          avatarInitials: users.avatarInitials
+        }).from(users)
         .where(
           or(
             sql`LOWER(${users.username}) LIKE LOWER(${searchPattern})`,
-            sql`LOWER(${users.displayName}) LIKE LOWER(${searchPattern})`,
+            sql`LOWER(COALESCE(${users.displayName}, '')) LIKE LOWER(${searchPattern})`,
             sql`LOWER(COALESCE(${users.email}, '')) LIKE LOWER(${searchPattern})`
           )
         );
       
-      // Add exclusion of current user if provided
+      // Add exclusion of current user if provided with a valid number
       if (excludeUserId !== undefined) {
         console.log("Excluding user with ID:", excludeUserId);
-        usersQuery = usersQuery.where(sql`${users.id} <> ${excludeUserId}`);
+        usersQuery = usersQuery.where(ne(users.id, excludeUserId));
       }
+      
+      // Log the prepared query for debugging
+      console.log("Executing user search query with pattern:", searchPattern);
       
       try {
         // Execute query with limit
@@ -1982,17 +2002,27 @@ export class DatabaseStorage implements IStorage {
         
         // If no results, generate test data for administrators
         if (results.length === 0 && query.toLowerCase() === 'test') {
-          console.log("No results found, would generate test data in routes.ts");
+          console.log("No results found for 'test', will generate test data in routes.ts");
         }
         
+        // Return the results
         return results;
       } catch (dbError) {
         console.error("[searchUsers] Database query error:", dbError);
+        if (dbError instanceof Error) {
+          console.error("[searchUsers] Error message:", dbError.message);
+          console.error("[searchUsers] Error stack:", dbError.stack);
+        }
+        // Return empty array on database error
         return [];
       }
     } catch (error) {
       console.error("[searchUsers] Error:", error);
-      // Return empty array on error
+      if (error instanceof Error) {
+        console.error("[searchUsers] Error message:", error.message);
+        console.error("[searchUsers] Error stack:", error.stack);
+      }
+      // Return empty array on any error
       return [];
     }
   }

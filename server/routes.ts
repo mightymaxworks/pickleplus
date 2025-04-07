@@ -2314,7 +2314,11 @@ function getRandomReason(pointChange: number): string {
       // Get current user from session if available but don't require authentication
       const currentUser = req.isAuthenticated() ? req.user as Express.User : null;
       console.log("User search API - Authentication status:", req.isAuthenticated());
-      console.log("User search API - Current user:", currentUser?.username, "ID:", currentUser?.id);
+      if (currentUser) {
+        console.log("User search API - Current user:", currentUser.username, "ID:", currentUser.id);
+      } else {
+        console.log("User search API - No authenticated user");
+      }
       
       const query = req.query.q as string;
       console.log("User search API - Query:", query);
@@ -2390,14 +2394,27 @@ function getRandomReason(pointChange: number): string {
       // Try regular search
       let users = [];
       try {
-        // Pass current user ID as excludeUserId if available
-        const currentUserId = currentUser?.id;
-        console.log("Calling searchUsers with currentUserId:", currentUserId);
-        users = await storage.searchUsers(query, currentUserId);
+        // Only pass currentUserId if it's a valid number to avoid NaN errors
+        const currentUserId = currentUser?.id ? Number(currentUser.id) : undefined;
+        
+        if (currentUserId !== undefined) {
+          console.log("Authenticated user searching players:", currentUser?.username);
+          if (isNaN(currentUserId)) {
+            console.log("Invalid user ID, will not exclude any users from search");
+          } else {
+            console.log("Will exclude user ID:", currentUserId, "from search results");
+          }
+        } else {
+          console.log("No user is authenticated, returning all matching users");
+        }
+        
+        // Only pass currentUserId if it's a valid number
+        const validUserId = currentUserId && !isNaN(currentUserId) ? currentUserId : undefined;
+        users = await storage.searchUsers(query, validUserId);
         console.log("Search results:", users.length, "users found for query:", query);
       } catch (searchError) {
         console.error("Error in searchUsers:", searchError);
-        // Return empty array instead of error
+        // Return empty array instead of error to avoid breaking the UI
         users = [];
       }
       
