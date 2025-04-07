@@ -2,18 +2,12 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { matchSDK } from "@/lib/sdk/matchSDK";
 
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { DialogPlayerSelect } from "../player-search/DialogPlayerSelect";
@@ -25,7 +19,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Minus, Users, UserCircle, CheckCircle2 } from "lucide-react";
+import { Users, UserCircle, CheckCircle2 } from "lucide-react";
 
 // Match form schema with only essential fields
 const matchFormSchema = z.object({
@@ -75,7 +69,6 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
     id: user.id,
     displayName: user.displayName || user.username,
     username: user.username,
-    avatarUrl: user.avatarUrl || undefined,
     avatarInitials: user.avatarInitials || undefined,
   } : null;
   
@@ -230,7 +223,7 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
       // Create match data object
       const matchData = {
         formatType,
-        scoringSystem: "traditional",
+        scoringSystem: "traditional" as const,
         pointsToWin: 11,
         division,
         matchType: "casual",
@@ -338,7 +331,7 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
       <CardContent className="space-y-6">
         {/* Format Selection */}
         <div className="space-y-2">
-          <FormLabel>Match Format</FormLabel>
+          <div className="text-sm font-medium">Match Format</div>
           <ToggleGroup 
             type="single" 
             value={formatType}
@@ -360,7 +353,7 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
         
         {/* Player Selection */}
         <div className="space-y-3">
-          <FormLabel>Players</FormLabel>
+          <div className="text-sm font-medium">Players</div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Your Side */}
@@ -461,7 +454,7 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
         
         {/* Game Format */}
         <div className="space-y-3">
-          <FormLabel>Game Format</FormLabel>
+          <div className="text-sm font-medium">Game Format</div>
           <div className="flex flex-wrap gap-2">
             <Button 
               variant={totalGames === 1 ? "default" : "outline"} 
@@ -508,7 +501,7 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
         
         {/* Score Entry */}
         <div className="space-y-3">
-          <FormLabel>Score</FormLabel>
+          <div className="text-sm font-medium">Score</div>
           
           {/* Single Game Score Entry */}
           {totalGames === 1 ? (
