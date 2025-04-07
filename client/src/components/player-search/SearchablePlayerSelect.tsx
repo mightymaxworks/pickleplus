@@ -92,7 +92,7 @@ export function SearchablePlayerSelect({
       if (!debouncedQuery || debouncedQuery.length < 2) return [];
 
       const params = new URLSearchParams({
-        query: debouncedQuery,
+        q: debouncedQuery,
       });
 
       const response = await apiRequest("GET", `/api/users/search?${params.toString()}`);
@@ -132,41 +132,43 @@ export function SearchablePlayerSelect({
           </FormLabel>
           <Popover open={open} onOpenChange={setOpen}>
             <div className="flex gap-2">
-              <PopoverTrigger asChild>
-                <FormControl>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={open}
-                    className={cn(
-                      "w-full justify-between",
-                      !field.value && "text-muted-foreground"
-                    )}
-                    onClick={() => setOpen(true)}
-                  >
-                    {selectedPlayer ? (
-                      <div className="flex items-center">
-                        <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-primary mr-2 text-xs">
-                          {selectedPlayer.avatarUrl ? (
-                            <img
-                              src={selectedPlayer.avatarUrl}
-                              alt={selectedPlayer.displayName}
-                              className="h-6 w-6 rounded-full"
-                            />
-                          ) : (
-                            selectedPlayer.avatarInitials || selectedPlayer.displayName.charAt(0)
-                          )}
+              <div className="w-full">
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={open}
+                      className={cn(
+                        "w-full justify-between",
+                        !field.value && "text-muted-foreground"
+                      )}
+                      onClick={() => setOpen(!open)}
+                    >
+                      {selectedPlayer ? (
+                        <div className="flex items-center">
+                          <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-primary mr-2 text-xs">
+                            {selectedPlayer.avatarUrl ? (
+                              <img
+                                src={selectedPlayer.avatarUrl}
+                                alt={selectedPlayer.displayName}
+                                className="h-6 w-6 rounded-full"
+                              />
+                            ) : (
+                              selectedPlayer.avatarInitials || selectedPlayer.displayName.charAt(0)
+                            )}
+                          </div>
+                          {selectedPlayer.displayName}
                         </div>
-                        {selectedPlayer.displayName}
-                      </div>
-                    ) : (
-                      placeholder
-                    )}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </FormControl>
-              </PopoverTrigger>
+                      ) : (
+                        placeholder
+                      )}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+              </div>
               
               {selectedPlayer && !hideRemoveButton && (
                 <Button
