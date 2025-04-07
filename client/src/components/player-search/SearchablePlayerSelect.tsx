@@ -45,6 +45,7 @@ interface SearchablePlayerSelectProps {
   excludePlayerIds?: number[];
   onClear?: () => void;
   required?: boolean;
+  hideRemoveButton?: boolean;
 }
 
 export function SearchablePlayerSelect({
@@ -56,6 +57,7 @@ export function SearchablePlayerSelect({
   excludePlayerIds = [],
   onClear,
   required = false,
+  hideRemoveButton = false,
 }: SearchablePlayerSelectProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -166,7 +168,7 @@ export function SearchablePlayerSelect({
                 </FormControl>
               </PopoverTrigger>
               
-              {selectedPlayer && (
+              {selectedPlayer && !hideRemoveButton && (
                 <Button
                   type="button"
                   variant="ghost"

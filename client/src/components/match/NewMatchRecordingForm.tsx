@@ -602,6 +602,7 @@ export function NewMatchRecordingForm({ onSuccess }: NewMatchRecordingFormProps)
                 label="Player 1 (You)"
                 placeholder="Select a player"
                 selectedPlayer={playerOneData}
+                hideRemoveButton={true}
                 required
               />
 

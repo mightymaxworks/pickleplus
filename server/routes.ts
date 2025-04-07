@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated, isAdmin } from "./auth";
+import { setupAuth, isAuthenticated, isAdmin, hashPassword } from "./auth";
 import { 
   insertTournamentRegistrationSchema, 
   redeemCodeSchema,
@@ -2576,6 +2576,61 @@ function getRandomReason(pointChange: number): string {
       res.status(500).json({ 
         message: "We couldn't add you to the waitlist right now, but we'll be launching soon!",
       });
+    }
+  });
+
+  // Create test users endpoint (for development purposes only)
+  app.post("/api/dev/create-test-users", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { count = 5 } = req.body;
+      const testUserCount = Math.min(Math.max(1, count), 10); // Limit between 1 and 10
+      
+      const testUsers = [];
+      
+      // Create test users with unique usernames
+      for (let i = 0; i < testUserCount; i++) {
+        const timestamp = Date.now();
+        const randomNum = Math.floor(Math.random() * 10000);
+        const hashedPassword = await hashPassword("password123");
+        
+        const firstName = ["Alex", "Taylor", "Jordan", "Casey", "Morgan", "Jamie", "Riley", "Quinn", "Avery", "Dakota"][i % 10];
+        const lastName = ["Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor"][i % 10];
+        const displayName = `${firstName} ${lastName}`;
+        const username = `test_player_${timestamp}_${randomNum}`;
+        const avatarInitials = `${firstName.charAt(0)}${lastName.charAt(0)}`;
+        
+        const skillLevelOptions = ["2.5", "3.0", "3.5", "4.0", "4.5", "5.0"];
+        const skillLevel = skillLevelOptions[Math.floor(Math.random() * skillLevelOptions.length)];
+        
+        // Create a test user
+        const testUser = await storage.createUser({
+          username,
+          password: hashedPassword,
+          displayName,
+          email: `${username}@example.com`,
+          avatarInitials,
+          yearOfBirth: 1985 + Math.floor(Math.random() * 20),
+          skillLevel,
+          location: "Test Location",
+          playingSince: `${2019 + Math.floor(Math.random() * 5)}`,
+          preferredPosition: ["Right", "Left", "Either"][Math.floor(Math.random() * 3)],
+          dominantHand: ["Right", "Left"][Math.floor(Math.random() * 2)],
+          paddleBrand: ["Selkirk", "Paddletek", "Joola", "Engage", "ProLite"][Math.floor(Math.random() * 5)],
+          profileCompletionPct: 80
+        });
+
+        // Add to response array without password
+        const { password, ...userWithoutPassword } = testUser;
+        testUsers.push(userWithoutPassword);
+      }
+      
+      res.status(201).json({
+        message: `Successfully created ${testUsers.length} test users`,
+        users: testUsers
+      });
+    } catch (error) {
+      console.error("Error creating test users:", error);
+      res.status(500).json({ message: "Error creating test users" });
     }
   });
 
