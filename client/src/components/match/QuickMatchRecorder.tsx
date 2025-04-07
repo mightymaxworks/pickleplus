@@ -53,6 +53,7 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
   
   // Match state
   const [formatType, setFormatType] = useState<"singles" | "doubles">("singles");
+  const [scoringSystem, setScoringSystem] = useState<"traditional" | "rally">("traditional");
   const [totalGames, setTotalGames] = useState(1);
   const [games, setGames] = useState<Array<{playerOneScore: number; playerTwoScore: number}>>([
     { playerOneScore: 0, playerTwoScore: 0 }
@@ -223,7 +224,7 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
       // Create match data object
       const matchData = {
         formatType,
-        scoringSystem: "traditional" as const,
+        scoringSystem,
         pointsToWin: 11,
         division,
         matchType: "casual",
@@ -277,6 +278,7 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
     setPlayerOnePartnerData(null);
     setPlayerTwoPartnerData(null);
     setFormatType("singles");
+    setScoringSystem("traditional");
     setTotalGames(1);
     setGames([{ playerOneScore: 0, playerTwoScore: 0 }]);
     form.reset({
@@ -292,21 +294,20 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
     if (!playerTwoData) return false;
     if (formatType === "doubles" && (!playerOnePartnerData || !playerTwoPartnerData)) return false;
     
-    // Then check if scores are entered and valid
+    // Then check if scores are entered
     if (totalGames === 1) {
       const game = games[0];
       if (!game) return false;
       
-      // In single game, one player must reach 11+ points and win by 2+
+      // Just check if any score was entered
       const maxScore = Math.max(game.playerOneScore, game.playerTwoScore);
-      const minScore = Math.min(game.playerOneScore, game.playerTwoScore);
-      return maxScore >= 11 && (maxScore - minScore) >= 2;
+      return maxScore > 0;
     } else {
-      // In multi-game format, one player must win majority
-      const playerOneWins = games.filter(g => g.playerOneScore > g.playerTwoScore).length;
-      const playerTwoWins = games.filter(g => g.playerTwoScore > g.playerOneScore).length;
-      const gamesToWin = Math.ceil(totalGames / 2);
-      return playerOneWins >= gamesToWin || playerTwoWins >= gamesToWin;
+      // In multi-game format, just verify that some games have scores
+      const gamesWithScores = games.filter(g => 
+        g && (g.playerOneScore > 0 || g.playerTwoScore > 0)
+      ).length;
+      return gamesWithScores > 0;
     }
   };
   
@@ -318,17 +319,17 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
   const playerTwoWins = games.filter(g => g.playerTwoScore > g.playerOneScore).length;
   
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
+    <Card className="w-full max-w-3xl mx-auto">
+      <CardHeader className="md:flex-row md:items-center px-4 sm:px-6">
+        <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full">
           <span>Quick Match Recorder</span>
-          <div className="text-sm font-normal text-muted-foreground">
+          <div className="text-sm font-normal text-muted-foreground mt-1 sm:mt-0">
             Record a casual match in just a few clicks
           </div>
         </CardTitle>
       </CardHeader>
       
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 px-4 sm:px-6">
         {/* Format Selection */}
         <div className="space-y-2">
           <div className="text-sm font-medium">Match Format</div>
@@ -336,7 +337,7 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
             type="single" 
             value={formatType}
             onValueChange={handleFormatTypeChange}
-            className="justify-start"
+            className="justify-start flex flex-wrap"
           >
             <ToggleGroupItem value="singles" className="gap-2">
               <UserCircle className="h-4 w-4" />
@@ -455,28 +456,57 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
         {/* Game Format */}
         <div className="space-y-3">
           <div className="text-sm font-medium">Game Format</div>
-          <div className="flex flex-wrap gap-2">
-            <Button 
-              variant={totalGames === 1 ? "default" : "outline"} 
-              onClick={() => handleTotalGamesChange(1)}
-              size="sm"
-            >
-              Single Game
-            </Button>
-            <Button 
-              variant={totalGames === 3 ? "default" : "outline"} 
-              onClick={() => handleTotalGamesChange(3)}
-              size="sm"
-            >
-              Best of 3
-            </Button>
-            <Button 
-              variant={totalGames === 5 ? "default" : "outline"} 
-              onClick={() => handleTotalGamesChange(5)}
-              size="sm"
-            >
-              Best of 5
-            </Button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <div className="text-xs text-muted-foreground">Games</div>
+              <div className="flex flex-wrap gap-2">
+                <Button 
+                  variant={totalGames === 1 ? "default" : "outline"} 
+                  onClick={() => handleTotalGamesChange(1)}
+                  size="sm"
+                >
+                  Single Game
+                </Button>
+                <Button 
+                  variant={totalGames === 3 ? "default" : "outline"} 
+                  onClick={() => handleTotalGamesChange(3)}
+                  size="sm"
+                >
+                  Best of 3
+                </Button>
+                <Button 
+                  variant={totalGames === 5 ? "default" : "outline"} 
+                  onClick={() => handleTotalGamesChange(5)}
+                  size="sm"
+                >
+                  Best of 5
+                </Button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="text-xs text-muted-foreground">Scoring System</div>
+              <div className="flex flex-wrap gap-2">
+                <Button 
+                  variant={scoringSystem === "traditional" ? "default" : "outline"} 
+                  onClick={() => setScoringSystem("traditional")}
+                  size="sm"
+                >
+                  Traditional
+                </Button>
+                <Button 
+                  variant={scoringSystem === "rally" ? "default" : "outline"} 
+                  onClick={() => setScoringSystem("rally")}
+                  size="sm"
+                >
+                  Rally
+                </Button>
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                {scoringSystem === "traditional" 
+                  ? "Points only on serve (side-out scoring)"
+                  : "Points scored on every rally"}
+              </div>
+            </div>
           </div>
           
           {/* Match status for multiple games */}

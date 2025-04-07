@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, Crown } from "lucide-react";
 
 interface Score {
   playerOneScore: number;
@@ -37,7 +37,7 @@ export function VisualScoreInput({
     onChange(newValue);
   };
 
-  // Determine if a player has won
+  // Determine if a player has won (for UI highlighting only, not for disabling inputs)
   const isGameWon = (playerOneScore: number, playerTwoScore: number): boolean => {
     // In pickleball, a player wins when they have at least `pointsToWin` points AND a 2-point lead
     const maxScore = Math.max(playerOneScore, playerTwoScore);
@@ -45,7 +45,7 @@ export function VisualScoreInput({
     return maxScore >= pointsToWin && (maxScore - minScore) >= 2;
   };
 
-  // Determine winner
+  // Determine winner (for UI only)
   const winner = isGameWon(value.playerOneScore, value.playerTwoScore)
     ? value.playerOneScore > value.playerTwoScore 
       ? "playerOne" 
@@ -54,91 +54,103 @@ export function VisualScoreInput({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Player One Score */}
-        <Card className={`p-4 flex flex-col items-center ${winner === "playerOne" ? "bg-primary/10 border-primary" : ""}`}>
-          <div className="flex items-center justify-center mb-2">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+        <Card className={`p-3 sm:p-4 flex flex-col items-center ${winner === "playerOne" ? "bg-primary/10 border-primary" : ""}`}>
+          <div className="flex items-center justify-center mb-2 w-full">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm sm:text-base">
               {playerOneInitials || playerOneName.charAt(0)}
             </div>
-            <div className="ml-2 text-sm font-medium">{playerOneName}</div>
+            <div className="ml-2 text-xs sm:text-sm font-medium truncate max-w-[100px] sm:max-w-[140px]">
+              {playerOneName}
+            </div>
             {winner === "playerOne" && (
-              <Badge className="ml-2" variant="default">
-                Winner
+              <Badge className="ml-auto flex items-center gap-1" variant="default">
+                <Crown className="h-3 w-3" />
+                <span className="hidden sm:inline">Winner</span>
               </Badge>
             )}
           </div>
           
-          <div className="flex items-center gap-4 mt-2">
+          <div className="flex items-center gap-2 sm:gap-4 mt-2 w-full justify-center">
             <Button
               variant="outline"
-              size="icon"
+              size="sm"
+              className="h-8 w-8 p-0"
               onClick={() => updateScore('playerOne', -1)}
-              disabled={value.playerOneScore <= 0 || winner !== null}
+              disabled={value.playerOneScore <= 0}
             >
-              <Minus className="h-4 w-4" />
+              <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
             
-            <div className="text-4xl font-bold w-12 text-center">
+            <div className="text-3xl sm:text-4xl font-bold w-10 sm:w-12 text-center">
               {value.playerOneScore}
             </div>
             
             <Button
               variant="outline"
-              size="icon"
+              size="sm"
+              className="h-8 w-8 p-0"
               onClick={() => updateScore('playerOne', 1)}
-              disabled={winner !== null}
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </div>
         </Card>
         
         {/* Player Two Score */}
-        <Card className={`p-4 flex flex-col items-center ${winner === "playerTwo" ? "bg-primary/10 border-primary" : ""}`}>
-          <div className="flex items-center justify-center mb-2">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+        <Card className={`p-3 sm:p-4 flex flex-col items-center ${winner === "playerTwo" ? "bg-primary/10 border-primary" : ""}`}>
+          <div className="flex items-center justify-center mb-2 w-full">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm sm:text-base">
               {playerTwoInitials || playerTwoName.charAt(0)}
             </div>
-            <div className="ml-2 text-sm font-medium">{playerTwoName}</div>
+            <div className="ml-2 text-xs sm:text-sm font-medium truncate max-w-[100px] sm:max-w-[140px]">
+              {playerTwoName}
+            </div>
             {winner === "playerTwo" && (
-              <Badge className="ml-2" variant="default">
-                Winner
+              <Badge className="ml-auto flex items-center gap-1" variant="default">
+                <Crown className="h-3 w-3" />
+                <span className="hidden sm:inline">Winner</span>
               </Badge>
             )}
           </div>
           
-          <div className="flex items-center gap-4 mt-2">
+          <div className="flex items-center gap-2 sm:gap-4 mt-2 w-full justify-center">
             <Button
               variant="outline"
-              size="icon"
+              size="sm"
+              className="h-8 w-8 p-0"
               onClick={() => updateScore('playerTwo', -1)}
-              disabled={value.playerTwoScore <= 0 || winner !== null}
+              disabled={value.playerTwoScore <= 0}
             >
-              <Minus className="h-4 w-4" />
+              <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
             
-            <div className="text-4xl font-bold w-12 text-center">
+            <div className="text-3xl sm:text-4xl font-bold w-10 sm:w-12 text-center">
               {value.playerTwoScore}
             </div>
             
             <Button
               variant="outline"
-              size="icon"
+              size="sm"
+              className="h-8 w-8 p-0"
               onClick={() => updateScore('playerTwo', 1)}
-              disabled={winner !== null}
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </div>
         </Card>
       </div>
       
-      {!winner && (
-        <div className="text-center text-xs text-muted-foreground">
-          First to {pointsToWin} points with a 2-point lead wins
-        </div>
-      )}
+      <div className="text-center text-xs text-muted-foreground">
+        {winner ? (
+          <span className="text-green-600 font-medium">
+            Game complete! {winner === "playerOne" ? playerOneName : playerTwoName} has won.
+          </span>
+        ) : (
+          <span>First to {pointsToWin} points with a 2-point lead wins</span>
+        )}
+      </div>
     </div>
   );
 }
