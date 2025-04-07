@@ -1656,7 +1656,18 @@ function getRandomReason(pointChange: number): string {
   // Record match result and update CourtIQ ratings
   app.post("/api/matches", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = (req.user as any).id;
+      const user = req.user as any;
+      const userId = user.id;
+      const isAdmin = user.isAdmin === true;
+      
+      // Check if the user is authorized to record this type of match
+      const matchType = req.body.matchType;
+      if ((matchType === 'league' || matchType === 'tournament') && !isAdmin) {
+        return res.status(403).json({ 
+          message: "Only administrators can record league or tournament matches",
+          error: "UNAUTHORIZED_MATCH_TYPE"
+        });
+      }
       
       // Determine winner from scores before validation
       let winnerId;

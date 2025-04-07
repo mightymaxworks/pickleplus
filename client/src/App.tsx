@@ -29,6 +29,7 @@ import { MainLayout } from "@/components/MainLayout";
 import { AuthLayout } from "@/components/AuthLayout";
 import { AuthProvider, useAuth } from "@/hooks/useAuth.tsx";
 import { QrCodeFAB } from "@/components/QrCodeFAB";
+import QuickMatchFAB from "@/components/QuickMatchFAB";
 import { FeatureProtectedRoute } from "@/components/FeatureProtectedRoute";
 import { Features, useFeatureFlag } from "@/lib/featureFlags";
 
@@ -181,6 +182,7 @@ function AppRoutes() {
       
       {/* Global Components */}
       {isAuthenticated && <QrCodeFAB />}
+      {isAuthenticated && <QuickMatchFAB />}
       <Toaster />
     </div>
   );

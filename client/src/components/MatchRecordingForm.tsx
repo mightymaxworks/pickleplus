@@ -785,8 +785,12 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="casual">Casual Match</SelectItem>
-                        <SelectItem value="league">League Match</SelectItem>
-                        <SelectItem value="tournament">Tournament Match</SelectItem>
+                        {user?.isAdmin && (
+                          <>
+                            <SelectItem value="league">League Match</SelectItem>
+                            <SelectItem value="tournament">Tournament Match</SelectItem>
+                          </>
+                        )}
                       </SelectContent>
                     </Select>
                   </FormControl>
