@@ -2309,133 +2309,142 @@ function getRandomReason(pointChange: number): string {
   });
   
   // User search for connections feature
-  app.get("/api/users/search", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/users/search", async (req: Request, res: Response) => {
     try {
-      // Get current user from session
-      const currentUser = req.user as Express.User;
-      console.log("User search API - Authentication status:", req.isAuthenticated());
-      console.log("User search API - Current user:", currentUser.username, "ID:", currentUser.id);
-      
+      // Get the search query
       const query = req.query.q as string;
       console.log("User search API - Query:", query);
       
+      // Check if the query is valid
       if (!query || query.length < 2) {
         console.log("Query too short, returning empty array");
-        return res.status(200).json([]); // Return empty array instead of 400 error
+        return res.status(200).json([]); // Return empty array instead of error
       }
       
-      // Create test users if needed
-      if (query.toLowerCase() === "test" && currentUser?.isAdmin) {
-        console.log("Creating test users for admin user:", currentUser.username);
-        // Only admin users can create test users
-        try {
-          // Create a simple test user for demo purposes
-          const testUserCount = 3;
-          const testUsers = [];
-          
-          for (let i = 0; i < testUserCount; i++) {
-            const timestamp = Date.now();
-            const randomNum = Math.floor(Math.random() * 10000);
-            const hashedPassword = await hashPassword("password123");
-            
-            const firstName = ["Alex", "Taylor", "Jordan", "Casey", "Morgan"][i % 5];
-            const lastName = ["Smith", "Johnson", "Williams", "Jones", "Brown"][i % 5];
-            const displayName = `${firstName} ${lastName}`;
-            const username = `test_player_${timestamp}_${randomNum}`;
-            const avatarInitials = `${firstName.charAt(0)}${lastName.charAt(0)}`;
-            
-            try {
-              // Create a test user
-              const testUser = await storage.createUser({
-                username,
-                password: hashedPassword,
-                displayName,
-                email: `${username}@example.com`,
-                avatarInitials,
-                yearOfBirth: 1985 + Math.floor(Math.random() * 20),
-                skillLevel: ["2.5", "3.0", "3.5", "4.0", "4.5"][Math.floor(Math.random() * 5)],
-                location: "Test Location",
-                playingSince: `${2019 + Math.floor(Math.random() * 5)}`,
-                preferredPosition: ["Right", "Left", "Either"][Math.floor(Math.random() * 3)],
-                dominantHand: ["Right", "Left"][Math.floor(Math.random() * 2)],
-                paddleBrand: ["Selkirk", "Paddletek", "Joola", "Engage"][Math.floor(Math.random() * 4)],
-                profileCompletionPct: 80
-              });
-
-              const { password, ...userWithoutPassword } = testUser;
-              testUsers.push(userWithoutPassword);
-            } catch (err) {
-              console.error("Error creating test user:", err);
-            }
-          }
-          
-          // Return the test users in the search results
-          if (testUsers.length > 0) {
-            console.log(`Created ${testUsers.length} test users for search`);
-            const sanitizedTestUsers = testUsers.map(user => ({
-              id: user.id,
-              username: user.username,
-              displayName: user.displayName || user.username,
-              passportId: user.passportId,
-              avatarUrl: user.avatarUrl,
-              avatarInitials: user.avatarInitials || user.username?.substring(0, 2).toUpperCase()
-            }));
-            return res.json(sanitizedTestUsers);
-          }
-        } catch (createError) {
-          console.error("Error creating test users:", createError);
-        }
-      }
+      // Get current user from session if authenticated
+      const isUserAuthenticated = req.isAuthenticated();
+      console.log("User search API - Authentication status:", isUserAuthenticated);
       
-      // Try regular search
-      let users = [];
-      try {
-        // Only pass currentUserId if it's a valid number to avoid NaN errors
-        const currentUserId = currentUser?.id ? Number(currentUser.id) : undefined;
+      // Default excludeUserId to undefined
+      let excludeUserId: number | undefined = undefined;
+      
+      // Get current user if authenticated
+      if (isUserAuthenticated && req.user) {
+        const currentUser = req.user as Express.User;
+        console.log("User search API - Current user:", currentUser.username);
         
-        if (currentUserId !== undefined) {
-          console.log("Authenticated user searching players:", currentUser?.username);
-          if (isNaN(currentUserId)) {
-            console.log("Invalid user ID, will not exclude any users from search");
+        // Convert to numeric ID and validate
+        if (currentUser.id) {
+          const numericId = Number(currentUser.id);
+          if (!isNaN(numericId) && numericId > 0) {
+            excludeUserId = numericId;
+            console.log("Will exclude user ID:", numericId, "from search results");
           } else {
-            console.log("Will exclude user ID:", currentUserId, "from search results");
+            console.log("Invalid user ID:", currentUser.id, "converted to", numericId);
           }
-        } else {
-          console.log("No user is authenticated, returning all matching users");
         }
         
-        // Only pass currentUserId if it's a valid number
-        const validUserId = currentUserId && !isNaN(currentUserId) ? currentUserId : undefined;
-        users = await storage.searchUsers(query, validUserId);
+        // Create test users if needed (admin only)
+        if (query.toLowerCase() === "test" && currentUser.isAdmin) {
+          console.log("Creating test users for admin user:", currentUser.username);
+          try {
+            // Create a simple test user for demo purposes
+            const testUserCount = 3;
+            const testUsers = [];
+            
+            for (let i = 0; i < testUserCount; i++) {
+              const timestamp = Date.now();
+              const randomNum = Math.floor(Math.random() * 10000);
+              const hashedPassword = await hashPassword("password123");
+              
+              const firstName = ["Alex", "Taylor", "Jordan", "Casey", "Morgan"][i % 5];
+              const lastName = ["Smith", "Johnson", "Williams", "Jones", "Brown"][i % 5];
+              const displayName = `${firstName} ${lastName}`;
+              const username = `test_player_${timestamp}_${randomNum}`;
+              const avatarInitials = `${firstName.charAt(0)}${lastName.charAt(0)}`;
+              
+              try {
+                // Create a test user
+                const testUser = await storage.createUser({
+                  username,
+                  password: hashedPassword,
+                  displayName,
+                  email: `${username}@example.com`,
+                  avatarInitials,
+                  yearOfBirth: 1985 + Math.floor(Math.random() * 20),
+                  skillLevel: ["2.5", "3.0", "3.5", "4.0", "4.5"][Math.floor(Math.random() * 5)],
+                  location: "Test Location",
+                  playingSince: `${2019 + Math.floor(Math.random() * 5)}`,
+                  preferredPosition: ["Right", "Left", "Either"][Math.floor(Math.random() * 3)],
+                  dominantHand: ["Right", "Left"][Math.floor(Math.random() * 2)],
+                  paddleBrand: ["Selkirk", "Paddletek", "Joola", "Engage"][Math.floor(Math.random() * 4)],
+                  profileCompletionPct: 80
+                });
+  
+                const { password, ...userWithoutPassword } = testUser;
+                testUsers.push(userWithoutPassword);
+              } catch (err) {
+                console.error("Error creating test user:", err);
+              }
+            }
+            
+            // Return the test users in the search results
+            if (testUsers.length > 0) {
+              console.log(`Created ${testUsers.length} test users for search`);
+              const sanitizedTestUsers = testUsers.map(user => ({
+                id: user.id,
+                username: user.username,
+                displayName: user.displayName || user.username,
+                passportId: user.passportId,
+                avatarUrl: user.avatarUrl,
+                avatarInitials: user.avatarInitials || user.username?.substring(0, 2).toUpperCase()
+              }));
+              return res.json(sanitizedTestUsers);
+            }
+          } catch (createError) {
+            console.error("Error creating test users:", createError);
+          }
+        }
+      } else {
+        console.log("No user is authenticated, returning all matching users");
+      }
+      
+      // Perform the user search
+      console.log("Searching for users with query:", query, "excludeUserId:", excludeUserId);
+      
+      try {
+        // Call searchUsers with the query and excludeUserId
+        const users = await storage.searchUsers(query, excludeUserId);
+        
         console.log("Search results:", users.length, "users found for query:", query);
+        
+        if (!users || users.length === 0) {
+          // No users found, return empty array with 200 status
+          console.log("No users found for query:", query);
+          return res.json([]);
+        }
+        
+        // Sanitize the user data to avoid oversharing
+        const sanitizedUsers = users.map(user => ({
+          id: user.id,
+          username: user.username,
+          displayName: user.displayName || user.username,
+          passportId: user.passportId,
+          avatarUrl: user.avatarUrl || null,
+          avatarInitials: user.avatarInitials || user.username?.substring(0, 2).toUpperCase()
+        }));
+        
+        console.log("Sending search results for query:", query, sanitizedUsers.length, "users");
+        return res.json(sanitizedUsers);
       } catch (searchError) {
         console.error("Error in searchUsers:", searchError);
         // Return empty array instead of error to avoid breaking the UI
-        users = [];
-      }
-      
-      if (!users || users.length === 0) {
-        // No users found, but return empty array with 200 status
-        console.log("No users found for query:", query);
         return res.json([]);
       }
-      
-      // Return a limited list with specific fields to avoid oversharing data
-      const sanitizedUsers = users.map(user => ({
-        id: user.id,
-        username: user.username,
-        displayName: user.displayName || user.username,
-        passportId: user.passportId,
-        avatarUrl: user.avatarUrl,
-        avatarInitials: user.avatarInitials || user.username?.substring(0, 2).toUpperCase()
-      }));
-      
-      console.log("Sending search results for query:", query, sanitizedUsers.length, "users");
-      res.json(sanitizedUsers);
     } catch (error) {
       console.error("Error in search API:", error);
       // Return empty array instead of error to avoid breaking the UI
-      res.json([]);
+      return res.json([]);
     }
   });
 
