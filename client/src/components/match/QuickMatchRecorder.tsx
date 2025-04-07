@@ -19,7 +19,13 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Users, UserCircle, CheckCircle2 } from "lucide-react";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Users, UserCircle, CheckCircle2, Info } from "lucide-react";
 
 // Match form schema with only essential fields
 const matchFormSchema = z.object({
@@ -54,6 +60,7 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
   // Match state
   const [formatType, setFormatType] = useState<"singles" | "doubles">("singles");
   const [scoringSystem, setScoringSystem] = useState<"traditional" | "rally">("traditional");
+  const [pointsToWin, setPointsToWin] = useState<11 | 15 | 21>(11);
   const [totalGames, setTotalGames] = useState(1);
   const [games, setGames] = useState<Array<{playerOneScore: number; playerTwoScore: number}>>([
     { playerOneScore: 0, playerTwoScore: 0 }
@@ -225,7 +232,7 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
       const matchData = {
         formatType,
         scoringSystem,
-        pointsToWin: 11,
+        pointsToWin,
         division,
         matchType: "casual",
         eventTier: "local",
@@ -279,6 +286,7 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
     setPlayerTwoPartnerData(null);
     setFormatType("singles");
     setScoringSystem("traditional");
+    setPointsToWin(11);
     setTotalGames(1);
     setGames([{ playerOneScore: 0, playerTwoScore: 0 }]);
     form.reset({
@@ -506,6 +514,46 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
                   ? "Points only on serve (side-out scoring)"
                   : "Points scored on every rally"}
               </div>
+              
+              {/* Points to Win */}
+              <div className="mt-3">
+                <div className="text-xs text-muted-foreground">Points to Win</div>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  <Button 
+                    variant={pointsToWin === 11 ? "default" : "outline"} 
+                    onClick={() => setPointsToWin(11)}
+                    size="sm"
+                  >
+                    11
+                  </Button>
+                  <Button 
+                    variant={pointsToWin === 15 ? "default" : "outline"} 
+                    onClick={() => setPointsToWin(15)}
+                    size="sm"
+                  >
+                    15
+                  </Button>
+                  <Button 
+                    variant={pointsToWin === 21 ? "default" : "outline"} 
+                    onClick={() => setPointsToWin(21)}
+                    size="sm"
+                  >
+                    21
+                  </Button>
+                  <div className="flex items-center ml-1">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="max-w-xs">The number of points needed to win a game. Traditional scoring typically uses 11 points, while rally scoring commonly uses 15 or 21 points.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           
@@ -546,7 +594,7 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
               playerTwoName={playerTwoData?.displayName || "Opponent"}
               playerOneInitials={playerOneData?.avatarInitials}
               playerTwoInitials={playerTwoData?.avatarInitials}
-              pointsToWin={11}
+              pointsToWin={pointsToWin}
             />
           ) : (
             /* Multi-game score entry */
@@ -576,7 +624,7 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
                     playerTwoName={playerTwoData?.displayName || "Opponent"}
                     playerOneInitials={playerOneData?.avatarInitials}
                     playerTwoInitials={playerTwoData?.avatarInitials}
-                    pointsToWin={11}
+                    pointsToWin={pointsToWin}
                   />
                 </TabsContent>
               ))}
