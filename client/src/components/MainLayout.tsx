@@ -9,7 +9,8 @@ import {
   BookOpen, 
   Settings, 
   LogOut,
-  Menu
+  Menu,
+  Shield
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -30,7 +31,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     logoutMutation.mutate();
   };
 
-  const navigationItems = [
+  // Create the base navigation items
+  const baseNavigationItems = [
     { name: 'Dashboard', path: '/', icon: <Home className="h-5 w-5" /> },
     { name: 'Tournaments', path: '/tournaments', icon: <Trophy className="h-5 w-5" /> },
     { name: 'Achievements', path: '/achievements', icon: <Award className="h-5 w-5" /> },
@@ -39,6 +41,20 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     { name: 'Profile', path: '/profile', icon: <UserCircle className="h-5 w-5" /> },
     { name: 'Preferences', path: '/preferences', icon: <Settings className="h-5 w-5" /> },
   ];
+
+  // Add admin dashboard item for admin users
+  console.log("User admin status:", user?.isAdmin);
+  
+  const navigationItems = user?.isAdmin 
+    ? [
+        ...baseNavigationItems,
+        { 
+          name: 'Admin Dashboard', 
+          path: '/admin/dashboard', 
+          icon: <Shield className="h-5 w-5 text-rose-500" /> 
+        },
+      ] 
+    : baseNavigationItems;
 
   // Generate initials for avatar
   const initials = user?.displayName
@@ -160,6 +176,12 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               </ul>
             </nav>
             <div className="border-t mt-4 pt-4">
+              {/* Debug element - remove in production */}
+              {user?.isAdmin && (
+                <div className="mb-2 text-xs text-center p-1 bg-rose-100 text-rose-700 rounded">
+                  Admin Access: {user?.isAdmin ? "Yes" : "No"}
+                </div>
+              )}
               <Button 
                 variant="outline" 
                 className="w-full flex items-center justify-center" 
