@@ -12,16 +12,16 @@ import { useIsMobile } from "@/hooks/use-mobile";
  */
 export default function QuickMatchFAB() {
   const [isOpen, setIsOpen] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const isMobile = useIsMobile();
 
-  if (!isAuthenticated) {
+  if (!user) {
     return null;
   }
 
   return (
     <>
-      <div className={`fixed z-40 ${isMobile ? 'bottom-20 left-4' : 'bottom-8 left-8'}`}>
+      <div className={`fixed z-50 ${isMobile ? 'bottom-20 right-4' : 'bottom-8 right-8'}`}>
         <Button 
           onClick={() => setIsOpen(true)}
           size="lg"

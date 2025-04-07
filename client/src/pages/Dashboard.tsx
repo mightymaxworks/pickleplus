@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -25,6 +25,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PlayerCard } from "@/components/dashboard/PlayerCard";
 import { QrCode, MapPin, Zap, Award, Calendar, Users, TrendingUp, Target, Settings, Scan, BookOpen, Plus, ArrowRight } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { MatchRecordingForm } from "@/components/MatchRecordingForm";
 import { formatDistanceToNow } from "date-fns";
 
 // Define missing interfaces
@@ -55,6 +57,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { tierInfo, isLoading: tierLoading } = useXPTier();
   const [, setLocation] = useLocation();
+  const [matchDialogOpen, setMatchDialogOpen] = useState(false);
   
   // Show changelog notification toast on login
   useChangelogNotification();
@@ -553,7 +556,7 @@ export default function Dashboard() {
             <QuickAction 
               icon={<Plus className="h-4 w-4" />} 
               label="Record Match" 
-              onClick={() => setLocation("/matches/new")}
+              onClick={() => setMatchDialogOpen(true)}
             />
           </div>
         </div>
@@ -849,6 +852,16 @@ export default function Dashboard() {
           </div>
         </TabsContent>
       </Tabs>
+      
+      {/* Match Recording Dialog */}
+      <Dialog open={matchDialogOpen} onOpenChange={setMatchDialogOpen}>
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Record Match Results</DialogTitle>
+          </DialogHeader>
+          <MatchRecordingForm onSuccess={() => setMatchDialogOpen(false)} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
