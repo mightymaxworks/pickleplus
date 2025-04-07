@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
-import { MatchRecordingForm } from "@/components/MatchRecordingForm";
+import { NewMatchRecordingForm } from "@/components/match/NewMatchRecordingForm";
 import { useAuth } from "@/hooks/useAuth";
 
 /**
@@ -44,11 +44,11 @@ export default function QuickMatchFAB() {
       
       {/* Match Recording Dialog */}
       <Dialog open={matchDialogOpen} onOpenChange={setMatchDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Record Match Results</DialogTitle>
           </DialogHeader>
-          <MatchRecordingForm onSuccess={() => setMatchDialogOpen(false)} />
+          <NewMatchRecordingForm onSuccess={() => setMatchDialogOpen(false)} />
         </DialogContent>
       </Dialog>
     </>

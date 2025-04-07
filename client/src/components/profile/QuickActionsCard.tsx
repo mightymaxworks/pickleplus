@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CodeRedemptionForm } from "@/components/CodeRedemptionForm";
-import { MatchRecordingForm } from "@/components/MatchRecordingForm";
+import { NewMatchRecordingForm } from "@/components/match/NewMatchRecordingForm";
 import { 
   Dialog, 
   DialogTrigger, 
@@ -56,11 +56,11 @@ export function QuickActionsCard({
                 <PlusCircle size={16} className="mr-2" /> Log Match Results
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Record Match Results</DialogTitle>
               </DialogHeader>
-              <MatchRecordingForm onSuccess={() => setMatchDialogOpen(false)} />
+              <NewMatchRecordingForm onSuccess={() => setMatchDialogOpen(false)} />
             </DialogContent>
           </Dialog>
         </CardContent>

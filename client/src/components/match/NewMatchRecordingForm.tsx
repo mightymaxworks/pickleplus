@@ -175,8 +175,8 @@ export function NewMatchRecordingForm({ onSuccess }: NewMatchRecordingFormProps)
         id: user.id,
         displayName: user.displayName || user.username,
         username: user.username,
-        avatarUrl: user.avatarUrl,
-        avatarInitials: user.avatarInitials,
+        avatarUrl: user.avatarUrl || undefined,
+        avatarInitials: user.avatarInitials || undefined,
       });
       form.setValue("playerOneId", user.id);
     }
@@ -227,8 +227,8 @@ export function NewMatchRecordingForm({ onSuccess }: NewMatchRecordingFormProps)
         id: playerTwoUserData.id,
         displayName: playerTwoUserData.displayName || playerTwoUserData.username,
         username: playerTwoUserData.username,
-        avatarUrl: playerTwoUserData.avatarUrl,
-        avatarInitials: playerTwoUserData.avatarInitials,
+        avatarUrl: playerTwoUserData.avatarUrl || undefined,
+        avatarInitials: playerTwoUserData.avatarInitials || undefined,
       });
     }
   }, [playerTwoUserData, playerTwoData]);
@@ -252,8 +252,8 @@ export function NewMatchRecordingForm({ onSuccess }: NewMatchRecordingFormProps)
         id: playerOnePartnerUserData.id,
         displayName: playerOnePartnerUserData.displayName || playerOnePartnerUserData.username,
         username: playerOnePartnerUserData.username,
-        avatarUrl: playerOnePartnerUserData.avatarUrl,
-        avatarInitials: playerOnePartnerUserData.avatarInitials,
+        avatarUrl: playerOnePartnerUserData.avatarUrl || undefined,
+        avatarInitials: playerOnePartnerUserData.avatarInitials || undefined,
       });
     }
   }, [playerOnePartnerUserData, playerOnePartnerData]);
@@ -277,8 +277,8 @@ export function NewMatchRecordingForm({ onSuccess }: NewMatchRecordingFormProps)
         id: playerTwoPartnerUserData.id,
         displayName: playerTwoPartnerUserData.displayName || playerTwoPartnerUserData.username,
         username: playerTwoPartnerUserData.username,
-        avatarUrl: playerTwoPartnerUserData.avatarUrl,
-        avatarInitials: playerTwoPartnerUserData.avatarInitials,
+        avatarUrl: playerTwoPartnerUserData.avatarUrl || undefined,
+        avatarInitials: playerTwoPartnerUserData.avatarInitials || undefined,
       });
     }
   }, [playerTwoPartnerUserData, playerTwoPartnerData]);
@@ -643,7 +643,7 @@ export function NewMatchRecordingForm({ onSuccess }: NewMatchRecordingFormProps)
                     excludePlayerIds={[
                       form.watch("playerOneId"),
                       form.watch("playerTwoId"),
-                      form.watch("playerOnePartnerId"),
+                      ...(form.watch("playerOnePartnerId") ? [form.watch("playerOnePartnerId")] : []),
                     ]}
                     onClear={() => setPlayerTwoPartnerData(null)}
                     required

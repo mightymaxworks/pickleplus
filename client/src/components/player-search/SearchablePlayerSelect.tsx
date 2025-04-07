@@ -133,6 +133,7 @@ export function SearchablePlayerSelect({
               <PopoverTrigger asChild>
                 <FormControl>
                   <Button
+                    type="button"
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
@@ -140,6 +141,7 @@ export function SearchablePlayerSelect({
                       "w-full justify-between",
                       !field.value && "text-muted-foreground"
                     )}
+                    onClick={() => setOpen(true)}
                   >
                     {selectedPlayer ? (
                       <div className="flex items-center">
