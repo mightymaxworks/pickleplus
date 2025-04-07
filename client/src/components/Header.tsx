@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
-import { Menu, Bell } from "lucide-react";
+import { Menu, Bell, Shield } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,15 +14,16 @@ import { PicklePlusLogo } from "@/components/icons/PicklePlusLogo";
 import { PickleGoldLogo } from "@/components/icons/PickleGoldLogo";
 import { FoundingMemberBadge } from "@/components/ui/founding-member-badge";
 import { useToast } from "@/hooks/use-toast";
+import { isAdmin } from "@/shared/utils/admin";
 
 export function Header() {
-  const { user, logout } = useAuth();
+  const { user, logoutMutation } = useAuth();
   const [, setLocation] = useLocation();
   const [notificationCount] = useState(3);
   const { toast } = useToast();
   
   const handleLogout = async () => {
-    await logout();
+    await logoutMutation.mutateAsync();
     setLocation("/login");
   };
   
@@ -73,9 +74,10 @@ export function Header() {
                 <DropdownMenuItem onClick={() => setLocation("/profile")}>
                   Profile
                 </DropdownMenuItem>
-                {user?.isAdmin && (
+                {isAdmin(user) && (
                   <>
                     <DropdownMenuItem onClick={() => setLocation("/admin/dashboard")}>
+                      <Shield className="mr-2 h-4 w-4" />
                       Admin Panel
                     </DropdownMenuItem>
                   </>
