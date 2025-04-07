@@ -84,18 +84,30 @@ export function VisualScoreInput({
             </Button>
             
             <input
-              type="number"
-              min="0"
-              max="99"
-              value={value.playerOneScore}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={value.playerOneScore || ''}
               onChange={(e) => {
-                const newScore = Math.max(0, parseInt(e.target.value) || 0);
-                onChange({
-                  ...value,
-                  playerOneScore: newScore
-                });
+                const newValue = e.target.value;
+                // Allow empty string (for deleting)
+                if (newValue === '') {
+                  onChange({
+                    ...value,
+                    playerOneScore: 0
+                  });
+                  return;
+                }
+                // Only allow numeric input
+                if (/^\d+$/.test(newValue)) {
+                  const newScore = parseInt(newValue);
+                  onChange({
+                    ...value,
+                    playerOneScore: newScore
+                  });
+                }
               }}
-              className="text-3xl sm:text-4xl font-bold w-10 sm:w-12 text-center bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-primary rounded-md"
+              className="text-3xl sm:text-4xl font-bold w-12 sm:w-16 text-center bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-primary rounded-md"
             />
             
             <Button
@@ -138,18 +150,30 @@ export function VisualScoreInput({
             </Button>
             
             <input
-              type="number"
-              min="0"
-              max="99"
-              value={value.playerTwoScore}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={value.playerTwoScore || ''}
               onChange={(e) => {
-                const newScore = Math.max(0, parseInt(e.target.value) || 0);
-                onChange({
-                  ...value,
-                  playerTwoScore: newScore
-                });
+                const newValue = e.target.value;
+                // Allow empty string (for deleting)
+                if (newValue === '') {
+                  onChange({
+                    ...value,
+                    playerTwoScore: 0
+                  });
+                  return;
+                }
+                // Only allow numeric input
+                if (/^\d+$/.test(newValue)) {
+                  const newScore = parseInt(newValue);
+                  onChange({
+                    ...value,
+                    playerTwoScore: newScore
+                  });
+                }
               }}
-              className="text-3xl sm:text-4xl font-bold w-10 sm:w-12 text-center bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-primary rounded-md"
+              className="text-3xl sm:text-4xl font-bold w-12 sm:w-16 text-center bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-primary rounded-md"
             />
             
             <Button
