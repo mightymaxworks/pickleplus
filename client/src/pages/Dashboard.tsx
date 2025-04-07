@@ -24,10 +24,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PlayerCard } from "@/components/dashboard/PlayerCard";
-import { QrCode, MapPin, Zap, Award, Calendar, Users, TrendingUp, Target, Settings, Scan, BookOpen, Plus, ArrowRight } from "lucide-react";
+import { QrCode, MapPin, Zap, Award, Calendar, Users, TrendingUp, Target, Settings, Scan, BookOpen, Plus, ArrowRight, Wrench, RefreshCw } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { NewMatchRecordingForm } from "@/components/match/NewMatchRecordingForm";
 import { formatDistanceToNow } from "date-fns";
+import { TestUserGenerator } from "@/components/dev/TestUserGenerator";
+import { toast } from "@/hooks/use-toast";
 
 // Define missing interfaces
 interface UserAchievementWithDetails {
@@ -52,6 +54,11 @@ interface UserTournament {
     placement: number | null;
   };
 }
+
+// Helper function to check if user is admin
+const isAdmin = (user: any): boolean => {
+  return (user as any)?.role === "admin";
+};
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -570,6 +577,7 @@ export default function Dashboard() {
           <TabsTrigger value="performance">Performance</TabsTrigger>
           <TabsTrigger value="social">Social</TabsTrigger>
           <TabsTrigger value="training">Training</TabsTrigger>
+          {isAdmin(user) && <TabsTrigger value="development">Development</TabsTrigger>}
         </TabsList>
         
         <TabsContent value="overview" className="mt-0">
@@ -852,6 +860,47 @@ export default function Dashboard() {
             </Card>
           </div>
         </TabsContent>
+        
+        {isAdmin(user) && (
+          <TabsContent value="development" className="mt-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-1">
+                <TestUserGenerator />
+              </div>
+              <div className="md:col-span-1">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center">
+                      <Wrench className="h-5 w-5 mr-2 text-primary" />
+                      Development Tools
+                    </CardTitle>
+                    <CardDescription>
+                      Additional utilities for development and testing
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Use these tools to test and debug features of the app.
+                    </p>
+                    <div className="space-y-4">
+                      <Button 
+                        variant="outline" 
+                        className="w-full flex items-center justify-center gap-2"
+                        onClick={() => toast({
+                          title: "Feature coming soon",
+                          description: "This development feature is not yet implemented."
+                        })}
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                        Reset Rating Cache
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+        )}
       </Tabs>
       
       {/* Match Recording Dialog */}

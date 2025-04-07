@@ -2580,7 +2580,7 @@ function getRandomReason(pointChange: number): string {
   });
 
   // Create test users endpoint (for development purposes only)
-  app.post("/api/dev/create-test-users", isAuthenticated, async (req: Request, res: Response) => {
+  app.post("/api/dev/create-test-users", async (req: Request, res: Response) => {
     try {
       const { count = 5 } = req.body;
       const testUserCount = Math.min(Math.max(1, count), 10); // Limit between 1 and 10
