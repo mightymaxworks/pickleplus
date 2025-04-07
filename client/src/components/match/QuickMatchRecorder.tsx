@@ -206,13 +206,13 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
       {
         userId: user.id,
         partnerId: formatType === "doubles" ? playerOnePartnerData?.id : undefined,
-        score: totalGames === 1 ? games[0].playerOneScore : games.filter(g => g.playerOneScore > g.playerTwoScore).length,
+        score: String(totalGames === 1 ? games[0].playerOneScore : games.filter(g => g.playerOneScore > g.playerTwoScore).length),
         isWinner: winnerId === user.id
       },
       {
         userId: playerTwoData.id,
         partnerId: formatType === "doubles" ? playerTwoPartnerData?.id : undefined,
-        score: totalGames === 1 ? games[0].playerTwoScore : games.filter(g => g.playerTwoScore > g.playerOneScore).length,
+        score: String(totalGames === 1 ? games[0].playerTwoScore : games.filter(g => g.playerTwoScore > g.playerOneScore).length),
         isWinner: winnerId === playerTwoData.id
       }
     ];
@@ -275,7 +275,7 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
       resetForm();
       
       // Navigate to the match page
-      navigate("/match");
+      navigate("/matches");
       
       // Call success callback
       if (onSuccess) {

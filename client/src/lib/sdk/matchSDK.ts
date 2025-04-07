@@ -4,7 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 export interface MatchPlayer {
   userId: number;
   partnerId?: number;
-  score: number;
+  score: string | number; // Can be string or number, server expects string
   isWinner: boolean;
 }
 
