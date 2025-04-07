@@ -2933,42 +2933,45 @@ function getRandomReason(pointChange: number): string {
         const sqlCommand = db.insert(matches).values(matchValues as any).toSQL();
         console.log('[Match API] Insert SQL command:', sqlCommand);
         
-        // The problem is not just filtering the values, but the SQL template itself is including columns
-        // that don't exist in the database. Let's create a completely custom SQL query instead.
+        // Solution: Use a different approach - instead of a raw SQL query, we'll use PostgreSQL directly
+        // This avoids both Drizzle's schema issues and parameter binding problems
         
-        // Build a map of filtered fields and their values
-        const existingColumnsValues: Record<string, any> = {};
-        const snakeCaseMap: Record<string, string> = {}; // Maps camelCase keys to snake_case
+        // Filter our values to include only fields that exist in the database
+        const filteredValues: Record<string, any> = {};
         
         Object.keys(matchValues).forEach(key => {
           // Convert camelCase to snake_case for DB column name
           const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
           if (existingColumns.includes(snakeKey)) {
-            existingColumnsValues[key] = matchValues[key];
-            snakeCaseMap[key] = snakeKey;
+            // Store in the snakeCase format for direct PostgreSQL query
+            filteredValues[snakeKey] = matchValues[key];
           } else {
             console.log(`[Match API] Skipping field "${key}" (as "${snakeKey}") - column does not exist in database`);
           }
         });
         
-        console.log('[Match API] Using filtered values with only existing columns:', Object.keys(existingColumnsValues));
+        console.log('[Match API] Using filtered values with only existing columns:', Object.keys(filteredValues));
         
-        // Build our own SQL INSERT statement as a raw query
-        // This avoids Drizzle's auto-generation which includes all schema fields regardless of filtering
-        const columnNames = Object.keys(existingColumnsValues).map(key => `"${snakeCaseMap[key]}"`).join(', ');
-        const placeholders = Object.keys(existingColumnsValues).map((_, i) => `$${i + 1}`).join(', ');
-        const values = Object.values(existingColumnsValues);
+        // Create a query with PostgreSQL's native client instead of Drizzle
+        // This gives us complete control over the columns being inserted
+        const { client } = await import('./db');  // Access the raw postgres client
         
-        console.log(`[Match API] Custom SQL INSERT: columns: [${columnNames}], values: [${values.join(', ')}]`);
+        // Build the column names and placeholders
+        const columnNames = Object.keys(filteredValues).map(key => `"${key}"`).join(', ');
+        const placeholders = Object.keys(filteredValues).map((_, i) => `$${i + 1}`).join(', ');
+        const values = Object.values(filteredValues);
         
-        // Execute the raw SQL query
+        console.log(`[Match API] Direct PostgreSQL query: INSERT INTO matches (${columnNames}) VALUES (${placeholders})`);
+        console.log(`[Match API] With values:`, values);
+        
+        // Execute the query directly with PostgreSQL
         const insertQuery = `
-          INSERT INTO "matches" (${columnNames}) 
+          INSERT INTO matches (${columnNames}) 
           VALUES (${placeholders})
           RETURNING *
         `;
         
-        const result = await db.execute(sql.raw(insertQuery, ...values));
+        const result = await client.query(insertQuery, values);
         console.log('[Match API] Insert operation completed, result:', result);
         
         // Handle the raw query response which might have a different structure
