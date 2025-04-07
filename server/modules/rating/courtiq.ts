@@ -21,7 +21,8 @@ import {
   InsertRatingHistory,
   InsertRankingPoints,
   InsertPointsHistory,
-  ratingProtections
+  ratingProtections,
+  tournamentEligibility
 } from "../../../shared/courtiq-schema";
 import { users } from "../../../shared/schema";
 import { seasons } from "../../../shared/courtiq-schema";
@@ -427,8 +428,9 @@ export class CourtIQService {
       matchId,
       reason,
       kFactor,
-      expectedOutcome,
-      actualOutcome,
+      // Convert decimal values to strings as required by the schema
+      expectedOutcome: expectedOutcome.toString(),
+      actualOutcome: actualOutcome.toString(),
       notes
     };
     
@@ -493,8 +495,13 @@ export class CourtIQService {
       format,
       source,
       sourceId,
-      multiplier,
-      notes
+      // Convert multiplier to string as required by the schema
+      multiplier: multiplier.toString(),
+      notes,
+      // Set default values for new fields
+      basePoints: points,
+      ratingDifferential: null, // Optional field
+      bonusPoints: adjustedPoints - points // Calculate bonus from multiplier
     };
     
     await db.insert(pointsHistory).values(pointsRecord);
@@ -811,7 +818,7 @@ export class CourtIQService {
         division,
         "singles",
         "match_win",
-        null, // Match ID
+        undefined, // Match ID - use undefined instead of null
         strengthMultiplier,
         `Singles victory against ${player2Id}`
       );
@@ -826,7 +833,7 @@ export class CourtIQService {
         division,
         "singles",
         "match_win",
-        null, // Match ID
+        undefined, // Match ID - use undefined instead of null
         strengthMultiplier,
         `Singles victory against ${player1Id}`
       );
@@ -1096,7 +1103,7 @@ export class CourtIQService {
         division,
         format,
         "match_win",
-        null, // Match ID
+        undefined, // Match ID - use undefined instead of null
         strengthMultiplier,
         `${format} victory with partner ${team1Player2Id}`
       );
@@ -1107,7 +1114,7 @@ export class CourtIQService {
         division,
         format,
         "match_win",
-        null, // Match ID
+        undefined, // Match ID - use undefined instead of null
         strengthMultiplier,
         `${format} victory with partner ${team1Player1Id}`
       );
@@ -1122,7 +1129,7 @@ export class CourtIQService {
         division,
         format,
         "match_win",
-        null, // Match ID
+        undefined, // Match ID - use undefined instead of null
         strengthMultiplier,
         `${format} victory with partner ${team2Player2Id}`
       );
@@ -1133,7 +1140,7 @@ export class CourtIQService {
         division,
         format,
         "match_win",
-        null, // Match ID
+        undefined, // Match ID - use undefined instead of null
         strengthMultiplier,
         `${format} victory with partner ${team2Player1Id}`
       );
@@ -1475,17 +1482,14 @@ export class CourtIQService {
     const points = Math.round(basePoints * qualityMultiplier * 10) / 10; // Round to nearest 0.1
     
     // Award the points to the loser
+    // Award points to the loser (with correct arguments for awardRankingPoints)
     await this.awardRankingPoints(
       matchData.loserId,
       points,
       matchData.division,
       matchData.format,
       "match_participation",
-      matchData.matchType,
-      matchData.eventTier,
-      undefined, // winType
       undefined, // sourceId
-      undefined, // ratingDifferential
       qualityMultiplier,
       pointsExplanation
     );
@@ -1537,7 +1541,8 @@ export class CourtIQService {
       format,
       source,
       sourceId,
-      multiplier,
+      // Convert multiplier to string for the schema
+      multiplier: multiplier.toString(),
       notes,
       // Enhanced fields
       basePoints: pointsDetails.base,
@@ -1763,21 +1768,29 @@ export class CourtIQService {
     
     const points = playerRankingPoints?.points || 0;
     
+    // Get rating and points requirements with type safety
+    const ratingRequirement = eligibilityConfig.ratingRequirement || 0;
+    const pointsRequirement = eligibilityConfig.pointsRequirement || 0;
+    const exceptionalSkillRatingBonus = eligibilityConfig.exceptionalSkillRatingBonus || 200;
+    const exceptionalSkillPointsPercentage = eligibilityConfig.exceptionalSkillPointsPercentage || 60;
+    const provenCompetitorPointsBonus = eligibilityConfig.provenCompetitorPointsBonus || 150;
+    const provenCompetitorRatingPercentage = eligibilityConfig.provenCompetitorRatingPercentage || 80;
+    
     // Check standard eligibility
-    const meetsRatingReq = playerRating.rating >= eligibilityConfig.ratingRequirement;
-    const meetsPointsReq = points >= eligibilityConfig.pointsRequirement;
+    const meetsRatingReq = playerRating.rating >= ratingRequirement;
+    const meetsPointsReq = points >= pointsRequirement;
     
     // Check exceptional skill path - high rating can compensate for lower points
-    const exceptionalSkillRatingReq = eligibilityConfig.ratingRequirement + eligibilityConfig.exceptionalSkillRatingBonus;
-    const exceptionalSkillPointsReq = Math.floor(eligibilityConfig.pointsRequirement * (eligibilityConfig.exceptionalSkillPointsPercentage / 100));
+    const exceptionalSkillRatingReq = ratingRequirement + exceptionalSkillRatingBonus;
+    const exceptionalSkillPointsReq = Math.floor(pointsRequirement * (exceptionalSkillPointsPercentage / 100));
     
     const qualifiesByExceptionalSkill = 
       (playerRating.rating >= exceptionalSkillRatingReq) && 
       (points >= exceptionalSkillPointsReq);
     
     // Check proven competitor path - high points can compensate for lower rating
-    const provenCompetitorPointsReq = Math.floor(eligibilityConfig.pointsRequirement * (1 + eligibilityConfig.provenCompetitorPointsBonus / 100));
-    const provenCompetitorRatingReq = Math.floor(eligibilityConfig.ratingRequirement * (eligibilityConfig.provenCompetitorRatingPercentage / 100));
+    const provenCompetitorPointsReq = Math.floor(pointsRequirement * (1 + provenCompetitorPointsBonus / 100));
+    const provenCompetitorRatingReq = Math.floor(ratingRequirement * (provenCompetitorRatingPercentage / 100));
     
     const qualifiesByProvenCompetitor = 
       (points >= provenCompetitorPointsReq) && 
@@ -1810,12 +1823,12 @@ export class CourtIQService {
       userRankingPoints: points,
       qualificationPath,
       requirementDetails: {
-        ratingRequirement: eligibilityConfig.ratingRequirement,
-        pointsRequirement: eligibilityConfig.pointsRequirement,
-        exceptionalSkillRatingBonus: eligibilityConfig.exceptionalSkillRatingBonus,
-        exceptionalSkillPointsPercentage: eligibilityConfig.exceptionalSkillPointsPercentage,
-        provenCompetitorPointsBonus: eligibilityConfig.provenCompetitorPointsBonus,
-        provenCompetitorRatingPercentage: eligibilityConfig.provenCompetitorRatingPercentage
+        ratingRequirement,
+        pointsRequirement,
+        exceptionalSkillRatingBonus,
+        exceptionalSkillPointsPercentage,
+        provenCompetitorPointsBonus,
+        provenCompetitorRatingPercentage
       }
     };
   }
