@@ -413,13 +413,15 @@ export class DatabaseStorage implements IStorage {
       // Handle excludeUserId validation
       let numericExcludeId: number | undefined = undefined;
       
-      if (excludeUserId !== undefined) {
-        const tempId = Number(excludeUserId);
+      if (excludeUserId !== undefined && excludeUserId !== null) {
+        // Make sure we're dealing with a number
+        const tempId = typeof excludeUserId === 'number' ? excludeUserId : Number(excludeUserId);
+        
         if (!isNaN(tempId) && tempId > 0) {
           numericExcludeId = tempId;
           console.log("Will exclude user ID:", numericExcludeId, "from search results");
         } else {
-          console.log("Invalid excludeUserId:", excludeUserId, "- Will not exclude any users");
+          console.log("Invalid excludeUserId:", excludeUserId, "converted to", tempId, "- Will not exclude any users");
         }
       }
       

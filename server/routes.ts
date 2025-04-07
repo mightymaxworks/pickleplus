@@ -2311,6 +2311,12 @@ function getRandomReason(pointChange: number): string {
   // User search for connections feature
   app.get("/api/users/search", isAuthenticated, async (req: Request, res: Response) => {
     try {
+      // Verify user is authenticated - explicitly check for the user object
+      if (!req.isAuthenticated() || !req.user) {
+        console.log("User is not authenticated for search endpoint");
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
       // Get the search query
       const query = req.query.q as string;
       console.log("User search API - Query:", query);
@@ -2324,28 +2330,33 @@ function getRandomReason(pointChange: number): string {
       // Default excludeUserId to undefined
       let excludeUserId: number | undefined = undefined;
       
-      // Get current user info if authenticated, but don't require authentication
-      if (req.isAuthenticated() && req.user) {
-        try {
-          const currentUser = req.user as Express.User;
-          console.log("User search API - Current user:", currentUser.username);
-          
+      // Get current user info
+      try {
+        const currentUser = req.user as Express.User;
+        console.log("User search API - Current user:", currentUser.username);
+        
+        if (currentUser.id !== undefined && currentUser.id !== null) {
           // Safely convert ID to number with proper validation
-          if (currentUser.id) {
+          if (typeof currentUser.id === 'number') {
+            // If ID is already a number, use it directly
+            excludeUserId = currentUser.id;
+          } else {
+            // Otherwise try to convert from string/other type
             const numericId = Number(currentUser.id);
             if (!isNaN(numericId) && numericId > 0) {
               excludeUserId = numericId;
-              console.log("Will exclude user ID:", numericId, "from search results");
             } else {
-              console.log("Invalid user ID:", currentUser.id, "converted to", numericId);
+              console.log("WARNING: Invalid user ID in session:", currentUser.id, "converted to", numericId);
             }
           }
-        } catch (authError) {
-          console.error("Error processing authenticated user:", authError);
-          // Continue without user exclusion if there's an error
+          
+          console.log("Will exclude user ID:", excludeUserId, "from search results");
+        } else {
+          console.log("User ID is null or undefined, won't exclude any users");
         }
-      } else {
-        console.log("No user is authenticated - performing search without exclusions");
+      } catch (authError) {
+        console.error("Error processing authenticated user:", authError);
+        // Continue without user exclusion if there's an error
       }
       
       // HANDLE MOCK USER CREATION (Admin only feature)
