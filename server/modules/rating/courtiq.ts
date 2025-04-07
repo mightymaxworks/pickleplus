@@ -610,7 +610,118 @@ export class CourtIQService {
   }
   
   /**
-   * Process a singles match and update ratings
+   * Main entry point for processing match results in the CourtIQ system
+   * This method adapts the unified interface to the specific processing methods
+   */
+  async processMatch({
+    matchId,
+    players,
+    format,
+    division,
+    matchType,
+    eventTier,
+    tournamentRound
+  }: {
+    matchId: number;
+    players: Array<{ 
+      userId: number; 
+      partnerId?: number | null; 
+      score?: number; 
+      isWinner: boolean 
+    }>;
+    format: string;
+    division: string;
+    matchType: string;
+    eventTier?: string;
+    tournamentRound?: string;
+  }): Promise<any> {
+    // Validate input
+    if (!players || players.length !== 2) {
+      throw new Error("Match processing requires exactly 2 players/teams");
+    }
+
+    if (!format) {
+      throw new Error("Match format is required");
+    }
+
+    // Determine if singles or doubles based on format and partner presence
+    const isSingles = format === "singles" || 
+      (players.every(p => !p.partnerId || p.partnerId === null));
+
+    if (isSingles) {
+      // Process as singles match
+      const player1 = players[0];
+      const player2 = players[1];
+      const winnerId = players.find(p => p.isWinner)?.userId;
+
+      if (!winnerId) {
+        throw new Error("Winner ID is required for match processing");
+      }
+
+      await this.processMatchSingles(
+        player1.userId,
+        player2.userId,
+        winnerId,
+        matchType,
+        division,
+        eventTier,
+        tournamentRound
+      );
+
+      return {
+        success: true,
+        format: "singles",
+        matchId
+      };
+    } else {
+      // Process as doubles match
+      const team1 = players[0];
+      const team2 = players[1];
+      
+      if (!team1.partnerId || !team2.partnerId) {
+        throw new Error("Partner IDs are required for doubles match processing");
+      }
+      
+      // Determine winning team
+      const winningTeamId = team1.isWinner ? 1 : 2;
+
+      // Figure out doubles format type
+      let doublesFormat: "mens_doubles" | "womens_doubles" | "mixed_doubles";
+      switch (format) {
+        case "mens_doubles":
+        case "womens_doubles":
+        case "mixed_doubles":
+          doublesFormat = format as "mens_doubles" | "womens_doubles" | "mixed_doubles";
+          break;
+        default:
+          // Default to mixed doubles if format is unclear
+          doublesFormat = "mixed_doubles";
+      }
+
+      await this.processMatchDoubles(
+        team1.userId,
+        team1.partnerId,
+        team2.userId,
+        team2.partnerId,
+        winningTeamId,
+        matchType,
+        division,
+        doublesFormat,
+        eventTier,
+        tournamentRound
+      );
+
+      return {
+        success: true,
+        format: "doubles",
+        matchId
+      };
+    }
+  }
+
+  /**
+   * Process a singles match and update player ratings
+   * This is called by the main processMatch method for singles format matches
    */
   async processMatchSingles(
     player1Id: number,
