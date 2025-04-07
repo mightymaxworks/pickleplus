@@ -70,13 +70,16 @@ export function setupAuth(app: Express) {
     cookie: {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+      secure: false, // Set to false for development to work in Replit
       sameSite: "lax"
     },
-    name: "pickle.sid" // Set a unique session cookie name
+    name: "connect.sid" // Use default cookie name
   };
 
   // Configure session middleware
+  // Trust the first proxy to work with Replit
+  app.set('trust proxy', 1);
+  
   app.use(session(sessionSettings));
   
   // Initialize Passport and restore authentication state from session
