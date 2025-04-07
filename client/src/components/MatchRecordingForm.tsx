@@ -345,6 +345,8 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
 
   // Handle form submission
   const onSubmit = (data: MatchFormValues) => {
+    console.log("Form submission started with data:", data);
+    
     // Validate that player IDs are not duplicated
     const players = [
       data.playerOneId, 
@@ -353,8 +355,11 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
       data.playerTwoPartnerId
     ].filter(Boolean);
     
+    console.log("Players in match:", players);
+    
     const uniquePlayers = new Set(players);
     if (uniquePlayers.size !== players.length) {
+      console.log("Duplicate players detected");
       toast({
         title: "Invalid players",
         description: "Each player can only appear once in a match",
@@ -398,6 +403,7 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
     }
     
     // No win by 2 issues, proceed with submission
+    console.log("Proceeding with match submission", data);
     setIsSubmitting(true);
     recordMatchMutation.mutate(data);
   };
@@ -1406,6 +1412,7 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
               <Button 
                 type="submit" 
                 disabled={isSubmitting}
+                onClick={() => console.log("Submit button clicked")}
                 className="flex items-center h-10 px-3 sm:px-4"
                 size="sm"
               >
