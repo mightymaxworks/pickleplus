@@ -782,44 +782,24 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm">Your Partner's Information</FormLabel>
-                  {selectedPlayers.playerOnePartnerId ? (
-                    <div className="flex items-center border rounded-md bg-muted/20 p-2 relative">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center mr-2">
-                        {selectedPlayers.playerOnePartnerId.displayName?.charAt(0) || selectedPlayers.playerOnePartnerId.username?.charAt(0) || 'P'}
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-medium">{selectedPlayers.playerOnePartnerId.displayName || selectedPlayers.playerOnePartnerId.username}</div>
-                        <div className="text-xs text-muted-foreground">
-                          ID: #{selectedPlayers.playerOnePartnerId.id} 
-                          {selectedPlayers.playerOnePartnerId.passportId && ` • Passport: ${selectedPlayers.playerOnePartnerId.passportId}`}
-                        </div>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => {
-                          form.setValue("playerOnePartnerId", 0);
-                          setSelectedPlayers(prev => {
-                            const newState = {...prev};
-                            delete newState.playerOnePartnerId;
-                            return newState;
-                          });
-                        }}
-                        className="h-8 w-8 p-0 absolute top-1 right-1"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ) : (
+                  <div className="space-y-2">
                     <div className="flex space-x-2">
                       <FormControl className="flex-grow">
                         <Input
                           placeholder="Enter your partner's ID or name"
-                          value={field.value === 0 ? "" : field.value?.toString()}
+                          value={field.value ? (field.value === 0 ? "" : field.value.toString()) : ""}
                           onChange={(e) => {
                             const value = e.target.value;
                             if (value === "") {
                               field.onChange(0);
+                              // Clear selected player when field is emptied
+                              if (selectedPlayers.playerOnePartnerId) {
+                                setSelectedPlayers(prev => {
+                                  const newState = {...prev};
+                                  delete newState.playerOnePartnerId;
+                                  return newState;
+                                });
+                              }
                             } else if (!isNaN(Number(value))) {
                               field.onChange(parseInt(value));
                             }
@@ -835,7 +815,37 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
                         <Search className="h-4 w-4" />
                       </Button>
                     </div>
-                  )}
+                    
+                    {selectedPlayers.playerOnePartnerId && (
+                      <div className="flex items-center border rounded-md bg-muted/20 p-2 relative">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center mr-2">
+                          {selectedPlayers.playerOnePartnerId.displayName?.charAt(0) || selectedPlayers.playerOnePartnerId.username?.charAt(0) || 'P'}
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">{selectedPlayers.playerOnePartnerId.displayName || selectedPlayers.playerOnePartnerId.username}</div>
+                          <div className="text-xs text-muted-foreground">
+                            ID: #{selectedPlayers.playerOnePartnerId.id} 
+                            {selectedPlayers.playerOnePartnerId.passportId && ` • Passport: ${selectedPlayers.playerOnePartnerId.passportId}`}
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={() => {
+                            form.setValue("playerOnePartnerId", 0);
+                            setSelectedPlayers(prev => {
+                              const newState = {...prev};
+                              delete newState.playerOnePartnerId;
+                              return newState;
+                            });
+                          }}
+                          className="h-6 w-6 p-0 absolute top-1 right-1"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                   <FormDescription className="text-xs">
                     Enter player ID or search by name/passport ID
                   </FormDescription>
@@ -854,44 +864,24 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
                 <FormLabel className="text-sm">
                   {formatType === "singles" ? "Opponent Information" : "Opponent 1 Information"}
                 </FormLabel>
-                {selectedPlayers.playerTwoId ? (
-                  <div className="flex items-center border rounded-md bg-muted/20 p-2 relative">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center mr-2">
-                      {selectedPlayers.playerTwoId.displayName?.charAt(0) || selectedPlayers.playerTwoId.username?.charAt(0) || 'O'}
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-medium">{selectedPlayers.playerTwoId.displayName || selectedPlayers.playerTwoId.username}</div>
-                      <div className="text-xs text-muted-foreground">
-                        ID: #{selectedPlayers.playerTwoId.id} 
-                        {selectedPlayers.playerTwoId.passportId && ` • Passport: ${selectedPlayers.playerTwoId.passportId}`}
-                      </div>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => {
-                        form.setValue("playerTwoId", 0);
-                        setSelectedPlayers(prev => {
-                          const newState = {...prev};
-                          delete newState.playerTwoId;
-                          return newState;
-                        });
-                      }}
-                      className="h-8 w-8 p-0 absolute top-1 right-1"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
+                <div className="space-y-2">
                   <div className="flex space-x-2">
                     <FormControl className="flex-grow">
                       <Input
                         placeholder={`Enter ${formatType === "singles" ? "opponent's" : "opponent 1's"} ID or name`}
-                        value={field.value === 0 ? "" : field.value.toString()}
+                        value={field.value ? (field.value === 0 ? "" : field.value.toString()) : ""}
                         onChange={(e) => {
                           const value = e.target.value;
                           if (value === "") {
                             field.onChange(0);
+                            // Clear selected player when field is emptied
+                            if (selectedPlayers.playerTwoId) {
+                              setSelectedPlayers(prev => {
+                                const newState = {...prev};
+                                delete newState.playerTwoId;
+                                return newState;
+                              });
+                            }
                           } else if (!isNaN(Number(value))) {
                             field.onChange(parseInt(value));
                           }
@@ -907,7 +897,37 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
                       <Search className="h-4 w-4" />
                     </Button>
                   </div>
-                )}
+                  
+                  {selectedPlayers.playerTwoId && (
+                    <div className="flex items-center border rounded-md bg-muted/20 p-2 relative">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center mr-2">
+                        {selectedPlayers.playerTwoId.displayName?.charAt(0) || selectedPlayers.playerTwoId.username?.charAt(0) || 'O'}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium text-sm">{selectedPlayers.playerTwoId.displayName || selectedPlayers.playerTwoId.username}</div>
+                        <div className="text-xs text-muted-foreground">
+                          ID: #{selectedPlayers.playerTwoId.id} 
+                          {selectedPlayers.playerTwoId.passportId && ` • Passport: ${selectedPlayers.playerTwoId.passportId}`}
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => {
+                          form.setValue("playerTwoId", 0);
+                          setSelectedPlayers(prev => {
+                            const newState = {...prev};
+                            delete newState.playerTwoId;
+                            return newState;
+                          });
+                        }}
+                        className="h-6 w-6 p-0 absolute top-1 right-1"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
                 <FormDescription className="text-xs">
                   Enter player ID or search by name/passport ID
                 </FormDescription>
@@ -924,44 +944,24 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm">Opponent 2 Information</FormLabel>
-                  {selectedPlayers.playerTwoPartnerId ? (
-                    <div className="flex items-center border rounded-md bg-muted/20 p-2 relative">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center mr-2">
-                        {selectedPlayers.playerTwoPartnerId.displayName?.charAt(0) || selectedPlayers.playerTwoPartnerId.username?.charAt(0) || 'O'}
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-medium">{selectedPlayers.playerTwoPartnerId.displayName || selectedPlayers.playerTwoPartnerId.username}</div>
-                        <div className="text-xs text-muted-foreground">
-                          ID: #{selectedPlayers.playerTwoPartnerId.id} 
-                          {selectedPlayers.playerTwoPartnerId.passportId && ` • Passport: ${selectedPlayers.playerTwoPartnerId.passportId}`}
-                        </div>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => {
-                          form.setValue("playerTwoPartnerId", 0);
-                          setSelectedPlayers(prev => {
-                            const newState = {...prev};
-                            delete newState.playerTwoPartnerId;
-                            return newState;
-                          });
-                        }}
-                        className="h-8 w-8 p-0 absolute top-1 right-1"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ) : (
+                  <div className="space-y-2">
                     <div className="flex space-x-2">
                       <FormControl className="flex-grow">
                         <Input
                           placeholder="Enter opponent 2's ID or name"
-                          value={field.value === 0 ? "" : field.value?.toString()}
+                          value={field.value ? (field.value === 0 ? "" : field.value.toString()) : ""}
                           onChange={(e) => {
                             const value = e.target.value;
                             if (value === "") {
                               field.onChange(0);
+                              // Clear selected player when field is emptied
+                              if (selectedPlayers.playerTwoPartnerId) {
+                                setSelectedPlayers(prev => {
+                                  const newState = {...prev};
+                                  delete newState.playerTwoPartnerId;
+                                  return newState;
+                                });
+                              }
                             } else if (!isNaN(Number(value))) {
                               field.onChange(parseInt(value));
                             }
@@ -977,7 +977,37 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
                         <Search className="h-4 w-4" />
                       </Button>
                     </div>
-                  )}
+                    
+                    {selectedPlayers.playerTwoPartnerId && (
+                      <div className="flex items-center border rounded-md bg-muted/20 p-2 relative">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center mr-2">
+                          {selectedPlayers.playerTwoPartnerId.displayName?.charAt(0) || selectedPlayers.playerTwoPartnerId.username?.charAt(0) || 'O'}
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">{selectedPlayers.playerTwoPartnerId.displayName || selectedPlayers.playerTwoPartnerId.username}</div>
+                          <div className="text-xs text-muted-foreground">
+                            ID: #{selectedPlayers.playerTwoPartnerId.id} 
+                            {selectedPlayers.playerTwoPartnerId.passportId && ` • Passport: ${selectedPlayers.playerTwoPartnerId.passportId}`}
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={() => {
+                            form.setValue("playerTwoPartnerId", 0);
+                            setSelectedPlayers(prev => {
+                              const newState = {...prev};
+                              delete newState.playerTwoPartnerId;
+                              return newState;
+                            });
+                          }}
+                          className="h-6 w-6 p-0 absolute top-1 right-1"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                   <FormDescription className="text-xs">
                     Enter player ID or search by name/passport ID
                   </FormDescription>
