@@ -26,7 +26,7 @@ import { Button } from "@/components/ui/button";
 import { PlayerCard } from "@/components/dashboard/PlayerCard";
 import { QrCode, MapPin, Zap, Award, Calendar, Users, TrendingUp, Target, Settings, Scan, BookOpen, Plus, ArrowRight } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MatchRecordingForm } from "@/components/MatchRecordingForm";
+import { NewMatchRecordingForm } from "@/components/match/NewMatchRecordingForm";
 import { formatDistanceToNow } from "date-fns";
 
 // Define missing interfaces
@@ -856,11 +856,11 @@ export default function Dashboard() {
       
       {/* Match Recording Dialog */}
       <Dialog open={matchDialogOpen} onOpenChange={setMatchDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Record Match Results</DialogTitle>
           </DialogHeader>
-          <MatchRecordingForm onSuccess={() => setMatchDialogOpen(false)} />
+          <NewMatchRecordingForm onSuccess={() => setMatchDialogOpen(false)} />
         </DialogContent>
       </Dialog>
     </div>
