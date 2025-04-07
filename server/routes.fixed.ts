@@ -1,1 +1,358 @@
-// Create a fixed routes.ts with corrected validation checks
+import type { Express, Request, Response, NextFunction } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { setupAuth, isAuthenticated, isAdmin } from "./auth";
+import { matches } from "@shared/schema";
+import { db, client } from "./db";
+import { eq, and, or, sql, desc } from "drizzle-orm";
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up authentication
+  setupAuth(app);
+  
+  // Match recording
+  app.post("/api/match/record", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      const { 
+        formatType, scoringSystem, pointsToWin,
+        players, gameScores, location, notes
+      } = req.body;
+      
+      // Validate basic match format
+      if (!formatType || !Array.isArray(players) || players.length < 2) {
+        return res.status(400).json({ error: "Invalid match data format" });
+      }
+      
+      // Ensure current user is one of the players
+      const currentUserPlaying = players.some(p => p.userId === req.user?.id);
+      if (!currentUserPlaying) {
+        return res.status(400).json({ error: "Current user must be one of the players" });
+      }
+      
+      // Prepare match data
+      const playerOne = players.find(p => p.userId === req.user?.id);
+      const playerTwo = players.find(p => p.userId !== req.user?.id);
+      
+      if (!playerOne || !playerTwo) {
+        return res.status(400).json({ error: "Invalid player data" });
+      }
+      
+      // Create match data object with defaults
+      const today = new Date();
+      const matchData = {
+        playerOneId: playerOne.userId,
+        playerTwoId: playerTwo.userId,
+        playerOnePartnerId: playerOne.partnerId || null,
+        playerTwoPartnerId: playerTwo.partnerId || null,
+        scorePlayerOne: String(playerOne.score),
+        scorePlayerTwo: String(playerTwo.score),
+        winnerId: playerOne.isWinner ? playerOne.userId : playerTwo.userId,
+        formatType,
+        scoringSystem: scoringSystem || "traditional",
+        pointsToWin: pointsToWin || 11,
+        division: req.body.division || "open",
+        matchType: req.body.matchType || "casual",
+        eventTier: req.body.eventTier || "local",
+        gameScores: typeof gameScores === 'string' ? gameScores : JSON.stringify(gameScores || []),
+        location,
+        notes,
+        matchDate: today,
+        // Set mandatory columns
+        pointsAwarded: 0,
+        xpAwarded: 0
+      };
+      
+      // Format validation
+      if (formatType === "doubles" && (!playerOne.partnerId || !playerTwo.partnerId)) {
+        return res.status(400).json({ error: "Doubles matches require partner IDs" });
+      }
+      
+      // Insert the match record using db.insert
+      const [match] = await db.insert(matches)
+        .values(matchData)
+        .returning();
+      
+      if (!match) {
+        return res.status(500).json({ error: "Failed to create match" });
+      }
+      
+      // Get player names for the response
+      const playerOneData = await storage.getUser(playerOne.userId);
+      const playerTwoData = await storage.getUser(playerTwo.userId);
+      let playerOnePartnerData = null;
+      let playerTwoPartnerData = null;
+      
+      if (formatType === "doubles") {
+        if (playerOne.partnerId) playerOnePartnerData = await storage.getUser(playerOne.partnerId);
+        if (playerTwo.partnerId) playerTwoPartnerData = await storage.getUser(playerTwo.partnerId);
+      }
+      
+      // Generate the player names mapping
+      const playerNames = {};
+      
+      if (playerOneData) {
+        playerNames[playerOneData.id] = {
+          displayName: playerOneData.displayName || playerOneData.username,
+          username: playerOneData.username,
+          avatarInitials: playerOneData.avatarInitials || undefined
+        };
+      }
+      
+      if (playerTwoData) {
+        playerNames[playerTwoData.id] = {
+          displayName: playerTwoData.displayName || playerTwoData.username,
+          username: playerTwoData.username,
+          avatarInitials: playerTwoData.avatarInitials || undefined
+        };
+      }
+      
+      if (playerOnePartnerData) {
+        playerNames[playerOnePartnerData.id] = {
+          displayName: playerOnePartnerData.displayName || playerOnePartnerData.username,
+          username: playerOnePartnerData.username,
+          avatarInitials: playerOnePartnerData.avatarInitials || undefined
+        };
+      }
+      
+      if (playerTwoPartnerData) {
+        playerNames[playerTwoPartnerData.id] = {
+          displayName: playerTwoPartnerData.displayName || playerTwoPartnerData.username,
+          username: playerTwoPartnerData.username,
+          avatarInitials: playerTwoPartnerData.avatarInitials || undefined
+        };
+      }
+      
+      // Combine match data with player information
+      const recordedMatch = {
+        ...match,
+        playerNames,
+        formatType,
+        scoringSystem,
+        pointsToWin,
+        players,
+        gameScores: typeof match.gameScores === 'string' ? JSON.parse(match.gameScores) : match.gameScores
+      };
+      
+      res.status(201).json(recordedMatch);
+      
+    } catch (error) {
+      console.error("[Match API] Error recording match:", error);
+      res.status(500).json({ error: "Server error recording match" });
+    }
+  });
+  
+  // Get recent matches
+  app.get("/api/match/recent", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      const userId = req.query.userId ? parseInt(req.query.userId as string, 10) : req.user.id;
+      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
+      
+      // Execute the query to get recent matches
+      const recentMatches = await db.select()
+        .from(matches)
+        .where(
+          or(
+            eq(matches.playerOneId, userId),
+            eq(matches.playerTwoId, userId),
+            eq(matches.playerOnePartnerId, userId),
+            eq(matches.playerTwoPartnerId, userId)
+          )
+        )
+        .orderBy(desc(matches.matchDate))
+        .limit(limit);
+      
+      // For each match, get the player names
+      const matchesWithPlayerNames = await Promise.all(recentMatches.map(async (match) => {
+        const playerIds = [
+          match.playerOneId,
+          match.playerTwoId,
+          match.playerOnePartnerId,
+          match.playerTwoPartnerId
+        ].filter(Boolean) as number[];
+        
+        const playerNames = {};
+        
+        for (const id of playerIds) {
+          const userData = await storage.getUser(id);
+          if (userData) {
+            playerNames[id] = {
+              displayName: userData.displayName || userData.username,
+              username: userData.username,
+              avatarInitials: userData.avatarInitials || undefined
+            };
+          }
+        }
+        
+        // Convert database fields to SDK format
+        return {
+          id: match.id,
+          date: match.matchDate.toISOString(),
+          formatType: match.formatType,
+          scoringSystem: match.scoringSystem,
+          pointsToWin: match.pointsToWin,
+          players: [
+            {
+              userId: match.playerOneId,
+              partnerId: match.playerOnePartnerId || undefined,
+              score: parseInt(match.scorePlayerOne, 10),
+              isWinner: match.winnerId === match.playerOneId
+            },
+            {
+              userId: match.playerTwoId,
+              partnerId: match.playerTwoPartnerId || undefined,
+              score: parseInt(match.scorePlayerTwo, 10),
+              isWinner: match.winnerId === match.playerTwoId
+            }
+          ],
+          gameScores: typeof match.gameScores === 'string' ? 
+            JSON.parse(match.gameScores || '[]') : 
+            (match.gameScores || []),
+          location: match.location,
+          notes: match.notes,
+          playerNames
+        };
+      }));
+      
+      res.json(matchesWithPlayerNames);
+      
+    } catch (error) {
+      console.error("[Match API] Error getting recent matches:", error);
+      res.status(500).json({ error: "Server error getting recent matches" });
+    }
+  });
+  
+  // Get match statistics
+  app.get("/api/match/stats", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      const userId = req.query.userId ? parseInt(req.query.userId as string, 10) : req.user.id;
+      
+      // Get total matches where user was involved
+      const [matchCount] = await db.select({
+        count: sql<number>`count(*)`
+      }).from(matches)
+        .where(
+          or(
+            eq(matches.playerOneId, userId),
+            eq(matches.playerTwoId, userId),
+            eq(matches.playerOnePartnerId, userId),
+            eq(matches.playerTwoPartnerId, userId)
+          )
+        );
+        
+      // Get matches where the user won
+      const [winsCount] = await db.select({
+        count: sql<number>`count(*)`
+      }).from(matches)
+        .where(
+          and(
+            or(
+              eq(matches.playerOneId, userId),
+              eq(matches.playerTwoId, userId),
+              eq(matches.playerOnePartnerId, userId),
+              eq(matches.playerTwoPartnerId, userId)
+            ),
+            eq(matches.winnerId, userId)
+          )
+        );
+      
+      // Get a few recent matches for the overview
+      const recentMatches = await db.select()
+        .from(matches)
+        .where(
+          or(
+            eq(matches.playerOneId, userId),
+            eq(matches.playerTwoId, userId),
+            eq(matches.playerOnePartnerId, userId),
+            eq(matches.playerTwoPartnerId, userId)
+          )
+        )
+        .orderBy(desc(matches.matchDate))
+        .limit(5);
+      
+      // Process the matches the same way as in the /api/match/recent endpoint
+      const formattedRecentMatches = await Promise.all(recentMatches.map(async (match) => {
+        const playerIds = [
+          match.playerOneId,
+          match.playerTwoId,
+          match.playerOnePartnerId,
+          match.playerTwoPartnerId
+        ].filter(Boolean) as number[];
+        
+        const playerNames = {};
+        
+        for (const id of playerIds) {
+          const userData = await storage.getUser(id);
+          if (userData) {
+            playerNames[id] = {
+              displayName: userData.displayName || userData.username,
+              username: userData.username,
+              avatarInitials: userData.avatarInitials || undefined
+            };
+          }
+        }
+        
+        return {
+          id: match.id,
+          date: match.matchDate.toISOString(),
+          formatType: match.formatType,
+          scoringSystem: match.scoringSystem,
+          pointsToWin: match.pointsToWin,
+          players: [
+            {
+              userId: match.playerOneId,
+              partnerId: match.playerOnePartnerId || undefined,
+              score: parseInt(match.scorePlayerOne, 10),
+              isWinner: match.winnerId === match.playerOneId
+            },
+            {
+              userId: match.playerTwoId,
+              partnerId: match.playerTwoPartnerId || undefined,
+              score: parseInt(match.scorePlayerTwo, 10),
+              isWinner: match.winnerId === match.playerTwoId
+            }
+          ],
+          gameScores: typeof match.gameScores === 'string' ? 
+            JSON.parse(match.gameScores || '[]') : 
+            (match.gameScores || []),
+          location: match.location,
+          notes: match.notes,
+          playerNames
+        };
+      }));
+      
+      // Calculate win rate as a percentage
+      const totalMatches = matchCount?.count || 0;
+      const matchesWon = winsCount?.count || 0;
+      const winRate = totalMatches > 0 ? Math.round((matchesWon / totalMatches) * 100) : 0;
+      
+      // Return the stats
+      res.json({
+        totalMatches,
+        matchesWon,
+        matchesLost: totalMatches - matchesWon,
+        winRate,
+        recentMatches: formattedRecentMatches
+      });
+      
+    } catch (error) {
+      console.error("[Match API] Error getting match stats:", error);
+      res.status(500).json({ error: "Server error getting match stats" });
+    }
+  });
+
+  // Create a simple HTTP server
+  const httpServer = createServer(app);
+  return httpServer;
+}

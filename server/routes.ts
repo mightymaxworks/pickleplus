@@ -19,7 +19,7 @@ import { xpSystem } from "./modules/xp/xpSystem";
 import { multiDimensionalRankingService } from "./modules/ranking/service";
 
 // Import database and query helpers
-import { db } from "./db";
+import { db, client } from "./db";
 import { eq, and, or, sql, desc, asc, inArray, lt, between } from "drizzle-orm";
 import { 
   playerRatings, 
@@ -2954,7 +2954,7 @@ function getRandomReason(pointChange: number): string {
         
         // Create a query with PostgreSQL's native client instead of Drizzle
         // This gives us complete control over the columns being inserted
-        const { client } = await import('./db');  // Access the raw postgres client
+        // Note: client is already imported at the top of the file
         
         // Build the column names and placeholders
         const columnNames = Object.keys(filteredValues).map(key => `"${key}"`).join(', ');
@@ -2962,31 +2962,26 @@ function getRandomReason(pointChange: number): string {
         const values = Object.values(filteredValues);
         
         console.log(`[Match API] Direct PostgreSQL query: INSERT INTO matches (${columnNames}) VALUES (${placeholders})`);
-        console.log(`[Match API] With values:`, values);
         
-        // Execute the query directly with PostgreSQL
-        const insertQuery = `
-          INSERT INTO matches (${columnNames}) 
-          VALUES (${placeholders})
-          RETURNING *
-        `;
-        
-        const result = await client.query(insertQuery, values);
-        console.log('[Match API] Insert operation completed, result:', result);
-        
-        // Handle the raw query response which might have a different structure
-        if (result && result.rows && result.rows.length > 0) {
-          match = result.rows[0];
-        } else if (Array.isArray(result) && result.length > 0) {
-          match = result[0];
-        } else {
-          console.log('[Match API] Unable to extract match data from result:', result);
-          match = null;
+        try {
+          // Use a parameterized query with the built-in drizzle functions
+          console.log("[Match API] Using drizzle.db.insert for match creation");
+          const result = await db.insert(matches)
+            .values(filteredValues as any)
+            .returning();
+          console.log('[Match API] Insert operation completed, result:', result);
+          
+          // In drizzle-orm, the insert().returning() result is an array
+          if (Array.isArray(result) && result.length > 0) {
+            match = result[0];
+          } else {
+            console.log('[Match API] Unable to extract match data from result:', result);
+            match = null;
+          }
+        } catch (dbError) {
+          console.error("[Match API] Database error creating match:", dbError);
+          return res.status(500).json({ error: "Database error creating match" });
         }
-      } catch (dbError) {
-        console.error("[Match API] Database error creating match:", dbError);
-        return res.status(500).json({ error: "Database error creating match" });
-      }
       
       if (!match) {
         return res.status(500).json({ error: "Failed to create match" });
