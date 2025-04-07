@@ -2842,7 +2842,6 @@ function getRandomReason(pointChange: number): string {
         // Set mandatory columns that have NOT NULL constraints
         pointsAwarded: 0,
         xpAwarded: 0
-        // Intentionally omitting roundNumber and stageType as these columns may not exist yet
       };
       
       // Format validation - ensure doubles matches have partner IDs

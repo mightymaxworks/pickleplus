@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { matchSDK } from "@/lib/sdk/matchSDK";
+import { useLocation } from "wouter";
 
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
@@ -56,6 +57,7 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [, navigate] = useLocation();
   
   // Match state
   const [formatType, setFormatType] = useState<"singles" | "doubles">("singles");
@@ -271,6 +273,9 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
       
       // Reset form
       resetForm();
+      
+      // Navigate to the match page
+      navigate("/match");
       
       // Call success callback
       if (onSuccess) {
