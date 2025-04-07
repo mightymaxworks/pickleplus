@@ -2311,15 +2311,20 @@ function getRandomReason(pointChange: number): string {
   // User search for connections feature
   app.get("/api/users/search", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const currentUserId = (req.user as any).id;
+      const currentUser = req.user as Express.User;
+      console.log("User search API - Current user:", currentUser?.username, "ID:", currentUser?.id);
+      
       const query = req.query.q as string;
+      console.log("User search API - Query:", query);
       
       if (!query || query.length < 2) {
-        return res.status(400).json({ message: "Search query must be at least 2 characters" });
+        console.log("Query too short, returning 400");
+        return res.status(200).json([]); // Return empty array instead of 400 error
       }
       
       // Create test users if needed
-      if (query.toLowerCase() === "test" && (req.user as any).isAdmin) {
+      if (query.toLowerCase() === "test" && currentUser?.isAdmin) {
+        console.log("Creating test users for admin user:", currentUser.username);
         // Only admin users can create test users
         try {
           // Create a simple test user for demo purposes
@@ -2383,6 +2388,8 @@ function getRandomReason(pointChange: number): string {
       // Try regular search
       let users = [];
       try {
+        const currentUserId = currentUser?.id;
+        console.log("Calling searchUsers with currentUserId:", currentUserId);
         users = await storage.searchUsers(query, currentUserId);
         console.log("Search results:", users.length, "users found for query:", query);
       } catch (searchError) {

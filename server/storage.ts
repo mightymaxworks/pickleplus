@@ -1939,27 +1939,41 @@ export class DatabaseStorage implements IStorage {
   }
   
   async searchUsers(query: string, excludeUserId?: number): Promise<User[]> {
-    // Convert query to lowercase for case-insensitive search with SQL ILIKE
-    const searchPattern = `%${query}%`;
-    
-    // Create the base query
-    let usersQuery = db.select().from(users)
-      .where(
-        or(
-          sql`LOWER(${users.username}) LIKE LOWER(${searchPattern})`,
-          sql`LOWER(${users.displayName}) LIKE LOWER(${searchPattern})`,
-          sql`LOWER(${users.email}) LIKE LOWER(${searchPattern})`
-        )
-      );
-    
-    // Add exclusion of current user if provided
-    if (excludeUserId) {
-      usersQuery = usersQuery.where(sql`${users.id} <> ${excludeUserId}`);
+    try {
+      // Check if excludeUserId is valid
+      if (excludeUserId !== undefined && (isNaN(excludeUserId) || !Number.isFinite(excludeUserId))) {
+        console.log("Invalid excludeUserId:", excludeUserId, "Using no exclusion");
+        excludeUserId = undefined;
+      }
+      
+      // Convert query to lowercase for case-insensitive search with SQL ILIKE
+      const searchPattern = `%${query}%`;
+      
+      // Create the base query
+      let usersQuery = db.select().from(users)
+        .where(
+          or(
+            sql`LOWER(${users.username}) LIKE LOWER(${searchPattern})`,
+            sql`LOWER(${users.displayName}) LIKE LOWER(${searchPattern})`,
+            sql`LOWER(${users.email}) LIKE LOWER(${searchPattern})`
+          )
+        );
+      
+      // Add exclusion of current user if provided
+      if (excludeUserId !== undefined) {
+        console.log("Excluding user with ID:", excludeUserId);
+        usersQuery = usersQuery.where(sql`${users.id} <> ${excludeUserId}`);
+      }
+      
+      // Execute query with limit
+      const results = await usersQuery.limit(10);
+      console.log(`Search for "${query}" found ${results.length} results`);
+      return results;
+    } catch (error) {
+      console.error("[searchUsers] Error:", error);
+      // Return empty array on error
+      return [];
     }
-    
-    // Execute query with limit
-    const results = await usersQuery.limit(10);
-    return results;
   }
 
   // Profile operations
