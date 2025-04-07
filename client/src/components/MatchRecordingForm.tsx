@@ -551,10 +551,22 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
     setOpenSearchDialog(true);
   };
   
+  // State to keep track of selected player information
+  const [selectedPlayers, setSelectedPlayers] = useState<Record<string, UserSearchResult>>({});
+
   // Handler for selecting a player from search results
   const selectPlayer = (player: UserSearchResult) => {
     if (searchingField) {
+      // Store the player ID in the form
       form.setValue(searchingField, player.id);
+      
+      // Store the player information for display purposes
+      setSelectedPlayers(prev => ({
+        ...prev,
+        [searchingField]: player
+      }));
+      
+      // Close the dialog and reset search state
       setOpenSearchDialog(false);
       setSearchingField(null);
       setSearchQuery("");
@@ -745,9 +757,17 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
             name="playerOneId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm">Your Player ID</FormLabel>
+                <FormLabel className="text-sm">Your Player Information</FormLabel>
                 <FormControl>
-                  <Input disabled {...field} value={user?.id || ""} />
+                  <div className="flex items-center border rounded-md bg-muted/20 p-2">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center mr-2">
+                      {user?.avatarInitials || user?.displayName?.charAt(0) || user?.username?.charAt(0) || 'U'}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium">{user?.displayName || user?.username}</div>
+                      <div className="text-xs text-muted-foreground">ID: #{user?.id} {user?.passportId && `• Passport: ${user?.passportId}`}</div>
+                    </div>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -761,33 +781,63 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
               name="playerOnePartnerId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm">Your Partner's ID</FormLabel>
-                  <div className="flex space-x-2">
-                    <FormControl>
-                      <Input
-                        placeholder="Enter your partner's ID"
-                        value={field.value === 0 ? "" : field.value?.toString()}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          if (value === "") {
-                            field.onChange(0);
-                          } else if (!isNaN(Number(value))) {
-                            field.onChange(parseInt(value));
-                          }
+                  <FormLabel className="text-sm">Your Partner's Information</FormLabel>
+                  {selectedPlayers.playerOnePartnerId ? (
+                    <div className="flex items-center border rounded-md bg-muted/20 p-2 relative">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center mr-2">
+                        {selectedPlayers.playerOnePartnerId.displayName?.charAt(0) || selectedPlayers.playerOnePartnerId.username?.charAt(0) || 'P'}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium">{selectedPlayers.playerOnePartnerId.displayName || selectedPlayers.playerOnePartnerId.username}</div>
+                        <div className="text-xs text-muted-foreground">
+                          ID: #{selectedPlayers.playerOnePartnerId.id} 
+                          {selectedPlayers.playerOnePartnerId.passportId && ` • Passport: ${selectedPlayers.playerOnePartnerId.passportId}`}
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => {
+                          form.setValue("playerOnePartnerId", 0);
+                          setSelectedPlayers(prev => {
+                            const newState = {...prev};
+                            delete newState.playerOnePartnerId;
+                            return newState;
+                          });
                         }}
-                      />
-                    </FormControl>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => openPlayerSearch("playerOnePartnerId")}
-                      className="px-3"
-                    >
-                      <Search className="h-4 w-4" />
-                    </Button>
-                  </div>
+                        className="h-8 w-8 p-0 absolute top-1 right-1"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex space-x-2">
+                      <FormControl className="flex-grow">
+                        <Input
+                          placeholder="Enter your partner's ID or name"
+                          value={field.value === 0 ? "" : field.value?.toString()}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === "") {
+                              field.onChange(0);
+                            } else if (!isNaN(Number(value))) {
+                              field.onChange(parseInt(value));
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => openPlayerSearch("playerOnePartnerId")}
+                        className="px-3"
+                      >
+                        <Search className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                   <FormDescription className="text-xs">
-                    Enter player ID or search by name
+                    Enter player ID or search by name/passport ID
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -802,32 +852,62 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-sm">
-                  {formatType === "singles" ? "Opponent's ID" : "Opponent 1 ID"}
+                  {formatType === "singles" ? "Opponent Information" : "Opponent 1 Information"}
                 </FormLabel>
-                <div className="flex space-x-2">
-                  <FormControl>
-                    <Input
-                      placeholder={`Enter ${formatType === "singles" ? "opponent's" : "opponent 1's"} ID`}
-                      value={field.value === 0 ? "" : field.value.toString()}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        if (value === "") {
-                          field.onChange(0);
-                        } else if (!isNaN(Number(value))) {
-                          field.onChange(parseInt(value));
-                        }
+                {selectedPlayers.playerTwoId ? (
+                  <div className="flex items-center border rounded-md bg-muted/20 p-2 relative">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center mr-2">
+                      {selectedPlayers.playerTwoId.displayName?.charAt(0) || selectedPlayers.playerTwoId.username?.charAt(0) || 'O'}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium">{selectedPlayers.playerTwoId.displayName || selectedPlayers.playerTwoId.username}</div>
+                      <div className="text-xs text-muted-foreground">
+                        ID: #{selectedPlayers.playerTwoId.id} 
+                        {selectedPlayers.playerTwoId.passportId && ` • Passport: ${selectedPlayers.playerTwoId.passportId}`}
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => {
+                        form.setValue("playerTwoId", 0);
+                        setSelectedPlayers(prev => {
+                          const newState = {...prev};
+                          delete newState.playerTwoId;
+                          return newState;
+                        });
                       }}
-                    />
-                  </FormControl>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => openPlayerSearch("playerTwoId")}
-                    className="px-3"
-                  >
-                    <Search className="h-4 w-4" />
-                  </Button>
-                </div>
+                      className="h-8 w-8 p-0 absolute top-1 right-1"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex space-x-2">
+                    <FormControl className="flex-grow">
+                      <Input
+                        placeholder={`Enter ${formatType === "singles" ? "opponent's" : "opponent 1's"} ID or name`}
+                        value={field.value === 0 ? "" : field.value.toString()}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === "") {
+                            field.onChange(0);
+                          } else if (!isNaN(Number(value))) {
+                            field.onChange(parseInt(value));
+                          }
+                        }}
+                      />
+                    </FormControl>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => openPlayerSearch("playerTwoId")}
+                      className="px-3"
+                    >
+                      <Search className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
                 <FormDescription className="text-xs">
                   Enter player ID or search by name/passport ID
                 </FormDescription>
@@ -843,31 +923,61 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
               name="playerTwoPartnerId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm">Opponent 2 ID</FormLabel>
-                  <div className="flex space-x-2">
-                    <FormControl>
-                      <Input
-                        placeholder="Enter opponent 2's ID"
-                        value={field.value === 0 ? "" : field.value?.toString()}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          if (value === "") {
-                            field.onChange(0);
-                          } else if (!isNaN(Number(value))) {
-                            field.onChange(parseInt(value));
-                          }
+                  <FormLabel className="text-sm">Opponent 2 Information</FormLabel>
+                  {selectedPlayers.playerTwoPartnerId ? (
+                    <div className="flex items-center border rounded-md bg-muted/20 p-2 relative">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center mr-2">
+                        {selectedPlayers.playerTwoPartnerId.displayName?.charAt(0) || selectedPlayers.playerTwoPartnerId.username?.charAt(0) || 'O'}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium">{selectedPlayers.playerTwoPartnerId.displayName || selectedPlayers.playerTwoPartnerId.username}</div>
+                        <div className="text-xs text-muted-foreground">
+                          ID: #{selectedPlayers.playerTwoPartnerId.id} 
+                          {selectedPlayers.playerTwoPartnerId.passportId && ` • Passport: ${selectedPlayers.playerTwoPartnerId.passportId}`}
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => {
+                          form.setValue("playerTwoPartnerId", 0);
+                          setSelectedPlayers(prev => {
+                            const newState = {...prev};
+                            delete newState.playerTwoPartnerId;
+                            return newState;
+                          });
                         }}
-                      />
-                    </FormControl>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => openPlayerSearch("playerTwoPartnerId")}
-                      className="px-3"
-                    >
-                      <Search className="h-4 w-4" />
-                    </Button>
-                  </div>
+                        className="h-8 w-8 p-0 absolute top-1 right-1"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex space-x-2">
+                      <FormControl className="flex-grow">
+                        <Input
+                          placeholder="Enter opponent 2's ID or name"
+                          value={field.value === 0 ? "" : field.value?.toString()}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === "") {
+                              field.onChange(0);
+                            } else if (!isNaN(Number(value))) {
+                              field.onChange(parseInt(value));
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => openPlayerSearch("playerTwoPartnerId")}
+                        className="px-3"
+                      >
+                        <Search className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                   <FormDescription className="text-xs">
                     Enter player ID or search by name/passport ID
                   </FormDescription>
