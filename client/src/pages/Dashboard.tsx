@@ -222,6 +222,7 @@ export default function Dashboard() {
     className?: string 
   }) => (
     <Button 
+      type="button"
       variant="outline" 
       className={`flex items-center gap-2 px-3 py-2 h-auto ${className}`}
       onClick={onClick}
