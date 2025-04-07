@@ -2309,16 +2309,12 @@ function getRandomReason(pointChange: number): string {
   });
   
   // User search for connections feature
-  app.get("/api/users/search", async (req: Request, res: Response) => {
+  app.get("/api/users/search", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      // Get current user from session if available but don't require authentication
-      const currentUser = req.isAuthenticated() ? req.user as Express.User : null;
+      // Get current user from session
+      const currentUser = req.user as Express.User;
       console.log("User search API - Authentication status:", req.isAuthenticated());
-      if (currentUser) {
-        console.log("User search API - Current user:", currentUser.username, "ID:", currentUser.id);
-      } else {
-        console.log("User search API - No authenticated user");
-      }
+      console.log("User search API - Current user:", currentUser.username, "ID:", currentUser.id);
       
       const query = req.query.q as string;
       console.log("User search API - Query:", query);

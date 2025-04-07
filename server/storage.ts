@@ -400,18 +400,19 @@ export class DatabaseStorage implements IStorage {
       }
       
       // Check if excludeUserId is valid
+      let numericExcludeId: number | undefined = undefined;
       if (excludeUserId !== undefined) {
         // Convert to number if it's a string
-        if (typeof excludeUserId === 'string') {
-          excludeUserId = Number(excludeUserId);
-        }
+        numericExcludeId = (typeof excludeUserId === 'string') 
+          ? Number(excludeUserId) 
+          : Number(excludeUserId);
         
         // Validate it's a proper number
-        if (isNaN(excludeUserId) || !Number.isFinite(excludeUserId) || excludeUserId < 0) {
-          console.log("Invalid excludeUserId:", excludeUserId, "Using no exclusion");
-          excludeUserId = undefined;
+        if (isNaN(numericExcludeId) || !Number.isFinite(numericExcludeId) || numericExcludeId < 1) {
+          console.log("Invalid excludeUserId:", excludeUserId, "converted to", numericExcludeId, "- Using no exclusion");
+          numericExcludeId = undefined;
         } else {
-          console.log("Valid excludeUserId:", excludeUserId);
+          console.log("Valid excludeUserId:", numericExcludeId);
         }
       }
       
@@ -420,38 +421,76 @@ export class DatabaseStorage implements IStorage {
       console.log("Search pattern:", searchPattern);
       
       // Create the base query
-      let usersQuery = db.select({
+      let queryBuilder = db.select({
           id: users.id,
           username: users.username,
           displayName: users.displayName,
           email: users.email,
           passportId: users.passportId,
           avatarInitials: users.avatarInitials
-        }).from(users)
-        .where(
-          or(
-            sql`LOWER(${users.username}) LIKE LOWER(${searchPattern})`,
-            sql`LOWER(COALESCE(${users.displayName}, '')) LIKE LOWER(${searchPattern})`,
-            sql`LOWER(COALESCE(${users.email}, '')) LIKE LOWER(${searchPattern})`
-          )
-        );
+        }).from(users);
+        
+      // Add the search condition
+      queryBuilder = queryBuilder.where(
+        or(
+          sql`LOWER(${users.username}) LIKE LOWER(${searchPattern})`,
+          sql`LOWER(COALESCE(${users.displayName}, '')) LIKE LOWER(${searchPattern})`,
+          sql`LOWER(COALESCE(${users.email}, '')) LIKE LOWER(${searchPattern})`
+        )
+      );
       
       // Add exclusion of current user if provided with a valid number
-      if (excludeUserId !== undefined) {
-        console.log("Excluding user with ID:", excludeUserId);
-        usersQuery = usersQuery.where(ne(users.id, excludeUserId));
+      if (numericExcludeId !== undefined) {
+        console.log("Excluding user with ID:", numericExcludeId);
+        
+        // Create a separate condition for the exclusion to avoid SQL syntax errors
+        queryBuilder = queryBuilder.where(
+          sql`${users.id} != ${numericExcludeId}`
+        );
       }
       
       // Log the prepared query for debugging
       console.log("Executing user search query with pattern:", searchPattern);
       
       try {
-        // Execute query with limit
-        const results = await usersQuery.limit(10);
+        // Execute query with limit and return results
+        const results = await queryBuilder.limit(10);
         console.log(`Search for "${query}" found ${results.length} results`);
         
-        // Return the results
-        return results;
+        // Map results to the correct shape and add any missing properties
+        const mappedResults = results.map(user => ({
+          ...user,
+          avatarUrl: null,
+          // Add other fields required by the User type but not included in the select
+          password: "", // This will never be sent to the client
+          bio: null,
+          yearOfBirth: null,
+          location: null,
+          playingSince: null,
+          skillLevel: null,
+          level: 1,
+          xp: 0,
+          rankingPoints: 0,
+          lastMatchDate: null,
+          totalMatches: 0,
+          matchesWon: 0,
+          totalTournaments: 0,
+          isFoundingMember: false,
+          isAdmin: false,
+          xpMultiplier: 100,
+          preferredPosition: null,
+          paddleBrand: null,
+          paddleModel: null,
+          playingStyle: null,
+          shotStrengths: null,
+          preferredFormat: null,
+          dominantHand: null,
+          createdAt: null,
+          profileCompletionPct: 0,
+          regularSchedule: null
+        }));
+        
+        return mappedResults;
       } catch (dbError) {
         console.error("[searchUsers] Database query error:", dbError);
         if (dbError instanceof Error) {
