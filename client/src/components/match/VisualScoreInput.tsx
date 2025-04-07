@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Plus, Minus, Crown } from "lucide-react";
+import { Plus, Minus, Crown, AlertCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface Score {
   playerOneScore: number;
@@ -28,6 +29,45 @@ export function VisualScoreInput({
   playerTwoInitials,
   pointsToWin = 11
 }: VisualScoreInputProps) {
+  const [scoreWarning, setScoreWarning] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  // Track previous warnings to prevent excessive toast notifications
+  const [prevWarningState, setPrevWarningState] = useState<string | null>(null);
+  
+  // Check for score warnings
+  useEffect(() => {
+    const p1Score = value.playerOneScore;
+    const p2Score = value.playerTwoScore;
+    let newWarning: string | null = null;
+    
+    // Check if any score is above the points to win threshold
+    if (p1Score > pointsToWin && p1Score - p2Score < 2) {
+      newWarning = `${playerOneName}'s score exceeds ${pointsToWin} without a 2-point lead`;
+    } else if (p2Score > pointsToWin && p2Score - p1Score < 2) {
+      newWarning = `${playerTwoName}'s score exceeds ${pointsToWin} without a 2-point lead`;
+    } else if (p1Score > pointsToWin + 5 || p2Score > pointsToWin + 5) {
+      newWarning = `Score seems unusually high for a ${pointsToWin}-point game`;
+    }
+    
+    // Update warning state
+    setScoreWarning(newWarning);
+    
+    // Only show toast if the warning state has changed to prevent spam
+    if (newWarning && newWarning !== prevWarningState) {
+      toast({
+        title: "Score Warning",
+        description: newWarning,
+        variant: "destructive",
+      });
+      // Update previous warning state
+      setPrevWarningState(newWarning);
+    } else if (!newWarning) {
+      // Reset previous warning state when there's no warning
+      setPrevWarningState(null);
+    }
+  }, [value.playerOneScore, value.playerTwoScore, pointsToWin, playerOneName, playerTwoName, toast, prevWarningState]);
+
   // Handle score changes within the boundaries
   const updateScore = (player: 'playerOne' | 'playerTwo', amount: number) => {
     const newValue = { ...value };
@@ -107,7 +147,7 @@ export function VisualScoreInput({
                   });
                 }
               }}
-              className="text-3xl sm:text-4xl font-bold w-12 sm:w-16 text-center bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-primary rounded-md"
+              className={`text-3xl sm:text-4xl font-bold w-12 sm:w-16 text-center bg-transparent border border-gray-300 focus:outline-none focus:ring-1 focus:ring-primary rounded-md ${value.playerOneScore > pointsToWin && !winner ? 'border-red-500' : ''}`}
             />
             
             <Button
@@ -173,7 +213,7 @@ export function VisualScoreInput({
                   });
                 }
               }}
-              className="text-3xl sm:text-4xl font-bold w-12 sm:w-16 text-center bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-primary rounded-md"
+              className={`text-3xl sm:text-4xl font-bold w-12 sm:w-16 text-center bg-transparent border border-gray-300 focus:outline-none focus:ring-1 focus:ring-primary rounded-md ${value.playerTwoScore > pointsToWin && !winner ? 'border-red-500' : ''}`}
             />
             
             <Button
@@ -193,6 +233,11 @@ export function VisualScoreInput({
           <span className="text-green-600 font-medium">
             Game complete! {winner === "playerOne" ? playerOneName : playerTwoName} has won.
           </span>
+        ) : scoreWarning ? (
+          <div className="flex items-center justify-center gap-1 text-red-500">
+            <AlertCircle className="h-3 w-3" />
+            <span>{scoreWarning}</span>
+          </div>
         ) : (
           <span>First to {pointsToWin} points with a 2-point lead wins</span>
         )}
