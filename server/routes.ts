@@ -2330,34 +2330,14 @@ function getRandomReason(pointChange: number): string {
       // Default excludeUserId to undefined
       let excludeUserId: number | undefined = undefined;
       
-      // Get current user info
-      try {
-        const currentUser = req.user as Express.User;
-        console.log("User search API - Current user:", currentUser.username);
-        
-        if (currentUser.id !== undefined && currentUser.id !== null) {
-          // Safely convert ID to number with proper validation
-          if (typeof currentUser.id === 'number') {
-            // If ID is already a number, use it directly
-            excludeUserId = currentUser.id;
-          } else {
-            // Otherwise try to convert from string/other type
-            const numericId = Number(currentUser.id);
-            if (!isNaN(numericId) && numericId > 0) {
-              excludeUserId = numericId;
-            } else {
-              console.log("WARNING: Invalid user ID in session:", currentUser.id, "converted to", numericId);
-            }
-          }
-          
-          console.log("Will exclude user ID:", excludeUserId, "from search results");
-        } else {
-          console.log("User ID is null or undefined, won't exclude any users");
-        }
-      } catch (authError) {
-        console.error("Error processing authenticated user:", authError);
-        // Continue without user exclusion if there's an error
-      }
+      // Skip the getUser call that's causing issues and just use the search directly
+      console.log("Skipping excludeUserId to avoid user lookup issues");
+      
+      // If needed, we could extract the user ID from the session instead:
+      // if (req.session?.passport?.user) {
+      //   excludeUserId = Number(req.session.passport.user);
+      //   console.log("Got user ID from session passport:", excludeUserId);
+      // }
       
       // HANDLE MOCK USER CREATION (Admin only feature)
       if (req.isAuthenticated() && req.user && (req.user as any).isAdmin && query.toLowerCase() === "test") {

@@ -21,7 +21,14 @@ export interface IStorage {
   updateUserXP(id: number, xpToAdd: number): Promise<User | undefined>;
   getUserCount(): Promise<number>;
   getActiveUserCount(): Promise<number>;
-  searchUsers(query: string, excludeUserId?: number): Promise<User[]>;
+  searchUsers(query: string, excludeUserId?: number): Promise<{ 
+    id: number; 
+    username: string; 
+    displayName: string; 
+    passportId: string | null; 
+    avatarUrl: string | null; 
+    avatarInitials: string; 
+  }[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -389,7 +396,15 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async searchUsers(query: string, excludeUserId?: number): Promise<User[]> {
+  // For user search, we only need a minimal set of user information
+  async searchUsers(query: string, excludeUserId?: number): Promise<{ 
+    id: number; 
+    username: string; 
+    displayName: string; 
+    passportId: string | null; 
+    avatarUrl: string | null; 
+    avatarInitials: string; 
+  }[]> {
     try {
       console.log("Storage searchUsers called with query:", query, "excludeUserId:", excludeUserId);
       
@@ -429,29 +444,19 @@ export class DatabaseStorage implements IStorage {
       const searchPattern = `%${safeQuery}%`;
       
       try {
-        // First try - get simplified data just to ensure query works
-        console.log("Executing basic user search with pattern:", searchPattern);
+        // We'll perform a direct search without any preliminary checks
+        console.log("Executing direct user search with pattern:", searchPattern);
         
-        // Simple query to test database search functionality
-        const testResults = await db.select({ 
-          id: users.id, 
-          username: users.username,
-          displayName: users.displayName
-        })
-        .from(users)
-        .where(
-          or(
-            sql`LOWER(${users.username}) LIKE LOWER(${searchPattern})`,
-            sql`LOWER(COALESCE(${users.displayName}, '')) LIKE LOWER(${searchPattern})`
-          )
-        )
-        .limit(10);
+        // Build the search query with the where clause directly
+        const whereClause = or(
+          sql`LOWER(${users.username}) LIKE LOWER(${searchPattern})`,
+          sql`LOWER(COALESCE(${users.displayName}, '')) LIKE LOWER(${searchPattern})`,
+          sql`LOWER(COALESCE(${users.email}, '')) LIKE LOWER(${searchPattern})`
+        );
         
-        console.log("Search test query found:", testResults.length, "results");
-        console.log("Test results:", testResults.map(u => `${u.id}: ${u.username}`).join(", "));
-      
-        // Now that we verified search works, build full query
-        let fullQuery = db.select({
+        // Execute the search query
+        // IMPORTANT: We're avoiding chaining multiple where clauses as that seems to be causing issues
+        let results = await db.select({
           id: users.id,
           username: users.username,
           displayName: users.displayName,
@@ -461,52 +466,25 @@ export class DatabaseStorage implements IStorage {
           location: users.location
         })
         .from(users)
-        .where(
-          or(
-            sql`LOWER(${users.username}) LIKE LOWER(${searchPattern})`,
-            sql`LOWER(COALESCE(${users.displayName}, '')) LIKE LOWER(${searchPattern})`,
-            sql`LOWER(COALESCE(${users.email}, '')) LIKE LOWER(${searchPattern})`
-          )
-        );
+        .where(whereClause)
+        .limit(10);
         
-        // Add exclusion if needed
+        // If we need to exclude a user, do it in memory to avoid SQL issues
         if (numericExcludeId !== undefined) {
-          fullQuery = fullQuery.where(ne(users.id, numericExcludeId));
+          results = results.filter(user => user.id !== numericExcludeId);
         }
         
-        // Execute full query with results
-        const results = await fullQuery.limit(10);
-        console.log(`Full search for "${safeQuery}" found ${results.length} results`);
+        console.log(`Search found ${results.length} results for "${safeQuery}"`);
+        console.log("Results:", results.map(u => `${u.id}: ${u.username}`).join(", "));
         
-        // Map to complete User objects with default values for missing fields
+        // Just return the simplified results since we only need id, name and avatar for search
         const mappedResults = results.map(user => ({
-          ...user,
-          password: "", // This will never be sent to client
-          bio: null,
-          yearOfBirth: null,
-          playingSince: null,
-          skillLevel: null,
-          level: 1,
-          xp: 0,
-          rankingPoints: 0,
-          lastMatchDate: null,
-          totalMatches: 0,
-          matchesWon: 0,
-          totalTournaments: 0,
-          isFoundingMember: false,
-          isAdmin: false,
-          xpMultiplier: 100,
-          preferredPosition: null,
-          paddleBrand: null,
-          paddleModel: null,
-          playingStyle: null,
-          shotStrengths: null,
-          preferredFormat: null,
-          dominantHand: null,
-          createdAt: null,
-          avatarUrl: null,
-          profileCompletionPct: 0,
-          regularSchedule: null
+          id: user.id,
+          username: user.username,
+          displayName: user.displayName || user.username,
+          passportId: user.passportId || null,
+          avatarUrl: null, // Safe default
+          avatarInitials: user.avatarInitials || (user.username ? user.username.substring(0, 2).toUpperCase() : "??")
         }));
         
         // Show what we're returning
@@ -542,39 +520,14 @@ export class DatabaseStorage implements IStorage {
           
           console.log(`Fallback filtering found ${filteredUsers.length} matches`);
           
-          // Map to full User objects with defaults
+          // Map to simplified user objects with only what we need for the player select
           return filteredUsers.map(user => ({
-            ...user,
-            email: null,
-            password: "",
-            bio: null,
-            yearOfBirth: null,
+            id: user.id,
+            username: user.username,
+            displayName: user.displayName || user.username,
             passportId: null,
-            location: null,
-            playingSince: null,
-            skillLevel: null,
-            level: 1,
-            xp: 0, 
-            rankingPoints: 0,
-            lastMatchDate: null,
-            totalMatches: 0,
-            matchesWon: 0,
-            totalTournaments: 0,
-            isFoundingMember: false,
-            isAdmin: false,
-            xpMultiplier: 100,
-            preferredPosition: null,
-            paddleBrand: null,
-            paddleModel: null,
-            playingStyle: null,
-            shotStrengths: null,
-            preferredFormat: null,
-            dominantHand: null,
-            createdAt: null,
-            avatarInitials: user.username?.substring(0, 2).toUpperCase() || "??",
             avatarUrl: null,
-            profileCompletionPct: 0,
-            regularSchedule: null
+            avatarInitials: user.username?.substring(0, 2).toUpperCase() || "??"
           }));
         } catch (fallbackError) {
           console.error("Fallback search approach also failed:", fallbackError);
