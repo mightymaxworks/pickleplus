@@ -2434,6 +2434,33 @@ function getRandomReason(pointChange: number): string {
     }
   });
 
+  // NEW PLAYER SEARCH API - Standalone endpoint with simplified implementation
+  app.get("/api/player/search", async (req: Request, res: Response) => {
+    try {
+      // Get the search query
+      const query = req.query.q as string;
+      console.log("Player search API called with query:", query);
+      
+      // Check if the query is valid
+      if (!query || query.length < 2) {
+        return res.json([]); // Empty array for short queries
+      }
+      
+      // Optional: Get excludeUserId if present
+      const excludeUserId = req.query.exclude ? Number(req.query.exclude) : undefined;
+      
+      // Get search results directly from storage
+      const users = await storage.searchUsers(query, excludeUserId);
+      
+      // Return the results
+      return res.json(users);
+      
+    } catch (error) {
+      console.error("Error in player search API:", error);
+      return res.json([]); // Return empty array for errors to avoid UI breakage
+    }
+  });
+  
   // Connection statistics for dashboard widget
   app.get("/api/connections/stats", isAuthenticated, async (req: Request, res: Response) => {
     try {

@@ -72,11 +72,16 @@ class SocialModule implements SocialModuleAPI {
 
   async searchPlayers(query: string): Promise<User[]> {
     try {
-      const response = await apiRequest('GET', `/api/users/search?q=${encodeURIComponent(query)}`);
-      return await response.json();
+      // Use the new standalone player search endpoint
+      console.log('Social Module: Searching players with query:', query);
+      const response = await apiRequest('GET', `/api/player/search?q=${encodeURIComponent(query)}`);
+      const data = await response.json();
+      console.log('Social Module: Search returned', data.length, 'results');
+      return data;
     } catch (error) {
-      console.error('Search players error:', error);
-      throw error;
+      console.error('Social Module: Player search error:', error);
+      // Return empty array instead of throwing to prevent UI breakage
+      return [];
     }
   }
 }

@@ -27,9 +27,10 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 
+// Make sure our interface matches the one from playerSDK
 interface UserSearchResult {
   id: number;
-  displayName: string;
+  displayName: string | null;
   username: string;
   passportId?: string | null;
   avatarUrl?: string | null;
@@ -88,33 +89,20 @@ export function SearchablePlayerSelect({
     isFetching,
     error,
   } = useQuery<UserSearchResult[]>({
-    queryKey: ["/api/users/search", debouncedQuery],
+    queryKey: ["/api/player/search", debouncedQuery, excludePlayerIds],
     queryFn: async () => {
       if (!debouncedQuery || debouncedQuery.length < 2) return [];
-
-      const params = new URLSearchParams({
-        q: debouncedQuery,
-      });
-
+      
       try {
-        console.log("Making player search request:", `/api/users/search?${params.toString()}`);
-        const response = await apiRequest("GET", `/api/users/search?${params.toString()}`);
-        console.log("Player search response status:", response.status);
+        // Import and use the playerSDK
+        const { searchPlayers } = await import("@/lib/sdk/playerSDK");
         
-        if (response.status === 401) {
-          console.log("Not authenticated for player search. Returning empty results.");
-          return []; // Return empty array instead of throwing for auth errors
-        }
+        // Call the SDK function
+        console.log("Using playerSDK.searchPlayers with query:", debouncedQuery);
+        const results = await searchPlayers(debouncedQuery);
         
-        if (!response.ok) {
-          throw new Error(`Player search API error: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log("Player search results:", data.length);
-
         // Filter out excluded player IDs
-        return data.filter((user: UserSearchResult) => 
+        return results.filter((user: UserSearchResult) => 
           !excludePlayerIds.includes(user.id)
         );
       } catch (err) {
