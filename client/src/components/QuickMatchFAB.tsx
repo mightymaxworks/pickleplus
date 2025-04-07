@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { NewMatchRecordingForm } from "@/components/match/NewMatchRecordingForm";
 import { useAuth } from "@/hooks/useAuth";
+import { useLocation } from "wouter";
 
 /**
  * Bottom action bar with quick match recording button
@@ -12,8 +13,14 @@ import { useAuth } from "@/hooks/useAuth";
 export default function QuickMatchFAB() {
   const [matchDialogOpen, setMatchDialogOpen] = useState(false);
   const { user } = useAuth();
+  const [location, setLocation] = useLocation();
   
   if (!user) {
+    return null;
+  }
+
+  // Check if we're already on the matches page
+  if (location === "/matches") {
     return null;
   }
 
@@ -32,25 +39,15 @@ export default function QuickMatchFAB() {
         <div className="px-2">
           {/* Full-width Record Match Button */}
           <Button 
-            onClick={() => setMatchDialogOpen(true)}
+            onClick={() => setLocation("/matches")}
             size="lg"
             className={`flex items-center justify-center h-16 rounded-xl w-full gap-2 ${buttonClass}`}
           >
             <PlusCircle className="h-6 w-6" />
-            <span className="text-base font-medium">Record Match</span>
+            <span className="text-base font-medium">Match Center</span>
           </Button>
         </div>
       </div>
-      
-      {/* Match Recording Dialog */}
-      <Dialog open={matchDialogOpen} onOpenChange={setMatchDialogOpen}>
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Record Match Results</DialogTitle>
-          </DialogHeader>
-          <NewMatchRecordingForm onSuccess={() => setMatchDialogOpen(false)} />
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

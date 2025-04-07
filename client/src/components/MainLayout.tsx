@@ -10,7 +10,8 @@ import {
   Settings, 
   LogOut,
   Menu,
-  Shield
+  Shield,
+  CheckCircle2
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -35,6 +36,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const baseNavigationItems = [
     { name: 'Dashboard', path: '/', icon: <Home className="h-5 w-5" /> },
     { name: 'Tournaments', path: '/tournaments', icon: <Trophy className="h-5 w-5" /> },
+    { name: 'Matches', path: '/matches', icon: <CheckCircle2 className="h-5 w-5" /> },
     { name: 'Achievements', path: '/achievements', icon: <Award className="h-5 w-5" /> },
     { name: 'Connections', path: '/connections', icon: <Users className="h-5 w-5" /> },
     { name: 'Coaching', path: '/coaching', icon: <BookOpen className="h-5 w-5" /> },

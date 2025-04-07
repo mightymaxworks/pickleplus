@@ -2759,6 +2759,393 @@ function getRandomReason(pointChange: number): string {
     }
   });
 
+  // Match API endpoints
+  app.post("/api/match/record", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      const { 
+        formatType, scoringSystem, pointsToWin,
+        players, gameScores, location, notes
+      } = req.body;
+      
+      // Validate basic match format
+      if (!formatType || !Array.isArray(players) || players.length < 2) {
+        return res.status(400).json({ error: "Invalid match data format" });
+      }
+      
+      // Ensure current user is one of the players
+      const currentUserPlaying = players.some(p => p.userId === req.user?.id);
+      if (!currentUserPlaying) {
+        return res.status(400).json({ error: "Current user must be one of the players" });
+      }
+      
+      // Prepare match data
+      const playerOne = players.find(p => p.userId === req.user?.id);
+      const playerTwo = players.find(p => p.userId !== req.user?.id);
+      
+      if (!playerOne || !playerTwo) {
+        return res.status(400).json({ error: "Invalid player data" });
+      }
+      
+      const matchData = {
+        playerOneId: playerOne.userId,
+        playerTwoId: playerTwo.userId,
+        playerOnePartnerId: playerOne.partnerId,
+        playerTwoPartnerId: playerTwo.partnerId,
+        scorePlayerOne: String(playerOne.score),
+        scorePlayerTwo: String(playerTwo.score),
+        winnerId: playerOne.isWinner ? playerOne.userId : playerTwo.userId,
+        formatType,
+        scoringSystem: scoringSystem || "traditional",
+        pointsToWin: pointsToWin || 11,
+        division: req.body.division || "open",
+        matchType: req.body.matchType || "casual",
+        eventTier: req.body.eventTier || "local",
+        gameScores,
+        location,
+        notes
+      };
+      
+      // Format validation - ensure doubles matches have partner IDs
+      if (formatType === "doubles" && (!playerOne.partnerId || !playerTwo.partnerId)) {
+        return res.status(400).json({ error: "Doubles matches require partner IDs" });
+      }
+      
+      // Create match record
+      console.log("[Match API] Creating match with data:", matchData);
+      
+      let match;
+      try {
+        // Direct database insertion
+        const [created] = await db.insert(matches).values(matchData).returning();
+        match = created;
+      } catch (dbError) {
+        console.error("[Match API] Database error creating match:", dbError);
+        return res.status(500).json({ error: "Database error creating match" });
+      }
+      
+      if (!match) {
+        return res.status(500).json({ error: "Failed to create match" });
+      }
+      
+      // Process with CourtIQ system for ratings/XP if available
+      if (typeof courtIQSystem !== 'undefined') {
+        try {
+          // Process match in rating system
+          await courtIQSystem.processMatch({
+            matchId: match.id,
+            players: players.map(p => ({
+              userId: p.userId,
+              partnerId: p.partnerId,
+              score: typeof p.score === 'string' ? parseInt(p.score, 10) : p.score,
+              isWinner: p.isWinner
+            })),
+            format: formatType,
+            division: matchData.division,
+            matchType: matchData.matchType,
+            eventTier: matchData.eventTier
+          });
+          
+          console.log("[Match API] Match processed by CourtIQ system");
+        } catch (courtiqError) {
+          console.error("[Match API] CourtIQ processing error:", courtiqError);
+          // Continue even if CourtIQ processing fails
+        }
+      }
+      
+      // Get player names for the response
+      const playerOneData = await storage.getUser(playerOne.userId);
+      const playerTwoData = await storage.getUser(playerTwo.userId);
+      let playerOnePartnerData = null;
+      let playerTwoPartnerData = null;
+      
+      if (formatType === "doubles") {
+        if (playerOne.partnerId) playerOnePartnerData = await storage.getUser(playerOne.partnerId);
+        if (playerTwo.partnerId) playerTwoPartnerData = await storage.getUser(playerTwo.partnerId);
+      }
+      
+      // Generate the player names mapping
+      const playerNames: Record<number, { displayName: string; username: string; avatarInitials?: string; avatarUrl?: string }> = {};
+      
+      if (playerOneData) {
+        playerNames[playerOneData.id] = {
+          displayName: playerOneData.displayName || playerOneData.username,
+          username: playerOneData.username,
+          avatarInitials: playerOneData.avatarInitials || undefined,
+          avatarUrl: (playerOneData as any).avatarUrl || undefined
+        };
+      }
+      
+      if (playerTwoData) {
+        playerNames[playerTwoData.id] = {
+          displayName: playerTwoData.displayName || playerTwoData.username,
+          username: playerTwoData.username,
+          avatarInitials: playerTwoData.avatarInitials || undefined,
+          avatarUrl: (playerTwoData as any).avatarUrl || undefined
+        };
+      }
+      
+      if (playerOnePartnerData) {
+        playerNames[playerOnePartnerData.id] = {
+          displayName: playerOnePartnerData.displayName || playerOnePartnerData.username,
+          username: playerOnePartnerData.username,
+          avatarInitials: playerOnePartnerData.avatarInitials || undefined,
+          avatarUrl: (playerOnePartnerData as any).avatarUrl || undefined
+        };
+      }
+      
+      if (playerTwoPartnerData) {
+        playerNames[playerTwoPartnerData.id] = {
+          displayName: playerTwoPartnerData.displayName || playerTwoPartnerData.username,
+          username: playerTwoPartnerData.username,
+          avatarInitials: playerTwoPartnerData.avatarInitials || undefined,
+          avatarUrl: (playerTwoPartnerData as any).avatarUrl || undefined
+        };
+      }
+      
+      // Combine match data with player information
+      const recordedMatch = {
+        ...match,
+        playerNames,
+        formatType,
+        scoringSystem,
+        pointsToWin,
+        players,
+        gameScores
+      };
+      
+      res.status(201).json(recordedMatch);
+      
+    } catch (error) {
+      console.error("[Match API] Error recording match:", error);
+      res.status(500).json({ error: "Server error recording match" });
+    }
+  });
+  
+  // Get recent matches
+  app.get("/api/match/recent", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      const userId = req.query.userId ? parseInt(req.query.userId as string, 10) : req.user.id;
+      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
+      
+      // Query for matches where the user was involved
+      const recentMatches = await db.select().from(matches)
+        .where(
+          or(
+            eq(matches.playerOneId, userId),
+            eq(matches.playerTwoId, userId),
+            eq(matches.playerOnePartnerId, userId),
+            eq(matches.playerTwoPartnerId, userId)
+          )
+        )
+        .orderBy(desc(matches.matchDate))
+        .limit(limit);
+      
+      // For each match, get the player names
+      const matchesWithPlayerNames = await Promise.all(recentMatches.map(async (match) => {
+        const playerIds = [
+          match.playerOneId,
+          match.playerTwoId,
+          match.playerOnePartnerId,
+          match.playerTwoPartnerId
+        ].filter(Boolean) as number[];
+        
+        const playerNames: Record<number, { displayName: string; username: string; avatarInitials?: string; avatarUrl?: string }> = {};
+        
+        for (const id of playerIds) {
+          const userData = await storage.getUser(id);
+          if (userData) {
+            playerNames[id] = {
+              displayName: userData.displayName || userData.username,
+              username: userData.username,
+              avatarInitials: userData.avatarInitials || undefined,
+              avatarUrl: (userData as any).avatarUrl || undefined
+            };
+          }
+        }
+        
+        // Convert database fields to SDK format
+        return {
+          id: match.id,
+          date: match.matchDate.toISOString(),
+          formatType: match.formatType,
+          scoringSystem: match.scoringSystem,
+          pointsToWin: match.pointsToWin,
+          players: [
+            {
+              userId: match.playerOneId,
+              partnerId: match.playerOnePartnerId || undefined,
+              score: parseInt(match.scorePlayerOne, 10),
+              isWinner: match.winnerId === match.playerOneId
+            },
+            {
+              userId: match.playerTwoId,
+              partnerId: match.playerTwoPartnerId || undefined,
+              score: parseInt(match.scorePlayerTwo, 10),
+              isWinner: match.winnerId === match.playerTwoId
+            }
+          ],
+          gameScores: match.gameScores || [],
+          location: match.location,
+          notes: match.notes,
+          playerNames
+        };
+      }));
+      
+      res.json(matchesWithPlayerNames);
+      
+    } catch (error) {
+      console.error("[Match API] Error getting recent matches:", error);
+      res.status(500).json({ error: "Server error getting recent matches" });
+    }
+  });
+  
+  // Get match statistics
+  app.get("/api/match/stats", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      const userId = req.query.userId ? parseInt(req.query.userId as string, 10) : req.user.id;
+      
+      // Get total matches where user was involved
+      const [matchCount] = await db.select({
+        count: sql<number>`count(*)`
+      }).from(matches)
+        .where(
+          or(
+            eq(matches.playerOneId, userId),
+            eq(matches.playerTwoId, userId),
+            eq(matches.playerOnePartnerId, userId),
+            eq(matches.playerTwoPartnerId, userId)
+          )
+        );
+        
+      // Get matches where the user won
+      const [winsCount] = await db.select({
+        count: sql<number>`count(*)`
+      }).from(matches)
+        .where(
+          and(
+            or(
+              eq(matches.playerOneId, userId),
+              eq(matches.playerTwoId, userId),
+              eq(matches.playerOnePartnerId, userId),
+              eq(matches.playerTwoPartnerId, userId)
+            ),
+            eq(matches.winnerId, userId)
+          )
+        );
+      
+      // Get recent matches for this user
+      const recentMatches = await db.select().from(matches)
+        .where(
+          or(
+            eq(matches.playerOneId, userId),
+            eq(matches.playerTwoId, userId),
+            eq(matches.playerOnePartnerId, userId),
+            eq(matches.playerTwoPartnerId, userId)
+          )
+        )
+        .orderBy(desc(matches.matchDate))
+        .limit(5);
+      
+      // Convert matches to the correct format with player names
+      const formattedRecentMatches = await Promise.all(recentMatches.map(async (match) => {
+        const playerIds = [
+          match.playerOneId,
+          match.playerTwoId,
+          match.playerOnePartnerId,
+          match.playerTwoPartnerId
+        ].filter(Boolean) as number[];
+        
+        const playerNames: Record<number, { displayName: string; username: string; avatarInitials?: string; avatarUrl?: string }> = {};
+        
+        for (const id of playerIds) {
+          const userData = await storage.getUser(id);
+          if (userData) {
+            playerNames[id] = {
+              displayName: userData.displayName || userData.username,
+              username: userData.username,
+              avatarInitials: userData.avatarInitials || undefined,
+              avatarUrl: (userData as any).avatarUrl || undefined
+            };
+          }
+        }
+        
+        return {
+          id: match.id,
+          date: match.matchDate.toISOString(),
+          formatType: match.formatType,
+          scoringSystem: match.scoringSystem,
+          pointsToWin: match.pointsToWin,
+          players: [
+            {
+              userId: match.playerOneId,
+              partnerId: match.playerOnePartnerId || undefined,
+              score: parseInt(match.scorePlayerOne, 10),
+              isWinner: match.winnerId === match.playerOneId
+            },
+            {
+              userId: match.playerTwoId,
+              partnerId: match.playerTwoPartnerId || undefined,
+              score: parseInt(match.scorePlayerTwo, 10),
+              isWinner: match.winnerId === match.playerTwoId
+            }
+          ],
+          gameScores: match.gameScores || [],
+          location: match.location,
+          notes: match.notes,
+          playerNames
+        };
+      }));
+      
+      // Calculate win percentage
+      const totalMatches = matchCount?.count || 0;
+      const matchesWon = winsCount?.count || 0;
+      const winRate = totalMatches > 0 ? (matchesWon / totalMatches) * 100 : 0;
+      
+      res.json({
+        totalMatches,
+        matchesWon,
+        winRate: parseFloat(winRate.toFixed(1)),
+        recentMatches: formattedRecentMatches
+      });
+      
+    } catch (error) {
+      console.error("[Match API] Error getting match stats:", error);
+      res.status(500).json({ error: "Server error getting match statistics" });
+    }
+  });
+  
+  // Player search endpoint (simplified version with no auth requirement)
+  app.get("/api/player/search", async (req: Request, res: Response) => {
+    try {
+      const query = req.query.q as string;
+      const excludeId = req.query.exclude ? parseInt(req.query.exclude as string, 10) : undefined;
+      
+      if (!query || query.length < 2) {
+        return res.status(400).json({ error: "Search query must be at least 2 characters" });
+      }
+      
+      // Search for users with the given query in username or displayName
+      const results = await storage.searchUsers(query, excludeId);
+      
+      res.json(results);
+    } catch (error) {
+      console.error("[Player API] Error searching players:", error);
+      res.status(500).json({ error: "Server error searching players" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
