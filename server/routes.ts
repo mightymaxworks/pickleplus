@@ -2925,6 +2925,14 @@ function getRandomReason(pointChange: number): string {
         // which might have methods or properties that aren't serializable
         const matchValues = { ...filteredMatchData };
         
+        // Debug: List all keys in matchValues
+        console.log('[Match API] Keys being inserted:', Object.keys(matchValues));
+        console.log('[Match API] matchValues:', matchValues);
+        
+        // Debug: Show the complete SQL command that will be executed
+        const sqlCommand = db.insert(matches).values(matchValues as any).toSQL();
+        console.log('[Match API] Insert SQL command:', sqlCommand);
+        
         // We need to explicitly type assert since the compiler doesn't know the exact structure
         const result = await db.insert(matches).values(matchValues as any).returning();
         console.log('[Match API] Insert operation completed, result:', result);
