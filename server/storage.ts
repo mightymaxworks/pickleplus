@@ -28,6 +28,7 @@ export interface IStorage {
   sessionStore: Store;
   // User operations
   getUser(id: number): Promise<User | undefined>;
+  getUserById(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByIdentifier(identifier: string): Promise<User | undefined>;
   getUserByPassportId(passportId: string): Promise<User | undefined>;
@@ -156,6 +157,24 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
+  // Explicit implementation of getUserById to satisfy IStorage interface
+  async getUserById(id: number): Promise<User | undefined> {
+    try {
+      // Validate id is a proper number to avoid errors
+      const numericId = Number(id);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] getUserById called with invalid ID: ${id}, converted to ${numericId}`);
+        return undefined;
+      }
+      
+      // Delegate to the original getUser method
+      return this.getUser(numericId);
+    } catch (error) {
+      console.error('[Storage] getUserById error:', error);
+      return undefined;
+    }
+  }
   sessionStore: Store;
   private users: Map<number, User>;
   private tournaments: Map<number, Tournament>;
@@ -317,25 +336,90 @@ export class MemStorage implements IStorage {
 
   // User operations
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    try {
+      // Validate id is a proper number to avoid database errors
+      const numericId = Number(id);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] getUser called with invalid ID: ${id}, converted to ${numericId}`);
+        return undefined;
+      }
+      
+      return this.users.get(numericId);
+    } catch (error) {
+      console.error('[Storage] getUser error:', error);
+      return undefined;
+    }
+  }
+  
+  // Explicit implementation of getUserById for clarification
+  async getUserById(id: number): Promise<User | undefined> {
+    try {
+      // Validate id is a proper number to avoid database errors
+      const numericId = Number(id);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] getUserById called with invalid ID: ${id}, converted to ${numericId}`);
+        return undefined;
+      }
+      
+      // Delegate to the original getUser method
+      return this.getUser(numericId);
+    } catch (error) {
+      console.error('[Storage] getUserById error:', error);
+      return undefined;
+    }
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username
-    );
+    try {
+      // Validate username parameter
+      if (!username || typeof username !== 'string') {
+        console.log(`[Storage] getUserByUsername called with invalid username: ${username}`);
+        return undefined;
+      }
+      
+      return Array.from(this.users.values()).find(
+        (user) => user.username === username
+      );
+    } catch (error) {
+      console.error('[Storage] getUserByUsername error:', error);
+      return undefined;
+    }
   }
   
   async getUserByIdentifier(identifier: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === identifier || user.email === identifier
-    );
+    try {
+      // Validate identifier parameter
+      if (!identifier || typeof identifier !== 'string') {
+        console.log(`[Storage] getUserByIdentifier called with invalid identifier: ${identifier}`);
+        return undefined;
+      }
+      
+      return Array.from(this.users.values()).find(
+        (user) => user.username === identifier || user.email === identifier
+      );
+    } catch (error) {
+      console.error('[Storage] getUserByIdentifier error:', error);
+      return undefined;
+    }
   }
   
   async getUserByPassportId(passportId: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.passportId === passportId
-    );
+    try {
+      // Validate passport ID parameter
+      if (!passportId || typeof passportId !== 'string') {
+        console.log(`[Storage] getUserByPassportId called with invalid passportId: ${passportId}`);
+        return undefined;
+      }
+      
+      return Array.from(this.users.values()).find(
+        (user) => user.passportId === passportId
+      );
+    } catch (error) {
+      console.error('[Storage] getUserByPassportId error:', error);
+      return undefined;
+    }
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
@@ -1583,6 +1667,16 @@ export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: number): Promise<User | undefined> {
     try {
+      // Validate id is a proper number to avoid database errors
+      const numericId = Number(id);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] getUser called with invalid ID: ${id}, converted to ${numericId}`);
+        return undefined;
+      }
+      
+      console.log(`[Storage] getUser called with valid ID: ${numericId}`);
+      
       const [user] = await db.select({
         id: users.id,
         username: users.username,
@@ -1614,7 +1708,7 @@ export class DatabaseStorage implements IStorage {
         preferredFormat: users.preferredFormat,
         dominantHand: users.dominantHand,
         createdAt: users.createdAt,
-      }).from(users).where(eq(users.id, id));
+      }).from(users).where(eq(users.id, numericId));
       
       // Add the missing fields that are expected in the User type
       if (user) {
@@ -1624,6 +1718,25 @@ export class DatabaseStorage implements IStorage {
       return user;
     } catch (error) {
       console.error('[Storage] getUser error:', error);
+      return undefined;
+    }
+  }
+  
+  // Explicit implementation of getUserById for database storage
+  async getUserById(id: number): Promise<User | undefined> {
+    try {
+      // Validate id is a proper number to avoid database errors
+      const numericId = Number(id);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] getUserById called with invalid ID: ${id}, converted to ${numericId}`);
+        return undefined;
+      }
+      
+      // Delegate to the original getUser method
+      return this.getUser(numericId);
+    } catch (error) {
+      console.error('[Storage] getUserById error:', error);
       return undefined;
     }
   }
@@ -1748,6 +1861,12 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     try {
+      // Validate username parameter
+      if (!username || typeof username !== 'string') {
+        console.log(`[Storage] getUserByUsername called with invalid username: ${username}`);
+        return undefined;
+      }
+      
       const [user] = await db.select({
         id: users.id,
         username: users.username,
@@ -1847,6 +1966,14 @@ export class DatabaseStorage implements IStorage {
   
   async getUserByPassportId(passportId: string): Promise<User | undefined> {
     try {
+      // Validate passportId is not empty or invalid
+      if (!passportId || typeof passportId !== 'string' || passportId.trim() === '') {
+        console.log(`[Storage] getUserByPassportId called with invalid passportId: ${passportId}`);
+        return undefined;
+      }
+      
+      console.log(`[Storage] getUserByPassportId called with passportId: ${passportId}`);
+      
       const [user] = await db.select({
         id: users.id,
         username: users.username,
@@ -1898,44 +2025,77 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUser(id: number, update: Partial<InsertUser>): Promise<User | undefined> {
-    const [updatedUser] = await db.update(users)
-      .set(update)
-      .where(eq(users.id, id))
-      .returning();
-    return updatedUser;
+    try {
+      // Validate id is a proper number to avoid database errors
+      const numericId = Number(id);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] updateUser called with invalid ID: ${id}, converted to ${numericId}`);
+        return undefined;
+      }
+      
+      console.log(`[Storage] updateUser called with valid ID: ${numericId}`);
+      
+      const [updatedUser] = await db.update(users)
+        .set(update)
+        .where(eq(users.id, numericId))
+        .returning();
+      return updatedUser;
+    } catch (error) {
+      console.error('[Storage] updateUser error:', error);
+      return undefined;
+    }
   }
 
   async updateUserXP(id: number, xpToAdd: number): Promise<User | undefined> {
-    const user = await this.getUser(id);
-    if (!user) return undefined;
+    try {
+      // Validate id is a proper number to avoid database errors
+      const numericId = Number(id);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] updateUserXP called with invalid ID: ${id}, converted to ${numericId}`);
+        return undefined;
+      }
+      
+      console.log(`[Storage] updateUserXP called with valid ID: ${numericId} and XP to add: ${xpToAdd}`);
+      
+      const user = await this.getUser(numericId);
+      if (!user) {
+        console.log(`[Storage] updateUserXP - User with ID ${numericId} not found`);
+        return undefined;
+      }
 
-    const currentXP = user.xp || 0;
-    const currentLevel = user.level || 1;
-    
-    // Apply XP multiplier if the user is a founding member
-    let finalXpToAdd = xpToAdd;
-    if (user.isFoundingMember && user.xpMultiplier) {
-      // xpMultiplier is stored as a percentage (e.g., 110 for 1.1x)
-      finalXpToAdd = Math.floor(xpToAdd * (user.xpMultiplier / 100));
-      console.log(`[XP] User ${id} is a founding member with multiplier ${user.xpMultiplier}%. Adding ${finalXpToAdd}XP instead of ${xpToAdd}XP`);
+      const currentXP = user.xp || 0;
+      const currentLevel = user.level || 1;
+      
+      // Apply XP multiplier if the user is a founding member
+      let finalXpToAdd = xpToAdd;
+      if (user.isFoundingMember && user.xpMultiplier) {
+        // xpMultiplier is stored as a percentage (e.g., 110 for 1.1x)
+        finalXpToAdd = Math.floor(xpToAdd * (user.xpMultiplier / 100));
+        console.log(`[XP] User ${numericId} is a founding member with multiplier ${user.xpMultiplier}%. Adding ${finalXpToAdd}XP instead of ${xpToAdd}XP`);
+      }
+      
+      // Calculate new XP and level
+      const newXP = currentXP + finalXpToAdd;
+      
+      // Simple level calculation: level up for every 1000 XP
+      const xpPerLevel = 1000;
+      const newLevel = Math.floor(newXP / xpPerLevel) + 1;
+
+      const [updatedUser] = await db.update(users)
+        .set({ 
+          xp: newXP,
+          level: newLevel 
+        })
+        .where(eq(users.id, numericId))
+        .returning();
+      
+      return updatedUser;
+    } catch (error) {
+      console.error('[Storage] updateUserXP error:', error);
+      return undefined;
     }
-    
-    // Calculate new XP and level
-    const newXP = currentXP + finalXpToAdd;
-    
-    // Simple level calculation: level up for every 1000 XP
-    const xpPerLevel = 1000;
-    const newLevel = Math.floor(newXP / xpPerLevel) + 1;
-
-    const [updatedUser] = await db.update(users)
-      .set({ 
-        xp: newXP,
-        level: newLevel 
-      })
-      .where(eq(users.id, id))
-      .returning();
-    
-    return updatedUser;
   }
   
   async searchUsers(query: string, excludeUserId?: number): Promise<User[]> {
