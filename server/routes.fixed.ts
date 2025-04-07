@@ -155,8 +155,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.query.userId ? parseInt(req.query.userId as string, 10) : req.user.id;
       const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
       
-      // Execute the query to get recent matches
-      const recentMatches = await db.select()
+      // Execute the query to get recent matches with explicit column selection
+      const recentMatches = await db.select({
+        id: matches.id,
+        playerOneId: matches.playerOneId,
+        playerTwoId: matches.playerTwoId,
+        playerOnePartnerId: matches.playerOnePartnerId,
+        playerTwoPartnerId: matches.playerTwoPartnerId,
+        winnerId: matches.winnerId,
+        scorePlayerOne: matches.scorePlayerOne,
+        scorePlayerTwo: matches.scorePlayerTwo,
+        formatType: matches.formatType,
+        scoringSystem: matches.scoringSystem,
+        pointsToWin: matches.pointsToWin,
+        matchDate: matches.matchDate,
+        location: matches.location,
+        notes: matches.notes,
+        gameScores: matches.gameScores
+      })
         .from(matches)
         .where(
           or(
@@ -238,7 +254,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const userId = req.query.userId ? parseInt(req.query.userId as string, 10) : req.user.id;
       
-      // Get total matches where user was involved
+      // Get total matches where user was involved - use individual column selections to avoid round_number
       const [matchCount] = await db.select({
         count: sql<number>`count(*)`
       }).from(matches)
@@ -267,8 +283,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           )
         );
       
-      // Get a few recent matches for the overview
-      const recentMatches = await db.select()
+      // Get a few recent matches for the overview - select only the columns we need
+      const recentMatches = await db.select({
+        id: matches.id,
+        playerOneId: matches.playerOneId,
+        playerTwoId: matches.playerTwoId,
+        playerOnePartnerId: matches.playerOnePartnerId,
+        playerTwoPartnerId: matches.playerTwoPartnerId,
+        winnerId: matches.winnerId,
+        scorePlayerOne: matches.scorePlayerOne,
+        scorePlayerTwo: matches.scorePlayerTwo,
+        formatType: matches.formatType,
+        scoringSystem: matches.scoringSystem,
+        pointsToWin: matches.pointsToWin,
+        matchDate: matches.matchDate,
+        location: matches.location,
+        notes: matches.notes,
+        gameScores: matches.gameScores
+      })
         .from(matches)
         .where(
           or(
@@ -349,6 +381,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("[Match API] Error getting match stats:", error);
       res.status(500).json({ error: "Server error getting match stats" });
+    }
+  });
+
+  // Player search endpoint
+  app.get("/api/player/search", async (req: Request, res: Response) => {
+    try {
+      const query = req.query.q as string;
+      
+      if (!query || query.length < 2) {
+        return res.json([]);
+      }
+      
+      // Assuming 'users' table includes username, displayName fields
+      const { users } = await import("@shared/schema");
+      
+      const players = await db.select({
+        id: users.id,
+        username: users.username,
+        displayName: users.displayName,
+        avatarUrl: users.avatarUrl,
+        avatarInitials: users.avatarInitials
+      })
+      .from(users)
+      .where(
+        or(
+          sql`lower(${users.username}) like ${`%${query.toLowerCase()}%`}`,
+          sql`lower(${users.displayName}) like ${`%${query.toLowerCase()}%`}`
+        )
+      )
+      .limit(10);
+      
+      // Format the player data
+      const formattedPlayers = players.map(player => ({
+        id: player.id,
+        username: player.username,
+        displayName: player.displayName || player.username,
+        avatarUrl: player.avatarUrl,
+        avatarInitials: player.avatarInitials
+      }));
+      
+      res.json(formattedPlayers);
+      
+    } catch (error) {
+      console.error("[Player API] Error searching players:", error);
+      res.status(500).json({ error: "Server error searching players" });
     }
   });
 
