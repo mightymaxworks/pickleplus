@@ -766,8 +766,7 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
                     <FormControl>
                       <Input
                         placeholder="Enter your partner's ID"
-                        {...field}
-                        value={field.value === 0 ? "" : field.value || ""}
+                        value={field.value === 0 ? "" : field.value?.toString()}
                         onChange={(e) => {
                           const value = e.target.value;
                           if (value === "") {
@@ -809,8 +808,7 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
                   <FormControl>
                     <Input
                       placeholder={`Enter ${formatType === "singles" ? "opponent's" : "opponent 1's"} ID`}
-                      {...field}
-                      value={field.value === 0 ? "" : field.value || ""}
+                      value={field.value === 0 ? "" : field.value.toString()}
                       onChange={(e) => {
                         const value = e.target.value;
                         if (value === "") {
@@ -850,8 +848,7 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
                     <FormControl>
                       <Input
                         placeholder="Enter opponent 2's ID"
-                        {...field}
-                        value={field.value === 0 ? "" : field.value || ""}
+                        value={field.value === 0 ? "" : field.value?.toString()}
                         onChange={(e) => {
                           const value = e.target.value;
                           if (value === "") {
