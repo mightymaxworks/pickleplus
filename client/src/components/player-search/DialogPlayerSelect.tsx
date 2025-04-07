@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Check, ChevronsUpDown, User, X, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
-import { searchPlayers } from "@/lib/sdk/playerSDK";
+import { searchPlayers, UserSearchResult } from "@/lib/sdk/playerSDK";
 
 import {
   Dialog,
@@ -13,16 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-// Interface for user search results
-interface UserSearchResult {
-  id: number;
-  displayName: string | null;
-  username: string;
-  passportId?: string | null;
-  avatarUrl?: string | undefined;
-  avatarInitials?: string | undefined;
-}
 
 interface DialogPlayerSelectProps {
   onSelect?: (player: UserSearchResult) => void;

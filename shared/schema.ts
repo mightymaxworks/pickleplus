@@ -38,6 +38,7 @@ export const users = pgTable("users", {
   dominantHand: varchar("dominant_hand", { length: 20 }),
   regularSchedule: varchar("regular_schedule", { length: 255 }),
   createdAt: timestamp("created_at").defaultNow()
+  // Note: avatarUrl doesn't exist in the database (remove references to it in code)
 });
 
 // Tournaments table
@@ -153,7 +154,7 @@ export const userRedemptions = pgTable("user_redemptions", {
 // Matches table
 export const matches = pgTable("matches", {
   id: serial("id").primaryKey(),
-  matchDate: timestamp("match_date").notNull().defaultNow(),
+  matchDate: timestamp("match_date"),
   // Player information
   playerOneId: integer("player_one_id").notNull().references(() => users.id),
   playerTwoId: integer("player_two_id").notNull().references(() => users.id),
@@ -177,8 +178,9 @@ export const matches = pgTable("matches", {
   // Context information
   location: varchar("location", { length: 255 }),
   tournamentId: integer("tournament_id").references(() => tournaments.id),
-  roundNumber: integer("round_number"), // For tournament matches
-  stageType: varchar("stage_type", { length: 50 }), // main, qualifying, consolation
+  // Note: roundNumber and stageType don't exist in the database
+  // roundNumber: integer("round_number"), // For tournament matches
+  // stageType: varchar("stage_type", { length: 50 }), // main, qualifying, consolation
   isRated: boolean("is_rated").default(true),
   isVerified: boolean("is_verified").default(false), // Whether opponents have verified the result
   
@@ -189,7 +191,7 @@ export const matches = pgTable("matches", {
   
   // Timestamps
   createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow()
+  updatedAt: timestamp("updated_at")
 });
 
 // Ranking history table

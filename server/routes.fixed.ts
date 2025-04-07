@@ -400,7 +400,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: users.id,
         username: users.username,
         displayName: users.displayName,
-        avatarUrl: users.avatarUrl,
         avatarInitials: users.avatarInitials
       })
       .from(users)
@@ -417,7 +416,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: player.id,
         username: player.username,
         displayName: player.displayName || player.username,
-        avatarUrl: player.avatarUrl,
         avatarInitials: player.avatarInitials
       }));
       

@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { UseFormReturn } from "react-hook-form";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
+import { UserSearchResult } from "@/lib/sdk/playerSDK";
 
 import {
   FormControl,
@@ -26,16 +27,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-
-// Make sure our interface matches the one from playerSDK
-interface UserSearchResult {
-  id: number;
-  displayName: string | null;
-  username: string;
-  passportId?: string | null;
-  avatarUrl?: string | null;
-  avatarInitials?: string;
-}
 
 interface SearchablePlayerSelectProps {
   form: UseFormReturn<any>;

@@ -7,12 +7,16 @@
 
 import { User } from "@shared/schema";
 import { apiRequest } from "../queryClient";
+import { SocialModuleAPI } from "@/modules/types";
 
-interface UserSearchResult {
+// Define the UserSearchResult interface for consistent use across the application
+export interface UserSearchResult {
   id: number;
   username: string;
   displayName: string | null;
   avatarInitials?: string;
+  // Note: avatarUrl is not present in the database, but added here as optional 
+  // to maintain compatibility with existing components that expect it
   avatarUrl?: string | null;
   passportId?: string | null;
 }
@@ -62,14 +66,14 @@ export async function searchPlayers(
       
       // Fallback to social module if available
       try {
-        const { getModuleAPI } = await import("@/modules/moduleRegistration");
+        const { moduleRegistry } = await import("@/core/modules/moduleRegistry");
         
-        if (typeof getModuleAPI === "function") {
-          const socialModule = getModuleAPI("social");
-          if (socialModule && typeof socialModule.searchPlayers === "function") {
+        if (moduleRegistry && moduleRegistry.hasModule("social")) {
+          const socialModule = moduleRegistry.getModule<{name: string, version: string, exports: SocialModuleAPI}>("social");
+          if (socialModule && typeof socialModule.exports.searchPlayers === "function") {
             console.log("PlayerSDK: Falling back to social module searchPlayers");
-            const results = await socialModule.searchPlayers(query);
-            return results;
+            const results = await socialModule.exports.searchPlayers(query);
+            return results as UserSearchResult[];
           }
         }
       } catch (moduleError) {
