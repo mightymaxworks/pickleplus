@@ -2933,8 +2933,23 @@ function getRandomReason(pointChange: number): string {
         const sqlCommand = db.insert(matches).values(matchValues as any).toSQL();
         console.log('[Match API] Insert SQL command:', sqlCommand);
         
+        // Create a custom SQL query that only includes the columns we know exist in the database
+        // This fixes the issue with columns like "round_number" and "stage_type" that are in the schema but not in the database
+        const existingColumnsValues: Record<string, any> = {};
+        Object.keys(matchValues).forEach(key => {
+          // Convert camelCase to snake_case
+          const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+          if (existingColumns.includes(snakeKey)) {
+            existingColumnsValues[key] = matchValues[key];
+          } else {
+            console.log(`[Match API] Skipping field "${key}" (as "${snakeKey}") - column does not exist in database`);
+          }
+        });
+        
+        console.log('[Match API] Using filtered values with only existing columns:', Object.keys(existingColumnsValues));
+        
         // We need to explicitly type assert since the compiler doesn't know the exact structure
-        const result = await db.insert(matches).values(matchValues as any).returning();
+        const result = await db.insert(matches).values(existingColumnsValues as any).returning();
         console.log('[Match API] Insert operation completed, result:', result);
         
         match = Array.isArray(result) && result.length > 0 ? result[0] : result;
