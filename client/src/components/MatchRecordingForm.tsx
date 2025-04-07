@@ -162,7 +162,17 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
   const [openSearchDialog, setOpenSearchDialog] = useState(false);
   const [searchingField, setSearchingField] = useState<"playerTwoId" | "playerOnePartnerId" | "playerTwoPartnerId" | null>(null);
   
-  // User search query
+  // State for autocomplete dropdowns
+  const [showPlayerTwoDropdown, setShowPlayerTwoDropdown] = useState(false);
+  const [showPlayerOnePartnerDropdown, setShowPlayerOnePartnerDropdown] = useState(false);
+  const [showPlayerTwoPartnerDropdown, setShowPlayerTwoPartnerDropdown] = useState(false);
+  
+  // Debounced search queries
+  const [debouncedPlayerTwoQuery, setDebouncedPlayerTwoQuery] = useState("");
+  const [debouncedPlayerOnePartnerQuery, setDebouncedPlayerOnePartnerQuery] = useState("");
+  const [debouncedPlayerTwoPartnerQuery, setDebouncedPlayerTwoPartnerQuery] = useState("");
+  
+  // User search query for main dialog
   const { data: searchResults, isLoading: isSearching } = useQuery({
     queryKey: ["/api/users/search", searchQuery],
     queryFn: async () => {
@@ -173,6 +183,43 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
       return data as UserSearchResult[];
     },
     enabled: searchQuery.length >= 2,
+  });
+  
+  // Auto-search queries for direct field inputs
+  const { data: playerTwoSearchResults } = useQuery({
+    queryKey: ["/api/users/search", debouncedPlayerTwoQuery],
+    queryFn: async () => {
+      if (!debouncedPlayerTwoQuery || debouncedPlayerTwoQuery.length < 2) return [];
+      
+      const res = await apiRequest("GET", `/api/users/search?q=${encodeURIComponent(debouncedPlayerTwoQuery)}`);
+      const data = await res.json();
+      return data as UserSearchResult[];
+    },
+    enabled: debouncedPlayerTwoQuery.length >= 2,
+  });
+  
+  const { data: playerOnePartnerSearchResults } = useQuery({
+    queryKey: ["/api/users/search", debouncedPlayerOnePartnerQuery],
+    queryFn: async () => {
+      if (!debouncedPlayerOnePartnerQuery || debouncedPlayerOnePartnerQuery.length < 2) return [];
+      
+      const res = await apiRequest("GET", `/api/users/search?q=${encodeURIComponent(debouncedPlayerOnePartnerQuery)}`);
+      const data = await res.json();
+      return data as UserSearchResult[];
+    },
+    enabled: debouncedPlayerOnePartnerQuery.length >= 2,
+  });
+  
+  const { data: playerTwoPartnerSearchResults } = useQuery({
+    queryKey: ["/api/users/search", debouncedPlayerTwoPartnerQuery],
+    queryFn: async () => {
+      if (!debouncedPlayerTwoPartnerQuery || debouncedPlayerTwoPartnerQuery.length < 2) return [];
+      
+      const res = await apiRequest("GET", `/api/users/search?q=${encodeURIComponent(debouncedPlayerTwoPartnerQuery)}`);
+      const data = await res.json();
+      return data as UserSearchResult[];
+    },
+    enabled: debouncedPlayerTwoPartnerQuery.length >= 2,
   });
 
   // Initialize form with default values
@@ -564,6 +611,8 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
   const [playerTwoIdInput, setPlayerTwoIdInput] = useState("");
   const [playerOnePartnerIdInput, setPlayerOnePartnerIdInput] = useState("");
   const [playerTwoPartnerIdInput, setPlayerTwoPartnerIdInput] = useState("");
+  
+
 
   // Handler for selecting a player from search results
   const selectPlayer = (player: UserSearchResult) => {
@@ -874,7 +923,7 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
               </label>
             </div>
             
-            <div className="flex space-x-2">
+            <div className="flex space-x-2 relative">
               <input
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder={`Enter ${formatType === "singles" ? "opponent's" : "opponent 1's"} ID or name`}
@@ -882,6 +931,19 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
                 onChange={(e) => {
                   const value = e.target.value;
                   setPlayerTwoIdInput(value);
+                  
+                  // Set debounced query after a small delay for search
+                  setTimeout(() => {
+                    setDebouncedPlayerTwoQuery(value);
+                  }, 300);
+                  
+                  // Show dropdown if typing
+                  if (value.length >= 2) {
+                    setShowPlayerTwoDropdown(true);
+                  } else {
+                    setShowPlayerTwoDropdown(false);
+                  }
+                  
                   if (value === "") {
                     form.setValue("playerTwoId", 0);
                     // Clear selected player when field is emptied
@@ -896,6 +958,17 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
                     form.setValue("playerTwoId", parseInt(value));
                   }
                 }}
+                onBlur={() => {
+                  // Delay hiding dropdown to allow for item selection
+                  setTimeout(() => {
+                    setShowPlayerTwoDropdown(false);
+                  }, 200);
+                }}
+                onFocus={() => {
+                  if (playerTwoIdInput.length >= 2) {
+                    setShowPlayerTwoDropdown(true);
+                  }
+                }}
               />
               <Button
                 type="button"
@@ -905,6 +978,38 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
               >
                 <Search className="h-4 w-4" />
               </Button>
+              
+              {/* Autocomplete dropdown */}
+              {showPlayerTwoDropdown && playerTwoSearchResults && playerTwoSearchResults.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-lg z-10 max-h-48 overflow-y-auto">
+                  {playerTwoSearchResults.map((player) => (
+                    <div 
+                      key={player.id}
+                      className="flex items-center p-2 hover:bg-muted cursor-pointer"
+                      onMouseDown={(e) => {
+                        e.preventDefault(); // Prevent input blur
+                        setPlayerTwoIdInput(player.displayName || player.username);
+                        form.setValue("playerTwoId", player.id);
+                        setSelectedPlayers(prev => ({
+                          ...prev,
+                          playerTwoId: player
+                        }));
+                        setShowPlayerTwoDropdown(false);
+                      }}
+                    >
+                      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center mr-2">
+                        {player.displayName?.charAt(0) || player.username?.charAt(0) || 'U'}
+                      </div>
+                      <div>
+                        <div className="font-medium text-sm">{player.displayName || player.username}</div>
+                        <div className="text-xs text-muted-foreground">
+                          ID: #{player.id} {player.passportId && `• Passport: ${player.passportId}`}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             
             {selectedPlayers.playerTwoId && (
