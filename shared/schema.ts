@@ -153,17 +153,41 @@ export const userRedemptions = pgTable("user_redemptions", {
 // Matches table
 export const matches = pgTable("matches", {
   id: serial("id").primaryKey(),
-  matchDate: timestamp("match_date").notNull(),
-  winner1Id: integer("winner_1_id").notNull().references(() => users.id),
-  winner2Id: integer("winner_2_id").references(() => users.id),
-  loser1Id: integer("loser_1_id").notNull().references(() => users.id),
-  loser2Id: integer("loser_2_id").references(() => users.id),
-  score: varchar("score", { length: 50 }).notNull(),
-  format: varchar("format", { length: 50 }).notNull().default("singles"),
+  matchDate: timestamp("match_date").notNull().defaultNow(),
+  // Player information
+  playerOneId: integer("player_one_id").notNull().references(() => users.id),
+  playerTwoId: integer("player_two_id").notNull().references(() => users.id),
+  playerOnePartnerId: integer("player_one_partner_id").references(() => users.id),
+  playerTwoPartnerId: integer("player_two_partner_id").references(() => users.id),
+  winnerId: integer("winner_id").notNull().references(() => users.id),
+  
+  // Score information
+  scorePlayerOne: varchar("score_player_one", { length: 50 }).notNull(),
+  scorePlayerTwo: varchar("score_player_two", { length: 50 }).notNull(),
+  gameScores: json("game_scores"), // Array of game scores for multi-game matches
+  
+  // Match metadata
+  formatType: varchar("format_type", { length: 50 }).notNull().default("singles"), // singles, doubles
+  scoringSystem: varchar("scoring_system", { length: 50 }).notNull().default("traditional"), // traditional, rally
+  pointsToWin: integer("points_to_win").notNull().default(11), // 11, 15, 21
+  division: varchar("division", { length: 50 }).default("open"), // open, 19+, 35+, 50+, etc.
+  matchType: varchar("match_type", { length: 50 }).notNull().default("casual"), // casual, league, tournament
+  eventTier: varchar("event_tier", { length: 50 }).default("local"), // local, regional, national, international
+  
+  // Context information
   location: varchar("location", { length: 255 }),
   tournamentId: integer("tournament_id").references(() => tournaments.id),
+  roundNumber: integer("round_number"), // For tournament matches
+  stageType: varchar("stage_type", { length: 50 }), // main, qualifying, consolation
   isRated: boolean("is_rated").default(true),
+  isVerified: boolean("is_verified").default(false), // Whether opponents have verified the result
+  
+  // Additional information
   notes: text("notes"),
+  xpAwarded: integer("xp_awarded").default(0),
+  pointsAwarded: integer("points_awarded").default(0),
+  
+  // Timestamps
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
@@ -260,7 +284,28 @@ export const userRelations = relations(users, ({ many }) => ({
   receivedConnections: many(connections, { relationName: "recipient" }),
   externalAccounts: many(externalAccounts),
   blockedUsers: many(userBlockList, { relationName: "blocker" }),
-  blockedBy: many(userBlockList, { relationName: "blocked" })
+  blockedBy: many(userBlockList, { relationName: "blocked" }),
+  playerOneMatches: many(matches, { relationName: "playerOne" }),
+  playerTwoMatches: many(matches, { relationName: "playerTwo" }),
+  playerOnePartnerMatches: many(matches, { relationName: "playerOnePartner" }),
+  playerTwoPartnerMatches: many(matches, { relationName: "playerTwoPartner" }),
+  wonMatches: many(matches, { relationName: "winner" })
+}));
+
+// Tournament relations
+export const tournamentRelations = relations(tournaments, ({ many }) => ({
+  registrations: many(tournamentRegistrations),
+  matches: many(matches)
+}));
+
+// Match relations
+export const matchRelations = relations(matches, ({ one }) => ({
+  playerOne: one(users, { fields: [matches.playerOneId], references: [users.id], relationName: "playerOne" }),
+  playerTwo: one(users, { fields: [matches.playerTwoId], references: [users.id], relationName: "playerTwo" }),
+  playerOnePartner: one(users, { fields: [matches.playerOnePartnerId], references: [users.id], relationName: "playerOnePartner" }),
+  playerTwoPartner: one(users, { fields: [matches.playerTwoPartnerId], references: [users.id], relationName: "playerTwoPartner" }),
+  winner: one(users, { fields: [matches.winnerId], references: [users.id], relationName: "winner" }),
+  tournament: one(tournaments, { fields: [matches.tournamentId], references: [tournaments.id] })
 }));
 
 // Create insert schema for user validation
@@ -293,8 +338,62 @@ export const insertRedemptionCodeSchema = createInsertSchema(redemptionCodes)
 export const insertUserRedemptionSchema = createInsertSchema(userRedemptions)
   .omit({ id: true, createdAt: true, redeemedAt: true });
 
+// Create a more detailed match insert schema with validation
 export const insertMatchSchema = createInsertSchema(matches)
-  .omit({ id: true, createdAt: true, updatedAt: true });
+  .omit({ 
+    id: true, 
+    createdAt: true, 
+    updatedAt: true, 
+    isVerified: true, 
+    xpAwarded: true, 
+    pointsAwarded: true
+  })
+  .extend({
+    // Make sure these fields are present
+    playerOneId: z.number().int().positive(),
+    playerTwoId: z.number().int().positive(),
+    
+    // Optional fields for doubles
+    playerOnePartnerId: z.number().int().positive().optional(),
+    playerTwoPartnerId: z.number().int().positive().optional(),
+    
+    // Match format validation
+    formatType: z.enum(["singles", "doubles"]).default("singles"),
+    scoringSystem: z.enum(["traditional", "rally"]).default("traditional"),
+    pointsToWin: z.number().int().refine(value => [11, 15, 21].includes(value), {
+      message: "Points to win must be 11, 15, or 21",
+    }),
+    
+    // Match type validation
+    matchType: z.enum(["casual", "league", "tournament"]).default("casual"),
+    
+    // Division validation
+    division: z.enum(["open", "19+", "35+", "50+", "60+", "70+"]).default("open"),
+  })
+  .refine(data => {
+    // Doubles matches must have partners
+    if (data.formatType === "doubles") {
+      return !!data.playerOnePartnerId && !!data.playerTwoPartnerId;
+    }
+    return true;
+  }, {
+    message: "Doubles matches require partner IDs",
+    path: ["playerOnePartnerId"],
+  })
+  .refine(data => {
+    // All players must be unique
+    const players = [
+      data.playerOneId, 
+      data.playerTwoId, 
+      data.playerOnePartnerId, 
+      data.playerTwoPartnerId
+    ].filter(Boolean);
+    const uniquePlayers = new Set(players);
+    return uniquePlayers.size === players.length;
+  }, {
+    message: "Each player can only appear once in a match",
+    path: ["playerTwoId"],
+  });
 
 export const insertRankingHistorySchema = createInsertSchema(rankingHistory)
   .omit({ id: true, createdAt: true });

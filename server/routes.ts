@@ -1664,41 +1664,96 @@ function getRandomReason(pointChange: number): string {
       const playerTwoScore = parseInt(req.body.scorePlayerTwo);
       winnerId = playerOneScore > playerTwoScore ? req.body.playerOneId : req.body.playerTwoId;
       
+      // Set match date (defaulting to now if not provided)
+      const matchDate = req.body.matchDate ? new Date(req.body.matchDate) : new Date();
+      
       // Validate match data against our schema
       const matchData = insertMatchSchema.parse({
         ...req.body,
-        // Set default values for optional fields if not provided
+        matchDate,
+        winnerId, // Set winner based on scores
+        
+        // Ensure required fields are present
+        playerOneId: req.body.playerOneId,
+        playerTwoId: req.body.playerTwoId,
+        scorePlayerOne: req.body.scorePlayerOne,
+        scorePlayerTwo: req.body.scorePlayerTwo,
+        
+        // Handle optional fields with defaults
         playerOnePartnerId: req.body.playerOnePartnerId || undefined,
         playerTwoPartnerId: req.body.playerTwoPartnerId || undefined,
         formatType: req.body.formatType || "singles",
-        division: req.body.division || "open", // Age division (open, 35+, 50+, etc.)
+        division: req.body.division || "open",
         scoringSystem: req.body.scoringSystem || "traditional",
         pointsToWin: req.body.pointsToWin || 11,
-        matchType: req.body.matchType || "casual", // casual, league, tournament
-        eventTier: req.body.eventTier || "local", // local, regional, national, international
+        matchType: req.body.matchType || "casual",
+        eventTier: req.body.eventTier || "local",
         notes: req.body.notes || null,
         location: req.body.location || null,
-        pointsAwarded: 10, // Fixed points for casual matches
-        xpAwarded: 25, // Standard XP for playing a match
-        winnerId: winnerId // Set winner based on scores
+        
+        // Tournament context fields
+        tournamentId: req.body.tournamentId || undefined,
+        roundNumber: req.body.roundNumber,
+        stageType: req.body.stageType,
+        
+        // Convert game scores to JSON if provided
+        gameScores: req.body.gameScores ? JSON.stringify(req.body.gameScores) : undefined
       });
       
-      // Ensure the current user is either player one or player one's partner
-      if (matchData.playerOneId !== userId && matchData.playerOnePartnerId !== userId) {
+      // Ensure the current user is one of the players
+      const isCurrentUserInMatch = [
+        matchData.playerOneId, 
+        matchData.playerOnePartnerId, 
+        matchData.playerTwoId, 
+        matchData.playerTwoPartnerId
+      ].includes(userId);
+      
+      if (!isCurrentUserInMatch) {
         return res.status(400).json({ 
-          message: "Current user must be player one or player one's partner" 
+          message: "Current user must be one of the players in the match" 
         });
       }
       
-      // Winner is already determined before validation
+      // Determine loser for point calculation
       const loserId = matchData.winnerId === matchData.playerOneId ? matchData.playerTwoId : matchData.playerOneId;
       
+      // Check if this is a tournament match and fetch additional context if needed
+      let tournamentData = null;
+      let isTournamentFinal = false;
+      let isTournamentSemiFinal = false;
+      let participantCount = 0;
+      
+      if (matchData.tournamentId && matchData.matchType === "tournament") {
+        // Fetch tournament info to enrich the match context
+        const tournament = await storage.getTournament(matchData.tournamentId);
+        if (tournament) {
+          tournamentData = tournament;
+          participantCount = tournament.currentParticipants || 0;
+          
+          // Determine special tournament rounds
+          if (matchData.stageType === "main" && matchData.roundNumber === 1) {
+            isTournamentFinal = true;
+          } else if (matchData.stageType === "main" && matchData.roundNumber === 2) {
+            isTournamentSemiFinal = true;
+          }
+          
+          // Set event tier from tournament if not provided
+          if (!req.body.eventTier) {
+            // Map tournament level to event tier
+            const tournamentToEventTierMap: Record<string, string> = {
+              "local": "local",
+              "regional": "regional",
+              "national": "national",
+              "international": "international"
+            };
+            
+            matchData.eventTier = tournamentToEventTierMap[tournament.level] || "local";
+          }
+        }
+      }
+      
       // Create the match record
-      const match = await storage.createMatch({
-        ...matchData,
-        pointsAwarded: 10, // Fixed points for casual matches
-        xpAwarded: 25 // Standard XP for playing a match
-      });
+      const match = await storage.createMatch(matchData);
       
       // Prepare player data for CourtIQ processing
       const players = [
@@ -1716,11 +1771,23 @@ function getRandomReason(pointChange: number): string {
         }
       ];
       
-      // Process the match in CourtIQ system (if available)
+      // Initialize objects to store rating and ranking point results
       let ratingResults;
       let rankingPointsResult;
+      
       try {
+        // Process the match in CourtIQ system
         if (typeof courtIQSystem !== 'undefined') {
+          // Create the tournament context object if this is a tournament match
+          const tournamentContext = matchData.tournamentId ? {
+            tournamentId: matchData.tournamentId,
+            stageType: matchData.stageType,
+            roundNumber: matchData.roundNumber,
+            isFinal: isTournamentFinal,
+            isSemiFinal: isTournamentSemiFinal,
+            participantCount
+          } : undefined;
+          
           // Process match in CourtIQ for rating changes
           ratingResults = await courtIQSystem.processMatch({
             matchId: match.id,
@@ -1728,7 +1795,8 @@ function getRandomReason(pointChange: number): string {
             format: matchData.formatType,
             division: matchData.division,
             matchType: matchData.matchType,
-            eventTier: matchData.eventTier
+            eventTier: matchData.eventTier,
+            tournamentContext
           });
           
           // Calculate ranking points based on match context and rating differential
@@ -1747,11 +1815,17 @@ function getRandomReason(pointChange: number): string {
                 division: matchData.division,
                 format: matchData.formatType
               },
-              // Additional context for point calculation
-              isTournamentFinal: matchData.isTournamentFinal || false,
-              isTournamentSemiFinal: matchData.isTournamentSemiFinal || false,
-              participantCount: matchData.participantCount
+              // Tournament context
+              isTournamentFinal,
+              isTournamentSemiFinal,
+              participantCount,
+              tournamentContext
             });
+            
+            // Calculate match outcome significance (decisive vs close)
+            const scoreGap = Math.abs(parseInt(matchData.scorePlayerOne) - parseInt(matchData.scorePlayerTwo));
+            const isDecisive = scoreGap > Math.floor(matchData.pointsToWin / 3);
+            const outcomeType = isDecisive ? "decisive" : "close";
             
             // Award enhanced ranking points to the winner
             await courtIQSystem.awardEnhancedRankingPoints(
@@ -1762,14 +1836,14 @@ function getRandomReason(pointChange: number): string {
               "match_victory",
               matchData.matchType,
               matchData.eventTier,
-              matchData.scorePlayerOne > matchData.scorePlayerTwo ? "decisive" : "close",
+              outcomeType,
               match.id,
               ratingResults?.playerOneRatingChange?.ratingDifferential,
               1.0, // No additional multiplier
               `Match victory against player #${loserId}`
             );
           } else {
-            // For doubles matches - simplified point calculation for now
+            // For doubles matches
             rankingPointsResult = await courtIQSystem.calculateRankingPointsForMatch({
               matchType: matchData.matchType,
               eventTier: matchData.eventTier,
@@ -1783,14 +1857,24 @@ function getRandomReason(pointChange: number): string {
                 division: matchData.division,
                 format: matchData.formatType
               },
-              isTournamentFinal: matchData.isTournamentFinal || false,
-              isTournamentSemiFinal: matchData.isTournamentSemiFinal || false,
-              participantCount: matchData.participantCount
+              isTournamentFinal,
+              isTournamentSemiFinal,
+              participantCount,
+              tournamentContext
             });
             
-            // Award points to the winning team
+            // Prepare player representation for the description
+            const winningTeam = matchData.winnerId === matchData.playerOneId 
+              ? { main: matchData.playerOneId, partner: matchData.playerOnePartnerId }
+              : { main: matchData.playerTwoId, partner: matchData.playerTwoPartnerId };
+            
+            const losingTeam = matchData.winnerId === matchData.playerOneId 
+              ? { main: matchData.playerTwoId, partner: matchData.playerTwoPartnerId }
+              : { main: matchData.playerOneId, partner: matchData.playerOnePartnerId };
+            
+            // Award points to both winners
             await courtIQSystem.awardEnhancedRankingPoints(
-              matchData.winnerId,
+              winningTeam.main,
               rankingPointsResult,
               matchData.division,
               matchData.formatType,
@@ -1801,17 +1885,13 @@ function getRandomReason(pointChange: number): string {
               match.id,
               undefined,
               1.0,
-              `Doubles victory with partner #${matchData.playerOnePartnerId || matchData.playerTwoPartnerId}`
+              `Doubles victory with partner #${winningTeam.partner} against team #${losingTeam.main}/${losingTeam.partner || 'solo'}`
             );
             
             // If there's a partner, also award them points
-            const partnerId = matchData.winnerId === matchData.playerOneId 
-              ? matchData.playerOnePartnerId 
-              : matchData.playerTwoPartnerId;
-              
-            if (partnerId) {
+            if (winningTeam.partner) {
               await courtIQSystem.awardEnhancedRankingPoints(
-                partnerId,
+                winningTeam.partner,
                 rankingPointsResult,
                 matchData.division,
                 matchData.formatType,
@@ -1822,7 +1902,7 @@ function getRandomReason(pointChange: number): string {
                 match.id,
                 undefined,
                 1.0,
-                `Doubles victory with partner #${matchData.winnerId}`
+                `Doubles victory with partner #${winningTeam.main} against team #${losingTeam.main}/${losingTeam.partner || 'solo'}`
               );
             }
           }
@@ -1832,23 +1912,28 @@ function getRandomReason(pointChange: number): string {
         // Continue with legacy point system as fallback
       }
       
-      // Fixed points as a fallback if CourtIQ system fails
+      // Default points if CourtIQ system is unavailable or fails
       let pointsForWinner = 10;
+      
+      // If we have points from CourtIQ, use those
       if (rankingPointsResult) {
         pointsForWinner = rankingPointsResult.total;
       } else {
         // Legacy point system as fallback
-        // Update winner's ranking points using the old system
         const updatedWinner = await storage.updateUserRankingPoints(matchData.winnerId, pointsForWinner);
         
         // Get the old and new ranking
         const oldRanking = (updatedWinner?.rankingPoints || 0) - pointsForWinner;
         const newRanking = updatedWinner?.rankingPoints || 0;
         
-        // Determine opponent(s) for the ranking history reason text
+        // Determine opponent text for history
         let opponentText = `player #${loserId}`;
         if (matchData.formatType === "doubles") {
-          opponentText = `players #${loserId}${matchData.playerTwoPartnerId ? ` and #${matchData.playerTwoPartnerId}` : ''}`;
+          const loserPartner = matchData.winnerId === matchData.playerOneId 
+            ? matchData.playerTwoPartnerId 
+            : matchData.playerOnePartnerId;
+            
+          opponentText = `players #${loserId}${loserPartner ? ` and #${loserPartner}` : ''}`;
         }
         
         // Record ranking change in legacy system
@@ -1861,12 +1946,14 @@ function getRandomReason(pointChange: number): string {
         });
       }
       
-      // Update match counts for the current user
+      // Update match counts for all participating players
       const isWinner = userId === matchData.winnerId;
       
+      // Update the current user's match stats
       await storage.updateUser(userId, {
         totalMatches: (req.user as any).totalMatches + 1,
-        matchesWon: isWinner ? (req.user as any).matchesWon + 1 : (req.user as any).matchesWon
+        matchesWon: isWinner ? (req.user as any).matchesWon + 1 : (req.user as any).matchesWon,
+        lastMatchDate: matchDate
       });
       
       // Create activity for the user recording the match
@@ -1875,21 +1962,51 @@ function getRandomReason(pointChange: number): string {
         type: "match_played",
         description: isWinner ? "Won a match" : "Played a match",
         xpEarned: 25, // Award XP for playing a match regardless of outcome
-        metadata: { matchId: match.id }
+        metadata: { 
+          matchId: match.id,
+          tournamentId: matchData.tournamentId,
+          format: matchData.formatType,
+          outcome: isWinner ? "won" : "lost"
+        }
       });
       
       // Award XP with the XP system
       try {
+        // Base XP award for recording a match
+        let xpAction = isWinner ? "match_won" : "match_played";
+        
+        // Special XP actions for tournament matches
+        if (matchData.matchType === "tournament") {
+          if (isWinner) {
+            if (isTournamentFinal) {
+              xpAction = "tournament_final_won";
+            } else if (isTournamentSemiFinal) {
+              xpAction = "tournament_semifinal_won";
+            } else {
+              xpAction = "tournament_match_won";
+            }
+          } else {
+            xpAction = "tournament_match_played";
+          }
+        }
+        
+        // Award XP through the XP system
         await xpSystem.awardXP(
           userId,
-          isWinner ? "match_won" : "match_recorded",
-          undefined,
+          xpAction,
+          matchData.tournamentId,
           match.id
         );
       } catch (xpError) {
         console.error("Error awarding XP:", xpError);
         // Continue without XP system - we'll still use the old method
-        await storage.updateUserXP(userId, isWinner ? 50 : 25);
+        const baseXP = isWinner ? 50 : 25;
+        const tournamentBonus = matchData.matchType === "tournament" ? 25 : 0;
+        const finalBonus = isTournamentFinal ? 50 : 0;
+        const semiFinalBonus = isTournamentSemiFinal ? 25 : 0;
+        
+        const totalXP = baseXP + tournamentBonus + finalBonus + semiFinalBonus;
+        await storage.updateUserXP(userId, totalXP);
       }
       
       // Prepare response
@@ -1916,10 +2033,43 @@ function getRandomReason(pointChange: number): string {
         };
       }
       
+      // Add tournament context if this was a tournament match
+      if (tournamentData) {
+        response.tournamentContext = {
+          tournamentName: tournamentData.name,
+          tournamentLevel: tournamentData.level,
+          roundType: matchData.stageType,
+          roundNumber: matchData.roundNumber,
+          isFinal: isTournamentFinal,
+          isSemiFinal: isTournamentSemiFinal
+        };
+      }
+      
+      // Publish match recorded event through the event bus
+      try {
+        // This allows other modules (like achievement system) to react
+        await serverEventBus.publish("match:recorded", {
+          matchId: match.id,
+          winnerId: matchData.winnerId,
+          playerOneId: matchData.playerOneId,
+          playerTwoId: matchData.playerTwoId,
+          playerOnePartnerId: matchData.playerOnePartnerId,
+          playerTwoPartnerId: matchData.playerTwoPartnerId,
+          formatType: matchData.formatType,
+          matchType: matchData.matchType,
+          tournamentId: matchData.tournamentId,
+          isRated: true,
+          ratingChanges: ratingResults
+        });
+      } catch (eventError) {
+        console.error("Error publishing match event:", eventError);
+        // Non-critical error, continue
+      }
+      
       res.status(201).json(response);
     } catch (error) {
       console.error("Error recording match:", error);
-      res.status(500).json({ message: "Error recording match" });
+      res.status(500).json({ message: "Error recording match", error: (error as Error).message });
     }
   });
 

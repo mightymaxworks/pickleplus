@@ -9,6 +9,7 @@ import { AlertCircle, Users, UserCircle, Plus, Minus, ChevronRight, ChevronLeft 
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -26,6 +27,13 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,6 +72,7 @@ const matchFormSchema = z.object({
   pointsToWin: z.coerce.number().int().refine(value => [11, 15, 21].includes(value), {
     message: "Points to win must be 11, 15, or 21",
   }),
+  division: z.enum(["open", "19+", "35+", "50+", "60+", "70+"]).default("open"),
   
   // Scores
   scorePlayerOne: z.string().min(1),
@@ -73,7 +82,29 @@ const matchFormSchema = z.object({
   // Match metadata
   location: z.string().optional(),
   notes: z.string().optional(),
-  matchType: z.literal("casual"), // For now, only casual is allowed
+  matchType: z.enum(["casual", "league", "tournament"]).default("casual"),
+  eventTier: z.enum(["local", "regional", "national", "international"]).default("local"),
+  
+  // Tournament context (only used when matchType is "tournament")
+  tournamentId: z.number().int().positive().optional(),
+  roundNumber: z.number().int().optional(),
+  stageType: z.enum(["qualifying", "main", "consolation"]).optional(),
+}).refine(data => {
+  // If it's a tournament match, ensure tournamentId is provided
+  return data.matchType !== "tournament" || (data.matchType === "tournament" && !!data.tournamentId);
+}, {
+  message: "Tournament ID is required for tournament matches",
+  path: ["tournamentId"]
+}).refine(data => {
+  // For doubles matches, ensure partners are specified
+  return data.formatType !== "doubles" || (
+    data.formatType === "doubles" && 
+    typeof data.playerOnePartnerId === "number" && 
+    typeof data.playerTwoPartnerId === "number"
+  );
+}, {
+  message: "Partner IDs are required for doubles matches",
+  path: ["playerOnePartnerId"]
 });
 
 type MatchFormValues = z.infer<typeof matchFormSchema>;
@@ -107,9 +138,11 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
       formatType: "singles",
       scoringSystem: "traditional",
       pointsToWin: 11,
+      division: "open",
       scorePlayerOne: "0",
       scorePlayerTwo: "0",
       matchType: "casual",
+      eventTier: "local",
       location: "",
       notes: "",
       gameScores: [{ playerOneScore: 0, playerTwoScore: 0 }],
@@ -201,9 +234,11 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
         formatType: "singles",
         scoringSystem: "traditional",
         pointsToWin: 11,
+        division: "open",
         scorePlayerOne: "0",
         scorePlayerTwo: "0",
         matchType: "casual",
+        eventTier: "local",
         location: "",
         notes: "",
         gameScores: [{ playerOneScore: 0, playerTwoScore: 0 }],
@@ -728,11 +763,173 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
           <div className="text-center mb-2">
             <h3 className="text-base font-semibold">Step 4: Match Details</h3>
             <p className="text-xs text-muted-foreground">
-              Add optional information
+              Add match information
             </p>
           </div>
           
           <div className="grid grid-cols-1 gap-4">
+            {/* Match Type */}
+            <FormField
+              control={form.control}
+              name="matchType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm">Match Type</FormLabel>
+                  <FormControl>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select match type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="casual">Casual Match</SelectItem>
+                        <SelectItem value="league">League Match</SelectItem>
+                        <SelectItem value="tournament">Tournament Match</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Event Tier - Always visible as the event context matters */}
+            <FormField
+              control={form.control}
+              name="eventTier"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm">Event Level</FormLabel>
+                  <FormControl>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select event level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="local">Local</SelectItem>
+                        <SelectItem value="regional">Regional</SelectItem>
+                        <SelectItem value="national">National</SelectItem>
+                        <SelectItem value="international">International</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormDescription className="text-xs">
+                    Higher level events earn more points
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            {/* Tournament fields - Only shown for tournament match type */}
+            {form.watch("matchType") === "tournament" && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="tournamentId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm">Tournament ID</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter tournament ID"
+                          {...field}
+                          value={field.value || ""}
+                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                          type="number"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="roundNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm">Round Number</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter round number (1=final, 2=semis, etc.)"
+                          {...field}
+                          value={field.value || ""}
+                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                          type="number"
+                        />
+                      </FormControl>
+                      <FormDescription className="text-xs">
+                        Lower numbers are later rounds (1=final, 2=semis, etc.)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="stageType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm">Bracket Stage</FormLabel>
+                      <FormControl>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select bracket stage" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="qualifying">Qualifying</SelectItem>
+                            <SelectItem value="main">Main Bracket</SelectItem>
+                            <SelectItem value="consolation">Consolation Bracket</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
+            
+            {/* Age Division */}
+            <FormField
+              control={form.control}
+              name="division"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm">Age Division</FormLabel>
+                  <FormControl>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select age division" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="open">Open (All Ages)</SelectItem>
+                        <SelectItem value="19+">19+</SelectItem>
+                        <SelectItem value="35+">35+</SelectItem>
+                        <SelectItem value="50+">50+</SelectItem>
+                        <SelectItem value="60+">60+</SelectItem>
+                        <SelectItem value="70+">70+</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
             {/* Location */}
             <FormField
               control={form.control}
