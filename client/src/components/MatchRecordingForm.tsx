@@ -200,6 +200,33 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
   const scoringSystem = form.watch("scoringSystem");
   const pointsToWin = form.watch("pointsToWin");
   
+  // Effect to set age division based on user's year of birth
+  useEffect(() => {
+    if (user?.yearOfBirth && form.watch("matchType") === "casual") {
+      // Calculate age from birth year
+      const today = new Date();
+      const age = today.getFullYear() - user.yearOfBirth;
+      
+      // Determine proper age division based on user's age
+      let division: "open" | "19+" | "35+" | "50+" | "60+" | "70+" = "open";
+      if (age >= 70) {
+        division = "70+";
+      } else if (age >= 60) {
+        division = "60+";
+      } else if (age >= 50) {
+        division = "50+";
+      } else if (age >= 35) {
+        division = "35+";
+      } else if (age >= 19) {
+        division = "19+";
+      }
+      
+      // Update the division field
+      form.setValue("division", division);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.yearOfBirth, form.watch("matchType")]);
+  
   // Effect to update game scores when games change
   useEffect(() => {
     const gameScoresString = games.map(game => 
@@ -740,11 +767,11 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
                       <Input
                         placeholder="Enter your partner's ID"
                         {...field}
-                        value={field.value || ""}
+                        value={field.value === 0 ? "" : field.value || ""}
                         onChange={(e) => {
                           const value = e.target.value;
                           if (value === "") {
-                            field.onChange(undefined);
+                            field.onChange(0);
                           } else if (!isNaN(Number(value))) {
                             field.onChange(parseInt(value));
                           }
@@ -783,7 +810,7 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
                     <Input
                       placeholder={`Enter ${formatType === "singles" ? "opponent's" : "opponent 1's"} ID`}
                       {...field}
-                      value={field.value || ""}
+                      value={field.value === 0 ? "" : field.value || ""}
                       onChange={(e) => {
                         const value = e.target.value;
                         if (value === "") {
@@ -824,11 +851,11 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
                       <Input
                         placeholder="Enter opponent 2's ID"
                         {...field}
-                        value={field.value || ""}
+                        value={field.value === 0 ? "" : field.value || ""}
                         onChange={(e) => {
                           const value = e.target.value;
                           if (value === "") {
-                            field.onChange(undefined);
+                            field.onChange(0);
                           } else if (!isNaN(Number(value))) {
                             field.onChange(parseInt(value));
                           }
