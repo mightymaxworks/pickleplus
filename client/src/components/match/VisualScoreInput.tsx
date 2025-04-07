@@ -83,9 +83,20 @@ export function VisualScoreInput({
               <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
             
-            <div className="text-3xl sm:text-4xl font-bold w-10 sm:w-12 text-center">
-              {value.playerOneScore}
-            </div>
+            <input
+              type="number"
+              min="0"
+              max="99"
+              value={value.playerOneScore}
+              onChange={(e) => {
+                const newScore = Math.max(0, parseInt(e.target.value) || 0);
+                onChange({
+                  ...value,
+                  playerOneScore: newScore
+                });
+              }}
+              className="text-3xl sm:text-4xl font-bold w-10 sm:w-12 text-center bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-primary rounded-md"
+            />
             
             <Button
               variant="outline"
@@ -126,9 +137,20 @@ export function VisualScoreInput({
               <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
             
-            <div className="text-3xl sm:text-4xl font-bold w-10 sm:w-12 text-center">
-              {value.playerTwoScore}
-            </div>
+            <input
+              type="number"
+              min="0"
+              max="99"
+              value={value.playerTwoScore}
+              onChange={(e) => {
+                const newScore = Math.max(0, parseInt(e.target.value) || 0);
+                onChange({
+                  ...value,
+                  playerTwoScore: newScore
+                });
+              }}
+              className="text-3xl sm:text-4xl font-bold w-10 sm:w-12 text-center bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-primary rounded-md"
+            />
             
             <Button
               variant="outline"
