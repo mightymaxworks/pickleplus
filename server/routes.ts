@@ -2309,7 +2309,7 @@ function getRandomReason(pointChange: number): string {
   });
   
   // User search for connections feature
-  app.get("/api/users/search", async (req: Request, res: Response) => {
+  app.get("/api/users/search", isAuthenticated, async (req: Request, res: Response) => {
     try {
       // Get the search query
       const query = req.query.q as string;

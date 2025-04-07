@@ -98,6 +98,11 @@ export function DialogPlayerSelect({
         const response = await apiRequest("GET", url);
         console.log("Search API response status:", response.status);
         
+        if (response.status === 401) {
+          console.log("Authentication required for player search. Returning empty results.");
+          return []; // Handle authentication errors gracefully
+        }
+        
         if (!response.ok) {
           console.error("Search API error:", response.status);
           const errorText = await response.text();

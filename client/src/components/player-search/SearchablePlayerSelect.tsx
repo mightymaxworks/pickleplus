@@ -101,6 +101,11 @@ export function SearchablePlayerSelect({
         const response = await apiRequest("GET", `/api/users/search?${params.toString()}`);
         console.log("Player search response status:", response.status);
         
+        if (response.status === 401) {
+          console.log("Not authenticated for player search. Returning empty results.");
+          return []; // Return empty array instead of throwing for auth errors
+        }
+        
         if (!response.ok) {
           throw new Error(`Player search API error: ${response.status}`);
         }
@@ -114,7 +119,8 @@ export function SearchablePlayerSelect({
         );
       } catch (err) {
         console.error("Player search error:", err);
-        throw err;
+        // Return empty array for all errors to prevent UI breakage
+        return [];
       }
     },
     enabled: debouncedQuery.length >= 2,
