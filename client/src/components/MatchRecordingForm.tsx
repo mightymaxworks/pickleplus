@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { AlertCircle, Users, UserCircle, Plus, Minus, ChevronRight, ChevronLeft } from "lucide-react";
+import { AlertCircle, Users, UserCircle, Plus, Minus, ChevronRight, ChevronLeft, Search, X } from "lucide-react";
 
 import {
   Form,
@@ -51,6 +51,26 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Command,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+  CommandShortcut,
+} from "@/components/ui/command";
 
 // Game schema for a single game in a match
 const gameSchema = z.object({
@@ -114,6 +134,14 @@ interface MatchRecordingFormProps {
   onSuccess?: () => void;
 }
 
+// Define a type for user search results
+interface UserSearchResult {
+  id: number;
+  displayName: string;
+  username: string;
+  passportId?: string | null;
+}
+
 export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -128,6 +156,24 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
   const [games, setGames] = useState<GameValues[]>([{ playerOneScore: 0, playerTwoScore: 0 }]);
   const [showWinByTwoAlert, setShowWinByTwoAlert] = useState(false);
   const [submittingData, setSubmittingData] = useState<MatchFormValues | null>(null);
+  
+  // State for player search
+  const [searchQuery, setSearchQuery] = useState("");
+  const [openSearchDialog, setOpenSearchDialog] = useState(false);
+  const [searchingField, setSearchingField] = useState<"playerTwoId" | "playerOnePartnerId" | "playerTwoPartnerId" | null>(null);
+  
+  // User search query
+  const { data: searchResults, isLoading: isSearching } = useQuery({
+    queryKey: ["/api/users/search", searchQuery],
+    queryFn: async () => {
+      if (!searchQuery || searchQuery.length < 2) return [];
+      
+      const res = await apiRequest("GET", `/api/users/search?q=${encodeURIComponent(searchQuery)}`);
+      const data = await res.json();
+      return data as UserSearchResult[];
+    },
+    enabled: searchQuery.length >= 2,
+  });
 
   // Initialize form with default values
   const form = useForm<MatchFormValues>({
@@ -451,23 +497,43 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
     setGames(newGames);
   };
 
-  const setGameFormat = (format: "single" | "best-of-3") => {
+  const setGameFormat = (format: "single" | "best-of-3" | "best-of-5" | "best-of-7") => {
     if (format === "single") {
       setTotalGames(1);
       setGames([games[0] || { playerOneScore: 0, playerTwoScore: 0 }]);
       setCurrentGame(1);
     } else {
-      setTotalGames(3);
+      // Set the total games based on format
+      const maxGames = format === "best-of-3" ? 3 : format === "best-of-5" ? 5 : 7;
+      setTotalGames(maxGames);
+      
       // Initialize or keep existing games
       const newGames = [...games];
-      while (newGames.length < 3) {
+      while (newGames.length < maxGames) {
         newGames.push({ playerOneScore: 0, playerTwoScore: 0 });
       }
-      setGames(newGames);
+      setGames(newGames.slice(0, maxGames));
     }
   };
 
   // Render the appropriate step content based on main step and sub-step
+  // Handler for opening player search dialog
+  const openPlayerSearch = (fieldName: "playerTwoId" | "playerOnePartnerId" | "playerTwoPartnerId") => {
+    setSearchingField(fieldName);
+    setSearchQuery(""); // Clear previous search
+    setOpenSearchDialog(true);
+  };
+  
+  // Handler for selecting a player from search results
+  const selectPlayer = (player: UserSearchResult) => {
+    if (searchingField) {
+      form.setValue(searchingField, player.id);
+      setOpenSearchDialog(false);
+      setSearchingField(null);
+      setSearchQuery("");
+    }
+  };
+  
   const renderStepContent = () => {
     // Step 1: Match Format (broken into sub-steps)
     if (step === 1) {
@@ -591,22 +657,38 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
               <ToggleGroup
                 type="single"
                 variant="outline"
-                className="grid grid-cols-2 justify-stretch"
-                value={totalGames === 1 ? "single" : "best-of-3"}
+                className="grid grid-cols-2 gap-1 justify-stretch"
+                value={
+                  totalGames === 1 ? "single" : 
+                  totalGames === 3 ? "best-of-3" : 
+                  totalGames === 5 ? "best-of-5" : "best-of-7"
+                }
                 onValueChange={(value) => {
-                  if (value) setGameFormat(value as "single" | "best-of-3");
+                  if (value) setGameFormat(value as "single" | "best-of-3" | "best-of-5" | "best-of-7");
                 }}
               >
-                <ToggleGroupItem value="single" className="h-20">
+                <ToggleGroupItem value="single" className="h-16">
                   <div className="flex flex-col items-center justify-center">
                     <span>Single Game</span>
                     <span className="text-xs text-muted-foreground">Just one game</span>
                   </div>
                 </ToggleGroupItem>
-                <ToggleGroupItem value="best-of-3" className="h-20">
+                <ToggleGroupItem value="best-of-3" className="h-16">
                   <div className="flex flex-col items-center justify-center">
                     <span>Best of 3</span>
                     <span className="text-xs text-muted-foreground">First to 2 wins</span>
+                  </div>
+                </ToggleGroupItem>
+                <ToggleGroupItem value="best-of-5" className="h-16">
+                  <div className="flex flex-col items-center justify-center">
+                    <span>Best of 5</span>
+                    <span className="text-xs text-muted-foreground">First to 3 wins</span>
+                  </div>
+                </ToggleGroupItem>
+                <ToggleGroupItem value="best-of-7" className="h-16">
+                  <div className="flex flex-col items-center justify-center">
+                    <span>Best of 7</span>
+                    <span className="text-xs text-muted-foreground">First to 4 wins</span>
                   </div>
                 </ToggleGroupItem>
               </ToggleGroup>
@@ -653,14 +735,34 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm">Your Partner's ID</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter your partner's ID"
-                      {...field}
-                      value={field.value || ""}
-                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                    />
-                  </FormControl>
+                  <div className="flex space-x-2">
+                    <FormControl>
+                      <Input
+                        placeholder="Enter your partner's ID"
+                        {...field}
+                        value={field.value || ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === "") {
+                            field.onChange(undefined);
+                          } else if (!isNaN(Number(value))) {
+                            field.onChange(parseInt(value));
+                          }
+                        }}
+                      />
+                    </FormControl>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => openPlayerSearch("playerOnePartnerId")}
+                      className="px-3"
+                    >
+                      <Search className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <FormDescription className="text-xs">
+                    Enter player ID or search by name
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -676,13 +778,34 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
                 <FormLabel className="text-sm">
                   {formatType === "singles" ? "Opponent's ID" : "Opponent 1 ID"}
                 </FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder={`Enter ${formatType === "singles" ? "opponent's" : "opponent 1's"} ID`}
-                    {...field}
-                    onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : 0)}
-                  />
-                </FormControl>
+                <div className="flex space-x-2">
+                  <FormControl>
+                    <Input
+                      placeholder={`Enter ${formatType === "singles" ? "opponent's" : "opponent 1's"} ID`}
+                      {...field}
+                      value={field.value || ""}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === "") {
+                          field.onChange(0);
+                        } else if (!isNaN(Number(value))) {
+                          field.onChange(parseInt(value));
+                        }
+                      }}
+                    />
+                  </FormControl>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => openPlayerSearch("playerTwoId")}
+                    className="px-3"
+                  >
+                    <Search className="h-4 w-4" />
+                  </Button>
+                </div>
+                <FormDescription className="text-xs">
+                  Enter player ID or search by name/passport ID
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -696,14 +819,34 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm">Opponent 2 ID</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter opponent 2's ID"
-                      {...field}
-                      value={field.value || ""}
-                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                    />
-                  </FormControl>
+                  <div className="flex space-x-2">
+                    <FormControl>
+                      <Input
+                        placeholder="Enter opponent 2's ID"
+                        {...field}
+                        value={field.value || ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === "") {
+                            field.onChange(undefined);
+                          } else if (!isNaN(Number(value))) {
+                            field.onChange(parseInt(value));
+                          }
+                        }}
+                      />
+                    </FormControl>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => openPlayerSearch("playerTwoPartnerId")}
+                      className="px-3"
+                    >
+                      <Search className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <FormDescription className="text-xs">
+                    Enter player ID or search by name/passport ID
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -982,6 +1125,87 @@ export function MatchRecordingForm({ onSuccess }: MatchRecordingFormProps) {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {renderStepContent()}
+          
+          {/* Player Search Dialog */}
+          <Dialog open={openSearchDialog} onOpenChange={setOpenSearchDialog}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Search Player</DialogTitle>
+                <DialogDescription>
+                  Search for a player by name or passport ID
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-4 py-4">
+                <div className="relative">
+                  <Input
+                    className="pr-10"
+                    placeholder="Search by name or passport ID"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  {searchQuery && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2"
+                      onClick={() => setSearchQuery("")}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                
+                <div className="max-h-[300px] overflow-y-auto">
+                  {isSearching ? (
+                    <div className="flex justify-center items-center py-8">
+                      <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+                    </div>
+                  ) : searchResults && searchResults.length > 0 ? (
+                    <Command>
+                      <CommandList>
+                        <CommandGroup>
+                          {searchResults.map((player) => (
+                            <CommandItem 
+                              key={player.id}
+                              onSelect={() => selectPlayer(player)}
+                              className="flex items-center space-x-2 cursor-pointer"
+                            >
+                              <div className="flex-1">
+                                <p className="font-medium">{player.displayName}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  #{player.id} {player.passportId && `• Passport: ${player.passportId}`}
+                                </p>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  ) : searchQuery.length >= 2 ? (
+                    <div className="py-6 text-center text-muted-foreground">
+                      No players found
+                    </div>
+                  ) : (
+                    <div className="py-6 text-center text-muted-foreground">
+                      Enter at least 2 characters to search
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setOpenSearchDialog(false)}
+                >
+                  Cancel
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           
           <div className="flex justify-between pt-2 mt-2">
             {/* Back Button - Show when not on first sub-step */}
