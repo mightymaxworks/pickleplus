@@ -393,79 +393,95 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log("Storage searchUsers called with query:", query, "excludeUserId:", excludeUserId);
       
-      // Input validation for query
-      if (!query || typeof query !== 'string') {
-        console.log("Invalid query:", query, "Returning empty array");
+      // More detailed logging
+      if (!query) {
+        console.log("Search query is empty or null, returning empty array");
         return [];
       }
       
-      // Check if excludeUserId is valid
+      // Extra safety for query parameter - ensure it's a string and trim it
+      const safeQuery = String(query).trim();
+      if (safeQuery.length < 2) {
+        console.log("Search query is too short (needs 2+ chars), returning empty array");
+        return [];
+      }
+      
+      // Simply check if there are any users at all - for debugging
+      const userCount = await db.select({ count: sql<number>`count(*)` }).from(users);
+      console.log("Total users in database:", userCount[0].count);
+      
+      // Handle excludeUserId validation
       let numericExcludeId: number | undefined = undefined;
+      
       if (excludeUserId !== undefined) {
-        // Convert to number if it's a string
-        numericExcludeId = (typeof excludeUserId === 'string') 
-          ? Number(excludeUserId) 
-          : Number(excludeUserId);
-        
-        // Validate it's a proper number
-        if (isNaN(numericExcludeId) || !Number.isFinite(numericExcludeId) || numericExcludeId < 1) {
-          console.log("Invalid excludeUserId:", excludeUserId, "converted to", numericExcludeId, "- Using no exclusion");
-          numericExcludeId = undefined;
+        const tempId = Number(excludeUserId);
+        if (!isNaN(tempId) && tempId > 0) {
+          numericExcludeId = tempId;
+          console.log("Will exclude user ID:", numericExcludeId, "from search results");
         } else {
-          console.log("Valid excludeUserId:", numericExcludeId);
+          console.log("Invalid excludeUserId:", excludeUserId, "- Will not exclude any users");
         }
       }
       
-      // Convert query to lowercase for case-insensitive search with SQL ILIKE
-      const searchPattern = `%${query}%`;
-      console.log("Search pattern:", searchPattern);
+      // Create a simple pattern for SQL LIKE
+      const searchPattern = `%${safeQuery}%`;
       
-      // Create the base query
-      let queryBuilder = db.select({
+      try {
+        // First try - get simplified data just to ensure query works
+        console.log("Executing basic user search with pattern:", searchPattern);
+        
+        // Simple query to test database search functionality
+        const testResults = await db.select({ 
+          id: users.id, 
+          username: users.username,
+          displayName: users.displayName
+        })
+        .from(users)
+        .where(
+          or(
+            sql`LOWER(${users.username}) LIKE LOWER(${searchPattern})`,
+            sql`LOWER(COALESCE(${users.displayName}, '')) LIKE LOWER(${searchPattern})`
+          )
+        )
+        .limit(10);
+        
+        console.log("Search test query found:", testResults.length, "results");
+        console.log("Test results:", testResults.map(u => `${u.id}: ${u.username}`).join(", "));
+      
+        // Now that we verified search works, build full query
+        let fullQuery = db.select({
           id: users.id,
           username: users.username,
           displayName: users.displayName,
           email: users.email,
           passportId: users.passportId,
-          avatarInitials: users.avatarInitials
-        }).from(users);
-        
-      // Add the search condition
-      queryBuilder = queryBuilder.where(
-        or(
-          sql`LOWER(${users.username}) LIKE LOWER(${searchPattern})`,
-          sql`LOWER(COALESCE(${users.displayName}, '')) LIKE LOWER(${searchPattern})`,
-          sql`LOWER(COALESCE(${users.email}, '')) LIKE LOWER(${searchPattern})`
-        )
-      );
-      
-      // Add exclusion of current user if provided with a valid number
-      if (numericExcludeId !== undefined) {
-        console.log("Excluding user with ID:", numericExcludeId);
-        
-        // Create a separate condition for the exclusion to avoid SQL syntax errors
-        queryBuilder = queryBuilder.where(
-          sql`${users.id} != ${numericExcludeId}`
+          avatarInitials: users.avatarInitials,
+          location: users.location
+        })
+        .from(users)
+        .where(
+          or(
+            sql`LOWER(${users.username}) LIKE LOWER(${searchPattern})`,
+            sql`LOWER(COALESCE(${users.displayName}, '')) LIKE LOWER(${searchPattern})`,
+            sql`LOWER(COALESCE(${users.email}, '')) LIKE LOWER(${searchPattern})`
+          )
         );
-      }
-      
-      // Log the prepared query for debugging
-      console.log("Executing user search query with pattern:", searchPattern);
-      
-      try {
-        // Execute query with limit and return results
-        const results = await queryBuilder.limit(10);
-        console.log(`Search for "${query}" found ${results.length} results`);
         
-        // Map results to the correct shape and add any missing properties
+        // Add exclusion if needed
+        if (numericExcludeId !== undefined) {
+          fullQuery = fullQuery.where(ne(users.id, numericExcludeId));
+        }
+        
+        // Execute full query with results
+        const results = await fullQuery.limit(10);
+        console.log(`Full search for "${safeQuery}" found ${results.length} results`);
+        
+        // Map to complete User objects with default values for missing fields
         const mappedResults = results.map(user => ({
           ...user,
-          avatarUrl: null,
-          // Add other fields required by the User type but not included in the select
-          password: "", // This will never be sent to the client
+          password: "", // This will never be sent to client
           bio: null,
           yearOfBirth: null,
-          location: null,
           playingSince: null,
           skillLevel: null,
           level: 1,
@@ -486,27 +502,86 @@ export class DatabaseStorage implements IStorage {
           preferredFormat: null,
           dominantHand: null,
           createdAt: null,
+          avatarUrl: null,
           profileCompletionPct: 0,
           regularSchedule: null
         }));
         
+        // Show what we're returning
+        console.log("Returning", mappedResults.length, "user matches for", safeQuery);
         return mappedResults;
+        
       } catch (dbError) {
-        console.error("[searchUsers] Database query error:", dbError);
-        if (dbError instanceof Error) {
-          console.error("[searchUsers] Error message:", dbError.message);
-          console.error("[searchUsers] Error stack:", dbError.stack);
+        console.error("Database error in searchUsers:", dbError);
+        
+        // Try a fallback approach - get all users and filter in memory
+        console.log("Trying fallback approach - get all users and filter in JS");
+        try {
+          const allUsers = await db.select({
+            id: users.id,
+            username: users.username,
+            displayName: users.displayName
+          }).from(users).limit(100);
+          
+          console.log(`Got ${allUsers.length} total users for in-memory filtering`);
+          
+          // Filter in JS
+          const lowercaseQuery = safeQuery.toLowerCase();
+          const filteredUsers = allUsers.filter(user => {
+            // Skip the excluded user if specified
+            if (numericExcludeId && user.id === numericExcludeId) return false;
+            
+            // Match on username and displayName
+            return (
+              user.username?.toLowerCase().includes(lowercaseQuery) ||
+              (user.displayName && user.displayName.toLowerCase().includes(lowercaseQuery))
+            );
+          }).slice(0, 10); // Limit to 10 results
+          
+          console.log(`Fallback filtering found ${filteredUsers.length} matches`);
+          
+          // Map to full User objects with defaults
+          return filteredUsers.map(user => ({
+            ...user,
+            email: null,
+            password: "",
+            bio: null,
+            yearOfBirth: null,
+            passportId: null,
+            location: null,
+            playingSince: null,
+            skillLevel: null,
+            level: 1,
+            xp: 0, 
+            rankingPoints: 0,
+            lastMatchDate: null,
+            totalMatches: 0,
+            matchesWon: 0,
+            totalTournaments: 0,
+            isFoundingMember: false,
+            isAdmin: false,
+            xpMultiplier: 100,
+            preferredPosition: null,
+            paddleBrand: null,
+            paddleModel: null,
+            playingStyle: null,
+            shotStrengths: null,
+            preferredFormat: null,
+            dominantHand: null,
+            createdAt: null,
+            avatarInitials: user.username?.substring(0, 2).toUpperCase() || "??",
+            avatarUrl: null,
+            profileCompletionPct: 0,
+            regularSchedule: null
+          }));
+        } catch (fallbackError) {
+          console.error("Fallback search approach also failed:", fallbackError);
+          return []; // Empty array as last resort
         }
-        // Return empty array on database error
-        return [];
       }
-    } catch (error) {
-      console.error("[searchUsers] Error:", error);
-      if (error instanceof Error) {
-        console.error("[searchUsers] Error message:", error.message);
-        console.error("[searchUsers] Error stack:", error.stack);
-      }
-      return [];
+    } catch (outerError) {
+      console.error("Outer error in searchUsers:", outerError);
+      return []; // Empty array as last resort
     }
   }
 }

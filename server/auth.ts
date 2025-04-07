@@ -48,21 +48,7 @@ export function isAuthenticated(req: Request, res: Response, next: any) {
   console.log(`isAuthenticated check for ${req.path} - Session ID: ${req.sessionID}`);
   console.log(`Authentication status: ${req.isAuthenticated()}`);
   
-  if (req.path === '/api/users/search') {
-    // Special case for player search to bypass strict authentication
-    // This is for testing and development purposes
-    if (req.isAuthenticated()) {
-      console.log("Authenticated user searching players:", req.user?.username);
-      return next();
-    } else {
-      console.log("Non-authenticated search attempt - allowing with warning");
-      // For player search, we'll allow non-authenticated requests but log a warning
-      // This ensures player select functionality works even with authentication issues
-      return next();
-    }
-  }
-  
-  // For all other protected routes, enforce authentication
+  // For all protected routes, enforce authentication
   if (req.isAuthenticated()) {
     return next();
   }
