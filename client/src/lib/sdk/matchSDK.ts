@@ -37,8 +37,31 @@ export interface RecordedMatch extends MatchData {
  * @returns The recorded match data with ID
  */
 export async function recordMatch(matchData: MatchData): Promise<RecordedMatch> {
-  const response = await apiRequest("POST", "/api/match/record", matchData);
-  return await response.json();
+  console.log("matchSDK: Recording match with data:", JSON.stringify(matchData, null, 2));
+  
+  try {
+    const response = await apiRequest("POST", "/api/match/record", matchData);
+    console.log("matchSDK: Received API response status:", response.status);
+    
+    if (!response.ok) {
+      // Try to extract more specific error info from response
+      try {
+        const errorData = await response.json();
+        console.error("matchSDK: Error response data:", errorData);
+        throw new Error(errorData.error || `Server returned ${response.status}`);
+      } catch (jsonError) {
+        // If we can't parse the error JSON, throw a generic error with status
+        throw new Error(`Failed to record match: Server returned ${response.status}`);
+      }
+    }
+    
+    const recordedMatch = await response.json();
+    console.log("matchSDK: Match recorded successfully:", recordedMatch);
+    return recordedMatch;
+  } catch (error) {
+    console.error("matchSDK: Error recording match:", error);
+    throw error;
+  }
 }
 
 /**

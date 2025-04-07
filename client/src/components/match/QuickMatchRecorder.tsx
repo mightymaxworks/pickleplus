@@ -197,6 +197,7 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
     
     // Determine winner
     const winnerId = calculateWinner();
+    console.log("Calculated winner ID:", winnerId);
     
     // Prepare players array
     const players = [
@@ -213,6 +214,9 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
         isWinner: winnerId === playerTwoData.id
       }
     ];
+    
+    console.log("Match players:", players);
+    console.log("Game scores:", games);
     
     try {
       // Calculate age division based on user birthyear
@@ -241,10 +245,15 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
         notes: form.getValues("notes"),
       };
       
+      console.log("Submitting match data:", JSON.stringify(matchData, null, 2));
+      
       // Record match via SDK
-      await matchSDK.recordMatch(matchData);
+      console.log("Calling matchSDK.recordMatch...");
+      const response = await matchSDK.recordMatch(matchData);
+      console.log("Match recorded successfully:", response);
       
       // Invalidate relevant queries
+      console.log("Invalidating related queries...");
       queryClient.invalidateQueries({ queryKey: ["/api/user/ranking-history"] });
       queryClient.invalidateQueries({ queryKey: ["/api/ranking-leaderboard"] });
       queryClient.invalidateQueries({ queryKey: ["/api/leaderboard"] });
@@ -269,9 +278,18 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
       }
     } catch (error) {
       console.error("Error recording match:", error);
+      
+      // Try to extract more error details
+      let errorMessage = "There was an error recording your match.";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null) {
+        errorMessage = JSON.stringify(error);
+      }
+      
       toast({
         title: "Error recording match",
-        description: "There was an error recording your match. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

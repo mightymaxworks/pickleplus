@@ -29,6 +29,25 @@ import {
   ratingTiers 
 } from "../shared/courtiq-schema";
 
+// Utility function to safely parse gameScores data
+function parseGameScores(gameScores: any): { playerOneScore: number; playerTwoScore: number }[] {
+  if (!gameScores) return [];
+  
+  // Handle different possible formats of gameScores
+  if (typeof gameScores === 'string') {
+    try {
+      return JSON.parse(gameScores);
+    } catch (e) {
+      console.error("[Match API] Failed to parse gameScores:", e);
+      return [];
+    }
+  } else if (Array.isArray(gameScores)) {
+    return gameScores;
+  }
+  
+  return [];
+}
+
 // Import multi-dimensional ranking types
 import {
   PlayFormat,
@@ -2762,10 +2781,17 @@ function getRandomReason(pointChange: number): string {
 
   // Match API endpoints
   app.post("/api/match/record", isAuthenticated, async (req: Request, res: Response) => {
+    console.log("[Match API] POST /api/match/record called");
+    console.log("[Match API] Authentication status:", !!req.user);
+    console.log("[Match API] Request body:", JSON.stringify(req.body, null, 2));
+    
     try {
       if (!req.user) {
+        console.log("[Match API] Authentication failed, no user in request");
         return res.status(401).json({ error: "Not authenticated" });
       }
+      
+      console.log("[Match API] User authenticated:", req.user.id, req.user.username);
       
       const { 
         formatType, scoringSystem, pointsToWin,
@@ -2792,11 +2818,14 @@ function getRandomReason(pointChange: number): string {
       }
       
       // Create match data object, omitting tournament-specific fields that may not exist in the DB yet
+      // Explicitly set default values for mandatory fields
+      const today = new Date();
+
       const matchData = {
         playerOneId: playerOne.userId,
         playerTwoId: playerTwo.userId,
-        playerOnePartnerId: playerOne.partnerId,
-        playerTwoPartnerId: playerTwo.partnerId,
+        playerOnePartnerId: playerOne.partnerId || null,
+        playerTwoPartnerId: playerTwo.partnerId || null,
         scorePlayerOne: String(playerOne.score),
         scorePlayerTwo: String(playerTwo.score),
         winnerId: playerOne.isWinner ? playerOne.userId : playerTwo.userId,
@@ -2808,7 +2837,11 @@ function getRandomReason(pointChange: number): string {
         eventTier: req.body.eventTier || "local",
         gameScores,
         location,
-        notes
+        notes,
+        matchDate: today,
+        // Set mandatory columns that have NOT NULL constraints
+        pointsAwarded: 0,
+        xpAwarded: 0
         // Intentionally omitting roundNumber and stageType as these columns may not exist yet
       };
       
@@ -2887,7 +2920,16 @@ function getRandomReason(pointChange: number): string {
       // Insert the match record
       let match;
       try {
-        const result = await db.insert(matches).values(filteredMatchData).returning();
+        console.log('[Match API] Preparing to insert match with filtered data');
+        
+        // We need to ensure we're passing an object to values(), not a record type
+        // which might have methods or properties that aren't serializable
+        const matchValues = { ...filteredMatchData };
+        
+        // We need to explicitly type assert since the compiler doesn't know the exact structure
+        const result = await db.insert(matches).values(matchValues as any).returning();
+        console.log('[Match API] Insert operation completed, result:', result);
+        
         match = Array.isArray(result) && result.length > 0 ? result[0] : result;
       } catch (dbError) {
         console.error("[Match API] Database error creating match:", dbError);
