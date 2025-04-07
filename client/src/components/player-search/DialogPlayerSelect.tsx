@@ -80,9 +80,11 @@ export function DialogPlayerSelect({
     data: searchResults = [],
     isLoading,
     isFetching,
+    error,
   } = useQuery<UserSearchResult[]>({
     queryKey: ["/api/users/search", debouncedQuery],
     queryFn: async () => {
+      console.log("Search query triggered with:", debouncedQuery);
       if (!debouncedQuery || debouncedQuery.length < 2) return [];
 
       try {
@@ -90,19 +92,29 @@ export function DialogPlayerSelect({
           q: debouncedQuery,
         });
 
-        const response = await apiRequest("GET", `/api/users/search?${params.toString()}`);
+        const url = `/api/users/search?${params.toString()}`;
+        console.log("Making API request to:", url);
+        
+        const response = await apiRequest("GET", url);
+        console.log("Search API response status:", response.status);
+        
         if (!response.ok) {
           console.error("Search API error:", response.status);
+          const errorText = await response.text();
+          console.error("Error details:", errorText);
           return [];
         }
         
         const data = await response.json();
-        console.log("Search results:", data);
+        console.log("Search results received:", data);
 
         // Filter out excluded player IDs
-        return data.filter((user: UserSearchResult) => 
+        const filteredResults = data.filter((user: UserSearchResult) => 
           !excludePlayerIds.includes(user.id)
         );
+        console.log("Filtered results:", filteredResults);
+        
+        return filteredResults;
       } catch (error) {
         console.error("Error searching for players:", error);
         return [];
@@ -110,10 +122,46 @@ export function DialogPlayerSelect({
     },
     enabled: debouncedQuery.length >= 2 && open,
   });
+  
+  // Log any errors from the query
+  useEffect(() => {
+    if (error) {
+      console.error("Player search query error:", error);
+    }
+  }, [error]);
 
   // Handle selection of a player
   const selectPlayer = (playerData: UserSearchResult) => {
+    console.log("Selecting player:", playerData);
     form.setValue(fieldName, playerData.id);
+    
+    // Construct player data with avatar initials as fallback
+    const selectedPlayerData = {
+      id: playerData.id,
+      displayName: playerData.displayName,
+      avatarUrl: playerData.avatarUrl,
+      avatarInitials: playerData.avatarInitials || playerData.displayName.charAt(0)
+    };
+    
+    // Update the formState with the complete player data
+    if (fieldName === "playerOneId") {
+      window.dispatchEvent(new CustomEvent('player-selected', { 
+        detail: { field: 'playerOneData', player: selectedPlayerData }
+      }));
+    } else if (fieldName === "playerTwoId") {
+      window.dispatchEvent(new CustomEvent('player-selected', { 
+        detail: { field: 'playerTwoData', player: selectedPlayerData }
+      }));
+    } else if (fieldName === "playerOnePartnerId") {
+      window.dispatchEvent(new CustomEvent('player-selected', { 
+        detail: { field: 'playerOnePartnerData', player: selectedPlayerData }
+      }));
+    } else if (fieldName === "playerTwoPartnerId") {
+      window.dispatchEvent(new CustomEvent('player-selected', { 
+        detail: { field: 'playerTwoPartnerData', player: selectedPlayerData }
+      }));
+    }
+    
     setOpen(false);
   };
 

@@ -2326,9 +2326,12 @@ function getRandomReason(pointChange: number): string {
         id: user.id,
         username: user.username,
         displayName: user.displayName || user.username,
+        passportId: user.passportId,
+        avatarUrl: user.avatarUrl,
         avatarInitials: user.avatarInitials || user.username.substring(0, 2).toUpperCase()
       }));
       
+      console.log("Sending search results for query:", query, sanitizedUsers);
       res.json(sanitizedUsers);
     } catch (error) {
       console.error("Error searching users:", error);

@@ -143,6 +143,30 @@ export function NewMatchRecordingForm({ onSuccess }: NewMatchRecordingFormProps)
   const [playerOnePartnerData, setPlayerOnePartnerData] = useState<UserSearchResult | null>(null);
   const [playerTwoPartnerData, setPlayerTwoPartnerData] = useState<UserSearchResult | null>(null);
   
+  // Listen for player selection events from DialogPlayerSelect
+  useEffect(() => {
+    const handlePlayerSelected = (event: CustomEvent) => {
+      const { field, player } = event.detail;
+      console.log("Player selected event received:", field, player);
+      
+      if (field === "playerOneData") {
+        setPlayerOneData(player);
+      } else if (field === "playerTwoData") {
+        setPlayerTwoData(player);
+      } else if (field === "playerOnePartnerData") {
+        setPlayerOnePartnerData(player);
+      } else if (field === "playerTwoPartnerData") {
+        setPlayerTwoPartnerData(player);
+      }
+    };
+    
+    window.addEventListener('player-selected', handlePlayerSelected as EventListener);
+    
+    return () => {
+      window.removeEventListener('player-selected', handlePlayerSelected as EventListener);
+    };
+  }, []);
+  
   // Initialize form with default values
   const form = useForm<MatchFormValues>({
     resolver: zodResolver(matchFormSchema),
