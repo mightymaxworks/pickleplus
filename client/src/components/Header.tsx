@@ -74,7 +74,7 @@ export function Header() {
                 <DropdownMenuItem onClick={() => setLocation("/profile")}>
                   Profile
                 </DropdownMenuItem>
-                {isAdmin(user) && (
+                {user?.isAdmin && (
                   <>
                     <DropdownMenuItem onClick={() => setLocation("/admin/dashboard")}>
                       <Shield className="mr-2 h-4 w-4" />
@@ -82,6 +82,10 @@ export function Header() {
                     </DropdownMenuItem>
                   </>
                 )}
+                {/* For debugging - remove in production */}
+                <DropdownMenuItem className="text-xs text-muted-foreground">
+                  {user?.isAdmin ? "Admin: Yes" : "Admin: No"}
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   Logout
