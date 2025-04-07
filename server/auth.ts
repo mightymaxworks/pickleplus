@@ -143,6 +143,13 @@ export function setupAuth(app: Express) {
       req.login(user, (err) => {
         if (err) return next(err);
         
+        // Ensure proper headers for CORS with credentials
+        res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+        res.header('Access-Control-Allow-Credentials', 'true');
+        
+        console.log('Registration successful for user:', user.username);
+        console.log('Session ID:', req.sessionID);
+        
         // Return the user data without the password
         const { password, ...userWithoutPassword } = user;
         res.status(201).json(userWithoutPassword);
@@ -171,6 +178,14 @@ export function setupAuth(app: Express) {
         req.login(user, (err) => {
           if (err) return next(err);
           
+          // Extra logging for debug
+          console.log('Login successful for user:', user.username);
+          console.log('Session ID:', req.sessionID);
+          
+          // Ensure proper headers for CORS with credentials
+          res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+          res.header('Access-Control-Allow-Credentials', 'true');
+          
           // Return the user data without the password
           const { password, ...userWithoutPassword } = user;
           return res.json(userWithoutPassword);
@@ -187,9 +202,22 @@ export function setupAuth(app: Express) {
 
   // Logout route
   app.post("/api/auth/logout", (req, res, next) => {
+    // Ensure CORS headers for credentials
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    
     req.logout((err) => {
       if (err) return next(err);
-      res.status(200).json({ message: "Logged out successfully" });
+      
+      // Explicitly destroy the session
+      req.session.destroy((err) => {
+        if (err) {
+          console.error("Error destroying session:", err);
+          return next(err);
+        }
+        
+        res.status(200).json({ message: "Logged out successfully" });
+      });
     });
   });
 
@@ -198,6 +226,11 @@ export function setupAuth(app: Express) {
     console.log("Current user check - Is authenticated:", req.isAuthenticated());
     console.log("Current user check - Session ID:", req.sessionID);
     console.log("Current user check - Cookie:", req.headers.cookie);
+    console.log("Current user check - Sessions:", req.session);
+    
+    // Ensure CORS headers for credentials
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Credentials', 'true');
     
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Not authenticated" });

@@ -12,8 +12,15 @@ app.use(cors({
   origin: true, // Allow the request origin (will reflect the request origin)
   credentials: true, // Allow cookies to be sent with the request
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'Set-Cookie', 'X-Requested-With']
 }));
+
+// Add headers for better cookie handling
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie, Set-Cookie');
+  next();
+});
 
 app.use((req, res, next) => {
   const start = Date.now();
