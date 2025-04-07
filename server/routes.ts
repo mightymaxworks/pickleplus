@@ -2791,6 +2791,7 @@ function getRandomReason(pointChange: number): string {
         return res.status(400).json({ error: "Invalid player data" });
       }
       
+      // Create match data object, omitting tournament-specific fields that may not exist in the DB yet
       const matchData = {
         playerOneId: playerOne.userId,
         playerTwoId: playerTwo.userId,
@@ -2808,6 +2809,7 @@ function getRandomReason(pointChange: number): string {
         gameScores,
         location,
         notes
+        // Intentionally omitting roundNumber and stageType as these columns may not exist yet
       };
       
       // Format validation - ensure doubles matches have partner IDs
@@ -2820,8 +2822,30 @@ function getRandomReason(pointChange: number): string {
       
       let match;
       try {
-        // Direct database insertion
-        const [created] = await db.insert(matches).values(matchData).returning();
+        // Direct database insertion - only include fields that exist in the database
+        // First, check which columns exist in the matches table
+        const columnsQuery = await db.execute(
+          sql`SELECT column_name FROM information_schema.columns WHERE table_name = 'matches'`
+        );
+        
+        // Extract column names from the result
+        const existingColumns = columnsQuery.rows.map((row: any) => row.column_name);
+        console.log('[Match API] Existing columns in matches table:', existingColumns);
+        
+        // Filter the matchData to only include fields that exist in the database
+        const filteredMatchData: Record<string, any> = {};
+        for (const [key, value] of Object.entries(matchData)) {
+          // Convert camelCase to snake_case for column name comparison
+          const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+          if (existingColumns.includes(snakeKey)) {
+            filteredMatchData[key] = value;
+          }
+        }
+        
+        console.log('[Match API] Filtered match data:', filteredMatchData);
+        
+        // Insert the filtered data
+        const [created] = await db.insert(matches).values(filteredMatchData).returning();
         match = created;
       } catch (dbError) {
         console.error("[Match API] Database error creating match:", dbError);
@@ -2936,28 +2960,57 @@ function getRandomReason(pointChange: number): string {
       const userId = req.query.userId ? parseInt(req.query.userId as string, 10) : req.user.id;
       const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
       
-      // Get only the columns that exist in the actual database
-      const recentMatches = await db.select({
-        id: matches.id,
-        playerOneId: matches.playerOneId,
-        playerTwoId: matches.playerTwoId,
-        playerOnePartnerId: matches.playerOnePartnerId,
-        playerTwoPartnerId: matches.playerTwoPartnerId,
-        winnerId: matches.winnerId,
-        scorePlayerOne: matches.scorePlayerOne,
-        scorePlayerTwo: matches.scorePlayerTwo,
-        matchType: matches.matchType,
-        tournamentId: matches.tournamentId,
-        matchDate: matches.matchDate,
-        location: matches.location,
-        notes: matches.notes,
-        formatType: matches.formatType,
-        scoringSystem: matches.scoringSystem, 
-        pointsToWin: matches.pointsToWin,
-        gameScores: matches.gameScores,
-        division: matches.division,
-        eventTier: matches.eventTier
-      })
+      // Get the list of columns that exist in the matches table
+      const columnsQuery = await db.execute(
+        sql`SELECT column_name FROM information_schema.columns WHERE table_name = 'matches'`
+      );
+      const existingColumns = columnsQuery.rows.map((row: any) => row.column_name);
+      console.log('[Match API] Existing columns in matches table for recent endpoint:', existingColumns);
+      
+      // Dynamically create the select object based on existing columns
+      const selectObj: Record<string, any> = {};
+      
+      // Always include these critical fields
+      const criticalFields = ['id', 'player_one_id', 'player_two_id', 'winner_id', 
+                            'player_one_partner_id', 'player_two_partner_id',
+                            'score_player_one', 'score_player_two', 'match_date'];
+      
+      // Map column names to their drizzle schema equivalents for select
+      const columnMap: Record<string, any> = {
+        'id': matches.id,
+        'player_one_id': matches.playerOneId,
+        'player_two_id': matches.playerTwoId,
+        'player_one_partner_id': matches.playerOnePartnerId,
+        'player_two_partner_id': matches.playerTwoPartnerId,
+        'winner_id': matches.winnerId,
+        'score_player_one': matches.scorePlayerOne,
+        'score_player_two': matches.scorePlayerTwo,
+        'match_type': matches.matchType,
+        'tournament_id': matches.tournamentId,
+        'match_date': matches.matchDate,
+        'location': matches.location,
+        'notes': matches.notes,
+        'format_type': matches.formatType,
+        'scoring_system': matches.scoringSystem,
+        'points_to_win': matches.pointsToWin,
+        'game_scores': matches.gameScores,
+        'division': matches.division,
+        'event_tier': matches.eventTier
+      };
+      
+      // Build the select object with only columns that exist in the database
+      Object.keys(columnMap).forEach(columnName => {
+        if (existingColumns.includes(columnName) || criticalFields.includes(columnName)) {
+          // Convert snake_case back to camelCase for the keys
+          const camelKey = columnName.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+          selectObj[camelKey] = columnMap[columnName];
+        }
+      });
+      
+      console.log('[Match API] Dynamic select object:', Object.keys(selectObj));
+      
+      // Execute the query with the dynamically built select object
+      const recentMatches = await db.select(selectObj)
       .from(matches)
       .where(
         or(
@@ -3067,28 +3120,57 @@ function getRandomReason(pointChange: number): string {
           )
         );
       
-      // Get recent matches for this user
-      const recentMatches = await db.select({
-        id: matches.id,
-        playerOneId: matches.playerOneId,
-        playerTwoId: matches.playerTwoId,
-        playerOnePartnerId: matches.playerOnePartnerId,
-        playerTwoPartnerId: matches.playerTwoPartnerId,
-        winnerId: matches.winnerId,
-        scorePlayerOne: matches.scorePlayerOne,
-        scorePlayerTwo: matches.scorePlayerTwo,
-        matchType: matches.matchType,
-        tournamentId: matches.tournamentId,
-        matchDate: matches.matchDate,
-        location: matches.location,
-        notes: matches.notes,
-        formatType: matches.formatType,
-        scoringSystem: matches.scoringSystem, 
-        pointsToWin: matches.pointsToWin,
-        gameScores: matches.gameScores,
-        division: matches.division,
-        eventTier: matches.eventTier
-      })
+      // Get the list of columns that exist in the matches table
+      const columnsQuery = await db.execute(
+        sql`SELECT column_name FROM information_schema.columns WHERE table_name = 'matches'`
+      );
+      const existingColumns = columnsQuery.rows.map((row: any) => row.column_name);
+      console.log('[Match API] Existing columns in matches table for stats endpoint:', existingColumns);
+      
+      // Dynamically create the select object based on existing columns
+      const selectObj: Record<string, any> = {};
+      
+      // Always include these critical fields
+      const criticalFields = ['id', 'player_one_id', 'player_two_id', 'winner_id', 
+                            'player_one_partner_id', 'player_two_partner_id',
+                            'score_player_one', 'score_player_two', 'match_date'];
+      
+      // Map column names to their drizzle schema equivalents for select
+      const columnMap: Record<string, any> = {
+        'id': matches.id,
+        'player_one_id': matches.playerOneId,
+        'player_two_id': matches.playerTwoId,
+        'player_one_partner_id': matches.playerOnePartnerId,
+        'player_two_partner_id': matches.playerTwoPartnerId,
+        'winner_id': matches.winnerId,
+        'score_player_one': matches.scorePlayerOne,
+        'score_player_two': matches.scorePlayerTwo,
+        'match_type': matches.matchType,
+        'tournament_id': matches.tournamentId,
+        'match_date': matches.matchDate,
+        'location': matches.location,
+        'notes': matches.notes,
+        'format_type': matches.formatType,
+        'scoring_system': matches.scoringSystem,
+        'points_to_win': matches.pointsToWin,
+        'game_scores': matches.gameScores,
+        'division': matches.division,
+        'event_tier': matches.eventTier
+      };
+      
+      // Build the select object with only columns that exist in the database
+      Object.keys(columnMap).forEach(columnName => {
+        if (existingColumns.includes(columnName) || criticalFields.includes(columnName)) {
+          // Convert snake_case back to camelCase for the keys
+          const camelKey = columnName.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+          selectObj[camelKey] = columnMap[columnName];
+        }
+      });
+      
+      console.log('[Match API] Dynamic select object for stats:', Object.keys(selectObj));
+      
+      // Execute the query with the dynamically built select object
+      const recentMatches = await db.select(selectObj)
       .from(matches)
       .where(
         or(
