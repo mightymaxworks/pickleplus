@@ -2936,18 +2936,39 @@ function getRandomReason(pointChange: number): string {
       const userId = req.query.userId ? parseInt(req.query.userId as string, 10) : req.user.id;
       const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
       
-      // Query for matches where the user was involved
-      const recentMatches = await db.select().from(matches)
-        .where(
-          or(
-            eq(matches.playerOneId, userId),
-            eq(matches.playerTwoId, userId),
-            eq(matches.playerOnePartnerId, userId),
-            eq(matches.playerTwoPartnerId, userId)
-          )
+      // Get only the columns that exist in the actual database
+      const recentMatches = await db.select({
+        id: matches.id,
+        playerOneId: matches.playerOneId,
+        playerTwoId: matches.playerTwoId,
+        playerOnePartnerId: matches.playerOnePartnerId,
+        playerTwoPartnerId: matches.playerTwoPartnerId,
+        winnerId: matches.winnerId,
+        scorePlayerOne: matches.scorePlayerOne,
+        scorePlayerTwo: matches.scorePlayerTwo,
+        matchType: matches.matchType,
+        tournamentId: matches.tournamentId,
+        matchDate: matches.matchDate,
+        location: matches.location,
+        notes: matches.notes,
+        formatType: matches.formatType,
+        scoringSystem: matches.scoringSystem, 
+        pointsToWin: matches.pointsToWin,
+        gameScores: matches.gameScores,
+        division: matches.division,
+        eventTier: matches.eventTier
+      })
+      .from(matches)
+      .where(
+        or(
+          eq(matches.playerOneId, userId),
+          eq(matches.playerTwoId, userId),
+          eq(matches.playerOnePartnerId, userId),
+          eq(matches.playerTwoPartnerId, userId)
         )
-        .orderBy(desc(matches.matchDate))
-        .limit(limit);
+      )
+      .orderBy(desc(matches.matchDate))
+      .limit(limit);
       
       // For each match, get the player names
       const matchesWithPlayerNames = await Promise.all(recentMatches.map(async (match) => {
@@ -3047,17 +3068,38 @@ function getRandomReason(pointChange: number): string {
         );
       
       // Get recent matches for this user
-      const recentMatches = await db.select().from(matches)
-        .where(
-          or(
-            eq(matches.playerOneId, userId),
-            eq(matches.playerTwoId, userId),
-            eq(matches.playerOnePartnerId, userId),
-            eq(matches.playerTwoPartnerId, userId)
-          )
+      const recentMatches = await db.select({
+        id: matches.id,
+        playerOneId: matches.playerOneId,
+        playerTwoId: matches.playerTwoId,
+        playerOnePartnerId: matches.playerOnePartnerId,
+        playerTwoPartnerId: matches.playerTwoPartnerId,
+        winnerId: matches.winnerId,
+        scorePlayerOne: matches.scorePlayerOne,
+        scorePlayerTwo: matches.scorePlayerTwo,
+        matchType: matches.matchType,
+        tournamentId: matches.tournamentId,
+        matchDate: matches.matchDate,
+        location: matches.location,
+        notes: matches.notes,
+        formatType: matches.formatType,
+        scoringSystem: matches.scoringSystem, 
+        pointsToWin: matches.pointsToWin,
+        gameScores: matches.gameScores,
+        division: matches.division,
+        eventTier: matches.eventTier
+      })
+      .from(matches)
+      .where(
+        or(
+          eq(matches.playerOneId, userId),
+          eq(matches.playerTwoId, userId),
+          eq(matches.playerOnePartnerId, userId),
+          eq(matches.playerTwoPartnerId, userId)
         )
-        .orderBy(desc(matches.matchDate))
-        .limit(5);
+      )
+      .orderBy(desc(matches.matchDate))
+      .limit(5);
       
       // Convert matches to the correct format with player names
       const formattedRecentMatches = await Promise.all(recentMatches.map(async (match) => {
