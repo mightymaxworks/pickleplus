@@ -2820,16 +2820,15 @@ function getRandomReason(pointChange: number): string {
       // Create match record
       console.log("[Match API] Creating match with data:", matchData);
       
-      let match;
+      // Get column information and filter match data
+      let existingColumns: string[] = [];
       try {
-        // Direct database insertion - only include fields that exist in the database
         // First, check which columns exist in the matches table
         const columnsQuery = await db.execute(
           sql`SELECT column_name FROM information_schema.columns WHERE table_name = 'matches'`
         );
         
         // Handle different response formats from database drivers
-        let existingColumns: string[] = [];
         if (columnsQuery && columnsQuery.rows) {
           existingColumns = columnsQuery.rows.map((row: any) => row.column_name);
         } else if (Array.isArray(columnsQuery)) {
@@ -2841,29 +2840,55 @@ function getRandomReason(pointChange: number): string {
             'id', 'player_one_id', 'player_two_id', 'winner_id', 
             'player_one_partner_id', 'player_two_partner_id',
             'score_player_one', 'score_player_two', 'match_date',
-            'format_type', 'match_type', 'scoring_system', 'points_to_win'
+            'format_type', 'match_type', 'scoring_system', 'points_to_win',
+            'game_scores', 'division', 'event_tier', 'location', 'notes'
           ];
         }
-        console.log('[Match API] Existing columns in matches table:', existingColumns);
+      } catch (columnError) {
+        console.error("[Match API] Error fetching column information:", columnError);
+        // Use default columns if we couldn't get them from the database
+        existingColumns = [
+          'id', 'player_one_id', 'player_two_id', 'winner_id', 
+          'player_one_partner_id', 'player_two_partner_id',
+          'score_player_one', 'score_player_two', 'match_date',
+          'format_type', 'match_type', 'scoring_system', 'points_to_win',
+          'game_scores', 'division', 'event_tier', 'location', 'notes'
+        ];
+      }
+      
+      console.log('[Match API] Existing columns in matches table:', existingColumns);
+      
+      // Filter the matchData to only include fields that exist in the database
+      const filteredMatchData: Record<string, any> = {};
+      for (const [key, value] of Object.entries(matchData)) {
+        // Handle null and undefined values properly
+        if (value === undefined) continue;
         
-        // Filter the matchData to only include fields that exist in the database
-        const filteredMatchData: Record<string, any> = {};
-        for (const [key, value] of Object.entries(matchData)) {
-          // Convert camelCase to snake_case for column name comparison
-          const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
-          if (existingColumns.includes(snakeKey)) {
-            filteredMatchData[key] = value;
-          }
+        // Convert camelCase to snake_case for column name comparison
+        const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+        if (existingColumns.includes(snakeKey)) {
+          filteredMatchData[key] = value;
         }
-        
-        console.log('[Match API] Filtered match data:', filteredMatchData);
-        
-        // Insert the filtered data
-        // Make sure the values are properly formatted as an array for the insert
-        const created = await db.insert(matches).values([filteredMatchData as any]).returning();
-        
-        // Handle different response formats from the database driver
-        const match = Array.isArray(created) && created.length > 0 ? created[0] : created;
+      }
+      
+      // Handle special serializations needed for certain data types
+      if (filteredMatchData.gameScores && typeof filteredMatchData.gameScores !== 'string') {
+        try {
+          // Ensure gameScores is properly stringified for JSON column
+          filteredMatchData.gameScores = JSON.stringify(filteredMatchData.gameScores);
+        } catch (e) {
+          console.error("[Match API] Failed to stringify gameScores:", e);
+          delete filteredMatchData.gameScores;
+        }
+      }
+      
+      console.log('[Match API] Final filtered match data:', filteredMatchData);
+      
+      // Insert the match record
+      let match;
+      try {
+        const result = await db.insert(matches).values(filteredMatchData).returning();
+        match = Array.isArray(result) && result.length > 0 ? result[0] : result;
       } catch (dbError) {
         console.error("[Match API] Database error creating match:", dbError);
         return res.status(500).json({ error: "Database error creating match" });
