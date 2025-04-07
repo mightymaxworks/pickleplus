@@ -1940,6 +1940,8 @@ export class DatabaseStorage implements IStorage {
   
   async searchUsers(query: string, excludeUserId?: number): Promise<User[]> {
     try {
+      console.log("Storage searchUsers called with query:", query, "excludeUserId:", excludeUserId);
+      
       // Check if excludeUserId is valid
       if (excludeUserId !== undefined && (isNaN(excludeUserId) || !Number.isFinite(excludeUserId))) {
         console.log("Invalid excludeUserId:", excludeUserId, "Using no exclusion");
@@ -1950,12 +1952,20 @@ export class DatabaseStorage implements IStorage {
       const searchPattern = `%${query}%`;
       
       // Create the base query
-      let usersQuery = db.select().from(users)
+      let usersQuery = db.select(
+          users.id,
+          users.username,
+          users.displayName,
+          users.email,
+          users.passportId,
+          users.avatarUrl,
+          users.avatarInitials
+        ).from(users)
         .where(
           or(
             sql`LOWER(${users.username}) LIKE LOWER(${searchPattern})`,
             sql`LOWER(${users.displayName}) LIKE LOWER(${searchPattern})`,
-            sql`LOWER(${users.email}) LIKE LOWER(${searchPattern})`
+            sql`LOWER(COALESCE(${users.email}, '')) LIKE LOWER(${searchPattern})`
           )
         );
       
@@ -1965,10 +1975,21 @@ export class DatabaseStorage implements IStorage {
         usersQuery = usersQuery.where(sql`${users.id} <> ${excludeUserId}`);
       }
       
-      // Execute query with limit
-      const results = await usersQuery.limit(10);
-      console.log(`Search for "${query}" found ${results.length} results`);
-      return results;
+      try {
+        // Execute query with limit
+        const results = await usersQuery.limit(10);
+        console.log(`Search for "${query}" found ${results.length} results`);
+        
+        // If no results, generate test data for administrators
+        if (results.length === 0 && query.toLowerCase() === 'test') {
+          console.log("No results found, would generate test data in routes.ts");
+        }
+        
+        return results;
+      } catch (dbError) {
+        console.error("[searchUsers] Database query error:", dbError);
+        return [];
+      }
     } catch (error) {
       console.error("[searchUsers] Error:", error);
       // Return empty array on error

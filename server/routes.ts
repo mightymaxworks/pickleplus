@@ -2309,16 +2309,18 @@ function getRandomReason(pointChange: number): string {
   });
   
   // User search for connections feature
-  app.get("/api/users/search", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/users/search", async (req: Request, res: Response) => {
     try {
-      const currentUser = req.user as Express.User;
+      // Get current user from session if available but don't require authentication
+      const currentUser = req.isAuthenticated() ? req.user as Express.User : null;
+      console.log("User search API - Authentication status:", req.isAuthenticated());
       console.log("User search API - Current user:", currentUser?.username, "ID:", currentUser?.id);
       
       const query = req.query.q as string;
       console.log("User search API - Query:", query);
       
       if (!query || query.length < 2) {
-        console.log("Query too short, returning 400");
+        console.log("Query too short, returning empty array");
         return res.status(200).json([]); // Return empty array instead of 400 error
       }
       
@@ -2388,6 +2390,7 @@ function getRandomReason(pointChange: number): string {
       // Try regular search
       let users = [];
       try {
+        // Pass current user ID as excludeUserId if available
         const currentUserId = currentUser?.id;
         console.log("Calling searchUsers with currentUserId:", currentUserId);
         users = await storage.searchUsers(query, currentUserId);

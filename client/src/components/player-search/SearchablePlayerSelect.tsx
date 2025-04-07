@@ -86,6 +86,7 @@ export function SearchablePlayerSelect({
     data: searchResults = [],
     isLoading,
     isFetching,
+    error,
   } = useQuery<UserSearchResult[]>({
     queryKey: ["/api/users/search", debouncedQuery],
     queryFn: async () => {
@@ -95,16 +96,37 @@ export function SearchablePlayerSelect({
         q: debouncedQuery,
       });
 
-      const response = await apiRequest("GET", `/api/users/search?${params.toString()}`);
-      const data = await response.json();
+      try {
+        console.log("Making player search request:", `/api/users/search?${params.toString()}`);
+        const response = await apiRequest("GET", `/api/users/search?${params.toString()}`);
+        console.log("Player search response status:", response.status);
+        
+        if (!response.ok) {
+          throw new Error(`Player search API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log("Player search results:", data.length);
 
-      // Filter out excluded player IDs
-      return data.filter((user: UserSearchResult) => 
-        !excludePlayerIds.includes(user.id)
-      );
+        // Filter out excluded player IDs
+        return data.filter((user: UserSearchResult) => 
+          !excludePlayerIds.includes(user.id)
+        );
+      } catch (err) {
+        console.error("Player search error:", err);
+        throw err;
+      }
     },
     enabled: debouncedQuery.length >= 2,
+    retry: 1,
   });
+  
+  // Log any errors for debugging
+  useEffect(() => {
+    if (error) {
+      console.error("Player search query error:", error);
+    }
+  }, [error]);
 
   // Handle selection of a player
   const selectPlayer = (playerData: UserSearchResult) => {
