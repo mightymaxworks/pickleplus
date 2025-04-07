@@ -1,4 +1,4 @@
-import { Switch, Route, Redirect } from "wouter";
+import { Switch, Route, Redirect, useLocation } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
@@ -44,6 +44,7 @@ function App() {
 function AppRoutes() {
   const { user } = useAuth();
   const isAuthenticated = !!user;
+  const [location] = useLocation();
   
   return (
     <div className="font-pairing-default">
@@ -180,9 +181,9 @@ function AppRoutes() {
         </Route>
       </Switch>
       
-      {/* Global Components */}
-      {isAuthenticated && <QrCodeFAB />}
-      {isAuthenticated && <QuickMatchFAB />}
+      {/* Global Components - only show on authenticated routes, not on landing page */}
+      {isAuthenticated && !location.includes("/welcome") && !location.includes("/auth") && <QrCodeFAB />}
+      {isAuthenticated && !location.includes("/welcome") && !location.includes("/auth") && <QuickMatchFAB />}
       <Toaster />
     </div>
   );
