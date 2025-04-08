@@ -6,29 +6,36 @@ export interface MatchPlayer {
   partnerId?: number;
   score: string | number; // Can be string or number, server expects string
   isWinner: boolean;
+  displayName?: string;
+  username?: string;
+  avatarUrl?: string;
+  avatarInitials?: string;
+  isFoundingMember?: boolean;
 }
 
 export interface MatchData {
-  formatType: "singles" | "doubles";
+  formatType: "singles" | "doubles" | "mixed";
   scoringSystem: "traditional" | "rally";
   pointsToWin: number;
   players: MatchPlayer[];
   gameScores: { playerOneScore: number; playerTwoScore: number }[];
   location?: string;
   notes?: string;
+  matchType?: 'casual' | 'competitive' | 'tournament' | 'league';
 }
 
 export interface RecordedMatch extends MatchData {
   id: number;
   date: string;
-  validationStatus?: 'pending' | 'confirmed' | 'disputed'; 
+  validationStatus?: 'pending' | 'confirmed' | 'disputed' | 'validated'; 
   validatedBy?: number[];
   feedback?: {
     enjoymentRating?: number;
     skillMatchRating?: number;
     comments?: string;
   };
-  playerNames: {
+  matchType: 'casual' | 'competitive' | 'tournament' | 'league';
+  playerNames?: {
     [userId: number]: {
       displayName: string;
       username: string;
@@ -135,21 +142,25 @@ export async function validateMatch(
 }
 
 /**
- * Provide feedback for a match
- * @param matchId The ID of the match to provide feedback for
- * @param feedback The feedback data
+ * Provide feedback on a match
+ * @param matchId The ID of the match
+ * @param enjoymentRating Rating for match enjoyment (1-5)
+ * @param skillMatchRating Rating for skill match level (1-5)
+ * @param comments Optional comments about the match
  * @returns The feedback result
  */
 export async function provideMatchFeedback(
   matchId: number,
-  feedback: {
-    enjoymentRating?: number;
-    skillMatchRating?: number;
-    comments?: string;
-  }
-): Promise<{ id: number }> {
+  enjoymentRating: number,
+  skillMatchRating: number,
+  comments?: string
+): Promise<{ success: boolean }> {
   try {
-    const response = await apiRequest("POST", `/api/match/${matchId}/feedback`, feedback);
+    const response = await apiRequest("POST", `/api/match/feedback/${matchId}`, {
+      enjoymentRating,
+      skillMatchRating,
+      comments
+    });
     
     if (!response.ok) {
       const errorData = await response.json();
@@ -164,25 +175,17 @@ export async function provideMatchFeedback(
 }
 
 /**
- * Get the user's daily match limits
- * @returns Daily match limit information with enhanced anti-binge measures
+ * Get daily match limits for the current user
+ * @returns Daily match limits and usage for different XP tiers
  */
-export interface DailyMatchLimitsResponse {
-  dailyMatchCount: number;
-  currentBaseMultiplier: number;
-  currentEffectiveMultiplier: number;
-  timeWeightedFactor: number;
-  timeConstraintMessage: string | null;
-  recentMatchCount: number;
-  dailyMatchLimit: {
-    tier1: { multiplier: number; remaining: number };
-    tier2: { multiplier: number; remaining: number };
-    tier3: { multiplier: number; remaining: number };
-    tier4: { multiplier: number; unlimited: boolean };
-  }
-}
-
-export async function getDailyMatchLimits(): Promise<DailyMatchLimitsResponse> {
+export async function getDailyMatchLimits(): Promise<{
+  currentTier: string;
+  remainingMatches: number;
+  tier1: { multiplier: number; unlimited: boolean };
+  tier2: { multiplier: number; unlimited: boolean };
+  tier3: { multiplier: number; unlimited: boolean };
+  tier4: { multiplier: number; unlimited: boolean };
+}> {
   try {
     const response = await apiRequest("GET", "/api/match/daily-limits");
     
@@ -194,37 +197,16 @@ export async function getDailyMatchLimits(): Promise<DailyMatchLimitsResponse> {
     return await response.json();
   } catch (error) {
     console.error("matchSDK: Error getting daily match limits:", error);
-    
-    // Return a fallback value for error cases to avoid breaking the UI
-    // This maintains backwards compatibility with old data structure
-    const fallback: DailyMatchLimitsResponse = {
-      dailyMatchCount: 0,
-      currentBaseMultiplier: 100,
-      currentEffectiveMultiplier: 100,
-      timeWeightedFactor: 100,
-      timeConstraintMessage: null,
-      recentMatchCount: 0,
-      dailyMatchLimit: {
-        tier1: { multiplier: 100, remaining: 3 },
-        tier2: { multiplier: 75, remaining: 3 },
-        tier3: { multiplier: 50, remaining: 4 },
-        tier4: { multiplier: 25, unlimited: true }
-      }
-    };
-    
     throw error;
   }
 }
 
-// Export all functions as a named object
+// Export as a single SDK object
 export const matchSDK = {
   recordMatch,
   getRecentMatches,
   getMatchStats,
-  // VALMAT functions
   validateMatch,
   provideMatchFeedback,
   getDailyMatchLimits
 };
-
-export default matchSDK;
