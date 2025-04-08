@@ -4,7 +4,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from './lib/queryClient'
 import { Toaster } from '@/components/ui/toaster'
 import { AuthProvider } from '@/hooks/useAuth'
-import { ProtectedRoute } from './components/ProtectedRoute'
+import MainLayout from './components/MainLayout'
 
 // Main Pages
 import Dashboard from './pages/Dashboard'
@@ -23,6 +23,9 @@ import CoachingPage from './pages/CoachingPage'
 import ComingSoonPage from './pages/ComingSoonPage'
 import MatchPage from './pages/match-page'
 import ModernizedMatchPage from './pages/modernized-match-page'
+import AdminDashboardPage from './pages/AdminDashboardPage'
+import AdminUsersPage from './pages/AdminUsersPage'
+import AdminCodesPage from './pages/AdminCodesPage'
 
 // Demo Pages (for development and testing)
 import MatchRewardDemo from './pages/match-reward-demo'
@@ -35,30 +38,105 @@ export default function App() {
         <AuthProvider>
           <Switch>
             {/* Public Routes */}
-            <Route path="/landing" component={LandingPage} />
-            <Route path="/login" component={Login} />
-            <Route path="/register" component={Register} />
-            <Route path="/scan/:id" component={ScanPage} />
+            <Route path="/landing">
+              <LandingPage />
+            </Route>
+            <Route path="/login">
+              <Login />
+            </Route>
+            <Route path="/register">
+              <Register />
+            </Route>
+            <Route path="/scan/:id">
+              {(params) => <ScanPage id={params.id} />}
+            </Route>
             
-            {/* Protected Routes */}
-            <ProtectedRoute path="/" component={Dashboard} />
-            <ProtectedRoute path="/profile" component={Profile} />
-            <ProtectedRoute path="/profile/edit" component={ProfileEdit} />
-            <ProtectedRoute path="/tournaments" component={Tournaments} />
-            <ProtectedRoute path="/leaderboard" component={Leaderboard} />
-            <ProtectedRoute path="/connections" component={ConnectionsPage} />
-            <ProtectedRoute path="/preferences" component={PreferencesPage} />
-            <ProtectedRoute path="/coaching" component={CoachingPage} />
-            <ProtectedRoute path="/match" component={MatchPage} />
-            <ProtectedRoute path="/modernized-match" component={ModernizedMatchPage} />
-            <ProtectedRoute path="/coming-soon" component={ComingSoonPage} />
+            {/* Protected Routes with MainLayout */}
+            <Route path="/">
+              <MainLayout>
+                <Dashboard />
+              </MainLayout>
+            </Route>
+            <Route path="/profile">
+              <MainLayout>
+                <Profile />
+              </MainLayout>
+            </Route>
+            <Route path="/profile/edit">
+              <MainLayout>
+                <ProfileEdit />
+              </MainLayout>
+            </Route>
+            <Route path="/tournaments">
+              <MainLayout>
+                <Tournaments />
+              </MainLayout>
+            </Route>
+            <Route path="/leaderboard">
+              <MainLayout>
+                <Leaderboard />
+              </MainLayout>
+            </Route>
+            <Route path="/connections">
+              <MainLayout>
+                <ConnectionsPage />
+              </MainLayout>
+            </Route>
+            <Route path="/preferences">
+              <MainLayout>
+                <PreferencesPage />
+              </MainLayout>
+            </Route>
+            <Route path="/coaching">
+              <MainLayout>
+                <CoachingPage />
+              </MainLayout>
+            </Route>
+            <Route path="/match">
+              <MainLayout>
+                <MatchPage />
+              </MainLayout>
+            </Route>
+            <Route path="/modernized-match">
+              <MainLayout>
+                <ModernizedMatchPage />
+              </MainLayout>
+            </Route>
+            <Route path="/coming-soon">
+              <MainLayout>
+                <ComingSoonPage />
+              </MainLayout>
+            </Route>
+            
+            {/* Admin Routes */}
+            <Route path="/admin/dashboard">
+              <MainLayout>
+                <AdminDashboardPage />
+              </MainLayout>
+            </Route>
+            <Route path="/admin/users">
+              <MainLayout>
+                <AdminUsersPage />
+              </MainLayout>
+            </Route>
+            <Route path="/admin/codes">
+              <MainLayout>
+                <AdminCodesPage />
+              </MainLayout>
+            </Route>
             
             {/* Demo Routes (Development Only) */}
-            <Route path="/demo/match-reward" component={MatchRewardDemo} />
-            <Route path="/demo/xp-ranking" component={XPRankingDemo} />
+            <Route path="/demo/match-reward">
+              <MatchRewardDemo />
+            </Route>
+            <Route path="/demo/xp-ranking">
+              <XPRankingDemo />
+            </Route>
             
             {/* 404 Route */}
-            <Route component={NotFound} />
+            <Route>
+              <NotFound />
+            </Route>
           </Switch>
         </AuthProvider>
       </QueryClientProvider>
