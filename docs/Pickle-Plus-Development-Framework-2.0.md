@@ -1,10 +1,16 @@
-# Pickle+ Development Framework 2.0
+# Pickle+ Development Framework 3.0
 
 ## System Overview
 
-This framework establishes a standardized system of prefixed serial codes that categorize 
-our development work across different domains. Each code represents a comprehensive set of 
-requirements, implementation details, and best practices.
+This framework establishes a standardized system for development work across the Pickle+ platform. It provides comprehensive guidelines for:
+
+1. Ticket structure and tracking
+2. Prompt engineering and implementation specifications
+3. Architectural patterns and code organization
+4. Development processes and code quality standards
+5. Documentation requirements and component inventory management
+
+Version 3.0 includes enhanced codebase analysis integration to prevent duplicate development and standardized prompt structures for implementation.
 
 ## Reference Code Categories
 
