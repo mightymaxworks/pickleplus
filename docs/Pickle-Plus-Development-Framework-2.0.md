@@ -66,6 +66,7 @@ For example:
 We have established foundational frameworks for each work type:
 
 - UI-278651: Complete UI/UX Framework (our foundational design system)
+- UI-456789: UI/UX Integration Framework (our structured approach to component integration)
 - FT-123456: Feature Development Framework (our structured approach to building features)
 - DB-789012: Debugging Framework (our methodical approach to solving issues)
 
@@ -141,6 +142,9 @@ Before any code changes, ensure there's a checklist:
 - [ ] Checked database schema for related tables
 - [ ] Reviewed SDK layer for related functions
 - [ ] Identified specific gaps or improvements needed
+- [ ] Identified where in the existing UI the new component will be placed
+- [ ] Documented the user navigation path to access the new feature
+- [ ] Confirmed responsiveness on mobile and desktop devices
 - [ ] Confirmed no duplication of existing functionality
 ```
 
@@ -196,8 +200,18 @@ Our comprehensive UI/UX framework covering:
 
 9. Implementation Process
    - Development workflow
+   - Always integrate new components into the existing UI
+   - Document access paths to new features
+   - Test complete user flows, not just isolated components
+   - Verify UI changes on all targeted devices
    - Quality assurance
    - Documentation
+
+10. UI/UX Integration Guidelines
+   - Always integrate components into the existing UI
+   - Document access paths to newly created features
+   - Test complete user flows, not just isolated components
+   - Verify UI changes on all targeted devices
 
 Using this code ensures consistent application of our design principles across the platform.
 
@@ -292,3 +306,74 @@ Example of requesting context-aware debugging assistance:
 
 Example of referencing a foundational framework:
 "Apply the UI-278651 design principles to the coach profile page"
+
+## UI/UX Integration Guidelines
+
+### Component Integration Workflow
+
+To ensure proper UI/UX integration, follow this workflow:
+
+1. **Access Path Planning**:
+   - Identify where in the existing UI the component will be placed
+   - Document the navigation path users will follow to reach the feature
+   - Update any necessary navigation elements (menus, tabs, links)
+
+2. **Integration Testing**:
+   - Test the complete user flow from entry point to the component
+   - Verify all states (loading, error, empty, populated) display correctly
+   - Confirm mobile and desktop responsiveness
+
+3. **Documentation Requirements**:
+   - Document the access path in technical documentation
+   - Include screenshots of the component in context
+   - Note any navigation changes made to support the new feature
+
+4. **Common UI/UX Integration Pitfalls**:
+   - Creating components that aren't linked to the UI ("orphaned components")
+   - Adding features without clear navigation paths
+   - Implementing desktop-only views without mobile considerations
+   - Failing to test the complete user journey
+
+Remember: **A feature that can't be found might as well not exist.**
+
+### UI-456789: UI/UX Integration Framework
+
+Our specific framework for ensuring proper integration of UI/UX components:
+
+1. Integration Planning
+   - Access path identification
+   - User flow mapping
+   - Navigation structure updates
+   - Mobile and desktop consideration
+
+2. Component Connectivity
+   - Parent-child component relationship
+   - Data flow planning
+   - Event handling between components
+   - State sharing strategies
+
+3. Navigation Implementation
+   - Menu item additions/modifications
+   - Tab structure updates
+   - Breadcrumb integration
+   - Contextual navigation
+
+4. Responsive Integration
+   - Mobile layout adaptation
+   - Desktop layout enhancement
+   - Touch vs. mouse interaction differences
+   - Viewport-specific component arrangements
+
+5. Integration Testing
+   - Full user journey validation
+   - Navigation path verification
+   - Cross-device testing
+   - Performance impact assessment
+
+6. Integration Documentation
+   - Access path documentation
+   - Screenshots in context
+   - User flow diagrams
+   - Release notes for new navigation
+
+Using this code ensures components are properly integrated into the existing UI and accessible to users.

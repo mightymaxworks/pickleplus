@@ -1,5 +1,27 @@
 import { apiRequest } from "@/lib/queryClient";
 
+/**
+ * Match SDK
+ * 
+ * This SDK provides functionality for match-related operations in the Pickle+ platform.
+ * 
+ * UI Components Integration:
+ * - MatchHistory: Displays a list of matches (Navigation: Match Center → History tab)
+ * - MatchTrends: Shows match performance visualizations (Navigation: Match Center → History tab)
+ * - MatchFilters: Provides filtering options for matches (Navigation: Match Center → History tab)
+ * - MatchDetails: Shows detailed match information (Navigation: Match Center → Click on any match)
+ * 
+ * User Access Paths:
+ * 1. Main Navigation → Match Center → Various tabs
+ * 2. Dashboard → Recent Matches card → "View All"
+ * 3. Profile → Match History section
+ * 
+ * Mobile Considerations:
+ * - Components stack vertically on mobile devices
+ * - MatchFilters collapses into a dropdown menu
+ * - MatchTrends shows simplified visualizations
+ */
+
 // Define types for match data
 export interface MatchPlayer {
   userId: number;

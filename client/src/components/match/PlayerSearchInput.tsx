@@ -13,6 +13,22 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, User } from 'lucide-react';
 import { useDebounce } from '@/hooks/useDebounce';
 
+/**
+ * PlayerSearchInput Component
+ * 
+ * A reusable player search component that allows users to find and select other players.
+ * 
+ * UI Integration Points:
+ * - Match Recording: Used to find opponents (Navigation: Match Center → Record Match)
+ * - Match Filtering: Used to filter by opponent (Navigation: Match Center → History tab → Filter button)
+ * - Social Connections: Used to find players to connect with (Navigation: Social → Find Players)
+ * 
+ * Mobile Considerations:
+ * - Search results display in a compact dropdown
+ * - Avatar size reduced on smaller screens
+ * - Touch-friendly hit areas for selection
+ */
+
 export interface UserSearchResult {
   id: number;
   username: string;

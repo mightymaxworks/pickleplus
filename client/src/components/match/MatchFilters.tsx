@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
-import { PlayerSearchInput } from '@/components/match/PlayerSearchInput';
+import PlayerSearchInput, { UserSearchResult } from './PlayerSearchInput';
 import { CalendarIcon, FilterIcon, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -148,7 +148,7 @@ export function MatchFilters({ filters, onFilterChange }: MatchFiltersProps) {
                     <Calendar
                       mode="single"
                       selected={tempFilters.dateRange[0] || undefined}
-                      onSelect={(date) => handleFilterChange('dateRange', [date, tempFilters.dateRange[1]])}
+                      onSelect={(date) => handleFilterChange('dateRange', [date as Date | null, tempFilters.dateRange[1]])}
                       initialFocus
                     />
                   </PopoverContent>
@@ -173,7 +173,7 @@ export function MatchFilters({ filters, onFilterChange }: MatchFiltersProps) {
                     <Calendar
                       mode="single"
                       selected={tempFilters.dateRange[1] || undefined}
-                      onSelect={(date) => handleFilterChange('dateRange', [tempFilters.dateRange[0], date])}
+                      onSelect={(date) => handleFilterChange('dateRange', [tempFilters.dateRange[0], date as Date | null])}
                       initialFocus
                     />
                   </PopoverContent>
@@ -229,7 +229,7 @@ export function MatchFilters({ filters, onFilterChange }: MatchFiltersProps) {
                     <span>{tempFilters.opponent.displayName}</span>
                     <Button 
                       variant="ghost" 
-                      size="xs" 
+                      size="sm" 
                       className="h-5 w-5 p-0" 
                       onClick={() => handleFilterChange('opponent', null)}
                     >
@@ -239,7 +239,7 @@ export function MatchFilters({ filters, onFilterChange }: MatchFiltersProps) {
                 ) : (
                   <div className="w-full">
                     <PlayerSearchInput
-                      onPlayerSelected={(player) => {
+                      onPlayerSelected={(player: UserSearchResult | null) => {
                         if (player) {
                           handleFilterChange('opponent', {
                             id: player.id,

@@ -70,10 +70,11 @@ export function MatchDetails({ match, onClose }: MatchDetailsProps) {
   const isDoublesMatch = formatType === 'doubles';
   
   // Format the Players display
-  const formatPlayerDisplay = (player: any, isWinner: boolean) => {
+  const formatPlayerDisplay = (player: RecordedMatch['players'][0], isWinner: boolean) => {
     const playerName = player.displayName || player.username || 'Unknown Player';
     const partnerId = isDoublesMatch ? (isWinner ? winner?.partnerId : loser?.partnerId) : null;
-    const partnerData = null; // In a real implementation, this would be fetched
+    // In a real implementation, this would be fetched from the server
+    const partnerData: {displayName?: string, username?: string, avatarUrl?: string, avatarInitials?: string} | null = null;
     const partnerName = partnerData ? (partnerData.displayName || partnerData.username) : 'Unknown Partner';
     
     return (
@@ -188,7 +189,7 @@ export function MatchDetails({ match, onClose }: MatchDetailsProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {gameScores.map((game: any, index: number) => (
+                    {gameScores.map((game: {playerOneScore: number, playerTwoScore: number}, index: number) => (
                       <TableRow key={index}>
                         <TableCell>{index + 1}</TableCell>
                         <TableCell className="text-center font-medium">

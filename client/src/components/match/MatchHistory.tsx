@@ -13,18 +13,40 @@ import { MatchFilters, MatchFiltersState } from './MatchFilters';
 import MatchTrends from './MatchTrends';
 import MatchDetails from './MatchDetails';
 
+/**
+ * MatchHistory Component
+ * 
+ * Displays a user's match history with filtering and trend visualization capabilities.
+ * 
+ * UI Integration Points:
+ * - Main match history display (Navigation: Match Center → History tab)
+ * - Player profile match history (Navigation: Profile → Match History)
+ * 
+ * Mobile Considerations:
+ * - Match cards stack vertically
+ * - Filters collapse into a dropdown
+ * - Trends show simplified visualizations
+ */
 interface MatchHistoryProps {
+  matches?: RecordedMatch[];
+  userId?: number;
   limit?: number;
   showFilters?: boolean;
   showTrends?: boolean;
   className?: string;
+  onMatchesRefresh?: () => void;
+  formatDate?: (dateString: string) => string;
 }
 
 export function MatchHistory({ 
+  matches: providedMatches,
+  userId: providedUserId,
   limit = 10, 
   showFilters = true,
   showTrends = true,
-  className = ''
+  className = '',
+  onMatchesRefresh,
+  formatDate: customFormatDate
 }: MatchHistoryProps) {
   const { user } = useAuth();
   const [selectedMatch, setSelectedMatch] = useState<RecordedMatch | null>(null);
@@ -35,14 +57,17 @@ export function MatchHistory({
     opponent: null
   });
   
-  // Fetch recent matches
-  const { data: matches, isLoading, isError } = useQuery({
-    queryKey: ['/api/match/recent', limit],
+  // Determine whether to use provided matches or fetch from API
+  const { data: fetchedMatches, isLoading, isError } = useQuery({
+    queryKey: ['/api/match/recent', providedUserId || (user?.id), limit],
     queryFn: async () => {
-      return await matchSDK.getRecentMatches(undefined, limit);
+      return await matchSDK.getRecentMatches(providedUserId || undefined, limit);
     },
-    enabled: !!user,
+    enabled: !providedMatches && !!(providedUserId || user?.id),
   });
+  
+  // Use provided matches if available, otherwise use fetched matches
+  const matches = providedMatches || fetchedMatches;
   
   // Apply filters to matches
   const filteredMatches = React.useMemo(() => {
@@ -121,7 +146,10 @@ export function MatchHistory({
           <XCircle className="h-10 w-10 mx-auto text-destructive mb-2" />
           <h3 className="font-medium text-lg">Failed to load matches</h3>
           <p className="text-muted-foreground mb-4">There was an error loading your match history.</p>
-          <Button variant="outline" onClick={() => window.location.reload()}>
+          <Button 
+            variant="outline" 
+            onClick={() => onMatchesRefresh ? onMatchesRefresh() : window.location.reload()}
+          >
             Try Again
           </Button>
         </CardContent>
@@ -162,8 +190,9 @@ export function MatchHistory({
           <MatchCard 
             key={match.id} 
             match={match} 
-            currentUserId={user?.id}
+            currentUserId={providedUserId || user?.id}
             onClick={() => setSelectedMatch(match)}
+            formatDate={customFormatDate}
           />
         ))}
         
@@ -190,9 +219,10 @@ interface MatchCardProps {
   match: RecordedMatch;
   currentUserId?: number;
   onClick?: () => void;
+  formatDate?: (dateString: string) => string;
 }
 
-function MatchCard({ match, currentUserId, onClick }: MatchCardProps) {
+function MatchCard({ match, currentUserId, onClick, formatDate }: MatchCardProps) {
   const { 
     date, 
     players, 
@@ -202,7 +232,7 @@ function MatchCard({ match, currentUserId, onClick }: MatchCardProps) {
   } = match;
   
   const matchDate = parseISO(date);
-  const formattedDate = format(matchDate, 'MMM d, yyyy');
+  const formattedDate = formatDate ? formatDate(date) : format(matchDate, 'MMM d, yyyy');
   const formattedTime = format(matchDate, 'h:mm a');
   
   // Find the current user's player data
