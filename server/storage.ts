@@ -454,6 +454,8 @@ export class DatabaseStorage implements IStorage {
           sql`LOWER(COALESCE(${users.email}, '')) LIKE LOWER(${searchPattern})`
         );
         
+        console.log("Search SQL:", whereClause);
+        
         // Execute the search query
         // IMPORTANT: We're avoiding chaining multiple where clauses as that seems to be causing issues
         let results = await db.select({
