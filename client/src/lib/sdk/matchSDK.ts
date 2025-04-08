@@ -67,6 +67,28 @@ export interface RecordedMatch extends MatchData {
       avatarUrl?: string;
     }
   };
+  // Rewards data
+  xpAwarded?: number; // Total XP awarded for the match
+  pointsAwarded?: number; // Total ranking points awarded for the match
+  rewards?: {
+    [userId: number]: {
+      xp?: {
+        amount: number;
+        breakdown?: {
+          baseAmount: number;
+          victoryBonus?: number;
+          tournamentMultiplier?: number;
+          skillBonus?: number;
+        }
+      },
+      ranking?: {
+        points: number;
+        previousTier?: string;
+        newTier?: string;
+        tierChanged?: boolean;
+      }
+    }
+  };
 }
 
 /**

@@ -372,16 +372,45 @@ function MatchList({ matches, isLoading }: MatchListProps) {
                 )}
               </div>
               
-              {/* Details about the match */}
-              <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground justify-center">
-                <div className="flex items-center gap-1">
-                  <Trophy className="h-3 w-3" />
-                  <span>{match.formatType === 'singles' ? 'Singles' : 'Doubles'} Match</span>
+              {/* PKL-278651-HIST-0002-UI-01: Match Rewards Display */}
+              <div className="flex flex-col gap-2 mt-1">
+                {/* Match details */}
+                <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground justify-center">
+                  <div className="flex items-center gap-1">
+                    <Trophy className="h-3 w-3" />
+                    <span>{match.formatType === 'singles' ? 'Singles' : 'Doubles'} Match</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <CheckCircle className="h-3 w-3" />
+                    <span>{match.validationStatus}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <CheckCircle className="h-3 w-3" />
-                  <span>{match.validationStatus}</span>
-                </div>
+                
+                {/* PKL-278651-HIST-0002-UI-01-A: XP and Ranking Rewards Section */}
+                {(match.xpAwarded || match.pointsAwarded || (match.rewards && user?.id && match.rewards[user.id])) && (
+                  <div className="border-t border-dashed border-muted pt-2 mt-1">
+                    <div className="flex gap-x-4 justify-center text-xs">
+                      {/* XP rewards */}
+                      {(match.xpAwarded || (match.rewards && user?.id && match.rewards[user.id]?.xp)) && (
+                        <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                          <span className="font-medium">+{match.rewards?.[user?.id || 0]?.xp?.amount || match.xpAwarded || 0} XP</span>
+                        </div>
+                      )}
+                      
+                      {/* Ranking rewards */}
+                      {(match.pointsAwarded || (match.rewards && user?.id && match.rewards[user.id]?.ranking)) && (
+                        <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
+                          <span className="font-medium">+{match.rewards?.[user?.id || 0]?.ranking?.points || match.pointsAwarded || 0} CP</span>
+                          {match.rewards?.[user?.id || 0]?.ranking?.tierChanged && (
+                            <Badge variant="outline" className="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300 h-4 px-1 text-[10px]">
+                              Tier Up!
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

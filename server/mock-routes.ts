@@ -243,7 +243,13 @@ export function registerMockRoutes(app: Express): Server {
     // We'll create default matches if none exist
     const userMatches = [];
     
-    // Add a default recent match for testing
+    // PKL-278651-HIST-0002-BL: Generate rewards data for recent matches
+    const xpBase = 25; 
+    const victoryBonus = 15;
+    const rankingPoints = 18;
+    const tierChanged = Math.random() > 0.7;
+    
+    // Add a default recent match for testing with rewards data
     userMatches.push({
       id: 1001,
       date: new Date().toISOString(),
@@ -252,6 +258,40 @@ export function registerMockRoutes(app: Express): Server {
       pointsToWin: 11,
       matchType: 'casual',
       eventTier: 'local',
+      xpAwarded: xpBase + victoryBonus,
+      pointsAwarded: rankingPoints,
+      rewards: {
+        1: {
+          xp: {
+            amount: xpBase + victoryBonus,
+            breakdown: {
+              baseAmount: xpBase,
+              victoryBonus: victoryBonus,
+              tournamentMultiplier: null
+            }
+          },
+          ranking: {
+            points: rankingPoints,
+            previousTier: tierChanged ? "Intermediate" : "Beginner",
+            newTier: tierChanged ? "Advanced" : "Beginner",
+            tierChanged: tierChanged
+          }
+        },
+        6: {
+          xp: {
+            amount: Math.floor(xpBase * 0.8),
+            breakdown: {
+              baseAmount: Math.floor(xpBase * 0.8)
+            }
+          },
+          ranking: {
+            points: Math.floor(rankingPoints * 0.7),
+            previousTier: "Beginner",
+            newTier: "Beginner",
+            tierChanged: false
+          }
+        }
+      },
       players: [
         {
           userId: 1, // Current user
@@ -464,6 +504,13 @@ export function registerMockRoutes(app: Express): Server {
       const currentValidationStatus = i % 2 === 0 ? 'validated' : 'pending';
       if (validationStatus && validationStatus !== 'all' && currentValidationStatus !== validationStatus) continue;
       
+      // PKL-278651-HIST-0002-BL: Generate rewards data
+      const xpBase = Math.floor(Math.random() * 20) + 10; // 10-30 XP
+      const rankingPoints = Math.floor(Math.random() * 15) + 5; // 5-20 CP
+      const isWinner = i % 2 === 0;
+      const victoryBonus = isWinner ? Math.floor(xpBase * 0.5) : 0;
+      const tierChanged = Math.random() > 0.7;
+      
       // Simple match object similar to RecordedMatch
       matches.push({
         id: 1001 + i,
@@ -473,11 +520,45 @@ export function registerMockRoutes(app: Express): Server {
         pointsToWin: 11,
         matchType: currentMatchType,
         eventTier: i % 4 === 0 ? 'regional' : 'local',
+        xpAwarded: xpBase + victoryBonus,
+        pointsAwarded: rankingPoints,
+        rewards: {
+          1: {
+            xp: {
+              amount: xpBase + victoryBonus,
+              breakdown: {
+                baseAmount: xpBase,
+                victoryBonus: victoryBonus,
+                tournamentMultiplier: currentMatchType === 'tournament' ? 1.5 : null
+              }
+            },
+            ranking: {
+              points: rankingPoints,
+              previousTier: tierChanged ? "Intermediate" : "Beginner",
+              newTier: tierChanged ? "Advanced" : "Beginner",
+              tierChanged: tierChanged
+            }
+          },
+          6: {
+            xp: {
+              amount: Math.floor(xpBase * 0.8),
+              breakdown: {
+                baseAmount: Math.floor(xpBase * 0.8)
+              }
+            },
+            ranking: {
+              points: Math.floor(rankingPoints * 0.7),
+              previousTier: "Beginner",
+              newTier: "Beginner",
+              tierChanged: false
+            }
+          }
+        },
         players: [
           {
             userId: 1,
             score: Math.floor(Math.random() * 5) + 7, // Random score between 7-11
-            isWinner: i % 2 === 0
+            isWinner: isWinner
           },
           {
             userId: 6 + i % 3, // Different opponents
