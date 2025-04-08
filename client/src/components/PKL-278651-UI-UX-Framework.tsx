@@ -248,11 +248,16 @@
 
 ## 10. Usage Instructions
 
-When requesting implementation of any feature according to this framework, simply reference the code "PKL-278651" to indicate all specifications outlined in this document should be followed.
+Simply state "PKL-278651" in a request to indicate:
 
-Example: "Please implement [feature] according to PKL-278651."
+1. This entire UI/UX framework should be applied
+2. The Match Center design principles should be used
+3. The implementation should follow our mobile-first approach
+4. All accessibility standards should be met
+5. Component architecture should follow our established patterns
+6. Integration with CourtIQ and PCP Global Rankings should be handled appropriately
 
-This will indicate that the implementation should follow all design principles, responsive behaviors, accessibility standards, and platform-specific patterns outlined in this framework.
+No need to specify the features or components - saying "PKL-278651" is sufficient to communicate the entire set of requirements.
 */
 
 // This is a documentation file only, so we export nothing
