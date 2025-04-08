@@ -50,7 +50,7 @@ function FilterBar({ filters, onFilterChange, onResetFilters }: FilterBarProps) 
           onClick={() => setIsOpen(!isOpen)}
         >
           <Filter className="h-4 w-4" />
-          <span>Filters</span>
+          <span className="text-sm">Filters</span>
           <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </Button>
         
@@ -65,15 +65,15 @@ function FilterBar({ filters, onFilterChange, onResetFilters }: FilterBarProps) 
       
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleContent>
-          <div className="bg-background rounded-md shadow-sm border p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="bg-background rounded-md shadow-sm border p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {/* Date range */}
             <div className="space-y-2">
-              <Label>Date range</Label>
+              <Label className="text-xs sm:text-sm">Date range</Label>
               <div className="flex gap-2">
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="flex-1 justify-start text-left font-normal">
-                      <CalendarIcon className="mr-1 h-4 w-4" />
+                    <Button variant="outline" size="sm" className="flex-1 justify-start text-left font-normal text-xs sm:text-sm">
+                      <CalendarIcon className="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
                       {filters.startDate ? format(filters.startDate, 'PP') : 'Start date'}
                     </Button>
                   </PopoverTrigger>
@@ -88,8 +88,8 @@ function FilterBar({ filters, onFilterChange, onResetFilters }: FilterBarProps) 
                 </Popover>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="flex-1 justify-start text-left font-normal">
-                      <CalendarIcon className="mr-1 h-4 w-4" />
+                    <Button variant="outline" size="sm" className="flex-1 justify-start text-left font-normal text-xs sm:text-sm">
+                      <CalendarIcon className="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
                       {filters.endDate ? format(filters.endDate, 'PP') : 'End date'}
                     </Button>
                   </PopoverTrigger>
@@ -107,12 +107,12 @@ function FilterBar({ filters, onFilterChange, onResetFilters }: FilterBarProps) 
             
             {/* Match type */}
             <div className="space-y-2">
-              <Label>Match type</Label>
+              <Label className="text-xs sm:text-sm">Match type</Label>
               <Select 
                 value={filters.matchType} 
                 onValueChange={(value) => onFilterChange('matchType', value)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="text-xs sm:text-sm h-8 sm:h-9">
                   <SelectValue placeholder="All match types" />
                 </SelectTrigger>
                 <SelectContent>
@@ -127,12 +127,12 @@ function FilterBar({ filters, onFilterChange, onResetFilters }: FilterBarProps) 
             
             {/* Format type */}
             <div className="space-y-2">
-              <Label>Format</Label>
+              <Label className="text-xs sm:text-sm">Format</Label>
               <Select 
                 value={filters.formatType} 
                 onValueChange={(value) => onFilterChange('formatType', value)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="text-xs sm:text-sm h-8 sm:h-9">
                   <SelectValue placeholder="All formats" />
                 </SelectTrigger>
                 <SelectContent>
@@ -146,12 +146,12 @@ function FilterBar({ filters, onFilterChange, onResetFilters }: FilterBarProps) 
             
             {/* Validation status */}
             <div className="space-y-2">
-              <Label>Validation status</Label>
+              <Label className="text-xs sm:text-sm">Validation status</Label>
               <Select 
                 value={filters.validationStatus} 
                 onValueChange={(value) => onFilterChange('validationStatus', value)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="text-xs sm:text-sm h-8 sm:h-9">
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
@@ -165,8 +165,9 @@ function FilterBar({ filters, onFilterChange, onResetFilters }: FilterBarProps) 
             
             {/* Location */}
             <div className="space-y-2">
-              <Label>Location</Label>
+              <Label className="text-xs sm:text-sm">Location</Label>
               <Input 
+                className="text-xs sm:text-sm h-8 sm:h-9"
                 placeholder="Any location" 
                 value={filters.location} 
                 onChange={(e) => onFilterChange('location', e.target.value)}
@@ -175,13 +176,13 @@ function FilterBar({ filters, onFilterChange, onResetFilters }: FilterBarProps) 
             
             {/* Sort options */}
             <div className="space-y-2">
-              <Label>Sort by</Label>
+              <Label className="text-xs sm:text-sm">Sort by</Label>
               <div className="flex gap-2">
                 <Select 
                   value={filters.sortBy} 
                   onValueChange={(value) => onFilterChange('sortBy', value)}
                 >
-                  <SelectTrigger className="flex-1">
+                  <SelectTrigger className="flex-1 text-xs sm:text-sm h-8 sm:h-9">
                     <SelectValue placeholder="Date" />
                   </SelectTrigger>
                   <SelectContent>
@@ -193,12 +194,13 @@ function FilterBar({ filters, onFilterChange, onResetFilters }: FilterBarProps) 
                 <Button 
                   variant="outline" 
                   size="icon"
+                  className="h-8 w-8 sm:h-9 sm:w-9"
                   onClick={() => onFilterChange('sortDirection', filters.sortDirection === 'asc' ? 'desc' : 'asc')}
                 >
                   {filters.sortDirection === 'asc' ? (
-                    <ArrowUp className="h-4 w-4" />
+                    <ArrowUp className="h-3 w-3 sm:h-4 sm:w-4" />
                   ) : (
-                    <ArrowDown className="h-4 w-4" />
+                    <ArrowDown className="h-3 w-3 sm:h-4 sm:w-4" />
                   )}
                 </Button>
               </div>
@@ -270,41 +272,41 @@ function MatchList({ matches, isLoading }: MatchListProps) {
   }
   
   return (
-    <div className="space-y-4">
-      <ScrollArea className="max-h-[600px] pr-4">
+    <div className="space-y-4 pb-4">
+      <ScrollArea className="max-h-[550px]">
         {matches.map((match) => (
-          <div key={match.id} className="mb-4 p-6 hover:bg-muted/50 transition-colors rounded-md bg-background shadow-sm border">
+          <div key={match.id} className="mb-4 p-4 sm:p-6 hover:bg-muted/50 transition-colors rounded-md bg-background shadow-sm border">
             <div className="flex-1">
               {/* Match header with match type badges and date */}
-              <div className="flex gap-2 mb-3">
-                <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800">
+              <div className="flex flex-wrap gap-2 mb-3">
+                <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 text-xs py-0 h-5">
                   {match.matchType === 'tournament' ? 'Tournament' : 'Casual'}
                 </Badge>
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs py-0 h-5">
                   {match.formatType === 'singles' ? 'Singles' : 'Doubles'}
                 </Badge>
                 {match.eventTier && (
-                  <Badge variant="outline" className="bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800">
+                  <Badge variant="outline" className="bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 text-xs py-0 h-5">
                     {match.eventTier}
                   </Badge>
                 )}
               </div>
-              <div className="text-sm text-muted-foreground flex items-center gap-1 mb-4">
+              <div className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1 mb-4">
                 <Clock className="h-3 w-3" />
                 {match.date ? format(parseISO(match.date), 'MMM d, yyyy') : 'Unknown date'}
               </div>
               
               {/* Players section with avatars */}
-              <div className="flex mb-6 gap-2 justify-between">
+              <div className="flex mb-4 sm:mb-6 gap-2 justify-between">
                 {/* Your side */}
                 <div className="flex flex-col items-center">
-                  <div className="h-14 w-14 rounded-full bg-primary/10 mb-2 flex items-center justify-center text-primary font-bold text-lg">
+                  <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-primary/10 mb-2 flex items-center justify-center text-primary font-bold text-base sm:text-lg">
                     {user?.id && match.playerNames && match.playerNames[user.id] 
                       ? match.playerNames[user.id].avatarInitials || user.displayName?.charAt(0) || "YP"
                       : "YP"}
                   </div>
                   <div className="text-center">
-                    <div className="font-medium">
+                    <div className="font-medium text-sm sm:text-base">
                       {user?.displayName || 'You'}
                     </div>
                     <div className="text-xs text-muted-foreground">
@@ -315,19 +317,19 @@ function MatchList({ matches, isLoading }: MatchListProps) {
                 
                 {/* VS indicator */}
                 <div className="flex items-center">
-                  <span className="text-base text-muted-foreground font-medium">VS</span>
+                  <span className="text-sm sm:text-base text-muted-foreground font-medium">VS</span>
                 </div>
                 
                 {/* Opponent side */}
                 <div className="flex flex-col items-center">
-                  <div className="h-14 w-14 rounded-full bg-muted mb-2 flex items-center justify-center font-bold text-lg">
+                  <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-muted mb-2 flex items-center justify-center font-bold text-base sm:text-lg">
                     {match.playerNames && 
                       Object.values(match.playerNames)
                         .filter(p => p.username !== user?.username)
                         .map(p => p.avatarInitials || p.displayName?.charAt(0) || "JP")[0] || "JP"}
                   </div>
                   <div className="text-center">
-                    <div className="font-medium">
+                    <div className="font-medium text-sm sm:text-base">
                       {match.playerNames && 
                         Object.values(match.playerNames)
                           .filter(p => p.username !== user?.username)
@@ -344,15 +346,15 @@ function MatchList({ matches, isLoading }: MatchListProps) {
               </div>
               
               {/* Score display with Win badge */}
-              <div className="flex flex-col items-center mb-4">
-                <div className="w-44 flex mb-2">
-                  <div className="flex-1 bg-primary/10 rounded-l-md py-3 flex justify-center">
-                    <span className="text-3xl font-bold text-primary">
+              <div className="flex flex-col items-center mb-3 sm:mb-4">
+                <div className="w-32 sm:w-44 flex mb-2">
+                  <div className="flex-1 bg-primary/10 rounded-l-md py-2 sm:py-3 flex justify-center">
+                    <span className="text-xl sm:text-3xl font-bold text-primary">
                       {match.players.find(p => p.userId === user?.id)?.score || '11'}
                     </span>
                   </div>
-                  <div className="flex-1 bg-muted rounded-r-md py-3 flex justify-center">
-                    <span className="text-3xl font-bold">
+                  <div className="flex-1 bg-muted rounded-r-md py-2 sm:py-3 flex justify-center">
+                    <span className="text-xl sm:text-3xl font-bold">
                       {match.players.find(p => p.userId !== user?.id)?.score || '4'}
                     </span>
                   </div>
@@ -360,18 +362,18 @@ function MatchList({ matches, isLoading }: MatchListProps) {
                 
                 {/* Win/Loss indicator */}
                 {match.players.find(p => p.userId === user?.id)?.isWinner ? (
-                  <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800 px-4">
+                  <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800 px-3 text-xs h-5">
                     Win
                   </Badge>
                 ) : (
-                  <Badge variant="outline" className="bg-gray-100 dark:bg-gray-800/40 px-4">
+                  <Badge variant="outline" className="bg-gray-100 dark:bg-gray-800/40 px-3 text-xs h-5">
                     Loss
                   </Badge>
                 )}
               </div>
               
               {/* Details about the match */}
-              <div className="flex gap-x-3 gap-y-1 text-xs text-muted-foreground justify-center">
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground justify-center">
                 <div className="flex items-center gap-1">
                   <Trophy className="h-3 w-3" />
                   <span>{match.formatType === 'singles' ? 'Singles' : 'Doubles'} Match</span>
@@ -413,14 +415,15 @@ function Pagination({ currentPage, totalPages, totalCount, onPageChange }: Pagin
   };
   
   return (
-    <div className="flex items-center justify-between mt-4">
-      <div className="text-sm text-muted-foreground">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mt-4 pb-8">
+      <div className="text-xs sm:text-sm text-muted-foreground">
         Showing <span className="font-medium">{totalCount > 0 ? (currentPage - 1) * 10 + 1 : 0}</span> to <span className="font-medium">{Math.min(currentPage * 10, totalCount)}</span> of <span className="font-medium">{totalCount}</span> matches
       </div>
-      <div className="flex gap-1">
+      <div className="flex gap-1 w-full sm:w-auto justify-end">
         <Button 
           variant="outline" 
           size="sm" 
+          className="text-xs h-8"
           onClick={handlePrevious}
           disabled={currentPage === 1}
         >
@@ -429,6 +432,7 @@ function Pagination({ currentPage, totalPages, totalCount, onPageChange }: Pagin
         <Button 
           variant="outline" 
           size="sm" 
+          className="text-xs h-8"
           onClick={handleNext}
           disabled={currentPage === totalPages || totalPages === 0}
         >

@@ -69,8 +69,8 @@ export function MatchesPage() {
         >
           <h1 className="text-2xl font-bold tracking-tight">Match Center</h1>
           <Button asChild size="sm" className="bg-gradient-to-r from-[#FF5722] to-[#FF8A65] hover:from-[#FF5722] hover:to-[#FF7043]">
-            <Link href="/record-match">
-              <Plus className="h-4 w-4 mr-1" />
+            <Link href="/record-match" className="whitespace-nowrap">
+              <Plus className="h-4 w-4 mr-1 md:inline-block hidden" />
               Record Match
             </Link>
           </Button>
