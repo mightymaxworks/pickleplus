@@ -44,7 +44,7 @@ export default function App() {
             <Route path="/" component={EnhancedLandingPage} />
             <Route path="/login" component={EnhancedAuthPage} />
             <Route path="/register" component={EnhancedAuthPage} />
-            <Route path="/auth" component={TestAuthPage} />
+            <Route path="/auth" component={EnhancedAuthPage} />
             
             {/* Protected Routes */}
             <Route path="/dashboard">

@@ -63,12 +63,28 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.5 }}
           >
-            <h2 className="text-2xl md:text-3xl font-bold mb-2 bg-gradient-to-r from-indigo-400 via-blue-500 to-purple-600 text-transparent bg-clip-text">
-              Welcome, {user.displayName || user.username}!
-            </h2>
-            <p className="text-gray-500 dark:text-gray-400 mb-6">
-              Your pickleball journey continues. Track your progress, join tournaments, and connect with the community.
-            </p>
+            <div className="flex items-center gap-2 mb-6">
+              <div className="flex-1">
+                <h2 className="text-2xl md:text-3xl font-bold mb-1 text-gray-800 dark:text-gray-100">
+                  Welcome, <span className="text-indigo-500 dark:text-indigo-400">{user.displayName || user.username}</span>
+                </h2>
+                <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base max-w-xl">
+                  Your pickleball journey continues. Track your progress, join tournaments, and connect with the community.
+                </p>
+              </div>
+              {/* Show recent activity notification - disabled for now */}
+              {false && (
+                <div className="hidden md:block bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800/30 max-w-xs">
+                  <div className="flex items-center text-sm text-blue-600 dark:text-blue-400 font-medium mb-1">
+                    <Activity size={14} className="mr-1" />
+                    Recent Activity
+                  </div>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    Your rating increased after recent matches. Keep it up!
+                  </p>
+                </div>
+              )}
+            </div>
           </motion.div>
           
           {/* Player Passport Section */}
