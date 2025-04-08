@@ -10,6 +10,7 @@ import TestAuthPage from './pages/TestAuthPage'
 import TestRoutingPage from './pages/TestRoutingPage'
 import Dashboard from './pages/Dashboard'
 import RecordMatchPage from './pages/record-match-page'
+import MatchesPage from './pages/matches-page'
 import MatchRewardDemo from './pages/match-reward-demo'
 import NotFound from './pages/not-found'
 
@@ -64,7 +65,7 @@ export default function App() {
               {(params) => <ProtectedRoute component={Dashboard} path="/dashboard" />}
             </Route>
             <Route path="/matches">
-              {(params) => <ProtectedRoute component={Dashboard} path="/matches" />}
+              {(params) => <ProtectedRoute component={MatchesPage} path="/matches" />}
             </Route>
             <Route path="/tournaments">
               {(params) => <ProtectedRoute component={Dashboard} path="/tournaments" />}
