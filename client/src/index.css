@@ -5,6 +5,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom breakpoint for extra small screens */
+@layer utilities {
+  /* Extra small screens (320-480px) */
+  @media (min-width: 320px) and (max-width: 479px) {
+    .xs\:max-w-\[350px\] {
+      max-width: 350px;
+    }
+    .xs\:text-xs {
+      font-size: 0.75rem;
+      line-height: 1rem;
+    }
+    .xs\:text-lg {
+      font-size: 1.125rem;
+      line-height: 1.75rem;
+    }
+    .xs\:text-4xl {
+      font-size: 2.25rem;
+      line-height: 2.5rem;
+    }
+  }
+}
+
 /* Custom animation for the ping effect with a single play */
 @keyframes ping-once {
   0% {
@@ -46,6 +68,13 @@
 .passport-card-rotate,
 .passport-card:hover {
   transform: rotateY(180deg);
+}
+
+/* Mobile touch support for passport card */
+@media (max-width: 767px) {
+  .passport-card.active {
+    transform: rotateY(180deg);
+  }
 }
 
 .passport-card-back {

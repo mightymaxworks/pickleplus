@@ -1,5 +1,6 @@
 import { useLocation, Link } from "wouter";
 import { motion } from "framer-motion";
+import React, { useState } from "react";
 import { PicklePlusTextLogo } from "@/components/icons/PicklePlusTextLogo";
 import { PicklePlusLogo } from "@/components/icons/PicklePlusLogo";
 import { PicklePlusNewLogo } from "@/components/icons/PicklePlusNewLogo";
@@ -139,6 +140,12 @@ const Testimonial = ({
 
 export default function EnhancedLandingPage() {
   const [, navigate] = useLocation();
+  const [cardActive, setCardActive] = useState(false);
+  
+  // Handle card click/tap for mobile users
+  const toggleCard = () => {
+    setCardActive(!cardActive);
+  };
   
   return (
     <div className="enhanced-landing-page overflow-x-hidden w-full">
@@ -176,10 +183,10 @@ export default function EnhancedLandingPage() {
               <div className="mb-2 inline-block bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 text-sm font-medium">
                 🔥 Level up your Pickleball game
               </div>
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 leading-tight">
+              <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl font-bold mb-4 leading-tight">
                 Your Pickleball Journey, <span className="text-yellow-200">Powered by CourtIQ™</span>
               </h1>
-              <p className="text-lg sm:text-xl mb-8 text-white/90 leading-relaxed">
+              <p className="text-base xs:text-lg sm:text-xl mb-6 md:mb-8 text-white/90 leading-relaxed">
                 Pickle+ Passport with CourtIQ™ analytics tracks your progress, connects you with the community, and elevates your game with real-time insights and rewards.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
@@ -210,27 +217,30 @@ export default function EnhancedLandingPage() {
               </div>
             </motion.div>
             
-            {/* Enhanced Player Passport Card with Live Demo Effect */}
+            {/* Enhanced Player Passport Card with Live Demo Effect - Mobile Optimized */}
             <motion.div 
               className="w-full md:w-1/2 flex justify-center mt-10 md:mt-0"
               initial="hidden"
               animate="visible"
               variants={slideIn("right")}
             >
-              <div className="relative w-full max-w-sm sm:max-w-md perspective">
-                {/* Interactive instruction tag */}
-                <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg z-10 flex items-center space-x-2 animate-bounce">
-                  <MousePointerClick className="h-4 w-4 text-[#FF5722]" />
-                  <span className="text-xs font-medium text-gray-800">Interactive Passport - Hover to Explore</span>
+              <div className="relative w-full max-w-[320px] xs:max-w-[350px] sm:max-w-md perspective">
+                {/* Interactive instruction tag - mobile optimized */}
+                <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-full shadow-lg z-10 flex items-center space-x-2 animate-bounce">
+                  <MousePointerClick className="h-3 w-3 sm:h-4 sm:w-4 text-[#FF5722]" />
+                  <span className="text-[10px] sm:text-xs font-medium text-gray-800">Interactive Passport - Tap to Explore</span>
                 </div>
                 
-                {/* Live updates notification */}
-                <div className="absolute -right-4 -top-4 bg-[#4CAF50] text-white text-xs font-bold px-2 py-1 rounded-full z-10 shadow-lg flex items-center">
-                  <div className="w-2 h-2 bg-white rounded-full mr-1 animate-ping"></div>
+                {/* Live updates notification - mobile optimized */}
+                <div className="absolute -right-2 sm:-right-4 -top-2 sm:-top-4 bg-[#4CAF50] text-white text-[10px] xs:text-xs font-bold px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full z-10 shadow-lg flex items-center">
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full mr-1 animate-ping"></div>
                   LIVE
                 </div>
                 
-                <div className="preserve-3d passport-card hover:passport-card-rotate">
+                <div 
+                  className={`preserve-3d passport-card hover:passport-card-rotate ${cardActive ? 'active' : ''}`}
+                  onClick={toggleCard}
+                >
                   {/* Passport Front - with live update animations */}
                   <div className="bg-white rounded-xl shadow-2xl overflow-hidden absolute inset-0 backface-hidden">
                     {/* Header with logo */}
