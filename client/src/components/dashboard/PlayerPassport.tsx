@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User } from '@shared/schema';
-import { OfficialPicklePlusWhiteLogo } from '@/components/icons/OfficialPicklePlusLogo';
-import { Trophy, Scan, RotateCw } from 'lucide-react';
+import { PicklePlusNewLogo } from '../icons/PicklePlusNewLogo';
+import { Trophy, Scan, RotateCw, Info } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 
 interface PlayerPassportProps {
   user: User;
@@ -11,6 +12,8 @@ interface PlayerPassportProps {
 
 export function PlayerPassport({ user }: PlayerPassportProps) {
   const [isFlipped, setIsFlipped] = useState(false);
+  const isExtraSmallScreen = useMediaQuery('(max-width: 480px)');
+  const isSmallScreen = useMediaQuery('(max-width: 640px)');
   
   // Function to get initials from display name
   const getInitials = () => {
@@ -32,11 +35,111 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
   // Determine if user is a founding member
   const isFoundingMember = user.id === 1;
   
+  // Reset flip state when switching to mobile to avoid broken layout
+  useEffect(() => {
+    if (isExtraSmallScreen && isFlipped) {
+      setIsFlipped(false);
+    }
+  }, [isExtraSmallScreen, isFlipped]);
+  
+  // For extremely small screens, use a simpler layout
+  if (isExtraSmallScreen) {
+    return (
+      <div className="w-full">
+        <div className="relative bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-xl">
+          {/* Top border accent */}
+          <div className="h-1 w-full bg-gradient-to-r from-[#FF5722] to-[#FF9800]"></div>
+          
+          {/* Header with orange gradient */}
+          <div className="bg-gradient-to-r from-[#FF5722] to-[#FF9800] p-3">
+            <div className="flex justify-between items-center text-white">
+              <div className="font-bold text-base">
+                {isFoundingMember ? "Founding Member" : "Player Passport"}
+              </div>
+              <PicklePlusNewLogo className="h-6 w-auto" />
+            </div>
+            
+            {/* Player info */}
+            <div className="flex items-center mt-2">
+              <div className="h-12 w-12 rounded-full bg-white p-0.5 mr-2 shadow">
+                <div className={`h-full w-full rounded-full flex items-center justify-center text-white font-bold text-base ${
+                  isFoundingMember 
+                    ? 'bg-gradient-to-r from-[#BF953F] to-[#FBF5B7] via-[#AA771C]' 
+                    : 'bg-gradient-to-r from-[#2196F3] to-[#03A9F4]'
+                }`}>
+                  {getInitials()}
+                </div>
+              </div>
+              
+              <div>
+                <div className="font-bold text-base text-white truncate max-w-[140px]">
+                  {user.displayName || user.username}
+                </div>
+                <div className="text-xs text-white/90">
+                  <div className="bg-white/20 rounded-full px-2 py-0.5 flex items-center inline-block">
+                    <Trophy size={10} className="text-yellow-300 mr-1" />
+                    {user.skillLevel || '3.5 Intermediate+'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Stats section */}
+          <div className="p-3">
+            <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Level {user.level || 5} • {user.xp || 520} XP
+            </div>
+            
+            {/* XP Progress Bar */}
+            <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-3">
+              <div 
+                className="h-full bg-gradient-to-r from-[#FF5722] to-[#FF9800] rounded-full"
+                style={{ width: `${Math.min((user.xp || 520) / 10, 100)}%` }}
+              ></div>
+            </div>
+            
+            {/* Simple stats */}
+            <div className="grid grid-cols-3 gap-1 text-center">
+              <div className="bg-gray-100 dark:bg-gray-800 p-1.5 rounded-lg">
+                <div className="text-xs text-gray-500 dark:text-gray-400">Rating</div>
+                <div className="font-bold text-sm text-blue-600 dark:text-blue-400">1,248</div>
+              </div>
+              <div className="bg-gray-100 dark:bg-gray-800 p-1.5 rounded-lg">
+                <div className="text-xs text-gray-500 dark:text-gray-400">Matches</div>
+                <div className="font-bold text-sm text-green-600 dark:text-green-400">{user.totalMatches || 24}</div>
+              </div>
+              <div className="bg-gray-100 dark:bg-gray-800 p-1.5 rounded-lg">
+                <div className="text-xs text-gray-500 dark:text-gray-400">Rank</div>
+                <div className="font-bold text-sm text-purple-600 dark:text-purple-400">7th</div>
+              </div>
+            </div>
+            
+            {/* QR Code button for mobile */}
+            <div className="mt-3 flex justify-center">
+              <button 
+                onClick={() => {
+                  // In a real app, this would show a QR code modal or redirect to a QR view
+                  alert('This would show your QR code for scanning at events!');
+                }}
+                className="flex items-center justify-center gap-1.5 text-sm bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 p-2 rounded-lg w-full"
+              >
+                <Scan size={14} />
+                <span>View Passport QR Code</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // For normal screens, use the flippable passport
   return (
     <div className="w-full perspective cursor-pointer" onClick={() => setIsFlipped(!isFlipped)}>
       <div 
         className={`preserve-3d transition-all duration-500 relative ${isFlipped ? 'passport-card-rotate' : ''}`}
-        style={{ transformStyle: 'preserve-3d', minHeight: '300px' }}
+        style={{ transformStyle: 'preserve-3d', minHeight: isSmallScreen ? '250px' : '300px' }}
       >
         {/* Front of passport */}
         <div className="absolute inset-0 backface-hidden w-full bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-xl">
@@ -49,7 +152,7 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
               <div className="font-bold text-lg">
                 {isFoundingMember ? "Founding Member" : "Player Passport"}
               </div>
-              <OfficialPicklePlusWhiteLogo className="h-8 w-auto" />
+              <PicklePlusNewLogo className="h-8 w-auto" />
             </div>
             
             {/* Player info */}
@@ -171,7 +274,7 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
             }`}>
               <QRCodeSVG
                 value={qrData}
-                size={180}
+                size={isSmallScreen ? 140 : 180}
                 bgColor={"#ffffff"}
                 fgColor={isFoundingMember ? "#BF953F" : "#000000"}
                 level={"L"}
