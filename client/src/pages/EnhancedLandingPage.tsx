@@ -186,7 +186,8 @@ export default function EnhancedLandingPage() {
                   size="lg" 
                   className="bg-white text-[#FF5722] hover:bg-white/90 w-full sm:w-auto"
                   onClick={() => {
-                    window.location.pathname = "/auth";
+                    console.log("Navigating to /auth using wouter navigate");
+                    navigate("/auth");
                   }}
                 >
                   Get Started
