@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
-import { AlertTriangle, Calendar, TrophyIcon, CheckCircle2, BarChart4, PlusCircle, Loader2, AlertCircle, Award, ThumbsUp, Zap as ZapIcon } from "lucide-react";
+import { AlertTriangle, Calendar, TrophyIcon, CheckCircle2, BarChart4, PlusCircle, Loader2, AlertCircle, Award, ThumbsUp, Zap as ZapIcon, Trophy } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { matchSDK, type RecordedMatch } from "@/lib/sdk/matchSDK";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,6 +14,11 @@ import { useLocation } from "wouter";
 import DailyMatchLimits from "@/components/match/DailyMatchLimits";
 import MatchValidation from "@/components/match/MatchValidation";
 import { Badge } from "@/components/ui/badge";
+
+// Import our new UI components
+import MatchHistory from "@/components/match/MatchHistory";
+import MatchTrends from "@/components/match/MatchTrends";
+import MatchFilters from "@/components/match/MatchFilters";
 
 export default function MatchPage() {
   const { toast } = useToast();
@@ -288,15 +293,16 @@ export default function MatchPage() {
         </TabsContent>
         
         <TabsContent value="history" className="mt-6 space-y-8">
-          {/* Comprehensive Match History */}
+          {/* Comprehensive Match History with Enhanced UI */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">All Matches</h2>
+              <h2 className="text-xl font-bold">Match History</h2>
               <Button variant="outline" size="sm" onClick={() => refetchMatches()}>
                 Refresh
               </Button>
             </div>
             
+            {/* New Match History Component with Analytics */}
             {matchesLoading ? (
               <Card className="p-8 text-center">
                 <div className="flex justify-center items-center">
@@ -304,70 +310,29 @@ export default function MatchPage() {
                 </div>
               </Card>
             ) : recentMatches && recentMatches.length > 0 ? (
-              <div className="space-y-4">
-                {recentMatches.map((match: RecordedMatch) => {
-                  const userPlayer = match.players.find((p) => p.userId === user?.id);
-                  const isWinner = userPlayer?.isWinner;
-                  const opponent = getOpponentName(match, user?.id || 0);
-                  
-                  return (
-                    <Card key={match.id} className={`border-l-4 ${isWinner ? 'border-l-green-500' : 'border-l-gray-300'}`}>
-                      <CardContent className="p-4">
-                        <div className="flex flex-col md:flex-row justify-between">
-                          <div className="flex-1">
-                            <div className="font-medium flex items-center">
-                              {isWinner ? 'Victory against ' : 'Loss to '} {opponent}
-                              {match.validationStatus ? (
-                                <Badge variant={match.validationStatus === 'disputed' ? 'destructive' : match.validationStatus === 'confirmed' ? 'default' : 'outline'} className="ml-2">
-                                  {match.validationStatus === 'disputed' ? 'Disputed' : match.validationStatus === 'confirmed' ? 'Confirmed' : 'Pending Validation'}
-                                </Badge>
-                              ) : (
-                                <Badge variant="outline" className="ml-2">
-                                  Pending Validation
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {match.formatType === 'singles' ? 'Singles' : 'Doubles'} • {formatDate(match.date)}
-                            </div>
-                            {match.notes && (
-                              <div className="mt-2 text-sm border-t pt-2">
-                                <span className="text-muted-foreground">Notes: </span> 
-                                {match.notes}
-                              </div>
-                            )}
-                            
-                            <div className="mt-3">
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button variant="outline" size="sm">
-                                    <CheckCircle2 className="h-4 w-4 mr-1" />
-                                    Validate Match
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                  <DialogHeader>
-                                    <DialogTitle>Validate Match</DialogTitle>
-                                  </DialogHeader>
-                                  <MatchValidation 
-                                    match={match} 
-                                    onValidationComplete={() => {
-                                      refetchMatches();
-                                    }} 
-                                  />
-                                </DialogContent>
-                              </Dialog>
-                            </div>
-                          </div>
-                          <div className="text-lg font-semibold mt-2 md:mt-0">
-                            {match.players[0].score} - {match.players[1].score}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
+              <>
+                {/* New Featured UI Components */}
+                <div className="p-4 mb-6 bg-muted border border-muted-foreground/20 rounded-lg shadow-sm">
+                  <h3 className="text-lg font-medium mb-2 flex items-center text-primary">
+                    <TrophyIcon className="h-5 w-5 mr-2" /> 
+                    Enhanced Analytics Tools
+                  </h3>
+                  <p className="text-sm mb-3">
+                    Explore your match history with our new analytics tools. Track your performance trends, filter matches, and view detailed match statistics.
+                  </p>
+                </div>
+                
+                {/* Show new Match History components */}
+                <MatchHistory 
+                  matches={recentMatches} 
+                  userId={user?.id}
+                  showFilters={true}
+                  showTrends={true}
+                  onMatchesRefresh={() => refetchMatches()}
+                  formatDate={formatDate}
+                  className="mt-4"
+                />
+              </>
             ) : (
               <Card className="p-8 text-center border-dashed">
                 <CardTitle className="mb-2">No Match History</CardTitle>
