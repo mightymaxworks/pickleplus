@@ -10,7 +10,7 @@ import {
   calculateRankingProgress, 
   getTierColors,
   getRankingTier
-} from "@/lib/sdk/xpSDK";
+} from "@/lib/sdk/rankingSDK";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
