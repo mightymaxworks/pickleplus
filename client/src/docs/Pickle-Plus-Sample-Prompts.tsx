@@ -107,37 +107,57 @@ When you say: "Generate the prompt for DB-789012 for match recording validation 
 I would generate:
 
 ```
-Debug the match recording validation issue following our modular architecture:
+Debug the match recording validation issue with a focus on root cause analysis:
 
-1. Problem Identification by Layer:
-   - DATABASE LAYER: Check for data integrity issues in match records
-   - SERVER LAYER: Analyze server logs for API validation failures
-   - SDK LAYER: Review error handling in matchSDK.ts
-   - UI LAYER: Examine component state management and form validation
+1. Root Cause Identification (not symptom treatment):
+   - Trace the validation issue to its source layer in our architecture
+   - Determine whether this is a data, logic, or presentation issue
+   - Create a reproducible test case with specific steps
+   - Document the exact error messages and behavior
 
-2. Systematic Investigation:
-   - Add detailed logging at each architectural layer
-   - Trace the complete validation flow across all layers
-   - Check for mismatches between schema validation and API validation
-   - Test with different user roles and match types to identify patterns
+2. Systematic Layer-by-Layer Investigation:
+   - DATABASE LAYER: 
+     * Examine match schema for validation constraints
+     * Verify data integrity in existing match records
+     * Check for schema/migration inconsistencies
+     * Test direct database queries to validate data
 
-3. Layer-Specific Diagnostics:
-   - DATABASE: Query match records directly to verify schema integrity
-   - SERVER: Add debug endpoints to test validation logic in isolation
-   - SDK: Implement temporary logging in React Query mutation hooks
-   - UI: Add form state debugging to identify client-side validation issues
+   - SERVER LAYER:
+     * Review validation logic in server/routes.ts
+     * Analyze API endpoint behavior with different inputs
+     * Check middleware that might affect validation
+     * Trace the request/response cycle with logging
 
-4. Resolution Strategy:
-   - Fix identified issues at the appropriate architectural layer
-   - Ensure consistent validation rules across all layers
-   - Add safeguards to prevent similar issues in the future
-   - Update error handling to provide clearer feedback to users
+   - SDK LAYER:
+     * Inspect matchSDK.ts implementation for validation handling
+     * Examine React Query mutation error handling
+     * Verify proper error propagation to UI
+     * Test SDK methods in isolation
 
-5. Testing Approach:
-   - Create unit tests for the validation logic at each layer
-   - Perform integration tests to verify cross-layer communication
-   - Test edge cases (large scores, timeouts, etc.)
-   - Verify fixes across different devices and browsers
+   - UI LAYER:
+     * Review form validation in match recording components
+     * Check state management and error display
+     * Verify UI validation matches backend expectations
+     * Test user interactions that trigger validation
+
+3. Comprehensive Documentation:
+   - Document all investigation steps taken
+   - Record findings at each layer of the architecture
+   - Note any discovered discrepancies between layers
+   - Create diagrams of the validation flow if helpful
+
+4. Solution with Architectural Integrity:
+   - Implement fixes at the appropriate layer (not just where symptoms appear)
+   - Ensure each layer maintains its proper responsibilities
+   - Standardize validation logic across all layers
+   - Make sure fixes follow our established patterns
+
+5. Thorough Verification:
+   - Create unit tests specific to the identified issue
+   - Test the validation flow end-to-end
+   - Verify fix works for all edge cases (unusual scores, etc.)
+   - Regression test related match functionality
+   - Document the fix and update technical documentation
 ```
 
 */

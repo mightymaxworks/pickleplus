@@ -160,33 +160,39 @@ Using this code ensures a consistent, methodical approach to building new functi
 
 ### DB-789012: Debugging Framework
 
-Our methodical approach to debugging and system maintenance:
+Our methodical approach to debugging follows these core principles:
 
-1. Problem Identification
-   - Error categorization
-   - Impact assessment
-   - Reproduction steps
-   - Root cause analysis
+1. Root Cause Analysis (not symptom treatment)
+   - Trace issues to their fundamental source
+   - Identify the architectural layer where the issue originates
+   - Understand the complete issue context and impact
+   - Create reproducible test cases
 
-2. Investigation Process
-   - Log analysis
-   - Code review
-   - Performance profiling
-   - Network traffic analysis
+2. Layer-by-Layer Investigation (respecting 4-layer architecture)
+   - DATABASE: Examine data integrity, schema issues, query performance
+   - SERVER: Analyze API endpoints, service logic, middleware issues
+   - SDK: Review client abstraction layer, React Query implementation
+   - UI: Inspect component rendering, state management, event handling
 
-3. Resolution Approach
-   - Fix implementation
-   - Regression testing
-   - Documentation update
-   - Knowledge sharing
+3. Comprehensive Documentation
+   - Document the problem definition clearly
+   - Record investigation steps taken
+   - Note all findings, including what didn't work
+   - Create technical documentation for the solution
 
-4. Prevention Measures
-   - Code quality improvements
-   - Monitoring enhancements
-   - Testing automation
-   - Developer education
+4. Architectural Integrity Preservation
+   - Ensure fixes maintain proper layer separation
+   - Prevent cross-layer leakage of responsibilities
+   - Apply fixes at the correct architectural layer
+   - Follow established patterns for each layer
 
-Using this code ensures a consistent, thorough approach to fixing issues and improving system quality.
+5. Thorough Verification
+   - Unit test the specific fix
+   - Test integration with adjacent components
+   - Verify end-to-end functionality
+   - Regression test related features
+
+Using this code ensures we fix the root cause of issues while maintaining our architectural principles.
 
 ## Sample Prompts
 
