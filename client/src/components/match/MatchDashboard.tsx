@@ -167,25 +167,26 @@ export function MatchDashboard({
   return (
     <div className={`${className} space-y-6`}>
       {/* Header with stats cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        {/* Total Matches */}
+      {/* MATCH-UI-278652[ENHANCE] - Mobile-optimized dashboard layout */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        {/* Total Matches - More compact for mobile */}
         <TiltCard 
-          className="border-2 border-primary/20 p-1 overflow-visible bg-gradient-to-br from-background to-muted" 
-          tiltAmount={15} 
+          className="border-2 border-primary/20 p-1 overflow-visible bg-gradient-to-br from-background to-muted shadow-md" 
+          tiltAmount={10} // Reduced tilt for better mobile usability
           glowOnHover={true}
           glowAlways={true}
-          hoverScale={1.08}
+          hoverScale={1.05} // Smaller scale for mobile
         >
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center text-muted-foreground text-sm font-medium">
-                <Calendar className="h-5 w-5 mr-2 text-primary" />
-                Total Matches
+          <CardContent className="p-3 md:p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center text-muted-foreground text-xs sm:text-sm font-medium">
+                <Calendar className="h-4 w-4 mr-1 text-primary" />
+                <span className="hidden xs:inline">Total</span> Matches
               </div>
-              <Badge variant="outline" className="text-xs font-bold">Lifetime</Badge>
+              <Badge variant="outline" className="text-xs font-bold hidden sm:flex">Lifetime</Badge>
             </div>
-            <div className="text-4xl font-bold text-primary">{matchStats?.totalMatches || 0}</div>
-            <div className="w-full h-2 bg-primary/10 rounded-full mt-3">
+            <div className="text-3xl md:text-4xl font-bold text-primary">{matchStats?.totalMatches || 0}</div>
+            <div className="w-full h-1.5 md:h-2 bg-primary/10 rounded-full mt-2 md:mt-3">
               <div 
                 className="h-full bg-primary rounded-full shadow-sm" 
                 style={{ width: '100%' }}
@@ -194,24 +195,24 @@ export function MatchDashboard({
           </CardContent>
         </TiltCard>
         
-        {/* Matches Won */}
+        {/* Matches Won - More compact for mobile */}
         <TiltCard 
-          className="border-2 border-primary/20 p-1 bg-gradient-to-br from-background to-muted" 
-          tiltAmount={15} 
+          className="border-2 border-primary/20 p-1 bg-gradient-to-br from-background to-muted shadow-md" 
+          tiltAmount={10}
           glowOnHover={true} 
           glowAlways={true}
-          hoverScale={1.08}
+          hoverScale={1.05}
         >
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center text-muted-foreground text-sm font-medium">
-                <Trophy className="h-5 w-5 mr-2 text-primary" />
-                Matches Won
+          <CardContent className="p-3 md:p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center text-muted-foreground text-xs sm:text-sm font-medium">
+                <Trophy className="h-4 w-4 mr-1 text-primary" />
+                <span className="hidden xs:inline">Matches</span> Won
               </div>
-              <Badge variant="outline" className="text-xs font-bold">Lifetime</Badge>
+              <Badge variant="outline" className="text-xs font-bold hidden sm:flex">Lifetime</Badge>
             </div>
-            <div className="text-4xl font-bold text-primary">{matchStats?.matchesWon || 0}</div>
-            <div className="w-full h-2 bg-primary/10 rounded-full mt-3">
+            <div className="text-3xl md:text-4xl font-bold text-primary">{matchStats?.matchesWon || 0}</div>
+            <div className="w-full h-1.5 md:h-2 bg-primary/10 rounded-full mt-2 md:mt-3">
               <div 
                 className="h-full bg-primary rounded-full shadow-sm" 
                 style={{ width: `${matchStats?.winRate || 0}%` }}
@@ -220,25 +221,25 @@ export function MatchDashboard({
           </CardContent>
         </TiltCard>
         
-        {/* Win Rate */}
+        {/* Win Rate - More compact for mobile */}
         <TiltCard 
-          className="border-2 border-green-500/20 p-1 bg-gradient-to-br from-background to-muted" 
-          tiltAmount={15} 
+          className="border-2 border-green-500/20 p-1 bg-gradient-to-br from-background to-muted shadow-md" 
+          tiltAmount={10}
           glowOnHover={true}
           glowAlways={true}
-          hoverScale={1.08}
+          hoverScale={1.05}
           glowColor="rgba(132, 204, 22, 0.4)" // Success green
         >
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center text-muted-foreground text-sm font-medium">
-                <BarChart4 className="h-5 w-5 mr-2 text-green-500" />
+          <CardContent className="p-3 md:p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center text-muted-foreground text-xs sm:text-sm font-medium">
+                <BarChart4 className="h-4 w-4 mr-1 text-green-500" />
                 Win Rate
               </div>
-              <Badge variant="outline" className="text-xs font-bold text-green-500 border-green-500/50">Performance</Badge>
+              <Badge variant="outline" className="text-xs font-bold text-green-500 border-green-500/50 hidden sm:flex">Performance</Badge>
             </div>
-            <div className="text-4xl font-bold text-green-500">{matchStats?.winRate || 0}%</div>
-            <div className="w-full h-2 bg-primary/10 rounded-full mt-3">
+            <div className="text-3xl md:text-4xl font-bold text-green-500">{matchStats?.winRate || 0}%</div>
+            <div className="w-full h-1.5 md:h-2 bg-primary/10 rounded-full mt-2 md:mt-3">
               <div 
                 className="h-full bg-green-500 rounded-full shadow-sm" 
                 style={{ width: `${matchStats?.winRate || 0}%` }}
@@ -247,84 +248,89 @@ export function MatchDashboard({
           </CardContent>
         </TiltCard>
         
-        {/* Match Format Distribution */}
+        {/* Format Breakdown - More compact for mobile */}
         <TiltCard 
-          className="border-2 border-blue-500/20 p-1 bg-gradient-to-br from-background to-muted" 
-          tiltAmount={15} 
+          className="border-2 border-blue-500/20 p-1 bg-gradient-to-br from-background to-muted shadow-md" 
+          tiltAmount={10}
           glowOnHover={true}
           glowAlways={true}
-          hoverScale={1.08}
+          hoverScale={1.05}
           glowColor="rgba(59, 130, 246, 0.4)" // Blue
         >
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center text-muted-foreground text-sm font-medium">
-                <Users className="h-5 w-5 mr-2 text-blue-500" />
-                Format Breakdown
+          <CardContent className="p-3 md:p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center text-muted-foreground text-xs sm:text-sm font-medium">
+                <Users className="h-4 w-4 mr-1 text-blue-500" />
+                Format
               </div>
-              <Badge variant="outline" className="text-xs font-bold text-blue-500 border-blue-500/50">Distribution</Badge>
+              <Badge variant="outline" className="text-xs font-bold text-blue-500 border-blue-500/50 hidden sm:flex">Distribution</Badge>
             </div>
-            <div className="flex items-center justify-between text-2xl mt-2">
+            <div className="flex items-center justify-between text-xl md:text-2xl mt-1 md:mt-2">
               <div className="text-center">
-                <div className="text-sm text-muted-foreground">Singles</div>
-                <div className="font-bold text-blue-500 text-3xl">{matchStats?.singlesMatches || 0}</div>
+                <div className="text-xs md:text-sm text-muted-foreground">Singles</div>
+                <div className="font-bold text-blue-500 text-2xl md:text-3xl">{matchStats?.singlesMatches || 0}</div>
               </div>
-              <Separator orientation="vertical" className="mx-2 h-10 bg-blue-500/20" />
+              <Separator orientation="vertical" className="mx-2 h-8 md:h-10 bg-blue-500/20" />
               <div className="text-center">
-                <div className="text-sm text-muted-foreground">Doubles</div>
-                <div className="font-bold text-blue-500 text-3xl">{matchStats?.doublesMatches || 0}</div>
+                <div className="text-xs md:text-sm text-muted-foreground">Doubles</div>
+                <div className="font-bold text-blue-500 text-2xl md:text-3xl">{matchStats?.doublesMatches || 0}</div>
               </div>
             </div>
           </CardContent>
         </TiltCard>
       </div>
       
-      {/* Filters and View Toggles */}
-      <div className="flex flex-col sm:flex-row justify-between gap-2 items-start sm:items-center">
-        <div className="flex-1">
-          <ContextualFilters 
-            matches={matches} 
-            filters={filters} 
-            onFilterChange={setFilters} 
-          />
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className={`gap-1 ${activeView === 'timeline' ? 'bg-muted' : ''}`}
-            onClick={() => handleViewToggle('timeline')}
-          >
-            <Activity className="h-4 w-4" />
-            Timeline
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className={`gap-1 ${activeView === 'stats' ? 'bg-muted' : ''}`}
-            onClick={() => handleViewToggle('stats')}
-          >
-            <BarChart4 className="h-4 w-4" />
-            Stats
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={onRefreshData}
-            className="gap-1"
-          >
-            <LayoutDashboard className="h-4 w-4" />
-            Refresh
-          </Button>
+      {/* MATCH-UI-278652[ENHANCE] - Mobile-optimized filters and controls */}
+      <div className="space-y-3">
+        {/* Action buttons - Top placement on mobile for easy access */}
+        <div className="flex items-center justify-between bg-muted/30 rounded-lg p-2">
+          <div className="flex items-center gap-1 md:gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className={`gap-1 ${activeView === 'timeline' ? 'bg-muted' : ''}`}
+              onClick={() => handleViewToggle('timeline')}
+            >
+              <Activity className="h-4 w-4" />
+              <span className="hidden xs:inline">Timeline</span>
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className={`gap-1 ${activeView === 'stats' ? 'bg-muted' : ''}`}
+              onClick={() => handleViewToggle('stats')}
+            >
+              <BarChart4 className="h-4 w-4" />
+              <span className="hidden xs:inline">Stats</span>
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={onRefreshData}
+              className="gap-1"
+            >
+              <LayoutDashboard className="h-4 w-4" />
+              <span className="hidden sm:inline">Refresh</span>
+            </Button>
+          </div>
+          
           <Button 
             size="sm"
             onClick={onRecordMatch}
             className="gap-1"
           >
             <PlusCircle className="h-4 w-4" />
-            Record
+            <span className="hidden xs:inline">Record</span> Match
           </Button>
+        </div>
+        
+        {/* Filters - Full width on mobile */}
+        <div className="w-full">
+          <ContextualFilters 
+            matches={matches} 
+            filters={filters} 
+            onFilterChange={setFilters} 
+          />
         </div>
       </div>
       
