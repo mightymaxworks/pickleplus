@@ -73,10 +73,15 @@ export default function EnhancedAuthPage() {
   const [activeTab, setActiveTab] = useState<string>("login");
   const [showFounderSection, setShowFounderSection] = useState(false);
 
-  // Redirect if user is already logged in
+  // Redirect if user is already logged in - with debug logging
   useEffect(() => {
-    if (user) {
-      navigate("/");
+    console.log("AuthPage - User state:", user);
+    // Only navigate away if we have a confirmed logged-in user
+    if (user && user.id) {
+      console.log("AuthPage - Redirecting to dashboard because user is logged in");
+      navigate("/dashboard");
+    } else {
+      console.log("AuthPage - No redirect, user not logged in");
     }
   }, [user, navigate]);
 
