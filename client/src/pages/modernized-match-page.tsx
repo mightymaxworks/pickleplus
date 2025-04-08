@@ -27,7 +27,8 @@ import {
   Activity,
   BarChart4,
   Zap,
-  Filter
+  Filter,
+  XCircle
 } from "lucide-react";
 
 /**
@@ -123,24 +124,24 @@ export default function ModernizedMatchPage() {
   };
 
   return (
-    <div className="container max-w-7xl py-6 md:py-8 space-y-8">
+    <div className="container max-w-6xl py-6 md:py-10 space-y-10">
       {/* MATCH-UI-278653[ENHANCE] - Improved header styling and alignment */}
-      <div className="flex flex-col justify-center items-center text-center mb-2 md:mb-4">
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">Match Center</h1>
-        <p className="text-muted-foreground max-w-2xl">Track your performance, analyze your stats, and review your match history</p>
-        <div className="w-20 h-1 bg-primary/60 rounded-full mt-4 mb-2"></div>
+      <div className="flex flex-col justify-center items-center text-center mb-4 md:mb-6">
+        <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">Match Center</h1>
+        <p className="text-muted-foreground max-w-xl mx-auto">Track your performance, analyze your stats, and review your match history</p>
+        <div className="w-24 h-1 bg-primary/60 rounded-full mt-5 mb-2"></div>
       </div>
       
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid grid-cols-3 w-full md:w-auto">
+        <TabsList className="grid grid-cols-3 w-full md:w-auto mx-auto">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="history">Match History</TabsTrigger>
           <TabsTrigger value="validations">Validations</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="overview" className="mt-6">
+        <TabsContent value="overview" className="mt-8">
           {/* MATCH-UI-278653[ENHANCE] - Enhanced Overview Dashboard focused on stats & insights */}
-          <div className="space-y-6">
+          <div className="space-y-8 mx-auto max-w-5xl">
             {/* Performance Stats Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <TiltCard 
@@ -252,24 +253,27 @@ export default function ModernizedMatchPage() {
             </div>
             
             {/* Performance Trends Chart */}
-            <Card className="border shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center">
+            <Card className="border shadow-md overflow-hidden">
+              <div className="bg-gradient-to-r from-primary/10 to-transparent px-6 py-4 border-b">
+                <CardTitle className="flex items-center text-xl">
                   <Activity className="h-5 w-5 mr-2 text-primary" />
                   Performance Trends
                 </CardTitle>
-              </CardHeader>
-              <CardContent>
+              </div>
+              <CardContent className="p-6">
                 <MatchTrends matches={recentMatches?.slice(0, 10) || []} />
               </CardContent>
             </Card>
             
             {/* Recent Activity Section - Limited to 3 most recent matches */}
             <div>
-              <h3 className="text-lg font-semibold mb-3 flex items-center">
-                <Calendar className="h-5 w-5 mr-2 text-muted-foreground" />
-                Recent Activity
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold flex items-center">
+                  <Calendar className="h-5 w-5 mr-2 text-primary" />
+                  Recent Activity
+                </h3>
+                <Badge variant="outline" className="text-xs">Last 3 matches</Badge>
+              </div>
               
               {matchesLoading ? (
                 <Card className="p-6 text-center border-dashed">
@@ -285,19 +289,29 @@ export default function ModernizedMatchPage() {
                     const opponent = getOpponentName(match, user?.id || 0);
                     
                     return (
-                      <Card key={match.id} className="overflow-hidden">
-                        <div className={`h-1 w-full ${isWinner ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                      <Card key={match.id} className="overflow-hidden shadow-sm hover:shadow-md transition-all duration-200">
+                        <div className={`h-1.5 w-full ${isWinner ? 'bg-green-500' : 'bg-red-300'}`}></div>
                         <CardContent className="p-4">
                           <div className="flex justify-between items-center">
-                            <div>
-                              <div className="font-medium">
-                                {isWinner ? 'Victory against ' : 'Loss to '} {opponent}
+                            <div className="flex items-start space-x-3">
+                              <div className={`p-2 rounded-full ${isWinner ? 'bg-green-500/10 text-green-600' : 'bg-red-500/10 text-red-500'}`}>
+                                {isWinner ? 
+                                  <Trophy className="h-5 w-5" /> : 
+                                  <XCircle className="h-5 w-5" />
+                                }
                               </div>
-                              <div className="text-sm text-muted-foreground">
-                                {match.formatType === 'singles' ? 'Singles' : 'Doubles'} • {formatDate(match.date)}
+                              <div>
+                                <div className="font-medium">
+                                  {isWinner ? 'Victory against ' : 'Loss to '} {opponent}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  {match.formatType === 'singles' ? 'Singles' : 'Doubles'} • {formatDate(match.date)}
+                                </div>
                               </div>
                             </div>
-                            <div className="text-lg font-semibold">
+                            <div className={`text-lg font-semibold px-3 py-1 rounded-full ${
+                              isWinner ? 'bg-green-500/10 text-green-600' : 'bg-red-100 text-red-500'
+                            }`}>
                               {match.players[0].score} - {match.players[1].score}
                             </div>
                           </div>
@@ -354,9 +368,9 @@ export default function ModernizedMatchPage() {
           </div>
         </TabsContent>
         
-        <TabsContent value="history" className="mt-6">
+        <TabsContent value="history" className="mt-8">
           {/* MATCH-UI-278653[ENHANCE] - Comprehensive History View with advanced filtering */}
-          <div className="space-y-6">
+          <div className="space-y-8 mx-auto max-w-5xl">
             {/* History Header with Stats Summary */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-muted/30 p-4 rounded-lg mb-6">
               <div>
@@ -417,13 +431,13 @@ export default function ModernizedMatchPage() {
             </Card>
             
             {/* Match Timeline - Full History */}
-            <Card className="border shadow-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center">
+            <Card className="border shadow-md overflow-hidden">
+              <div className="bg-gradient-to-r from-primary/10 to-transparent px-6 py-4 border-b">
+                <CardTitle className="flex items-center text-xl">
                   <Activity className="h-5 w-5 mr-2 text-primary" />
                   Complete Match Timeline
                 </CardTitle>
-              </CardHeader>
+              </div>
               <CardContent className="pb-6">
                 {matchesLoading ? (
                   <div className="flex justify-center py-8">
@@ -464,9 +478,9 @@ export default function ModernizedMatchPage() {
           </div>
         </TabsContent>
         
-        <TabsContent value="validations" className="mt-6 space-y-8">
+        <TabsContent value="validations" className="mt-8">
           {/* Pending Validations */}
-          <div>
+          <div className="space-y-8 mx-auto max-w-5xl">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold">Pending Match Validations</h2>
               <Button variant="outline" size="sm" onClick={() => refetchMatches()}>
