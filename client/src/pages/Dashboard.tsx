@@ -73,12 +73,12 @@ export default function Dashboard() {
           
           {/* Player Passport Section */}
           <motion.div 
-            className="md:col-span-6"
+            className="md:col-span-12 lg:col-span-6"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
           >
-            <div className="flex items-center mb-3">
+            <div className="flex items-center mb-4">
               <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-400 to-pink-500 text-transparent bg-clip-text">
                 Your Digital Passport
               </h3>
@@ -90,8 +90,10 @@ export default function Dashboard() {
             <Card className="shadow-xl border-0 bg-gradient-to-br from-white/80 via-white/90 to-white/80 dark:from-gray-900/90 dark:via-gray-900/95 dark:to-gray-900/90 backdrop-blur-sm overflow-hidden relative mb-6">
               <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-purple-500/5 pointer-events-none"></div>
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#FF5722] to-[#FF9800]"></div>
-              <CardContent className="p-0 relative z-10">
-                <PlayerPassport user={user} />
+              <CardContent className="p-4 relative z-10">
+                <div className="w-full max-w-md mx-auto">
+                  <PlayerPassport user={user} />
+                </div>
               </CardContent>
             </Card>
           </motion.div>

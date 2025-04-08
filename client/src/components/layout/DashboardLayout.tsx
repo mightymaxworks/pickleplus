@@ -92,24 +92,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         transition={{ type: 'spring', damping: 20, stiffness: 100 }}
       >
         <div className="px-4 sm:px-6 py-3 flex items-center justify-between">
-          {/* Center-aligned Logo */}
-          <div className="flex-1 flex justify-start">
-            <motion.button 
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              {mobileMenuOpen ? (
-                <X size={24} className="text-gray-600 dark:text-gray-300" />
-              ) : (
-                <Menu size={24} className="text-gray-600 dark:text-gray-300" />
-              )}
-            </motion.button>
-          </div>
-          
+          {/* Logo aligned to the left */}
           <motion.div
-            className="flex items-center justify-center flex-1"
+            className="flex items-center justify-start flex-1"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
@@ -118,7 +103,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </motion.div>
           
           {/* Right side actions */}
-          <div className="flex-1 flex items-center justify-end gap-1 sm:gap-3">
+          <div className="flex items-center justify-end gap-1 sm:gap-3">
             {/* Notification Bell */}
             <motion.button 
               className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
@@ -138,14 +123,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               )}
             </motion.button>
             
-            {/* User Profile */}
+            {/* User Profile - Now toggles the menu */}
             <motion.div 
-              className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-full pl-1 pr-2 py-1 border border-gray-200 dark:border-gray-700"
+              className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-full pl-1 pr-2 py-1 border border-gray-200 dark:border-gray-700 cursor-pointer"
               whileHover={{ scale: 1.02 }}
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#2196F3] to-[#03A9F4] flex items-center justify-center text-sm font-medium text-white shadow-sm">
                 {user.username.substring(0, 2).toUpperCase()}
               </div>
+              {mobileMenuOpen ? (
+                <X size={16} className="text-gray-600 dark:text-gray-300 ml-1" />
+              ) : (
+                <Menu size={16} className="text-gray-600 dark:text-gray-300 ml-1" />
+              )}
             </motion.div>
           </div>
         </div>
