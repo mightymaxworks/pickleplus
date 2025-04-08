@@ -186,8 +186,7 @@ export default function EnhancedLandingPage() {
                   size="lg" 
                   className="bg-white text-[#FF5722] hover:bg-white/90 w-full sm:w-auto"
                   onClick={() => {
-                    console.log("Navigating to /auth");
-                    window.location.href = "/auth";
+                    window.location.pathname = "/auth";
                   }}
                 >
                   Get Started
