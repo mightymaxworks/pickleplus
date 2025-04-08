@@ -75,17 +75,18 @@ export default function RecordMatchPage() {
     setMatchData(data);
     setShowSuccess(true);
     
-    // Hide success message after 3 seconds
-    setTimeout(() => {
-      navigate('/matches');
-    }, 3000);
-    
     // Publish event that match recording was completed
     eventBus.publish('match:record:completed', { 
       userId: user?.id,
       matchId: data?.id,
       matchType: 'casual'
     });
+    
+    // Redirect to matches page after a short delay (1 second)
+    // This gives time for the success message to be seen
+    setTimeout(() => {
+      navigate('/matches');
+    }, 1000);
   };
   
   return (

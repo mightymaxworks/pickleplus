@@ -293,12 +293,13 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
       // Reset form
       resetForm();
       
-      // Navigate to the match page
-      navigate("/matches");
-      
-      // Call success callback with response data
+      // Call success callback with response data instead of navigating directly
+      // This allows the parent component to handle navigation and success UI
       if (onSuccess) {
         onSuccess(response);
+      } else {
+        // Fallback navigation if no success handler
+        navigate("/matches");
       }
     } catch (error) {
       console.error("Error recording match:", error);
@@ -704,7 +705,7 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
           size="sm"
         >
           <CheckCircle2 className="h-4 w-4" />
-          Record Match
+          Submit
         </Button>
       </CardFooter>
     </Card>
