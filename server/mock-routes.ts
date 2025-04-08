@@ -232,9 +232,142 @@ export function registerMockRoutes(app: Express): Server {
   });
   
   // Match routes
+  /**
+   * PKL-278651-STAT-0001-BL: Enhanced Match Statistics endpoint
+   */
   app.get('/api/match/stats', (req: Request, res: Response) => {
-    // Return match stats for current user
-    res.json(matchStats);
+    // Get query parameters for filtering
+    const timeRange = req.query.timeRange as string || 'all';
+    const matchType = req.query.matchType as string;
+    const formatType = req.query.formatType as string;
+    
+    console.log('Match stats request:', {
+      timeRange, matchType, formatType,
+      userId: req.query.userId
+    });
+    
+    // Generate comprehensive statistics for the dashboard
+    const enhancedStats = {
+      // Basic statistics
+      totalMatches: 28,
+      matchesWon: 17,
+      matchesLost: 11,
+      winRate: 61,
+      avgScore: 9.3,
+      avgScoreChange: 0.7,
+      winRateChange: 3,
+      
+      // Streaks
+      currentWinStreak: 3,
+      bestWinStreak: 5,
+      currentLossStreak: 0,
+      
+      // Format specific
+      singlesMatches: 15,
+      singlesWins: 10,
+      singlesLosses: 5,
+      singlesWinRate: 67,
+      singlesAvgScore: 9.6,
+      
+      doublesMatches: 13,
+      doublesWins: 7,
+      doublesLosses: 6,
+      doublesWinRate: 54,
+      doublesAvgScore: 8.9,
+      
+      // Match type specific
+      casualMatches: 18,
+      casualWinRate: 55,
+      competitiveMatches: 7,
+      competitiveWinRate: 71,
+      tournamentMatches: 3,
+      tournamentWinRate: 67,
+      
+      // Time data
+      lastMatchDate: new Date().toISOString(),
+      firstMatchDate: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
+      
+      // Location data
+      mostPlayedLocation: "Pickleball Paradise",
+      locations: [
+        { name: "Pickleball Paradise", matches: 15, winRate: 60 },
+        { name: "Community Center", matches: 8, winRate: 63 },
+        { name: "Local Club", matches: 5, winRate: 40 }
+      ],
+      
+      // Opponent data
+      favoriteOpponent: "Johnny Pickleball",
+      topOpponents: [
+        { userId: 6, name: "Johnny Pickleball", username: "johnny_pickle", initials: "JP", matches: 6, wins: 4, losses: 2, winRate: 67 },
+        { userId: 7, name: "Sarah Spike", username: "sarah_spike", initials: "SS", matches: 5, wins: 3, losses: 2, winRate: 60 },
+        { userId: 8, name: "Michael Volley", username: "mike_volley", initials: "MV", matches: 4, wins: 2, losses: 2, winRate: 50 }
+      ],
+      
+      // Best scores
+      bestScore: "11-2",
+      worstScore: "5-11",
+      
+      // Charts data
+      performanceTrend: [
+        { date: "Jan", winRate: 50, avgScore: 8.1, matches: 4 },
+        { date: "Feb", winRate: 54, avgScore: 8.4, matches: 5 },
+        { date: "Mar", winRate: 60, avgScore: 9.1, matches: 10 },
+        { date: "Apr", winRate: 67, avgScore: 9.8, matches: 9 }
+      ],
+      
+      formatPerformance: [
+        { format: "Singles", wins: 10, losses: 5, winRate: 67 },
+        { format: "Doubles", wins: 7, losses: 6, winRate: 54 }
+      ],
+      
+      scoreDistribution: [
+        { score: "11-0", count: 1, percentage: 4 },
+        { score: "11-2", count: 2, percentage: 7 },
+        { score: "11-4", count: 3, percentage: 11 },
+        { score: "11-6", count: 5, percentage: 18 },
+        { score: "11-8", count: 4, percentage: 14 },
+        { score: "11-9", count: 2, percentage: 7 },
+        { score: "9-11", count: 3, percentage: 11 },
+        { score: "7-11", count: 4, percentage: 14 },
+        { score: "5-11", count: 2, percentage: 7 },
+        { score: "3-11", count: 2, percentage: 7 }
+      ],
+      
+      opponentAnalysis: [
+        { skill: "Beginner", winRate: 82, matches: 11 },
+        { skill: "Intermediate", winRate: 56, matches: 9 },
+        { skill: "Advanced", winRate: 43, matches: 7 },
+        { skill: "Elite", winRate: 0, matches: 1 }
+      ]
+    };
+    
+    // Apply filters for demo purposes
+    if (matchType === 'casual') {
+      enhancedStats.totalMatches = 18;
+      enhancedStats.matchesWon = 10;
+      enhancedStats.matchesLost = 8;
+      enhancedStats.winRate = 55;
+    } else if (matchType === 'tournament') {
+      enhancedStats.totalMatches = 3;
+      enhancedStats.matchesWon = 2;
+      enhancedStats.matchesLost = 1;
+      enhancedStats.winRate = 67;
+    }
+    
+    if (formatType === 'singles') {
+      enhancedStats.totalMatches = 15;
+      enhancedStats.matchesWon = 10;
+      enhancedStats.matchesLost = 5;
+      enhancedStats.winRate = 67;
+    } else if (formatType === 'doubles') {
+      enhancedStats.totalMatches = 13;
+      enhancedStats.matchesWon = 7;
+      enhancedStats.matchesLost = 6;
+      enhancedStats.winRate = 54;
+    }
+    
+    // Return the statistics
+    res.json(enhancedStats);
   });
   
   // Get recent matches
