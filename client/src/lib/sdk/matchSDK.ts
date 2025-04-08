@@ -220,11 +220,13 @@ export async function getRecentMatches(userId?: number, limit: number = 10): Pro
         playerNames: {
           1: {
             displayName: "You",
-            username: "You"
+            username: "PickleballPro",
+            avatarInitials: "YP"
           },
           6: {
-            displayName: "Recent Opponent",
-            username: "recent_opponent"
+            displayName: "Johnny Pickleball",
+            username: "johnny_pickle",
+            avatarInitials: "JP"
           }
         },
         validationStatus: 'validated'

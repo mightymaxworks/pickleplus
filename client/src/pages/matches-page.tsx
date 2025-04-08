@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { ChevronRight, Plus, Clock, Trophy, AlertCircle } from "lucide-react";
+import { ChevronRight, Plus, Clock, Trophy, AlertCircle, CheckCircle, Users } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { motion } from "framer-motion";
 
@@ -118,11 +118,18 @@ export function MatchesPage() {
                       // Match list
                       <div className="divide-y">
                         {recentMatches.map((match) => (
-                          <div key={match.id} className="flex items-start p-4 hover:bg-muted/50">
+                          <div key={match.id} className="flex items-start p-4 hover:bg-muted/50 transition-colors rounded-md">
                             <div className="flex-1">
-                              <div className="flex flex-col md:flex-row md:items-center mb-2 gap-1 md:gap-3">
-                                <div className="font-medium">
-                                  {match.matchType === 'tournament' ? 'Tournament Match' : 'Casual Match'}
+                              {/* Match header with type and date */}
+                              <div className="flex flex-col md:flex-row md:items-center mb-3 gap-1 md:gap-3">
+                                <div className="font-medium flex items-center gap-2">
+                                  {match.matchType === 'tournament' ? 
+                                    <Badge variant="outline" className="bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800">Tournament</Badge> : 
+                                    <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800">Casual</Badge>
+                                  }
+                                  {match.formatType && (
+                                    <Badge variant="outline" className="text-xs">{match.formatType === 'singles' ? 'Singles' : 'Doubles'}</Badge>
+                                  )}
                                 </div>
                                 <span className="hidden md:inline text-muted-foreground">•</span>
                                 <div className="text-sm text-muted-foreground flex items-center gap-1">
@@ -131,17 +138,62 @@ export function MatchesPage() {
                                 </div>
                               </div>
                               
-                              <div className="flex items-center gap-4 mb-3">
-                                {/* Score display */}
-                                <div className="flex items-center">
-                                  <div className="flex flex-col items-center bg-primary/10 rounded-l-md px-3 py-2">
-                                    <span className="text-xs font-medium">You</span>
+                              {/* Players section with avatars */}
+                              <div className="flex mb-4 gap-3 items-center">
+                                {/* Your side */}
+                                <div className="flex flex-1 items-center">
+                                  <div className="h-10 w-10 rounded-full bg-primary/10 mr-3 flex items-center justify-center text-primary font-bold">
+                                    {user?.id && match.playerNames && match.playerNames[user.id] 
+                                      ? match.playerNames[user.id].avatarInitials || user.displayName?.charAt(0) || "Y"
+                                      : user?.displayName?.charAt(0) || "Y"}
+                                  </div>
+                                  <div>
+                                    <div className="font-medium text-sm">
+                                      {user?.displayName || 'You'}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                      @{user?.username || 'you'}
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                {/* VS indicator */}
+                                <div className="text-sm text-muted-foreground font-medium">VS</div>
+                                
+                                {/* Opponent side */}
+                                <div className="flex flex-1 items-center justify-end text-right">
+                                  <div className="mr-3">
+                                    <div className="font-medium text-sm">
+                                      {match.playerNames && 
+                                        Object.values(match.playerNames)
+                                          .filter(p => p.username !== user?.username)
+                                          .map(p => p.displayName || p.username)[0] || 'Unknown opponent'}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                      @{match.playerNames && 
+                                        Object.values(match.playerNames)
+                                          .filter(p => p.username !== user?.username)
+                                          .map(p => p.username)[0] || 'opponent'}
+                                    </div>
+                                  </div>
+                                  <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center font-bold">
+                                    {match.playerNames && 
+                                      Object.values(match.playerNames)
+                                        .filter(p => p.username !== user?.username)
+                                        .map(p => p.avatarInitials || p.displayName?.charAt(0) || "O")[0] || "O"}
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Score display */}
+                              <div className="flex items-center gap-4 mb-3 justify-center">
+                                <div className="flex items-center shadow-sm rounded-md overflow-hidden">
+                                  <div className="flex flex-col items-center bg-primary/10 px-4 py-2">
                                     <span className="text-2xl font-bold text-primary">
                                       {match.players.find(p => p.userId === user?.id)?.score || '?'}
                                     </span>
                                   </div>
-                                  <div className="flex flex-col items-center bg-muted rounded-r-md px-3 py-2">
-                                    <span className="text-xs font-medium">Opponent</span>
+                                  <div className="flex flex-col items-center bg-muted px-4 py-2">
                                     <span className="text-2xl font-bold">
                                       {match.players.find(p => p.userId !== user?.id)?.score || '?'}
                                     </span>
@@ -150,25 +202,32 @@ export function MatchesPage() {
                                 
                                 {/* Win/Loss indicator */}
                                 {match.players.find(p => p.userId === user?.id)?.isWinner ? (
-                                  <Badge variant="success" className="ml-2">Win</Badge>
+                                  <Badge className="bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800">Win</Badge>
                                 ) : (
-                                  <Badge variant="secondary" className="ml-2">Loss</Badge>
+                                  <Badge variant="outline" className="bg-gray-100 dark:bg-gray-900/40">Loss</Badge>
                                 )}
                               </div>
                               
-                              {/* Players */}
-                              <div className="flex flex-wrap gap-2 text-sm">
-                                <div className="text-muted-foreground">Played against:</div>
-                                <div className="font-medium">
-                                  {match.playerNames && Object.values(match.playerNames)
-                                    .filter(p => p.username !== user?.username)
-                                    .map(p => p.displayName || p.username)
-                                    .join(', ') || 'Unknown opponent'}
+                              {/* Details about the match */}
+                              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground justify-center">
+                                <div className="flex items-center gap-1">
+                                  <Trophy className="h-3 w-3" />
+                                  <span>{match.formatType === 'singles' ? 'Singles' : 'Doubles'} Match</span>
                                 </div>
+                                <div className="flex items-center gap-1">
+                                  <CheckCircle className="h-3 w-3" />
+                                  <span>{match.validationStatus === 'validated' ? 'Validated' : 'Pending Validation'}</span>
+                                </div>
+                                {match.division && (
+                                  <div className="flex items-center gap-1">
+                                    <Users className="h-3 w-3" />
+                                    <span>{match.division} Division</span>
+                                  </div>
+                                )}
                               </div>
                             </div>
                             
-                            <Button variant="ghost" size="icon" className="ml-auto">
+                            <Button variant="ghost" size="icon" className="ml-auto self-center">
                               <ChevronRight className="h-4 w-4" />
                             </Button>
                           </div>
