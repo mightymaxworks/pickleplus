@@ -237,6 +237,56 @@ export function registerMockRoutes(app: Express): Server {
     res.json(matchStats);
   });
   
+  // Get recent matches
+  app.get('/api/match/recent', (req: Request, res: Response) => {
+    // If we have any stored matches in the mock data, return them
+    // We'll create default matches if none exist
+    const userMatches = [];
+    
+    // Add a default recent match for testing
+    userMatches.push({
+      id: 1001,
+      date: new Date().toISOString(),
+      formatType: 'singles',
+      scoringSystem: 'traditional',
+      pointsToWin: 11,
+      matchType: 'casual',
+      eventTier: 'local',
+      players: [
+        {
+          userId: 1, // Current user
+          score: "11",
+          isWinner: true
+        },
+        {
+          userId: 6, // Random opponent
+          score: "4",
+          isWinner: false
+        }
+      ],
+      gameScores: [
+        {
+          playerOneScore: 11,
+          playerTwoScore: 4
+        }
+      ],
+      playerNames: {
+        1: {
+          displayName: "Pickleball Pro",
+          username: "PickleballPro"
+        },
+        6: {
+          displayName: "Johnny",
+          username: "johnny_pickle"
+        }
+      },
+      validationStatus: 'validated'
+    });
+    
+    // Return the matches
+    res.json(userMatches);
+  });
+  
   app.post('/api/matches', (req: Request, res: Response) => {
     const matchData = req.body;
     
