@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { PicklePlusNewLogo } from '@/components/icons/PicklePlusNewLogo';
 import { Trophy, Scan, RotateCw } from 'lucide-react';
@@ -13,6 +13,39 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const isExtraSmallScreen = useMediaQuery('(max-width: 350px)');
   const isSmallScreen = useMediaQuery('(max-width: 640px)');
+  const [cardHeight, setCardHeight] = useState(isSmallScreen ? 350 : 400);
+  const frontRef = useRef<HTMLDivElement>(null);
+  const backRef = useRef<HTMLDivElement>(null);
+  
+  // Debug log function to help us identify sizing issues
+  const logDimensions = () => {
+    if (frontRef.current && backRef.current) {
+      console.log('Passport Card Dimensions:');
+      console.log('Front height:', frontRef.current.scrollHeight);
+      console.log('Back height:', backRef.current.scrollHeight);
+    }
+  };
+  
+  // Calculate the required height whenever relevant dependencies change
+  useEffect(() => {
+    const calculateHeight = () => {
+      if (frontRef.current && backRef.current) {
+        const frontHeight = frontRef.current.scrollHeight;
+        const backHeight = backRef.current.scrollHeight;
+        const maxHeight = Math.max(frontHeight, backHeight) + 10; // Add some padding
+        console.log('Setting card height to:', maxHeight);
+        setCardHeight(maxHeight);
+      }
+    };
+    
+    // Small delay to ensure DOM is fully rendered
+    const timer = setTimeout(() => {
+      calculateHeight();
+      logDimensions();
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [isFlipped, isSmallScreen, isExtraSmallScreen]);
   
   // Check if user is a founding member
   const isFoundingMember = user.isFoundingMember || false;
@@ -135,10 +168,10 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
     <div className="w-full perspective cursor-pointer" onClick={() => setIsFlipped(!isFlipped)}>
       <div 
         className={`relative transition-transform duration-700 preserve-3d ${isFlipped ? 'passport-card-rotate' : ''}`}
-        style={{ minHeight: isSmallScreen ? '250px' : '300px' }}
+        style={{ height: `${cardHeight}px` }}
       >
         {/* Front of passport */}
-        <div className="absolute inset-0 backface-hidden w-full bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-xl">
+        <div ref={frontRef} className="absolute inset-0 backface-hidden w-full bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-xl">
           {/* Top border accent */}
           <div className="h-1 w-full bg-gradient-to-r from-[#FF5722] to-[#FF9800]"></div>
           
@@ -224,6 +257,7 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
         
         {/* Back of passport with QR code */}
         <div 
+          ref={backRef}
           className="absolute inset-0 backface-hidden w-full bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-xl"
           style={{ transform: 'rotateY(180deg)', backfaceVisibility: 'hidden' }}
         >
@@ -256,27 +290,27 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
             </>
           )}
           
-          <div className={`p-4 flex flex-col items-center justify-center h-full ${isFoundingMember ? 'qr-gold-gradient' : 'qr-blue-gradient'}`}>
-            <div className="mb-3 text-center">
-              <div className={`font-bold text-base sm:text-lg mb-1 ${
+          <div className={`p-3 flex flex-col items-center justify-center h-full ${isFoundingMember ? 'qr-gold-gradient' : 'qr-blue-gradient'}`}>
+            <div className="mb-2 text-center">
+              <div className={`font-bold text-base sm:text-lg mb-0.5 ${
                 isFoundingMember 
                   ? 'gold-shimmer' 
                   : 'text-[#2196F3]'
               }`}>
                 {isFoundingMember ? "Founding Member Pass" : "Pickle+ Passport"}
               </div>
-              <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Scan to check in at events and connect with players</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">Scan to connect with players</div>
             </div>
             
             {/* QR code with special border for founding members */}
-            <div className={`bg-white p-3 rounded-xl shadow-lg mb-3 ${
+            <div className={`bg-white p-2 rounded-xl shadow-lg mb-2 ${
               isFoundingMember 
                 ? 'border-2 border-[#FFD700]' 
                 : ''
             }`}>
               <QRCodeSVG
                 value={qrData}
-                size={isExtraSmallScreen ? 110 : isSmallScreen ? 125 : 160}
+                size={isExtraSmallScreen ? 100 : isSmallScreen ? 120 : 150}
                 bgColor={"#ffffff"}
                 fgColor={isFoundingMember ? "#BF953F" : "#000000"}
                 level={"L"}
