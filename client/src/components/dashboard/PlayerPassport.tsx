@@ -256,27 +256,27 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
             </>
           )}
           
-          <div className={`p-6 flex flex-col items-center justify-center h-full ${isFoundingMember ? 'qr-gold-gradient' : 'qr-blue-gradient'}`}>
-            <div className="mb-4 text-center">
-              <div className={`font-bold text-lg mb-1 ${
+          <div className={`p-4 flex flex-col items-center justify-center h-full ${isFoundingMember ? 'qr-gold-gradient' : 'qr-blue-gradient'}`}>
+            <div className="mb-3 text-center">
+              <div className={`font-bold text-base sm:text-lg mb-1 ${
                 isFoundingMember 
                   ? 'gold-shimmer' 
                   : 'text-[#2196F3]'
               }`}>
-                {isFoundingMember ? "Founding Member Pass" : "Pickle+ Digital Passport"}
+                {isFoundingMember ? "Founding Member Pass" : "Pickle+ Passport"}
               </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">Your digital identity for check-ins, events, and connections</div>
+              <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Scan to check in at events and connect with players</div>
             </div>
             
             {/* QR code with special border for founding members */}
-            <div className={`bg-white p-4 rounded-xl shadow-lg mb-4 ${
+            <div className={`bg-white p-3 rounded-xl shadow-lg mb-3 ${
               isFoundingMember 
                 ? 'border-2 border-[#FFD700]' 
                 : ''
             }`}>
               <QRCodeSVG
                 value={qrData}
-                size={isSmallScreen ? 140 : 180}
+                size={isExtraSmallScreen ? 110 : isSmallScreen ? 125 : 160}
                 bgColor={"#ffffff"}
                 fgColor={isFoundingMember ? "#BF953F" : "#000000"}
                 level={"L"}
@@ -284,14 +284,14 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
               />
             </div>
             
-            <div className="text-center text-sm text-gray-500 dark:text-gray-400 mb-2">
-              Passport ID: {user.passportId || `PID-${user.id}`}
+            <div className="text-center text-xs text-gray-500 dark:text-gray-400 mb-2">
+              ID: {user.passportId || `PID-${user.id}`}
             </div>
             
             {/* Special XP bonus notice for founding members */}
             {isFoundingMember && (
-              <div className="text-center text-xs mt-1 mb-3 gold-shimmer font-medium">
-                +10% XP Bonus on all activities
+              <div className="text-center text-xs mt-1 mb-1 gold-shimmer font-medium">
+                +10% XP Bonus
               </div>
             )}
             
