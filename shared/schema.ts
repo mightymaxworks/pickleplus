@@ -1,5 +1,5 @@
 // Main schema file for Pickle+ global types and tables
-import { pgTable, serial, integer, varchar, text, boolean, timestamp, date, json } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, varchar, text, boolean, timestamp, date, json, jsonb } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -27,6 +27,10 @@ export const users = pgTable("users", {
   xpMultiplier: integer("xp_multiplier").default(100),
   profileCompletionPct: integer("profile_completion_pct").default(0),
   rankingPoints: integer("ranking_points").default(0),
+  // Note: rankingTier is calculated at runtime based on ranking points
+  // rankingTier: varchar("ranking_tier", { length: 20 }).default("bronze"),
+  // Note: consecutiveWins doesn't exist in the database
+  // consecutiveWins: integer("consecutive_wins").default(0),
   playingSince: varchar("playing_since", { length: 50 }),
   skillLevel: varchar("skill_level", { length: 50 }),
   preferredPosition: varchar("preferred_position", { length: 50 }),
@@ -60,6 +64,7 @@ export const tournaments = pgTable("tournaments", {
   entryFee: integer("entry_fee"),
   prizePool: integer("prize_pool"),
   status: varchar("status", { length: 50 }).notNull().default("upcoming"),
+  level: varchar("level", { length: 50 }).notNull().default("club"), // club, district, city, provincial, national, regional, international
   organizer: varchar("organizer", { length: 255 }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
@@ -148,6 +153,44 @@ export const userRedemptions = pgTable("user_redemptions", {
   pointsGranted: integer("points_granted").default(0),
   multiplierGranted: integer("multiplier_granted").default(100),
   multiplierExpiration: timestamp("multiplier_expiration"),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// XP transactions table - Tracks all XP awards
+export const xpTransactions = pgTable("xp_transactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  amount: integer("amount").notNull(),
+  source: varchar("source", { length: 100 }).notNull(),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  metadata: jsonb("metadata"),
+  matchId: integer("match_id").references(() => matches.id),
+  tournamentId: integer("tournament_id").references(() => tournaments.id),
+  achievementId: integer("achievement_id").references(() => achievements.id),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Ranking transactions table - Tracks all ranking point awards
+export const rankingTransactions = pgTable("ranking_transactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  amount: integer("amount").notNull(),
+  source: varchar("source", { length: 100 }).notNull(),
+  matchId: integer("match_id").references(() => matches.id),
+  tournamentId: integer("tournament_id").references(() => tournaments.id),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Ranking tier history table - Tracks tier changes over time
+export const rankingTierHistory = pgTable("ranking_tier_history", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  oldTier: varchar("old_tier", { length: 20 }).notNull(),
+  newTier: varchar("new_tier", { length: 20 }).notNull(),
+  rankingPoints: integer("ranking_points").notNull(),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow()
 });
 
@@ -288,6 +331,9 @@ export const userRelations = relations(users, ({ many }) => ({
   activities: many(activities),
   userRedemptions: many(userRedemptions),
   rankingHistory: many(rankingHistory),
+  xpTransactions: many(xpTransactions),
+  rankingTransactions: many(rankingTransactions),
+  rankingTierHistory: many(rankingTierHistory),
   coachingProfile: many(coachingProfiles),
   sentConnections: many(connections, { relationName: "requester" }),
   receivedConnections: many(connections, { relationName: "recipient" }),
@@ -304,17 +350,21 @@ export const userRelations = relations(users, ({ many }) => ({
 // Tournament relations
 export const tournamentRelations = relations(tournaments, ({ many }) => ({
   registrations: many(tournamentRegistrations),
-  matches: many(matches)
+  matches: many(matches),
+  xpTransactions: many(xpTransactions),
+  rankingTransactions: many(rankingTransactions)
 }));
 
 // Match relations
-export const matchRelations = relations(matches, ({ one }) => ({
+export const matchRelations = relations(matches, ({ one, many }) => ({
   playerOne: one(users, { fields: [matches.playerOneId], references: [users.id], relationName: "playerOne" }),
   playerTwo: one(users, { fields: [matches.playerTwoId], references: [users.id], relationName: "playerTwo" }),
   playerOnePartner: one(users, { fields: [matches.playerOnePartnerId], references: [users.id], relationName: "playerOnePartner" }),
   playerTwoPartner: one(users, { fields: [matches.playerTwoPartnerId], references: [users.id], relationName: "playerTwoPartner" }),
   winner: one(users, { fields: [matches.winnerId], references: [users.id], relationName: "winner" }),
-  tournament: one(tournaments, { fields: [matches.tournamentId], references: [tournaments.id] })
+  tournament: one(tournaments, { fields: [matches.tournamentId], references: [tournaments.id] }),
+  xpTransactions: many(xpTransactions),
+  rankingTransactions: many(rankingTransactions)
 }));
 
 // Create insert schema for user validation
@@ -327,7 +377,10 @@ export const insertUserSchema = createInsertSchema(users)
 
 // Create insert schemas for validation
 export const insertTournamentSchema = createInsertSchema(tournaments)
-  .omit({ id: true, createdAt: true, updatedAt: true });
+  .omit({ id: true, createdAt: true, updatedAt: true })
+  .extend({
+    level: z.enum(['club', 'district', 'city', 'provincial', 'national', 'regional', 'international']).default('club')
+  });
 
 export const insertTournamentRegistrationSchema = createInsertSchema(tournamentRegistrations)
   .omit({ id: true, createdAt: true, updatedAt: true, registrationDate: true });
@@ -574,7 +627,9 @@ export const matchRelationsExtended = relations(matches, ({ one, many }) => ({
   winner: one(users, { fields: [matches.winnerId], references: [users.id], relationName: "winner" }),
   tournament: one(tournaments, { fields: [matches.tournamentId], references: [tournaments.id] }),
   validations: many(matchValidations),
-  feedback: many(matchFeedback)
+  feedback: many(matchFeedback),
+  xpTransactions: many(xpTransactions),
+  rankingTransactions: many(rankingTransactions)
 }));
 
 // Create insert schemas for VALMAT tables
@@ -596,5 +651,43 @@ export type InsertMatchFeedback = z.infer<typeof insertMatchFeedbackSchema>;
 
 export type UserDailyMatches = typeof userDailyMatches.$inferSelect;
 export type InsertUserDailyMatches = z.infer<typeof insertUserDailyMatchesSchema>;
+
+// Relations for XP and Ranking tables
+export const xpTransactionRelations = relations(xpTransactions, ({ one }) => ({
+  user: one(users, { fields: [xpTransactions.userId], references: [users.id] }),
+  match: one(matches, { fields: [xpTransactions.matchId], references: [matches.id] }),
+  tournament: one(tournaments, { fields: [xpTransactions.tournamentId], references: [tournaments.id] }),
+  achievement: one(achievements, { fields: [xpTransactions.achievementId], references: [achievements.id] })
+}));
+
+export const rankingTransactionRelations = relations(rankingTransactions, ({ one }) => ({
+  user: one(users, { fields: [rankingTransactions.userId], references: [users.id] }),
+  match: one(matches, { fields: [rankingTransactions.matchId], references: [matches.id] }),
+  tournament: one(tournaments, { fields: [rankingTransactions.tournamentId], references: [tournaments.id] })
+}));
+
+export const rankingTierHistoryRelations = relations(rankingTierHistory, ({ one }) => ({
+  user: one(users, { fields: [rankingTierHistory.userId], references: [users.id] })
+}));
+
+// XP and Ranking schemas
+export const insertXpTransactionSchema = createInsertSchema(xpTransactions)
+  .omit({ id: true, createdAt: true, timestamp: true });
+
+export const insertRankingTransactionSchema = createInsertSchema(rankingTransactions)
+  .omit({ id: true, createdAt: true, timestamp: true });
+
+export const insertRankingTierHistorySchema = createInsertSchema(rankingTierHistory)
+  .omit({ id: true, createdAt: true, timestamp: true });
+
+// XP and Ranking types
+export type XpTransaction = typeof xpTransactions.$inferSelect;
+export type InsertXpTransaction = z.infer<typeof insertXpTransactionSchema>;
+
+export type RankingTransaction = typeof rankingTransactions.$inferSelect;
+export type InsertRankingTransaction = z.infer<typeof insertRankingTransactionSchema>;
+
+export type RankingTierHistory = typeof rankingTierHistory.$inferSelect;
+export type InsertRankingTierHistory = z.infer<typeof insertRankingTierHistorySchema>;
 
 // Add additional core schema exports here as the system grows

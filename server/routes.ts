@@ -21,6 +21,10 @@ import { ZodError } from "zod";
 import { generatePassportId, validatePassportId } from "./utils/passport-id";
 import { xpService } from "./services";
 
+// Import API route modules
+import xpRoutes from "./api/xp";
+import rankingRoutes from "./api/ranking";
+
 // Import CourtIQ and XP systems
 import { courtIQService as courtIQSystem } from "./modules/rating/courtiq";
 import { xpSystem } from "./modules/xp/xpSystem";
@@ -81,6 +85,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // - POST /api/auth/logout
   // - GET /api/auth/current-user
   setupAuth(app);
+  
+  // Register API route modules
+  app.use('/api/xp', xpRoutes);
+  app.use('/api/ranking', rankingRoutes);
   
   // Add a logging middleware for debugging authentication
   app.use((req: Request, res: Response, next: NextFunction) => {
