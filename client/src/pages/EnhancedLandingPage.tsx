@@ -185,7 +185,7 @@ export default function EnhancedLandingPage() {
                 <Button 
                   size="lg" 
                   className="bg-white text-[#FF5722] hover:bg-white/90 w-full sm:w-auto"
-                  onClick={() => navigate("/register")}
+                  onClick={() => navigate("/auth")}
                 >
                   Get Started
                 </Button>
