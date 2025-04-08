@@ -232,22 +232,22 @@ function MatchTimelineCard({ match, currentUserId, onClick }: MatchTimelineCardP
     ? 'rgba(34, 197, 94, 0.35)' // Success green with transparency
     : 'rgba(239, 68, 68, 0.35)'; // Destructive red with transparency
   
+  // MATCH-UI-278652[ENHANCE] - Mobile-optimized match card with improved spacing
   return (
     <TiltCard
-      /* MATCH-UI-278652[ENHANCE] - Mobile-optimized match card */
       glowColor={glowColor}
       tiltAmount={10} // Reduced tilt for better mobile usability
       glowOnHover={true}
       glowAlways={true}
-      hoverScale={1.05} // Smaller hover for better mobile experience
+      hoverScale={1.05} // Smaller hover for mobile experience
       onClick={onClick}
       className={`border-2 shadow-md ${userWon ? 'border-green-500/30 bg-gradient-to-br from-green-50/5 to-green-900/5' : 'border-red-500/30 bg-gradient-to-br from-red-50/5 to-red-900/5'}`}
     >
-      <div className="p-3">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+      <div className="p-4 md:p-5"> {/* Increased padding for better spacing */}
+        <div className="flex flex-col gap-3"> {/* Increased gap for more whitespace */}
           {/* Player info - Stack elements on mobile */}
           <div className="flex items-center">
-            <Avatar className="h-8 w-8 mr-2 shrink-0">
+            <Avatar className="h-9 w-9 mr-3 shrink-0"> {/* Larger avatar with more margin */}
               {opponentPlayer.avatarUrl ? (
                 <AvatarImage src={opponentPlayer.avatarUrl} alt={opponentPlayer.displayName} />
               ) : (
@@ -256,11 +256,11 @@ function MatchTimelineCard({ match, currentUserId, onClick }: MatchTimelineCardP
                 </AvatarFallback>
               )}
             </Avatar>
-            <div className="min-w-0"> {/* Prevent text overflow */}
-              <div className="font-medium truncate">
+            <div className="min-w-0 flex-1"> {/* Prevent text overflow */}
+              <div className="font-medium text-base md:text-lg truncate"> {/* Larger text */}
                 vs {opponentPlayer.displayName || 'Unknown Player'}
               </div>
-              <div className="text-xs sm:text-sm text-muted-foreground flex items-center flex-wrap gap-1 sm:gap-x-3">
+              <div className="text-xs md:text-sm text-muted-foreground flex items-center flex-wrap gap-2 mt-1">
                 <span className="flex items-center">
                   <Calendar className="h-3 w-3 mr-1" /> {formattedDate}
                 </span>
@@ -268,38 +268,40 @@ function MatchTimelineCard({ match, currentUserId, onClick }: MatchTimelineCardP
                   <Clock className="h-3 w-3 mr-1" /> {formattedTime}
                 </span>
               </div>
-              <div className="mt-1 flex flex-wrap gap-1">
-                {location && (
-                  <Badge variant="outline" className="text-xs py-0 h-5">
-                    <MapPin className="h-3 w-3 mr-1" /> 
-                    <span className="truncate max-w-[80px]">{location}</span>
-                  </Badge>
-                )}
-                <Badge variant="outline" className="text-xs capitalize py-0 h-5">
-                  <Users className="h-3 w-3 mr-1" /> {formatType}
-                </Badge>
-                {matchType && (
-                  <Badge variant="outline" className="text-xs capitalize py-0 h-5">
-                    {matchType}
-                  </Badge>
-                )}
-              </div>
             </div>
           </div>
           
-          {/* Score info - Aligned right on desktop, centered on mobile */}
-          <div className="sm:text-right flex flex-row justify-between sm:block items-center border-t sm:border-t-0 pt-2 sm:pt-0 mt-1 sm:mt-0">
-            <div className="flex items-center">
-              <span className="font-bold mr-2 text-lg">
-                {currentUserPlayer.score} - {opponentPlayer.score}
-              </span>
-              <Badge variant={userWon ? "success" : "destructive"} className="h-6">
-                {userWon ? "Won" : "Lost"}
+          {/* Middle section with score */}
+          <div className="flex items-center justify-between bg-muted/20 rounded-md px-3 py-2">
+            <span className="font-bold text-lg md:text-xl">
+              {currentUserPlayer.score} - {opponentPlayer.score}
+            </span>
+            <Badge variant={userWon ? "success" : "destructive"} className="h-6 ml-2">
+              {userWon ? "Won" : "Lost"}
+            </Badge>
+          </div>
+          
+          {/* Bottom badges section */}
+          <div className="flex flex-wrap justify-between items-center gap-2">
+            <div className="flex flex-wrap gap-2">
+              {location && (
+                <Badge variant="outline" className="text-xs py-0 h-5">
+                  <MapPin className="h-3 w-3 mr-1" /> 
+                  <span className="truncate max-w-[80px]">{location}</span>
+                </Badge>
+              )}
+              <Badge variant="outline" className="text-xs capitalize py-0 h-5">
+                <Users className="h-3 w-3 mr-1" /> {formatType}
               </Badge>
+              {matchType && (
+                <Badge variant="outline" className="text-xs capitalize py-0 h-5 hidden sm:flex">
+                  {matchType}
+                </Badge>
+              )}
             </div>
             
-            {/* Points visualization - Stack on mobile */}
-            <div className="flex gap-1 sm:gap-2 sm:mt-2 sm:justify-end">
+            {/* Points visualization */}
+            <div className="flex gap-2">
               <Badge variant="outline" className="text-xs flex items-center py-0 h-5">
                 <Trophy className="h-3 w-3 mr-1" /> +15 pts
               </Badge>
