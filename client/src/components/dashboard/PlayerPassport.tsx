@@ -61,7 +61,6 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
         className={`preserve-3d cursor-pointer relative ${isFlipped ? 'passport-card-rotate' : ''}`}
         onClick={() => setIsFlipped(!isFlipped)}
         style={{ 
-          transformStyle: 'preserve-3d', 
           transition: 'transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)' 
         }}
         animate={{ 
@@ -771,22 +770,7 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
         </motion.div>
       </motion.div>
       
-      {/* CSS for animations */}
-      <style jsx>{`
-        @keyframes pulse-glow {
-          0% { box-shadow: 0 0 5px rgba(255, 87, 34, 0.5); }
-          50% { box-shadow: 0 0 20px rgba(255, 87, 34, 0.8); }
-          100% { box-shadow: 0 0 5px rgba(255, 87, 34, 0.5); }
-        }
-        
-        .qr-blue-gradient {
-          background: radial-gradient(circle at center, rgba(33, 150, 243, 0.1) 0%, rgba(255, 255, 255, 0) 70%);
-        }
-        
-        .qr-gold-gradient {
-          background: radial-gradient(circle at center, rgba(255, 215, 0, 0.1) 0%, rgba(255, 255, 255, 0) 70%);
-        }
-      `}</style>
+      {/* CSS animations have been moved to index.css */}
     </div>
   );
 }

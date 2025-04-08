@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PlayerPassport } from '@/components/dashboard/PlayerPassport';
+import { PCPRankings } from '@/components/dashboard/PCPRankings';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { Bolt, BarChart3, Trophy, Award, Star, TrendingUp, Activity } from 'lucide-react';
@@ -26,7 +27,7 @@ export default function Dashboard() {
   const winRate = user.totalMatches ? Math.round((user.matchesWon || 16) / (user.totalMatches || 24) * 100) : 67;
   
   return (
-    <DashboardLayout title="Dashboard">
+    <DashboardLayout>
       {/* Background with subtle particle effect */}
       <div className="fixed inset-0 pointer-events-none z-0 opacity-20">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-purple-900/10"></div>
@@ -72,7 +73,7 @@ export default function Dashboard() {
           
           {/* Player Passport Section */}
           <motion.div 
-            className="md:col-span-5"
+            className="md:col-span-6"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
@@ -95,12 +96,22 @@ export default function Dashboard() {
             </Card>
           </motion.div>
           
-          {/* Stats Section */}
+          {/* PCP Rankings Section */}
           <motion.div 
-            className="md:col-span-7"
+            className="md:col-span-6"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            <PCPRankings user={user} />
+          </motion.div>
+          
+          {/* Stats Section */}
+          <motion.div 
+            className="md:col-span-12"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
           >
             <div className="flex items-center mb-3">
               <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-400 to-indigo-500 text-transparent bg-clip-text">
@@ -111,14 +122,14 @@ export default function Dashboard() {
               </div>
             </div>
             
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* XP Card with circular progress */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: isLoaded ? 1 : 0, scale: isLoaded ? 1 : 0.95 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
               >
-                <Card className="shadow-lg border border-gray-100/20 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm overflow-hidden">
+                <Card className="shadow-lg border border-gray-100/20 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm overflow-hidden h-full">
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#FF5722] to-[#FF9800]"></div>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-md font-medium flex items-center">
@@ -240,7 +251,7 @@ export default function Dashboard() {
                 animate={{ opacity: isLoaded ? 1 : 0, scale: isLoaded ? 1 : 0.95 }}
                 transition={{ delay: 0.4, duration: 0.5 }}
               >
-                <Card className="shadow-lg border border-gray-100/20 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm">
+                <Card className="shadow-lg border border-gray-100/20 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm h-full">
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#2196F3] to-[#03A9F4]"></div>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-md font-medium flex items-center">
@@ -396,13 +407,13 @@ export default function Dashboard() {
                 </Card>
               </motion.div>
               
-              {/* CourtIQ Rating Card with radar visualization */}
+              {/* CourtIQ Radar Visualization */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: isLoaded ? 1 : 0, scale: isLoaded ? 1 : 0.95 }}
                 transition={{ delay: 0.5, duration: 0.5 }}
               >
-                <Card className="shadow-lg border border-gray-100/20 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm overflow-hidden">
+                <Card className="shadow-lg border border-gray-100/20 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm overflow-hidden h-full">
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#673AB7] to-[#9C27B0]"></div>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-md font-medium flex items-center">
@@ -410,14 +421,14 @@ export default function Dashboard() {
                         <Activity size={18} />
                       </span>
                       <span className="bg-gradient-to-r from-[#673AB7] to-[#9C27B0] text-transparent bg-clip-text">
-                        CourtIQ™ Performance Metrics
+                        CourtIQ™ Performance
                       </span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex items-center">
-                      {/* Radar chart-like visualization */}
-                      <div className="relative w-24 h-24 mr-4">
+                    <div className="flex items-center justify-center">
+                      {/* Radar chart visualization */}
+                      <div className="relative w-40 h-40">
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="w-full h-full">
                             {/* Background hexagon */}
@@ -440,6 +451,14 @@ export default function Dashboard() {
                                 stroke="#f3f4f6" 
                                 strokeWidth="1" 
                               />
+                              
+                              {/* Axis labels */}
+                              <text x="50" y="5" textAnchor="middle" fill="#94a3b8" fontSize="6">Power</text>
+                              <text x="92" y="35" textAnchor="start" fill="#94a3b8" fontSize="6">Speed</text>
+                              <text x="92" y="75" textAnchor="start" fill="#94a3b8" fontSize="6">Precision</text>
+                              <text x="50" y="98" textAnchor="middle" fill="#94a3b8" fontSize="6">Strategy</text>
+                              <text x="8" y="75" textAnchor="end" fill="#94a3b8" fontSize="6">Control</text>
+                              <text x="8" y="35" textAnchor="end" fill="#94a3b8" fontSize="6">Consistency</text>
                             </svg>
                             
                             {/* Data hexagon with animation */}
@@ -463,59 +482,25 @@ export default function Dashboard() {
                                   <stop offset="100%" stopColor="#9C27B0" />
                                 </linearGradient>
                               </defs>
+                              
+                              {/* Skill points */}
+                              <circle cx="50" cy="15" r="2.5" fill="#673AB7" />
+                              <circle cx="80" cy="32" r="2.5" fill="#7E57C2" />
+                              <circle cx="75" cy="70" r="2.5" fill="#9575CD" />
+                              <circle cx="45" cy="85" r="2.5" fill="#B39DDB" />
+                              <circle cx="20" cy="65" r="2.5" fill="#D1C4E9" />
+                              <circle cx="25" cy="30" r="2.5" fill="#EDE7F6" />
                             </motion.svg>
                             
-                            {/* Center dot */}
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="w-4 h-4 rounded-full bg-gradient-to-r from-[#673AB7] to-[#9C27B0]"></div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex-1">
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600 dark:text-gray-400">Current Rating</span>
-                            <motion.span 
-                              className="font-bold text-xl bg-gradient-to-r from-[#673AB7] to-[#9C27B0] text-transparent bg-clip-text"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: isLoaded ? 1 : 0 }}
-                              transition={{ delay: 1.1, duration: 0.3 }}
-                            >
-                              1,248
-                            </motion.span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600 dark:text-gray-400">Skill Level</span>
-                            <motion.span 
-                              className="font-medium px-2 py-0.5 rounded-full bg-gradient-to-r from-[#673AB7] to-[#9C27B0] text-white text-xs"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: isLoaded ? 1 : 0 }}
-                              transition={{ delay: 1.2, duration: 0.3 }}
-                            >
-                              {user.skillLevel || '3.5 Intermediate+'}
-                            </motion.span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600 dark:text-gray-400">Ranking Position</span>
+                            {/* Center point */}
                             <motion.div 
-                              className="flex items-center"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: isLoaded ? 1 : 0 }}
-                              transition={{ delay: 1.3, duration: 0.3 }}
+                              className="absolute inset-0 flex items-center justify-center"
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ delay: 1.2, duration: 0.5, type: 'spring' }}
                             >
-                              <span className="font-medium mr-1">7th</span>
-                              <div className="flex -space-x-1">
-                                <div className="w-4 h-4 rounded-full bg-gradient-to-r from-[#FFD700] to-[#FFC107] flex items-center justify-center text-[8px] text-white font-bold">
-                                  1
-                                </div>
-                                <div className="w-4 h-4 rounded-full bg-gradient-to-r from-[#C0C0C0] to-[#9E9E9E] flex items-center justify-center text-[8px] text-white font-bold">
-                                  2
-                                </div>
-                                <div className="w-4 h-4 rounded-full bg-gradient-to-r from-[#CD7F32] to-[#A1887F] flex items-center justify-center text-[8px] text-white font-bold">
-                                  3
-                                </div>
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#673AB7] to-[#9C27B0] flex items-center justify-center text-white font-bold shadow-lg">
+                                <span className="text-sm">1248</span>
                               </div>
                             </motion.div>
                           </div>
@@ -588,14 +573,7 @@ export default function Dashboard() {
         </div>
       </motion.div>
       
-      {/* Add to CSS */}
-      <style jsx>{`
-        @keyframes moveLeftRight {
-          0% { transform: translateX(-10px); opacity: 0.3; }
-          50% { transform: translateX(50px); opacity: 0.7; }
-          100% { transform: translateX(100px); opacity: 0.3; }
-        }
-      `}</style>
+      {/* CSS Animation is now in index.css */}
     </DashboardLayout>
   );
 }
