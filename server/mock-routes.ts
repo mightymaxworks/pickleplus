@@ -353,6 +353,20 @@ export function registerMockRoutes(app: Express): Server {
     
     res.json(results);
   });
+  
+  // Match validation endpoint
+  app.post('/api/match/validate/:matchId', (req: Request, res: Response) => {
+    const matchId = parseInt(req.params.matchId);
+    const { status, notes } = req.body;
+    
+    // Simulate validation success
+    res.json({
+      id: matchId,
+      status: status,
+      validated: true,
+      message: "Match validated successfully"
+    });
+  });
 
   const httpServer = createServer(app);
   return httpServer;

@@ -175,7 +175,7 @@ export function DialogPlayerSelect({
                   >
                     <div className="flex items-center gap-3">
                       <Avatar className="h-8 w-8">
-                        {player.avatarUrl ? (
+                        {'avatarUrl' in player && player.avatarUrl ? (
                           <AvatarImage src={player.avatarUrl} alt={player.displayName || player.username} />
                         ) : null}
                         <AvatarFallback>
