@@ -2,12 +2,20 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin, hashPassword } from "./auth";
+import { db, client } from "./db";
+import { eq, and, or, sql, desc, asc, inArray, lt, between } from "drizzle-orm";
 import { 
   insertTournamentRegistrationSchema, 
   redeemCodeSchema,
   insertMatchSchema,
   insertRedemptionCodeSchema,
-  matches
+  matches,
+  // VALMAT imports
+  matchValidationSchema,
+  matchFeedbackSchema,
+  matchValidations,
+  matchFeedback,
+  userDailyMatches
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { generatePassportId, validatePassportId } from "./utils/passport-id";
@@ -17,10 +25,6 @@ import { xpService } from "./services";
 import { courtIQService as courtIQSystem } from "./modules/rating/courtiq";
 import { xpSystem } from "./modules/xp/xpSystem";
 import { multiDimensionalRankingService } from "./modules/ranking/service";
-
-// Import database and query helpers
-import { db, client } from "./db";
-import { eq, and, or, sql, desc, asc, inArray, lt, between } from "drizzle-orm";
 import { 
   playerRatings, 
   ratingHistory,
@@ -3415,6 +3419,282 @@ function getRandomReason(pointChange: number): string {
       res.status(500).json({ error: "Server error getting match statistics" });
     }
   });
+  
+  // VALMAT - Match Validation Endpoints
+  
+  // 1. Match Validation Endpoint - Validate or dispute a match
+  app.post("/api/match/validate/:matchId", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      const userId = req.user.id;
+      const { matchId } = req.params;
+      
+      // Validate the input against our schema
+      const validationData = matchValidationSchema.parse(req.body);
+      
+      // First, check if the match exists
+      const match = await db.select().from(matches).where(eq(matches.id, parseInt(matchId))).limit(1);
+      if (!match || match.length === 0) {
+        return res.status(404).json({ error: "Match not found" });
+      }
+      
+      // Check if the user was actually part of this match
+      const currentMatch = match[0];
+      const isUserInMatch = [
+        currentMatch.playerOneId,
+        currentMatch.playerTwoId,
+        currentMatch.playerOnePartnerId,
+        currentMatch.playerTwoPartnerId
+      ].includes(userId);
+      
+      if (!isUserInMatch) {
+        return res.status(403).json({ error: "You can only validate matches you participated in" });
+      }
+      
+      // Check if the user has already validated this match
+      const existingValidation = await db.select()
+        .from(matchValidations)
+        .where(and(
+          eq(matchValidations.matchId, parseInt(matchId)),
+          eq(matchValidations.userId, userId)
+        ))
+        .limit(1);
+      
+      if (existingValidation && existingValidation.length > 0) {
+        // Update existing validation
+        await db.update(matchValidations)
+          .set({
+            status: validationData.status,
+            notes: validationData.notes,
+            validatedAt: new Date()
+          })
+          .where(eq(matchValidations.id, existingValidation[0].id));
+          
+        // Return the updated validation
+        const updatedValidation = await db.select()
+          .from(matchValidations)
+          .where(eq(matchValidations.id, existingValidation[0].id))
+          .limit(1);
+          
+        return res.json(updatedValidation[0]);
+      } else {
+        // Create new validation record
+        const newValidation = await db.insert(matchValidations)
+          .values({
+            matchId: parseInt(matchId),
+            userId: userId,
+            status: validationData.status,
+            notes: validationData.notes,
+            validatedAt: new Date()
+          })
+          .returning();
+          
+        // Check if all participants have now validated the match
+        await updateMatchValidationStatus(parseInt(matchId));
+        
+        return res.status(201).json(newValidation[0]);
+      }
+    } catch (error) {
+      console.error("[VALMAT] Error validating match:", error);
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: "Validation error", details: error.errors });
+      }
+      return res.status(500).json({ error: "Server error validating match" });
+    }
+  });
+  
+  // 2. Match Feedback Endpoint - Provide feedback about a match
+  app.post("/api/match/:matchId/feedback", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      const userId = req.user.id;
+      const { matchId } = req.params;
+      
+      // Validate the input against our schema
+      const feedbackData = matchFeedbackSchema.parse(req.body);
+      
+      // First, check if the match exists
+      const match = await db.select().from(matches).where(eq(matches.id, parseInt(matchId))).limit(1);
+      if (!match || match.length === 0) {
+        return res.status(404).json({ error: "Match not found" });
+      }
+      
+      // Check if the user was actually part of this match
+      const currentMatch = match[0];
+      const isUserInMatch = [
+        currentMatch.playerOneId,
+        currentMatch.playerTwoId,
+        currentMatch.playerOnePartnerId,
+        currentMatch.playerTwoPartnerId
+      ].includes(userId);
+      
+      if (!isUserInMatch) {
+        return res.status(403).json({ error: "You can only provide feedback for matches you participated in" });
+      }
+      
+      // Check if the user has already provided feedback
+      const existingFeedback = await db.select()
+        .from(matchFeedback)
+        .where(and(
+          eq(matchFeedback.matchId, parseInt(matchId)),
+          eq(matchFeedback.userId, userId)
+        ))
+        .limit(1);
+      
+      if (existingFeedback && existingFeedback.length > 0) {
+        // Update existing feedback
+        await db.update(matchFeedback)
+          .set({
+            enjoymentRating: feedbackData.enjoymentRating,
+            skillMatchRating: feedbackData.skillMatchRating,
+            comments: feedbackData.comments
+          })
+          .where(eq(matchFeedback.id, existingFeedback[0].id));
+          
+        // Return the updated feedback
+        const updatedFeedback = await db.select()
+          .from(matchFeedback)
+          .where(eq(matchFeedback.id, existingFeedback[0].id))
+          .limit(1);
+          
+        return res.json(updatedFeedback[0]);
+      } else {
+        // Create new feedback record
+        const newFeedback = await db.insert(matchFeedback)
+          .values({
+            matchId: parseInt(matchId),
+            userId: userId,
+            enjoymentRating: feedbackData.enjoymentRating,
+            skillMatchRating: feedbackData.skillMatchRating,
+            comments: feedbackData.comments
+          })
+          .returning();
+          
+        return res.status(201).json(newFeedback[0]);
+      }
+    } catch (error) {
+      console.error("[VALMAT] Error providing match feedback:", error);
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: "Validation error", details: error.errors });
+      }
+      return res.status(500).json({ error: "Server error providing match feedback" });
+    }
+  });
+  
+  // 3. Daily Limits Endpoint - Check user's daily match limit status
+  app.get("/api/match/daily-limits", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      const userId = req.user.id;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Start of today
+      
+      // Check if user has a daily match record for today
+      const todayStr = today.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+      const dailyRecord = await db.select()
+        .from(userDailyMatches)
+        .where(and(
+          eq(userDailyMatches.userId, userId),
+          sql`DATE(${userDailyMatches.matchDate}) = ${todayStr}`
+        ))
+        .limit(1);
+      
+      // Define point multipliers based on match count
+      const getMultiplier = (count: number): number => {
+        if (count <= 3) return 100; // First 3 matches: 100% points
+        if (count <= 6) return 75;  // Matches 4-6: 75% points  
+        if (count <= 10) return 50; // Matches 7-10: 50% points
+        return 25;                  // More than 10 matches: 25% points
+      };
+      
+      // Calculate remaining full-point matches
+      let matchCount = 0;
+      let multiplier = 100;
+      
+      if (dailyRecord && dailyRecord.length > 0) {
+        matchCount = dailyRecord[0].matchCount;
+        multiplier = getMultiplier(matchCount);
+      }
+      
+      // Calculate remaining matches at each tier
+      const remainingFullPoints = Math.max(0, 3 - matchCount);
+      const remaining75Percent = Math.max(0, 6 - Math.max(3, matchCount));
+      const remaining50Percent = Math.max(0, 10 - Math.max(6, matchCount));
+      
+      res.json({
+        dailyMatchCount: matchCount,
+        currentMultiplier: multiplier,
+        dailyMatchLimit: {
+          tier1: { multiplier: 100, remaining: remainingFullPoints },
+          tier2: { multiplier: 75, remaining: remaining75Percent },
+          tier3: { multiplier: 50, remaining: remaining50Percent },
+          tier4: { multiplier: 25, unlimited: true }
+        }
+      });
+    } catch (error) {
+      console.error("[VALMAT] Error checking daily match limits:", error);
+      res.status(500).json({ error: "Server error checking daily match limits" });
+    }
+  });
+  
+  // VALMAT - Helper function to update match validation status
+  async function updateMatchValidationStatus(matchId: number) {
+    // Get all participants for the match
+    const match = await db.select().from(matches).where(eq(matches.id, matchId)).limit(1);
+    if (!match || match.length === 0) return;
+    
+    const currentMatch = match[0];
+    
+    // Determine all participants
+    const participants = [
+      currentMatch.playerOneId,
+      currentMatch.playerTwoId
+    ];
+    
+    // Add partners if it's a doubles match
+    if (currentMatch.formatType === 'doubles') {
+      if (currentMatch.playerOnePartnerId) participants.push(currentMatch.playerOnePartnerId);
+      if (currentMatch.playerTwoPartnerId) participants.push(currentMatch.playerTwoPartnerId);
+    }
+    
+    // Get all validations for this match
+    const validations = await db.select()
+      .from(matchValidations)
+      .where(eq(matchValidations.matchId, matchId));
+    
+    // Check if we have validations from all participants
+    if (validations.length === participants.length) {
+      // Check if any participant has disputed the match
+      const hasDispute = validations.some(v => v.status === 'disputed');
+      
+      // Update match validation status
+      if (hasDispute) {
+        await db.update(matches)
+          .set({
+            validationStatus: 'disputed',
+            validationCompletedAt: new Date()
+          })
+          .where(eq(matches.id, matchId));
+      } else {
+        await db.update(matches)
+          .set({
+            validationStatus: 'validated',
+            validationCompletedAt: new Date(),
+            isVerified: true // Legacy field support
+          })
+          .where(eq(matches.id, matchId));
+      }
+    }
+  }
   
   // Player search endpoint (simplified version with no auth requirement)
   app.get("/api/player/search", async (req: Request, res: Response) => {

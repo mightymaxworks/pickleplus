@@ -1,16 +1,19 @@
 import { useState, useEffect } from "react";
 import { QuickMatchRecorder } from "@/components/match/QuickMatchRecorder";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
-import { Calendar, TrophyIcon, CheckCircle2, BarChart4, PlusCircle, Loader2 } from "lucide-react";
+import { AlertTriangle, Calendar, TrophyIcon, CheckCircle2, BarChart4, PlusCircle, Loader2, AlertCircle, Award, ThumbsUp, Zap as ZapIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { matchSDK } from "@/lib/sdk/matchSDK";
+import { matchSDK, type RecordedMatch } from "@/lib/sdk/matchSDK";
 import { useAuth } from "@/hooks/useAuth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { useLocation } from "wouter";
+import DailyMatchLimits from "@/components/match/DailyMatchLimits";
+import MatchValidation from "@/components/match/MatchValidation";
+import { Badge } from "@/components/ui/badge";
 
 export default function MatchPage() {
   const { toast } = useToast();
@@ -120,11 +123,12 @@ export default function MatchPage() {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="history">Match History</TabsTrigger>
+          <TabsTrigger value="validations">Pending Validations</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="mt-6 space-y-8">
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             {/* Total Matches */}
             <Card>
               <CardHeader className="pb-2">
@@ -175,6 +179,9 @@ export default function MatchPage() {
                 </div>
               </CardContent>
             </Card>
+            
+            {/* Daily Match Limits */}
+            <DailyMatchLimits />
           </div>
 
           {/* Recent Matches Section */}
@@ -194,8 +201,8 @@ export default function MatchPage() {
               </Card>
             ) : recentMatches && recentMatches.length > 0 ? (
               <div className="space-y-4">
-                {recentMatches.slice(0, 5).map((match: any) => {
-                  const userPlayer = match.players.find((p: any) => p.userId === user?.id);
+                {recentMatches.slice(0, 5).map((match: RecordedMatch) => {
+                  const userPlayer = match.players.find((p) => p.userId === user?.id);
                   const isWinner = userPlayer?.isWinner;
                   const opponent = getOpponentName(match, user?.id || 0);
                   
@@ -203,12 +210,43 @@ export default function MatchPage() {
                     <Card key={match.id} className={`border-l-4 ${isWinner ? 'border-l-green-500' : 'border-l-gray-300'}`}>
                       <CardContent className="p-4">
                         <div className="flex flex-col md:flex-row justify-between">
-                          <div>
-                            <div className="font-medium">
+                          <div className="flex-1">
+                            <div className="font-medium flex items-center">
                               {isWinner ? 'Victory against ' : 'Loss to '} {opponent}
+                              {match.validationStatus ? (
+                                <Badge variant={match.validationStatus === 'disputed' ? 'destructive' : match.validationStatus === 'confirmed' ? 'default' : 'outline'} className="ml-2">
+                                  {match.validationStatus === 'disputed' ? 'Disputed' : match.validationStatus === 'confirmed' ? 'Confirmed' : 'Pending Validation'}
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="ml-2">
+                                  Pending Validation
+                                </Badge>
+                              )}
                             </div>
                             <div className="text-sm text-muted-foreground">
                               {match.formatType === 'singles' ? 'Singles' : 'Doubles'} • {formatDate(match.date)}
+                            </div>
+                            
+                            <div className="mt-3">
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="outline" size="sm">
+                                    <CheckCircle2 className="h-4 w-4 mr-1" />
+                                    Validate Match
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Validate Match</DialogTitle>
+                                  </DialogHeader>
+                                  <MatchValidation 
+                                    match={match} 
+                                    onValidationComplete={() => {
+                                      refetchMatches();
+                                    }} 
+                                  />
+                                </DialogContent>
+                              </Dialog>
                             </div>
                           </div>
                           <div className="text-lg font-semibold mt-2 md:mt-0">
@@ -267,8 +305,8 @@ export default function MatchPage() {
               </Card>
             ) : recentMatches && recentMatches.length > 0 ? (
               <div className="space-y-4">
-                {recentMatches.map((match: any) => {
-                  const userPlayer = match.players.find((p: any) => p.userId === user?.id);
+                {recentMatches.map((match: RecordedMatch) => {
+                  const userPlayer = match.players.find((p) => p.userId === user?.id);
                   const isWinner = userPlayer?.isWinner;
                   const opponent = getOpponentName(match, user?.id || 0);
                   
@@ -276,9 +314,18 @@ export default function MatchPage() {
                     <Card key={match.id} className={`border-l-4 ${isWinner ? 'border-l-green-500' : 'border-l-gray-300'}`}>
                       <CardContent className="p-4">
                         <div className="flex flex-col md:flex-row justify-between">
-                          <div>
-                            <div className="font-medium">
+                          <div className="flex-1">
+                            <div className="font-medium flex items-center">
                               {isWinner ? 'Victory against ' : 'Loss to '} {opponent}
+                              {match.validationStatus ? (
+                                <Badge variant={match.validationStatus === 'disputed' ? 'destructive' : match.validationStatus === 'confirmed' ? 'default' : 'outline'} className="ml-2">
+                                  {match.validationStatus === 'disputed' ? 'Disputed' : match.validationStatus === 'confirmed' ? 'Confirmed' : 'Pending Validation'}
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="ml-2">
+                                  Pending Validation
+                                </Badge>
+                              )}
                             </div>
                             <div className="text-sm text-muted-foreground">
                               {match.formatType === 'singles' ? 'Singles' : 'Doubles'} • {formatDate(match.date)}
@@ -289,6 +336,28 @@ export default function MatchPage() {
                                 {match.notes}
                               </div>
                             )}
+                            
+                            <div className="mt-3">
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="outline" size="sm">
+                                    <CheckCircle2 className="h-4 w-4 mr-1" />
+                                    Validate Match
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Validate Match</DialogTitle>
+                                  </DialogHeader>
+                                  <MatchValidation 
+                                    match={match} 
+                                    onValidationComplete={() => {
+                                      refetchMatches();
+                                    }} 
+                                  />
+                                </DialogContent>
+                              </Dialog>
+                            </div>
                           </div>
                           <div className="text-lg font-semibold mt-2 md:mt-0">
                             {match.players[0].score} - {match.players[1].score}
@@ -318,6 +387,150 @@ export default function MatchPage() {
               </Card>
             )}
           </div>
+        </TabsContent>
+        
+        <TabsContent value="validations" className="mt-6 space-y-8">
+          {/* Pending Validations */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">Pending Match Validations</h2>
+              <Button variant="outline" size="sm" onClick={() => refetchMatches()}>
+                Refresh
+              </Button>
+            </div>
+            
+            {matchesLoading ? (
+              <Card className="p-8 text-center">
+                <div className="flex justify-center items-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              </Card>
+            ) : recentMatches && recentMatches.filter(m => m.validationStatus !== 'confirmed').length > 0 ? (
+              <div className="space-y-4">
+                {recentMatches
+                  .filter(m => m.validationStatus !== 'confirmed')
+                  .map((match: RecordedMatch) => {
+                    const userPlayer = match.players.find((p) => p.userId === user?.id);
+                    const isWinner = userPlayer?.isWinner;
+                    const opponent = getOpponentName(match, user?.id || 0);
+                    const validationStatus = match.validationStatus || 'pending';
+                    
+                    return (
+                      <Card key={match.id} className={`border-l-4 ${isWinner ? 'border-l-green-500' : 'border-l-gray-300'}`}>
+                        <CardContent className="p-4">
+                          <div className="flex flex-col md:flex-row justify-between">
+                            <div className="flex-1">
+                              <div className="font-medium flex items-center">
+                                {isWinner ? 'Victory against ' : 'Loss to '} {opponent}
+                                <Badge variant={validationStatus === 'disputed' ? 'destructive' : 'outline'} className="ml-2">
+                                  {validationStatus === 'disputed' ? 'Disputed' : 'Pending Validation'}
+                                </Badge>
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {match.formatType === 'singles' ? 'Singles' : 'Doubles'} • {formatDate(match.date)}
+                              </div>
+                              
+                              <Card className="mt-3 border border-amber-200 bg-amber-50 dark:bg-amber-950 dark:border-amber-800">
+                                <CardContent className="p-3">
+                                  <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300">
+                                    <AlertTriangle className="h-4 w-4" />
+                                    <span className="text-sm font-medium">This match requires validation to earn full XP and rating points.</span>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                              
+                              <div className="mt-3">
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button variant="default" size="sm">
+                                      <CheckCircle2 className="h-4 w-4 mr-1" />
+                                      Validate Match
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent>
+                                    <DialogHeader>
+                                      <DialogTitle>Validate Match</DialogTitle>
+                                    </DialogHeader>
+                                    <MatchValidation 
+                                      match={match} 
+                                      onValidationComplete={() => {
+                                        refetchMatches();
+                                      }} 
+                                    />
+                                  </DialogContent>
+                                </Dialog>
+                              </div>
+                            </div>
+                            <div className="text-lg font-semibold mt-2 md:mt-0 flex flex-col items-end">
+                              <div>{match.players[0].score} - {match.players[1].score}</div>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                {match.validationStatus === 'disputed' 
+                                  ? 'Match disputed' 
+                                  : 'Awaiting validation'}
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+              </div>
+            ) : (
+              <Card className="p-8 text-center border-dashed">
+                <CardTitle className="mb-2">No Pending Validations</CardTitle>
+                <CardDescription>
+                  All your matches have been validated. Great job!
+                </CardDescription>
+              </Card>
+            )}
+          </div>
+          
+          {/* Match Validation Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>How VALMAT™ Works</CardTitle>
+              <CardDescription>
+                The VALMAT™ (Match Validation System) helps ensure fair play and accurately track progress.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="bg-primary/10 p-2 rounded-full">
+                  <CheckCircle2 className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-medium">Match Validation</h3>
+                  <p className="text-sm text-muted-foreground">
+                    All participants must validate matches to confirm the results were recorded correctly.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <div className="bg-primary/10 p-2 rounded-full">
+                  <ThumbsUp className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-medium">Feedback Collection</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Provide feedback on match enjoyment and skill level matching to help improve the CourtIQ™ system.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <div className="bg-primary/10 p-2 rounded-full">
+                  <ZapIcon className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-medium">Daily Match Limits</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Points awarded decrease after certain match counts to prevent system abuse and encourage rest.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 

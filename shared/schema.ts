@@ -184,6 +184,13 @@ export const matches = pgTable("matches", {
   isRated: boolean("is_rated").default(true),
   isVerified: boolean("is_verified").default(false), // Whether opponents have verified the result
   
+  // VALMAT - Match Validation
+  validationStatus: varchar("validation_status", { length: 50 }).notNull().default("pending"), // pending, validated, disputed, rejected
+  validationCompletedAt: timestamp("validation_completed_at"),
+  validationRequiredBy: timestamp("validation_required_by").defaultNow(),
+  rankingPointMultiplier: integer("ranking_point_multiplier").default(100), // Percentage multiplier for ranking points
+  dailyMatchCount: integer("daily_match_count").default(1), // Which match of the day is this
+  
   // Additional information
   notes: text("notes"),
   xpAwarded: integer("xp_awarded").default(0),
@@ -348,7 +355,13 @@ export const insertMatchSchema = createInsertSchema(matches)
     updatedAt: true, 
     isVerified: true, 
     xpAwarded: true, 
-    pointsAwarded: true
+    pointsAwarded: true,
+    // VALMAT omissions - these are managed by the system
+    validationStatus: true,
+    validationCompletedAt: true,
+    validationRequiredBy: true,
+    rankingPointMultiplier: true,
+    dailyMatchCount: true
   })
   .extend({
     // Make sure these fields are present
@@ -485,10 +498,103 @@ export const redeemCodeSchema = z.object({
   code: z.string().min(6).max(50)
 });
 
+// VALMAT - Match validation schemas
+export const matchValidationSchema = z.object({
+  matchId: z.number().int().positive(),
+  status: z.enum(["confirmed", "disputed"]),
+  notes: z.string().optional()
+});
+
+export const matchFeedbackSchema = z.object({
+  matchId: z.number().int().positive(),
+  enjoymentRating: z.number().int().min(1).max(5).optional(),
+  skillMatchRating: z.number().int().min(1).max(5).optional(),
+  comments: z.string().optional()
+});
+
 // Export everything from the communication preferences schema
 export * from './schema/communication-preferences';
 
 // Export everything from the partner preferences schema
 export * from './schema/partner-preferences';
+
+// VALMAT - Match Validation System
+// Match validation table to track individual participants' validations
+export const matchValidations = pgTable("match_validations", {
+  id: serial("id").primaryKey(),
+  matchId: integer("match_id").notNull().references(() => matches.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, confirmed, disputed
+  validatedAt: timestamp("validated_at"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Match feedback table to collect optional player feedback
+export const matchFeedback = pgTable("match_feedback", {
+  id: serial("id").primaryKey(),
+  matchId: integer("match_id").notNull().references(() => matches.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  enjoymentRating: integer("enjoyment_rating"), // 1-5 star rating
+  skillMatchRating: integer("skill_match_rating"), // 1-5 star rating
+  comments: text("comments"),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// User daily match count table to track diminishing returns
+export const userDailyMatches = pgTable("user_daily_matches", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  matchCount: integer("match_count").notNull().default(0), // How many matches played today
+  matchDate: date("match_date").notNull(), // The date in question
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Define relations for VALMAT tables
+export const matchValidationRelations = relations(matchValidations, ({ one }) => ({
+  match: one(matches, { fields: [matchValidations.matchId], references: [matches.id] }),
+  user: one(users, { fields: [matchValidations.userId], references: [users.id] })
+}));
+
+export const matchFeedbackRelations = relations(matchFeedback, ({ one }) => ({
+  match: one(matches, { fields: [matchFeedback.matchId], references: [matches.id] }),
+  user: one(users, { fields: [matchFeedback.userId], references: [users.id] })
+}));
+
+export const userDailyMatchesRelations = relations(userDailyMatches, ({ one }) => ({
+  user: one(users, { fields: [userDailyMatches.userId], references: [users.id] })
+}));
+
+// Update match relations to include VALMAT tables
+export const matchRelationsExtended = relations(matches, ({ one, many }) => ({
+  playerOne: one(users, { fields: [matches.playerOneId], references: [users.id], relationName: "playerOne" }),
+  playerTwo: one(users, { fields: [matches.playerTwoId], references: [users.id], relationName: "playerTwo" }),
+  playerOnePartner: one(users, { fields: [matches.playerOnePartnerId], references: [users.id], relationName: "playerOnePartner" }),
+  playerTwoPartner: one(users, { fields: [matches.playerTwoPartnerId], references: [users.id], relationName: "playerTwoPartner" }),
+  winner: one(users, { fields: [matches.winnerId], references: [users.id], relationName: "winner" }),
+  tournament: one(tournaments, { fields: [matches.tournamentId], references: [tournaments.id] }),
+  validations: many(matchValidations),
+  feedback: many(matchFeedback)
+}));
+
+// Create insert schemas for VALMAT tables
+export const insertMatchValidationSchema = createInsertSchema(matchValidations)
+  .omit({ id: true, createdAt: true, validatedAt: true });
+
+export const insertMatchFeedbackSchema = createInsertSchema(matchFeedback)
+  .omit({ id: true, createdAt: true });
+
+export const insertUserDailyMatchesSchema = createInsertSchema(userDailyMatches)
+  .omit({ id: true, createdAt: true });
+
+// Define TypeScript types for VALMAT
+export type MatchValidation = typeof matchValidations.$inferSelect;
+export type InsertMatchValidation = z.infer<typeof insertMatchValidationSchema>;
+
+export type MatchFeedback = typeof matchFeedback.$inferSelect;
+export type InsertMatchFeedback = z.infer<typeof insertMatchFeedbackSchema>;
+
+export type UserDailyMatches = typeof userDailyMatches.$inferSelect;
+export type InsertUserDailyMatches = z.infer<typeof insertUserDailyMatchesSchema>;
 
 // Add additional core schema exports here as the system grows

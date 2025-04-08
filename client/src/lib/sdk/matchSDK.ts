@@ -21,6 +21,13 @@ export interface MatchData {
 export interface RecordedMatch extends MatchData {
   id: number;
   date: string;
+  validationStatus?: 'pending' | 'confirmed' | 'disputed'; 
+  validatedBy?: number[];
+  feedback?: {
+    enjoymentRating?: number;
+    skillMatchRating?: number;
+    comments?: string;
+  };
   playerNames: {
     [userId: number]: {
       displayName: string;
@@ -97,11 +104,103 @@ export async function getMatchStats(userId?: number): Promise<{
   return await response.json();
 }
 
+/**
+ * Validate a match result
+ * @param matchId The ID of the match to validate
+ * @param status "confirmed" or "disputed"
+ * @param notes Optional notes, especially important for disputes
+ * @returns The validation result
+ */
+export async function validateMatch(
+  matchId: number,
+  status: "confirmed" | "disputed",
+  notes?: string
+): Promise<{ id: number; status: string }> {
+  try {
+    const response = await apiRequest("POST", `/api/match/validate/${matchId}`, {
+      status,
+      notes
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `Server returned ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error("matchSDK: Error validating match:", error);
+    throw error;
+  }
+}
+
+/**
+ * Provide feedback for a match
+ * @param matchId The ID of the match to provide feedback for
+ * @param feedback The feedback data
+ * @returns The feedback result
+ */
+export async function provideMatchFeedback(
+  matchId: number,
+  feedback: {
+    enjoymentRating?: number;
+    skillMatchRating?: number;
+    comments?: string;
+  }
+): Promise<{ id: number }> {
+  try {
+    const response = await apiRequest("POST", `/api/match/${matchId}/feedback`, feedback);
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `Server returned ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error("matchSDK: Error providing match feedback:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get the user's daily match limits
+ * @returns Daily match limit information
+ */
+export async function getDailyMatchLimits(): Promise<{
+  dailyMatchCount: number;
+  currentMultiplier: number;
+  dailyMatchLimit: {
+    tier1: { multiplier: number; remaining: number };
+    tier2: { multiplier: number; remaining: number };
+    tier3: { multiplier: number; remaining: number };
+    tier4: { multiplier: number; unlimited: boolean };
+  }
+}> {
+  try {
+    const response = await apiRequest("GET", "/api/match/daily-limits");
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `Server returned ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error("matchSDK: Error getting daily match limits:", error);
+    throw error;
+  }
+}
+
 // Export all functions as a named object
 export const matchSDK = {
   recordMatch,
   getRecentMatches,
-  getMatchStats
+  getMatchStats,
+  // VALMAT functions
+  validateMatch,
+  provideMatchFeedback,
+  getDailyMatchLimits
 };
 
 export default matchSDK;
