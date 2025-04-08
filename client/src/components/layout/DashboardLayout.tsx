@@ -3,8 +3,8 @@ import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { MobileNavigation } from './MobileNavigation';
 import { User } from '@shared/schema';
-import { motion } from 'framer-motion';
-import { Bell, User as UserIcon, Menu, X, Search, Settings } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Bell, User as UserIcon, Menu, X, Search, Settings, Home, Calendar, Award, Users } from 'lucide-react';
 import { OfficialPicklePlusLogo } from '@/components/icons/OfficialPicklePlusLogo';
 
 interface DashboardLayoutProps {
@@ -12,9 +12,9 @@ interface DashboardLayoutProps {
   title?: string;
 }
 
-export function DashboardLayout({ children, title = 'Dashboard' }: DashboardLayoutProps) {
+export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, isLoading } = useAuth();
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3);
@@ -38,7 +38,7 @@ export function DashboardLayout({ children, title = 'Dashboard' }: DashboardLayo
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
         >
-          <OfficialPicklePlusLogo className="h-12 w-auto mb-6" />
+          <OfficialPicklePlusLogo className="h-14 w-auto mb-6" />
         </motion.div>
         
         <div className="relative w-12 h-12">
@@ -92,46 +92,40 @@ export function DashboardLayout({ children, title = 'Dashboard' }: DashboardLayo
         transition={{ type: 'spring', damping: 20, stiffness: 100 }}
       >
         <div className="px-4 sm:px-6 py-3 flex items-center justify-between">
-          {/* Logo and Title Section */}
-          <div className="flex items-center">
-            <div className="flex items-center mr-3 sm:mr-6">
-              <OfficialPicklePlusLogo className="h-8 w-auto hidden sm:block" />
-              <div 
-                className={`h-8 w-0.5 bg-gradient-to-b from-[#FF5722]/20 to-transparent mx-3 hidden sm:block ${
-                  scrolled ? 'opacity-0' : 'opacity-100'
-                } transition-opacity duration-300`}
-              ></div>
-            </div>
-            
-            <motion.h1 
-              className="text-xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
+          {/* Center-aligned Logo */}
+          <div className="flex-1 flex justify-start">
+            <motion.button 
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
             >
-              {title}
-            </motion.h1>
+              {mobileMenuOpen ? (
+                <X size={24} className="text-gray-600 dark:text-gray-300" />
+              ) : (
+                <Menu size={24} className="text-gray-600 dark:text-gray-300" />
+              )}
+            </motion.button>
           </div>
           
+          <motion.div
+            className="flex items-center justify-center flex-1"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            <OfficialPicklePlusLogo className="h-10 w-auto" />
+          </motion.div>
+          
           {/* Right side actions */}
-          <div className="flex items-center gap-1 sm:gap-3">
-            {/* Search Bar - Hidden on mobile */}
-            <div className="hidden md:flex items-center bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden px-3 py-1.5 border border-gray-200 dark:border-gray-700">
-              <Search size={16} className="text-gray-500 dark:text-gray-400 mr-2" />
-              <input
-                type="text"
-                placeholder="Search..."
-                className="bg-transparent border-none outline-none text-sm text-gray-600 dark:text-gray-300 w-32 lg:w-48"
-              />
-            </div>
-            
+          <div className="flex-1 flex items-center justify-end gap-1 sm:gap-3">
             {/* Notification Bell */}
             <motion.button 
               className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Bell size={18} className="text-gray-600 dark:text-gray-300" />
+              <Bell size={22} className="text-gray-600 dark:text-gray-300" />
               {notificationCount > 0 && (
                 <motion.div 
                   className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#FF5722] flex items-center justify-center text-white text-[10px] font-medium"
@@ -152,63 +146,79 @@ export function DashboardLayout({ children, title = 'Dashboard' }: DashboardLayo
               <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#2196F3] to-[#03A9F4] flex items-center justify-center text-sm font-medium text-white shadow-sm">
                 {user.username.substring(0, 2).toUpperCase()}
               </div>
-              <span className="text-sm font-medium hidden sm:inline-block text-gray-700 dark:text-gray-300">
-                {user.displayName || user.username}
-              </span>
             </motion.div>
-            
-            {/* Mobile Menu Toggle */}
-            <motion.button 
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 block sm:hidden transition-colors duration-200"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              {mobileMenuOpen ? (
-                <X size={20} className="text-gray-600 dark:text-gray-300" />
-              ) : (
-                <Menu size={20} className="text-gray-600 dark:text-gray-300" />
-              )}
-            </motion.button>
           </div>
         </div>
         
-        {/* Mobile Menu */}
-        <motion.div 
-          className="sm:hidden overflow-hidden"
-          initial={{ height: 0 }}
-          animate={{ height: mobileMenuOpen ? 'auto' : 0 }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
-        >
-          <div className="px-4 py-3 space-y-3 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-            <div className="flex items-center bg-white dark:bg-gray-800 rounded-lg overflow-hidden px-3 py-2 border border-gray-200 dark:border-gray-700 shadow-sm">
-              <Search size={16} className="text-gray-500 dark:text-gray-400 mr-2" />
-              <input
-                type="text"
-                placeholder="Search..."
-                className="bg-transparent border-none outline-none text-sm text-gray-600 dark:text-gray-300 w-full"
-              />
-            </div>
-            
-            {[
-              { label: 'Profile', icon: <UserIcon size={16} /> },
-              { label: 'Settings', icon: <Settings size={16} /> }
-            ].map((item, i) => (
-              <motion.a 
-                key={item.label}
-                href="#" 
-                className="flex items-center py-2 px-3 rounded-lg bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 * i }}
-                whileHover={{ x: 5 }}
-              >
-                <span className="mr-3 text-gray-500 dark:text-gray-400">{item.icon}</span>
-                <span className="text-gray-700 dark:text-gray-300">{item.label}</span>
-              </motion.a>
-            ))}
-          </div>
-        </motion.div>
+        {/* Mobile Menu with Navigation Items */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div 
+              className="overflow-hidden bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <div className="p-4 space-y-3">
+                {/* Navigation Items */}
+                {[
+                  { label: 'Dashboard', icon: <Home size={18} />, path: '/dashboard' },
+                  { label: 'Matches', icon: <Calendar size={18} />, path: '/matches' },
+                  { label: 'Tournaments', icon: <Award size={18} />, path: '/tournaments' },
+                  { label: 'Community', icon: <Users size={18} />, path: '/community' },
+                  { label: 'Profile', icon: <UserIcon size={18} />, path: '/profile' },
+                  { label: 'Settings', icon: <Settings size={18} />, path: '/settings' }
+                ].map((item, i) => {
+                  const isActive = location === item.path;
+                  
+                  return (
+                    <motion.button 
+                      key={item.label}
+                      className={`flex items-center w-full py-3 px-4 rounded-xl ${
+                        isActive 
+                          ? 'bg-gradient-to-r from-[#FF5722]/10 to-[#FF9800]/10 border border-[#FF5722]/20' 
+                          : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
+                      } shadow-sm`}
+                      onClick={() => {
+                        navigate(item.path);
+                        setMobileMenuOpen(false);
+                      }}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.05 * i }}
+                      whileHover={{ x: 5 }}
+                    >
+                      <span className={`mr-3 ${isActive ? 'text-[#FF5722]' : 'text-gray-500 dark:text-gray-400'}`}>
+                        {item.icon}
+                      </span>
+                      <span className={`font-medium ${isActive ? 'text-[#FF5722]' : 'text-gray-700 dark:text-gray-300'}`}>
+                        {item.label}
+                      </span>
+                      
+                      {isActive && (
+                        <motion.div 
+                          className="ml-auto w-1.5 h-6 bg-[#FF5722] rounded-full"
+                          layoutId="navActiveIndicator"
+                        />
+                      )}
+                    </motion.button>
+                  );
+                })}
+                
+                {/* Search Box */}
+                <div className="mt-4 flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden px-4 py-3 border border-gray-200 dark:border-gray-700 shadow-sm">
+                  <Search size={18} className="text-gray-500 dark:text-gray-400 mr-2" />
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    className="bg-transparent border-none outline-none text-gray-600 dark:text-gray-300 w-full"
+                  />
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.header>
       
       {/* Main Content */}
