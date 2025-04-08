@@ -1,0 +1,541 @@
+/**
+ * PKL-278651-HIST-0001-UI: Match History Tab Component
+ * This component provides a filterable, sortable match history with pagination
+ */
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { format, parseISO, subMonths } from 'date-fns';
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { getMatchHistory, RecordedMatch } from '@/lib/sdk/matchSDK';
+import { ChevronDown, Calendar as CalendarIcon, Trophy, CheckCircle, Clock, Filter, SlidersHorizontal, ArrowDown, ArrowUp } from 'lucide-react';
+
+/**
+ * PKL-278651-HIST-0001-UI-01: FilterBar component
+ */
+interface FilterBarProps {
+  filters: {
+    startDate: Date | undefined;
+    endDate: Date | undefined;
+    matchType: string;
+    formatType: string;
+    validationStatus: string;
+    location: string;
+    sortBy: string;
+    sortDirection: string;
+  };
+  onFilterChange: (key: string, value: any) => void;
+  onResetFilters: () => void;
+}
+
+function FilterBar({ filters, onFilterChange, onResetFilters }: FilterBarProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  return (
+    <div className="mb-6">
+      <div className="flex items-center justify-between mb-2">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="flex items-center gap-1"
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          <Filter className="h-4 w-4" />
+          <span>Filters</span>
+          <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        </Button>
+        
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={onResetFilters}
+        >
+          Reset
+        </Button>
+      </div>
+      
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleContent>
+          <div className="bg-background rounded-md shadow-sm border p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Date range */}
+            <div className="space-y-2">
+              <Label>Date range</Label>
+              <div className="flex gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="flex-1 justify-start text-left font-normal">
+                      <CalendarIcon className="mr-1 h-4 w-4" />
+                      {filters.startDate ? format(filters.startDate, 'PP') : 'Start date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={filters.startDate}
+                      onSelect={(date) => onFilterChange('startDate', date)}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="flex-1 justify-start text-left font-normal">
+                      <CalendarIcon className="mr-1 h-4 w-4" />
+                      {filters.endDate ? format(filters.endDate, 'PP') : 'End date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={filters.endDate}
+                      onSelect={(date) => onFilterChange('endDate', date)}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+            
+            {/* Match type */}
+            <div className="space-y-2">
+              <Label>Match type</Label>
+              <Select 
+                value={filters.matchType} 
+                onValueChange={(value) => onFilterChange('matchType', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All match types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All match types</SelectItem>
+                  <SelectItem value="casual">Casual</SelectItem>
+                  <SelectItem value="competitive">Competitive</SelectItem>
+                  <SelectItem value="tournament">Tournament</SelectItem>
+                  <SelectItem value="league">League</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Format type */}
+            <div className="space-y-2">
+              <Label>Format</Label>
+              <Select 
+                value={filters.formatType} 
+                onValueChange={(value) => onFilterChange('formatType', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All formats" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All formats</SelectItem>
+                  <SelectItem value="singles">Singles</SelectItem>
+                  <SelectItem value="doubles">Doubles</SelectItem>
+                  <SelectItem value="mixed">Mixed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Validation status */}
+            <div className="space-y-2">
+              <Label>Validation status</Label>
+              <Select 
+                value={filters.validationStatus} 
+                onValueChange={(value) => onFilterChange('validationStatus', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="validated">Validated</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="disputed">Disputed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Location */}
+            <div className="space-y-2">
+              <Label>Location</Label>
+              <Input 
+                placeholder="Any location" 
+                value={filters.location} 
+                onChange={(e) => onFilterChange('location', e.target.value)}
+              />
+            </div>
+            
+            {/* Sort options */}
+            <div className="space-y-2">
+              <Label>Sort by</Label>
+              <div className="flex gap-2">
+                <Select 
+                  value={filters.sortBy} 
+                  onValueChange={(value) => onFilterChange('sortBy', value)}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Date" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="date">Date</SelectItem>
+                    <SelectItem value="score">Score</SelectItem>
+                    <SelectItem value="opponent">Opponent</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  onClick={() => onFilterChange('sortDirection', filters.sortDirection === 'asc' ? 'desc' : 'asc')}
+                >
+                  {filters.sortDirection === 'asc' ? (
+                    <ArrowUp className="h-4 w-4" />
+                  ) : (
+                    <ArrowDown className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+    </div>
+  );
+}
+
+/**
+ * PKL-278651-HIST-0001-UI-02: MatchList component
+ */
+interface MatchListProps {
+  matches: RecordedMatch[];
+  isLoading: boolean;
+}
+
+function MatchList({ matches, isLoading }: MatchListProps) {
+  const { user } = useAuth();
+  
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="border rounded-md p-6">
+            <div className="flex justify-between mb-3">
+              <Skeleton className="h-6 w-24" />
+              <Skeleton className="h-6 w-32" />
+            </div>
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex flex-col items-center">
+                <Skeleton className="h-14 w-14 rounded-full mb-2" />
+                <Skeleton className="h-4 w-16 mb-1" />
+                <Skeleton className="h-3 w-12" />
+              </div>
+              <Skeleton className="h-6 w-6" />
+              <div className="flex flex-col items-center">
+                <Skeleton className="h-14 w-14 rounded-full mb-2" />
+                <Skeleton className="h-4 w-16 mb-1" />
+                <Skeleton className="h-3 w-12" />
+              </div>
+            </div>
+            <div className="flex justify-center mb-4">
+              <Skeleton className="h-10 w-44" />
+            </div>
+            <div className="flex justify-center">
+              <Skeleton className="h-4 w-32" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  
+  if (matches.length === 0) {
+    return (
+      <div className="text-center p-8">
+        <div className="w-16 h-16 rounded-full bg-muted mx-auto flex items-center justify-center mb-4">
+          <Trophy className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <h3 className="font-medium text-lg">No matches found</h3>
+        <p className="text-muted-foreground mt-1">
+          Try adjusting your filters to see more results
+        </p>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="space-y-4">
+      <ScrollArea className="max-h-[600px] pr-4">
+        {matches.map((match) => (
+          <div key={match.id} className="mb-4 p-6 hover:bg-muted/50 transition-colors rounded-md bg-background shadow-sm border">
+            <div className="flex-1">
+              {/* Match header with match type badges and date */}
+              <div className="flex gap-2 mb-3">
+                <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800">
+                  {match.matchType === 'tournament' ? 'Tournament' : 'Casual'}
+                </Badge>
+                <Badge variant="outline" className="text-xs">
+                  {match.formatType === 'singles' ? 'Singles' : 'Doubles'}
+                </Badge>
+                {match.eventTier && (
+                  <Badge variant="outline" className="bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800">
+                    {match.eventTier}
+                  </Badge>
+                )}
+              </div>
+              <div className="text-sm text-muted-foreground flex items-center gap-1 mb-4">
+                <Clock className="h-3 w-3" />
+                {match.date ? format(parseISO(match.date), 'MMM d, yyyy') : 'Unknown date'}
+              </div>
+              
+              {/* Players section with avatars */}
+              <div className="flex mb-6 gap-2 justify-between">
+                {/* Your side */}
+                <div className="flex flex-col items-center">
+                  <div className="h-14 w-14 rounded-full bg-primary/10 mb-2 flex items-center justify-center text-primary font-bold text-lg">
+                    {user?.id && match.playerNames && match.playerNames[user.id] 
+                      ? match.playerNames[user.id].avatarInitials || user.displayName?.charAt(0) || "YP"
+                      : "YP"}
+                  </div>
+                  <div className="text-center">
+                    <div className="font-medium">
+                      {user?.displayName || 'You'}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      @{user?.username || 'you'}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* VS indicator */}
+                <div className="flex items-center">
+                  <span className="text-base text-muted-foreground font-medium">VS</span>
+                </div>
+                
+                {/* Opponent side */}
+                <div className="flex flex-col items-center">
+                  <div className="h-14 w-14 rounded-full bg-muted mb-2 flex items-center justify-center font-bold text-lg">
+                    {match.playerNames && 
+                      Object.values(match.playerNames)
+                        .filter(p => p.username !== user?.username)
+                        .map(p => p.avatarInitials || p.displayName?.charAt(0) || "JP")[0] || "JP"}
+                  </div>
+                  <div className="text-center">
+                    <div className="font-medium">
+                      {match.playerNames && 
+                        Object.values(match.playerNames)
+                          .filter(p => p.username !== user?.username)
+                          .map(p => p.displayName || p.username)[0] || 'Johnny Pickleball'}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      @{match.playerNames && 
+                        Object.values(match.playerNames)
+                          .filter(p => p.username !== user?.username)
+                          .map(p => p.username)[0] || 'johnny_pickle'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Score display with Win badge */}
+              <div className="flex flex-col items-center mb-4">
+                <div className="w-44 flex mb-2">
+                  <div className="flex-1 bg-primary/10 rounded-l-md py-3 flex justify-center">
+                    <span className="text-3xl font-bold text-primary">
+                      {match.players.find(p => p.userId === user?.id)?.score || '11'}
+                    </span>
+                  </div>
+                  <div className="flex-1 bg-muted rounded-r-md py-3 flex justify-center">
+                    <span className="text-3xl font-bold">
+                      {match.players.find(p => p.userId !== user?.id)?.score || '4'}
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Win/Loss indicator */}
+                {match.players.find(p => p.userId === user?.id)?.isWinner ? (
+                  <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800 px-4">
+                    Win
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="bg-gray-100 dark:bg-gray-800/40 px-4">
+                    Loss
+                  </Badge>
+                )}
+              </div>
+              
+              {/* Details about the match */}
+              <div className="flex gap-x-3 gap-y-1 text-xs text-muted-foreground justify-center">
+                <div className="flex items-center gap-1">
+                  <Trophy className="h-3 w-3" />
+                  <span>{match.formatType === 'singles' ? 'Singles' : 'Doubles'} Match</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <CheckCircle className="h-3 w-3" />
+                  <span>{match.validationStatus}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </ScrollArea>
+    </div>
+  );
+}
+
+/**
+ * PKL-278651-HIST-0001-UI-03: Pagination component
+ */
+interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+  onPageChange: (page: number) => void;
+}
+
+function Pagination({ currentPage, totalPages, totalCount, onPageChange }: PaginationProps) {
+  const handlePrevious = () => {
+    if (currentPage > 1) {
+      onPageChange(currentPage - 1);
+    }
+  };
+  
+  const handleNext = () => {
+    if (currentPage < totalPages) {
+      onPageChange(currentPage + 1);
+    }
+  };
+  
+  return (
+    <div className="flex items-center justify-between mt-4">
+      <div className="text-sm text-muted-foreground">
+        Showing <span className="font-medium">{totalCount > 0 ? (currentPage - 1) * 10 + 1 : 0}</span> to <span className="font-medium">{Math.min(currentPage * 10, totalCount)}</span> of <span className="font-medium">{totalCount}</span> matches
+      </div>
+      <div className="flex gap-1">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handlePrevious}
+          disabled={currentPage === 1}
+        >
+          Previous
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleNext}
+          disabled={currentPage === totalPages || totalPages === 0}
+        >
+          Next
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * PKL-278651-HIST-0001: Main MatchHistoryTab component
+ */
+export default function MatchHistoryTab() {
+  const { user } = useAuth();
+  
+  // Default filter state - 3 months of history
+  const defaultStartDate = subMonths(new Date(), 3);
+  
+  // State for filters
+  const [filters, setFilters] = useState({
+    startDate: defaultStartDate,
+    endDate: undefined as Date | undefined,
+    matchType: 'all',
+    formatType: 'all',
+    validationStatus: 'all',
+    location: '',
+    sortBy: 'date',
+    sortDirection: 'desc',
+    page: 1,
+    limit: 10,
+  });
+  
+  // Handler for filter changes
+  const handleFilterChange = (key: string, value: any) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: value,
+      // Reset to page 1 when filters change
+      ...(key !== 'page' ? { page: 1 } : {}),
+    }));
+  };
+  
+  // Reset filters to default
+  const handleResetFilters = () => {
+    setFilters({
+      startDate: defaultStartDate,
+      endDate: undefined,
+      matchType: 'all',
+      formatType: 'all',
+      validationStatus: 'all',
+      location: '',
+      sortBy: 'date',
+      sortDirection: 'desc',
+      page: 1,
+      limit: 10,
+    });
+  };
+  
+  // Fetch match history data with filters
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['matchHistory', user?.id, filters],
+    queryFn: () => getMatchHistory({
+      userId: user?.id,
+      startDate: filters.startDate?.toISOString(),
+      endDate: filters.endDate?.toISOString(),
+      matchType: filters.matchType as any,
+      formatType: filters.formatType as any,
+      validationStatus: filters.validationStatus as any,
+      location: filters.location || undefined,
+      page: filters.page,
+      limit: filters.limit,
+      sortBy: filters.sortBy as any,
+      sortDirection: filters.sortDirection as any,
+    }),
+    staleTime: 60000, // 1 minute
+  });
+  
+  return (
+    <div>
+      {/* PKL-278651-HIST-0001-UI-01: FilterBar */}
+      <FilterBar
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        onResetFilters={handleResetFilters}
+      />
+      
+      {/* Display error state if any */}
+      {isError && (
+        <div className="p-4 bg-red-50 text-red-800 rounded-md mb-4">
+          <p className="text-sm">There was an error loading your match history. Please try again later.</p>
+        </div>
+      )}
+      
+      {/* PKL-278651-HIST-0001-UI-02: MatchList */}
+      <MatchList
+        matches={data?.matches || []}
+        isLoading={isLoading}
+      />
+      
+      {/* PKL-278651-HIST-0001-UI-03: Pagination */}
+      <Pagination
+        currentPage={filters.page}
+        totalPages={data?.totalPages || 0}
+        totalCount={data?.totalCount || 0}
+        onPageChange={(page) => handleFilterChange('page', page)}
+      />
+    </div>
+  );
+}

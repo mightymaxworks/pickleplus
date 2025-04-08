@@ -417,6 +417,130 @@ export function registerMockRoutes(app: Express): Server {
       message: "Match validated successfully"
     });
   });
+  
+  /**
+   * PKL-278651-HIST-0001-BL: Match history endpoint with filtering and pagination
+   */
+  app.get('/api/match/history', (req: Request, res: Response) => {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
+    const matchType = req.query.matchType as string;
+    const formatType = req.query.formatType as string;
+    const validationStatus = req.query.validationStatus as string;
+    const location = req.query.location as string;
+    const sortBy = req.query.sortBy as string || 'date';
+    const sortDirection = req.query.sortDirection as string || 'desc';
+    const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
+    const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
+    
+    console.log('Match history request:', {
+      page, limit, userId, matchType, formatType, validationStatus,
+      location, sortBy, sortDirection, startDate, endDate
+    });
+    
+    // Generate example matches
+    const matches = [];
+    const totalCount = 23; // Example total count
+    
+    // Create example match history data
+    for (let i = 0; i < Math.min(limit, 10); i++) {
+      const matchDate = new Date();
+      matchDate.setDate(matchDate.getDate() - i * 3); // Space matches out by 3 days
+      
+      // Skip this match if it doesn't match the date filters
+      if (startDate && matchDate < startDate) continue;
+      if (endDate && matchDate > endDate) continue;
+      
+      // For demo purposes, alternate match types
+      const currentMatchType = i % 3 === 0 ? 'tournament' : (i % 2 === 0 ? 'competitive' : 'casual');
+      if (matchType && matchType !== 'all' && currentMatchType !== matchType) continue;
+      
+      // For demo purposes, alternate format types
+      const currentFormatType = i % 2 === 0 ? 'singles' : 'doubles';
+      if (formatType && formatType !== 'all' && currentFormatType !== formatType) continue;
+      
+      // For demo purposes, alternate validation status
+      const currentValidationStatus = i % 2 === 0 ? 'validated' : 'pending';
+      if (validationStatus && validationStatus !== 'all' && currentValidationStatus !== validationStatus) continue;
+      
+      // Simple match object similar to RecordedMatch
+      matches.push({
+        id: 1001 + i,
+        date: matchDate.toISOString(),
+        formatType: currentFormatType,
+        scoringSystem: 'traditional',
+        pointsToWin: 11,
+        matchType: currentMatchType,
+        eventTier: i % 4 === 0 ? 'regional' : 'local',
+        players: [
+          {
+            userId: 1,
+            score: Math.floor(Math.random() * 5) + 7, // Random score between 7-11
+            isWinner: i % 2 === 0
+          },
+          {
+            userId: 6 + i % 3, // Different opponents
+            score: Math.floor(Math.random() * 6) + 2, // Random score between 2-7
+            isWinner: i % 2 !== 0
+          }
+        ],
+        gameScores: [
+          {
+            playerOneScore: 11,
+            playerTwoScore: 4
+          }
+        ],
+        playerNames: {
+          1: {
+            displayName: "Pickleball Pro",
+            username: "PickleballPro",
+            avatarInitials: "PP"
+          },
+          6: {
+            displayName: "Johnny Pickleball",
+            username: "johnny_pickle",
+            avatarInitials: "JP"
+          },
+          7: {
+            displayName: "Sarah Spike",
+            username: "sarah_spike",
+            avatarInitials: "SS"
+          },
+          8: {
+            displayName: "Michael Volley",
+            username: "mike_volley",
+            avatarInitials: "MV"
+          }
+        },
+        validationStatus: currentValidationStatus,
+        location: i % 3 === 0 ? "Pickleball Paradise" : (i % 2 === 0 ? "Community Center" : "Local Club")
+      });
+    }
+    
+    // Sort matches based on request
+    if (sortBy === 'date') {
+      matches.sort((a, b) => {
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
+      });
+    } else if (sortBy === 'score') {
+      matches.sort((a, b) => {
+        const scoreA = parseInt(a.players[0].score as string);
+        const scoreB = parseInt(b.players[0].score as string);
+        return sortDirection === 'asc' ? scoreA - scoreB : scoreB - scoreA;
+      });
+    }
+    
+    // Return paginated results
+    return res.json({
+      matches,
+      totalCount,
+      currentPage: page,
+      totalPages: Math.ceil(totalCount / limit)
+    });
+  });
 
   const httpServer = createServer(app);
   return httpServer;

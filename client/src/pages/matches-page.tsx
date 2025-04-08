@@ -14,6 +14,7 @@ import { getRecentMatches } from "@/lib/sdk/matchSDK";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import MatchHistoryTab from "@/components/match/MatchHistoryTab";
 
 export function MatchesPage() {
   const { user } = useAuth();
@@ -262,14 +263,7 @@ export function MatchesPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex flex-col items-center justify-center py-8">
-                      <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                        <AlertCircle className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                      <p className="text-muted-foreground text-center">
-                        The complete match history is not yet implemented in this version.
-                      </p>
-                    </div>
+                    <MatchHistoryTab />
                   </CardContent>
                 </Card>
               </motion.div>
