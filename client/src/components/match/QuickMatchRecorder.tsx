@@ -11,6 +11,7 @@ import { useLocation } from "wouter";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { DialogPlayerSelect } from "../player-search/DialogPlayerSelect";
 import { VisualScoreInput } from "./VisualScoreInput";
 import { 
@@ -26,7 +27,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Users, UserCircle, CheckCircle2, Info } from "lucide-react";
+import { Users, UserCircle, CheckCircle2, Info, CheckCircle } from "lucide-react";
 
 // Match form schema with only essential fields
 const matchFormSchema = z.object({
@@ -254,6 +255,16 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
       const response = await matchSDK.recordMatch(matchData);
       console.log("Match recorded successfully:", response);
       
+      // Auto-validate the match for the submitter
+      try {
+        console.log("Auto-validating match for submitter...");
+        await matchSDK.validateMatch(response.id, 'confirmed');
+        console.log("Match auto-validated successfully");
+      } catch (validationError) {
+        console.error("Error auto-validating match:", validationError);
+        // Don't prevent the match from being recorded if auto-validation fails
+      }
+      
       // Invalidate relevant queries
       console.log("Invalidating related queries...");
       queryClient.invalidateQueries({ queryKey: ["/api/user/ranking-history"] });
@@ -268,7 +279,7 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
       // Show success toast
       toast({
         title: "Match recorded!",
-        description: "Your match has been successfully recorded.",
+        description: "Your match has been recorded and auto-validated. Other players still need to validate this match.",
       });
       
       // Reset form
@@ -653,6 +664,18 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
               ))}
             </Tabs>
           )}
+        </div>
+        
+        {/* VALMAT Validation Information */}
+        <div className="mt-4">
+          <Alert>
+            <CheckCircle className="h-4 w-4" />
+            <AlertTitle>VALMAT Validation System</AlertTitle>
+            <AlertDescription>
+              When you submit this match, it will be automatically validated by you (the submitter). 
+              Other players will need to validate the match for it to count fully toward rankings and XP.
+            </AlertDescription>
+          </Alert>
         </div>
       </CardContent>
       
