@@ -2,167 +2,257 @@
  * Pickle+ UI/UX Framework Documentation
  * Reference Code: PKL-278651
  * 
- * This file serves as a central documentation for our UI/UX framework.
- * When implementing new features, reference this framework using code PKL-278651.
+ * This file serves as the central documentation for the Pickle+ UI/UX development framework.
+ * When implementing any feature in the platform, reference this framework using code PKL-278651.
  */
 
 /**
  * This is a documentation-only file that doesn't export any functional components.
- * It provides guidance on the UI/UX framework for the Pickle+ platform.
+ * It provides guidance on the comprehensive UI/UX framework for the entire Pickle+ platform.
  */
 
 /*
-# 1. Overview
+# Pickle+ UI/UX Framework (PKL-278651)
 
-This document outlines the comprehensive UI/UX framework for the Pickle+ platform, 
-with a specific focus on the Match Center revamp. The reference code PKL-278651 
-can be used to request implementation of this design system without repeating the details.
+## 1. Core Development Principles
 
-# 2. Design System Architecture
+### User-Centric Design
+- All features must enhance the user's pickleball journey
+- Focus on reducing friction in user flows
+- Design for both novice and expert pickleball players
+- Prioritize features that motivate user engagement and progression
 
-## Core Principles
-- Mobile-First Design: All components must be designed and tested first for mobile, then enhanced for larger screens
-- Consistent Visual Language: Color scheme of #FF5722 (orange), #2196F3 (blue), #4CAF50 (green) with standardized component library
-- Progressive Disclosure: Present only the most relevant information initially, with details available on demand
-- Performance Optimization: Minimize bundle size, optimize resource loading, and implement lazy loading for heavy components
+### Platform Performance
+- Target initial page load under 2 seconds
+- Optimize for lower-end mobile devices
+- Implement code-splitting for larger feature modules
+- Use smart loading strategies (lazy loading, preloading critical resources)
 
-## Component Hierarchy
-- Atomic Design methodology: Atoms → Molecules → Organisms → Templates → Pages
-- Standardized props and interface definitions across related components
-- Shared state management for cross-component communication
+### Development Philosophy
+- Component-driven development
+- Test-driven UI implementation
+- Feature flags for gradual rollout
+- Focus on reusability and maintainability
 
-# 3. Responsive Design System
+## 2. Visual Design System
 
-## Breakpoint Strategy
+### Brand Identity
+- Primary: #FF5722 (Pickleball Orange) - Primary actions, highlights, core branding
+- Secondary: #2196F3 (Sport Blue) - Secondary actions, supporting UI elements
+- Accent: #4CAF50 (Success Green) - Success states, progression indicators
+- Special case: Gold accents (#FFD700) for founding members only
+
+### Typography
+- Headings: Inter (bold, semi-bold)
+- Body: Inter (regular, medium)
+- Monospace: Roboto Mono (for scores, statistics)
+- Text hierarchy:
+  * H1: 32px/24px (desktop/mobile)
+  * H2: 24px/20px
+  * H3: 20px/18px
+  * Body: 16px/14px
+  * Small: 14px/12px
+
+### Iconography
+- Use Lucide React icons as primary icon system
+- Custom sport-specific icons for pickleball elements
+- Icon sizes: 16px, 20px, 24px, 32px
+- Interactive icons must have touch area of at least 44x44px
+
+### Spacing System
+- Base unit: 4px
+- Spacing scale: 4px, 8px, 12px, 16px, 24px, 32px, 48px, 64px
+- Consistent component padding: 16px
+- Card padding: 24px
+- Section spacing: 32px
+
+## 3. Responsive Design Framework
+
+### Breakpoint System
 - XS: < 576px (Mobile)
 - SM: 576px - 767px (Large mobile/Small tablet)
 - MD: 768px - 991px (Tablet)
 - LG: 992px - 1199px (Desktop)
 - XL: ≥ 1200px (Large desktop)
 
-## Layout Grid
-- Mobile: 4-column grid with 16px gutters
+### Mobile-First Philosophy
+- Design and develop for mobile first, then progressively enhance
+- Test all features on mobile devices before desktop
+- Optimize touch targets for mobile interaction
+- Implement bottom navigation and floating action buttons for critical actions
+
+### Layout Patterns
+- Mobile: Single column, 4-column grid with 16px gutters
 - Tablet: 8-column grid with 24px gutters
 - Desktop: 12-column grid with 24px gutters
+- Use flexbox for component-level layouts
+- Use CSS Grid for page-level layouts
+- Maintain consistent content max-width (1200px)
 
-## Touch Targets
-- Minimum size of 44px × 44px for all interactive elements
-- Padding between interactive elements of at least 8px
+### Responsive Patterns
+- Card stacking on mobile, grid on larger screens
+- Collapsible sections on mobile
+- Bottom sheets instead of side drawers on mobile
+- Fixed navigation on mobile, sticky on desktop
 
-# 4. Animation & Interaction Guidelines
+## 4. Component Architecture
 
-## Animation Principles
-- Subtle animations for state changes (loading, success, error)
-- Functional transitions for enhanced UX (page transitions, modal openings)
-- Performance-minded with CSS transforms and opacity
+### Component Hierarchy
+- Atoms: Basic UI elements (buttons, inputs, icons)
+- Molecules: Combinations of atoms (form fields, cards)
+- Organisms: Functional groups (match recorder, leaderboard, profile editor)
+- Templates: Page layouts
+- Pages: Complete screens with business logic
 
-## Interaction Patterns
-- Swipe gestures for mobile navigation
-- Pull-to-refresh for data updates
-- Haptic feedback for important actions
+### Component Guidelines
+- Each component should have a single responsibility
+- Implement proper propTypes/TypeScript interfaces
+- Document component API clearly
+- Include accessibility attributes
+- Make all interactive components keyboard navigable
+- Follow consistent naming conventions
 
-# 5. Accessibility Standards
+### State Management
+- Local component state for UI-only concerns
+- React Query for server state
+- Context API for shared UI state
+- Clear separation between UI and business logic
 
-- WCAG 2.1 AA compliance as minimum standard
-- Proper semantic HTML and ARIA attributes
-- Keyboard navigation support
-- Color contrast ratio of at least 4.5:1
-- Screen reader compatibility
+## 5. Animation & Interaction
 
-# 6. Match Center Implementation (PKL-278651)
+### Motion Principles
+- Purpose: All animations must serve a purpose (feedback, guidance, branding)
+- Timing: Quick for UI feedback (100-300ms), moderate for transitions (300-500ms)
+- Easing: Use ease-out for entrances, ease-in for exits
+- Performance: Prefer CSS transforms and opacity changes
 
-## New Unified Match Dashboard
+### Interaction Patterns
+- Show immediate feedback on all user interactions
+- Implement optimistic UI updates where appropriate
+- Add skeleton loaders for async operations
+- Use subtle hover effects for interactive elements
+- Implement pull-to-refresh on mobile lists
 
-Component Structure:
-<MatchDashboard>
-  <UserRankingSnapshot />
-  <MatchRecordingFAB />
-  
-  <TabView>
-    <Tab name="overview">
-      <MatchStatsPanel />
-      <CourtIQInsights />
-      <RecentMatchesList />
-    </Tab>
-    
-    <Tab name="rankings">
-      <PCPRankingPanel />
-      <RankingProgressChart />
-      <RatingBreakdownCard />
-    </Tab>
-    
-    <Tab name="history">
-      <MatchFilterControls />
-      <MatchHistoryTimeline />
-    </Tab>
-    
-    <Tab name="validation">
-      <ValidationQueueList />
-      <ValidationGuidelines />
-    </Tab>
-  </TabView>
-</MatchDashboard>
+### Micro-interactions
+- Button state animations
+- Form field focus effects
+- Success/error animations
+- Achievement unlocked celebrations
+- Rating and points animations
 
-## Mobile Optimizations
+## 6. Accessibility Standards
 
-1. Floating Action Button (FAB): Replace the current "Record Match" button with a persistent FAB that's easily accessible on mobile
+### WCAG Compliance
+- Target WCAG 2.1 AA compliance at minimum
+- Ensure proper color contrast (4.5:1 minimum)
+- Support keyboard navigation for all interactive elements
+- Implement proper focus management
+- Use semantic HTML elements
 
-2. Bottom Navigation: Implement a bottom navigation bar for mobile users to easily switch between tabs
+### Screen Reader Support
+- Add appropriate ARIA attributes
+- Test with screen readers on both mobile and desktop
+- Implement proper form labeling
+- Ensure meaningful image alt text
+- Use aria-live for dynamic content updates
 
-3. Card-based UI: Redesign all content cards to be fully responsive, with collapsible sections on mobile
+### Inclusive Design
+- Support text resizing up to 200%
+- Design for color blind users
+- Test with screen magnifiers
+- Support reduced motion preferences
+- Ensure touch targets are at least 44x44px
 
-4. Touch-Optimized Controls: Larger touch targets, swipeable cards, and pull-to-refresh functionality
+## 7. UI Patterns Library
 
-## CourtIQ Integration
+### Navigation Patterns
+- Bottom navigation for mobile
+- Sidebar navigation for desktop
+- Breadcrumbs for deep navigation
+- Tab navigation for related content
 
-1. Performance Insights Card: Add a new component showing CourtIQ's analysis of player strengths/weaknesses based on match history
+### Data Display Patterns
+- Cards for content containers
+- Tables for structured data (responsive)
+- Lists for sequential content
+- Stats displays for metrics
+- Charts and visualizations for data insights
 
-2. Skill Radar Chart: Visual representation of player skills across different aspects of pickleball
+### Input Patterns
+- Forms with progressive validation
+- Searchable select dropdowns
+- Multi-step processes with progress indicators
+- Editable fields with inline validation
+- Multi-select options with toggle switches
 
-3. Match Quality Metrics: Display enjoyment and skill match ratings from previous matches
+### Feedback Patterns
+- Toast notifications for transient feedback
+- Modal dialogs for important actions
+- Inline validation for form fields
+- Progress indicators for long operations
+- Empty states with helpful actions
 
-## PCP Global Rankings Integration
+## 8. Content Strategy
 
-1. Ranking Snapshot: Compact version of the PCP Global Rankings card at the top of the match center
+### Microcopy Guidelines
+- Clear, concise, and conversational
+- Consistent terminology across platform
+- Pickleball-specific language where appropriate
+- Avoid technical jargon
+- Use active voice and present tense
 
-2. Ranking Impact Preview: Show potential impact on rankings before recording a match
+### Content Hierarchy
+- Progressive disclosure of complex information
+- Important actions above the fold
+- Group related content visually
+- Use visual weight to indicate importance
+- Implement clear visual scan patterns
 
-3. Multi-dimensional View: Allow filtering of match history by different ranking dimensions (singles, doubles, age divisions)
+### Loading States
+- Skeleton screens for initial page loads
+- Inline loaders for component-specific operations
+- Global loading indicators for full page operations
+- Meaningful loading messages for longer operations
 
-## Enhanced Match Recording Flow
+### Error Handling
+- Friendly error messages with clear resolution steps
+- Inline form field validation
+- System status messages
+- Offline indicators and recovery options
 
-1. Simplified Form: Reduce the complexity of match recording with a step-by-step wizard
+## 9. Implementation Process
 
-2. Smart Defaults: Pre-fill common values based on user history
+### Development Workflow
+1. Define component requirements and API
+2. Create component structure
+3. Implement mobile-first styling
+4. Add responsive enhancements
+5. Implement interactions and animations
+6. Test across devices and screen sizes
+7. Validate accessibility
+8. Document component usage
 
-3. Real-time Validation: Validate scores and match details as they're entered
+### Quality Assurance
+- Cross-browser testing (Chrome, Safari, Firefox, Edge)
+- Mobile device testing (iOS, Android)
+- Accessibility validation
+- Performance benchmarking
+- Responsive behavior validation
 
-4. Opponent Suggestion: Suggest recent or frequent opponents
+### Documentation
+- Maintain this framework as living documentation
+- Document component APIs clearly
+- Include usage examples
+- Note any accessibility considerations
+- Provide responsive behavior notes
 
-# 7. Implementation Phases
+## 10. Usage Instructions
 
-## Phase 1: Mobile Optimization
-- Restructure current match page to use responsive patterns
-- Add bottom navigation for mobile users
-- Implement floating action button (FAB) for match recording
+When requesting implementation of any feature according to this framework, simply reference the code "PKL-278651" to indicate all specifications outlined in this document should be followed.
 
-## Phase 2: Component Integration
-- Create the new unified Match Dashboard
-- Implement the tab navigation system
-- Develop mobile-optimized versions of existing components
+Example: "Please implement [feature] according to PKL-278651."
 
-## Phase 3: Feature Enhancement
-- Integrate CourtIQ insights into the match center
-- Add PCP Global Rankings components
-- Implement the enhanced match recording flow
-
-# 8. Usage Instructions
-
-When requesting implementation of this design framework, simply reference the code "PKL-278651" to indicate all specifications outlined in this document should be followed.
-
-Example: "Please implement the match history component according to PKL-278651."
-
-This will indicate that the component should follow all design principles, responsive behaviors, and integration points outlined in this document.
+This will indicate that the implementation should follow all design principles, responsive behaviors, accessibility standards, and platform-specific patterns outlined in this framework.
 */
 
 // This is a documentation file only, so we export nothing
