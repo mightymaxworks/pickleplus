@@ -1,0 +1,212 @@
+# Pickle+ Development Framework
+
+## System Overview
+
+This framework establishes a standardized system of prefixed serial codes that categorize 
+our development work across different domains. Each code represents a comprehensive set of 
+requirements, implementation details, and best practices.
+
+## Reference Code Categories
+
+Our reference codes are organized in a hierarchical structure that identifies both the module and the type of work.
+
+### 1. Module Prefixes
+
+Based on our application's modular architecture, we use these module prefixes:
+
+- **USER**: User management, profiles, authentication
+- **MATCH**: Match recording, validation, history
+- **TOURN**: Tournament management, registration, brackets
+- **ACHV**: Achievement system, badges, rewards
+- **SOCIAL**: Social connections, messaging, interactions
+- **COACH**: Coaching features, session management
+- **GUIDE**: Guidance and tutorial systems
+- **ADMIN**: Administrative functions and dashboards
+
+### 2. Work Type Categories
+
+Within each module, we categorize work by type:
+
+- **UI**: UI/UX Implementation
+- **FT**: Feature Development
+- **DB**: Debugging & Maintenance
+
+### 3. Serial Numbers
+
+Each implementation has a unique 6-digit serial number.
+
+## Reference Code Format
+
+Each reference code follows the format:
+[Module Prefix]-[Work Type]-[6-digit Serial Number]
+
+For example:
+- MATCH-UI-278651: UI/UX implementation for the Match module
+- USER-FT-123456: Feature development for the User module
+- ADMIN-DB-789012: Debugging task for the Admin module
+
+## Foundational Frameworks
+
+We have established foundational frameworks for each work type:
+
+- UI-278651: Complete UI/UX Framework (our foundational design system)
+- FT-123456: Feature Development Framework (our structured approach to building features)
+- DB-789012: Debugging Framework (our methodical approach to solving issues)
+
+## Usage Instructions
+
+When referencing these codes in our communications:
+
+1. Use the full code with module and type prefixes (e.g., "MATCH-UI-278651")
+2. To generate a complete implementation plan: "Generate the prompt for [code]"
+3. To implement a feature using a specific framework: "Implement [feature] using [code]"
+4. For foundational frameworks, you can use the type-only code (e.g., "UI-278651")
+
+## Framework Details
+
+### UI-278651: UI/UX Framework
+
+Our comprehensive UI/UX framework covering:
+
+1. Core Development Principles
+   - User-centric design
+   - Platform performance
+   - Development philosophy
+
+2. Visual Design System
+   - Brand identity (colors, themes)
+   - Typography
+   - Iconography
+   - Spacing system
+
+3. Responsive Design Framework
+   - Breakpoint system
+   - Mobile-first philosophy
+   - Layout patterns
+   - Responsive patterns
+
+4. Component Architecture
+   - Component hierarchy
+   - Component guidelines
+   - State management
+
+5. Animation & Interaction
+   - Motion principles
+   - Interaction patterns
+   - Micro-interactions
+
+6. Accessibility Standards
+   - WCAG compliance
+   - Screen reader support
+   - Inclusive design
+
+7. UI Patterns Library
+   - Navigation patterns
+   - Data display patterns
+   - Input patterns
+   - Feedback patterns
+
+8. Content Strategy
+   - Microcopy guidelines
+   - Content hierarchy
+   - Loading states
+   - Error handling
+
+9. Implementation Process
+   - Development workflow
+   - Quality assurance
+   - Documentation
+
+Using this code ensures consistent application of our design principles across the platform.
+
+### FT-123456: Feature Development Framework
+
+Our structured approach to developing new features:
+
+1. Requirements Analysis
+   - User story definition
+   - Acceptance criteria
+   - Technical constraints
+   - Integration points
+
+2. Modular Architecture
+   - 4-Layer Architecture compliance (Database, Server, SDK, UI)
+   - Module boundaries and interfaces
+   - Clean separation of concerns
+   - Cross-module communication patterns
+
+3. Technical Implementation
+   - Data modeling in shared/schema.ts
+   - API design following RESTful principles
+   - SDK layer abstractions for API communication
+   - Component structure and state management
+
+4. Development Approach
+   - Test-driven development
+   - Progressive enhancement
+   - Performance considerations
+   - Security measures
+
+5. Quality Assurance
+   - Unit testing strategy
+   - Integration testing
+   - User acceptance testing
+   - Performance testing
+
+6. Deployment Strategy
+   - Feature flagging
+   - Rollout approach
+   - Monitoring plan
+   - Rollback procedures
+
+Using this code ensures a consistent, methodical approach to building new functionality that adheres to our modular architecture principles.
+
+### DB-789012: Debugging Framework
+
+Our methodical approach to debugging follows these core principles:
+
+1. Root Cause Analysis (not symptom treatment)
+   - Trace issues to their fundamental source
+   - Identify the architectural layer where the issue originates
+   - Understand the complete issue context and impact
+   - Create reproducible test cases
+
+2. Layer-by-Layer Investigation (respecting 4-layer architecture)
+   - DATABASE: Examine data integrity, schema issues, query performance
+   - SERVER: Analyze API endpoints, service logic, middleware issues
+   - SDK: Review client abstraction layer, React Query implementation
+   - UI: Inspect component rendering, state management, event handling
+
+3. Comprehensive Documentation
+   - Document the problem definition clearly
+   - Record investigation steps taken
+   - Note all findings, including what didn't work
+   - Create technical documentation for the solution
+
+4. Architectural Integrity Preservation
+   - Ensure fixes maintain proper layer separation
+   - Prevent cross-layer leakage of responsibilities
+   - Apply fixes at the correct architectural layer
+   - Follow established patterns for each layer
+
+5. Thorough Verification
+   - Unit test the specific fix
+   - Test integration with adjacent components
+   - Verify end-to-end functionality
+   - Regression test related features
+
+Using this code ensures we fix the root cause of issues while maintaining our architectural principles.
+
+## Sample Prompts
+
+Example of generating a module-specific UI implementation prompt:
+"Generate the prompt for MATCH-UI-278651 for the match recording interface"
+
+Example of requesting a module-specific feature development:
+"Implement user achievements tracking using ACHV-FT-123456"
+
+Example of requesting module-specific debugging assistance:
+"Debug tournament registration validation issue using TOURN-DB-789012"
+
+Example of referencing a foundational framework:
+"Apply the UI-278651 design principles to the coach profile page"
