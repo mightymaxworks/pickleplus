@@ -1,28 +1,23 @@
 import React from 'react';
-import pickleLogoSrc from '@/assets/pickle-plus-logo.png';
+import pickleLogoPath from '../../assets/pickle-plus-logo.png';
 
 interface PicklePlusNewLogoProps {
   className?: string;
-  height?: number;
-  width?: number;
 }
 
-export const PicklePlusNewLogo: React.FC<PicklePlusNewLogoProps> = ({
-  className = '',
-  height,
-  width,
-}) => {
-  const style: React.CSSProperties = {
-    height: height ? `${height}px` : 'auto',
-    width: width ? `${width}px` : 'auto',
-  };
-
+export const PicklePlusNewLogo: React.FC<PicklePlusNewLogoProps> = ({ className }) => {
   return (
     <img 
-      src={pickleLogoSrc} 
-      alt="Pickle Plus Logo" 
+      src={pickleLogoPath} 
+      alt="Pickle+ Logo" 
       className={className} 
-      style={style}
+      style={{ 
+        height: 'auto',
+        width: 'auto',
+        maxHeight: '100%',
+        maxWidth: '100%',
+        objectFit: 'contain'
+      }}
     />
   );
 };

@@ -1,10 +1,7 @@
 import { useLocation, Link } from "wouter";
 import { motion } from "framer-motion";
 import React from "react";
-import { PicklePlusTextLogo } from "@/components/icons/PicklePlusTextLogo";
-import { PicklePlusLogo } from "@/components/icons/PicklePlusLogo";
-import { PicklePlusNewLogo } from "@/components/icons/PicklePlusNewLogo";
-import { PicklePlusWhiteLogo } from "@/components/icons/PicklePlusWhiteLogo";
+import { PicklePlusNewLogo } from "../components/icons/PicklePlusNewLogo";
 import { Button } from "@/components/ui/button";
 import { 
   ChevronDown, 
@@ -236,7 +233,7 @@ export default function EnhancedLandingPage() {
                   <div className="bg-gradient-to-r from-[#FF5722] to-[#FF9800] pt-3 pb-5 px-5 text-white">
                     <div className="flex justify-between items-center">
                       <div className="font-bold text-lg">Pickle+ Digital Passport</div>
-                      <PicklePlusWhiteLogo className="h-10 w-auto" />
+                      <PicklePlusNewLogo className="h-10 w-auto" />
                     </div>
                     
                     {/* CourtIQ badge */}
@@ -413,7 +410,7 @@ export default function EnhancedLandingPage() {
         <div className="container mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div>
-              <PicklePlusWhiteLogo className="h-8 w-auto mb-4" />
+              <PicklePlusNewLogo className="h-8 w-auto mb-4" />
               <p className="text-gray-400 text-sm mb-4">
                 Revolutionizing the pickleball experience with cutting-edge technology and community focus.
               </p>
@@ -465,7 +462,7 @@ export default function EnhancedLandingPage() {
       </footer>
 
       {/* CSS Styles for specific animations */}
-      <style jsx>{`
+      <style>{`
         @keyframes float {
           0% { transform: translateY(0px); }
           50% { transform: translateY(-10px); }
