@@ -56,7 +56,7 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
               <div className="font-bold text-base">
                 {isFoundingMember ? "Founding Member" : "Player Passport"}
               </div>
-              <PicklePlusNewLogo className="h-6 w-auto" />
+              <PicklePlusNewLogo height="24px" width="auto" preserveAspectRatio={true} />
             </div>
             
             {/* Player info */}
@@ -118,10 +118,7 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
             {/* QR Code button for mobile */}
             <div className="mt-3 flex justify-center">
               <button 
-                onClick={() => {
-                  // In a real app, this would show a QR code modal or redirect to a QR view
-                  alert('This would show your QR code for scanning at events!');
-                }}
+                onClick={() => setIsFlipped(true)}
                 className="flex items-center justify-center gap-1.5 text-sm bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 p-2 rounded-lg w-full"
               >
                 <Scan size={14} />
@@ -136,9 +133,9 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
 
   // For normal screens, use the flippable passport
   return (
-    <div className="w-full perspective cursor-pointer" onClick={() => setIsFlipped(!isFlipped)}>
+    <div className="w-full perspective cursor-pointer">
       <div 
-        className={`preserve-3d relative ${isFlipped ? 'passport-card-rotate' : ''}`}
+        className={`relative transition-transform duration-700 preserve-3d ${isFlipped ? 'passport-card-rotate' : ''}`}
         style={{ minHeight: isSmallScreen ? '250px' : '300px' }}
       >
         {/* Front of passport */}
@@ -152,7 +149,7 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
               <div className="font-bold text-lg">
                 {isFoundingMember ? "Founding Member" : "Player Passport"}
               </div>
-              <PicklePlusNewLogo className="h-8 w-auto" />
+              <PicklePlusNewLogo height="32px" width="auto" preserveAspectRatio={true} />
             </div>
             
             {/* Player info */}
@@ -212,10 +209,13 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
             </div>
             
             <div className="mt-4 flex justify-center">
-              <div className="text-center text-sm flex items-center text-gray-500 dark:text-gray-400">
-                <Scan size={15} className="mr-1" />
-                Tap card to view your Pickle+ digital passport QR code
-              </div>
+              <button 
+                onClick={() => setIsFlipped(true)}
+                className="flex items-center justify-center gap-1.5 text-sm bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 p-2 rounded-lg w-full"
+              >
+                <Scan size={14} />
+                <span>View Passport QR Code</span>
+              </button>
             </div>
           </div>
         </div>

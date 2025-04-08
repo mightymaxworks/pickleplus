@@ -103,7 +103,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             transition={{ delay: 0.2, duration: 0.5 }}
           >
             <PicklePlusNewLogo 
-              className={isExtraSmallScreen ? "h-6 w-auto" : "h-8 w-auto"}
+              height={isExtraSmallScreen ? "24px" : "32px"}
+              width="auto"
+              preserveAspectRatio={true}
             />
           </motion.div>
           
