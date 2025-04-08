@@ -94,7 +94,7 @@ export function VisualScoreInput({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         {/* Player One Score */}
         <Card className={`p-3 sm:p-4 flex flex-col items-center ${winner === "playerOne" ? "bg-primary/10 border-primary" : ""}`}>
           <div className="flex items-center justify-center mb-2 w-full">
@@ -112,15 +112,15 @@ export function VisualScoreInput({
             )}
           </div>
           
-          <div className="flex items-center gap-2 sm:gap-4 mt-2 w-full justify-center">
+          <div className="flex items-center gap-3 sm:gap-4 mt-2 w-full justify-center">
             <Button
               variant="outline"
               size="sm"
-              className="h-8 w-8 p-0"
+              className="h-10 w-10 sm:h-9 sm:w-9 p-0 rounded-full"
               onClick={() => updateScore('playerOne', -1)}
               disabled={value.playerOneScore <= 0}
             >
-              <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
+              <Minus className="h-4 w-4" />
             </Button>
             
             <input
@@ -147,16 +147,16 @@ export function VisualScoreInput({
                   });
                 }
               }}
-              className={`text-3xl sm:text-4xl font-bold w-12 sm:w-16 text-center bg-transparent border border-gray-300 focus:outline-none focus:ring-1 focus:ring-primary rounded-md ${value.playerOneScore > pointsToWin && !winner ? 'border-red-500' : ''}`}
+              className={`text-3xl sm:text-4xl font-bold w-16 h-14 sm:h-16 text-center bg-transparent border border-gray-300 focus:outline-none focus:ring-1 focus:ring-primary rounded-md ${value.playerOneScore > pointsToWin && !winner ? 'border-red-500' : ''}`}
             />
             
             <Button
               variant="outline"
               size="sm"
-              className="h-8 w-8 p-0"
+              className="h-10 w-10 sm:h-9 sm:w-9 p-0 rounded-full"
               onClick={() => updateScore('playerOne', 1)}
             >
-              <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+              <Plus className="h-4 w-4" />
             </Button>
           </div>
         </Card>
@@ -178,15 +178,15 @@ export function VisualScoreInput({
             )}
           </div>
           
-          <div className="flex items-center gap-2 sm:gap-4 mt-2 w-full justify-center">
+          <div className="flex items-center gap-3 sm:gap-4 mt-2 w-full justify-center">
             <Button
               variant="outline"
               size="sm"
-              className="h-8 w-8 p-0"
+              className="h-10 w-10 sm:h-9 sm:w-9 p-0 rounded-full"
               onClick={() => updateScore('playerTwo', -1)}
               disabled={value.playerTwoScore <= 0}
             >
-              <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
+              <Minus className="h-4 w-4" />
             </Button>
             
             <input
@@ -213,29 +213,29 @@ export function VisualScoreInput({
                   });
                 }
               }}
-              className={`text-3xl sm:text-4xl font-bold w-12 sm:w-16 text-center bg-transparent border border-gray-300 focus:outline-none focus:ring-1 focus:ring-primary rounded-md ${value.playerTwoScore > pointsToWin && !winner ? 'border-red-500' : ''}`}
+              className={`text-3xl sm:text-4xl font-bold w-16 h-14 sm:h-16 text-center bg-transparent border border-gray-300 focus:outline-none focus:ring-1 focus:ring-primary rounded-md ${value.playerTwoScore > pointsToWin && !winner ? 'border-red-500' : ''}`}
             />
             
             <Button
               variant="outline"
               size="sm"
-              className="h-8 w-8 p-0"
+              className="h-10 w-10 sm:h-9 sm:w-9 p-0 rounded-full"
               onClick={() => updateScore('playerTwo', 1)}
             >
-              <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+              <Plus className="h-4 w-4" />
             </Button>
           </div>
         </Card>
       </div>
       
-      <div className="text-center text-xs text-muted-foreground">
+      <div className="text-center text-xs sm:text-sm p-2 mt-1 bg-gray-50 rounded-md">
         {winner ? (
           <span className="text-green-600 font-medium">
             Game complete! {winner === "playerOne" ? playerOneName : playerTwoName} has won.
           </span>
         ) : scoreWarning ? (
           <div className="flex items-center justify-center gap-1 text-red-500">
-            <AlertCircle className="h-3 w-3" />
+            <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
             <span>{scoreWarning}</span>
           </div>
         ) : (

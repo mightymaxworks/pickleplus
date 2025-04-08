@@ -370,16 +370,16 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
   
   return (
     <Card className="w-full max-w-3xl mx-auto">
-      <CardHeader className="md:flex-row md:items-center px-4 sm:px-6">
-        <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full">
+      <CardHeader className="md:flex-row md:items-center px-4 sm:px-6 py-3 sm:py-4">
+        <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full text-base sm:text-lg">
           <span>Quick Match Recorder</span>
-          <div className="text-sm font-normal text-muted-foreground mt-1 sm:mt-0">
+          <div className="text-xs sm:text-sm font-normal text-muted-foreground mt-1 sm:mt-0">
             Record a casual match in just a few clicks
           </div>
         </CardTitle>
       </CardHeader>
       
-      <CardContent className="space-y-6 px-4 sm:px-6">
+      <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">
         {/* Format Selection */}
         <div className="space-y-2">
           <div className="text-sm font-medium">Match Format</div>
@@ -387,15 +387,15 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
             type="single" 
             value={formatType}
             onValueChange={handleFormatTypeChange}
-            className="justify-start flex flex-wrap"
+            className="justify-start flex w-full"
           >
-            <ToggleGroupItem value="singles" className="gap-2">
+            <ToggleGroupItem value="singles" className="gap-2 flex-1 h-10 sm:h-auto">
               <UserCircle className="h-4 w-4" />
-              Singles
+              <span className="text-sm">Singles</span>
             </ToggleGroupItem>
-            <ToggleGroupItem value="doubles" className="gap-2">
+            <ToggleGroupItem value="doubles" className="gap-2 flex-1 h-10 sm:h-auto">
               <Users className="h-4 w-4" />
-              Doubles
+              <span className="text-sm">Doubles</span>
             </ToggleGroupItem>
           </ToggleGroup>
         </div>
@@ -406,20 +406,20 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
         <div className="space-y-3">
           <div className="text-sm font-medium">Players</div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {/* Your Side */}
             <Card className="border-dashed">
-              <CardHeader className="py-3 px-4">
+              <CardHeader className="py-2 sm:py-3 px-3 sm:px-4">
                 <CardTitle className="text-sm font-medium">Your Side</CardTitle>
               </CardHeader>
-              <CardContent className="py-2 px-4">
+              <CardContent className="py-2 px-3 sm:px-4">
                 {/* Current User (You) */}
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                <div className="flex items-center gap-2 sm:gap-3 mb-3">
+                  <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm sm:text-base">
                     {playerOneData?.avatarInitials || playerOneData?.displayName?.charAt(0) || "Y"}
                   </div>
                   <div>
-                    <div className="font-medium">
+                    <div className="font-medium text-sm sm:text-base">
                       {playerOneData?.displayName || "You"}
                     </div>
                     <div className="text-xs text-muted-foreground">
@@ -453,10 +453,10 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
             
             {/* Opponent Side */}
             <Card className="border-dashed">
-              <CardHeader className="py-3 px-4">
+              <CardHeader className="py-2 sm:py-3 px-3 sm:px-4">
                 <CardTitle className="text-sm font-medium">Opponent Side</CardTitle>
               </CardHeader>
-              <CardContent className="py-2 px-4">
+              <CardContent className="py-2 px-3 sm:px-4">
                 {/* Opponent Selection */}
                 <div className="mb-3">
                   <DialogPlayerSelect
@@ -676,10 +676,10 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
         
         {/* VALMAT Validation Information */}
         <div className="mt-4">
-          <Alert>
-            <CheckCircle className="h-4 w-4" />
-            <AlertTitle>VALMAT Validation System</AlertTitle>
-            <AlertDescription>
+          <Alert className="text-xs sm:text-sm">
+            <CheckCircle className="h-4 w-4 shrink-0" />
+            <AlertTitle className="text-sm sm:text-base">VALMAT Validation System</AlertTitle>
+            <AlertDescription className="text-xs sm:text-sm">
               When you submit this match, it will be automatically validated by you (the submitter). 
               Other players will need to validate the match for it to count fully toward rankings and XP.
             </AlertDescription>
@@ -687,18 +687,21 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
         </div>
       </CardContent>
       
-      <CardFooter className="flex justify-between">
+      <CardFooter className="flex justify-between px-4 sm:px-6 py-3 sm:py-4">
         <Button 
           variant="outline" 
           onClick={resetForm}
           disabled={isSubmitting}
+          size="sm"
+          className="h-10 sm:h-auto sm:text-base"
         >
           Reset
         </Button>
         <Button 
           onClick={handleSubmit}
           disabled={isSubmitting || !isMatchComplete() || !playerTwoData}
-          className="gap-2"
+          className="gap-2 h-10 min-w-28 sm:h-auto sm:text-base"
+          size="sm"
         >
           <CheckCircle2 className="h-4 w-4" />
           Record Match
