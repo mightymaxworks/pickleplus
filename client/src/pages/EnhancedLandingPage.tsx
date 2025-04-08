@@ -1,6 +1,6 @@
 import { useLocation, Link } from "wouter";
 import { motion } from "framer-motion";
-import React, { useState } from "react";
+import React from "react";
 import { PicklePlusTextLogo } from "@/components/icons/PicklePlusTextLogo";
 import { PicklePlusLogo } from "@/components/icons/PicklePlusLogo";
 import { PicklePlusNewLogo } from "@/components/icons/PicklePlusNewLogo";
@@ -17,8 +17,7 @@ import {
   Zap,
   Star,
   Check,
-  MapPin,
-  MousePointerClick,
+  MapPin
 } from "lucide-react";
 
 // Enhanced animation variants with more refined animations
@@ -140,12 +139,6 @@ const Testimonial = ({
 
 export default function EnhancedLandingPage() {
   const [, navigate] = useLocation();
-  const [cardActive, setCardActive] = useState(false);
-  
-  // Handle card click/tap for mobile users
-  const toggleCard = () => {
-    setCardActive(!cardActive);
-  };
   
   return (
     <div className="enhanced-landing-page overflow-x-hidden w-full">
@@ -217,314 +210,107 @@ export default function EnhancedLandingPage() {
               </div>
             </motion.div>
             
-            {/* Enhanced Player Passport Card with Live Demo Effect - Mobile Optimized */}
+            {/* Simple Static Player Passport Card - Mobile Optimized */}
             <motion.div 
               className="w-full md:w-1/2 flex justify-center mt-10 md:mt-0"
               initial="hidden"
               animate="visible"
               variants={slideIn("right")}
             >
-              <div className="relative w-full max-w-[320px] xs:max-w-[350px] sm:max-w-md perspective">
-                {/* Interactive instruction tag - mobile optimized */}
-                <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-full shadow-lg z-10 flex items-center space-x-2 animate-bounce">
-                  <MousePointerClick className="h-3 w-3 sm:h-4 sm:w-4 text-[#FF5722]" />
-                  <span className="text-[10px] sm:text-xs font-medium text-gray-800">Interactive Passport - Tap to Explore</span>
+              <div className="relative w-full max-w-[320px] xs:max-w-[350px] sm:max-w-md">
+                {/* Static instruction tag */}
+                <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-full shadow-lg z-10 flex items-center space-x-2">
+                  <Star className="h-3 w-3 sm:h-4 sm:w-4 text-[#FF5722]" />
+                  <span className="text-[10px] sm:text-xs font-medium text-gray-800">Player Passport Preview</span>
                 </div>
                 
-                {/* Live updates notification - mobile optimized */}
+                {/* Live updates notification */}
                 <div className="absolute -right-2 sm:-right-4 -top-2 sm:-top-4 bg-[#4CAF50] text-white text-[10px] xs:text-xs font-bold px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full z-10 shadow-lg flex items-center">
                   <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full mr-1 animate-ping"></div>
                   LIVE
                 </div>
                 
-                <div 
-                  className={`preserve-3d passport-card hover:passport-card-rotate ${cardActive ? 'active' : ''}`}
-                  onClick={toggleCard}
-                >
-                  {/* Passport Front - with live update animations */}
-                  <div className="bg-white rounded-xl shadow-2xl overflow-hidden absolute inset-0 backface-hidden">
-                    {/* Header with logo */}
-                    <div className="bg-gradient-to-r from-[#FF5722] to-[#FF9800] pt-3 pb-5 px-5 text-white">
-                      <div className="flex justify-between items-center">
-                        <div className="font-bold text-lg">Pickle+ Digital Passport</div>
-                        <PicklePlusWhiteLogo className="h-10 w-auto" />
-                      </div>
-                      
-                      {/* CourtIQ badge - enhanced */}
-                      <div className="absolute top-16 right-2 bg-black/20 backdrop-blur-sm px-2 py-1 rounded text-xs font-medium flex items-center">
-                        <div className="w-2 h-2 bg-blue-300 rounded-full mr-1 animate-pulse"></div>
-                        <motion.span
-                          initial={{ opacity: 0.8 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
-                        >
-                          Powered by CourtIQ™
-                        </motion.span>
-                      </div>
-                      
-                      {/* Player info */}
-                      <div className="flex items-center mt-2">
-                        <div className="h-16 w-16 rounded-full bg-white p-0.5 mr-3 shadow-lg">
-                          <motion.div 
-                            className="h-full w-full rounded-full bg-gradient-to-r from-[#2196F3] to-[#03A9F4] flex items-center justify-center text-white font-bold text-xl"
-                            animate={{ 
-                              boxShadow: [
-                                "0 0 0 0px rgba(33, 150, 243, 0.4)",
-                                "0 0 0 8px rgba(33, 150, 243, 0)"
-                              ]
-                            }}
-                            transition={{ 
-                              duration: 2,
-                              repeat: Infinity,
-                              repeatDelay: 1
-                            }}
-                          >
-                            JS
-                          </motion.div>
+                {/* Simplified static passport */}
+                <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
+                  {/* Header with logo */}
+                  <div className="bg-gradient-to-r from-[#FF5722] to-[#FF9800] pt-3 pb-5 px-5 text-white">
+                    <div className="flex justify-between items-center">
+                      <div className="font-bold text-lg">Pickle+ Digital Passport</div>
+                      <PicklePlusWhiteLogo className="h-10 w-auto" />
+                    </div>
+                    
+                    {/* CourtIQ badge */}
+                    <div className="absolute top-16 right-2 bg-black/20 backdrop-blur-sm px-2 py-1 rounded text-xs font-medium flex items-center">
+                      <div className="w-2 h-2 bg-blue-300 rounded-full mr-1 animate-pulse"></div>
+                      <span>Powered by CourtIQ™</span>
+                    </div>
+                    
+                    {/* Player info */}
+                    <div className="flex items-center mt-2">
+                      <div className="h-16 w-16 rounded-full bg-white p-0.5 mr-3 shadow-lg">
+                        <div className="h-full w-full rounded-full bg-gradient-to-r from-[#2196F3] to-[#03A9F4] flex items-center justify-center text-white font-bold text-xl">
+                          JS
                         </div>
-                        <div>
-                          <div className="font-bold text-xl">John Smith</div>
-                          <div className="flex items-center text-sm text-white/80 mt-0.5">
-                            <motion.div 
-                              className="font-medium bg-white/20 backdrop-blur-sm rounded-full px-2 py-0.5"
-                              initial={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
-                              animate={{ backgroundColor: "rgba(255, 255, 255, 0.3)" }}
-                              transition={{ duration: 1.5, repeat: Infinity, repeatType: "reverse" }}
-                            >
-                              3.5 Intermediate+
-                            </motion.div>
+                      </div>
+                      <div>
+                        <div className="font-bold text-xl">John Smith</div>
+                        <div className="flex items-center text-sm text-white/80 mt-0.5">
+                          <div className="font-medium bg-white/20 backdrop-blur-sm rounded-full px-2 py-0.5">
+                            3.5 Intermediate+
                           </div>
                         </div>
                       </div>
-                    </div>
-                    
-                    {/* Stats section - with live data animation */}
-                    <div className="p-4 sm:p-6">
-                      {/* XP Progress - with animated progress */}
-                      <div className="bg-gray-50 rounded-lg p-3 mb-4 border border-gray-100">
-                        <div className="flex justify-between items-center mb-1">
-                          <div className="font-bold text-gray-700">Level 5</div>
-                          <motion.div 
-                            className="text-[#FF5722] font-medium text-sm"
-                            initial={{ opacity: 1 }}
-                            animate={{ opacity: [1, 0.6, 1] }}
-                            transition={{ duration: 3, repeat: Infinity }}
-                          >
-                            520/1000 XP
-                          </motion.div>
-                        </div>
-                        <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                          <motion.div 
-                            className="bg-gradient-to-r from-[#FF5722] to-[#FF9800] h-full rounded-full" 
-                            initial={{ width: "47%" }}
-                            animate={{ width: "52%" }}
-                            transition={{ duration: 2 }}
-                          />
-                        </div>
-                      </div>
-                      
-                      {/* CourtIQ metrics in a grid - with highlight animations */}
-                      <div className="grid grid-cols-3 gap-3 mb-4">
-                        <motion.div 
-                          className="bg-[#FF5722]/10 border border-[#FF5722]/20 rounded-lg p-3 text-center"
-                          whileHover={{ 
-                            scale: 1.05, 
-                            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
-                            borderColor: "rgba(255, 87, 34, 0.4)"
-                          }}
-                        >
-                          <div className="text-[#FF5722] font-bold text-lg mb-0.5">Lvl 5</div>
-                          <div className="text-xs text-gray-600">CourtIQ XP</div>
-                        </motion.div>
-                        <motion.div 
-                          className="bg-[#2196F3]/10 border border-[#2196F3]/20 rounded-lg p-3 text-center"
-                          whileHover={{ 
-                            scale: 1.05, 
-                            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
-                            borderColor: "rgba(33, 150, 243, 0.4)"
-                          }}
-                          animate={{
-                            borderColor: ["rgba(33, 150, 243, 0.2)", "rgba(33, 150, 243, 0.4)", "rgba(33, 150, 243, 0.2)"]
-                          }}
-                          transition={{ duration: 3, repeat: Infinity }}
-                        >
-                          <motion.div 
-                            className="text-[#2196F3] font-bold text-lg mb-0.5"
-                            animate={{ scale: [1, 1.05, 1] }}
-                            transition={{ duration: 3, repeat: Infinity }}
-                          >
-                            1,248
-                          </motion.div>
-                          <div className="text-xs text-gray-600">CourtIQ Rating</div>
-                        </motion.div>
-                        <motion.div 
-                          className="bg-[#673AB7]/10 border border-[#673AB7]/20 rounded-lg p-3 text-center"
-                          whileHover={{ 
-                            scale: 1.05, 
-                            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
-                            borderColor: "rgba(103, 58, 183, 0.4)"
-                          }}
-                        >
-                          <div className="text-[#673AB7] font-bold text-lg mb-0.5">7th</div>
-                          <div className="text-xs text-gray-600">CourtIQ Rank</div>
-                        </motion.div>
-                      </div>
-                      
-                      {/* Additional stats with hover effects */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <motion.div 
-                          className="bg-[#4CAF50]/10 border border-[#4CAF50]/20 rounded-lg p-2 text-center"
-                          whileHover={{ 
-                            scale: 1.05, 
-                            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
-                            borderColor: "rgba(76, 175, 80, 0.4)"
-                          }}
-                        >
-                          <div className="text-[#4CAF50] font-bold text-lg">3</div>
-                          <div className="text-xs text-gray-600">Tournaments</div>
-                        </motion.div>
-                        <motion.div 
-                          className="bg-[#FF9800]/10 border border-[#FF9800]/20 rounded-lg p-2 text-center"
-                          whileHover={{ 
-                            scale: 1.05, 
-                            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
-                            borderColor: "rgba(255, 152, 0, 0.4)"
-                          }}
-                        >
-                          <motion.div 
-                            className="text-[#FF9800] font-bold text-lg"
-                            initial={{ opacity: 1 }}
-                            animate={{ 
-                              opacity: [1, 1, 1],
-                              scale: [1, 1, 1]
-                            }}
-                            transition={{ 
-                              duration: 8,
-                              times: [0, 0.9, 1],
-                              repeat: Infinity,
-                              repeatDelay: 3
-                            }}
-                          >
-                            <span className="relative">
-                              <span>24</span>
-                              <span className="absolute -top-1 -right-3 text-[10px] text-[#FF5722] opacity-0 animate-ping-once">+1</span>
-                            </span>
-                          </motion.div>
-                          <div className="text-xs text-gray-600">Matches Played</div>
-                        </motion.div>
-                      </div>
-                      
-                      {/* Live activity notification */}
-                      <motion.div 
-                        className="mt-4 flex items-center gap-2 bg-gradient-to-r from-[#2196F3]/5 to-[#03A9F4]/5 p-2 rounded-lg border border-[#2196F3]/10"
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 1.5 }}
-                      >
-                        <div className="bg-[#2196F3] rounded-full p-1 text-white">
-                          <Trophy size={16} />
-                        </div>
-                        <div className="text-xs text-gray-700">Won mixed doubles tournament at Willow Park</div>
-                        <div className="text-[10px] text-[#2196F3] ml-auto font-medium">+100 RP</div>
-                      </motion.div>
                     </div>
                   </div>
                   
-                  {/* Passport Back - with enhanced interactivity */}
-                  <div className="bg-white rounded-xl shadow-2xl overflow-hidden absolute inset-0 backface-hidden passport-card-back">
-                    <div className="bg-gradient-to-r from-[#2196F3] to-[#03A9F4] p-5 text-white">
-                      <h3 className="font-bold text-xl flex items-center">
-                        Player Achievements
-                        <motion.div 
-                          className="ml-2 bg-white/20 text-xs px-2 py-0.5 rounded-full"
-                          animate={{ 
-                            scale: [1, 1.1, 1],
-                            backgroundColor: ["rgba(255,255,255,0.2)", "rgba(255,255,255,0.3)", "rgba(255,255,255,0.2)"]
-                          }}
-                          transition={{ duration: 3, repeat: Infinity }}
-                        >
-                          UPDATED
-                        </motion.div>
-                      </h3>
+                  {/* Stats section */}
+                  <div className="p-4 sm:p-6">
+                    {/* XP Progress */}
+                    <div className="bg-gray-50 rounded-lg p-3 mb-4 border border-gray-100">
+                      <div className="flex justify-between items-center mb-1">
+                        <div className="font-bold text-gray-700">Level 5</div>
+                        <div className="text-[#FF5722] font-medium text-sm">520/1000 XP</div>
+                      </div>
+                      <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="bg-gradient-to-r from-[#FF5722] to-[#FF9800] h-full rounded-full w-[52%]"></div>
+                      </div>
                     </div>
-                    <div className="p-5">
-                      <div className="grid grid-cols-3 gap-3 mb-4">
-                        <motion.div 
-                          className="bg-[#FFD700]/10 border border-[#FFD700]/20 rounded-lg p-3 text-center"
-                          whileHover={{ scale: 1.05, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)" }}
-                        >
-                          <motion.div 
-                            className="bg-[#FFD700] text-white p-2 rounded-full mx-auto mb-2 w-10 h-10 flex items-center justify-center"
-                            animate={{ 
-                              boxShadow: ["0 0 0 0 rgba(255, 215, 0, 0.4)", "0 0 0 10px rgba(255, 215, 0, 0)"]
-                            }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                          >
-                            <Trophy size={20} />
-                          </motion.div>
-                          <div className="text-xs text-gray-600">Champion</div>
-                        </motion.div>
-                        <motion.div 
-                          className="bg-[#4CAF50]/10 border border-[#4CAF50]/20 rounded-lg p-3 text-center" 
-                          whileHover={{ scale: 1.05, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)" }}
-                        >
-                          <div className="bg-[#4CAF50] text-white p-2 rounded-full mx-auto mb-2 w-10 h-10 flex items-center justify-center">
-                            <Award size={20} />
-                          </div>
-                          <div className="text-xs text-gray-600">Veteran</div>
-                        </motion.div>
-                        <motion.div 
-                          className="bg-[#9C27B0]/10 border border-[#9C27B0]/20 rounded-lg p-3 text-center"
-                          whileHover={{ scale: 1.05, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)" }}
-                        >
-                          <div className="bg-[#9C27B0] text-white p-2 rounded-full mx-auto mb-2 w-10 h-10 flex items-center justify-center">
-                            <Star size={20} />
-                          </div>
-                          <div className="text-xs text-gray-600">All-Star</div>
-                        </motion.div>
+                    
+                    {/* CourtIQ metrics in a grid */}
+                    <div className="grid grid-cols-3 gap-3 mb-4">
+                      <div className="bg-[#FF5722]/10 border border-[#FF5722]/20 rounded-lg p-3 text-center">
+                        <div className="text-[#FF5722] font-bold text-lg mb-0.5">Lvl 5</div>
+                        <div className="text-xs text-gray-600">CourtIQ XP</div>
                       </div>
-                      
-                      <div className="mb-4">
-                        <div className="text-sm font-bold mb-2 flex items-center">
-                          Recent Matches
-                          <div className="ml-2 px-1.5 py-0.5 bg-green-100 rounded-full text-[10px] text-green-700 font-medium">LIVE</div>
-                        </div>
-                        <div className="space-y-2">
-                          <motion.div 
-                            className="bg-gray-50 rounded-md p-2 flex justify-between items-center"
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 1 }}
-                          >
-                            <div className="text-xs">vs. Sarah Johnson</div>
-                            <div className="text-xs font-medium text-green-600">W 11-8</div>
-                          </motion.div>
-                          <div className="bg-gray-50 rounded-md p-2 flex justify-between items-center">
-                            <div className="text-xs">vs. Mike Taylor</div>
-                            <div className="text-xs font-medium text-green-600">W 11-7</div>
-                          </div>
-                          <div className="bg-gray-50 rounded-md p-2 flex justify-between items-center">
-                            <div className="text-xs">vs. Emma Davis</div>
-                            <div className="text-xs font-medium text-red-600">L 8-11</div>
-                          </div>
-                        </div>
+                      <div className="bg-[#2196F3]/10 border border-[#2196F3]/20 rounded-lg p-3 text-center">
+                        <div className="text-[#2196F3] font-bold text-lg mb-0.5">1,248</div>
+                        <div className="text-xs text-gray-600">CourtIQ Rating</div>
                       </div>
-                      
-                      <div className="text-center mt-4">
-                        <motion.div 
-                          className="inline-block bg-[#FF5722]/10 rounded-full px-3 py-2 text-sm"
-                          animate={{ 
-                            scale: [1, 1.03, 1],
-                            backgroundColor: ["rgba(255, 87, 34, 0.1)", "rgba(255, 87, 34, 0.15)", "rgba(255, 87, 34, 0.1)"]
-                          }}
-                          transition={{ duration: 3, repeat: Infinity }}
-                        >
-                          <div className="flex items-center">
-                            <MapPin size={14} className="mr-1 text-[#FF5722]" />
-                            <span className="text-gray-700">Westside Pickleball Club</span>
-                          </div>
-                        </motion.div>
+                      <div className="bg-[#673AB7]/10 border border-[#673AB7]/20 rounded-lg p-3 text-center">
+                        <div className="text-[#673AB7] font-bold text-lg mb-0.5">7th</div>
+                        <div className="text-xs text-gray-600">CourtIQ Rank</div>
                       </div>
+                    </div>
+                    
+                    {/* Additional stats */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-[#4CAF50]/10 border border-[#4CAF50]/20 rounded-lg p-2 text-center">
+                        <div className="text-[#4CAF50] font-bold text-lg">3</div>
+                        <div className="text-xs text-gray-600">Tournaments</div>
+                      </div>
+                      <div className="bg-[#FF9800]/10 border border-[#FF9800]/20 rounded-lg p-2 text-center">
+                        <div className="text-[#FF9800] font-bold text-lg">24</div>
+                        <div className="text-xs text-gray-600">Matches Played</div>
+                      </div>
+                    </div>
+                    
+                    {/* Recent activity */}
+                    <div className="mt-4 flex items-center gap-2 bg-gradient-to-r from-[#2196F3]/5 to-[#03A9F4]/5 p-2 rounded-lg border border-[#2196F3]/10">
+                      <div className="bg-[#2196F3] rounded-full p-1 text-white">
+                        <Trophy size={16} />
+                      </div>
+                      <div className="text-xs text-gray-700">Won mixed doubles tournament at Willow Park</div>
+                      <div className="text-[10px] text-[#2196F3] ml-auto font-medium">+100 RP</div>
                     </div>
                   </div>
                 </div>
@@ -591,386 +377,175 @@ export default function EnhancedLandingPage() {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-16 sm:py-24 bg-white overflow-hidden">
+      {/* Call-to-action Section */}
+      <section id="founding" className="py-16 sm:py-24 bg-[#FF5722] text-white overflow-hidden">
         <div className="container mx-auto px-4 sm:px-6">
-          <motion.div 
-            className="text-center mb-12"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={slideUp}
-          >
-            <div className="mb-3 inline-block bg-[#2196F3]/10 rounded-full px-3 py-1 text-sm font-medium text-[#2196F3]">
-              Player Stories
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Transforming Pickleball Journeys</h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              See how players of all levels are using Pickle+ to track their progress and improve their game.
-            </p>
-          </motion.div>
-          
-          <motion.div 
-            className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={staggerContainer}
-          >
-            <Testimonial 
-              quote="Pickle+ has completely transformed how I track my progress. The CourtIQ analytics showed me exactly where I needed to improve."
-              author="Sarah Johnson"
-              role="3.5 Intermediate Player"
-              improvement="Improved from 3.0 to 3.5 in just 3 months"
-            />
-            <Testimonial 
-              quote="The tournament passport feature makes check-ins so easy. I love how I can see my entire match history and progression over time."
-              author="Michael Rodriguez"
-              role="4.0 Advanced Player"
-              improvement="Won 2 local tournaments after 6 months with Pickle+"
-            />
-            <Testimonial 
-              quote="As a founding member, I've watched Pickle+ evolve into an amazing tool. The XP system keeps me motivated to play more often."
-              author="Jessica Chen"
-              role="Founding Member"
-              improvement="Improved win rate from 58% to 72% in one season"
-            />
-          </motion.div>
-        </div>
-      </section>
-
-      {/* CourtIQ Technology Section with animated graphics */}
-      <section className="py-16 sm:py-24 bg-gradient-to-br from-[#2196F3]/5 to-[#03A9F4]/10 overflow-hidden">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div className="max-w-4xl mx-auto text-center">
             <motion.div
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
-              variants={slideIn("left")}
+              variants={slideUp}
             >
-              <div className="mb-3 inline-block bg-[#2196F3]/20 rounded-full px-3 py-1 text-sm font-medium text-[#2196F3]">
-                CourtIQ™ Technology
+              <div className="inline-flex items-center justify-center mb-4">
+                <Star className="text-yellow-300 h-6 w-6 mr-2" />
+                <span className="text-yellow-300 text-lg font-bold">Founding Members Program</span>
               </div>
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4">Advanced Analytics Designed for Pickleball</h2>
-              <p className="text-lg text-gray-600 mb-6">
-                Our proprietary CourtIQ™ system analyzes your play patterns, tracks your improvement, and provides personalized insights to elevate your game.
+              <h2 className="text-3xl sm:text-4xl font-bold mb-6">Join the Pickle+ Movement</h2>
+              <p className="text-lg mb-8 text-white/90 max-w-3xl mx-auto">
+                Become a founding member and get lifetime access to premium features, exclusive tournament invites, and be part of shaping the future of pickleball technology.
               </p>
-              
-              <ul className="space-y-4">
-                <li className="flex items-start gap-3">
-                  <div className="flex-shrink-0 bg-[#2196F3]/10 p-2 rounded-full text-[#2196F3] mt-1">
-                    <Check size={18} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg mb-1">Multi-Dimensional Rating</h3>
-                    <p className="text-gray-600">Track your skills across multiple dimensions including power, control, strategy, and mobility.</p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="flex-shrink-0 bg-[#2196F3]/10 p-2 rounded-full text-[#2196F3] mt-1">
-                    <Check size={18} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg mb-1">Personalized Improvement Path</h3>
-                    <p className="text-gray-600">Get tailored recommendations to improve your specific weaknesses and enhance your strengths.</p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="flex-shrink-0 bg-[#2196F3]/10 p-2 rounded-full text-[#2196F3] mt-1">
-                    <Check size={18} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg mb-1">Progress Visualization</h3>
-                    <p className="text-gray-600">See your improvement over time with beautiful charts and progression timelines.</p>
-                  </div>
-                </li>
-              </ul>
-            </motion.div>
-            
-            <motion.div
-              className="relative"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={slideIn("right")}
-            >
-              <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-                <h3 className="font-bold text-xl mb-4 text-[#2196F3]">CourtIQ™ Player Dashboard</h3>
-                
-                {/* Radar Chart Visualization (Simulated) */}
-                <div className="relative w-full aspect-square max-w-md mx-auto mb-6">
-                  <div className="absolute inset-0 bg-[#2196F3]/5 rounded-full"></div>
-                  <div className="absolute inset-4 bg-[#2196F3]/10 rounded-full"></div>
-                  <div className="absolute inset-8 bg-[#2196F3]/15 rounded-full"></div>
-                  <div className="absolute inset-12 bg-[#2196F3]/20 rounded-full"></div>
-                  
-                  {/* Skill Points with animation */}
-                  <div className="absolute top-[15%] left-[50%] transform -translate-x-1/2 h-4 w-4 bg-[#FF5722] rounded-full"></div>
-                  <div className="absolute top-[50%] left-[85%] transform -translate-y-1/2 h-4 w-4 bg-[#4CAF50] rounded-full"></div>
-                  <div className="absolute bottom-[15%] left-[50%] transform -translate-x-1/2 h-4 w-4 bg-[#2196F3] rounded-full"></div>
-                  <div className="absolute top-[50%] left-[15%] transform -translate-y-1/2 h-4 w-4 bg-[#9C27B0] rounded-full"></div>
-                  
-                  {/* Skill Radar (Simulated) */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-[65%] h-[65%] bg-[#2196F3]/30 rounded-full backdrop-blur-sm"></div>
-                  </div>
-                  
-                  {/* Skill Labels */}
-                  <div className="absolute top-[5%] left-[50%] transform -translate-x-1/2 text-sm font-medium">Power</div>
-                  <div className="absolute top-[50%] right-[5%] transform translate-y-[-50%] text-sm font-medium">Control</div>
-                  <div className="absolute bottom-[5%] left-[50%] transform -translate-x-1/2 text-sm font-medium">Strategy</div>
-                  <div className="absolute top-[50%] left-[5%] transform translate-y-[-50%] text-sm font-medium">Mobility</div>
-                </div>
-                
-                {/* Skill Rankings */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-[#FF5722]/10 rounded-lg p-3">
-                    <div className="text-sm text-gray-600 mb-1">Power Rating</div>
-                    <div className="text-xl font-bold text-[#FF5722]">8.2</div>
-                    <div className="text-xs text-gray-500">+0.5 this month</div>
-                  </div>
-                  <div className="bg-[#4CAF50]/10 rounded-lg p-3">
-                    <div className="text-sm text-gray-600 mb-1">Control Rating</div>
-                    <div className="text-xl font-bold text-[#4CAF50]">7.8</div>
-                    <div className="text-xs text-gray-500">+0.3 this month</div>
-                  </div>
-                  <div className="bg-[#2196F3]/10 rounded-lg p-3">
-                    <div className="text-sm text-gray-600 mb-1">Strategy Rating</div>
-                    <div className="text-xl font-bold text-[#2196F3]">8.5</div>
-                    <div className="text-xs text-gray-500">+0.7 this month</div>
-                  </div>
-                  <div className="bg-[#9C27B0]/10 rounded-lg p-3">
-                    <div className="text-sm text-gray-600 mb-1">Mobility Rating</div>
-                    <div className="text-xl font-bold text-[#9C27B0]">7.5</div>
-                    <div className="text-xs text-gray-500">+0.2 this month</div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Founding Member Section */}
-      <section className="py-16 sm:py-24 bg-gradient-to-br from-black to-[#222] text-white overflow-hidden">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={slideIn("left")}
-              className="order-2 md:order-1"
-            >
-              <div className="bg-gradient-to-r from-[#FFD700]/20 to-[#FFA000]/20 p-1 rounded-xl">
-                <div className="bg-black rounded-lg p-6 border border-[#FFD700]/30">
-                  <div className="flex items-center mb-4">
-                    <div className="bg-gradient-to-r from-[#FFD700] to-[#FFA000] p-3 rounded-full mr-4">
-                      <Star size={24} className="text-black" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-[#FFD700]">Founding Member Benefits</h3>
-                  </div>
-                  
-                  <ul className="space-y-4">
-                    <li className="flex items-start gap-3">
-                      <div className="flex-shrink-0 text-[#FFD700] mt-1">
-                        <Check size={18} />
-                      </div>
-                      <div>
-                        <p className="text-white/90">Premium golden accents and exclusive founding member badge</p>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <div className="flex-shrink-0 text-[#FFD700] mt-1">
-                        <Check size={18} />
-                      </div>
-                      <div>
-                        <p className="text-white/90">10% XP boost on all activities for faster progression</p>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <div className="flex-shrink-0 text-[#FFD700] mt-1">
-                        <Check size={18} />
-                      </div>
-                      <div>
-                        <p className="text-white/90">Priority placement in tournament registrations and events</p>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <div className="flex-shrink-0 text-[#FFD700] mt-1">
-                        <Check size={18} />
-                      </div>
-                      <div>
-                        <p className="text-white/90">Early access to new features and updates before general release</p>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <div className="flex-shrink-0 text-[#FFD700] mt-1">
-                        <Check size={18} />
-                      </div>
-                      <div>
-                        <p className="text-white/90">Exclusive founding member community and events</p>
-                      </div>
-                    </li>
-                  </ul>
-                  
-                  <div className="mt-6">
-                    <Link href="/register">
-                      <Button 
-                        size="lg" 
-                        className="bg-gradient-to-r from-[#FFD700] to-[#FFA000] text-black hover:opacity-90 w-full"
-                      >
-                        Become a Founding Member
-                      </Button>
-                    </Link>
-                    <p className="text-center text-white/60 text-sm mt-2">Limited availability - Join now to secure your place</p>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-            
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={slideIn("right")}
-              className="order-1 md:order-2"
-            >
-              <div className="mb-3 inline-block bg-[#FFD700]/20 rounded-full px-3 py-1 text-sm font-medium text-[#FFD700]">
-                Exclusive Opportunity
-              </div>
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4">Join as a <span className="text-[#FFD700]">Founding Member</span></h2>
-              <p className="text-lg text-white/80 mb-6">
-                Become part of our exclusive founding community and enjoy special benefits that will enhance your Pickle+ experience.
-              </p>
-              
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <Users size={20} className="text-[#FFD700]" />
-                  <div className="text-lg font-medium">Founding Community</div>
-                </div>
-                <p className="text-white/70">
-                  Connect with other passionate founding members who are helping shape the future of Pickle+.
-                </p>
-              </div>
-              
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <div className="flex items-center gap-3 mb-2">
-                  <Award size={20} className="text-[#FFD700]" />
-                  <div className="text-lg font-medium">Permanent Recognition</div>
-                </div>
-                <p className="text-white/70">
-                  Your status as a founding member never expires and will always be proudly displayed on your profile.
-                </p>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Call to Action Section */}
-      <section className="py-16 sm:py-20 bg-gradient-to-r from-[#FF5722] to-[#FF8A65] text-white">
-        <div className="container mx-auto px-4 sm:px-6 text-center">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeIn}
-          >
-            <h2 className="text-3xl sm:text-4xl font-bold mb-6">Ready to Level Up Your Pickleball Journey?</h2>
-            <p className="text-xl mb-8 max-w-3xl mx-auto text-white/90">
-              Join Pickle+ today and start tracking your progress, connecting with players, and elevating your game.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/register">
+              <Link href="/auth">
                 <Button 
                   size="lg" 
-                  className="bg-white text-[#FF5722] hover:bg-white/90"
+                  className="bg-white text-[#FF5722] hover:bg-white/90 font-bold"
                 >
-                  Create Account
+                  Become a Founding Member
                 </Button>
               </Link>
-              <Link href="/login">
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="border-white border-2 text-white hover:bg-white/10 hover:border-white bg-transparent"
-                >
-                  Login
-                </Button>
-              </Link>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
+      <footer className="py-12 bg-gray-900 text-white">
         <div className="container mx-auto px-4 sm:px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-            <PicklePlusTextLogo className="h-8 w-auto mb-4 md:mb-0" />
-            <div className="flex items-center space-x-4">
-              <a href="#" className="text-white/70 hover:text-white transition-colors">
-                Terms
-              </a>
-              <a href="#" className="text-white/70 hover:text-white transition-colors">
-                Privacy
-              </a>
-              <a href="#" className="text-white/70 hover:text-white transition-colors">
-                Help
-              </a>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div>
+              <PicklePlusWhiteLogo className="h-8 w-auto mb-4" />
+              <p className="text-gray-400 text-sm mb-4">
+                Revolutionizing the pickleball experience with cutting-edge technology and community focus.
+              </p>
+              <div className="flex space-x-4">
+                <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                  <span className="sr-only">Twitter</span>
+                  {/* Twitter icon placeholder */}
+                </a>
+                <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                  <span className="sr-only">Instagram</span>
+                  {/* Instagram icon placeholder */}
+                </a>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-bold text-lg mb-4">Features</h4>
+              <ul className="space-y-2">
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Player Passport</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">CourtIQ™ Analytics</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Tournament Hub</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Achievement System</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-bold text-lg mb-4">Resources</h4>
+              <ul className="space-y-2">
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Blog</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Tutorials</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Support</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">API</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-bold text-lg mb-4">Company</h4>
+              <ul className="space-y-2">
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">About</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Careers</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Privacy</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Terms</a></li>
+              </ul>
             </div>
           </div>
-          <div className="border-t border-gray-800 pt-8 text-center md:text-left">
-            <p className="text-white/50 text-sm">
-              © {new Date().getFullYear()} Pickle+. All rights reserved. Powered by CourtIQ™.
+          <div className="border-t border-gray-800 mt-12 pt-8 text-center">
+            <p className="text-gray-500 text-sm">
+              &copy; {new Date().getFullYear()} Pickle+. All rights reserved.
             </p>
           </div>
         </div>
       </footer>
 
-      {/* CSS for 3D Card Effect */}
-      <style dangerouslySetInnerHTML={{__html: `
-        .perspective {
-          perspective: 1500px;
-        }
-        
-        .preserve-3d {
-          transform-style: preserve-3d;
-          transition: transform 1s;
-        }
-        
-        .backface-hidden {
-          backface-visibility: hidden;
-        }
-        
-        .passport-card-back {
-          transform: rotateY(180deg);
-        }
-        
-        .passport-card-rotate {
-          transform: rotateY(180deg);
-        }
-        
+      {/* CSS Styles for specific animations */}
+      <style jsx>{`
         @keyframes float {
           0% { transform: translateY(0px); }
           50% { transform: translateY(-10px); }
           100% { transform: translateY(0px); }
         }
-        
+
+        @keyframes float-delayed {
+          0% { transform: translateY(0px); }
+          50% { transform: translateY(-15px); }
+          100% { transform: translateY(0px); }
+        }
+
+        @keyframes float-slow {
+          0% { transform: translateY(0px); }
+          50% { transform: translateY(-5px); }
+          100% { transform: translateY(0px); }
+        }
+
+        @keyframes ping-once {
+          0% { transform: scale(0.2); opacity: 0; }
+          70% { transform: scale(1.2); opacity: 1; }
+          100% { transform: scale(1); opacity: 0; }
+        }
+
         .animate-float {
-          animation: float 4s ease-in-out infinite;
+          animation: float 6s ease-in-out infinite;
         }
-        
+
         .animate-float-delayed {
-          animation: float 5s ease-in-out 1s infinite;
+          animation: float-delayed 8s ease-in-out infinite;
         }
-        
+
         .animate-float-slow {
-          animation: float 6s ease-in-out 2s infinite;
+          animation: float-slow 10s ease-in-out infinite;
         }
-      `}} />
+
+        .animate-ping-once {
+          animation: ping-once 2s cubic-bezier(0, 0, 0.2, 1) forwards;
+        }
+
+        .xs\\:max-w-[350px] {
+          max-width: 350px;
+        }
+
+        .xs\\:text-4xl {
+          font-size: 2.25rem;
+          line-height: 2.5rem;
+        }
+
+        .xs\\:text-lg {
+          font-size: 1.125rem;
+          line-height: 1.75rem;
+        }
+
+        .xs\\:text-xs {
+          font-size: 0.75rem;
+          line-height: 1rem;
+        }
+
+        @media (min-width: 320px) and (max-width: 480px) {
+          .xs\\:max-w-[350px] {
+            max-width: 350px;
+          }
+          
+          .xs\\:text-4xl {
+            font-size: 2.25rem;
+            line-height: 2.5rem;
+          }
+          
+          .xs\\:text-lg {
+            font-size: 1.125rem;
+            line-height: 1.75rem;
+          }
+          
+          .xs\\:text-xs {
+            font-size: 0.75rem;
+            line-height: 1rem;
+          }
+        }
+      `}</style>
     </div>
   );
 }
