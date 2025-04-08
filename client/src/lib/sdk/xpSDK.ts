@@ -18,7 +18,7 @@ import { apiRequest, queryClient } from "../queryClient";
  */
 export async function getUserXP(userId: number): Promise<number | undefined> {
   try {
-    const response = await apiRequest("GET", `/api/xp/${userId}`);
+    const response = await apiRequest("GET", `/api/xp/total/${userId}`);
     const data = await response.json();
     return data.totalXP;
   } catch (error) {
@@ -87,10 +87,10 @@ export function calculateXPProgress(totalXP: number): {
  */
 export function useUserXP(userId: number | undefined) {
   return {
-    queryKey: ['/api/xp', userId],
+    queryKey: ['/api/xp/total', userId],
     queryFn: async () => {
       if (!userId) return null;
-      const response = await apiRequest("GET", `/api/xp/${userId}`);
+      const response = await apiRequest("GET", `/api/xp/total/${userId}`);
       return response.json();
     }
   };
