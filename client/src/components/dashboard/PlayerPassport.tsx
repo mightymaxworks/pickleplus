@@ -122,21 +122,58 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
           className="absolute inset-0 backface-hidden w-full bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-xl"
           style={{ transform: 'rotateY(180deg)', backfaceVisibility: 'hidden' }}
         >
-          {/* Top border accent */}
-          <div className="h-1 w-full bg-gradient-to-r from-[#2196F3] to-[#03A9F4]"></div>
+          {/* Top border accent - Gold for founding members, blue for regular members */}
+          <div className={`h-1 w-full bg-gradient-to-r ${
+            isFoundingMember
+              ? 'from-[#BF953F] to-[#FBF5B7]'
+              : 'from-[#2196F3] to-[#03A9F4]'
+          }`}></div>
           
-          <div className="p-6 flex flex-col items-center justify-center h-full">
+          {/* Founding member corner accents */}
+          {isFoundingMember && (
+            <>
+              <div className="absolute top-0 left-0 w-8 h-8">
+                <div className="absolute top-0 left-0 w-full h-1 bg-[#FFD700]"></div>
+                <div className="absolute top-0 left-0 w-1 h-full bg-[#FFD700]"></div>
+              </div>
+              <div className="absolute top-0 right-0 w-8 h-8">
+                <div className="absolute top-0 right-0 w-full h-1 bg-[#FFD700]"></div>
+                <div className="absolute top-0 right-0 w-1 h-full bg-[#FFD700]"></div>
+              </div>
+              <div className="absolute bottom-0 left-0 w-8 h-8">
+                <div className="absolute bottom-0 left-0 w-full h-1 bg-[#FFD700]"></div>
+                <div className="absolute bottom-0 left-0 w-1 h-full bg-[#FFD700]"></div>
+              </div>
+              <div className="absolute bottom-0 right-0 w-8 h-8">
+                <div className="absolute bottom-0 right-0 w-full h-1 bg-[#FFD700]"></div>
+                <div className="absolute bottom-0 right-0 w-1 h-full bg-[#FFD700]"></div>
+              </div>
+            </>
+          )}
+          
+          <div className={`p-6 flex flex-col items-center justify-center h-full ${isFoundingMember ? 'qr-gold-gradient' : 'qr-blue-gradient'}`}>
             <div className="mb-4 text-center">
-              <div className="font-bold text-lg text-[#2196F3] mb-1">Player Tournament Pass</div>
+              <div className={`font-bold text-lg mb-1 ${
+                isFoundingMember 
+                  ? 'gold-shimmer' 
+                  : 'text-[#2196F3]'
+              }`}>
+                {isFoundingMember ? "Founding Member Pass" : "Player Tournament Pass"}
+              </div>
               <div className="text-sm text-gray-500 dark:text-gray-400">Scan this code to check-in at tournaments</div>
             </div>
             
-            <div className="bg-white p-4 rounded-xl shadow-lg mb-4">
+            {/* QR code with special border for founding members */}
+            <div className={`bg-white p-4 rounded-xl shadow-lg mb-4 ${
+              isFoundingMember 
+                ? 'border-2 border-[#FFD700]' 
+                : ''
+            }`}>
               <QRCodeSVG
                 value={qrData}
                 size={180}
                 bgColor={"#ffffff"}
-                fgColor={"#000000"}
+                fgColor={isFoundingMember ? "#BF953F" : "#000000"}
                 level={"L"}
                 includeMargin={false}
               />
@@ -146,8 +183,19 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
               Passport ID: {user.passportId || `PID-${user.id}`}
             </div>
             
+            {/* Special XP bonus notice for founding members */}
+            {isFoundingMember && (
+              <div className="text-center text-xs mt-1 mb-3 gold-shimmer font-medium">
+                +10% XP Bonus on all activities
+              </div>
+            )}
+            
             <button 
-              className="mt-2 flex items-center gap-1 text-blue-500 hover:text-blue-700 transition-colors"
+              className={`mt-2 flex items-center gap-1 transition-colors ${
+                isFoundingMember
+                  ? 'text-[#BF953F] hover:text-[#FFD700]'
+                  : 'text-blue-500 hover:text-blue-700'
+              }`}
               onClick={(e) => {
                 e.stopPropagation();
                 setIsFlipped(false);
