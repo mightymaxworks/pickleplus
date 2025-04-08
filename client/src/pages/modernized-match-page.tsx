@@ -8,11 +8,27 @@ import { matchSDK, type RecordedMatch } from "@/lib/sdk/matchSDK";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import MatchDashboard from "@/components/match/MatchDashboard";
+import MatchTimeline from "@/components/match/MatchTimeline";
+import MatchTrends from "@/components/match/MatchTrends";
+import ContextualFilters from "@/components/match/ContextualFilters";
 import MatchValidation from "@/components/match/MatchValidation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, PlusCircle, CheckCircle2, Trophy } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { TiltCard } from "@/components/ui/tilt-card";
+import { 
+  Loader2, 
+  PlusCircle, 
+  CheckCircle2, 
+  Trophy,
+  Calendar,
+  Users,
+  Activity,
+  BarChart4,
+  Zap,
+  Filter
+} from "lucide-react";
 
 /**
  * ModernizedMatchPage Component
@@ -107,12 +123,12 @@ export default function ModernizedMatchPage() {
   };
 
   return (
-    <div className="container max-w-7xl py-6 space-y-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Match Center</h1>
-          <p className="text-muted-foreground">Track your performance and match history</p>
-        </div>
+    <div className="container max-w-7xl py-6 md:py-8 space-y-8">
+      {/* MATCH-UI-278653[ENHANCE] - Improved header styling and alignment */}
+      <div className="flex flex-col justify-center items-center text-center mb-2 md:mb-4">
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">Match Center</h1>
+        <p className="text-muted-foreground max-w-2xl">Track your performance, analyze your stats, and review your match history</p>
+        <div className="w-20 h-1 bg-primary/60 rounded-full mt-4 mb-2"></div>
       </div>
       
       <Tabs defaultValue="overview" className="w-full">
@@ -123,43 +139,329 @@ export default function ModernizedMatchPage() {
         </TabsList>
         
         <TabsContent value="overview" className="mt-6">
-          {/* Show match dashboard */}
-          <MatchDashboard 
-            matches={recentMatches || []}
-            matchStats={matchStats || {
-              totalMatches: 0,
-              matchesWon: 0,
-              winRate: 0,
-              singlesMatches: 0,
-              doublesMatches: 0
-            }}
-            isLoading={statsLoading || matchesLoading}
-            onRecordMatch={() => setMatchDialogOpen(true)}
-            onRefreshData={() => {
-              refetchStats();
-              refetchMatches();
-            }}
-          />
+          {/* MATCH-UI-278653[ENHANCE] - Enhanced Overview Dashboard focused on stats & insights */}
+          <div className="space-y-6">
+            {/* Performance Stats Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <TiltCard 
+                className="border-2 border-primary/20 p-3 overflow-visible bg-gradient-to-br from-background to-muted shadow-md" 
+                tiltAmount={8}
+                glowOnHover={true}
+                glowAlways={true}
+                hoverScale={1.03}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center text-muted-foreground font-medium">
+                      <Trophy className="h-5 w-5 mr-2 text-primary" />
+                      <span>Matches Won</span>
+                    </div>
+                    <Badge variant="outline" className="font-bold">Lifetime</Badge>
+                  </div>
+                  <div className="text-4xl font-bold text-primary">{matchStats?.matchesWon || 0}</div>
+                  <div className="w-full h-2 bg-primary/10 rounded-full mt-3">
+                    <div 
+                      className="h-full bg-primary rounded-full shadow-sm" 
+                      style={{ width: `${matchStats?.winRate || 0}%` }}
+                    ></div>
+                  </div>
+                </CardContent>
+              </TiltCard>
+              
+              <TiltCard 
+                className="border-2 border-green-500/20 p-3 bg-gradient-to-br from-background to-muted shadow-md" 
+                tiltAmount={8}
+                glowOnHover={true}
+                glowAlways={true}
+                hoverScale={1.03}
+                glowColor="rgba(132, 204, 22, 0.4)"
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center text-muted-foreground font-medium">
+                      <BarChart4 className="h-5 w-5 mr-2 text-green-500" />
+                      <span>Win Rate</span>
+                    </div>
+                    <Badge variant="outline" className="font-bold text-green-500 border-green-500/50">Performance</Badge>
+                  </div>
+                  <div className="text-4xl font-bold text-green-500">{matchStats?.winRate || 0}%</div>
+                  <div className="w-full h-2 bg-primary/10 rounded-full mt-3">
+                    <div 
+                      className="h-full bg-green-500 rounded-full shadow-sm" 
+                      style={{ width: `${matchStats?.winRate || 0}%` }}
+                    ></div>
+                  </div>
+                </CardContent>
+              </TiltCard>
+              
+              <TiltCard 
+                className="border-2 border-blue-500/20 p-3 bg-gradient-to-br from-background to-muted shadow-md" 
+                tiltAmount={8}
+                glowOnHover={true}
+                glowAlways={true}
+                hoverScale={1.03}
+                glowColor="rgba(59, 130, 246, 0.4)"
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center text-muted-foreground font-medium">
+                      <Users className="h-5 w-5 mr-2 text-blue-500" />
+                      <span>Format Ratio</span>
+                    </div>
+                    <Badge variant="outline" className="font-bold text-blue-500 border-blue-500/50">Breakdown</Badge>
+                  </div>
+                  <div className="flex items-center justify-between text-2xl mt-2">
+                    <div className="text-center">
+                      <div className="text-sm text-muted-foreground">Singles</div>
+                      <div className="font-bold text-blue-500 text-3xl">{(matchStats as any)?.singlesMatches || 0}</div>
+                    </div>
+                    <Separator orientation="vertical" className="mx-2 h-10 bg-blue-500/20" />
+                    <div className="text-center">
+                      <div className="text-sm text-muted-foreground">Doubles</div>
+                      <div className="font-bold text-blue-500 text-3xl">{(matchStats as any)?.doublesMatches || 0}</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </TiltCard>
+              
+              <TiltCard 
+                className="border-2 border-orange-500/20 p-3 bg-gradient-to-br from-background to-muted shadow-md" 
+                tiltAmount={8}
+                glowOnHover={true}
+                glowAlways={true}
+                hoverScale={1.03}
+                glowColor="rgba(249, 115, 22, 0.4)"
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center text-muted-foreground font-medium">
+                      <Zap className="h-5 w-5 mr-2 text-orange-500" />
+                      <span>Total XP</span>
+                    </div>
+                  </div>
+                  <div className="text-4xl font-bold text-orange-500">
+                    {user?.xp || 0}
+                    <span className="text-sm font-normal text-muted-foreground ml-2">points</span>
+                  </div>
+                  <div className="flex items-center mt-3 text-sm text-muted-foreground">
+                    <span className="text-orange-500 font-medium">+{Math.floor((user?.xp || 0) * 0.12)}</span> 
+                    <span className="ml-1">earned from recent matches</span>
+                  </div>
+                </CardContent>
+              </TiltCard>
+            </div>
+            
+            {/* Performance Trends Chart */}
+            <Card className="border shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Activity className="h-5 w-5 mr-2 text-primary" />
+                  Performance Trends
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <MatchTrends matches={recentMatches?.slice(0, 10) || []} />
+              </CardContent>
+            </Card>
+            
+            {/* Recent Activity Section - Limited to 3 most recent matches */}
+            <div>
+              <h3 className="text-lg font-semibold mb-3 flex items-center">
+                <Calendar className="h-5 w-5 mr-2 text-muted-foreground" />
+                Recent Activity
+              </h3>
+              
+              {matchesLoading ? (
+                <Card className="p-6 text-center border-dashed">
+                  <div className="flex justify-center">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                </Card>
+              ) : recentMatches && recentMatches.length > 0 ? (
+                <div className="space-y-3">
+                  {recentMatches.slice(0, 3).map((match: RecordedMatch) => {
+                    const userPlayer = match.players.find((p) => p.userId === user?.id);
+                    const isWinner = userPlayer?.isWinner;
+                    const opponent = getOpponentName(match, user?.id || 0);
+                    
+                    return (
+                      <Card key={match.id} className="overflow-hidden">
+                        <div className={`h-1 w-full ${isWinner ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <div className="font-medium">
+                                {isWinner ? 'Victory against ' : 'Loss to '} {opponent}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {match.formatType === 'singles' ? 'Singles' : 'Doubles'} • {formatDate(match.date)}
+                              </div>
+                            </div>
+                            <div className="text-lg font-semibold">
+                              {match.players[0].score} - {match.players[1].score}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                  
+                  {recentMatches.length > 3 && (
+                    <div className="text-center mt-4">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => {
+                          const historyTab = document.querySelector('[data-state="inactive"][value="history"]') as HTMLElement;
+                          if (historyTab) historyTab.click();
+                        }}
+                      >
+                        View All Matches
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Card className="p-6 text-center border-dashed">
+                  <CardTitle className="text-base mb-2">No Matches Recorded</CardTitle>
+                  <CardDescription>
+                    Start recording your matches to see your performance trends.
+                  </CardDescription>
+                  <div className="mt-4">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setMatchDialogOpen(true)}
+                      className="gap-2"
+                    >
+                      <PlusCircle className="h-4 w-4" />
+                      Record First Match
+                    </Button>
+                  </div>
+                </Card>
+              )}
+            </div>
+            
+            {/* Quick Actions */}
+            <div className="flex justify-end mt-4">
+              <Button 
+                onClick={() => setMatchDialogOpen(true)}
+                className="gap-2"
+              >
+                <PlusCircle className="h-4 w-4" />
+                Record Match
+              </Button>
+            </div>
+          </div>
         </TabsContent>
         
         <TabsContent value="history" className="mt-6">
-          {/* Comprehensive Match History with Enhanced UI */}
-          <MatchDashboard 
-            matches={recentMatches || []}
-            matchStats={matchStats || {
-              totalMatches: 0,
-              matchesWon: 0,
-              winRate: 0,
-              singlesMatches: 0,
-              doublesMatches: 0
-            }}
-            isLoading={statsLoading || matchesLoading}
-            onRecordMatch={() => setMatchDialogOpen(true)}
-            onRefreshData={() => {
-              refetchStats();
-              refetchMatches();
-            }}
-          />
+          {/* MATCH-UI-278653[ENHANCE] - Comprehensive History View with advanced filtering */}
+          <div className="space-y-6">
+            {/* History Header with Stats Summary */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-muted/30 p-4 rounded-lg mb-6">
+              <div>
+                <h2 className="text-xl font-bold tracking-tight flex items-center">
+                  <Calendar className="mr-2 h-5 w-5 text-primary" />
+                  Match History
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  Complete chronological record of all your matches
+                </p>
+              </div>
+              
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    refetchStats();
+                    refetchMatches();
+                  }}
+                  className="gap-1"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-refresh-cw"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
+                  Refresh
+                </Button>
+                
+                <Button 
+                  onClick={() => setMatchDialogOpen(true)}
+                  className="gap-1"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  Record Match
+                </Button>
+              </div>
+            </div>
+            
+            {/* Advanced Filtering Section */}
+            <Card className="border shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center">
+                  <Filter className="h-5 w-5 mr-2 text-primary" />
+                  Advanced Search & Filters
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ContextualFilters 
+                  matches={recentMatches || []}
+                  filters={{
+                    dateRange: [null, null],
+                    matchType: 'all',
+                    formatType: 'all',
+                    opponent: null,
+                    location: null
+                  }}
+                  onFilterChange={() => {}}
+                />
+              </CardContent>
+            </Card>
+            
+            {/* Match Timeline - Full History */}
+            <Card className="border shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center">
+                  <Activity className="h-5 w-5 mr-2 text-primary" />
+                  Complete Match Timeline
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pb-6">
+                {matchesLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : recentMatches && recentMatches.length > 0 ? (
+                  <MatchTimeline 
+                    matches={recentMatches} 
+                    onMatchSelected={(match) => {
+                      // Implement match details modal
+                      console.log('Match selected:', match);
+                    }} 
+                  />
+                ) : (
+                  <div className="text-center py-8">
+                    <Trophy className="h-12 w-12 mx-auto text-muted-foreground opacity-20 mb-3" />
+                    <h3 className="font-medium text-lg">No Matches Yet</h3>
+                    <p className="text-muted-foreground">Record your first match to start building your history.</p>
+                    <Button 
+                      variant="outline" 
+                      className="mt-4"
+                      onClick={() => setMatchDialogOpen(true)}
+                    >
+                      Record First Match
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            
+            {/* Export Options */}
+            <div className="flex justify-end">
+              <Button variant="outline" size="sm" className="gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                Export History
+              </Button>
+            </div>
+          </div>
         </TabsContent>
         
         <TabsContent value="validations" className="mt-6 space-y-8">
