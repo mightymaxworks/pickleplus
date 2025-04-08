@@ -561,11 +561,6 @@ export default function Dashboard() {
               onClick={() => setLocation("/scan")}
               className="bg-primary text-white hover:bg-primary/90 hover:text-white"
             />
-            <QuickAction 
-              icon={<Plus className="h-4 w-4" />} 
-              label="Record Match" 
-              onClick={() => setMatchDialogOpen(true)}
-            />
           </div>
         </div>
       </div>
