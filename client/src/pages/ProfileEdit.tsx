@@ -525,6 +525,7 @@ export default function ProfileEdit() {
                                 <SelectItem value="CRBN">CRBN</SelectItem>
                                 <SelectItem value="Electrum">Electrum</SelectItem>
                                 <SelectItem value="Diadem">Diadem</SelectItem>
+                                <SelectItem value="SHOT3">SHOT3</SelectItem>
                                 <SelectItem value="Other">Other</SelectItem>
                               </SelectContent>
                             </Select>
