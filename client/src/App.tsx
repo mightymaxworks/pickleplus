@@ -9,6 +9,7 @@ import EnhancedAuthPage from './pages/EnhancedAuthPage'
 import TestAuthPage from './pages/TestAuthPage'
 import TestRoutingPage from './pages/TestRoutingPage'
 import Dashboard from './pages/Dashboard'
+import RecordMatchPage from './pages/record-match-page'
 import MatchRewardDemo from './pages/match-reward-demo'
 import NotFound from './pages/not-found'
 
@@ -81,7 +82,7 @@ export default function App() {
               {(params) => <ProtectedRoute component={Dashboard} path="/profile" />}
             </Route>
             <Route path="/record-match">
-              {(params) => <ProtectedRoute component={Dashboard} path="/record-match" />}
+              {(params) => <ProtectedRoute component={RecordMatchPage} path="/record-match" />}
             </Route>
             <Route path="/admin">
               {(params) => <ProtectedRoute component={Dashboard} path="/admin" />}

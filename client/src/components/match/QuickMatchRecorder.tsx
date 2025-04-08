@@ -51,7 +51,7 @@ interface UserSearchResult {
 }
 
 interface QuickMatchRecorderProps {
-  onSuccess?: () => void;
+  onSuccess?: (data?: any) => void;
 }
 
 export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
@@ -241,7 +241,7 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
         scoringSystem,
         pointsToWin,
         division,
-        matchType: "casual",
+        matchType: "casual" as 'casual', // Type assertion to match MatchData interface
         eventTier: "local",
         players,
         gameScores: games,
@@ -288,9 +288,9 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
       // Navigate to the match page
       navigate("/matches");
       
-      // Call success callback
+      // Call success callback with response data
       if (onSuccess) {
-        onSuccess();
+        onSuccess(response);
       }
     } catch (error) {
       console.error("Error recording match:", error);
