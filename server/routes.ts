@@ -3066,6 +3066,28 @@ function getRandomReason(pointChange: number): string {
         };
       }
       
+      // Auto-validate the match for the submitter (who is always player one)
+      try {
+        // Create an automatic validation record for the submitter
+        await db.insert(matchValidations)
+          .values({
+            matchId: match.id,
+            userId: req.user.id, // The user who submitted the match
+            status: 'confirmed',
+            notes: 'Auto-confirmed as match recorder',
+            validatedAt: new Date()
+          })
+          .returning();
+        
+        console.log(`[VALMAT] Auto-validated match ${match.id} for submitter ${req.user.id}`);
+        
+        // Check if this auto-validation completes all required validations
+        await updateMatchValidationStatus(match.id);
+      } catch (validationError) {
+        console.error("[VALMAT] Error auto-validating match for submitter:", validationError);
+        // Continue anyway - this is not critical
+      }
+      
       // Combine match data with player information
       const recordedMatch = {
         ...match,
@@ -3597,6 +3619,7 @@ function getRandomReason(pointChange: number): string {
       const userId = req.user.id;
       const today = new Date();
       today.setHours(0, 0, 0, 0); // Start of today
+      const now = new Date();
       
       // Check if user has a daily match record for today
       const todayStr = today.toISOString().split('T')[0]; // Format as YYYY-MM-DD
@@ -3608,7 +3631,54 @@ function getRandomReason(pointChange: number): string {
         ))
         .limit(1);
       
-      // Define point multipliers based on match count
+      // Get recent matches to check for time-based constraints
+      const recentMatches = await db.select({
+        id: matches.id,
+        matchDate: matches.matchDate
+      })
+      .from(matches)
+      .where(
+        and(
+          or(
+            eq(matches.playerOneId, userId),
+            eq(matches.playerTwoId, userId),
+            eq(matches.playerOnePartnerId, userId),
+            eq(matches.playerTwoPartnerId, userId)
+          ),
+          sql`${matches.matchDate} >= ${new Date(now.getTime() - 4 * 60 * 60 * 1000).toISOString()}` // Last 4 hours
+        )
+      )
+      .orderBy(desc(matches.matchDate));
+      
+      // Time-weighted multiplier calculation
+      const calculateTimeWeightedMultiplier = (matches: {id: number, matchDate: Date}[]): number => {
+        if (matches.length === 0) return 1.0; // No recent matches
+        
+        // Sort by most recent first
+        const sortedMatches = [...matches].sort((a, b) => b.matchDate.getTime() - a.matchDate.getTime());
+        
+        // Calculate minutes since most recent match
+        const minutesSinceLastMatch = (now.getTime() - sortedMatches[0].matchDate.getTime()) / (60 * 1000);
+        
+        // Rapid match penalty (if less than 15 min since last match)
+        if (minutesSinceLastMatch < 15) {
+          return 0.7; // 30% reduction if matches are being recorded too quickly
+        }
+        
+        // Density penalty based on number of matches in past 2 hours
+        const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+        const matchesInLastTwoHours = sortedMatches.filter(
+          match => match.matchDate >= twoHoursAgo
+        ).length;
+        
+        if (matchesInLastTwoHours >= 4) {
+          return 0.75; // 25% reduction if 4+ matches in 2 hours (potentially binge playing)
+        }
+        
+        return 1.0; // No time-based penalty
+      };
+      
+      // Enhanced point multipliers based on match count
       const getMultiplier = (count: number): number => {
         if (count <= 3) return 100; // First 3 matches: 100% points
         if (count <= 6) return 75;  // Matches 4-6: 75% points  
@@ -3616,23 +3686,46 @@ function getRandomReason(pointChange: number): string {
         return 25;                  // More than 10 matches: 25% points
       };
       
+      // Calculate anti-binge factors
+      const timeWeightedFactor = calculateTimeWeightedMultiplier(recentMatches);
+      
       // Calculate remaining full-point matches
       let matchCount = 0;
-      let multiplier = 100;
+      let baseMultiplier = 100;
       
       if (dailyRecord && dailyRecord.length > 0) {
         matchCount = dailyRecord[0].matchCount;
-        multiplier = getMultiplier(matchCount);
+        baseMultiplier = getMultiplier(matchCount);
       }
+      
+      // Apply time-weighted adjustment to create the effective multiplier
+      const effectiveMultiplier = Math.round(baseMultiplier * timeWeightedFactor);
       
       // Calculate remaining matches at each tier
       const remainingFullPoints = Math.max(0, 3 - matchCount);
       const remaining75Percent = Math.max(0, 6 - Math.max(3, matchCount));
       const remaining50Percent = Math.max(0, 10 - Math.max(6, matchCount));
       
+      // Generate time-based messages
+      let timeConstraintMessage = null;
+      if (timeWeightedFactor < 1.0) {
+        if (recentMatches.length > 0) {
+          const minutesSinceLastMatch = (now.getTime() - recentMatches[0].matchDate.getTime()) / (60 * 1000);
+          if (minutesSinceLastMatch < 15) {
+            timeConstraintMessage = "Matches are being recorded too quickly. Take a short break for full points.";
+          } else {
+            timeConstraintMessage = "You're playing a lot of matches in a short time. Pace yourself for optimal points.";
+          }
+        }
+      }
+      
       res.json({
         dailyMatchCount: matchCount,
-        currentMultiplier: multiplier,
+        currentBaseMultiplier: baseMultiplier,
+        currentEffectiveMultiplier: effectiveMultiplier,
+        timeWeightedFactor: Math.round(timeWeightedFactor * 100),
+        timeConstraintMessage,
+        recentMatchCount: recentMatches.length,
         dailyMatchLimit: {
           tier1: { multiplier: 100, remaining: remainingFullPoints },
           tier2: { multiplier: 75, remaining: remaining75Percent },

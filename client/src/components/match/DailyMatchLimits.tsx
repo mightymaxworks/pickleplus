@@ -4,6 +4,8 @@ import { matchSDK } from '@/lib/sdk/matchSDK';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from '@/components/ui/badge';
+import { Clock, AlertTriangle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function DailyMatchLimits() {
   const { data, isLoading, error } = useQuery({
@@ -59,19 +61,52 @@ export default function DailyMatchLimits() {
     currentTier = 'tier2';
   }
   
+  // Handle backward compatibility with new API response format
+  const baseMultiplier = data.currentBaseMultiplier !== undefined ? data.currentBaseMultiplier : data.currentMultiplier;
+  const effectiveMultiplier = data.currentEffectiveMultiplier !== undefined ? data.currentEffectiveMultiplier : data.currentMultiplier;
+  const timeWeightedFactor = data.timeWeightedFactor !== undefined ? data.timeWeightedFactor : 100;
+  const hasTimePenalty = timeWeightedFactor < 100;
+  
   return (
     <Card>
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
           <CardTitle className="text-md">Daily Match Limits</CardTitle>
-          <Badge variant={data.currentMultiplier === 100 ? "default" : "outline"}>
-            {data.currentMultiplier}% Points
-          </Badge>
+          <div className="flex items-center gap-2">
+            {hasTimePenalty && (
+              <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300">
+                <Clock className="mr-1 h-3 w-3" /> Time Penalty
+              </Badge>
+            )}
+            <Badge 
+              variant={effectiveMultiplier === 100 ? "default" : "outline"}
+              className={hasTimePenalty ? "line-through" : ""}
+            >
+              {baseMultiplier}% Base
+            </Badge>
+            {hasTimePenalty && (
+              <Badge variant="secondary">
+                {effectiveMultiplier}% Effective
+              </Badge>
+            )}
+          </div>
         </div>
-        <CardDescription>You've played {matchesPlayed} matches today</CardDescription>
+        <CardDescription>
+          You've played {matchesPlayed} matches today
+          {data.recentMatchCount > 0 && ` (${data.recentMatchCount} in the last 4 hours)`}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
+          {data.timeConstraintMessage && (
+            <Alert variant="warning" className="py-2">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription className="text-xs">
+                {data.timeConstraintMessage}
+              </AlertDescription>
+            </Alert>
+          )}
+          
           <div>
             <div className="flex justify-between text-sm mb-1">
               <span className="font-medium">Tier 1: 100% Points</span>
@@ -105,11 +140,16 @@ export default function DailyMatchLimits() {
             />
           </div>
           
-          <div className="pt-2 text-sm text-muted-foreground">
-            {currentTier === 'tier4' ? (
-              <span>You're now earning 25% points for additional matches today</span>
+          <div className="pt-2 text-sm">
+            {hasTimePenalty ? (
+              <div className="text-amber-700">
+                <p className="font-medium">Time Penalty: {100 - timeWeightedFactor}% Reduction</p>
+                <p className="text-xs mt-1">Effective points multiplier has been temporarily reduced due to rapid match recording.</p>
+              </div>
+            ) : currentTier === 'tier4' ? (
+              <span className="text-muted-foreground">You're now earning 25% points for additional matches today</span>
             ) : (
-              <span>Play more matches to increase your XP and rating!</span>
+              <span className="text-muted-foreground">Play more matches to increase your XP and rating!</span>
             )}
           </div>
         </div>

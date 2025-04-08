@@ -165,18 +165,24 @@ export async function provideMatchFeedback(
 
 /**
  * Get the user's daily match limits
- * @returns Daily match limit information
+ * @returns Daily match limit information with enhanced anti-binge measures
  */
-export async function getDailyMatchLimits(): Promise<{
+export interface DailyMatchLimitsResponse {
   dailyMatchCount: number;
-  currentMultiplier: number;
+  currentBaseMultiplier: number;
+  currentEffectiveMultiplier: number;
+  timeWeightedFactor: number;
+  timeConstraintMessage: string | null;
+  recentMatchCount: number;
   dailyMatchLimit: {
     tier1: { multiplier: number; remaining: number };
     tier2: { multiplier: number; remaining: number };
     tier3: { multiplier: number; remaining: number };
     tier4: { multiplier: number; unlimited: boolean };
   }
-}> {
+}
+
+export async function getDailyMatchLimits(): Promise<DailyMatchLimitsResponse> {
   try {
     const response = await apiRequest("GET", "/api/match/daily-limits");
     
@@ -188,6 +194,24 @@ export async function getDailyMatchLimits(): Promise<{
     return await response.json();
   } catch (error) {
     console.error("matchSDK: Error getting daily match limits:", error);
+    
+    // Return a fallback value for error cases to avoid breaking the UI
+    // This maintains backwards compatibility with old data structure
+    const fallback: DailyMatchLimitsResponse = {
+      dailyMatchCount: 0,
+      currentBaseMultiplier: 100,
+      currentEffectiveMultiplier: 100,
+      timeWeightedFactor: 100,
+      timeConstraintMessage: null,
+      recentMatchCount: 0,
+      dailyMatchLimit: {
+        tier1: { multiplier: 100, remaining: 3 },
+        tier2: { multiplier: 75, remaining: 3 },
+        tier3: { multiplier: 50, remaining: 4 },
+        tier4: { multiplier: 25, unlimited: true }
+      }
+    };
+    
     throw error;
   }
 }
