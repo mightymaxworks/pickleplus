@@ -5,7 +5,8 @@ import { MobileNavigation } from './MobileNavigation';
 import { User } from '@shared/schema';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, User as UserIcon, Menu, X, Search, Settings, Home, Calendar, Award, Users } from 'lucide-react';
-import { OfficialPicklePlusLogo } from '@/components/icons/OfficialPicklePlusLogo';
+import { PicklePlusNewLogo } from '../icons/PicklePlusNewLogo';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -18,6 +19,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3);
+  const isExtraSmallScreen = useMediaQuery('(max-width: 480px)');
+  const isSmallScreen = useMediaQuery('(max-width: 640px)');
   
   // Handle scroll detection for header styling
   useEffect(() => {
@@ -38,7 +41,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
         >
-          <OfficialPicklePlusLogo className="h-14 w-auto mb-6" />
+          <PicklePlusNewLogo height="56px" className="mb-6" preserveAspectRatio={true} />
         </motion.div>
         
         <div className="relative w-12 h-12">
@@ -99,7 +102,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
           >
-            <OfficialPicklePlusLogo className="h-10 w-auto" />
+            <PicklePlusNewLogo 
+              className={isExtraSmallScreen ? "h-6 w-auto" : "h-8 w-auto"}
+            />
           </motion.div>
           
           {/* Right side actions */}

@@ -138,8 +138,8 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
   return (
     <div className="w-full perspective cursor-pointer" onClick={() => setIsFlipped(!isFlipped)}>
       <div 
-        className={`preserve-3d transition-all duration-500 relative ${isFlipped ? 'passport-card-rotate' : ''}`}
-        style={{ transformStyle: 'preserve-3d', minHeight: isSmallScreen ? '250px' : '300px' }}
+        className={`preserve-3d relative ${isFlipped ? 'passport-card-rotate' : ''}`}
+        style={{ minHeight: isSmallScreen ? '250px' : '300px' }}
       >
         {/* Front of passport */}
         <div className="absolute inset-0 backface-hidden w-full bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-xl">
