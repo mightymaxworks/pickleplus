@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { PicklePlusTextLogo } from "@/components/icons/PicklePlusTextLogo";
 import { PicklePlusLogo } from "@/components/icons/PicklePlusLogo";
 import { PicklePlusNewLogo } from "@/components/icons/PicklePlusNewLogo";
+import { PicklePlusWhiteLogo } from "@/components/icons/PicklePlusWhiteLogo";
 import { Button } from "@/components/ui/button";
 import { 
   ChevronDown, 
@@ -140,31 +141,41 @@ export default function EnhancedLandingPage() {
   
   return (
     <div className="enhanced-landing-page overflow-x-hidden w-full">
-      {/* Top Navigation Bar */}
-      <header className="py-4 px-4 sm:px-6 absolute top-0 left-0 right-0 z-50">
+      {/* Top Navigation Bar with improved mobile design */}
+      <header className="py-5 px-4 sm:px-6 absolute top-0 left-0 right-0 z-50 backdrop-blur-sm bg-gradient-to-r from-[#FF5722]/80 to-[#FF7043]/80">
         <div className="container mx-auto">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
-              <PicklePlusNewLogo className="h-10 w-auto" />
-            </div>
-            <nav className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="text-white hover:text-white/90 font-medium">Features</a>
-              <a href="#technology" className="text-white hover:text-white/90 font-medium">Technology</a>
-              <a href="#founding" className="text-white hover:text-white/90 font-medium">Founding Membership</a>
-              <Button 
-                variant="outline" 
-                className="border-white text-white hover:bg-white/10"
-                onClick={() => navigate("/auth")}
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
               >
-                Login
-              </Button>
-            </nav>
-            <Button 
-              className="md:hidden bg-white text-[#FF5722] hover:bg-white/90"
-              onClick={() => navigate("/auth")}
-            >
-              Login
-            </Button>
+                <PicklePlusWhiteLogo className="h-12 sm:h-16 w-auto" />
+              </motion.div>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <nav className="hidden md:flex items-center space-x-6">
+                <a href="#features" className="text-white hover:text-white/90 font-medium text-sm transition-all hover:scale-105">Features</a>
+                <a href="#technology" className="text-white hover:text-white/90 font-medium text-sm transition-all hover:scale-105">Technology</a>
+                <a href="#founding" className="text-white hover:text-white/90 font-medium text-sm transition-all hover:scale-105">Founding Membership</a>
+              </nav>
+              
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                <Button 
+                  variant="secondary"
+                  className="bg-white text-[#FF5722] hover:bg-white/90 shadow-md font-medium"
+                  onClick={() => navigate("/auth")}
+                >
+                  Sign In
+                </Button>
+              </motion.div>
+            </div>
           </div>
         </div>
       </header>
@@ -238,7 +249,7 @@ export default function EnhancedLandingPage() {
                     <div className="bg-gradient-to-r from-[#FF5722] to-[#FF9800] pt-3 pb-5 px-5 text-white">
                       <div className="flex justify-between items-center">
                         <div className="font-bold text-lg">Player Passport</div>
-                        <PicklePlusNewLogo className="h-12 w-auto" />
+                        <PicklePlusNewLogo className="h-10 w-auto" />
                       </div>
                       {/* CourtIQ badge - repositioned */}
                       <div className="absolute top-16 right-2 bg-black/20 backdrop-blur-sm px-2 py-1 rounded text-xs font-medium flex items-center">
