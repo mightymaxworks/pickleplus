@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/toaster'
 import { AuthProvider } from '@/hooks/useAuth'
 import EnhancedLandingPage from './pages/EnhancedLandingPage'
 import EnhancedAuthPage from './pages/EnhancedAuthPage'
+import TestAuthPage from './pages/TestAuthPage'
 import Dashboard from './pages/Dashboard'
 import MatchRewardDemo from './pages/match-reward-demo'
 import NotFound from './pages/not-found'
@@ -43,7 +44,7 @@ export default function App() {
             <Route path="/" component={EnhancedLandingPage} />
             <Route path="/login" component={EnhancedAuthPage} />
             <Route path="/register" component={EnhancedAuthPage} />
-            <Route path="/auth" component={EnhancedAuthPage} />
+            <Route path="/auth" component={TestAuthPage} />
             
             {/* Protected Routes */}
             <Route path="/dashboard">
