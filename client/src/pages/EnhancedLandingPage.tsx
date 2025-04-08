@@ -182,14 +182,16 @@ export default function EnhancedLandingPage() {
                 Pickle+ Passport with CourtIQ™ analytics tracks your progress, connects you with the community, and elevates your game with real-time insights and rewards.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-                <Link href="/auth">
-                  <Button 
-                    size="lg" 
-                    className="bg-white text-[#FF5722] hover:bg-white/90 w-full sm:w-auto"
-                  >
-                    Get Started
-                  </Button>
-                </Link>
+                <Button 
+                  size="lg" 
+                  className="bg-white text-[#FF5722] hover:bg-white/90 w-full sm:w-auto"
+                  onClick={() => {
+                    console.log("Navigating to /auth");
+                    window.location.href = "/auth";
+                  }}
+                >
+                  Get Started
+                </Button>
                 <Button 
                   size="lg" 
                   variant="outline" 
