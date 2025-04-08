@@ -92,6 +92,23 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
     },
   });
   
+  // Reset form to initial state
+  const resetForm = () => {
+    setPlayerTwoData(null);
+    setPlayerOnePartnerData(null);
+    setPlayerTwoPartnerData(null);
+    setFormatType("singles");
+    setScoringSystem("traditional");
+    setPointsToWin(11);
+    setTotalGames(1);
+    setGames([{ playerOneScore: 0, playerTwoScore: 0 }]);
+    form.reset({
+      playerTwoId: 0,
+      formatType: "singles",
+      notes: "",
+    });
+  };
+  
   // Listen for player selection events from DialogPlayerSelect
   useEffect(() => {
     const handlePlayerSelected = (event: CustomEvent) => {
@@ -161,6 +178,29 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
       return playerOneWins > playerTwoWins 
         ? user?.id 
         : playerTwoData?.id;
+    }
+  };
+  
+  // Calculate if match is complete and ready to submit
+  const isMatchComplete = () => {
+    // First, check if all players are selected
+    if (!playerTwoData) return false;
+    if (formatType === "doubles" && (!playerOnePartnerData || !playerTwoPartnerData)) return false;
+    
+    // Then check if scores are entered
+    if (totalGames === 1) {
+      const game = games[0];
+      if (!game) return false;
+      
+      // Just check if any score was entered
+      const maxScore = Math.max(game.playerOneScore, game.playerTwoScore);
+      return maxScore > 0;
+    } else {
+      // In multi-game format, just verify that some games have scores
+      const gamesWithScores = games.filter(g => 
+        g && (g.playerOneScore > 0 || g.playerTwoScore > 0)
+      ).length;
+      return gamesWithScores > 0;
     }
   };
   
@@ -252,8 +292,21 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
       
       // Record match via SDK
       console.log("Calling matchSDK.recordMatch...");
-      const response = await matchSDK.recordMatch(matchData);
-      console.log("Match recorded successfully:", response);
+      
+      let response;
+      try {
+        response = await matchSDK.recordMatch(matchData);
+        console.log("Match recorded successfully:", response);
+        
+        // Check if response is valid
+        if (!response || !response.id) {
+          console.error("Invalid response from matchSDK:", response);
+          throw new Error("Failed to get a valid response when recording match");
+        }
+      } catch (matchRecordError) {
+        console.error("Inner try/catch - Error in matchSDK.recordMatch:", matchRecordError);
+        throw matchRecordError;
+      }
       
       // Auto-validate the match for the submitter
       try {
@@ -319,46 +372,6 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
       });
     } finally {
       setIsSubmitting(false);
-    }
-  };
-  
-  // Reset form to initial state
-  const resetForm = () => {
-    setPlayerTwoData(null);
-    setPlayerOnePartnerData(null);
-    setPlayerTwoPartnerData(null);
-    setFormatType("singles");
-    setScoringSystem("traditional");
-    setPointsToWin(11);
-    setTotalGames(1);
-    setGames([{ playerOneScore: 0, playerTwoScore: 0 }]);
-    form.reset({
-      playerTwoId: 0,
-      formatType: "singles",
-      notes: "",
-    });
-  };
-  
-  // Calculate if match is complete and ready to submit
-  const isMatchComplete = () => {
-    // First, check if all players are selected
-    if (!playerTwoData) return false;
-    if (formatType === "doubles" && (!playerOnePartnerData || !playerTwoPartnerData)) return false;
-    
-    // Then check if scores are entered
-    if (totalGames === 1) {
-      const game = games[0];
-      if (!game) return false;
-      
-      // Just check if any score was entered
-      const maxScore = Math.max(game.playerOneScore, game.playerTwoScore);
-      return maxScore > 0;
-    } else {
-      // In multi-game format, just verify that some games have scores
-      const gamesWithScores = games.filter(g => 
-        g && (g.playerOneScore > 0 || g.playerTwoScore > 0)
-      ).length;
-      return gamesWithScores > 0;
     }
   };
   
@@ -678,26 +691,33 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
         {/* VALMAT Validation Information */}
         <div className="mt-4">
           <Alert className="text-xs sm:text-sm">
-            <CheckCircle className="h-4 w-4 shrink-0" />
-            <AlertTitle className="text-sm sm:text-base">VALMAT Validation System</AlertTitle>
-            <AlertDescription className="text-xs sm:text-sm">
-              When you submit this match, it will be automatically validated by you (the submitter). 
-              Other players will need to validate the match for it to count fully toward rankings and XP.
+            <CheckCircle className="h-4 w-4 mt-0.5" />
+            <AlertTitle className="ml-2">Match will be validated automatically</AlertTitle>
+            <AlertDescription className="ml-2">
+              Your match will be auto-validated for you, but other players will need to confirm it.
             </AlertDescription>
           </Alert>
         </div>
+        
+        {/* Notes Field */}
+        <div className="space-y-3">
+          <div className="text-sm font-medium flex items-center">
+            <span>Notes</span>
+            <span className="text-xs text-muted-foreground ml-2">(Optional)</span>
+          </div>
+          <Form {...form}>
+            <form>
+              <textarea
+                className="w-full min-h-[80px] p-3 rounded-md border focus:border-primary border-input bg-background focus:outline-none"
+                placeholder="Add any notes about this match..."
+                {...form.register("notes")}
+              />
+            </form>
+          </Form>
+        </div>
       </CardContent>
       
-      <CardFooter className="flex justify-between px-4 sm:px-6 py-3 sm:py-4">
-        <Button 
-          variant="outline" 
-          onClick={resetForm}
-          disabled={isSubmitting}
-          size="sm"
-          className="h-10 sm:h-auto sm:text-base"
-        >
-          Reset
-        </Button>
+      <CardFooter className="px-4 sm:px-6 py-3 sm:py-4 flex flex-row-reverse justify-between">
         <Button 
           onClick={handleSubmit}
           disabled={isSubmitting || !isMatchComplete() || !playerTwoData}
@@ -706,6 +726,15 @@ export function QuickMatchRecorder({ onSuccess }: QuickMatchRecorderProps) {
         >
           <CheckCircle2 className="h-4 w-4" />
           Submit
+        </Button>
+        <Button 
+          variant="outline" 
+          onClick={resetForm}
+          disabled={isSubmitting}
+          className="gap-1 h-10 sm:h-auto"
+          size="sm"
+        >
+          Reset
         </Button>
       </CardFooter>
     </Card>
