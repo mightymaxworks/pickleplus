@@ -235,10 +235,12 @@ function MatchTimelineCard({ match, currentUserId, onClick }: MatchTimelineCardP
   return (
     <TiltCard
       glowColor={glowColor}
-      tiltAmount={4}
+      tiltAmount={15}
       glowOnHover={true}
+      glowAlways={true}
+      hoverScale={1.1}
       onClick={onClick}
-      className={`border ${userWon ? 'border-green-500/30' : 'border-red-500/30'}`}
+      className={`border-2 ${userWon ? 'border-green-500/30 bg-gradient-to-br from-green-50/5 to-green-900/5' : 'border-red-500/30 bg-gradient-to-br from-red-50/5 to-red-900/5'}`}
     >
       <div className="p-3">
         <div className="flex justify-between items-center">

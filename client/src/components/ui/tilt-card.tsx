@@ -27,10 +27,10 @@ export function TiltCard({
   children,
   className = '',
   glowColor = 'rgba(255, 87, 34, 0.35)', // Pickle+ orange with transparency
-  tiltAmount = 5,
-  glowAmount = 20,
-  perspective = 800,
-  hoverScale = 1.02,
+  tiltAmount = 15,
+  glowAmount = 35,
+  perspective = 1000,
+  hoverScale = 1.05,
   glowOnHover = true,
   glowAlways = false,
   onClick
@@ -90,7 +90,7 @@ export function TiltCard({
       ref={cardRef}
       className={cn(
         'relative rounded-lg overflow-hidden cursor-pointer transition-shadow duration-300',
-        shouldShowGlow ? 'shadow-lg' : 'shadow-md',
+        shouldShowGlow ? 'shadow-xl border-2 border-primary/30' : 'shadow-lg',
         className
       )}
       style={{
@@ -98,6 +98,8 @@ export function TiltCard({
         transformStyle: 'preserve-3d',
         rotateX: rotateX,
         rotateY: rotateY,
+        boxShadow: isHovering ? '0 10px 30px -15px rgba(0,0,0,0.3)' : 'none',
+        transition: 'box-shadow 0.3s ease',
       }}
       whileHover={{ scale: hoverScale }}
       onMouseMove={handleMouseMove}
@@ -126,9 +128,15 @@ export function TiltCard({
       )}
       
       {/* Content */}
-      <div className="relative z-10">
+      <motion.div 
+        className="relative z-10"
+        style={{
+          transform: isHovering ? 'translateZ(20px)' : 'translateZ(0px)',
+          transition: 'transform 0.3s ease-out'
+        }}
+      >
         {children}
-      </div>
+      </motion.div>
     </motion.div>
   );
 }

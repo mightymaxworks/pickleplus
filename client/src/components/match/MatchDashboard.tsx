@@ -169,19 +169,25 @@ export function MatchDashboard({
       {/* Header with stats cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         {/* Total Matches */}
-        <TiltCard className="border p-1 overflow-visible" tiltAmount={3} glowOnHover={true}>
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between mb-2">
+        <TiltCard 
+          className="border-2 border-primary/20 p-1 overflow-visible bg-gradient-to-br from-background to-muted" 
+          tiltAmount={15} 
+          glowOnHover={true}
+          glowAlways={true}
+          hoverScale={1.08}
+        >
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center text-muted-foreground text-sm font-medium">
-                <Calendar className="h-4 w-4 mr-1" />
+                <Calendar className="h-5 w-5 mr-2 text-primary" />
                 Total Matches
               </div>
-              <Badge variant="outline" className="text-xs">Lifetime</Badge>
+              <Badge variant="outline" className="text-xs font-bold">Lifetime</Badge>
             </div>
-            <div className="text-3xl font-bold">{matchStats?.totalMatches || 0}</div>
-            <div className="w-full h-1 bg-primary/10 rounded-full mt-2">
+            <div className="text-4xl font-bold text-primary">{matchStats?.totalMatches || 0}</div>
+            <div className="w-full h-2 bg-primary/10 rounded-full mt-3">
               <div 
-                className="h-full bg-primary rounded-full" 
+                className="h-full bg-primary rounded-full shadow-sm" 
                 style={{ width: '100%' }}
               ></div>
             </div>
@@ -189,19 +195,25 @@ export function MatchDashboard({
         </TiltCard>
         
         {/* Matches Won */}
-        <TiltCard className="border p-1" tiltAmount={3} glowOnHover={true}>
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between mb-2">
+        <TiltCard 
+          className="border-2 border-primary/20 p-1 bg-gradient-to-br from-background to-muted" 
+          tiltAmount={15} 
+          glowOnHover={true} 
+          glowAlways={true}
+          hoverScale={1.08}
+        >
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center text-muted-foreground text-sm font-medium">
-                <Trophy className="h-4 w-4 mr-1" />
+                <Trophy className="h-5 w-5 mr-2 text-primary" />
                 Matches Won
               </div>
-              <Badge variant="outline" className="text-xs">Lifetime</Badge>
+              <Badge variant="outline" className="text-xs font-bold">Lifetime</Badge>
             </div>
-            <div className="text-3xl font-bold">{matchStats?.matchesWon || 0}</div>
-            <div className="w-full h-1 bg-primary/10 rounded-full mt-2">
+            <div className="text-4xl font-bold text-primary">{matchStats?.matchesWon || 0}</div>
+            <div className="w-full h-2 bg-primary/10 rounded-full mt-3">
               <div 
-                className="h-full bg-primary rounded-full" 
+                className="h-full bg-primary rounded-full shadow-sm" 
                 style={{ width: `${matchStats?.winRate || 0}%` }}
               ></div>
             </div>
@@ -210,23 +222,25 @@ export function MatchDashboard({
         
         {/* Win Rate */}
         <TiltCard 
-          className="border p-1" 
-          tiltAmount={3} 
+          className="border-2 border-green-500/20 p-1 bg-gradient-to-br from-background to-muted" 
+          tiltAmount={15} 
           glowOnHover={true}
+          glowAlways={true}
+          hoverScale={1.08}
           glowColor="rgba(132, 204, 22, 0.4)" // Success green
         >
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between mb-2">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center text-muted-foreground text-sm font-medium">
-                <BarChart4 className="h-4 w-4 mr-1" />
+                <BarChart4 className="h-5 w-5 mr-2 text-green-500" />
                 Win Rate
               </div>
-              <Badge variant="outline" className="text-xs">Performance</Badge>
+              <Badge variant="outline" className="text-xs font-bold text-green-500 border-green-500/50">Performance</Badge>
             </div>
-            <div className="text-3xl font-bold">{matchStats?.winRate || 0}%</div>
-            <div className="w-full h-1 bg-primary/10 rounded-full mt-2">
+            <div className="text-4xl font-bold text-green-500">{matchStats?.winRate || 0}%</div>
+            <div className="w-full h-2 bg-primary/10 rounded-full mt-3">
               <div 
-                className="h-full bg-lime-500 rounded-full" 
+                className="h-full bg-green-500 rounded-full shadow-sm" 
                 style={{ width: `${matchStats?.winRate || 0}%` }}
               ></div>
             </div>
@@ -234,24 +248,31 @@ export function MatchDashboard({
         </TiltCard>
         
         {/* Match Format Distribution */}
-        <TiltCard className="border p-1" tiltAmount={3} glowOnHover={true}>
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between mb-2">
+        <TiltCard 
+          className="border-2 border-blue-500/20 p-1 bg-gradient-to-br from-background to-muted" 
+          tiltAmount={15} 
+          glowOnHover={true}
+          glowAlways={true}
+          hoverScale={1.08}
+          glowColor="rgba(59, 130, 246, 0.4)" // Blue
+        >
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center text-muted-foreground text-sm font-medium">
-                <Users className="h-4 w-4 mr-1" />
+                <Users className="h-5 w-5 mr-2 text-blue-500" />
                 Format Breakdown
               </div>
-              <Badge variant="outline" className="text-xs">Distribution</Badge>
+              <Badge variant="outline" className="text-xs font-bold text-blue-500 border-blue-500/50">Distribution</Badge>
             </div>
-            <div className="flex items-center justify-between text-2xl">
+            <div className="flex items-center justify-between text-2xl mt-2">
               <div className="text-center">
                 <div className="text-sm text-muted-foreground">Singles</div>
-                <div className="font-bold">{matchStats?.singlesMatches || 0}</div>
+                <div className="font-bold text-blue-500 text-3xl">{matchStats?.singlesMatches || 0}</div>
               </div>
-              <Separator orientation="vertical" className="mx-2 h-8" />
+              <Separator orientation="vertical" className="mx-2 h-10 bg-blue-500/20" />
               <div className="text-center">
                 <div className="text-sm text-muted-foreground">Doubles</div>
-                <div className="font-bold">{matchStats?.doublesMatches || 0}</div>
+                <div className="font-bold text-blue-500 text-3xl">{matchStats?.doublesMatches || 0}</div>
               </div>
             </div>
           </CardContent>
