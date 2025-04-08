@@ -233,7 +233,9 @@ export default function EnhancedLandingPage() {
                   <div className="bg-gradient-to-r from-[#FF5722] to-[#FF9800] pt-3 pb-5 px-5 text-white">
                     <div className="flex justify-between items-center">
                       <div className="font-bold text-lg">Pickle+ Digital Passport</div>
-                      <PicklePlusNewLogo className="h-10 w-auto" />
+                      <div className="h-10 w-auto">
+                        <PicklePlusNewLogo width={80} preserveAspectRatio={true} />
+                      </div>
                     </div>
                     
                     {/* CourtIQ badge */}
@@ -410,7 +412,9 @@ export default function EnhancedLandingPage() {
         <div className="container mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div>
-              <PicklePlusNewLogo className="h-8 w-auto mb-4" />
+              <div className="w-32 h-8 mb-4">
+                <PicklePlusNewLogo width={120} preserveAspectRatio={true} />
+              </div>
               <p className="text-gray-400 text-sm mb-4">
                 Revolutionizing the pickleball experience with cutting-edge technology and community focus.
               </p>

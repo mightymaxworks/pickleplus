@@ -185,7 +185,9 @@ export default function EnhancedAuthPage() {
             transition={{ duration: 0.5 }}
             className="flex flex-col items-center"
           >
-            <PicklePlusNewLogo className="h-20 w-auto mb-2" />
+            <div className="h-20 w-auto mb-2">
+              <PicklePlusNewLogo width={160} preserveAspectRatio={true} />
+            </div>
           </motion.div>
         </div>
 
