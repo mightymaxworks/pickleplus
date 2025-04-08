@@ -12,6 +12,8 @@ import Dashboard from './pages/Dashboard'
 import RecordMatchPage from './pages/record-match-page'
 import MatchesPage from './pages/matches-page'
 import MatchRewardDemo from './pages/match-reward-demo'
+import EnhancedProfile from './pages/EnhancedProfile'
+import ProfileEdit from './pages/ProfileEdit'
 import NotFound from './pages/not-found'
 
 import { useAuth } from './hooks/useAuth'
@@ -80,7 +82,10 @@ export default function App() {
               {(params) => <ProtectedRoute component={Dashboard} path="/passport" />}
             </Route>
             <Route path="/profile">
-              {(params) => <ProtectedRoute component={Dashboard} path="/profile" />}
+              {(params) => <ProtectedRoute component={EnhancedProfile} path="/profile" />}
+            </Route>
+            <Route path="/profile/edit">
+              {(params) => <ProtectedRoute component={ProfileEdit} path="/profile/edit" />}
             </Route>
             <Route path="/record-match">
               {(params) => <ProtectedRoute component={RecordMatchPage} path="/record-match" />}

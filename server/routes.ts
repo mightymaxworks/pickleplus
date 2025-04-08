@@ -220,6 +220,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to update profile" });
     }
   });
+  
+  // Profile Image Upload
+  app.post("/api/profile/upload-image", isAuthenticated, async (req: Request, res: Response) => {
+    if (!req.user) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    try {
+      // In a real implementation, we would:
+      // 1. Use multipart middleware like multer to handle file uploads
+      // 2. Process the image (resize, optimize)
+      // 3. Store it in cloud storage or file system
+      // 4. Save the URL in the database
+      
+      console.log("Profile image upload requested for user", req.user.id);
+      
+      // For this prototype, we'll mock the behavior
+      // In a real implementation, we would save the URL after uploading to cloud storage
+      const mockAvatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(req.user.username)}&size=200&color=fff&background=FF5722`;
+      
+      // Update user with new avatar URL
+      const updatedUser = await storage.updateUserProfile(req.user.id, {
+        avatarUrl: mockAvatarUrl
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ error: "Failed to update profile image" });
+      }
+      
+      // Return success response with the updated user
+      res.json({
+        success: true,
+        message: "Profile image uploaded successfully",
+        user: {
+          id: updatedUser.id,
+          avatarUrl: updatedUser.avatarUrl
+        }
+      });
+    } catch (error) {
+      console.error('Error uploading profile image:', error);
+      res.status(500).json({ error: "Failed to upload profile image" });
+    }
+  });
+  
+  // Remove Profile Image
+  app.delete("/api/profile/remove-image", isAuthenticated, async (req: Request, res: Response) => {
+    if (!req.user) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    try {
+      // Update user to remove avatar URL
+      const updatedUser = await storage.updateUserProfile(req.user.id, {
+        avatarUrl: null
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ error: "Failed to remove profile image" });
+      }
+      
+      // Return success response
+      res.json({
+        success: true,
+        message: "Profile image removed successfully"
+      });
+    } catch (error) {
+      console.error('Error removing profile image:', error);
+      res.status(500).json({ error: "Failed to remove profile image" });
+    }
+  });
 
   // User routes
   app.get("/api/users/:id", isAuthenticated, async (req: Request, res: Response) => {
