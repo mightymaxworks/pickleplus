@@ -126,31 +126,37 @@ Our structured approach to developing new features:
    - Technical constraints
    - Integration points
 
-2. Technical Architecture
-   - Data modeling
-   - API design
-   - Component structure
-   - State management approach
+2. Modular Architecture
+   - 4-Layer Architecture compliance (Database, Server, SDK, UI)
+   - Module boundaries and interfaces
+   - Clean separation of concerns
+   - Cross-module communication patterns
 
-3. Implementation Approach
+3. Technical Implementation
+   - Data modeling in shared/schema.ts
+   - API design following RESTful principles
+   - SDK layer abstractions for API communication
+   - Component structure and state management
+
+4. Development Approach
    - Test-driven development
    - Progressive enhancement
    - Performance considerations
    - Security measures
 
-4. Quality Assurance
+5. Quality Assurance
    - Unit testing strategy
    - Integration testing
    - User acceptance testing
    - Performance testing
 
-5. Deployment Strategy
+6. Deployment Strategy
    - Feature flagging
    - Rollout approach
    - Monitoring plan
    - Rollback procedures
 
-Using this code ensures a consistent, methodical approach to building new functionality.
+Using this code ensures a consistent, methodical approach to building new functionality that adheres to our modular architecture principles.
 
 ### DB-789012: Debugging Framework
 
