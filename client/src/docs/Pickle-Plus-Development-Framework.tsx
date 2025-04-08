@@ -23,41 +23,59 @@ requirements, implementation details, and best practices.
 
 ## Reference Code Categories
 
-### 1. UI/UX Implementation (UI-XXXXXX)
+Our reference codes are organized in a hierarchical structure that identifies both the module and the type of work.
 
-UI codes reference our comprehensive design system and UI/UX principles. These include:
+### 1. Module Prefixes
 
-- UI-278651: Complete UI/UX Framework (our foundational design system)
-- UI-XXXXXX: Specific UI/UX implementations (component designs, page layouts, etc.)
+Based on our application's modular architecture, we use these module prefixes:
 
-### 2. Feature Development (FT-XXXXXX)
+- **USER**: User management, profiles, authentication
+- **MATCH**: Match recording, validation, history
+- **TOURN**: Tournament management, registration, brackets
+- **ACHV**: Achievement system, badges, rewards
+- **SOCIAL**: Social connections, messaging, interactions
+- **COACH**: Coaching features, session management
+- **GUIDE**: Guidance and tutorial systems
+- **ADMIN**: Administrative functions and dashboards
 
-FT codes reference specific feature implementations with detailed requirements:
+### 2. Work Type Categories
 
-- FT-123456: Feature Development Framework (our structured approach to building features)
-- FT-XXXXXX: Specific feature implementations (match recording, tournament management, etc.)
+Within each module, we categorize work by type:
 
-### 3. Debugging & Maintenance (DB-XXXXXX)
+- **UI**: UI/UX Implementation
+- **FT**: Feature Development
+- **DB**: Debugging & Maintenance
 
-DB codes reference our approach to debugging and system maintenance:
+### 3. Serial Numbers
 
-- DB-789012: Debugging Framework (our methodical approach to solving issues)
-- DB-XXXXXX: Specific debugging or maintenance tasks (performance optimization, bug fixes, etc.)
+Each implementation has a unique 6-digit serial number.
 
 ## Reference Code Format
 
 Each reference code follows the format:
-[Category Prefix]-[6-digit Serial Number]
+[Module Prefix]-[Work Type]-[6-digit Serial Number]
 
-For example: UI-278651 or FT-123456 or DB-789012
+For example:
+- MATCH-UI-278651: UI/UX implementation for the Match module
+- USER-FT-123456: Feature development for the User module
+- ADMIN-DB-789012: Debugging task for the Admin module
+
+## Foundational Frameworks
+
+We have established foundational frameworks for each work type:
+
+- UI-278651: Complete UI/UX Framework (our foundational design system)
+- FT-123456: Feature Development Framework (our structured approach to building features)
+- DB-789012: Debugging Framework (our methodical approach to solving issues)
 
 ## Usage Instructions
 
 When referencing these codes in our communications:
 
-1. Use the full code with prefix (e.g., "UI-278651")
+1. Use the full code with module and type prefixes (e.g., "MATCH-UI-278651")
 2. To generate a complete implementation plan: "Generate the prompt for [code]"
 3. To implement a feature using a specific framework: "Implement [feature] using [code]"
+4. For foundational frameworks, you can use the type-only code (e.g., "UI-278651")
 
 ## Framework Details
 
@@ -196,14 +214,17 @@ Using this code ensures we fix the root cause of issues while maintaining our ar
 
 ## Sample Prompts
 
-Example of generating a UI implementation prompt:
-"Generate the prompt for UI-278651 for the Match Center revamp"
+Example of generating a module-specific UI implementation prompt:
+"Generate the prompt for MATCH-UI-278651 for the match recording interface"
 
-Example of requesting a feature development:
-"Implement user achievements tracking using FT-123456"
+Example of requesting a module-specific feature development:
+"Implement user achievements tracking using ACHV-FT-123456"
 
-Example of requesting debugging assistance:
-"Debug match recording validation issue using DB-789012"
+Example of requesting module-specific debugging assistance:
+"Debug tournament registration validation issue using TOURN-DB-789012"
+
+Example of referencing a foundational framework:
+"Apply the UI-278651 design principles to the coach profile page"
 
 */
 
