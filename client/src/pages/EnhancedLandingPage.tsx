@@ -182,16 +182,14 @@ export default function EnhancedLandingPage() {
                 Pickle+ Passport with CourtIQ™ analytics tracks your progress, connects you with the community, and elevates your game with real-time insights and rewards.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-                <Button 
-                  size="lg" 
-                  className="bg-white text-[#FF5722] hover:bg-white/90 w-full sm:w-auto"
-                  onClick={() => {
-                    console.log("Navigating to /auth using wouter navigate");
-                    navigate("/auth");
-                  }}
-                >
-                  Get Started
-                </Button>
+                <Link href="/auth">
+                  <Button 
+                    size="lg" 
+                    className="bg-white text-[#FF5722] hover:bg-white/90 w-full sm:w-auto"
+                  >
+                    Get Started
+                  </Button>
+                </Link>
                 <Button 
                   size="lg" 
                   variant="outline" 
@@ -646,13 +644,14 @@ export default function EnhancedLandingPage() {
                   </ul>
                   
                   <div className="mt-6">
-                    <Button 
-                      size="lg" 
-                      className="bg-gradient-to-r from-[#FFD700] to-[#FFA000] text-black hover:opacity-90 w-full"
-                      onClick={() => navigate("/register")}
-                    >
-                      Become a Founding Member
-                    </Button>
+                    <Link href="/register">
+                      <Button 
+                        size="lg" 
+                        className="bg-gradient-to-r from-[#FFD700] to-[#FFA000] text-black hover:opacity-90 w-full"
+                      >
+                        Become a Founding Member
+                      </Button>
+                    </Link>
                     <p className="text-center text-white/60 text-sm mt-2">Limited availability - Join now to secure your place</p>
                   </div>
                 </div>
@@ -712,21 +711,23 @@ export default function EnhancedLandingPage() {
               Join Pickle+ today and start tracking your progress, connecting with players, and elevating your game.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                size="lg" 
-                className="bg-white text-[#FF5722] hover:bg-white/90"
-                onClick={() => navigate("/register")}
-              >
-                Create Account
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="border-white border-2 text-white hover:bg-white/10 hover:border-white bg-transparent"
-                onClick={() => navigate("/login")}
-              >
-                Login
-              </Button>
+              <Link href="/register">
+                <Button 
+                  size="lg" 
+                  className="bg-white text-[#FF5722] hover:bg-white/90"
+                >
+                  Create Account
+                </Button>
+              </Link>
+              <Link href="/login">
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="border-white border-2 text-white hover:bg-white/10 hover:border-white bg-transparent"
+                >
+                  Login
+                </Button>
+              </Link>
             </div>
           </motion.div>
         </div>
