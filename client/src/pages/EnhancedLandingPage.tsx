@@ -17,6 +17,7 @@ import {
   Star,
   Check,
   MapPin,
+  MousePointerClick,
 } from "lucide-react";
 
 // Enhanced animation variants with more refined animations
@@ -190,15 +191,6 @@ export default function EnhancedLandingPage() {
                     Get Started
                   </Button>
                 </Link>
-                <Link href="/test-routing">
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    className="ml-2 bg-white text-[#FF5722] border-[#FF5722]"
-                  >
-                    Test Routing
-                  </Button>
-                </Link>
                 <Button 
                   size="lg" 
                   variant="outline" 
@@ -218,7 +210,7 @@ export default function EnhancedLandingPage() {
               </div>
             </motion.div>
             
-            {/* Enhanced Player Passport Card with 3D effects */}
+            {/* Enhanced Player Passport Card with Live Demo Effect */}
             <motion.div 
               className="w-full md:w-1/2 flex justify-center mt-10 md:mt-0"
               initial="hidden"
@@ -226,8 +218,20 @@ export default function EnhancedLandingPage() {
               variants={slideIn("right")}
             >
               <div className="relative w-full max-w-sm sm:max-w-md perspective">
+                {/* Interactive instruction tag */}
+                <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg z-10 flex items-center space-x-2 animate-bounce">
+                  <MousePointerClick className="h-4 w-4 text-[#FF5722]" />
+                  <span className="text-xs font-medium text-gray-800">Interactive Passport - Hover to Explore</span>
+                </div>
+                
+                {/* Live updates notification */}
+                <div className="absolute -right-4 -top-4 bg-[#4CAF50] text-white text-xs font-bold px-2 py-1 rounded-full z-10 shadow-lg flex items-center">
+                  <div className="w-2 h-2 bg-white rounded-full mr-1 animate-ping"></div>
+                  LIVE
+                </div>
+                
                 <div className="preserve-3d passport-card hover:passport-card-rotate">
-                  {/* Passport Front */}
+                  {/* Passport Front - with live update animations */}
                   <div className="bg-white rounded-xl shadow-2xl overflow-hidden absolute inset-0 backface-hidden">
                     {/* Header with logo */}
                     <div className="bg-gradient-to-r from-[#FF5722] to-[#FF9800] pt-3 pb-5 px-5 text-white">
@@ -235,114 +239,256 @@ export default function EnhancedLandingPage() {
                         <div className="font-bold text-lg">Pickle+ Digital Passport</div>
                         <PicklePlusWhiteLogo className="h-10 w-auto" />
                       </div>
-                      {/* CourtIQ badge - repositioned */}
+                      
+                      {/* CourtIQ badge - enhanced */}
                       <div className="absolute top-16 right-2 bg-black/20 backdrop-blur-sm px-2 py-1 rounded text-xs font-medium flex items-center">
                         <div className="w-2 h-2 bg-blue-300 rounded-full mr-1 animate-pulse"></div>
-                        Powered by CourtIQ™
+                        <motion.span
+                          initial={{ opacity: 0.8 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
+                        >
+                          Powered by CourtIQ™
+                        </motion.span>
                       </div>
                       
                       {/* Player info */}
                       <div className="flex items-center mt-2">
                         <div className="h-16 w-16 rounded-full bg-white p-0.5 mr-3 shadow-lg">
-                          <div className="h-full w-full rounded-full bg-gradient-to-r from-[#2196F3] to-[#03A9F4] flex items-center justify-center text-white font-bold text-xl">
+                          <motion.div 
+                            className="h-full w-full rounded-full bg-gradient-to-r from-[#2196F3] to-[#03A9F4] flex items-center justify-center text-white font-bold text-xl"
+                            animate={{ 
+                              boxShadow: [
+                                "0 0 0 0px rgba(33, 150, 243, 0.4)",
+                                "0 0 0 8px rgba(33, 150, 243, 0)"
+                              ]
+                            }}
+                            transition={{ 
+                              duration: 2,
+                              repeat: Infinity,
+                              repeatDelay: 1
+                            }}
+                          >
                             JS
-                          </div>
+                          </motion.div>
                         </div>
                         <div>
                           <div className="font-bold text-xl">John Smith</div>
                           <div className="flex items-center text-sm text-white/80 mt-0.5">
-                            <div className="font-medium bg-white/20 backdrop-blur-sm rounded-full px-2 py-0.5">3.5 Intermediate+</div>
+                            <motion.div 
+                              className="font-medium bg-white/20 backdrop-blur-sm rounded-full px-2 py-0.5"
+                              initial={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+                              animate={{ backgroundColor: "rgba(255, 255, 255, 0.3)" }}
+                              transition={{ duration: 1.5, repeat: Infinity, repeatType: "reverse" }}
+                            >
+                              3.5 Intermediate+
+                            </motion.div>
                           </div>
                         </div>
                       </div>
                     </div>
                     
-                    {/* Stats section */}
+                    {/* Stats section - with live data animation */}
                     <div className="p-4 sm:p-6">
-                      {/* XP Progress */}
+                      {/* XP Progress - with animated progress */}
                       <div className="bg-gray-50 rounded-lg p-3 mb-4 border border-gray-100">
                         <div className="flex justify-between items-center mb-1">
                           <div className="font-bold text-gray-700">Level 5</div>
-                          <div className="text-[#FF5722] font-medium text-sm">520/1000 XP</div>
+                          <motion.div 
+                            className="text-[#FF5722] font-medium text-sm"
+                            initial={{ opacity: 1 }}
+                            animate={{ opacity: [1, 0.6, 1] }}
+                            transition={{ duration: 3, repeat: Infinity }}
+                          >
+                            520/1000 XP
+                          </motion.div>
                         </div>
                         <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                          <div className="bg-gradient-to-r from-[#FF5722] to-[#FF9800] h-full rounded-full" style={{ width: '52%' }}></div>
+                          <motion.div 
+                            className="bg-gradient-to-r from-[#FF5722] to-[#FF9800] h-full rounded-full" 
+                            initial={{ width: "47%" }}
+                            animate={{ width: "52%" }}
+                            transition={{ duration: 2 }}
+                          />
                         </div>
                       </div>
                       
-                      {/* CourtIQ metrics in a grid */}
+                      {/* CourtIQ metrics in a grid - with highlight animations */}
                       <div className="grid grid-cols-3 gap-3 mb-4">
-                        <div className="bg-[#FF5722]/10 border border-[#FF5722]/20 rounded-lg p-3 text-center">
+                        <motion.div 
+                          className="bg-[#FF5722]/10 border border-[#FF5722]/20 rounded-lg p-3 text-center"
+                          whileHover={{ 
+                            scale: 1.05, 
+                            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+                            borderColor: "rgba(255, 87, 34, 0.4)"
+                          }}
+                        >
                           <div className="text-[#FF5722] font-bold text-lg mb-0.5">Lvl 5</div>
                           <div className="text-xs text-gray-600">CourtIQ XP</div>
-                        </div>
-                        <div className="bg-[#2196F3]/10 border border-[#2196F3]/20 rounded-lg p-3 text-center">
-                          <div className="text-[#2196F3] font-bold text-lg mb-0.5">1,248</div>
+                        </motion.div>
+                        <motion.div 
+                          className="bg-[#2196F3]/10 border border-[#2196F3]/20 rounded-lg p-3 text-center"
+                          whileHover={{ 
+                            scale: 1.05, 
+                            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+                            borderColor: "rgba(33, 150, 243, 0.4)"
+                          }}
+                          animate={{
+                            borderColor: ["rgba(33, 150, 243, 0.2)", "rgba(33, 150, 243, 0.4)", "rgba(33, 150, 243, 0.2)"]
+                          }}
+                          transition={{ duration: 3, repeat: Infinity }}
+                        >
+                          <motion.div 
+                            className="text-[#2196F3] font-bold text-lg mb-0.5"
+                            animate={{ scale: [1, 1.05, 1] }}
+                            transition={{ duration: 3, repeat: Infinity }}
+                          >
+                            1,248
+                          </motion.div>
                           <div className="text-xs text-gray-600">CourtIQ Rating</div>
-                        </div>
-                        <div className="bg-[#673AB7]/10 border border-[#673AB7]/20 rounded-lg p-3 text-center">
+                        </motion.div>
+                        <motion.div 
+                          className="bg-[#673AB7]/10 border border-[#673AB7]/20 rounded-lg p-3 text-center"
+                          whileHover={{ 
+                            scale: 1.05, 
+                            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+                            borderColor: "rgba(103, 58, 183, 0.4)"
+                          }}
+                        >
                           <div className="text-[#673AB7] font-bold text-lg mb-0.5">7th</div>
                           <div className="text-xs text-gray-600">CourtIQ Rank</div>
-                        </div>
+                        </motion.div>
                       </div>
                       
-                      {/* Additional stats */}
+                      {/* Additional stats with hover effects */}
                       <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-[#4CAF50]/10 border border-[#4CAF50]/20 rounded-lg p-2 text-center">
+                        <motion.div 
+                          className="bg-[#4CAF50]/10 border border-[#4CAF50]/20 rounded-lg p-2 text-center"
+                          whileHover={{ 
+                            scale: 1.05, 
+                            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+                            borderColor: "rgba(76, 175, 80, 0.4)"
+                          }}
+                        >
                           <div className="text-[#4CAF50] font-bold text-lg">3</div>
                           <div className="text-xs text-gray-600">Tournaments</div>
-                        </div>
-                        <div className="bg-[#FF9800]/10 border border-[#FF9800]/20 rounded-lg p-2 text-center">
-                          <div className="text-[#FF9800] font-bold text-lg">24</div>
+                        </motion.div>
+                        <motion.div 
+                          className="bg-[#FF9800]/10 border border-[#FF9800]/20 rounded-lg p-2 text-center"
+                          whileHover={{ 
+                            scale: 1.05, 
+                            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+                            borderColor: "rgba(255, 152, 0, 0.4)"
+                          }}
+                        >
+                          <motion.div 
+                            className="text-[#FF9800] font-bold text-lg"
+                            initial={{ opacity: 1 }}
+                            animate={{ 
+                              opacity: [1, 1, 1],
+                              scale: [1, 1, 1]
+                            }}
+                            transition={{ 
+                              duration: 8,
+                              times: [0, 0.9, 1],
+                              repeat: Infinity,
+                              repeatDelay: 3
+                            }}
+                          >
+                            <span className="relative">
+                              <span>24</span>
+                              <span className="absolute -top-1 -right-3 text-[10px] text-[#FF5722] opacity-0 animate-ping-once">+1</span>
+                            </span>
+                          </motion.div>
                           <div className="text-xs text-gray-600">Matches Played</div>
-                        </div>
+                        </motion.div>
                       </div>
                       
-                      {/* Activity badge - latest achievement */}
-                      <div className="mt-4 flex items-center gap-2 bg-gradient-to-r from-[#2196F3]/5 to-[#03A9F4]/5 p-2 rounded-lg border border-[#2196F3]/10">
+                      {/* Live activity notification */}
+                      <motion.div 
+                        className="mt-4 flex items-center gap-2 bg-gradient-to-r from-[#2196F3]/5 to-[#03A9F4]/5 p-2 rounded-lg border border-[#2196F3]/10"
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 1.5 }}
+                      >
                         <div className="bg-[#2196F3] rounded-full p-1 text-white">
                           <Trophy size={16} />
                         </div>
                         <div className="text-xs text-gray-700">Won mixed doubles tournament at Willow Park</div>
                         <div className="text-[10px] text-[#2196F3] ml-auto font-medium">+100 RP</div>
-                      </div>
+                      </motion.div>
                     </div>
                   </div>
                   
-                  {/* Passport Back */}
+                  {/* Passport Back - with enhanced interactivity */}
                   <div className="bg-white rounded-xl shadow-2xl overflow-hidden absolute inset-0 backface-hidden passport-card-back">
                     <div className="bg-gradient-to-r from-[#2196F3] to-[#03A9F4] p-5 text-white">
-                      <h3 className="font-bold text-xl">Player Achievements</h3>
+                      <h3 className="font-bold text-xl flex items-center">
+                        Player Achievements
+                        <motion.div 
+                          className="ml-2 bg-white/20 text-xs px-2 py-0.5 rounded-full"
+                          animate={{ 
+                            scale: [1, 1.1, 1],
+                            backgroundColor: ["rgba(255,255,255,0.2)", "rgba(255,255,255,0.3)", "rgba(255,255,255,0.2)"]
+                          }}
+                          transition={{ duration: 3, repeat: Infinity }}
+                        >
+                          UPDATED
+                        </motion.div>
+                      </h3>
                     </div>
                     <div className="p-5">
                       <div className="grid grid-cols-3 gap-3 mb-4">
-                        <div className="bg-[#FFD700]/10 border border-[#FFD700]/20 rounded-lg p-3 text-center">
-                          <div className="bg-[#FFD700] text-white p-2 rounded-full mx-auto mb-2 w-10 h-10 flex items-center justify-center">
+                        <motion.div 
+                          className="bg-[#FFD700]/10 border border-[#FFD700]/20 rounded-lg p-3 text-center"
+                          whileHover={{ scale: 1.05, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)" }}
+                        >
+                          <motion.div 
+                            className="bg-[#FFD700] text-white p-2 rounded-full mx-auto mb-2 w-10 h-10 flex items-center justify-center"
+                            animate={{ 
+                              boxShadow: ["0 0 0 0 rgba(255, 215, 0, 0.4)", "0 0 0 10px rgba(255, 215, 0, 0)"]
+                            }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          >
                             <Trophy size={20} />
-                          </div>
+                          </motion.div>
                           <div className="text-xs text-gray-600">Champion</div>
-                        </div>
-                        <div className="bg-[#4CAF50]/10 border border-[#4CAF50]/20 rounded-lg p-3 text-center">
+                        </motion.div>
+                        <motion.div 
+                          className="bg-[#4CAF50]/10 border border-[#4CAF50]/20 rounded-lg p-3 text-center" 
+                          whileHover={{ scale: 1.05, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)" }}
+                        >
                           <div className="bg-[#4CAF50] text-white p-2 rounded-full mx-auto mb-2 w-10 h-10 flex items-center justify-center">
                             <Award size={20} />
                           </div>
                           <div className="text-xs text-gray-600">Veteran</div>
-                        </div>
-                        <div className="bg-[#9C27B0]/10 border border-[#9C27B0]/20 rounded-lg p-3 text-center">
+                        </motion.div>
+                        <motion.div 
+                          className="bg-[#9C27B0]/10 border border-[#9C27B0]/20 rounded-lg p-3 text-center"
+                          whileHover={{ scale: 1.05, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)" }}
+                        >
                           <div className="bg-[#9C27B0] text-white p-2 rounded-full mx-auto mb-2 w-10 h-10 flex items-center justify-center">
                             <Star size={20} />
                           </div>
                           <div className="text-xs text-gray-600">All-Star</div>
-                        </div>
+                        </motion.div>
                       </div>
                       
                       <div className="mb-4">
-                        <div className="text-sm font-bold mb-2">Recent Matches</div>
+                        <div className="text-sm font-bold mb-2 flex items-center">
+                          Recent Matches
+                          <div className="ml-2 px-1.5 py-0.5 bg-green-100 rounded-full text-[10px] text-green-700 font-medium">LIVE</div>
+                        </div>
                         <div className="space-y-2">
-                          <div className="bg-gray-50 rounded-md p-2 flex justify-between items-center">
+                          <motion.div 
+                            className="bg-gray-50 rounded-md p-2 flex justify-between items-center"
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 1 }}
+                          >
                             <div className="text-xs">vs. Sarah Johnson</div>
                             <div className="text-xs font-medium text-green-600">W 11-8</div>
-                          </div>
+                          </motion.div>
                           <div className="bg-gray-50 rounded-md p-2 flex justify-between items-center">
                             <div className="text-xs">vs. Mike Taylor</div>
                             <div className="text-xs font-medium text-green-600">W 11-7</div>
@@ -355,12 +501,19 @@ export default function EnhancedLandingPage() {
                       </div>
                       
                       <div className="text-center mt-4">
-                        <div className="inline-block bg-[#FF5722]/10 rounded-full px-3 py-2 text-sm">
+                        <motion.div 
+                          className="inline-block bg-[#FF5722]/10 rounded-full px-3 py-2 text-sm"
+                          animate={{ 
+                            scale: [1, 1.03, 1],
+                            backgroundColor: ["rgba(255, 87, 34, 0.1)", "rgba(255, 87, 34, 0.15)", "rgba(255, 87, 34, 0.1)"]
+                          }}
+                          transition={{ duration: 3, repeat: Infinity }}
+                        >
                           <div className="flex items-center">
                             <MapPin size={14} className="mr-1 text-[#FF5722]" />
                             <span className="text-gray-700">Westside Pickleball Club</span>
                           </div>
-                        </div>
+                        </motion.div>
                       </div>
                     </div>
                   </div>
