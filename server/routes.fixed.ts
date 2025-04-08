@@ -9,6 +9,7 @@ import { eq, and, or, sql, desc } from "drizzle-orm";
 // Import API route modules
 import xpRoutes from "./api/xp";
 import rankingRoutes from "./api/ranking";
+import matchRoutes from "./api/match";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
@@ -17,6 +18,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register API route modules
   app.use('/api/xp', xpRoutes);
   app.use('/api/ranking', rankingRoutes);
+  app.use('/api/match', matchRoutes);
   
   // Match recording
   app.post("/api/match/record", isAuthenticated, async (req: Request, res: Response) => {

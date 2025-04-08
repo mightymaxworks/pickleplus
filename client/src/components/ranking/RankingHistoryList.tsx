@@ -1,152 +1,84 @@
-/**
- * Ranking History List Component
- * 
- * This component displays a user's ranking transaction history with visualizations
- */
-import { useQuery } from "@tanstack/react-query";
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
-  useUserRankingTransactions, 
-  getTierColors 
-} from "@/lib/sdk/rankingSDK";
-import { format } from "date-fns";
-import { ArrowUp, ArrowDown, ChevronsUp, BadgeInfo } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+  Trophy, 
+  Activity, 
+  Award, 
+  Gift, 
+  TrendingUp, 
+  UserPlus, 
+  Puzzle, 
+  Medal,
+  BadgeCheck
+} from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { RankingTransaction } from '@/lib/sdk/rankingSDK';
+import { cn } from '@/lib/utils';
 
-interface RankingHistoryListProps {
-  userId: number;
-  limit?: number;
-  maxHeight?: string;
-  className?: string;
+export interface RankingHistoryListProps {
+  transactions: RankingTransaction[];
 }
 
-export default function RankingHistoryList({ 
-  userId,
-  limit = 10,
-  maxHeight = '400px',
-  className = ""
-}: RankingHistoryListProps) {
-  const transactionsQueryConfig = useUserRankingTransactions(userId, limit);
-  const { data, isLoading, error } = useQuery(transactionsQueryConfig);
+const getTransactionIcon = (source: string) => {
+  switch (source) {
+    case 'match':
+      return <Trophy className="h-4 w-4 text-yellow-500" />;
+    case 'tournament':
+      return <Award className="h-4 w-4 text-blue-500" />;
+    case 'skill_progression':
+      return <TrendingUp className="h-4 w-4 text-green-500" />;
+    case 'consistency':
+      return <BadgeCheck className="h-4 w-4 text-purple-500" />;
+    case 'bonus':
+      return <Gift className="h-4 w-4 text-red-500" />;
+    case 'win_streak':
+      return <Medal className="h-4 w-4 text-orange-500" />;
+    case 'event':
+      return <Puzzle className="h-4 w-4 text-indigo-500" />;
+    case 'registration':
+      return <UserPlus className="h-4 w-4 text-green-500" />;
+    default:
+      return <Activity className="h-4 w-4 text-primary" />;
+  }
+};
 
-  if (isLoading) {
+export default function RankingHistoryList({ transactions }: RankingHistoryListProps) {
+  if (!transactions || transactions.length === 0) {
     return (
-      <Card className={className}>
-        <CardHeader>
-          <CardTitle className="text-lg">Ranking History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-3 w-24" />
-                </div>
-                <Skeleton className="h-8 w-16" />
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <div className="text-center py-6 text-sm text-muted-foreground">
+        No ranking transactions found.
+      </div>
     );
   }
-
-  if (error || !data || !data.transactions || data.transactions.length === 0) {
-    return (
-      <Card className={className}>
-        <CardHeader>
-          <CardTitle className="text-lg">Ranking History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground text-sm">
-            {error ? "Error loading ranking history" : "No ranking history found"}
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const { transactions } = data;
-
+  
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center">
-          Ranking History
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <BadgeInfo className="h-4 w-4 ml-1.5 text-muted-foreground cursor-help" />
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs">
-                <p>CourtIQ™ Ranking points are earned from match victories and tournament performance</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ScrollArea className={`pr-4 ${maxHeight ? `max-h-[${maxHeight}]` : ''}`}>
-          <div className="space-y-3">
-            {transactions.map((transaction: {
-              id: number;
-              userId: number;
-              amount: number;
-              source: string;
-              timestamp: string; 
-              metadata?: {
-                matchType?: string;
-                [key: string]: any;
-              };
-            }) => {
-              const isPositive = transaction.amount > 0;
-              const absAmount = Math.abs(transaction.amount);
-              
-              return (
-                <div key={transaction.id} className="flex items-center justify-between border-b pb-2 last:border-0">
-                  <div>
-                    <h4 className="font-medium text-sm truncate max-w-[200px]">
-                      {transaction.source}
-                    </h4>
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(transaction.timestamp), 'MMM d, yyyy')}
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <Badge variant={isPositive ? "default" : "destructive"} className="rounded-sm">
-                      <span className="mr-1">
-                        {isPositive 
-                          ? (absAmount >= 10 ? <ChevronsUp className="h-3 w-3" /> : <ArrowUp className="h-3 w-3" />) 
-                          : <ArrowDown className="h-3 w-3" />}
-                      </span>
-                      {absAmount} pts
-                    </Badge>
-                    
-                    {transaction.metadata?.matchType && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Badge variant="outline" className="rounded-sm text-xs">
-                              {transaction.metadata.matchType}
-                            </Badge>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Match type: {transaction.metadata.matchType}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
+    <div className="space-y-3">
+      <h3 className="text-sm font-medium">Recent Ranking Activity</h3>
+      <div className="space-y-2">
+        {transactions.map((transaction) => (
+          <Card key={transaction.id} className="overflow-hidden">
+            <CardContent className="p-3 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex-shrink-0 h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  {getTransactionIcon(transaction.source)}
+                </div>
+                <div>
+                  <div className="font-medium text-sm">{transaction.reason}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {formatDistanceToNow(new Date(transaction.timestamp), { addSuffix: true })}
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </ScrollArea>
-      </CardContent>
-    </Card>
+              </div>
+              <div className={cn(
+                "px-2 py-1 rounded-full text-xs font-medium",
+                transaction.amount > 0 ? "bg-blue-100 text-blue-800" : "bg-red-100 text-red-800"
+              )}>
+                {transaction.amount > 0 ? '+' : ''}{transaction.amount} pts
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
   );
 }

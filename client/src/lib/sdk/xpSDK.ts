@@ -1,111 +1,104 @@
 /**
- * XP SDK - Client SDK for the XP Transaction System
+ * XP SDK
  * 
- * This file implements the client-side SDK for interacting with the XP system API
- * It provides functions for retrieving XP information and performing related operations.
+ * Functions for interacting with XP data
  */
-import { 
-  XpTransaction,
-  User
-} from "@shared/schema";
-import { apiRequest, queryClient } from "../queryClient";
 
-/**
- * Gets total XP for a user.
- * 
- * @param userId The ID of the user to get XP for
- * @returns Promise with the total XP amount or undefined if not found
- */
-export async function getUserXP(userId: number): Promise<number | undefined> {
-  try {
-    const response = await apiRequest("GET", `/api/xp/total/${userId}`);
-    const data = await response.json();
-    return data.totalXP;
-  } catch (error) {
-    console.error("Error fetching user XP:", error);
-    throw error;
-  }
+export interface XPBreakdown {
+  dailyMatchNumber: number;
+  baseAmount: number;
+  cooldownReduction: boolean;
+  cooldownAmount: number | null;
+  tournamentMultiplier: number | null;
+  victoryBonus: number | null;
+  winStreakBonus: number | null;
+  closeMatchBonus: number | null;
+  skillBonus: number | null;
+  foundingMemberBonus: number | null;
+  weeklyCapReached: boolean;
 }
 
-/**
- * Gets recent XP transactions for a user.
- * 
- * @param userId The ID of the user to get transactions for
- * @param limit Number of transactions to retrieve (default 10)
- * @returns Promise with an array of XP transactions
- */
-export async function getUserXPTransactions(userId: number, limit = 10): Promise<XpTransaction[]> {
-  try {
-    const response = await apiRequest("GET", `/api/xp/${userId}/transactions?limit=${limit}`);
-    const data = await response.json();
-    return data.transactions;
-  } catch (error) {
-    console.error("Error fetching user XP transactions:", error);
-    throw error;
-  }
+export interface XPTransaction {
+  id: number;
+  userId: number;
+  amount: number;
+  reason: string;
+  source: string;
+  timestamp: string;
 }
 
-/**
- * Calculate XP needed for next level for a given user.
- * 
- * @param totalXP Current XP amount
- * @returns Object with information about the next level
- */
-export function calculateXPProgress(totalXP: number): { 
-  currentLevel: number; 
-  nextLevel: number; 
-  currentLevelXP: number; 
-  nextLevelXP: number; 
-  xpNeeded: number; 
+export interface XPSummary {
+  totalXP: number;
+  level: number;
+  nextLevelXP: number;
+  previousLevelXP: number;
+  nextLevelDelta: number;
   progress: number;
-} {
-  // Level formula: Level = 1 + floor(0.1 * sqrt(XP))
-  const currentLevel = Math.floor(1 + 0.1 * Math.sqrt(totalXP));
-  const nextLevel = currentLevel + 1;
-  
-  // XP required for a specific level: XP = 100 * (Level - 1)^2
-  const currentLevelXP = 100 * Math.pow(currentLevel - 1, 2);
-  const nextLevelXP = 100 * Math.pow(nextLevel - 1, 2);
-  
-  const xpNeeded = nextLevelXP - totalXP;
-  const progress = (totalXP - currentLevelXP) / (nextLevelXP - currentLevelXP) * 100;
-  
-  return {
-    currentLevel,
-    nextLevel,
-    currentLevelXP,
-    nextLevelXP,
-    xpNeeded,
-    progress
-  };
 }
 
-// React Query Hooks
-
-/**
- * Hook to get a user's XP information
- */
-export function useUserXP(userId: number | undefined) {
-  return {
-    queryKey: ['/api/xp/total', userId],
-    queryFn: async () => {
-      if (!userId) return null;
-      const response = await apiRequest("GET", `/api/xp/total/${userId}`);
-      return response.json();
-    }
+export interface PaginatedTransactions {
+  transactions: XPTransaction[];
+  pagination: {
+    total: number;
+    limit: number;
+    offset: number;
   };
 }
 
 /**
- * Hook to get a user's XP transactions
+ * Get the XP summary for the current authenticated user
+ * 
+ * @returns Promise with XP summary
  */
-export function useUserXPTransactions(userId: number | undefined, limit = 10) {
-  return {
-    queryKey: ['/api/xp/transactions', userId, limit],
-    queryFn: async () => {
-      if (!userId) return [];
-      const response = await apiRequest("GET", `/api/xp/${userId}/transactions?limit=${limit}`);
-      return response.json();
-    }
-  };
+export async function getXPSummary(): Promise<XPSummary> {
+  const response = await fetch('/api/xp/total');
+  if (!response.ok) {
+    throw new Error('Failed to fetch XP summary');
+  }
+  return await response.json();
+}
+
+/**
+ * Get the XP summary for a specific user
+ * 
+ * @param userId User ID
+ * @returns Promise with XP summary
+ */
+export async function getUserXPSummary(userId: number): Promise<XPSummary> {
+  const response = await fetch(`/api/xp/total/${userId}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch XP summary for user ${userId}`);
+  }
+  return await response.json();
+}
+
+/**
+ * Get XP transactions for the current authenticated user
+ * 
+ * @param limit Number of transactions to return (default: 10)
+ * @param offset Offset for pagination (default: 0)
+ * @returns Promise with paginated XP transactions
+ */
+export async function getXPTransactions(limit = 10, offset = 0): Promise<PaginatedTransactions> {
+  const response = await fetch(`/api/xp/transactions?limit=${limit}&offset=${offset}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch XP transactions');
+  }
+  return await response.json();
+}
+
+/**
+ * Get XP transactions for a specific user
+ * 
+ * @param userId User ID
+ * @param limit Number of transactions to return (default: 10)
+ * @param offset Offset for pagination (default: 0)
+ * @returns Promise with paginated XP transactions
+ */
+export async function getUserXPTransactions(userId: number, limit = 10, offset = 0): Promise<PaginatedTransactions> {
+  const response = await fetch(`/api/xp/${userId}/transactions?limit=${limit}&offset=${offset}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch XP transactions for user ${userId}`);
+  }
+  return await response.json();
 }
