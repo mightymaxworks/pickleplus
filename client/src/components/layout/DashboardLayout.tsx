@@ -1,158 +1,60 @@
-import { useState, useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
-import { useLocation } from "wouter";
-import { Menu, X, Home, Calendar, Users, Trophy, Activity, BookOpen, PlusCircle } from "lucide-react";
-import DesktopSidebar from "./DesktopSidebar";
-import MobileNavigation from "./MobileNavigation";
-import UserDropdownMenu from "./UserDropdownMenu";
-import { Button } from "@/components/ui/button";
+import React, { ReactNode } from 'react';
+import { useLocation } from 'wouter';
+import { useAuth } from '@/hooks/useAuth';
+import { MobileNavigation } from './MobileNavigation';
+import { User } from '@shared/schema';
 
 interface DashboardLayoutProps {
-  children: React.ReactNode;
+  children: ReactNode;
+  title?: string;
 }
 
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { user } = useAuth();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [, navigate] = useLocation();
-  const [mounted, setMounted] = useState(false);
-
-  // Prevent hydration issues
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Handle mobile menu toggle
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
+export function DashboardLayout({ children, title = 'Dashboard' }: DashboardLayoutProps) {
+  const { user, isLoading } = useAuth();
+  const [location] = useLocation();
   
-  // Close mobile menu when location changes
-  useEffect(() => {
-    setIsMobileMenuOpen(false);
-  }, [useLocation()[0]]); // Only re-run when the path changes
-
-  if (!mounted || !user) return null;
-
-  return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Desktop Sidebar - hidden on mobile */}
-      <div className="hidden md:block">
-        <DesktopSidebar user={user} />
+  // Handle loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin h-8 w-8 border-4 border-[#FF5722] border-t-transparent rounded-full"></div>
       </div>
-      
-      {/* Main Content Area */}
-      <div className="flex flex-col flex-1 overflow-hidden">
-        {/* Top Navigation Bar */}
-        <header className="bg-white shadow-sm z-10">
-          <div className="px-4 py-3 flex items-center justify-between">
-            {/* Mobile Menu Button */}
-            <button
-              onClick={toggleMobileMenu}
-              className="md:hidden text-gray-600 focus:outline-none"
-            >
-              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-            
-            {/* Page Title - can be dynamic */}
-            <h1 className="text-xl font-bold text-gray-800 md:ml-0 ml-4">
-              Pickle+ Dashboard
-            </h1>
-            
-            {/* User Menu */}
-            <div className="flex items-center space-x-4">
-              <UserDropdownMenu user={user} />
+    );
+  }
+  
+  // If no user, we shouldn't get here due to ProtectedRoute
+  if (!user) {
+    return null;
+  }
+  
+  return (
+    <div className="bg-gray-50 min-h-screen pb-32">
+      {/* Top Navigation */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
+        <div className="px-4 sm:px-6 py-4 flex items-center justify-between">
+          <h1 className="text-xl font-bold text-gray-900">{title}</h1>
+          
+          <div className="flex items-center">
+            {/* User Profile */}
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#2196F3] to-[#03A9F4] flex items-center justify-center text-sm font-medium text-white">
+                {user.username.substring(0, 2).toUpperCase()}
+              </div>
+              <span className="text-sm font-medium hidden sm:inline-block">
+                {user.displayName || user.username}
+              </span>
             </div>
           </div>
-        </header>
-        
-        {/* Mobile Menu - only visible when open */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden absolute top-16 left-0 right-0 z-50 bg-white shadow-md">
-            <nav className="p-4">
-              <ul className="space-y-4">
-                <li>
-                  <a 
-                    href="/dashboard" 
-                    className="flex items-center text-gray-700 hover:text-primary"
-                  >
-                    <Home size={20} className="mr-2" />
-                    Dashboard
-                  </a>
-                </li>
-                <li>
-                  <a 
-                    href="/matches" 
-                    className="flex items-center text-gray-700 hover:text-primary"
-                  >
-                    <Activity size={20} className="mr-2" />
-                    Matches
-                  </a>
-                </li>
-                <li>
-                  <a 
-                    href="/tournaments" 
-                    className="flex items-center text-gray-700 hover:text-primary"
-                  >
-                    <Trophy size={20} className="mr-2" />
-                    Tournaments
-                  </a>
-                </li>
-                <li>
-                  <a 
-                    href="/training" 
-                    className="flex items-center text-gray-700 hover:text-primary"
-                  >
-                    <BookOpen size={20} className="mr-2" />
-                    Training
-                  </a>
-                </li>
-                <li>
-                  <a 
-                    href="/community" 
-                    className="flex items-center text-gray-700 hover:text-primary"
-                  >
-                    <Users size={20} className="mr-2" />
-                    Community
-                  </a>
-                </li>
-                <li>
-                  <a 
-                    href="/passport" 
-                    className="flex items-center text-gray-700 hover:text-primary"
-                  >
-                    <Calendar size={20} className="mr-2" />
-                    Passport
-                  </a>
-                </li>
-                {user.isAdmin && (
-                  <li>
-                    <a 
-                      href="/admin" 
-                      className="flex items-center text-indigo-600 hover:text-indigo-800"
-                    >
-                      <span className="flex items-center">
-                        <Users size={20} className="mr-2" />
-                        Admin Panel
-                      </span>
-                    </a>
-                  </li>
-                )}
-              </ul>
-            </nav>
-          </div>
-        )}
-        
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto pb-16 md:pb-0">
-          {children}
-        </main>
-        
-        {/* Mobile Navigation - fixed to bottom */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50">
-          <MobileNavigation />
         </div>
-      </div>
+      </header>
+      
+      {/* Main Content */}
+      <main className="container mx-auto px-4 sm:px-6 py-6">
+        {children}
+      </main>
+      
+      {/* Mobile Navigation */}
+      <MobileNavigation user={user} />
     </div>
   );
 }

@@ -1,72 +1,78 @@
-import { useLocation } from "wouter";
-import { Home, Activity, Trophy, Plus, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
+import React from 'react';
+import { useLocation } from 'wouter';
+import { Home, Calendar, Award, Users, Menu } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { User } from '@shared/schema';
 
-export default function MobileNavigation() {
+interface MobileNavigationProps {
+  user: User;
+}
+
+export function MobileNavigation({ user }: MobileNavigationProps) {
   const [location, navigate] = useLocation();
-  const { user } = useAuth();
-  
-  if (!user) return null;
-  
+
+  const isActive = (path: string) => location === path;
+
   return (
-    <div className="bg-white shadow-lg border-t border-gray-200">
-      <div className="flex items-center justify-around h-16 px-4 relative">
-        {/* Home */}
-        <button
-          onClick={() => navigate("/dashboard")}
-          className={`flex flex-col items-center justify-center p-2 ${
-            location === "/dashboard" ? "text-primary" : "text-gray-600"
-          }`}
-        >
-          <Home size={20} />
-          <span className="text-xs mt-1">Home</span>
-        </button>
-        
-        {/* Matches */}
-        <button
-          onClick={() => navigate("/matches")}
-          className={`flex flex-col items-center justify-center p-2 ${
-            location === "/matches" ? "text-primary" : "text-gray-600"
-          }`}
-        >
-          <Activity size={20} />
-          <span className="text-xs mt-1">Matches</span>
-        </button>
-        
-        {/* Record Match Button (Centered) */}
-        <div className="absolute left-1/2 transform -translate-x-1/2 -translate-y-1/3">
-          <Button
-            onClick={() => navigate("/record-match")}
-            size="lg"
-            className="h-14 w-14 rounded-full bg-primary hover:bg-primary/90 flex items-center justify-center"
-          >
-            <Plus size={24} />
-          </Button>
-        </div>
-        
-        {/* Tournaments */}
-        <button
-          onClick={() => navigate("/tournaments")}
-          className={`flex flex-col items-center justify-center p-2 ${
-            location === "/tournaments" ? "text-primary" : "text-gray-600"
-          }`}
-        >
-          <Trophy size={20} />
-          <span className="text-xs mt-1">Events</span>
-        </button>
-        
-        {/* Profile/Menu */}
-        <button
-          onClick={() => navigate("/profile")}
-          className={`flex flex-col items-center justify-center p-2 ${
-            location === "/profile" ? "text-primary" : "text-gray-600"
-          }`}
-        >
-          <User size={20} />
-          <span className="text-xs mt-1">Profile</span>
-        </button>
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
+      {/* Top row with navigation items */}
+      <div className="flex items-center justify-around px-2 h-16">
+        <NavItem 
+          icon={<Home size={20} />} 
+          label="Home" 
+          active={isActive('/dashboard')} 
+          onClick={() => navigate('/dashboard')} 
+        />
+        <NavItem 
+          icon={<Calendar size={20} />} 
+          label="Matches" 
+          active={isActive('/matches')} 
+          onClick={() => navigate('/matches')} 
+        />
+        <div className="w-24" /> {/* Spacer for the Record button */}
+        <NavItem 
+          icon={<Award size={20} />} 
+          label="Tournaments" 
+          active={isActive('/tournaments')} 
+          onClick={() => navigate('/tournaments')} 
+        />
+        <NavItem 
+          icon={<Users size={20} />} 
+          label="Community" 
+          active={isActive('/community')} 
+          onClick={() => navigate('/community')} 
+        />
       </div>
+
+      {/* Record Match button that spans the full width below */}
+      <Button
+        onClick={() => navigate('/record-match')}
+        size="lg"
+        className="bg-[#FF5722] hover:bg-[#E64A19] text-white w-full h-12 rounded-none flex items-center justify-center text-base font-medium"
+      >
+        Record Match
+      </Button>
     </div>
+  );
+}
+
+interface NavItemProps {
+  icon: React.ReactNode;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}
+
+function NavItem({ icon, label, active, onClick }: NavItemProps) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex flex-col items-center justify-center p-1 rounded-md ${
+        active ? 'text-[#FF5722]' : 'text-gray-500'
+      }`}
+    >
+      <div className="mb-1">{icon}</div>
+      <span className="text-xs font-medium">{label}</span>
+    </button>
   );
 }
