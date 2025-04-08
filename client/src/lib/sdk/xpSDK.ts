@@ -3,6 +3,7 @@
  * 
  * Functions for interacting with XP data
  */
+import { useQuery } from "@tanstack/react-query";
 
 export interface XPBreakdown {
   dailyMatchNumber: number;
@@ -101,4 +102,25 @@ export async function getUserXPTransactions(userId: number, limit = 10, offset =
     throw new Error(`Failed to fetch XP transactions for user ${userId}`);
   }
   return await response.json();
+}
+
+/**
+ * React hook for getting XP data for a user
+ * 
+ * @param userId User ID (defaults to current user if not provided)
+ * @returns Query result with XP summary
+ */
+export function useUserXP(userId?: number) {
+  const queryKey = userId ? [`/api/xp/total/${userId}`] : ['/api/xp/total'];
+  
+  return useQuery({
+    queryKey,
+    queryFn: async () => {
+      if (userId) {
+        return await getUserXPSummary(userId);
+      } else {
+        return await getXPSummary();
+      }
+    }
+  });
 }

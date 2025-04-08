@@ -3,6 +3,7 @@
  * 
  * Functions for interacting with ranking data
  */
+import { useQuery } from "@tanstack/react-query";
 
 export interface RankingTransaction {
   id: number;
@@ -88,4 +89,25 @@ export async function getUserRankingTransactions(userId: number, limit = 10, off
     throw new Error(`Failed to fetch ranking transactions for user ${userId}`);
   }
   return await response.json();
+}
+
+/**
+ * React hook for getting ranking data for a user
+ * 
+ * @param userId User ID (defaults to current user if not provided)
+ * @returns Query result with ranking summary
+ */
+export function useUserRanking(userId?: number) {
+  const queryKey = userId ? [`/api/ranking/${userId}`] : ['/api/ranking'];
+  
+  return useQuery({
+    queryKey,
+    queryFn: async () => {
+      if (userId) {
+        return await getUserRankingSummary(userId);
+      } else {
+        return await getRankingSummary();
+      }
+    }
+  });
 }
