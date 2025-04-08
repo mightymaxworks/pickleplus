@@ -26,26 +26,25 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
     }
   };
   
-  // Calculate the required height whenever relevant dependencies change
+  // Use fixed heights based on screen size
   useEffect(() => {
-    const calculateHeight = () => {
-      if (frontRef.current && backRef.current) {
-        const frontHeight = frontRef.current.scrollHeight;
-        const backHeight = backRef.current.scrollHeight;
-        const maxHeight = Math.max(frontHeight, backHeight) + 10; // Add some padding
-        console.log('Setting card height to:', maxHeight);
-        setCardHeight(maxHeight);
-      }
-    };
+    let fixedHeight;
+    if (isExtraSmallScreen) {
+      fixedHeight = 330;
+    } else if (isSmallScreen) {
+      fixedHeight = 370;
+    } else {
+      fixedHeight = 440;
+    }
+    setCardHeight(fixedHeight);
     
-    // Small delay to ensure DOM is fully rendered
+    // Debug logging to check component heights
     const timer = setTimeout(() => {
-      calculateHeight();
       logDimensions();
     }, 100);
     
     return () => clearTimeout(timer);
-  }, [isFlipped, isSmallScreen, isExtraSmallScreen]);
+  }, [isSmallScreen, isExtraSmallScreen]);
   
   // Check if user is a founding member
   const isFoundingMember = user.isFoundingMember || false;
@@ -171,7 +170,7 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
         style={{ height: `${cardHeight}px` }}
       >
         {/* Front of passport */}
-        <div ref={frontRef} className="absolute inset-0 backface-hidden w-full bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-xl">
+        <div ref={frontRef} className="absolute inset-0 backface-hidden w-full flex flex-col bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-xl">
           {/* Top border accent */}
           <div className="h-1 w-full bg-gradient-to-r from-[#FF5722] to-[#FF9800]"></div>
           
@@ -211,7 +210,7 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
           </div>
           
           {/* Stats section with glass morphism effect */}
-          <div className="p-4">
+          <div className="p-4 flex-grow flex flex-col">
             <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Level {user.level || 5} • {user.xp || 520} XP
             </div>
@@ -240,7 +239,7 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
               </div>
             </div>
             
-            <div className="mt-4 flex justify-center">
+            <div className="mt-auto flex justify-center">
               <button 
                 onClick={(e) => {
                   e.stopPropagation();
@@ -258,7 +257,7 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
         {/* Back of passport with QR code */}
         <div 
           ref={backRef}
-          className="absolute inset-0 backface-hidden w-full bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-xl"
+          className="absolute inset-0 backface-hidden w-full flex flex-col bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-xl"
           style={{ transform: 'rotateY(180deg)', backfaceVisibility: 'hidden' }}
         >
           {/* Top border accent - Gold for founding members, blue for regular members */}
@@ -290,7 +289,7 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
             </>
           )}
           
-          <div className={`p-3 flex flex-col items-center justify-center h-full ${isFoundingMember ? 'qr-gold-gradient' : 'qr-blue-gradient'}`}>
+          <div className={`p-3 flex-grow flex flex-col items-center h-full ${isFoundingMember ? 'qr-gold-gradient' : 'qr-blue-gradient'}`}>
             <div className="mb-2 text-center">
               <div className={`font-bold text-base sm:text-lg mb-0.5 ${
                 isFoundingMember 
@@ -329,8 +328,11 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
               </div>
             )}
             
+            {/* Flex spacer */}
+            <div className="flex-grow"></div>
+            
             <button 
-              className={`mt-2 flex items-center gap-1 transition-colors ${
+              className={`mt-auto flex items-center gap-1 transition-colors ${
                 isFoundingMember
                   ? 'text-[#BF953F] hover:text-[#FFD700]'
                   : 'text-blue-500 hover:text-blue-700'
