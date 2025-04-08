@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { PicklePlusTextLogo } from "@/components/icons/PicklePlusTextLogo";
+import { PicklePlusNewLogo } from "@/components/icons/PicklePlusNewLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -178,8 +179,9 @@ export default function EnhancedAuthPage() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
+            className="flex flex-col items-center"
           >
-            <PicklePlusTextLogo className="h-16 w-auto" />
+            <PicklePlusNewLogo className="h-20 w-auto mb-2" />
           </motion.div>
         </div>
 
