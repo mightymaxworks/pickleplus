@@ -38,12 +38,28 @@ Each implementation has a unique 6-digit serial number.
 ## Reference Code Format
 
 Each reference code follows the format:
-[Module Prefix]-[Work Type]-[6-digit Serial Number]
+[Module Prefix]-[Work Type]-[6-digit Serial Number][Implementation Context]
+
+Where:
+- **Module Prefix**: The functional area (MATCH, USER, TOURN, etc.)
+- **Work Type**: The category of work (UI, FT, DB)
+- **Serial Number**: A unique 6-digit identifier
+- **Implementation Context** (optional): Specifies the implementation state
+
+### Implementation Context Flags
+
+We use the following implementation context flags to indicate the state of existing code:
+
+- **[NEW]**: Complete implementation from scratch
+- **[PARTIAL]**: Enhancement assuming partial implementation exists
+- **[ENHANCE]**: Improvement of complete existing implementation
+- **[REFACTOR]**: Restructuring of existing implementation
+- **[FIX]**: Bug fixing in existing implementation
 
 For example:
-- MATCH-UI-278651: UI/UX implementation for the Match module
-- USER-FT-123456: Feature development for the User module
-- ADMIN-DB-789012: Debugging task for the Admin module
+- MATCH-UI-278651[NEW]: New UI/UX implementation for the Match module
+- USER-FT-123456[ENHANCE]: Enhancement of existing User feature
+- ADMIN-DB-789012[FIX]: Bug fix for Admin module
 
 ## Foundational Frameworks
 

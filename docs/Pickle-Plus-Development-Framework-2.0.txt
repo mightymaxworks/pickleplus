@@ -1,0 +1,160 @@
+PICKLE+ DEVELOPMENT FRAMEWORK 2.0
+================================
+
+SYSTEM OVERVIEW
+--------------
+
+This framework establishes a standardized system of prefixed serial codes that categorize 
+our development work across different domains. Each code represents a comprehensive set of 
+requirements, implementation details, and best practices.
+
+REFERENCE CODE CATEGORIES
+------------------------
+
+Our reference codes are organized in a hierarchical structure that identifies both the module and the type of work.
+
+1. MODULE PREFIXES
+
+Based on our application's modular architecture, we use these module prefixes:
+
+USER: User management, profiles, authentication
+MATCH: Match recording, validation, history
+TOURN: Tournament management, registration, brackets
+ACHV: Achievement system, badges, rewards
+SOCIAL: Social connections, messaging, interactions
+COACH: Coaching features, session management
+GUIDE: Guidance and tutorial systems
+ADMIN: Administrative functions and dashboards
+
+2. WORK TYPE CATEGORIES
+
+Within each module, we categorize work by type:
+
+UI: UI/UX Implementation
+FT: Feature Development
+DB: Debugging & Maintenance
+
+3. SERIAL NUMBERS
+
+Each implementation has a unique 6-digit serial number.
+
+REFERENCE CODE FORMAT
+-------------------
+
+Each reference code follows the format:
+[Module Prefix]-[Work Type]-[6-digit Serial Number][Implementation Context]
+
+Where:
+- Module Prefix: The functional area (MATCH, USER, TOURN, etc.)
+- Work Type: The category of work (UI, FT, DB)
+- Serial Number: A unique 6-digit identifier
+- Implementation Context (optional): Specifies the implementation state
+
+IMPLEMENTATION CONTEXT FLAGS
+--------------------------
+
+We use the following implementation context flags to indicate the state of existing code:
+
+[NEW]: Complete implementation from scratch
+[PARTIAL]: Enhancement assuming partial implementation exists
+[ENHANCE]: Improvement of complete existing implementation
+[REFACTOR]: Restructuring of existing implementation
+[FIX]: Bug fixing in existing implementation
+
+For example:
+MATCH-UI-278651[NEW]: New UI/UX implementation for the Match module
+USER-FT-123456[ENHANCE]: Enhancement of existing User feature
+ADMIN-DB-789012[FIX]: Bug fix for Admin module
+
+FOUNDATIONAL FRAMEWORKS
+---------------------
+
+We have established foundational frameworks for each work type:
+
+UI-278651: Complete UI/UX Framework (our foundational design system)
+FT-123456: Feature Development Framework (our structured approach to building features)
+DB-789012: Debugging Framework (our methodical approach to solving issues)
+
+USAGE INSTRUCTIONS
+----------------
+
+When referencing these codes in our communications:
+
+1. Use the full code with module, type, and context prefixes (e.g., "MATCH-UI-278651[PARTIAL]")
+2. To generate a complete implementation plan: "Generate the prompt for [code]"
+3. To implement a feature using a specific framework: "Implement [feature] using [code]"
+4. For foundational frameworks, you can use the type-only code (e.g., "UI-278651")
+
+CONTEXT-AWARE IMPLEMENTATIONS
+---------------------------
+
+Each implementation context follows a specific structure to ensure we don't rebuild existing functionality:
+
+DISCOVERY PHASE
+
+All implementation prompts should begin with a discovery phase:
+
+## Discovery Phase
+INSTRUCTION: Before proceeding, analyze the existing codebase to determine:
+- Which components already exist and their current state
+- Which API endpoints are already implemented
+- Which database schemas are already defined
+- Which SDK functions are already available
+
+DO NOT regenerate or reimplement existing functionality unless explicitly requested for refactoring.
+
+IMPLEMENTATION DISCOVERY QUESTIONS
+
+Before generating implementation plans, we include these discovery questions:
+
+## Discovery Questions
+1. Does functionality for [feature] already exist? If so, what is its current structure?
+2. What related components already exist?
+3. What related API endpoints are already implemented?
+4. What related database schemas are already defined?
+5. What related SDK functions are already available?
+6. What are the current limitations or issues with the existing implementation?
+
+DIFFERENTIAL IMPLEMENTATION PLANS
+
+Our implementation plans specify:
+
+## Differential Implementation Plan
+### Keep (Do not modify)
+- List components/code to keep as is
+
+### Enhance (Modify existing)
+- List components/code to enhance with specific changes
+
+### Add (Create new)
+- List completely new components/code to create
+
+### Remove (If applicable)
+- List components/code to remove or replace
+
+PRE-IMPLEMENTATION CHECKLIST
+
+Before any code changes, ensure there's a checklist:
+
+## Pre-Implementation Checklist
+- [ ] Examined existing related components
+- [ ] Verified current API endpoints functionality
+- [ ] Checked database schema for related tables
+- [ ] Reviewed SDK layer for related functions
+- [ ] Identified specific gaps or improvements needed
+- [ ] Confirmed no duplication of existing functionality
+
+SAMPLE PROMPTS
+------------
+
+Example of generating a context-aware UI implementation prompt:
+"Generate the prompt for MATCH-UI-278651[PARTIAL] for the match recording interface"
+
+Example of requesting a context-aware feature development:
+"Implement user achievements tracking using ACHV-FT-123456[NEW]"
+
+Example of requesting context-aware debugging assistance:
+"Debug tournament registration validation issue using TOURN-DB-789012[FIX]"
+
+Example of referencing a foundational framework:
+"Apply the UI-278651 design principles to the coach profile page"

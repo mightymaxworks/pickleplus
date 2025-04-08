@@ -1,19 +1,4 @@
-/**
- * Pickle+ Development Framework
- * 
- * This document outlines the comprehensive development approach for Pickle+, including
- * standardized reference codes that represent specific implementation patterns.
- * 
- * These reference codes allow for efficient communication about complex development tasks
- * without having to repeat detailed specifications each time.
- */
-
-/**
- * This is a documentation-only file that doesn't export any functional components.
- */
-
-/*
-# Pickle+ Development Framework
+# Pickle+ Development Framework 2.0
 
 ## System Overview
 
@@ -307,8 +292,3 @@ Example of requesting context-aware debugging assistance:
 
 Example of referencing a foundational framework:
 "Apply the UI-278651 design principles to the coach profile page"
-
-*/
-
-// This is a documentation file only, so we export nothing
-export {};
