@@ -111,7 +111,7 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
             <div className="mt-4 flex justify-center">
               <div className="text-center text-sm flex items-center text-gray-500 dark:text-gray-400">
                 <Scan size={15} className="mr-1" />
-                Tap card to view QR code for tournament check-in
+                Tap card to view your Pickle+ digital passport QR code
               </div>
             </div>
           </div>
@@ -158,9 +158,9 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
                   ? 'gold-shimmer' 
                   : 'text-[#2196F3]'
               }`}>
-                {isFoundingMember ? "Founding Member Pass" : "Player Tournament Pass"}
+                {isFoundingMember ? "Founding Member Pass" : "Pickle+ Digital Passport"}
               </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">Scan this code to check-in at tournaments</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">Your digital identity for check-ins, events, and connections</div>
             </div>
             
             {/* QR code with special border for founding members */}
