@@ -1,0 +1,46 @@
+# Development Guidelines for Pickle+ Platform
+
+## Project Structure
+- Follow a modular architecture with clear separation of concerns
+- Organize code into layers: Database, Server, SDK, and UI
+- Use TypeScript throughout the codebase for type safety
+
+## Running and Testing the Project
+- The workflow "Start application" runs `npm run dev`, starting both backend and frontend servers
+- After making edits, the workflow automatically restarts
+- **Important**: Always provide explicit URLs for testing:
+  - Main application: https://{repl-name}.{username}.repl.co
+  - For specific features/pages: https://{repl-name}.{username}.repl.co/{path}
+- After each deployment or implementation of a significant feature, state the explicit URLs where the feature can be accessed and tested
+
+## Frontend Development
+- Use React with TypeScript for the frontend
+- Follow the component-based architecture
+- Implement responsive design for mobile, tablet, and desktop
+- Use shadow components, React Query, and wouter for routing
+
+## Backend Development
+- Structure API routes according to resource types
+- Implement proper error handling and validation
+- Use mock routes for development and testing
+- Follow REST principles for API design
+
+## SDK Development
+- Create SDK modules for each domain area (XP, Ranking, Match, User, etc.)
+- Use TypeScript interfaces for type definitions
+- Implement consistent error handling
+- Document all SDK functions with JSDoc comments
+
+## Styling and Branding
+- Use Tailwind CSS for styling
+- Follow the Pickle+ brand colors:
+  - Primary: #FF5722 (pickleball orange)
+  - Secondary: #2196F3 (sport blue)
+  - Accent: #4CAF50 (success green)
+- Ensure all UI elements follow accessibility guidelines
+
+## Testing
+- Write unit tests for critical business logic
+- Perform manual testing on all features
+- Test across different screen sizes
+- Validate API responses against expected schemas
