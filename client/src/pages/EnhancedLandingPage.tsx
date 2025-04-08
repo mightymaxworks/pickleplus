@@ -176,7 +176,7 @@ export default function EnhancedLandingPage() {
                 🔥 Level up your Pickleball game
               </div>
               <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 leading-tight">
-                Your Pickleball Journey, <span className="text-yellow-200">Powered by Intelligence</span>
+                Your Pickleball Journey, <span className="text-yellow-200">Powered by CourtIQ™</span>
               </h1>
               <p className="text-lg sm:text-xl mb-8 text-white/90 leading-relaxed">
                 Pickle+ Passport with CourtIQ™ analytics tracks your progress, connects you with the community, and elevates your game with real-time insights and rewards.
@@ -205,7 +205,7 @@ export default function EnhancedLandingPage() {
               {/* Founding member highlight */}
               <div className="mt-8 inline-flex items-center gap-2 bg-black/20 backdrop-blur-sm rounded-full px-4 py-2">
                 <Star className="text-yellow-300 h-5 w-5" />
-                <span className="text-yellow-200 font-medium">Limited Founding Member slots available</span>
+                <span className="text-yellow-200 font-medium">Limited Founding Member slots available - Pickle+</span>
               </div>
             </motion.div>
             
@@ -223,7 +223,7 @@ export default function EnhancedLandingPage() {
                     {/* Header with logo */}
                     <div className="bg-gradient-to-r from-[#FF5722] to-[#FF9800] pt-3 pb-5 px-5 text-white">
                       <div className="flex justify-between items-center">
-                        <div className="font-bold text-lg">Player Passport</div>
+                        <div className="font-bold text-lg">Pickle+ Digital Passport</div>
                         <PicklePlusWhiteLogo className="h-10 w-auto" />
                       </div>
                       {/* CourtIQ badge - repositioned */}
