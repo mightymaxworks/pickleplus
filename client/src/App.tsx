@@ -26,6 +26,7 @@ import AchievementsComingSoon from "@/pages/AchievementsComingSoon";
 import LeaderboardComingSoon from "@/pages/LeaderboardComingSoon";
 import PreferencesPage from "@/pages/PreferencesPage";
 import MatchPage from "@/pages/match-page";
+import ModernizedMatchPage from "@/pages/modernized-match-page";
 import { MainLayout } from "@/components/MainLayout";
 import { AuthLayout } from "@/components/AuthLayout";
 import { AuthProvider, useAuth } from "@/hooks/useAuth.tsx";
@@ -156,6 +157,12 @@ function AppRoutes() {
         <Route path="/matches">
           <MainLayout>
             <MatchPage />
+          </MainLayout>
+        </Route>
+
+        <Route path="/matches/modern">
+          <MainLayout>
+            <ModernizedMatchPage />
           </MainLayout>
         </Route>
         
