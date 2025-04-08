@@ -18,7 +18,17 @@
   backface-visibility: hidden;
 }
 
-.passport-card-rotate {
+.passport-card {
+  transition: transform 0.8s;
+  transform-style: preserve-3d;
+}
+
+.passport-card-rotate,
+.passport-card:hover {
+  transform: rotateY(180deg);
+}
+
+.passport-card-back {
   transform: rotateY(180deg);
 }
 
