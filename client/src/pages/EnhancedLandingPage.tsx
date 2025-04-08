@@ -190,6 +190,15 @@ export default function EnhancedLandingPage() {
                     Get Started
                   </Button>
                 </Link>
+                <Link href="/test-routing">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    className="ml-2 bg-white text-[#FF5722] border-[#FF5722]"
+                  >
+                    Test Routing
+                  </Button>
+                </Link>
                 <Button 
                   size="lg" 
                   variant="outline" 

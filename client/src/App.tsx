@@ -1,4 +1,4 @@
-import { Fragment } from 'react'
+import { Fragment, useEffect } from 'react'
 import { Route, Switch, useLocation } from 'wouter'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from './lib/queryClient'
@@ -7,6 +7,7 @@ import { AuthProvider } from '@/hooks/useAuth'
 import EnhancedLandingPage from './pages/EnhancedLandingPage'
 import EnhancedAuthPage from './pages/EnhancedAuthPage'
 import TestAuthPage from './pages/TestAuthPage'
+import TestRoutingPage from './pages/TestRoutingPage'
 import Dashboard from './pages/Dashboard'
 import MatchRewardDemo from './pages/match-reward-demo'
 import NotFound from './pages/not-found'
@@ -35,6 +36,16 @@ function ProtectedRoute({
 }
 
 export default function App() {
+  // Add location hook to debug routing
+  const [location] = useLocation();
+  
+  console.log("Current location:", location);
+  
+  // Debugging useEffect to log location changes
+  useEffect(() => {
+    console.log("App.tsx - Location changed to:", location);
+  }, [location]);
+  
   return (
     <Fragment>
       <QueryClientProvider client={queryClient}>
@@ -45,6 +56,7 @@ export default function App() {
             <Route path="/login" component={EnhancedAuthPage} />
             <Route path="/register" component={EnhancedAuthPage} />
             <Route path="/auth" component={EnhancedAuthPage} />
+            <Route path="/test-routing" component={TestRoutingPage} />
             
             {/* Protected Routes */}
             <Route path="/dashboard">
