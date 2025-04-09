@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { queryClient } from '@/lib/queryClient';
 import { EnhancedUser } from '@/types/enhanced-user';
 import {
@@ -38,12 +39,25 @@ const StreamlinedProfilePage: FC = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingFields, setEditingFields] = useState<Record<string, boolean>>({});
   
-  // Editing state for the bio field
+  // Overview tab fields
   const [bioField, setBioField] = useState('');
   const [playingStyleField, setPlayingStyleField] = useState('');
   const [playingSinceField, setPlayingSinceField] = useState('');
+  
+  // Equipment tab fields
+  const [paddleBrandField, setPaddleBrandField] = useState('');
+  const [paddleModelField, setPaddleModelField] = useState('');
+  const [backupPaddleBrandField, setBackupPaddleBrandField] = useState('');
+  const [backupPaddleModelField, setBackupPaddleModelField] = useState('');
+  const [otherEquipmentField, setOtherEquipmentField] = useState('');
+  
+  // Preferences tab fields
+  const [preferredFormatField, setPreferredFormatField] = useState('');
+  const [dominantHandField, setDominantHandField] = useState('');
+  const [lookingForPartnersField, setLookingForPartnersField] = useState(false);
+  const [mentorshipInterestField, setMentorshipInterestField] = useState(false);
 
-  // Define playing style options
+  // Define dropdown options
   const playingStyleOptions = [
     { value: 'aggressive', label: 'Aggressive' },
     { value: 'defensive', label: 'Defensive' },
@@ -51,8 +65,34 @@ const StreamlinedProfilePage: FC = () => {
     { value: 'all-court', label: 'All-Court' },
   ];
   
+  const paddleBrandOptions = [
+    { value: 'SHOT3', label: 'SHOT3' },
+    { value: 'Selkirk', label: 'Selkirk' },
+    { value: 'Joola', label: 'Joola' },
+    { value: 'Engage', label: 'Engage' },
+    { value: 'Franklin', label: 'Franklin' },
+    { value: 'Head', label: 'Head' },
+    { value: 'Paddletek', label: 'Paddletek' },
+    { value: 'ProKennex', label: 'ProKennex' },
+    { value: 'Gamma', label: 'Gamma' },
+    { value: 'Other', label: 'Other' },
+  ];
+  
+  const formatOptions = [
+    { value: 'singles', label: 'Singles' },
+    { value: 'doubles', label: 'Doubles' },
+    { value: 'mixed', label: 'Mixed Doubles' },
+    { value: 'all', label: 'All Formats' },
+  ];
+  
+  const handOptions = [
+    { value: 'right', label: 'Right-Handed' },
+    { value: 'left', label: 'Left-Handed' },
+    { value: 'ambidextrous', label: 'Ambidextrous' },
+  ];
+  
   // Function to handle saving profile updates
-  const saveProfileField = async (fieldName: string, value: string) => {
+  const saveProfileField = async (fieldName: string, value: string | boolean) => {
     try {
       await fetch('/api/profile/update', {
         method: 'PATCH',
@@ -97,9 +137,23 @@ const StreamlinedProfilePage: FC = () => {
   // Initialize form fields when user data is loaded
   useEffect(() => {
     if (user) {
+      // Overview tab fields
       setBioField(user.bio || '');
       setPlayingStyleField(user.playingStyle || '');
       setPlayingSinceField(user.playingSince || '');
+      
+      // Equipment tab fields
+      setPaddleBrandField(user.paddleBrand || '');
+      setPaddleModelField(user.paddleModel || '');
+      setBackupPaddleBrandField(user.backupPaddleBrand || '');
+      setBackupPaddleModelField(user.backupPaddleModel || '');
+      setOtherEquipmentField(user.otherEquipment || '');
+      
+      // Preferences tab fields
+      setPreferredFormatField(user.preferredFormat || '');
+      setDominantHandField(user.dominantHand || '');
+      setLookingForPartnersField(user.lookingForPartners || false);
+      setMentorshipInterestField(user.mentorshipInterest || false);
     }
   }, [user]);
 
@@ -485,24 +539,197 @@ const StreamlinedProfilePage: FC = () => {
           <TabsContent value="equipment" className="mt-0">
             <Card className="p-6">
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Equipment Details</h3>
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Equipment Details</h3>
+                  {isEditMode && (
+                    <p className="text-xs text-muted-foreground">Click on any field to edit</p>
+                  )}
+                </div>
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <h4 className="text-sm font-medium text-muted-foreground mb-2">Primary Paddle</h4>
-                    <p>
-                      {user.paddleBrand ? `${user.paddleBrand} ${user.paddleModel || ''}` : 'Not specified'}
-                    </p>
+                    {isEditMode && editingFields.paddleBrand ? (
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-1 gap-2">
+                          <Select 
+                            value={paddleBrandField} 
+                            onValueChange={(value) => setPaddleBrandField(value)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select paddle brand" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {paddleBrandOptions.map(option => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          
+                          <Input 
+                            type="text"
+                            value={paddleModelField}
+                            onChange={(e) => setPaddleModelField(e.target.value)}
+                            placeholder="Paddle model (e.g., Genesis Pro Ai)"
+                          />
+                        </div>
+                        
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => {
+                              setPaddleBrandField(user.paddleBrand || '');
+                              setPaddleModelField(user.paddleModel || '');
+                              setEditingFields(prev => ({ ...prev, paddleBrand: false }));
+                            }}
+                          >
+                            <X className="h-4 w-4 mr-1" /> Cancel
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            onClick={async () => {
+                              await saveProfileField('paddleBrand', paddleBrandField);
+                              await saveProfileField('paddleModel', paddleModelField);
+                            }}
+                          >
+                            <Check className="h-4 w-4 mr-1" /> Save
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div 
+                        className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                        onClick={() => {
+                          if (isEditMode) {
+                            setEditingFields(prev => ({ ...prev, paddleBrand: true }));
+                          }
+                        }}
+                      >
+                        <p>{user.paddleBrand ? `${user.paddleBrand} ${user.paddleModel || ''}` : 'Not specified'}</p>
+                        {isEditMode && (
+                          <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
+                        )}
+                      </div>
+                    )}
                   </div>
+                  
                   <div>
                     <h4 className="text-sm font-medium text-muted-foreground mb-2">Backup Paddle</h4>
-                    <p>
-                      {user.backupPaddleBrand ? `${user.backupPaddleBrand} ${user.backupPaddleModel || ''}` : 'Not specified'}
-                    </p>
+                    {isEditMode && editingFields.backupPaddleBrand ? (
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-1 gap-2">
+                          <Select 
+                            value={backupPaddleBrandField} 
+                            onValueChange={(value) => setBackupPaddleBrandField(value)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select backup paddle brand" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {paddleBrandOptions.map(option => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          
+                          <Input 
+                            type="text"
+                            value={backupPaddleModelField}
+                            onChange={(e) => setBackupPaddleModelField(e.target.value)}
+                            placeholder="Backup paddle model"
+                          />
+                        </div>
+                        
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => {
+                              setBackupPaddleBrandField(user.backupPaddleBrand || '');
+                              setBackupPaddleModelField(user.backupPaddleModel || '');
+                              setEditingFields(prev => ({ ...prev, backupPaddleBrand: false }));
+                            }}
+                          >
+                            <X className="h-4 w-4 mr-1" /> Cancel
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            onClick={async () => {
+                              await saveProfileField('backupPaddleBrand', backupPaddleBrandField);
+                              await saveProfileField('backupPaddleModel', backupPaddleModelField);
+                            }}
+                          >
+                            <Check className="h-4 w-4 mr-1" /> Save
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div 
+                        className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                        onClick={() => {
+                          if (isEditMode) {
+                            setEditingFields(prev => ({ ...prev, backupPaddleBrand: true }));
+                          }
+                        }}
+                      >
+                        <p>{user.backupPaddleBrand ? `${user.backupPaddleBrand} ${user.backupPaddleModel || ''}` : 'Not specified'}</p>
+                        {isEditMode && (
+                          <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
+                
                 <div className="mt-4">
                   <h4 className="text-sm font-medium text-muted-foreground mb-2">Other Equipment</h4>
-                  <p>{user.otherEquipment || 'Not specified'}</p>
+                  {isEditMode && editingFields.otherEquipment ? (
+                    <div className="space-y-2">
+                      <Textarea 
+                        value={otherEquipmentField}
+                        onChange={(e) => setOtherEquipmentField(e.target.value)}
+                        placeholder="List any other equipment you use (bags, shoes, accessories, etc.)"
+                        className="min-h-[80px]"
+                      />
+                      <div className="flex justify-end gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => {
+                            setOtherEquipmentField(user.otherEquipment || '');
+                            setEditingFields(prev => ({ ...prev, otherEquipment: false }));
+                          }}
+                        >
+                          <X className="h-4 w-4 mr-1" /> Cancel
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          onClick={() => saveProfileField('otherEquipment', otherEquipmentField)}
+                        >
+                          <Check className="h-4 w-4 mr-1" /> Save
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div 
+                      className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                      onClick={() => {
+                        if (isEditMode) {
+                          setEditingFields(prev => ({ ...prev, otherEquipment: true }));
+                        }
+                      }}
+                    >
+                      <p>{user.otherEquipment || 'Not specified'}</p>
+                      {isEditMode && (
+                        <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </Card>
@@ -511,23 +738,226 @@ const StreamlinedProfilePage: FC = () => {
           <TabsContent value="preferences" className="mt-0">
             <Card className="p-6">
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Play Preferences</h3>
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Play Preferences</h3>
+                  {isEditMode && (
+                    <p className="text-xs text-muted-foreground">Click on any field to edit</p>
+                  )}
+                </div>
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <h4 className="text-sm font-medium text-muted-foreground mb-2">Format Preference</h4>
-                    <p>{user.preferredFormat || 'Not specified'}</p>
+                    {isEditMode && editingFields.preferredFormat ? (
+                      <div className="space-y-2">
+                        <Select 
+                          value={preferredFormatField} 
+                          onValueChange={(value) => setPreferredFormatField(value)}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select preferred format" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {formatOptions.map(option => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => {
+                              setPreferredFormatField(user.preferredFormat || '');
+                              setEditingFields(prev => ({ ...prev, preferredFormat: false }));
+                            }}
+                          >
+                            <X className="h-4 w-4 mr-1" /> Cancel
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            onClick={() => saveProfileField('preferredFormat', preferredFormatField)}
+                          >
+                            <Check className="h-4 w-4 mr-1" /> Save
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div 
+                        className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                        onClick={() => {
+                          if (isEditMode) {
+                            setEditingFields(prev => ({ ...prev, preferredFormat: true }));
+                          }
+                        }}
+                      >
+                        <p>{user.preferredFormat || 'Not specified'}</p>
+                        {isEditMode && (
+                          <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
+                        )}
+                      </div>
+                    )}
                   </div>
+                  
                   <div>
                     <h4 className="text-sm font-medium text-muted-foreground mb-2">Dominant Hand</h4>
-                    <p>{user.dominantHand || 'Not specified'}</p>
+                    {isEditMode && editingFields.dominantHand ? (
+                      <div className="space-y-2">
+                        <Select 
+                          value={dominantHandField} 
+                          onValueChange={(value) => setDominantHandField(value)}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select dominant hand" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {handOptions.map(option => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => {
+                              setDominantHandField(user.dominantHand || '');
+                              setEditingFields(prev => ({ ...prev, dominantHand: false }));
+                            }}
+                          >
+                            <X className="h-4 w-4 mr-1" /> Cancel
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            onClick={() => saveProfileField('dominantHand', dominantHandField)}
+                          >
+                            <Check className="h-4 w-4 mr-1" /> Save
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div 
+                        className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                        onClick={() => {
+                          if (isEditMode) {
+                            setEditingFields(prev => ({ ...prev, dominantHand: true }));
+                          }
+                        }}
+                      >
+                        <p>{user.dominantHand || 'Not specified'}</p>
+                        {isEditMode && (
+                          <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
+                        )}
+                      </div>
+                    )}
                   </div>
+                  
                   <div>
                     <h4 className="text-sm font-medium text-muted-foreground mb-2">Looking for Partners</h4>
-                    <p>{user.lookingForPartners ? 'Yes' : 'No'}</p>
+                    {isEditMode && editingFields.lookingForPartners ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            id="looking-for-partners"
+                            checked={lookingForPartnersField}
+                            onCheckedChange={setLookingForPartnersField}
+                          />
+                          <Label htmlFor="looking-for-partners">
+                            {lookingForPartnersField ? 'Yes, I\'m looking for partners' : 'No, not looking for partners'}
+                          </Label>
+                        </div>
+                        
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => {
+                              setLookingForPartnersField(user.lookingForPartners || false);
+                              setEditingFields(prev => ({ ...prev, lookingForPartners: false }));
+                            }}
+                          >
+                            <X className="h-4 w-4 mr-1" /> Cancel
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            onClick={() => saveProfileField('lookingForPartners', lookingForPartnersField)}
+                          >
+                            <Check className="h-4 w-4 mr-1" /> Save
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div 
+                        className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                        onClick={() => {
+                          if (isEditMode) {
+                            setEditingFields(prev => ({ ...prev, lookingForPartners: true }));
+                          }
+                        }}
+                      >
+                        <p>{user.lookingForPartners ? 'Yes' : 'No'}</p>
+                        {isEditMode && (
+                          <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
+                        )}
+                      </div>
+                    )}
                   </div>
+                  
                   <div>
                     <h4 className="text-sm font-medium text-muted-foreground mb-2">Mentorship Interest</h4>
-                    <p>{user.mentorshipInterest ? 'Yes' : 'No'}</p>
+                    {isEditMode && editingFields.mentorshipInterest ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            id="mentorship-interest"
+                            checked={mentorshipInterestField}
+                            onCheckedChange={setMentorshipInterestField}
+                          />
+                          <Label htmlFor="mentorship-interest">
+                            {mentorshipInterestField ? 'Yes, interested in mentorship' : 'No, not interested in mentorship'}
+                          </Label>
+                        </div>
+                        
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => {
+                              setMentorshipInterestField(user.mentorshipInterest || false);
+                              setEditingFields(prev => ({ ...prev, mentorshipInterest: false }));
+                            }}
+                          >
+                            <X className="h-4 w-4 mr-1" /> Cancel
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            onClick={() => saveProfileField('mentorshipInterest', mentorshipInterestField)}
+                          >
+                            <Check className="h-4 w-4 mr-1" /> Save
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div 
+                        className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                        onClick={() => {
+                          if (isEditMode) {
+                            setEditingFields(prev => ({ ...prev, mentorshipInterest: true }));
+                          }
+                        }}
+                      >
+                        <p>{user.mentorshipInterest ? 'Yes' : 'No'}</p>
+                        {isEditMode && (
+                          <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
