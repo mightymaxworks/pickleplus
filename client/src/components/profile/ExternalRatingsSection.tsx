@@ -71,33 +71,7 @@ export function ExternalRatingsSection({ user, isEditable = false, isCurrentUser
         return;
       }
       
-      // Validate URL formats
-      if (form.duprProfileUrl && !isValidUrl(form.duprProfileUrl)) {
-        toast({
-          title: "Invalid DUPR Profile URL",
-          description: "Please enter a valid URL starting with http:// or https://",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      if (form.utprProfileUrl && !isValidUrl(form.utprProfileUrl)) {
-        toast({
-          title: "Invalid UTPR Profile URL",
-          description: "Please enter a valid URL starting with http:// or https://",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      if (form.wprProfileUrl && !isValidUrl(form.wprProfileUrl)) {
-        toast({
-          title: "Invalid WPR Profile URL",
-          description: "Please enter a valid URL starting with http:// or https://",
-          variant: "destructive",
-        });
-        return;
-      }
+      // Remove URL validations as we're now using player IDs instead
       
       // Log data before submitting for debugging
       const updateData = {
@@ -181,13 +155,13 @@ export function ExternalRatingsSection({ user, isEditable = false, isCurrentUser
           </div>
           
           <div className="space-y-1">
-            <Label htmlFor={`${system.toLowerCase()}ProfileUrl`}>Profile URL</Label>
+            <Label htmlFor={`${system.toLowerCase()}ProfileUrl`}>{system} Player ID</Label>
             <Input
               id={`${system.toLowerCase()}ProfileUrl`}
               name={`${system.toLowerCase()}ProfileUrl`}
               value={form[`${system.toLowerCase()}ProfileUrl` as keyof typeof form] || ''}
               onChange={handleChange}
-              placeholder={`Enter your ${system} profile URL for verification`}
+              placeholder={`Enter your ${system} player ID for verification`}
             />
           </div>
         </div>
@@ -218,15 +192,9 @@ export function ExternalRatingsSection({ user, isEditable = false, isCurrentUser
           )}
           
           {profileUrl && (
-            <a 
-              href={profileUrl} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
-            >
-              <ExternalLink className="h-3.5 w-3.5 mr-1" />
-              View Profile
-            </a>
+            <span className="text-sm text-muted-foreground">
+              Player ID: {profileUrl}
+            </span>
           )}
         </div>
         
@@ -279,7 +247,7 @@ export function ExternalRatingsSection({ user, isEditable = false, isCurrentUser
             <div className="bg-muted/50 p-3 rounded-md mb-4">
               <p className="text-sm text-muted-foreground">
                 <Info className="h-4 w-4 inline mr-1" />
-                Add your ratings from official systems along with profile URLs for verification.
+                Add your ratings from official systems along with your player ID for verification.
                 All submissions will be marked as "Pending Verification" until an admin reviews them.
               </p>
             </div>
