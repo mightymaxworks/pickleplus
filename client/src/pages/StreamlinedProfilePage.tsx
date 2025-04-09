@@ -833,7 +833,10 @@ const StreamlinedProfilePage: FC = () => {
           <TabsContent value="overview" className="mt-0">
             {/* Profile Completion Progress Bar */}
             <Card className="p-4 mb-4">
-              <EnhancedProfileCompletion />
+              <EnhancedProfileCompletion 
+                user={user} 
+                onEditRequest={() => setIsEditMode(true)} 
+              />
             </Card>
             
             <Card className="p-6">

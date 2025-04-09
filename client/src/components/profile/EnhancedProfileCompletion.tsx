@@ -200,7 +200,15 @@ function SectionProgress({
 }
 
 // Main component
-export function EnhancedProfileCompletion({ user, refreshTrigger = 0 }: { user: any; refreshTrigger?: number }) {
+export function EnhancedProfileCompletion({ 
+  user, 
+  refreshTrigger = 0,
+  onEditRequest
+}: { 
+  user?: any; 
+  refreshTrigger?: number;
+  onEditRequest?: () => void 
+}) {
   console.log("RENDERING EnhancedProfileCompletion COMPONENT", user?.profileCompletionPct); // Debug log
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [showAnimation, setShowAnimation] = useState(false);
@@ -455,16 +463,27 @@ export function EnhancedProfileCompletion({ user, refreshTrigger = 0 }: { user: 
       </CardContent>
       
       <CardFooter className="pt-0">
-        <Button
-          variant="outline"
-          size="sm"
-          asChild
-          className="w-full"
-        >
-          <Link href="/profile/edit">
+        {onEditRequest ? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={onEditRequest}
+          >
             Complete Your Profile
-          </Link>
-        </Button>
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            asChild
+            className="w-full"
+          >
+            <Link href="/profile/edit">
+              Complete Your Profile
+            </Link>
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );
