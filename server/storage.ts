@@ -303,22 +303,38 @@ export class DatabaseStorage implements IStorage {
       // Filter out any properties that don't belong to the users table
       // but make sure to keep external rating fields
       const validData: Record<string, any> = {};
-      // Log the profileData keys for debugging
+      
+      // Log all keys available in the profileData object
       console.log(`[Storage] updateUserProfile - Fields in request:`, Object.keys(profileData));
+      console.log(`[Storage] updateUserProfile - Complete profileData:`, JSON.stringify(profileData, null, 2));
       
-      // List of all external rating fields
-      const externalRatingFields = [
-        'duprRating', 'duprProfileUrl',
-        'utprRating', 'utprProfileUrl',
-        'wprRating', 'wprProfileUrl',
-        'externalRatingsVerified', 'lastExternalRatingUpdate'
-      ];
+      // DEBUG: Print all columns in the users table
+      console.log(`[Storage] All users table columns:`, Object.keys(users));
       
+      // List of all external rating fields - map them to database column names
+      const externalRatingFieldsMap: Record<string, string> = {
+        'duprRating': 'dupr_rating',
+        'duprProfileUrl': 'dupr_profile_url',
+        'utprRating': 'utpr_rating',
+        'utprProfileUrl': 'utpr_profile_url',
+        'wprRating': 'wpr_rating',
+        'wprProfileUrl': 'wpr_profile_url',
+        'externalRatingsVerified': 'external_ratings_verified',
+        'lastExternalRatingUpdate': 'last_external_rating_update'
+      };
+      
+      // Map camelCase field names to snake_case database column names for external ratings
       Object.keys(profileData).forEach(key => {
-        // Check if key exists in the schema OR is in our external rating fields list
-        if (key in users || externalRatingFields.includes(key)) {
+        if (externalRatingFieldsMap[key]) {
+          // Use the mapped database column name
+          const dbColumnName = externalRatingFieldsMap[key];
+          validData[dbColumnName] = profileData[key];
+          console.log(`[Storage] updateUserProfile - Including mapped field: ${key} -> ${dbColumnName} with value:`, profileData[key]);
+        } 
+        // Also include any fields that exist directly in the schema
+        else if (key in users) {
           validData[key] = profileData[key];
-          console.log(`[Storage] updateUserProfile - Including field: ${key} with value:`, profileData[key]);
+          console.log(`[Storage] updateUserProfile - Including direct field: ${key} with value:`, profileData[key]);
         } else {
           console.log(`[Storage] updateUserProfile - Skipping field not in schema: ${key}`);
         }
