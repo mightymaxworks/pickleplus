@@ -12,7 +12,7 @@ import { toast } from '@/hooks/use-toast';
 import { 
   UserCircle, Settings, Award, Clock, Info, Dumbbell, BookOpen,
   Trophy, MapPin, BadgeCheck, Medal, Edit2, Check, X, Calendar, Clipboard,
-  Home, Activity, User, Shield, LogOut
+  Home, Activity, User, Shield, LogOut, Bell, Menu
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -256,76 +256,47 @@ const StreamlinedProfilePage: FC = () => {
   return (
     <div className="container px-4 pb-16 max-w-screen-xl mx-auto">
       {/* Sticky Header/Navigation */}
-      <div className="sticky top-0 z-20 bg-background pt-2 pb-2 border-b">
+      <div className="sticky top-0 z-20 bg-white py-3 border-b shadow-sm">
         <div className="container mx-auto px-4 flex justify-between items-center">
+          {/* Logo on the left */}
           <div 
             className="flex items-center cursor-pointer" 
             onClick={() => navigate("/dashboard")}
           >
             {user.isFoundingMember ? (
-              <div className="text-lg font-bold text-primary flex items-center">
-                <Medal className="h-5 w-5 mr-2 text-yellow-500" />
-                Pickle+
+              <div className="text-2xl font-bold tracking-tight flex text-orange-500">
+                <span>PICKLE</span>
+                <span className="text-blue-500">+</span>
               </div>
             ) : (
-              <div className="text-lg font-bold text-primary">Pickle+</div>
+              <div className="text-2xl font-bold tracking-tight flex text-orange-500">
+                <span>PICKLE</span>
+                <span className="text-blue-500">+</span>
+              </div>
             )}
           </div>
           
-          <div className="flex-1 mx-6">
-            <div className="flex items-center justify-center">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="mr-2"
-                onClick={() => navigate("/dashboard")}
-              >
-                <Home className="h-4 w-4 mr-2" />
-                Dashboard
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="mr-2"
-                onClick={() => navigate("/matches")}
-              >
-                <Activity className="h-4 w-4 mr-2" />
-                Matches
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="mr-2"
-                onClick={() => navigate("/leaderboard")}
-              >
-                <Trophy className="h-4 w-4 mr-2" />
-                Leaderboard
-              </Button>
+          {/* Right side with notification and user menu */}
+          <div className="flex items-center">
+            {/* Notification Bell */}
+            <div className="relative mr-4 cursor-pointer">
+              <Bell className="h-5 w-5 text-gray-500" />
+              <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
+                3
+              </span>
             </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            {user.isFoundingMember && (
-              <Badge variant="secondary" className="flex items-center gap-1 hidden sm:flex">
-                <Medal className="h-3 w-3" />
-                Founding Member
-              </Badge>
-            )}
-            {user.skillLevel && (
-              <Badge variant="outline" className="bg-primary/10 hidden sm:flex">
-                {user.skillLevel} Skill Level
-              </Badge>
-            )}
+            
+            {/* Edit Profile Button (Only visible on profile page) */}
             <Button 
               variant="outline" 
               size="sm" 
-              className="bg-background/80 backdrop-blur-sm"
+              className="mr-3 bg-background/80 backdrop-blur-sm hidden md:flex"
               onClick={() => setIsEditMode(!isEditMode)}
             >
               {isEditMode ? (
                 <>
                   <X className="h-4 w-4 mr-2" />
-                  Exit Edit Mode
+                  Exit Edit
                 </>
               ) : (
                 <>
@@ -335,41 +306,60 @@ const StreamlinedProfilePage: FC = () => {
               )}
             </Button>
             
-            <div className="flex items-center ml-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Avatar className="h-8 w-8 cursor-pointer">
+            {/* User Avatar and Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="flex items-center cursor-pointer">
+                  <Avatar className="h-10 w-10 bg-blue-500 text-white">
                     {user.avatarUrl ? (
                       <AvatarImage src={user.avatarUrl} alt={user.displayName || user.username} />
                     ) : null}
-                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                    <AvatarFallback className="bg-blue-500 text-white text-sm">
                       {user.avatarInitials || user.username.substring(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => navigate("/profile/streamlined")}>
-                    <User className="mr-2 h-4 w-4" />
-                    Profile
+                  {/* Mobile menu button */}
+                  <div className="ml-2 md:hidden">
+                    <Button variant="ghost" size="icon">
+                      <Menu className="h-5 w-5" />
+                    </Button>
+                  </div>
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => navigate("/profile/streamlined")}>
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/dashboard")}>
+                  <Home className="mr-2 h-4 w-4" />
+                  Dashboard
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/matches")}>
+                  <Activity className="mr-2 h-4 w-4" />
+                  Matches
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/leaderboard")}>
+                  <Trophy className="mr-2 h-4 w-4" />
+                  Leaderboard
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/settings")}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </DropdownMenuItem>
+                {user.isAdmin && (
+                  <DropdownMenuItem onClick={() => navigate("/admin/dashboard")}>
+                    <Shield className="mr-2 h-4 w-4" />
+                    Admin Panel
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/settings")}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    Settings
-                  </DropdownMenuItem>
-                  {user.isAdmin && (
-                    <DropdownMenuItem onClick={() => navigate("/admin/dashboard")}>
-                      <Shield className="mr-2 h-4 w-4" />
-                      Admin Panel
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate("/auth/logout")}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Logout
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate("/auth/logout")}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
