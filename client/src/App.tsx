@@ -84,9 +84,11 @@ export default function App() {
             <Route path="/passport">
               {(params) => <ProtectedRoute component={Dashboard} path="/passport" />}
             </Route>
+            {/* Main profile route now points to StreamlinedProfilePage */}
             <Route path="/profile">
-              {(params) => <ProtectedRoute component={EnhancedProfile} path="/profile" />}
+              {(params) => <ProtectedRoute component={StreamlinedProfilePage} path="/profile" />}
             </Route>
+            {/* Legacy profile routes kept for backward compatibility */}
             <Route path="/profile/enhanced">
               {(params) => <ProtectedRoute component={EnhancedProfilePage} path="/profile/enhanced" />}
             </Route>
