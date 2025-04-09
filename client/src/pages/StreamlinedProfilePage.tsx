@@ -25,6 +25,7 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { queryClient } from '@/lib/queryClient';
 import { EnhancedUser } from '@/types/enhanced-user';
+import { PicklePlusLogo } from '@/components/icons/PicklePlusLogo';
 import {
   Select,
   SelectContent,
@@ -263,17 +264,7 @@ const StreamlinedProfilePage: FC = () => {
             className="flex items-center cursor-pointer" 
             onClick={() => navigate("/dashboard")}
           >
-            {user.isFoundingMember ? (
-              <div className="text-2xl font-bold tracking-tight flex text-orange-500">
-                <span>PICKLE</span>
-                <span className="text-blue-500">+</span>
-              </div>
-            ) : (
-              <div className="text-2xl font-bold tracking-tight flex text-orange-500">
-                <span>PICKLE</span>
-                <span className="text-blue-500">+</span>
-              </div>
-            )}
+            <PicklePlusLogo className="h-8" />
           </div>
           
           {/* Right side with notification and user menu */}
