@@ -290,9 +290,17 @@ export class DatabaseStorage implements IStorage {
       // Calculate previous profile completion percentage
       const previousCompletion = this.calculateProfileCompletion(currentUser);
       
-      // Update the user profile
+      // Filter out any properties that don't belong to the users table
+      const validData: Record<string, any> = {};
+      Object.keys(profileData).forEach(key => {
+        if (key in users) {
+          validData[key] = profileData[key];
+        }
+      });
+      
+      // Update the user profile with validated data
       const [updatedUser] = await db.update(users)
-        .set(profileData)
+        .set(validData)
         .where(eq(users.id, numericId))
         .returning();
         

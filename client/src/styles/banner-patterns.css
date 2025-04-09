@@ -1,0 +1,347 @@
+/* 
+ * Banner Pattern CSS for Pickle+ Profile Banners
+ * PKL-278651-PPBC-0001 - Profile Page Banner Customization
+ */
+
+/* Base banner styles */
+.profile-banner {
+  width: 100%;
+  height: 200px;
+  position: relative;
+  overflow: hidden;
+  background-color: #f0f0f0;
+  border-radius: 0.5rem;
+}
+
+.profile-banner.banner-image {
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+/* No pattern (solid colors) */
+.banner-pattern-none {
+  background: linear-gradient(45deg, #FF5722, #FF9800);
+}
+
+/* Stripe pattern */
+.banner-pattern-stripes {
+  background: repeating-linear-gradient(
+    45deg,
+    #FF5722,
+    #FF5722 20px,
+    #FF9800 20px,
+    #FF9800 40px
+  );
+}
+
+/* Polka dot pattern */
+.banner-pattern-dots {
+  background-color: #FF5722;
+  background-image: radial-gradient(
+    circle,
+    #FF9800 8px,
+    transparent 8px
+  );
+  background-size: 30px 30px;
+}
+
+/* Chevron pattern */
+.banner-pattern-chevron {
+  background: linear-gradient(135deg, #FF5722 25%, transparent 25%) -20px 0,
+    linear-gradient(225deg, #FF5722 25%, transparent 25%) -20px 0,
+    linear-gradient(315deg, #FF5722 25%, transparent 25%),
+    linear-gradient(45deg, #FF5722 25%, transparent 25%);
+  background-size: 40px 40px;
+  background-color: #FF9800;
+}
+
+/* Zigzag pattern */
+.banner-pattern-zigzag {
+  background: 
+    linear-gradient(135deg, #FF9800 25%, transparent 25%) -20px 0,
+    linear-gradient(225deg, #FF9800 25%, transparent 25%) -20px 0,
+    linear-gradient(315deg, #FF9800 25%, transparent 25%),
+    linear-gradient(45deg, #FF9800 25%, transparent 25%);
+  background-size: 30px 30px;
+  background-color: #FF5722;
+}
+
+/* Wave pattern */
+.banner-pattern-waves {
+  background: linear-gradient(#FF5722 50%, #FF9800 50%);
+  background-size: 100% 20px;
+  position: relative;
+}
+
+.banner-pattern-waves::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(
+      circle at 50% 0, 
+      #FF9800 25%, 
+      transparent 26%
+    ),
+    radial-gradient(
+      circle at 50% 0, 
+      #FF5722 25%, 
+      transparent 26%
+    );
+  background-size: 20px 40px;
+  background-position: 0 0, 0 20px;
+  opacity: 0.5;
+}
+
+/* Circuit board pattern */
+.banner-pattern-circuit {
+  background: 
+    linear-gradient(#FF9800 50%, transparent 0) 0 0,
+    radial-gradient(circle, #FF5722 0.5px, transparent 0) 0 0;
+  background-size: 10px 10px, 20px 20px;
+  background-color: #FF5722;
+}
+
+/* Diamond pattern */
+.banner-pattern-diamonds {
+  background: 
+    linear-gradient(45deg, #FF9800 25%, transparent 25%, transparent 75%, #FF9800 75%, #FF9800),
+    linear-gradient(45deg, #FF9800 25%, transparent 25%, transparent 75%, #FF9800 75%, #FF9800);
+  background-size: 40px 40px;
+  background-position: 0 0, 20px 20px;
+  background-color: #FF5722;
+}
+
+/* Basketweave pattern */
+.banner-pattern-basketweave {
+  background:
+    linear-gradient(45deg, #FF9800 12%, transparent 0, transparent 88%, #FF9800 0),
+    linear-gradient(135deg, transparent 37%, #FF5722 0, #FF5722 63%, transparent 0),
+    linear-gradient(45deg, transparent 37%, #FF5722 0, #FF5722 63%, transparent 0);
+  background-size: 40px 40px;
+  background-color: #FF9800;
+}
+
+/* Confetti pattern */
+.banner-pattern-confetti {
+  background-color: #FF5722;
+  background-image: 
+    radial-gradient(#FF9800 3px, transparent 3px),
+    radial-gradient(#2196F3 2.5px, transparent 2.5px),
+    radial-gradient(#4CAF50 2px, transparent 2px);
+  background-size: 30px 30px;
+  background-position: 0 0, 15px 15px, 5px 20px;
+}
+
+/* Modern geometric pattern */
+.banner-pattern-geometric {
+  background: 
+    linear-gradient(45deg, #FF5722 45px, transparent 45px)64px 64px,
+    linear-gradient(45deg, #FF5722 45px, transparent 45px, transparent 91px, #FF9800 91px, #FF9800 135px, transparent 135px),
+    linear-gradient(-45deg, #FF5722 23px, transparent 23px, transparent 68px, #FF5722 68px, #FF5722 113px, transparent 113px, transparent 158px, #FF5722 158px);
+  background-color: #FF9800;
+  background-size: 128px 128px;
+}
+
+/* Sports-themed patterns */
+.banner-pattern-court {
+  background-color: #2196F3;
+  background-image: 
+    linear-gradient(white 2px, transparent 2px),
+    linear-gradient(90deg, white 2px, transparent 2px);
+  background-size: 30px 30px;
+  position: relative;
+}
+
+.banner-pattern-court::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background-color: white;
+  transform: translateY(-50%);
+}
+
+.banner-pattern-court::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 5px;
+  background-color: white;
+  transform: translateX(-50%);
+}
+
+/* Pickleball-specific pattern */
+.banner-pattern-pickleball {
+  background-color: #4CAF50;
+  position: relative;
+  overflow: hidden;
+}
+
+.banner-pattern-pickleball::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle, #FFFFFF 10px, transparent 10px);
+  background-size: 50px 50px;
+  background-position: 0 0;
+  opacity: 0.7;
+}
+
+/* Professional gradient */
+.banner-pattern-gradient-pro {
+  background: linear-gradient(135deg, #2196F3, #0D47A1);
+}
+
+/* Sporty gradient */
+.banner-pattern-gradient-sporty {
+  background: linear-gradient(135deg, #FF5722, #D84315);
+}
+
+/* Vibrant gradient */
+.banner-pattern-gradient-vibrant {
+  background: linear-gradient(135deg, #4CAF50, #2E7D32);
+}
+
+/* Subtle texture pattern */
+.banner-pattern-texture {
+  background-color: #EEEEEE;
+  background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23f5f5f5' fill-opacity='0.5' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Tournament winner pattern */
+.banner-pattern-champion {
+  background-color: #FFC107;
+  background-image: 
+    radial-gradient(circle, rgba(255,255,255,0.7) 8px, transparent 8px),
+    radial-gradient(circle, rgba(255,255,255,0.5) 16px, transparent 16px);
+  background-size: 50px 50px;
+  background-position: 0 0, 25px 25px;
+  position: relative;
+}
+
+.banner-pattern-champion::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(255,215,0,0.3) 25%, transparent 25%, transparent 50%, rgba(255,215,0,0.3) 50%, rgba(255,215,0,0.3) 75%, transparent 75%, transparent);
+  background-size: 20px 20px;
+  z-index: 1;
+}
+
+/* Founding member pattern */
+.banner-pattern-founder {
+  background-color: #212121;
+  background-image: linear-gradient(45deg, rgba(255,215,0,0.15) 25%, transparent 25%, transparent 50%, rgba(255,215,0,0.15) 50%, rgba(255,215,0,0.15) 75%, transparent 75%, transparent);
+  background-size: 20px 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.banner-pattern-founder::before, 
+.banner-pattern-founder::after {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  background: radial-gradient(circle, rgba(255,215,0,0.1) 10%, transparent 60%);
+  animation: founderGlow 4s ease infinite alternate;
+}
+
+.banner-pattern-founder::after {
+  animation-delay: -2s;
+}
+
+@keyframes founderGlow {
+  0% {
+    transform: translate(-5%, -5%) scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translate(5%, 5%) scale(1.2);
+    opacity: 0.8;
+  }
+}
+
+/* Special member patterns */
+.banner-pattern-vip {
+  background: linear-gradient(to right, #8E24AA, #5E35B1);
+  position: relative;
+}
+
+.banner-pattern-vip::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.1) 75%, transparent 75%, transparent);
+  background-size: 10px 10px;
+}
+
+/* Pro player pattern */
+.banner-pattern-pro {
+  background: linear-gradient(90deg, #000000, #424242);
+  position: relative;
+}
+
+.banner-pattern-pro::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(rgba(255, 87, 34, 0.2) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 87, 34, 0.2) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: -1px -1px;
+}
+
+/* Custom branded/sponsored pattern */
+.banner-pattern-sponsored {
+  background-color: #FFFFFF;
+  position: relative;
+  overflow: hidden;
+}
+
+.banner-pattern-sponsored::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(0,0,0,0.05) 25%, transparent 25%, transparent 50%, rgba(0,0,0,0.05) 50%, rgba(0,0,0,0.05) 75%, transparent 75%, transparent);
+  background-size: 10px 10px;
+}
+
+.banner-pattern-sponsored::after {
+  content: "SPONSORED";
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  font-size: 10px;
+  color: rgba(0, 0, 0, 0.5);
+  letter-spacing: 1px;
+}
