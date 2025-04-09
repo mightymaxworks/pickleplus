@@ -66,10 +66,20 @@ export function EditableProfileHeader({ user, tierInfo }: EditableProfileHeaderP
                 </Badge>
               )}
               
-              {/* Skill Level */}
+              {/* External Rating */}
               <Badge variant="outline" className={`flex items-center gap-1 px-3 py-1 ${user.isFoundingMember ? 'border-amber-400 text-amber-500' : 'border-[#2196F3] text-[#2196F3]'}`}>
-                <Medal className="h-3.5 w-3.5" />
-                {user.skillLevel || '4.5'} Skill Level
+                <Star className="h-3.5 w-3.5" />
+                {user.duprRating || user.utprRating || user.wprRating ? 
+                  `${Math.max(
+                    parseFloat(user.duprRating || '0'), 
+                    parseFloat(user.utprRating || '0'), 
+                    parseFloat(user.wprRating || '0')
+                  ).toFixed(1)} Rating` : 
+                  'No Rating'
+                }
+                {user.externalRatingsVerified && (
+                  <span className="ml-1 text-xs text-green-600">✓</span>
+                )}
               </Badge>
               
               {/* CourtIQ Rating */}

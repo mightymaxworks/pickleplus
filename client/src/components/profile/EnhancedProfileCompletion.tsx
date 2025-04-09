@@ -51,7 +51,7 @@ const FIELD_CATEGORIES = {
   playing: {
     title: "Playing Style",
     icon: Settings,
-    fields: ["skillLevel", "playingSince", "preferredFormat", "dominantHand", "preferredPosition", "playingStyle", "shotStrengths", "playerGoals"]
+    fields: ["duprRating", "utprRating", "wprRating", "playingSince", "preferredFormat", "dominantHand", "preferredPosition", "playingStyle", "shotStrengths", "playerGoals"]
   },
   preferences: {
     title: "Preferences",
@@ -137,7 +137,9 @@ const FIELD_DISPLAY_NAMES: Record<string, string> = {
   otherEquipment: "Other Equipment",
   
   // Playing style fields
-  skillLevel: "Skill Level",
+  duprRating: "DUPR Rating",
+  utprRating: "UTPR Rating",
+  wprRating: "WPR Rating",
   playingSince: "Playing Since",
   preferredFormat: "Game Format",
   dominantHand: "Dominant Hand",

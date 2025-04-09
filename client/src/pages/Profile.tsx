@@ -685,14 +685,26 @@ export default function Profile() {
                       <div className="font-medium">{user.dominantHand || "Not specified"}</div>
                     </div>
                     <div>
-                      <div className="text-xs text-muted-foreground">Skill Level</div>
-                      <div className="font-medium">{user.skillLevel || "Not specified"}</div>
+                      <div className="text-xs text-muted-foreground">External Rating</div>
+                      <div className="font-medium flex items-center">
+                        {user.duprRating || user.utprRating || user.wprRating ? 
+                          `${Math.max(
+                            parseFloat(user.duprRating || '0'), 
+                            parseFloat(user.utprRating || '0'), 
+                            parseFloat(user.wprRating || '0')
+                          ).toFixed(1)}` : 
+                          "Not specified"
+                        }
+                        {user.externalRatingsVerified && (
+                          <span className="ml-1 text-xs text-green-600">✓ Verified</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
               
-              {(!user.paddleBrand && !user.paddleModel && !user.preferredPosition && !user.playingStyle && !user.dominantHand && !user.skillLevel) && (
+              {(!user.paddleBrand && !user.paddleModel && !user.preferredPosition && !user.playingStyle && !user.dominantHand && !user.duprRating && !user.utprRating && !user.wprRating) && (
                 <div className="mt-4 flex justify-center">
                   <Button variant="outline" size="sm" asChild>
                     <Link to="/profile/edit">Add Your Equipment & Style</Link>

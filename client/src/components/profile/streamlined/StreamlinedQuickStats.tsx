@@ -33,12 +33,23 @@ const calculateXpProgress = (currentXp: number, currentLevel: number) => {
 const StreamlinedQuickStats: FC<StreamlinedQuickStatsProps> = ({ user, className = '' }) => {
   const xpProgress = calculateXpProgress(user.xp || 0, user.level || 1);
   
-  // Prioritize verified external ratings over self-assessment
-  const verifiedRating = user.externalRatingsVerified && (user.duprRating || user.utprRating || user.wprRating);
-  const displayRating = verifiedRating || user.skillLevel || '0';
+  // Get highest external rating value
+  const getHighestExternalRating = () => {
+    const ratings = [
+      parseFloat(user.duprRating || '0'),
+      parseFloat(user.utprRating || '0'),
+      parseFloat(user.wprRating || '0')
+    ].filter(r => r > 0);
+    
+    return ratings.length > 0 ? Math.max(...ratings) : 0;
+  };
+  
+  // Get external rating display value
+  const externalRating = getHighestExternalRating();
+  const displayRating = externalRating > 0 ? externalRating.toFixed(1) : '';
   
   // Use the value for progress bar (assuming max rating is 7.0)
-  const ratingValue = parseFloat(displayRating || '0');
+  const ratingValue = externalRating;
   const ratingPercentage = (ratingValue / 7) * 100; // Assuming max rating is 7.0
   
   // Calculate win rate if there are matches played
