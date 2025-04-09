@@ -201,6 +201,7 @@ function SectionProgress({
 
 // Main component
 export function EnhancedProfileCompletion({ user, refreshTrigger = 0 }: { user: any; refreshTrigger?: number }) {
+  console.log("RENDERING EnhancedProfileCompletion COMPONENT", user?.profileCompletionPct); // Debug log
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [showAnimation, setShowAnimation] = useState(false);
   const [previousPercentage, setPreviousPercentage] = useState(0);
