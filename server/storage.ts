@@ -18,6 +18,7 @@ export interface IStorage {
   getUserByPassportId(passportId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, update: Partial<InsertUser>): Promise<User | undefined>;
+  updateUserProfile(id: number, profileData: any): Promise<User | undefined>;
   updateUserXP(id: number, xpToAdd: number): Promise<User | undefined>;
   getUserCount(): Promise<number>;
   getActiveUserCount(): Promise<number>;
@@ -316,6 +317,117 @@ export class DatabaseStorage implements IStorage {
       console.error('[Storage] updateUser error:', error);
       return undefined;
     }
+  }
+  
+  async updateUserProfile(id: number, profileData: any): Promise<User | undefined> {
+    try {
+      // Validate id is a proper number to avoid database errors
+      const numericId = Number(id);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] updateUserProfile called with invalid ID: ${id}, converted to ${numericId}`);
+        return undefined;
+      }
+      
+      console.log(`[Storage] updateUserProfile called with valid ID: ${numericId}`);
+      
+      // Get the current user to calculate profile completion
+      const currentUser = await this.getUser(numericId);
+      if (!currentUser) {
+        console.log(`[Storage] updateUserProfile - User with ID ${numericId} not found`);
+        return undefined;
+      }
+      
+      // Calculate previous profile completion percentage
+      const previousCompletion = this.calculateProfileCompletion(currentUser);
+      
+      // Update the user profile
+      const [updatedUser] = await db.update(users)
+        .set(profileData)
+        .where(eq(users.id, numericId))
+        .returning();
+        
+      if (!updatedUser) {
+        console.log(`[Storage] updateUserProfile - Failed to update user with ID ${numericId}`);
+        return undefined;
+      }
+      
+      // Calculate new profile completion percentage
+      const newCompletion = this.calculateProfileCompletion(updatedUser);
+      
+      // Update the profile completion percentage if it changed
+      if (newCompletion !== previousCompletion) {
+        console.log(`[Storage] updateUserProfile - Profile completion changed from ${previousCompletion}% to ${newCompletion}% for user ${numericId}`);
+        
+        const [finalUser] = await db.update(users)
+          .set({ profileCompletionPct: newCompletion })
+          .where(eq(users.id, numericId))
+          .returning();
+          
+        return finalUser;
+      }
+      
+      return updatedUser;
+    } catch (error) {
+      console.error('[Storage] updateUserProfile error:', error);
+      return undefined;
+    }
+  }
+  
+  // Helper method to calculate profile completion percentage
+  private calculateProfileCompletion(user: User): number {
+    if (!user) return 0;
+    
+    // Define the fields that contribute to profile completion with their weights
+    const profileFields: { [key: string]: number } = {
+      bio: 5,
+      location: 5,
+      skillLevel: 5,
+      playingSince: 5,
+      preferredFormat: 5,
+      dominantHand: 5,
+      preferredPosition: 5,
+      paddleBrand: 5,
+      paddleModel: 5,
+      playingStyle: 5,
+      shotStrengths: 5,
+      regularSchedule: 5,
+      lookingForPartners: 5,
+      partnerPreferences: 5,
+      playerGoals: 5,
+      coach: 5,
+      clubs: 5,
+      leagues: 5,
+      socialHandles: 5,
+      mobilityLimitations: 3,
+      preferredMatchDuration: 3,
+      fitnessLevel: 4
+    };
+    
+    let totalWeight = 0;
+    let completedWeight = 0;
+    
+    // Calculate total weight and completed weight
+    for (const field in profileFields) {
+      const weight = profileFields[field];
+      totalWeight += weight;
+      
+      // Check if this field has been completed
+      const value = (user as any)[field];
+      if (value !== undefined && value !== null && value !== '') {
+        // For objects like socialHandles, check if there's at least one property
+        if (typeof value === 'object' && !Array.isArray(value)) {
+          if (Object.keys(value).length > 0) {
+            completedWeight += weight;
+          }
+        } else {
+          completedWeight += weight;
+        }
+      }
+    }
+    
+    // Calculate percentage (0-100)
+    return Math.round((completedWeight / totalWeight) * 100);
   }
 
   async updateUserXP(id: number, xpToAdd: number): Promise<User | undefined> {
