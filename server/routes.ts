@@ -6,6 +6,7 @@ import { eq, and, or, desc, sql } from "drizzle-orm";
 import { storage } from "./storage";
 import { matchRoutes } from "./api/match";
 import rankingRoutes from "./api/ranking";
+import { rankingSystem } from "./modules/ranking/rankingSystem";
 
 // Import necessary schema
 import { 
@@ -140,6 +141,72 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Multi-dimensional rankings leaderboard
   app.get("/api/multi-rankings/leaderboard", async (req: Request, res: Response) => {
     try {
+      // Extract all query parameters with defaults
+      const format = (req.query.format as string) || 'singles';
+      const ageDivision = (req.query.ageDivision as string) || '19plus';
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+      const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
+      
+      // New filter parameters for rating and tier based filtering
+      const tierFilter = req.query.tier as string || undefined;
+      const minRating = req.query.minRating ? parseFloat(req.query.minRating as string) : undefined;
+      const maxRating = req.query.maxRating ? parseFloat(req.query.maxRating as string) : undefined;
+      
+      // Check if we should use real data from the ranking system
+      if (process.env.USE_REAL_LEADERBOARD === 'true') {
+        try {
+          console.log('[API] Using real leaderboard data from rankingSystem');
+          const leaderboardData = await rankingSystem.getLeaderboard(
+            ageDivision,
+            format,
+            'current',
+            limit,
+            offset,
+            tierFilter,
+            minRating,
+            maxRating
+          );
+          
+          // Transform the data for the response if needed
+          const transformedData = leaderboardData.map((entry: any, index: number) => {
+            // Convert internal rating to 0-9 scale if available
+            const playerRating = entry.playerRating ? parseFloat((entry.playerRating * 1.8).toFixed(1)) : undefined;
+            
+            return {
+              userId: entry.userId,
+              username: entry.username,
+              displayName: entry.displayName || entry.username,
+              avatarUrl: entry.avatarUrl,
+              avatarInitials: entry.avatarInitials || entry.displayName?.substring(0, 2).toUpperCase() || entry.username.substring(0, 2).toUpperCase(),
+              countryCode: entry.countryCode || "US",
+              position: index + 1 + offset,
+              pointsTotal: entry.points,
+              tier: entry.tier,
+              specialty: entry.specialty || "All-Around",
+              ratings: {
+                overall: playerRating || 4.5, // Use the player rating if available, or fallback to 4.5
+              }
+            };
+          });
+          
+          return res.json({
+            leaderboard: transformedData,
+            categories: ["serve", "return", "dinking", "third_shot", "court_movement", "strategy", "offensive", "defensive"],
+            totalCount: transformedData.length + offset, // Calculate total for pagination
+            filterApplied: {
+              format,
+              ageDivision,
+              tier: tierFilter,
+              minRating,
+              maxRating
+            }
+          });
+        } catch (err) {
+          console.error('[API] Error getting real leaderboard data:', err);
+          // Fall back to sample data if real data fails
+        }
+      }
+      
       // Return sample data with the current user at the top position
       const currentUserId = req.user?.id || 1;
       const userData = await storage.getUser(currentUserId);
@@ -148,60 +215,134 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       const avatarUrl = userData?.avatarUrl || null;
       const avatarInitials = userData?.avatarInitials || "MX";
       
-      res.json({
-        leaderboard: [
-          {
-            userId: currentUserId,
-            username: username,
-            displayName: displayName,
-            avatarUrl: avatarUrl,
-            avatarInitials: avatarInitials,
-            countryCode: "US",
-            position: 1,
-            pointsTotal: 1200,
-            specialty: "offensive",
-            ratings: {
-              serve: 4.5,
-              return: 4.2,
-              dinking: 4.6,
-              third_shot: 4.8,
-              court_movement: 4.1,
-              strategy: 4.7,
-              offensive: 4.9,
-              defensive: 4.0
-            }
-          },
-          {
-            userId: 2,
-            username: "jane_smith",
-            displayName: "Jane Smith",
-            avatarUrl: null,
-            avatarInitials: "JS",
-            countryCode: "CA",
-            position: 2,
-            pointsTotal: 1180,
-            specialty: "defensive",
-            ratings: {
-              serve: 4.3,
-              return: 4.5,
-              dinking: 4.7,
-              third_shot: 4.1,
-              court_movement: 4.9,
-              strategy: 4.6,
-              offensive: 4.0,
-              defensive: 4.8
-            }
+      // Apply rating filters to sample data
+      let sampleLeaderboard = [
+        {
+          userId: currentUserId,
+          username: username,
+          displayName: displayName,
+          avatarUrl: avatarUrl,
+          avatarInitials: avatarInitials,
+          countryCode: "US",
+          position: 1,
+          pointsTotal: 1200,
+          tier: "Advanced",
+          specialty: "offensive",
+          ratings: {
+            overall: 7.2, // 0-9 scale (4.0 * 1.8)
+            serve: 4.5,
+            return: 4.2,
+            dinking: 4.6,
+            third_shot: 4.8,
+            court_movement: 4.1,
+            strategy: 4.7,
+            offensive: 4.9,
+            defensive: 4.0
           }
-        ],
+        },
+        {
+          userId: 2,
+          username: "jane_smith",
+          displayName: "Jane Smith",
+          avatarUrl: null,
+          avatarInitials: "JS",
+          countryCode: "CA",
+          position: 2,
+          pointsTotal: 1180,
+          tier: "Elite",
+          specialty: "defensive",
+          ratings: {
+            overall: 8.1, // 0-9 scale (4.5 * 1.8)
+            serve: 4.3,
+            return: 4.5,
+            dinking: 4.7,
+            third_shot: 4.1,
+            court_movement: 4.9,
+            strategy: 4.6,
+            offensive: 4.0,
+            defensive: 4.8
+          }
+        },
+        {
+          userId: 3,
+          username: "alex_johnson",
+          displayName: "Alex Johnson",
+          avatarUrl: null,
+          avatarInitials: "AJ",
+          countryCode: "GB",
+          position: 3,
+          pointsTotal: 980,
+          tier: "Intermediate+",
+          specialty: "strategy",
+          ratings: {
+            overall: 6.3, // 0-9 scale (3.5 * 1.8)
+            serve: 3.8,
+            return: 3.4,
+            dinking: 3.6,
+            third_shot: 3.3,
+            court_movement: 3.7,
+            strategy: 4.2,
+            offensive: 3.5,
+            defensive: 3.4
+          }
+        },
+        {
+          userId: 4,
+          username: "taylor_lee",
+          displayName: "Taylor Lee",
+          avatarUrl: null,
+          avatarInitials: "TL",
+          countryCode: "AU",
+          position: 4,
+          pointsTotal: 850,
+          tier: "Intermediate",
+          specialty: "dinking",
+          ratings: {
+            overall: 5.4, // 0-9 scale (3.0 * 1.8)
+            serve: 3.0,
+            return: 3.1,
+            dinking: 3.7,
+            third_shot: 3.2,
+            court_movement: 3.0,
+            strategy: 3.1,
+            offensive: 2.8,
+            defensive: 2.9
+          }
+        }
+      ];
+      
+      // Apply tier filter if provided
+      if (tierFilter) {
+        sampleLeaderboard = sampleLeaderboard.filter(player => player.tier === tierFilter);
+      }
+      
+      // Apply rating range filters if provided
+      if (minRating !== undefined) {
+        sampleLeaderboard = sampleLeaderboard.filter(player => player.ratings.overall >= minRating);
+      }
+      
+      if (maxRating !== undefined) {
+        sampleLeaderboard = sampleLeaderboard.filter(player => player.ratings.overall <= maxRating);
+      }
+      
+      // Apply pagination
+      sampleLeaderboard = sampleLeaderboard.slice(offset, offset + limit);
+      
+      // Update positions based on filtering
+      sampleLeaderboard.forEach((player, index) => {
+        player.position = index + 1 + offset;
+      });
+      
+      res.json({
+        leaderboard: sampleLeaderboard,
         categories: ["serve", "return", "dinking", "third_shot", "court_movement", "strategy", "offensive", "defensive"],
-        tiers: [
-          { name: "Elite", minRating: 4.5, color: "#6a0dad" },
-          { name: "Advanced", minRating: 4.0, color: "#0000ff" },
-          { name: "Intermediate+", minRating: 3.5, color: "#008000" },
-          { name: "Intermediate", minRating: 3.0, color: "#ffa500" },
-          { name: "Beginner+", minRating: 2.5, color: "#ff69b4" },
-          { name: "Beginner", minRating: 0, color: "#a9a9a9" }
-        ]
+        filterApplied: {
+          format,
+          ageDivision,
+          tier: tierFilter,
+          minRating,
+          maxRating
+        }
       });
     } catch (error) {
       console.error("[API] Error getting multi-dimensional rankings:", error);

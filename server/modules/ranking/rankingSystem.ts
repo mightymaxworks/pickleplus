@@ -701,15 +701,39 @@ export class RankingSystem {
   }
   
   /**
-   * Get the leaderboard for a specific division and format
+   * Get the leaderboard for a specific division and format with optional rating filters
+   * @param division Age division
+   * @param format Play format
+   * @param season Season identifier
+   * @param limit Number of results to return
+   * @param offset Pagination offset
+   * @param tierFilter Optional filter by competitive tier
+   * @param minRating Optional minimum rating value (0-9 scale, converted to internal 0-5 scale)
+   * @param maxRating Optional maximum rating value (0-9 scale, converted to internal 0-5 scale)
+   * @returns Array of leaderboard entries
    */
   async getLeaderboard(
     division: Division = Division.OPEN,
     format: Format = Format.SINGLES,
     season: string = CURRENT_SEASON,
     limit: number = 20,
-    offset: number = 0
+    offset: number = 0,
+    tierFilter?: string,
+    minRating?: number,
+    maxRating?: number
   ): Promise<any[]> {
+    // Convert 0-9 scale ratings to internal 0-5 scale
+    let internalMinRating: number | undefined;
+    let internalMaxRating: number | undefined;
+    
+    if (minRating !== undefined) {
+      internalMinRating = minRating / 1.8; // Convert from 0-9 to 0-5 scale
+    }
+    
+    if (maxRating !== undefined) {
+      internalMaxRating = maxRating / 1.8; // Convert from 0-9 to 0-5 scale
+    }
+    
     // Check user table columns
     const userColumns = await db.execute<{ column_name: string }>(sql`
       SELECT column_name FROM information_schema.columns 
@@ -726,6 +750,7 @@ export class RankingSystem {
         rp.total_matches as "matchesPlayed",
         rp.wins_count as "wins",
         rp.tournament_count as "tournaments",
+        pr.rating as "playerRating",
         u.username`;
     
     if (userColumnNames.includes('display_name')) {
@@ -740,14 +765,33 @@ export class RankingSystem {
       query = sql`${query}, NULL as "avatarUrl"`;
     }
     
+    // Base FROM clause
     query = sql`${query}
       FROM ranking_points rp
       JOIN users u ON rp.user_id = u.id
+      LEFT JOIN player_ratings pr ON rp.user_id = pr.user_id AND pr.division = ${division} AND pr.format = ${format}
       WHERE 
         rp.season = ${season}
         AND rp.division = ${division}
         AND rp.format = ${format}
-        AND rp.total_matches >= 5
+        AND rp.total_matches >= 5`;
+    
+    // Add tier filter if specified
+    if (tierFilter) {
+      query = sql`${query} AND rp.competitive_tier = ${tierFilter}`;
+    }
+    
+    // Add rating range filters if specified
+    if (internalMinRating !== undefined) {
+      query = sql`${query} AND pr.rating >= ${internalMinRating}`;
+    }
+    
+    if (internalMaxRating !== undefined) {
+      query = sql`${query} AND pr.rating <= ${internalMaxRating}`;
+    }
+    
+    // Order and limit
+    query = sql`${query}
       ORDER BY rp.points DESC
       LIMIT ${limit}
       OFFSET ${offset}

@@ -44,6 +44,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Pagination } from "@/components/ui/pagination";
+import { LeaderboardFilters } from "@/components/leaderboard/LeaderboardFilters";
 
 import { 
   AgeDivision, 
@@ -70,6 +71,18 @@ export function LeaderboardPage() {
   const [sortField, setSortField] = React.useState<string>('rank');
   const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>('asc');
   
+  // Add filter state for new rating-based filters
+  const [tierFilter, setTierFilter] = React.useState<string | undefined>(
+    params.get('tier') || undefined
+  );
+  const [minRating, setMinRating] = React.useState<number | undefined>(
+    params.get('minRating') ? parseFloat(params.get('minRating') as string) : undefined
+  );
+  const [maxRating, setMaxRating] = React.useState<number | undefined>(
+    params.get('maxRating') ? parseFloat(params.get('maxRating') as string) : undefined
+  );
+  const [showFilters, setShowFilters] = React.useState<boolean>(false);
+  
   // Fetch rating tiers
   const { data: tiers, isLoading: tiersLoading } = useRatingTiers();
   
@@ -84,7 +97,10 @@ export function LeaderboardPage() {
     ageDivision, 
     undefined, 
     itemsPerPage, 
-    (page - 1) * itemsPerPage
+    (page - 1) * itemsPerPage,
+    tierFilter,
+    minRating,
+    maxRating
   );
   
   // Extract the leaderboard array from the response
@@ -101,6 +117,9 @@ export function LeaderboardPage() {
     newParams.set('division', ageDivision);
     newParams.set('page', page.toString());
     if (searchTerm) newParams.set('search', searchTerm);
+    if (tierFilter) newParams.set('tier', tierFilter);
+    if (minRating !== undefined) newParams.set('minRating', minRating.toString());
+    if (maxRating !== undefined) newParams.set('maxRating', maxRating.toString());
     
     // Replace the URL without triggering a page load
     window.history.replaceState(
@@ -108,7 +127,7 @@ export function LeaderboardPage() {
       '', 
       window.location.pathname + '?' + newParams.toString()
     );
-  }, [format, ageDivision, page, searchTerm]);
+  }, [format, ageDivision, page, searchTerm, tierFilter, minRating, maxRating]);
   
   // Handle format change
   const handleFormatChange = (value: string) => {
@@ -326,6 +345,18 @@ export function LeaderboardPage() {
           </div>
         </div>
       </motion.div>
+      
+      {/* Rating-based filters */}
+      <LeaderboardFilters
+        tierFilter={tierFilter}
+        setTierFilter={setTierFilter}
+        minRating={minRating}
+        setMinRating={setMinRating}
+        maxRating={maxRating}
+        setMaxRating={setMaxRating}
+        showFilters={showFilters}
+        setShowFilters={setShowFilters}
+      />
       
       {/* Leaderboard Table */}
       <motion.div

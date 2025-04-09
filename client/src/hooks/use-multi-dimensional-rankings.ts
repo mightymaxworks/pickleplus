@@ -38,14 +38,27 @@ interface LeaderboardResponse {
 }
 
 /**
- * Get the multi-dimensional ranking leaderboard
+ * Get the multi-dimensional ranking leaderboard with skill-based rating filters
+ * 
+ * @param format The play format (singles, doubles, mixed)
+ * @param ageDivision The age division (19plus, 35plus, etc.)
+ * @param ratingTierId Optional rating tier ID for backward compatibility
+ * @param limit Number of records to return
+ * @param offset Pagination offset
+ * @param tier Optional tier filter (e.g., "Elite", "Advanced")
+ * @param minRating Optional minimum rating filter (0-9 scale)
+ * @param maxRating Optional maximum rating filter (0-9 scale)
+ * @returns Query result with leaderboard data
  */
 export function useMultiDimensionalLeaderboard(
   format: PlayFormat = 'singles',
   ageDivision: AgeDivision = '19plus',
   ratingTierId?: number,
   limit = 100,
-  offset = 0
+  offset = 0,
+  tier?: string,
+  minRating?: number,
+  maxRating?: number
 ) {
   return useQuery<LeaderboardResponse>({
     queryKey: [
@@ -54,7 +67,10 @@ export function useMultiDimensionalLeaderboard(
       ageDivision,
       ratingTierId,
       limit,
-      offset
+      offset,
+      tier,
+      minRating,
+      maxRating
     ],
     queryFn: async ({ queryKey }) => {
       const url = queryKey[0] as string;
@@ -63,6 +79,9 @@ export function useMultiDimensionalLeaderboard(
       const currentRatingTierId = queryKey[3] as number | undefined;
       const currentLimit = queryKey[4] as number;
       const currentOffset = queryKey[5] as number;
+      const currentTier = queryKey[6] as string | undefined;
+      const currentMinRating = queryKey[7] as number | undefined;
+      const currentMaxRating = queryKey[8] as number | undefined;
       
       const queryParams = new URLSearchParams();
       queryParams.append('format', currentFormat);
@@ -70,6 +89,11 @@ export function useMultiDimensionalLeaderboard(
       if (currentRatingTierId !== undefined) queryParams.append('ratingTierId', currentRatingTierId.toString());
       queryParams.append('limit', currentLimit.toString());
       queryParams.append('offset', currentOffset.toString());
+      
+      // Add new rating filter parameters
+      if (currentTier !== undefined) queryParams.append('tier', currentTier);
+      if (currentMinRating !== undefined) queryParams.append('minRating', currentMinRating.toString());
+      if (currentMaxRating !== undefined) queryParams.append('maxRating', currentMaxRating.toString());
       
       const response = await fetch(`${url}?${queryParams.toString()}`);
       if (!response.ok) {
