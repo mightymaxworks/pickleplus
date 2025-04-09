@@ -170,7 +170,7 @@ const StreamlinedProfilePage: FC = () => {
   
   // Banner pattern options
   const bannerPatternOptions = [
-    { value: '', label: 'No Pattern' },
+    { value: 'none', label: 'No Pattern' },
     { value: 'pickleball', label: 'Pickleball Pattern' },
     { value: 'court', label: 'Court Lines' },
     { value: 'geometric', label: 'Geometric' },
@@ -197,7 +197,7 @@ const StreamlinedProfilePage: FC = () => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setBannerFile(file);
-      setBannerPatternField(''); // Clear pattern when file is selected
+      setBannerPatternField('none'); // Clear pattern when file is selected
       
       // Create preview
       const reader = new FileReader();
@@ -383,7 +383,7 @@ const StreamlinedProfilePage: FC = () => {
   // Initialize banner pattern field when user data is loaded
   useEffect(() => {
     if (user) {
-      setBannerPatternField(user.bannerPattern || '');
+      setBannerPatternField(user.bannerPattern || 'none');
     }
   }, [user?.bannerPattern]);
   
@@ -548,7 +548,7 @@ const StreamlinedProfilePage: FC = () => {
               onClick={() => {
                 setBannerFile(null);
                 setBannerPreview(null);
-                setBannerPatternField(user?.bannerPattern || '');
+                setBannerPatternField(user?.bannerPattern || 'none');
                 setEditingFields(prev => ({ ...prev, banner: false }));
               }}
             >
