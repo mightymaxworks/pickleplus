@@ -5,25 +5,20 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Privacy-related tables are defined in ./schema/privacy.ts
-// However, we're not importing them here to avoid circular dependencies
-/* 
 import {
   userPrivacySettings,
   privacyProfiles,
   contactPreferences,
-  userPrivacySettingsRelations,
-  contactPreferencesRelations,
   insertUserPrivacySettingSchema,
   insertPrivacyProfileSchema,
   insertContactPreferenceSchema,
-  UserPrivacySetting,
-  InsertUserPrivacySetting,
-  PrivacyProfile,
-  InsertPrivacyProfile,
-  ContactPreference,
-  InsertContactPreference
-} from "./schema/privacy"; 
-*/
+  type UserPrivacySetting,
+  type InsertUserPrivacySetting,
+  type PrivacyProfile,
+  type InsertPrivacyProfile,
+  type ContactPreference,
+  type InsertContactPreference
+} from "./schema/privacy";
 
 // User table
 export const users = pgTable("users", {
@@ -398,6 +393,9 @@ export const userRelations = relations(users, ({ many }) => ({
   receivedConnections: many(connections, { relationName: "recipient" }),
   externalAccounts: many(externalAccounts),
   blockedUsers: many(userBlockList, { relationName: "blocker" }),
+  // Add privacy-related relations
+  privacySettings: many(userPrivacySettings),
+  contactPreferences: many(contactPreferences),
   blockedBy: many(userBlockList, { relationName: "blocked" }),
   playerOneMatches: many(matches, { relationName: "playerOne" }),
   playerTwoMatches: many(matches, { relationName: "playerTwo" }),
@@ -756,5 +754,20 @@ export type InsertRankingTransaction = z.infer<typeof insertRankingTransactionSc
 
 export type RankingTierHistory = typeof rankingTierHistory.$inferSelect;
 export type InsertRankingTierHistory = z.infer<typeof insertRankingTierHistorySchema>;
+
+// Define the privacy settings relations after users table is defined
+export const userPrivacySettingsRelations = relations(userPrivacySettings, ({ one }) => ({
+  user: one(users, {
+    fields: [userPrivacySettings.userId],
+    references: [users.id]
+  })
+}));
+
+export const contactPreferencesRelations = relations(contactPreferences, ({ one }) => ({
+  user: one(users, {
+    fields: [contactPreferences.userId],
+    references: [users.id]
+  })
+}));
 
 // Add additional core schema exports here as the system grows

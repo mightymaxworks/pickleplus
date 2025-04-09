@@ -1,15 +1,11 @@
 import { pgTable, serial, integer, varchar, text, boolean, timestamp, json, jsonb } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-
-// Forward reference to avoid circular dependency
-const usersReference = { name: "users", schema: "" };
 
 // User privacy settings table
 export const userPrivacySettings = pgTable("user_privacy_settings", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(usersReference, "id"),
+  userId: integer("user_id").notNull(), // We'll define relations in the main schema.ts file
   fieldName: varchar("field_name", { length: 100 }).notNull(),
   visibilityLevel: varchar("visibility_level", { length: 20 }).notNull().default("public"), // "public", "connections", "private"
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -30,7 +26,7 @@ export const privacyProfiles = pgTable("privacy_profiles", {
 // Contact preferences table
 export const contactPreferences = pgTable("contact_preferences", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
+  userId: integer("user_id").notNull(), // We'll define relations in the main schema.ts file
   allowMatchRequests: boolean("allow_match_requests").default(true),
   allowDirectMessages: boolean("allow_direct_messages").default(true),
   allowConnectionRequests: boolean("allow_connection_requests").default(true),
@@ -39,21 +35,6 @@ export const contactPreferences = pgTable("contact_preferences", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow()
 });
-
-// Relations
-export const userPrivacySettingsRelations = relations(userPrivacySettings, ({ one }) => ({
-  user: one(users, {
-    fields: [userPrivacySettings.userId],
-    references: [users.id]
-  })
-}));
-
-export const contactPreferencesRelations = relations(contactPreferences, ({ one }) => ({
-  user: one(users, {
-    fields: [contactPreferences.userId],
-    references: [users.id]
-  })
-}));
 
 // Zod schemas
 export const insertUserPrivacySettingSchema = createInsertSchema(userPrivacySettings)

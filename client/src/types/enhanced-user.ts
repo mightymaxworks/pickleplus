@@ -18,6 +18,8 @@ export interface EnhancedUser {
   matchesWon?: number;
   isAdmin?: boolean;
   createdAt?: Date;
+  lastUpdated?: Date;
+  avatarInitials?: string;
   
   // Profile completion
   profileCompletionPct?: number;
@@ -52,16 +54,29 @@ export interface EnhancedUser {
   homeCourtLocations?: string;
   travelRadiusKm?: number;
   
+  // Playing style preferences
+  playingStyle?: string;
+  shotStrengths?: string;
+  preferredFormat?: string;
+  dominantHand?: string;
+  regularSchedule?: string;
+  playingSince?: string;
+  skillLevel?: string;
+  
   // Additional fields
   playerGoals?: string;
   lookingForPartners?: boolean;
-  lastUpdated?: string;
   privacyProfile?: string;
   
   // Tournament and achievement data (optional)
+  totalTournaments?: number;
   tournamentCount?: number;
   achievements?: any[];
   
   // Rating and ranking
+  rankingPoints?: number;
   tier?: string;
+  isFoundingMember?: boolean;
+  xpMultiplier?: number;
+  lastMatchDate?: Date | null;
 }

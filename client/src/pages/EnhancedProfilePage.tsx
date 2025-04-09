@@ -37,27 +37,27 @@ export default function EnhancedProfilePage() {
     // Map base properties
     id: user?.id || 0,
     username: user?.username || '',
-    email: user?.email,
+    email: user?.email || null,
     password: user?.password || '',
-    displayName: user?.displayName,
-    location: user?.location,
-    bio: user?.bio,
-    yearOfBirth: user?.yearOfBirth,
-    passportId: user?.passportId,
-    profileImage: user?.profileImage,
-    level: user?.level,
-    xp: user?.xp,
-    totalMatches: user?.totalMatches,
-    matchesWon: user?.matchesWon,
-    tournamentCount: user?.tournamentCount,
-    achievements: user?.achievements,
-    profileCompletionPct: user?.profileCompletionPct,
-    tier: user?.tier,
-    isAdmin: user?.isAdmin,
-    createdAt: user?.createdAt,
+    displayName: user?.displayName || null,
+    location: user?.location || null,
+    bio: user?.bio || null,
+    yearOfBirth: user?.yearOfBirth || null,
+    passportId: user?.passportId || null,
+    avatarInitials: user?.avatarInitials || '',
+    level: user?.level || 1,
+    xp: user?.xp || 0,
+    totalMatches: user?.totalMatches || 0,
+    matchesWon: user?.matchesWon || 0,
+    totalTournaments: user?.totalTournaments || 0,
+    achievements: [],
+    profileCompletionPct: user?.profileCompletionPct || 0,
+    rankingPoints: user?.rankingPoints || 0,
+    isAdmin: user?.isAdmin || false,
+    createdAt: user?.createdAt || undefined,
     
     // Enhanced profile properties
-    lastUpdated: user?.lastUpdated ? user.lastUpdated.toString() : undefined,
+    lastUpdated: user?.lastUpdated || undefined,
     
     // Equipment preferences (reuse existing user data if available)
     paddleBrand: user?.paddleBrand || undefined,
@@ -84,7 +84,6 @@ export default function EnhancedProfilePage() {
     travelRadiusKm: undefined,
     playerGoals: undefined,
     lookingForPartners: undefined,
-    avatarUrl: undefined,
     privacyProfile: undefined
   };
   
