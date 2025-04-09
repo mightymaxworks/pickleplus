@@ -3,7 +3,7 @@
  * Match Statistics Schema - Extends the core match system with detailed statistics tracking
  */
 
-import { pgTable, serial, integer, varchar, text, timestamp, boolean, json, jsonb, date } from 'drizzle-orm/pg-core';
+import { pgTable, serial, integer, varchar, text, timestamp, boolean, json, jsonb, date, real } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
@@ -20,7 +20,7 @@ export const matchStatistics = pgTable("match_statistics", {
   
   // General statistics
   totalPoints: integer("total_points"),
-  rallyLengthAvg: integer("rally_length_avg"),
+  rallyLengthAvg: real("rally_length_avg"),
   longestRally: integer("longest_rally"),
   
   // Shot statistics
@@ -38,12 +38,12 @@ export const matchStatistics = pgTable("match_statistics", {
   returnPointsTotal: integer("return_points_total"),
   
   // Technical statistics
-  thirdShotSuccessRate: integer("third_shot_success_rate"),
-  timeAtNetPct: integer("time_at_net_pct"),
+  thirdShotSuccessRate: real("third_shot_success_rate"),
+  timeAtNetPct: real("time_at_net_pct"),
   
   // Physical statistics
-  distanceCoveredMeters: integer("distance_covered_meters"),
-  avgShotSpeedKph: integer("avg_shot_speed_kph"),
+  distanceCoveredMeters: real("distance_covered_meters"),
+  avgShotSpeedKph: real("avg_shot_speed_kph"),
   
   // Additional data
   metadata: jsonb("metadata"),
