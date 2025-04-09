@@ -301,10 +301,26 @@ export class DatabaseStorage implements IStorage {
       const previousCompletion = this.calculateProfileCompletion(currentUser);
       
       // Filter out any properties that don't belong to the users table
+      // but make sure to keep external rating fields
       const validData: Record<string, any> = {};
+      // Log the profileData keys for debugging
+      console.log(`[Storage] updateUserProfile - Fields in request:`, Object.keys(profileData));
+      
+      // List of all external rating fields
+      const externalRatingFields = [
+        'duprRating', 'duprProfileUrl',
+        'utprRating', 'utprProfileUrl',
+        'wprRating', 'wprProfileUrl',
+        'externalRatingsVerified', 'lastExternalRatingUpdate'
+      ];
+      
       Object.keys(profileData).forEach(key => {
-        if (key in users) {
+        // Check if key exists in the schema OR is in our external rating fields list
+        if (key in users || externalRatingFields.includes(key)) {
           validData[key] = profileData[key];
+          console.log(`[Storage] updateUserProfile - Including field: ${key} with value:`, profileData[key]);
+        } else {
+          console.log(`[Storage] updateUserProfile - Skipping field not in schema: ${key}`);
         }
       });
       

@@ -99,8 +99,8 @@ export function ExternalRatingsSection({ user, isEditable = false, isCurrentUser
         return;
       }
       
-      // Submit data
-      await apiRequest('POST', '/api/profile/update', {
+      // Log data before submitting for debugging
+      const updateData = {
         userId: user.id,
         duprRating: form.duprRating || null,
         duprProfileUrl: form.duprProfileUrl || null,
@@ -109,7 +109,13 @@ export function ExternalRatingsSection({ user, isEditable = false, isCurrentUser
         wprRating: form.wprRating || null,
         wprProfileUrl: form.wprProfileUrl || null,
         lastExternalRatingUpdate: new Date().toISOString(),
-      });
+      };
+      
+      console.log('Submitting external ratings update:', updateData);
+      
+      // Submit data
+      const response = await apiRequest('POST', '/api/profile/update', updateData);
+      console.log('External ratings update response:', response);
       
       // Reset form to view mode
       setIsEditing(false);
