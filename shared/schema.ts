@@ -85,6 +85,7 @@ export const users = pgTable("users", {
   preferredSurface: varchar("preferred_surface", { length: 50 }),
   indoorOutdoorPreference: varchar("indoor_outdoor_preference", { length: 20 }),
   competitiveIntensity: integer("competitive_intensity"),
+  lookingForPartners: boolean("looking_for_partners").default(false),
   mentorshipInterest: boolean("mentorship_interest").default(false),
   
   // Location data
