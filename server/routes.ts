@@ -387,17 +387,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
+      console.log("[Routes] /api/profile/update - Request body:", JSON.stringify(req.body, null, 2));
+      console.log("[Routes] /api/profile/update - User ID:", req.user.id);
+      console.log("[Routes] /api/profile/update - Content-Type:", req.headers['content-type']);
+      
       // Get the current user data to compare later for XP rewards
       const oldUser = await storage.getUser(req.user.id);
       if (!oldUser) {
+        console.log("[Routes] /api/profile/update - User not found with ID:", req.user.id);
         return res.status(404).json({ error: "User not found" });
       }
+      
+      console.log("[Routes] /api/profile/update - Old user external ratings:");
+      console.log("  DUPR Rating:", oldUser.duprRating);
+      console.log("  DUPR Profile URL:", oldUser.duprProfileUrl);
+      console.log("  UTPR Rating:", oldUser.utprRating);
+      console.log("  UTPR Profile URL:", oldUser.utprProfileUrl);
+      console.log("  WPR Rating:", oldUser.wprRating);
+      console.log("  WPR Profile URL:", oldUser.wprProfileUrl);
       
       // Update the user's profile
       const updatedUser = await storage.updateUserProfile(req.user.id, req.body);
       if (!updatedUser) {
+        console.log("[Routes] /api/profile/update - Failed to update profile for user:", req.user.id);
         return res.status(404).json({ error: "Failed to update profile" });
       }
+      
+      console.log("[Routes] /api/profile/update - Updated user external ratings:");
+      console.log("  DUPR Rating:", updatedUser.duprRating);
+      console.log("  DUPR Profile URL:", updatedUser.duprProfileUrl);
+      console.log("  UTPR Rating:", updatedUser.utprRating);
+      console.log("  UTPR Profile URL:", updatedUser.utprProfileUrl);
+      console.log("  WPR Rating:", updatedUser.wprRating);
+      console.log("  WPR Profile URL:", updatedUser.wprProfileUrl);
       
       // Check if profile completion crossed a threshold to award XP
       const oldCompletion = oldUser.profileCompletionPct || 0;
