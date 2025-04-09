@@ -323,6 +323,9 @@ export class DatabaseStorage implements IStorage {
         'lastExternalRatingUpdate': 'last_external_rating_update'
       };
       
+      // IMPORTANT DEBUG: Check what's in the profileData object
+      console.log(`[Storage] updateUserProfile - JSON stringified profileData:`, JSON.stringify(profileData));
+      
       // Map camelCase field names to snake_case database column names for external ratings
       Object.keys(profileData).forEach(key => {
         if (externalRatingFieldsMap[key]) {
@@ -339,6 +342,36 @@ export class DatabaseStorage implements IStorage {
           console.log(`[Storage] updateUserProfile - Skipping field not in schema: ${key}`);
         }
       });
+      
+      // CRITICAL: Force add the values for external ratings if they exist in the profileData
+      // This is a workaround for the mapping issue
+      if (profileData.duprRating) {
+        validData.dupr_rating = profileData.duprRating;
+        console.log(`[Storage] updateUserProfile - Force adding dupr_rating with value:`, profileData.duprRating);
+      }
+      if (profileData.duprProfileUrl) {
+        validData.dupr_profile_url = profileData.duprProfileUrl;
+        console.log(`[Storage] updateUserProfile - Force adding dupr_profile_url with value:`, profileData.duprProfileUrl);
+      }
+      if (profileData.utprRating) {
+        validData.utpr_rating = profileData.utprRating;
+        console.log(`[Storage] updateUserProfile - Force adding utpr_rating with value:`, profileData.utprRating);
+      }
+      if (profileData.utprProfileUrl) {
+        validData.utpr_profile_url = profileData.utprProfileUrl;
+        console.log(`[Storage] updateUserProfile - Force adding utpr_profile_url with value:`, profileData.utprProfileUrl);
+      }
+      if (profileData.wprRating) {
+        validData.wpr_rating = profileData.wprRating;
+        console.log(`[Storage] updateUserProfile - Force adding wpr_rating with value:`, profileData.wprRating);
+      }
+      if (profileData.wprProfileUrl) {
+        validData.wpr_profile_url = profileData.wprProfileUrl;
+        console.log(`[Storage] updateUserProfile - Force adding wpr_profile_url with value:`, profileData.wprProfileUrl);
+      }
+      
+      // Add last external rating update timestamp
+      validData.last_external_rating_update = new Date().toISOString();
       
       // Update the user profile with validated data
       console.log(`[Storage] updateUserProfile - SQL UPDATE operation. Data to update:`, JSON.stringify(validData, null, 2));

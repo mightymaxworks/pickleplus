@@ -89,6 +89,11 @@ export function ExternalRatingsSection({ user, isEditable = false, isCurrentUser
       
       // Use our dedicated endpoint for external ratings updates
       console.log('Making POST request to /api/profile/update-external-ratings with credentials included');
+      console.log('POST DATA:', JSON.stringify(updateData, null, 2));
+      
+      // Add debug timestamp to the log
+      console.log('Request time:', new Date().toISOString());
+      
       const response = await apiRequest('POST', '/api/profile/update-external-ratings', updateData);
       console.log('POST /api/profile/update-external-ratings response status:', response?.status || 'unknown');
       console.log('Response cookies present:', document.cookie ? 'Yes' : 'No');
