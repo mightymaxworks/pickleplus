@@ -33,6 +33,8 @@ import { Link } from "wouter";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
+import { ProfileCompletionGuidance } from "./ProfileCompletionGuidance";
+import { CategoryStrengthVisualization } from "./CategoryStrengthVisualization";
 
 // Field category definitions
 const FIELD_CATEGORIES = {
@@ -529,6 +531,51 @@ export function EnhancedProfileCompletion({
               Complete <span className="font-medium text-[#FF5722]">{fieldsToNextTier} more {fieldsToNextTier === 1 ? 'field' : 'fields'}</span> to reach {currentTier.label} tier!
             </div>
           )}
+          
+          {/* Enhanced UI Components (PKL-278651-UXPS-0003) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+            {/* Priority Missing Fields Component */}
+            <ProfileCompletionGuidance
+              incompleteFields={incompleteFields.map(field => getFieldKeyFromDisplayName(field))}
+              completedFields={completedFields.map(field => getFieldKeyFromDisplayName(field))}
+              categoryCompletion={Object.fromEntries(
+                sectionMetrics.map(section => [
+                  section.key,
+                  Math.round((section.completedCount / section.totalCount) * 100)
+                ])
+              )}
+              onEditRequest={(field) => {
+                if (field) {
+                  // Open specific field's section
+                  for (const [category, config] of Object.entries(FIELD_CATEGORIES)) {
+                    if (config.fields.includes(field)) {
+                      setExpandedSection(category);
+                      break;
+                    }
+                  }
+                }
+                // Call the general edit request handler
+                if (onEditRequest) onEditRequest();
+              }}
+              fieldDisplayNames={FIELD_DISPLAY_NAMES}
+            />
+            
+            {/* Category Strength Visualization Component */}
+            <CategoryStrengthVisualization
+              categoryCompletion={Object.fromEntries(
+                sectionMetrics.map(section => [
+                  section.key,
+                  Math.round((section.completedCount / section.totalCount) * 100)
+                ])
+              )}
+              onEditRequest={(category) => {
+                if (category) {
+                  setExpandedSection(category);
+                }
+                if (onEditRequest) onEditRequest();
+              }}
+            />
+          </div>
           
           <Separator className="my-3" />
           
