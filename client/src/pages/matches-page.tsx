@@ -10,12 +10,123 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { getRecentMatches } from "@/lib/sdk/matchSDK";
+import { getRecentMatches, RecordedMatch } from "@/lib/sdk/matchSDK";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import MatchHistoryTab from "@/components/match/MatchHistoryTab";
 import MatchStatsTab from "@/components/match/MatchStatsTab";
+
+/**
+ * Helper function to get opponent ID based on user ID and match data
+ */
+function getOpponentId(match: RecordedMatch, currentUserId: number | undefined): number | undefined {
+  if (!currentUserId) return undefined;
+  
+  // If match has the players array, use that
+  if (match.players?.length === 2) {
+    const opponent = match.players.find(p => p.userId !== currentUserId);
+    return opponent?.userId;
+  }
+  
+  // Otherwise, use the database fields
+  if (match.playerOneId === currentUserId) {
+    return match.playerTwoId;
+  } else if (match.playerTwoId === currentUserId) {
+    return match.playerOneId;
+  }
+  
+  return undefined;
+}
+
+/**
+ * Helper function to get opponent display name
+ */
+function getOpponentName(match: RecordedMatch, currentUserId: number | undefined): string {
+  if (!currentUserId) return "Unknown Opponent";
+  
+  // Try to get from playerNames object
+  if (match.playerNames) {
+    const opponentId = getOpponentId(match, currentUserId);
+    if (opponentId && match.playerNames[opponentId]) {
+      return match.playerNames[opponentId].displayName || match.playerNames[opponentId].username;
+    }
+    
+    // Fallback to filtering by username if we have user data
+    const opponent = Object.values(match.playerNames)
+      .filter(p => p.username !== "mightymax") // Default username
+      .map(p => p.displayName || p.username)[0];
+      
+    if (opponent) return opponent;
+  }
+  
+  // Default display based on opponent ID
+  const opponentId = getOpponentId(match, currentUserId);
+  return opponentId ? `Player ${opponentId}` : "Unknown Opponent";
+}
+
+/**
+ * Helper function to get opponent username
+ */
+function getOpponentUsername(match: RecordedMatch, currentUserId: number | undefined): string {
+  if (!currentUserId) return "unknown_player";
+  
+  // Try to get from playerNames object
+  if (match.playerNames) {
+    const opponentId = getOpponentId(match, currentUserId);
+    if (opponentId && match.playerNames[opponentId]) {
+      return match.playerNames[opponentId].username;
+    }
+    
+    // Fallback to filtering by username if we have user data
+    const opponent = Object.values(match.playerNames)
+      .filter(p => p.username !== "mightymax") // Default username
+      .map(p => p.username)[0];
+      
+    if (opponent) return opponent;
+  }
+  
+  // Default display based on opponent ID
+  const opponentId = getOpponentId(match, currentUserId);
+  return opponentId ? `player${opponentId}` : "unknown_player";
+}
+
+/**
+ * Helper function to get opponent avatar initials
+ */
+function getOpponentAvatarInitials(match: RecordedMatch, currentUserId: number | undefined): string {
+  if (!currentUserId) return "??";
+  
+  // Try to get from playerNames object
+  if (match.playerNames) {
+    const opponentId = getOpponentId(match, currentUserId);
+    if (opponentId && match.playerNames[opponentId]) {
+      if (match.playerNames[opponentId].avatarInitials) {
+        return match.playerNames[opponentId].avatarInitials;
+      }
+      
+      // Generate from display name or username
+      const name = match.playerNames[opponentId].displayName || match.playerNames[opponentId].username;
+      if (name) {
+        if (name.includes(' ')) {
+          return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        }
+        return name.substring(0, 2).toUpperCase();
+      }
+    }
+    
+    // Fallback to filtering by username if we have user data
+    const opponent = Object.values(match.playerNames)
+      .filter(p => p.username !== "mightymax") // Default username
+      .map(p => p.avatarInitials || p.displayName?.charAt(0) || p.username.charAt(0))[0];
+      
+    if (opponent) return opponent.toUpperCase();
+  }
+  
+  // Default display based on opponent ID
+  const opponentId = getOpponentId(match, currentUserId);
+  return opponentId ? `P${opponentId}` : "??";
+}
 
 export function MatchesPage() {
   const { user } = useAuth();
@@ -133,7 +244,9 @@ export function MatchesPage() {
                               </div>
                               <div className="text-sm text-muted-foreground flex items-center gap-1 mb-4">
                                 <Clock className="h-3 w-3" />
-                                {match.date ? format(parseISO(match.date), 'MMM d, yyyy') : 'Unknown date'}
+                                {match.matchDate ? format(parseISO(match.matchDate), 'MMM d, yyyy') : 
+                                 match.date ? format(parseISO(match.date), 'MMM d, yyyy') : 
+                                 match.createdAt ? format(parseISO(match.createdAt), 'MMM d, yyyy') : 'Unknown date'}
                               </div>
                               
                               {/* Players section with avatars */}
@@ -163,23 +276,14 @@ export function MatchesPage() {
                                 {/* Opponent side */}
                                 <div className="flex flex-col items-center">
                                   <div className="h-14 w-14 rounded-full bg-muted mb-2 flex items-center justify-center font-bold text-lg">
-                                    {match.playerNames && 
-                                      Object.values(match.playerNames)
-                                        .filter(p => p.username !== user?.username)
-                                        .map(p => p.avatarInitials || p.displayName?.charAt(0) || "JP")[0] || "JP"}
+                                    {getOpponentAvatarInitials(match, user?.id)}
                                   </div>
                                   <div className="text-center">
                                     <div className="font-medium">
-                                      {match.playerNames && 
-                                        Object.values(match.playerNames)
-                                          .filter(p => p.username !== user?.username)
-                                          .map(p => p.displayName || p.username)[0] || 'Johnny Pickleball'}
+                                      {getOpponentName(match, user?.id)}
                                     </div>
                                     <div className="text-xs text-muted-foreground">
-                                      @{match.playerNames && 
-                                        Object.values(match.playerNames)
-                                          .filter(p => p.username !== user?.username)
-                                          .map(p => p.username)[0] || 'johnny_pickle'}
+                                      @{getOpponentUsername(match, user?.id)}
                                     </div>
                                   </div>
                                 </div>

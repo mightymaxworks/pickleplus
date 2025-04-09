@@ -54,21 +54,19 @@ export interface ParticipantValidation {
   notes?: string;
 }
 
-export interface RecordedMatch extends MatchData {
+// Combined match interface that handles both frontend and backend data formats
+export interface RecordedMatch extends Partial<MatchData> {
   id: number;
-  date: string;
-  validationStatus?: 'pending' | 'confirmed' | 'disputed' | 'validated'; 
+  
+  // Frontend properties 
+  date?: string;
   validatedBy?: number[];
-  validationRequiredBy?: string;
   participantValidations?: ParticipantValidation[];
   feedback?: {
     enjoymentRating?: number;
     skillMatchRating?: number;
     comments?: string;
   };
-  matchType: 'casual' | 'competitive' | 'tournament' | 'league';
-  eventTier?: string; // Added eventTier property for tracking event level ('local', 'regional', etc.)
-  division?: string; // Added division property for age categories
   playerNames?: {
     [userId: number]: {
       displayName: string;
@@ -77,9 +75,6 @@ export interface RecordedMatch extends MatchData {
       avatarUrl?: string;
     }
   };
-  // Rewards data
-  xpAwarded?: number; // Total XP awarded for the match
-  pointsAwarded?: number; // Total ranking points awarded for the match
   rewards?: {
     [userId: number]: {
       xp?: {
@@ -99,6 +94,27 @@ export interface RecordedMatch extends MatchData {
       }
     }
   };
+  
+  // Backend properties (coming from database)
+  matchDate?: string;
+  playerOneId?: number;
+  playerTwoId?: number;
+  playerOnePartnerId?: number | null;
+  playerTwoPartnerId?: number | null;
+  winnerId?: number;
+  scorePlayerOne?: string;
+  scorePlayerTwo?: string;
+  eventTier?: string;
+  division?: string;
+  matchType?: 'casual' | 'competitive' | 'tournament' | 'league';
+  validationStatus?: 'pending' | 'confirmed' | 'disputed' | 'validated';
+  validationRequiredBy?: string;
+  validationCompletedAt?: string;
+  xpAwarded?: number;
+  pointsAwarded?: number;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 /**
