@@ -208,6 +208,17 @@ export function EnhancedProfileCompletion({ user, refreshTrigger = 0 }: { user: 
   // Query to fetch detailed profile completion data
   const { data: completionData, isLoading } = useQuery({
     queryKey: ["/api/profile/completion", refreshTrigger],
+    queryFn: async () => {
+      const response = await fetch("/api/profile/completion", {
+        credentials: "include"
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch profile completion data");
+      }
+      
+      return response.json();
+    },
     refetchOnWindowFocus: false
   });
   
