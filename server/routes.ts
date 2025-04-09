@@ -1,9 +1,12 @@
-import type { Express, Request, Response, NextFunction } from "express";
+import express, { type Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin, hashPassword } from "./auth";
 import { db, client } from "./db";
 import { eq, and, or, sql, desc, asc, inArray, lt, between } from "drizzle-orm";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 import { 
   insertTournamentRegistrationSchema, 
   redeemCodeSchema,
@@ -72,11 +75,49 @@ const ageDivision = {
   enumValues: ['U12', 'U14', 'U16', 'U19', '19plus', '35plus', '50plus', '60plus', '70plus'] as AgeDivision[]
 };
 
+// Create uploads directory if it doesn't exist
+const uploadDir = './uploads';
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Configure multer storage for file uploads
+const multerStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    // Save files to 'uploads' directory
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    // Generate a unique filename by adding a timestamp
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+  }
+});
+
+// Create multer upload instance
+const upload = multer({ 
+  storage: multerStorage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB file size limit
+  },
+  fileFilter: function (req, file, cb) {
+    // Accept only image files
+    if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+      return cb(null, false);
+    }
+    cb(null, true);
+  }
+});
+
 // Session handling is now in auth.ts
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Trust proxy - important for secure cookies in production
   app.set('trust proxy', 1);
+
+  // Serve static files from the uploads directory
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
   // Set up authentication (including session, passport initialization, and strategies)
   // This will set up the following routes:
@@ -222,27 +263,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Avatar Upload
-  app.post("/api/profile/upload-avatar", isAuthenticated, async (req: Request, res: Response) => {
+  app.post("/api/profile/upload-avatar", isAuthenticated, upload.single('avatar'), async (req: Request, res: Response) => {
     if (!req.user) {
       return res.status(401).json({ error: "Not authenticated" });
     }
     
     try {
-      // In a real implementation, we would:
-      // 1. Use multipart middleware like multer to handle file uploads
-      // 2. Process the image (resize, optimize)
-      // 3. Store it in cloud storage or file system
-      // 4. Save the URL in the database
-      
+      // Debug incoming request
       console.log("Avatar upload requested for user", req.user.id);
+      console.log("Request body:", req.body);
+      console.log("Request file:", req.file); // Multer adds file to req.file for single uploads
       
-      // For this prototype, we'll mock the behavior
-      // In a real implementation, we would save the URL after uploading to cloud storage
-      const mockAvatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(req.user.username)}&size=200&color=fff&background=FF5722`;
+      let avatarUrl;
+      
+      // Check if a file was uploaded successfully
+      if (req.file) {
+        // In a production environment, you would upload to cloud storage
+        // For this prototype, we'll use a local path
+        avatarUrl = `/uploads/${req.file.filename}`;
+        console.log("File uploaded successfully:", req.file.filename);
+      } else {
+        // Fallback to generated avatar if no file was uploaded
+        avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(req.user.username)}&size=200&color=fff&background=FF5722`;
+        console.log("No file uploaded, using generated avatar");
+      }
+      
+      console.log("Setting avatar URL to:", avatarUrl);
       
       // Update user with new avatar URL
       const updatedUser = await storage.updateUserProfile(req.user.id, {
-        avatarUrl: mockAvatarUrl
+        avatarUrl: avatarUrl
       });
       
       if (!updatedUser) {
@@ -265,27 +315,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Banner Upload
-  app.post("/api/profile/upload-banner", isAuthenticated, async (req: Request, res: Response) => {
+  app.post("/api/profile/upload-banner", isAuthenticated, upload.single('banner'), async (req: Request, res: Response) => {
     if (!req.user) {
       return res.status(401).json({ error: "Not authenticated" });
     }
     
     try {
-      // In a real implementation, we would:
-      // 1. Use multipart middleware like multer to handle file uploads
-      // 2. Process the image (resize, optimize)
-      // 3. Store it in cloud storage or file system
-      // 4. Save the URL in the database
-      
+      // Debug incoming request
       console.log("Banner upload requested for user", req.user.id);
+      console.log("Request body:", req.body);
+      console.log("Request file:", req.file); // Multer adds file to req.file for single uploads
       
-      // For this prototype, we'll mock the behavior
-      // In a real implementation, we would save the URL after uploading to cloud storage
-      const mockBannerUrl = `https://picsum.photos/1200/400`;
+      let bannerUrl;
+      
+      // Check if a file was uploaded successfully
+      if (req.file) {
+        // In a production environment, you would upload to cloud storage
+        // For this prototype, we'll use a local path
+        bannerUrl = `/uploads/${req.file.filename}`;
+        console.log("File uploaded successfully:", req.file.filename);
+      } else {
+        // Fallback to placeholder if no file was uploaded
+        bannerUrl = `https://picsum.photos/1200/400?random=${Date.now()}`;
+        console.log("No file uploaded, using placeholder image");
+      }
+      
+      console.log("Setting banner URL to:", bannerUrl);
       
       // Update user with new banner URL
       const updatedUser = await storage.updateUserProfile(req.user.id, {
-        bannerUrl: mockBannerUrl,
+        bannerUrl: bannerUrl,
         bannerPattern: null // Clear any pattern when setting a custom image
       });
       
