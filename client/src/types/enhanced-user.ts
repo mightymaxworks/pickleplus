@@ -56,6 +56,9 @@ export interface EnhancedUser {
   indoorOutdoorPreference?: string;
   competitiveIntensity?: number;
   mentorshipInterest?: boolean;
+  preferredMatchDuration?: string;
+  fitnessLevel?: string;
+  mobilityLimitations?: string;
   
   // Location data
   homeCourtLocations?: string;
@@ -64,16 +67,21 @@ export interface EnhancedUser {
   // Playing style preferences
   playingStyle?: string;
   shotStrengths?: string;
+  
+  // Communication preferences
+  privateMessagePreference?: string;
+  
+  // Social and partner settings
+  lookingForPartners?: boolean;
   preferredFormat?: string;
   dominantHand?: string;
   regularSchedule?: string;
   playingSince?: string;
   skillLevel?: string;
-  
-  // Additional fields
-  playerGoals?: string;
-  lookingForPartners?: boolean;
   privacyProfile?: string;
+  
+  // Goals and development
+  playerGoals?: string;
   
   // Tournament and achievement data (optional)
   totalTournaments?: number;

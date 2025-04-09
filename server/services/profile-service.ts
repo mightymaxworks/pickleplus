@@ -9,6 +9,7 @@ import { IProfileService } from "./interfaces";
 type ProfileFieldConfig = {
   weight: number;
   category: string;
+  comingSoon?: boolean;
 }
 
 type ProfileFields = {
@@ -62,12 +63,13 @@ export const PROFILE_FIELDS: ProfileFields = {
   courtCoverage: { weight: 2.5, category: 'performance' },
   
   // Social/Community fields (15%)
-  coach: { weight: 3, category: 'social' },
-  clubs: { weight: 3, category: 'social' },
-  leagues: { weight: 3, category: 'social' },
-  socialHandles: { weight: 2, category: 'social' },
-  mentorshipInterest: { weight: 2, category: 'social' },
-  homeCourtLocations: { weight: 2, category: 'social' },
+  // Coaching-related fields marked as "Coming Soon" - not counted in profile completion
+  coach: { weight: 0, category: 'social', comingSoon: true },
+  clubs: { weight: 0, category: 'social', comingSoon: true },
+  leagues: { weight: 0, category: 'social', comingSoon: true },
+  socialHandles: { weight: 0, category: 'social', comingSoon: true },
+  mentorshipInterest: { weight: 5, category: 'social' }, // Increased weight to compensate
+  homeCourtLocations: { weight: 10, category: 'social' }, // Increased weight to compensate
   
   // Health fields (10%)
   mobilityLimitations: { weight: 3, category: 'health' },
@@ -98,8 +100,14 @@ export class ProfileService implements IProfileService {
     
     // Calculate total possible weight
     for (const field in PROFILE_FIELDS) {
+      const fieldConfig = PROFILE_FIELDS[field];
+      // Skip "Coming Soon" fields
+      if (fieldConfig.comingSoon === true) {
+        continue;
+      }
+      
       // Get the weight from the profile field
-      totalWeight += PROFILE_FIELDS[field].weight;
+      totalWeight += fieldConfig.weight;
       
       // Check if this field is completed in the user object
       const fieldValue = userWithIndex[field];
@@ -109,10 +117,10 @@ export class ProfileService implements IProfileService {
         if (typeof fieldValue === 'object' && !Array.isArray(fieldValue)) {
           const obj = fieldValue as Record<string, any>;
           if (Object.keys(obj).length > 0) {
-            completedWeight += PROFILE_FIELDS[field].weight;
+            completedWeight += fieldConfig.weight;
           }
         } else {
-          completedWeight += PROFILE_FIELDS[field].weight;
+          completedWeight += fieldConfig.weight;
         }
       }
     }
@@ -211,9 +219,11 @@ export class ProfileService implements IProfileService {
     completedFields: string[];
     incompleteFields: string[];
     completedCategories: Record<string, number>;
+    comingSoonFields?: string[];
   } {
     const completedFields: string[] = [];
     const incompleteFields: string[] = [];
+    const comingSoonFields: string[] = [];
     const completedCategories: Record<string, number> = {
       basic: 0,
       equipment: 0,
@@ -236,8 +246,16 @@ export class ProfileService implements IProfileService {
     
     // Check each field
     for (const field in PROFILE_FIELDS) {
-      const category = PROFILE_FIELDS[field].category;
-      const weight = PROFILE_FIELDS[field].weight;
+      const fieldConfig = PROFILE_FIELDS[field];
+      const category = fieldConfig.category;
+      const weight = fieldConfig.weight;
+      const isComingSoon = fieldConfig.comingSoon === true;
+      
+      // Skip "Coming Soon" fields in completion calculation
+      if (isComingSoon) {
+        comingSoonFields.push(field);
+        continue;
+      }
       
       // Add to category total
       categoryTotals[category] += weight;
@@ -267,14 +285,15 @@ export class ProfileService implements IProfileService {
     // Convert category completion to percentages
     for (const category in completedCategories) {
       completedCategories[category] = Math.round(
-        (completedCategories[category] / categoryTotals[category]) * 100
+        (completedCategories[category] / (categoryTotals[category] || 1)) * 100
       );
     }
     
     return {
       completedFields,
       incompleteFields,
-      completedCategories
+      completedCategories,
+      comingSoonFields
     };
   }
 }

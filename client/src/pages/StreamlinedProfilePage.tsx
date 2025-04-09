@@ -74,6 +74,15 @@ const StreamlinedProfilePage: FC = () => {
   const [dominantHandField, setDominantHandField] = useState('');
   const [lookingForPartnersField, setLookingForPartnersField] = useState(false);
   const [mentorshipInterestField, setMentorshipInterestField] = useState(false);
+  const [preferredSurfaceField, setPreferredSurfaceField] = useState('');
+  const [indoorOutdoorPreferenceField, setIndoorOutdoorPreferenceField] = useState('');
+  const [competitiveIntensityField, setCompetitiveIntensityField] = useState(5);
+  const [homeCourtLocationsField, setHomeCourtLocationsField] = useState('');
+  const [preferredMatchDurationField, setPreferredMatchDurationField] = useState('');
+  const [fitnessLevelField, setFitnessLevelField] = useState('');
+  const [playerGoalsField, setPlayerGoalsField] = useState('');
+  const [mobilityLimitationsField, setMobilityLimitationsField] = useState('');
+  const [privateMessagePreferenceField, setPrivateMessagePreferenceField] = useState('');
   
   // Stats & Ratings tab fields
   const [skillLevelField, setSkillLevelField] = useState('');
@@ -176,6 +185,46 @@ const StreamlinedProfilePage: FC = () => {
     { value: 'court', label: 'Court Lines' },
     { value: 'geometric', label: 'Geometric' },
     { value: 'gradient', label: 'Gradient' },
+  ];
+  
+  // Options for new fields
+  const surfaceOptions = [
+    { value: 'concrete', label: 'Concrete' },
+    { value: 'asphalt', label: 'Asphalt' },
+    { value: 'composite', label: 'Composite' },
+    { value: 'clay', label: 'Clay' },
+    { value: 'cushioned', label: 'Cushioned' },
+    { value: 'wood', label: 'Wood (Indoor)' },
+    { value: 'turf', label: 'Artificial Turf' },
+    { value: 'any', label: 'Any Surface' },
+  ];
+  
+  const indoorOutdoorOptions = [
+    { value: 'indoor', label: 'Indoor Only' },
+    { value: 'outdoor', label: 'Outdoor Only' },
+    { value: 'both', label: 'Both (No Preference)' },
+    { value: 'indoor-preferred', label: 'Indoor Preferred' },
+    { value: 'outdoor-preferred', label: 'Outdoor Preferred' },
+  ];
+  
+  const matchDurationOptions = [
+    { value: 'short', label: 'Short (30-60 mins)' },
+    { value: 'medium', label: 'Medium (1-2 hours)' },
+    { value: 'long', label: 'Long (2+ hours)' },
+    { value: 'any', label: 'Any Duration' },
+  ];
+  
+  const fitnessLevelOptions = [
+    { value: 'beginner', label: 'Beginner' },
+    { value: 'intermediate', label: 'Intermediate' },
+    { value: 'advanced', label: 'Advanced' },
+    { value: 'elite', label: 'Elite' },
+  ];
+  
+  const messagePreferenceOptions = [
+    { value: 'all', label: 'Accept Messages from Anyone' },
+    { value: 'connections', label: 'Connections Only' },
+    { value: 'none', label: 'Do Not Accept Messages' },
   ];
   
   // Function to handle avatar file selection
@@ -369,6 +418,15 @@ const StreamlinedProfilePage: FC = () => {
       setDominantHandField(user.dominantHand || '');
       setLookingForPartnersField(user.lookingForPartners || false);
       setMentorshipInterestField(user.mentorshipInterest || false);
+      setPreferredSurfaceField(user.preferredSurface || '');
+      setIndoorOutdoorPreferenceField(user.indoorOutdoorPreference || '');
+      setCompetitiveIntensityField(user.competitiveIntensity || 5);
+      setHomeCourtLocationsField(user.homeCourtLocations || '');
+      setPreferredMatchDurationField(user.preferredMatchDuration || '');
+      setFitnessLevelField(user.fitnessLevel || '');
+      setPlayerGoalsField(user.playerGoals || '');
+      setMobilityLimitationsField(user.mobilityLimitations || '');
+      setPrivateMessagePreferenceField(user.privateMessagePreference || '');
       
       // Stats & Ratings tab fields
       setSkillLevelField(user.skillLevel || '');
@@ -1721,6 +1779,512 @@ const StreamlinedProfilePage: FC = () => {
                         <Badge variant={user.mentorshipInterest ? "default" : "outline"}>
                           {user.mentorshipInterest ? 'Enabled' : 'Disabled'}
                         </Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Play Environment Preferences */}
+                <div className="pt-4 border-t">
+                  <h4 className="text-md font-medium mb-4">Play Environment Preferences</h4>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {/* Preferred Surface */}
+                    <div>
+                      <h5 className="text-sm font-medium text-muted-foreground mb-2">Preferred Surface</h5>
+                      {isEditMode && editingFields.preferredSurface ? (
+                        <div className="space-y-2">
+                          <Select 
+                            value={preferredSurfaceField} 
+                            onValueChange={(value) => setPreferredSurfaceField(value)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select preferred surface" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {surfaceOptions.map(option => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                setPreferredSurfaceField(user.preferredSurface || '');
+                                setEditingFields(prev => ({ ...prev, preferredSurface: false }));
+                              }}
+                            >
+                              <X className="h-4 w-4 mr-1" /> Cancel
+                            </Button>
+                            <Button 
+                              size="sm"
+                              onClick={() => saveProfileField('preferredSurface', preferredSurfaceField)}
+                            >
+                              <Check className="h-4 w-4 mr-1" /> Save
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div 
+                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                          onClick={() => {
+                            if (isEditMode) {
+                              setEditingFields(prev => ({ ...prev, preferredSurface: true }));
+                            }
+                          }}
+                        >
+                          <p className="capitalize">{user.preferredSurface || 'Not specified'}</p>
+                          {isEditMode && (
+                            <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Indoor/Outdoor Preference */}
+                    <div>
+                      <h5 className="text-sm font-medium text-muted-foreground mb-2">Indoor/Outdoor Preference</h5>
+                      {isEditMode && editingFields.indoorOutdoorPreference ? (
+                        <div className="space-y-2">
+                          <Select 
+                            value={indoorOutdoorPreferenceField} 
+                            onValueChange={(value) => setIndoorOutdoorPreferenceField(value)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select indoor/outdoor preference" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {indoorOutdoorOptions.map(option => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                setIndoorOutdoorPreferenceField(user.indoorOutdoorPreference || '');
+                                setEditingFields(prev => ({ ...prev, indoorOutdoorPreference: false }));
+                              }}
+                            >
+                              <X className="h-4 w-4 mr-1" /> Cancel
+                            </Button>
+                            <Button 
+                              size="sm"
+                              onClick={() => saveProfileField('indoorOutdoorPreference', indoorOutdoorPreferenceField)}
+                            >
+                              <Check className="h-4 w-4 mr-1" /> Save
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div 
+                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                          onClick={() => {
+                            if (isEditMode) {
+                              setEditingFields(prev => ({ ...prev, indoorOutdoorPreference: true }));
+                            }
+                          }}
+                        >
+                          <p className="capitalize">{user.indoorOutdoorPreference || 'Not specified'}</p>
+                          {isEditMode && (
+                            <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Match Duration */}
+                    <div>
+                      <h5 className="text-sm font-medium text-muted-foreground mb-2">Preferred Match Duration</h5>
+                      {isEditMode && editingFields.preferredMatchDuration ? (
+                        <div className="space-y-2">
+                          <Select 
+                            value={preferredMatchDurationField} 
+                            onValueChange={(value) => setPreferredMatchDurationField(value)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select match duration" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {matchDurationOptions.map(option => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                setPreferredMatchDurationField(user.preferredMatchDuration || '');
+                                setEditingFields(prev => ({ ...prev, preferredMatchDuration: false }));
+                              }}
+                            >
+                              <X className="h-4 w-4 mr-1" /> Cancel
+                            </Button>
+                            <Button 
+                              size="sm"
+                              onClick={() => saveProfileField('preferredMatchDuration', preferredMatchDurationField)}
+                            >
+                              <Check className="h-4 w-4 mr-1" /> Save
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div 
+                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                          onClick={() => {
+                            if (isEditMode) {
+                              setEditingFields(prev => ({ ...prev, preferredMatchDuration: true }));
+                            }
+                          }}
+                        >
+                          <p className="capitalize">{user.preferredMatchDuration || 'Not specified'}</p>
+                          {isEditMode && (
+                            <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Fitness Level */}
+                    <div>
+                      <h5 className="text-sm font-medium text-muted-foreground mb-2">Fitness Level</h5>
+                      {isEditMode && editingFields.fitnessLevel ? (
+                        <div className="space-y-2">
+                          <Select 
+                            value={fitnessLevelField} 
+                            onValueChange={(value) => setFitnessLevelField(value)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select fitness level" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {fitnessLevelOptions.map(option => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                setFitnessLevelField(user.fitnessLevel || '');
+                                setEditingFields(prev => ({ ...prev, fitnessLevel: false }));
+                              }}
+                            >
+                              <X className="h-4 w-4 mr-1" /> Cancel
+                            </Button>
+                            <Button 
+                              size="sm"
+                              onClick={() => saveProfileField('fitnessLevel', fitnessLevelField)}
+                            >
+                              <Check className="h-4 w-4 mr-1" /> Save
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div 
+                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                          onClick={() => {
+                            if (isEditMode) {
+                              setEditingFields(prev => ({ ...prev, fitnessLevel: true }));
+                            }
+                          }}
+                        >
+                          <p className="capitalize">{user.fitnessLevel || 'Not specified'}</p>
+                          {isEditMode && (
+                            <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Player Goals & Special Considerations */}
+                <div className="pt-4 border-t">
+                  <h4 className="text-md font-medium mb-4">Goals & Special Considerations</h4>
+                  
+                  <div className="grid grid-cols-1 gap-6">
+                    {/* Player Goals */}
+                    <div>
+                      <h5 className="text-sm font-medium text-muted-foreground mb-2">Player Goals</h5>
+                      {isEditMode && editingFields.playerGoals ? (
+                        <div className="space-y-2">
+                          <Textarea 
+                            value={playerGoalsField}
+                            onChange={(e) => setPlayerGoalsField(e.target.value)}
+                            className="min-h-[80px] resize-none"
+                            placeholder="What are your pickleball goals? (e.g., improve third shot drops, play in tournaments, meet new players)"
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => {
+                                setPlayerGoalsField(user.playerGoals || '');
+                                setEditingFields(prev => ({ ...prev, playerGoals: false }));
+                              }}
+                            >
+                              <X className="h-4 w-4 mr-1" /> Cancel
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              onClick={() => saveProfileField('playerGoals', playerGoalsField)}
+                            >
+                              <Check className="h-4 w-4 mr-1" /> Save
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div 
+                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                          onClick={() => {
+                            if (isEditMode) {
+                              setEditingFields(prev => ({ ...prev, playerGoals: true }));
+                            }
+                          }}
+                        >
+                          <p>{user.playerGoals || 'Not specified'}</p>
+                          {isEditMode && (
+                            <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Home Court Locations */}
+                    <div>
+                      <h5 className="text-sm font-medium text-muted-foreground mb-2">Home Court Locations</h5>
+                      {isEditMode && editingFields.homeCourtLocations ? (
+                        <div className="space-y-2">
+                          <Textarea 
+                            value={homeCourtLocationsField}
+                            onChange={(e) => setHomeCourtLocationsField(e.target.value)}
+                            className="min-h-[80px] resize-none"
+                            placeholder="Where do you typically play? List your regular courts."
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => {
+                                setHomeCourtLocationsField(user.homeCourtLocations || '');
+                                setEditingFields(prev => ({ ...prev, homeCourtLocations: false }));
+                              }}
+                            >
+                              <X className="h-4 w-4 mr-1" /> Cancel
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              onClick={() => saveProfileField('homeCourtLocations', homeCourtLocationsField)}
+                            >
+                              <Check className="h-4 w-4 mr-1" /> Save
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div 
+                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                          onClick={() => {
+                            if (isEditMode) {
+                              setEditingFields(prev => ({ ...prev, homeCourtLocations: true }));
+                            }
+                          }}
+                        >
+                          <p>{user.homeCourtLocations || 'Not specified'}</p>
+                          {isEditMode && (
+                            <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Mobility Considerations */}
+                    <div>
+                      <h5 className="text-sm font-medium text-muted-foreground mb-2">Mobility Considerations</h5>
+                      {isEditMode && editingFields.mobilityLimitations ? (
+                        <div className="space-y-2">
+                          <Textarea 
+                            value={mobilityLimitationsField}
+                            onChange={(e) => setMobilityLimitationsField(e.target.value)}
+                            className="min-h-[80px] resize-none"
+                            placeholder="Any mobility considerations or limitations relevant for play? (This helps partners match appropriately)"
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => {
+                                setMobilityLimitationsField(user.mobilityLimitations || '');
+                                setEditingFields(prev => ({ ...prev, mobilityLimitations: false }));
+                              }}
+                            >
+                              <X className="h-4 w-4 mr-1" /> Cancel
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              onClick={() => saveProfileField('mobilityLimitations', mobilityLimitationsField)}
+                            >
+                              <Check className="h-4 w-4 mr-1" /> Save
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div 
+                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                          onClick={() => {
+                            if (isEditMode) {
+                              setEditingFields(prev => ({ ...prev, mobilityLimitations: true }));
+                            }
+                          }}
+                        >
+                          <p>{user.mobilityLimitations || 'Not specified'}</p>
+                          {isEditMode && (
+                            <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Communication Preferences */}
+                <div className="pt-4 border-t">
+                  <h4 className="text-md font-medium mb-4">Communication Preferences</h4>
+                  
+                  <div className="grid grid-cols-1 gap-6">
+                    {/* Private Message Preference */}
+                    <div>
+                      <h5 className="text-sm font-medium text-muted-foreground mb-2">Message Privacy Settings</h5>
+                      {isEditMode && editingFields.privateMessagePreference ? (
+                        <div className="space-y-2">
+                          <Select 
+                            value={privateMessagePreferenceField} 
+                            onValueChange={(value) => setPrivateMessagePreferenceField(value)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select message preference" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {messagePreferenceOptions.map(option => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                setPrivateMessagePreferenceField(user.privateMessagePreference || '');
+                                setEditingFields(prev => ({ ...prev, privateMessagePreference: false }));
+                              }}
+                            >
+                              <X className="h-4 w-4 mr-1" /> Cancel
+                            </Button>
+                            <Button 
+                              size="sm"
+                              onClick={() => saveProfileField('privateMessagePreference', privateMessagePreferenceField)}
+                            >
+                              <Check className="h-4 w-4 mr-1" /> Save
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div 
+                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                          onClick={() => {
+                            if (isEditMode) {
+                              setEditingFields(prev => ({ ...prev, privateMessagePreference: true }));
+                            }
+                          }}
+                        >
+                          <p className="capitalize">{user.privateMessagePreference || 'Not specified'}</p>
+                          {isEditMode && (
+                            <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Competitive Intensity */}
+                    <div>
+                      <h5 className="text-sm font-medium text-muted-foreground mb-2">Competitive Intensity</h5>
+                      {isEditMode && editingFields.competitiveIntensity ? (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-muted-foreground">Recreational</span>
+                              <span className="text-xs text-muted-foreground">Highly Competitive</span>
+                            </div>
+                            <Slider
+                              value={[competitiveIntensityField]}
+                              min={1}
+                              max={10}
+                              step={1}
+                              onValueChange={(value) => setCompetitiveIntensityField(value[0])}
+                            />
+                            <div className="text-center text-sm font-medium mt-2">
+                              Level: {competitiveIntensityField}/10
+                            </div>
+                          </div>
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                setCompetitiveIntensityField(user.competitiveIntensity || 5);
+                                setEditingFields(prev => ({ ...prev, competitiveIntensity: false }));
+                              }}
+                            >
+                              <X className="h-4 w-4 mr-1" /> Cancel
+                            </Button>
+                            <Button 
+                              size="sm"
+                              onClick={() => saveProfileField('competitiveIntensity', competitiveIntensityField)}
+                            >
+                              <Check className="h-4 w-4 mr-1" /> Save
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div 
+                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                          onClick={() => {
+                            if (isEditMode) {
+                              setEditingFields(prev => ({ ...prev, competitiveIntensity: true }));
+                            }
+                          }}
+                        >
+                          {user.competitiveIntensity ? (
+                            <div>
+                              <Progress value={(user.competitiveIntensity / 10) * 100} className="h-2 mb-2" />
+                              <p>Level {user.competitiveIntensity}/10</p>
+                            </div>
+                          ) : (
+                            <p>Not specified</p>
+                          )}
+                          {isEditMode && (
+                            <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
