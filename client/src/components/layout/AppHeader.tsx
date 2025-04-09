@@ -63,23 +63,9 @@ export function AppHeader() {
       transition={{ type: 'spring', damping: 20, stiffness: 100 }}
     >
       <div className="px-4 sm:px-6 py-3 flex items-center justify-between">
-        {/* Mobile Menu Toggle */}
-        <motion.button
-          className="md:hidden p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          {mobileMenuOpen ? (
-            <X size={22} className="text-gray-600 dark:text-gray-300" />
-          ) : (
-            <Menu size={22} className="text-gray-600 dark:text-gray-300" />
-          )}
-        </motion.button>
-        
         {/* Logo aligned to the left */}
         <motion.div
-          className="flex items-center justify-center flex-1"
+          className="flex items-center justify-start flex-1"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
@@ -172,64 +158,7 @@ export function AppHeader() {
         </div>
       </div>
       
-      {/* Mobile Menu with Navigation Items - Toggle menu */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div 
-            className="overflow-hidden bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-          >
-            <div className="p-4 space-y-3">
-              {/* Navigation Items */}
-              {[
-                { label: 'Dashboard', icon: <Home size={18} />, path: '/dashboard' },
-                { label: 'Matches', icon: <Calendar size={18} />, path: '/matches' },
-                { label: 'Mastery Paths', icon: <Award size={18} />, path: '/mastery-paths' },
-                { label: 'Profile', icon: <User size={18} />, path: '/profile' },
-                { label: 'Settings', icon: <Settings size={18} />, path: '/settings' }
-              ].map((item, i) => {
-                const isActive = location === item.path;
-                
-                return (
-                  <motion.button 
-                    key={item.label}
-                    className={`flex items-center w-full py-3 px-4 rounded-xl ${
-                      isActive 
-                        ? 'bg-gradient-to-r from-[#FF5722]/10 to-[#FF9800]/10 border border-[#FF5722]/20' 
-                        : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
-                    } shadow-sm`}
-                    onClick={() => {
-                      navigate(item.path);
-                      setMobileMenuOpen(false);
-                    }}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.05 * i }}
-                    whileHover={{ x: 5 }}
-                  >
-                    <span className={`mr-3 ${isActive ? 'text-[#FF5722]' : 'text-gray-500 dark:text-gray-400'}`}>
-                      {item.icon}
-                    </span>
-                    <span className={`font-medium ${isActive ? 'text-[#FF5722]' : 'text-gray-700 dark:text-gray-300'}`}>
-                      {item.label}
-                    </span>
-                    
-                    {isActive && (
-                      <motion.div 
-                        className="ml-auto w-1.5 h-6 bg-[#FF5722] rounded-full"
-                        layoutId="navActiveIndicator"
-                      />
-                    )}
-                  </motion.button>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* No mobile menu in AppHeader - using profile dropdown instead */}
     </motion.header>
   );
 }
