@@ -6,6 +6,7 @@
  * - Database-level constraints are favored over application-level validations
  * - Migration scripts include both "up" and "down" paths
  * - Data integrity is maintained through constraints, defaults, and transactions
+ * - Synchronization is maintained between application code and database schema
  */
 
 import fs from 'fs';
@@ -20,11 +21,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * Runs the points_awarded default constraint migration
+ * Runs the points_awarded and xp_awarded default constraint migration
  */
-export async function migratePointsAwardedDefault(): Promise<void> {
+export async function migrateMatchDefaultConstraints(): Promise<void> {
   try {
-    console.log('[Match Module] Running points_awarded default constraint migration');
+    console.log('[Match Module] Running match default constraint migrations');
     
     // Read the SQL file
     const migrationPath = path.join(__dirname, 'migrations', '20250409_points_awarded_default.sql');
@@ -46,8 +47,8 @@ export async function migratePointsAwardedDefault(): Promise<void> {
     
     console.log('[Match Module] Migration completed successfully');
     
-    // Verify the migration
-    await verifyPointsAwardedDefault();
+    // Verify the migration for both columns
+    await verifyMatchDefaultConstraints();
   } catch (error) {
     console.error('[Match Module] Migration failed:', error);
     throw error;
@@ -55,34 +56,44 @@ export async function migratePointsAwardedDefault(): Promise<void> {
 }
 
 /**
- * Verifies that the points_awarded column has the correct default constraint
+ * For backward compatibility
+ * @deprecated Use migrateMatchDefaultConstraints instead
  */
-async function verifyPointsAwardedDefault(): Promise<void> {
+export async function migratePointsAwardedDefault(): Promise<void> {
+  return migrateMatchDefaultConstraints();
+}
+
+/**
+ * Verifies that the points_awarded and xp_awarded columns have the correct default constraints
+ */
+async function verifyMatchDefaultConstraints(): Promise<void> {
   try {
     // Query the information schema using direct SQL
     const query = `
       SELECT column_name, data_type, is_nullable, column_default 
       FROM information_schema.columns 
-      WHERE table_name = 'matches' AND column_name = 'points_awarded';
+      WHERE table_name = 'matches' AND column_name IN ('points_awarded', 'xp_awarded');
     `;
     
-    // Use the postgres client directly for better type safety
+    // Use the postgres client directly for this raw query
     const { client } = await import('../../db');
-    const result = await client.query(query);
+    // Using any here because the client's query method is not properly typed in the LSP
+    const result = await (client as any).query(query);
     
     if (result.rows && result.rows.length > 0) {
       // Log the verification result
-      console.log('[Match Module] Verification result:', result.rows[0]);
+      console.log('[Match Module] Verification results:', result.rows);
       
-      // Check if the default constraint is set
-      const columnInfo = result.rows[0];
-      if (columnInfo.column_default !== '0') {
-        console.warn('[Match Module] Default constraint for points_awarded is not set to 0');
-      } else {
-        console.log('[Match Module] Default constraint for points_awarded verified correctly');
-      }
+      // Check each column
+      result.rows.forEach(function(columnInfo: { column_name: string, column_default: string }) {
+        if (columnInfo.column_default !== '0') {
+          console.warn(`[Match Module] Default constraint for ${columnInfo.column_name} is not set to 0`);
+        } else {
+          console.log(`[Match Module] Default constraint for ${columnInfo.column_name} verified correctly`);
+        }
+      });
     } else {
-      console.warn('[Match Module] No column information found for points_awarded');
+      console.warn('[Match Module] No column information found');
     }
   } catch (error) {
     console.error('[Match Module] Verification failed:', error);
@@ -90,16 +101,16 @@ async function verifyPointsAwardedDefault(): Promise<void> {
 }
 
 /**
- * Rolls back the points_awarded default constraint migration
+ * Rolls back the match default constraint migrations
  */
-export async function rollbackPointsAwardedDefault(): Promise<void> {
+export async function rollbackMatchDefaultConstraints(): Promise<void> {
   try {
-    console.log('[Match Module] Rolling back points_awarded default constraint migration');
+    console.log('[Match Module] Rolling back match default constraint migrations');
     
-    // Execute the rollback statement
+    // Execute the rollback statements
     await db.execute(sql`
-      ALTER TABLE matches
-      ALTER COLUMN points_awarded DROP DEFAULT;
+      ALTER TABLE matches ALTER COLUMN points_awarded DROP DEFAULT;
+      ALTER TABLE matches ALTER COLUMN xp_awarded DROP DEFAULT;
     `);
     
     console.log('[Match Module] Rollback completed successfully');
@@ -107,4 +118,12 @@ export async function rollbackPointsAwardedDefault(): Promise<void> {
     console.error('[Match Module] Rollback failed:', error);
     throw error;
   }
+}
+
+/**
+ * For backward compatibility
+ * @deprecated Use rollbackMatchDefaultConstraints instead
+ */
+export async function rollbackPointsAwardedDefault(): Promise<void> {
+  return rollbackMatchDefaultConstraints();
 }
