@@ -31,6 +31,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByIdentifier(identifier: string): Promise<User | undefined>;
   getUserByPassportCode(passportCode: string): Promise<User | undefined>;
+  getUserByPassportId(passportId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, update: Partial<InsertUser>): Promise<User | undefined>;
   updateUserProfile(id: number, profileData: any): Promise<User | undefined>;
@@ -270,6 +271,54 @@ export class DatabaseStorage implements IStorage {
       return user;
     } catch (error) {
       console.error('[Storage] getUserByPassportCode error:', error);
+      return undefined;
+    }
+  }
+  
+  async getUserByPassportId(passportId: string): Promise<User | undefined> {
+    try {
+      // Validate passportId is not empty or invalid
+      if (!passportId || typeof passportId !== 'string' || passportId.trim() === '') {
+        console.log(`[Storage] getUserByPassportId called with invalid passport ID: ${passportId}`);
+        return undefined;
+      }
+      
+      console.log(`[Storage] getUserByPassportId called with passport ID: ${passportId}`);
+      
+      // First try with the raw passport ID
+      let user;
+      [user] = await db.select()
+        .from(users)
+        .where(eq(users.passportId, passportId));
+        
+      // If not found, try to add PKL- prefix and dashes
+      if (!user) {
+        // Try different formats
+        const formattedId = `PKL-${passportId.substring(0, 3)}-${passportId.substring(3)}`;
+        [user] = await db.select()
+          .from(users)
+          .where(eq(users.passportId, formattedId));
+      }
+      
+      // Add any missing fields expected in the User type
+      if (user) {
+        if (!('avatarUrl' in user)) {
+          (user as any).avatarUrl = null;
+        }
+        
+        // Use default profileCompletionPct from database if available, otherwise 0
+        if (user.profileCompletionPct === undefined || user.profileCompletionPct === null) {
+          (user as any).profileCompletionPct = 0;
+        }
+        
+        if (!('regularSchedule' in user)) {
+          (user as any).regularSchedule = null;
+        }
+      }
+      
+      return user;
+    } catch (error) {
+      console.error('[Storage] getUserByPassportId error:', error);
       return undefined;
     }
   }
@@ -729,6 +778,7 @@ export class DatabaseStorage implements IStorage {
           username: user.username,
           displayName: user.displayName || user.username,
           passportCode: user.passportId || null,
+          passportId: user.passportId || null,
           avatarUrl: null, // Safe default
           avatarInitials: user.avatarInitials || (user.username ? user.username.substring(0, 2).toUpperCase() : "??")
         }));
@@ -772,6 +822,7 @@ export class DatabaseStorage implements IStorage {
             username: user.username,
             displayName: user.displayName || user.username,
             passportCode: null,
+            passportId: null,
             avatarUrl: null,
             avatarInitials: user.username?.substring(0, 2).toUpperCase() || "??"
           }));

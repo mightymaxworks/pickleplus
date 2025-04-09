@@ -21,13 +21,16 @@ export function PassportQrCodeCard({ user }: PassportQrCodeCardProps) {
   const [copiedId, setCopiedId] = useState(false);
   
   // Generate a fixed passport ID if one doesn't exist (for demo purposes)
-  const passportId = user.passportId || `PKL-${Math.floor(100000 + Math.random() * 900000)}`;
+  const formattedPassportId = user.passportId || `PKL-${Math.floor(100000 + Math.random() * 900000)}`;
+  
+  // Get the raw passport ID without PKL- prefix and dashes
+  const rawPassportId = formattedPassportId.replace(/^PKL-/, '').replace(/-/g, '');
   
   // Generate a connection token - in a real app, this would be secured with a server-side token
-  const connectionToken = btoa(`${passportId}:${Date.now()}`);
+  const connectionToken = btoa(`${rawPassportId}:${Date.now()}`);
   
   // Include connection information in the URL
-  const passportUrl = `https://pickleplus.app/connect/${passportId}?token=${connectionToken}`;
+  const passportUrl = `https://pickleplus.app/connect/${rawPassportId}?token=${connectionToken}`;
     
   const handleCopyLink = () => {
     if (passportUrl) {
@@ -43,8 +46,8 @@ export function PassportQrCodeCard({ user }: PassportQrCodeCardProps) {
   };
   
   const handleCopyId = () => {
-    if (passportId) {
-      navigator.clipboard.writeText(passportId);
+    if (rawPassportId) {
+      navigator.clipboard.writeText(rawPassportId);
       setCopiedId(true);
       toast({
         title: "ID copied",
@@ -97,7 +100,7 @@ export function PassportQrCodeCard({ user }: PassportQrCodeCardProps) {
         </div>
         
         <div className="flex items-center gap-1 font-mono text-xs text-center text-muted-foreground mb-4">
-          <span>ID: {passportId}</span>
+          <span>ID: {rawPassportId}</span>
           <button 
             onClick={handleCopyId}
             className="inline-flex text-muted-foreground hover:text-foreground transition-colors"

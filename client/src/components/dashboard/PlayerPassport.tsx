@@ -53,7 +53,7 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
   const qrData = JSON.stringify({
     id: user.id,
     username: user.username,
-    passportId: user.passportId || `PKL-${user.id}`,
+    passportId: user.passportId || `${user.id}`,
     memberType: isFoundingMember ? 'founding' : 'standard'
   });
   
@@ -103,8 +103,8 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
                 <div className="font-bold text-base text-white truncate max-w-[140px]">
                   {user.displayName || user.username}
                 </div>
-                <div className="text-xs text-white/90">
-                    {user.duprRating ? (
+                <div className="flex flex-wrap gap-1 text-xs text-white/90">
+                  {user.duprRating ? (
                     <div className="bg-white/20 rounded-full px-2 py-0.5 flex items-center inline-block">
                       <Trophy size={10} className="text-yellow-300 mr-1" />
                       DUPR {user.duprRating}
@@ -115,6 +115,9 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
                       CourtIQ™ Player
                     </div>
                   )}
+                  <div className="bg-white/20 rounded-full px-2 py-0.5 inline-block text-xs">
+                    {user.passportId ? user.passportId.replace(/PKL-|-/g, '') : user.id}
+                  </div>
                 </div>
               </div>
             </div>
@@ -206,8 +209,8 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
                 <div className="font-bold text-lg text-white">
                   {user.displayName || user.username}
                 </div>
-                <div className="text-sm text-white/90">
-                    {user.duprRating ? (
+                <div className="flex flex-wrap gap-1 text-sm text-white/90">
+                  {user.duprRating ? (
                     <div className="bg-white/20 rounded-full px-2 py-0.5 flex items-center inline-block">
                       <Trophy size={12} className="text-yellow-300 mr-1" />
                       DUPR {user.duprRating}
@@ -218,6 +221,9 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
                       CourtIQ™ Player
                     </div>
                   )}
+                  <div className="bg-white/20 rounded-full px-2 py-0.5 inline-block text-xs">
+                    {user.passportId ? user.passportId.replace(/PKL-|-/g, '') : user.id}
+                  </div>
                 </div>
               </div>
             </div>
@@ -332,7 +338,7 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
             </div>
             
             <div className="text-center text-xs text-gray-500 dark:text-gray-400 mb-2">
-              Passport Code: {user.passportId || `PKL-${user.id}`}
+              Passport Code: {user.passportId ? user.passportId.replace(/PKL-|-/g, '') : user.id}
             </div>
             
             {/* Special XP bonus notice for founding members */}

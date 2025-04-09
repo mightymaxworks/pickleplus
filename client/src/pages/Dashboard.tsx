@@ -75,10 +75,15 @@ export default function Dashboard() {
                   {user.passportId && (
                     <div className="inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-700">
                       <span className="text-xs text-gray-500 dark:text-gray-400">Passport Code:</span>
-                      <code className="text-sm font-mono font-medium text-blue-600 dark:text-blue-400">{user.passportId}</code>
+                      <code className="text-sm font-mono font-medium text-blue-600 dark:text-blue-400">
+                        {/* Display raw passport ID without PKL- prefix or dashes */}
+                        {user.passportId?.replace(/^PKL-/, '').replace(/-/g, '')}
+                      </code>
                       <button 
                         onClick={() => {
-                          navigator.clipboard.writeText(user.passportId || '');
+                          // Copy the raw passport ID without PKL- prefix or dashes
+                          const rawPassportId = user.passportId?.replace(/^PKL-/, '').replace(/-/g, '') || '';
+                          navigator.clipboard.writeText(rawPassportId);
                           setCodeCopied(true);
                           toast({
                             title: "Copied!",
