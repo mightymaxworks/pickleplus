@@ -295,8 +295,10 @@ matchRouter.get('/stats', async (req: Request, res: Response) => {
     
     // Apply time filter if provided
     if (timeFilter) {
+      // Convert Date object to ISO string for the SQL query
+      const timeFilterStr = timeFilter.toISOString();
       matchesQuery = matchesQuery.where(
-        sql`${matches.matchDate} >= ${timeFilter}`
+        sql`${matches.matchDate} >= ${timeFilterStr}`
       );
     }
     
@@ -352,9 +354,11 @@ matchRouter.get('/stats', async (req: Request, res: Response) => {
       // Check if user won this match
       const userIsWinner = userId ? 
         (match.winnerId === userId || 
-         (match.formatType === 'doubles' && match.winnerTeam === 'team1' && 
+         // If they're on the winning team (team 1)
+         (match.formatType === 'doubles' && match.winnerId === match.playerOneId && 
           (match.playerOneId === userId || match.playerOnePartnerId === userId)) ||
-         (match.formatType === 'doubles' && match.winnerTeam === 'team2' && 
+         // If they're on the winning team (team 2)
+         (match.formatType === 'doubles' && match.winnerId === match.playerTwoId && 
           (match.playerTwoId === userId || match.playerTwoPartnerId === userId))
         ) : 
         false;
