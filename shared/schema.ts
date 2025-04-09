@@ -35,7 +35,7 @@ export const users = pgTable("users", {
   location: varchar("location", { length: 255 }),
   bio: text("bio"),
   yearOfBirth: integer("year_of_birth"),
-  passportCode: varchar("passport_code", { length: 7 }).unique(),
+  passportId: varchar("passport_id", { length: 15 }).unique(),
   level: integer("level").default(1),
   xp: integer("xp").default(0),
   avatarInitials: varchar("avatar_initials", { length: 10 }),

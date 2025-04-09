@@ -225,7 +225,7 @@ export default function Profile() {
                   )}
                 </h2>
                 <p className="text-muted-foreground text-sm">@{user.username}</p>
-                <p className="text-xs font-mono bg-muted inline-block px-2 py-1 rounded mt-1">{user.passportCode || `PKL-${user.id}`}</p>
+                <p className="text-xs font-mono bg-muted inline-block px-2 py-1 rounded mt-1">{user.passportId || `PKL-${user.id}`}</p>
                 
                 <div className="mt-4 flex flex-wrap justify-center gap-2">
                   {user?.isCoach && (

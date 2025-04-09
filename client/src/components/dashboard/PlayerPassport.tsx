@@ -53,7 +53,7 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
   const qrData = JSON.stringify({
     id: user.id,
     username: user.username,
-    passportCode: user.passportCode || `PKL-${user.id}`,
+    passportId: user.passportId || `PKL-${user.id}`,
     memberType: isFoundingMember ? 'founding' : 'standard'
   });
   
@@ -332,7 +332,7 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
             </div>
             
             <div className="text-center text-xs text-gray-500 dark:text-gray-400 mb-2">
-              Passport Code: {user.passportCode || `PKL-${user.id}`}
+              Passport Code: {user.passportId || `PKL-${user.id}`}
             </div>
             
             {/* Special XP bonus notice for founding members */}
