@@ -39,7 +39,7 @@ const FIELD_CATEGORIES = {
   personal: {
     title: "Personal Info",
     icon: User,
-    fields: ["bio", "location", "yearOfBirth", "displayName"]
+    fields: ["bio", "location", "yearOfBirth", "displayName", "privateMessagePreference"]
   },
   equipment: {
     title: "Equipment",
@@ -49,17 +49,34 @@ const FIELD_CATEGORIES = {
   playing: {
     title: "Playing Style",
     icon: Settings,
-    fields: ["skillLevel", "playingSince", "preferredFormat", "dominantHand", "preferredPosition", "playingStyle", "shotStrengths"]
+    fields: ["skillLevel", "playingSince", "preferredFormat", "dominantHand", "preferredPosition", "playingStyle", "shotStrengths", "playerGoals"]
   },
   preferences: {
     title: "Preferences",
     icon: Calendar,
-    fields: ["regularSchedule", "lookingForPartners", "mentorshipInterest", "preferredSurface", "indoorOutdoorPreference", "competitiveIntensity", "homeCourtLocations", "travelRadiusKm"]
+    fields: [
+      "regularSchedule", 
+      "lookingForPartners", 
+      "mentorshipInterest", 
+      "preferredSurface", 
+      "indoorOutdoorPreference", 
+      "competitiveIntensity", 
+      "homeCourtLocations", 
+      "travelRadiusKm", 
+      "preferredMatchDuration", 
+      "fitnessLevel", 
+      "mobilityLimitations"
+    ]
   },
   skills: {
     title: "Skill Ratings",
     icon: Trophy,
     fields: ["forehandStrength", "backhandStrength", "servePower", "dinkAccuracy", "thirdShotConsistency", "courtCoverage"]
+  },
+  social: {
+    title: "Social & Community",
+    icon: ChevronRight, // Using as placeholder - you may want to use a different icon
+    fields: ["coach", "clubs", "leagues", "socialHandles"]
   }
 };
 
@@ -99,6 +116,75 @@ function getPreviousTier(percentage: number) {
   return previousTier;
 }
 
+// Define human-readable field name mapping
+const FIELD_DISPLAY_NAMES: Record<string, string> = {
+  // Personal fields
+  bio: "Bio",
+  location: "Location",
+  yearOfBirth: "Year of Birth",
+  displayName: "Display Name",
+  privateMessagePreference: "Message Preferences",
+  
+  // Equipment fields
+  paddleBrand: "Paddle Brand",
+  paddleModel: "Paddle Model",
+  backupPaddleBrand: "Backup Paddle Brand",
+  backupPaddleModel: "Backup Paddle Model",
+  apparelBrand: "Apparel Brand",
+  shoesBrand: "Shoes Brand",
+  otherEquipment: "Other Equipment",
+  
+  // Playing style fields
+  skillLevel: "Skill Level",
+  playingSince: "Playing Since",
+  preferredFormat: "Game Format",
+  dominantHand: "Dominant Hand",
+  preferredPosition: "Court Position",
+  playingStyle: "Playing Style",
+  shotStrengths: "Shot Strengths",
+  playerGoals: "Player Goals",
+  
+  // Preferences
+  regularSchedule: "Playing Schedule",
+  lookingForPartners: "Partner Status",
+  mentorshipInterest: "Mentorship Interest",
+  preferredSurface: "Preferred Surface",
+  indoorOutdoorPreference: "Indoor/Outdoor Preference",
+  competitiveIntensity: "Competitive Intensity",
+  homeCourtLocations: "Home Court Locations",
+  travelRadiusKm: "Travel Radius",
+  preferredMatchDuration: "Match Duration",
+  fitnessLevel: "Fitness Level",
+  mobilityLimitations: "Mobility Considerations",
+  
+  // Skill ratings
+  forehandStrength: "Forehand Strength",
+  backhandStrength: "Backhand Strength",
+  servePower: "Serve Power",
+  dinkAccuracy: "Dink Accuracy",
+  thirdShotConsistency: "Third Shot Consistency",
+  courtCoverage: "Court Coverage",
+  
+  // Social
+  coach: "Coach",
+  clubs: "Clubs",
+  leagues: "Leagues",
+  socialHandles: "Social Media"
+};
+
+// Create a mapping from display name back to field key
+const getFieldKeyFromDisplayName = (displayName: string): string => {
+  const lowerDisplayName = displayName.toLowerCase();
+  
+  for (const [key, value] of Object.entries(FIELD_DISPLAY_NAMES)) {
+    if (value.toLowerCase() === lowerDisplayName) {
+      return key;
+    }
+  }
+  
+  return displayName.toLowerCase();
+};
+
 // Categorize fields into their respective sections
 function categorizeFields(fields: string[]) {
   const categorized: Record<string, string[]> = {
@@ -107,19 +193,22 @@ function categorizeFields(fields: string[]) {
     playing: [],
     preferences: [],
     skills: [],
+    social: [],
     other: []
   };
   
   fields.forEach(field => {
     let found = false;
+    const fieldKey = getFieldKeyFromDisplayName(field);
     
     // Find which category this field belongs to
-    Object.keys(FIELD_CATEGORIES).forEach(category => {
-      if (FIELD_CATEGORIES[category as keyof typeof FIELD_CATEGORIES].fields.includes(field.toLowerCase())) {
+    for (const [category, config] of Object.entries(FIELD_CATEGORIES)) {
+      if (config.fields.includes(fieldKey)) {
         categorized[category].push(field);
         found = true;
+        break;
       }
-    });
+    }
     
     // If the field doesn't belong to any category, put it in "other"
     if (!found) {
