@@ -56,12 +56,15 @@ export function ContextualEditToggle({
         [fieldName]: checked
       };
       
-      // Send PATCH request to update profile
-      await apiRequest(
-        "PATCH", // Ensure this is a string, not an object
-        apiEndpoint,
-        payload
-      );
+      // Send direct fetch request to avoid any type issues
+      await fetch(apiEndpoint, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(payload)
+      });
       
       // Invalidate profile query to refresh data
       queryClient.invalidateQueries({ queryKey: ["/api/auth/current-user"] });

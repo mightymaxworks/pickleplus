@@ -172,12 +172,17 @@ export function ContextualProfileDetailsTab({ user }: ContextualProfileDetailsTa
         {/* Equipment */}
         <div>
           <h3 className="text-lg font-semibold mb-3">Equipment</h3>
+          {/* Debug logging */}
+          <div className="text-xs text-muted-foreground mb-2">
+            Paddle Brand: {String(user.paddleBrand)}, Paddle Model: {String(user.paddleModel)}
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <ContextualEditField
               fieldName="paddleBrand"
               fieldLabel="Paddle Brand"
               initialValue={user.paddleBrand || null}
               placeholder="Enter your paddle brand"
+              apiEndpoint="/api/profile/update"
             />
             
             <ContextualEditField
@@ -185,6 +190,7 @@ export function ContextualProfileDetailsTab({ user }: ContextualProfileDetailsTa
               fieldLabel="Paddle Model"
               initialValue={user.paddleModel || null}
               placeholder="Enter your paddle model"
+              apiEndpoint="/api/profile/update"
             />
           </div>
         </div>
@@ -195,6 +201,10 @@ export function ContextualProfileDetailsTab({ user }: ContextualProfileDetailsTa
         <div>
           <h3 className="text-lg font-semibold mb-3">Additional Information</h3>
           <div className="space-y-4">
+            {/* Debug logging */}
+            <div className="text-xs text-muted-foreground mb-2">
+              Bio: {String(user.bio)}, Player Goals: {String(user.playerGoals)}
+            </div>
             <ContextualEditField
               fieldName="bio"
               fieldLabel="Bio"
@@ -202,6 +212,7 @@ export function ContextualProfileDetailsTab({ user }: ContextualProfileDetailsTa
               placeholder="Tell others about yourself"
               validator={bioValidator}
               className="mb-4"
+              apiEndpoint="/api/profile/update"
             />
             
             <ContextualEditField
@@ -211,14 +222,21 @@ export function ContextualProfileDetailsTab({ user }: ContextualProfileDetailsTa
               placeholder="Share your pickleball goals"
               validator={playerGoalsValidator}
               className="mb-4"
+              apiEndpoint="/api/profile/update"
             />
             
             <div className="space-y-3">
+              {/* Debug logging */}
+              <div className="text-xs text-muted-foreground mb-2">
+                Looking for Partners: {String(user.lookingForPartners)}, 
+                Mentorship Interest: {String(user.mentorshipInterest)}
+              </div>
               <ContextualEditToggle
                 fieldName="lookingForPartners"
                 fieldLabel="Looking for Partners"
                 description="Show others that you're open to finding new playing partners"
                 initialValue={!!user.lookingForPartners}
+                apiEndpoint="/api/profile/update"
               />
               
               <ContextualEditToggle
@@ -226,6 +244,7 @@ export function ContextualProfileDetailsTab({ user }: ContextualProfileDetailsTa
                 fieldLabel="Interested in Mentorship"
                 description="Indicate if you're interested in mentoring others or being mentored"
                 initialValue={!!user.mentorshipInterest}
+                apiEndpoint="/api/profile/update"
               />
             </div>
           </div>

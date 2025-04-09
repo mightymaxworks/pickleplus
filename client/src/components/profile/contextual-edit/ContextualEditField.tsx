@@ -86,12 +86,15 @@ export function ContextualEditField({
         [fieldName]: type === "number" ? parseFloat(value) : value
       };
       
-      // Send PATCH request to update profile
-      await apiRequest(
-        "PATCH",
-        apiEndpoint,
-        payload
-      );
+      // Send direct fetch request to avoid any type issues
+      await fetch(apiEndpoint, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(payload)
+      });
       
       // Invalidate profile query to refresh data
       queryClient.invalidateQueries({ queryKey: ["/api/auth/current-user"] });
