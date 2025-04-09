@@ -4,6 +4,27 @@ import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Privacy-related tables are defined in ./schema/privacy.ts
+// However, we're not importing them here to avoid circular dependencies
+/* 
+import {
+  userPrivacySettings,
+  privacyProfiles,
+  contactPreferences,
+  userPrivacySettingsRelations,
+  contactPreferencesRelations,
+  insertUserPrivacySettingSchema,
+  insertPrivacyProfileSchema,
+  insertContactPreferenceSchema,
+  UserPrivacySetting,
+  InsertUserPrivacySetting,
+  PrivacyProfile,
+  InsertPrivacyProfile,
+  ContactPreference,
+  InsertContactPreference
+} from "./schema/privacy"; 
+*/
+
 // User table
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -31,17 +52,55 @@ export const users = pgTable("users", {
   // rankingTier: varchar("ranking_tier", { length: 20 }).default("bronze"),
   // Note: consecutiveWins doesn't exist in the database
   // consecutiveWins: integer("consecutive_wins").default(0),
+  
+  // Basic profile fields
   playingSince: varchar("playing_since", { length: 50 }),
   skillLevel: varchar("skill_level", { length: 50 }),
+  
+  // Enhanced profile fields - Physical attributes
+  height: integer("height"), // in cm
+  reach: integer("reach"), // in cm
+  
+  // Equipment preferences
   preferredPosition: varchar("preferred_position", { length: 50 }),
   paddleBrand: varchar("paddle_brand", { length: 50 }),
   paddleModel: varchar("paddle_model", { length: 50 }),
+  backupPaddleBrand: varchar("backup_paddle_brand", { length: 50 }),
+  backupPaddleModel: varchar("backup_paddle_model", { length: 50 }),
+  otherEquipment: text("other_equipment"),
+  
+  // Playing style and preferences
   playingStyle: varchar("playing_style", { length: 50 }),
   shotStrengths: varchar("shot_strengths", { length: 100 }),
   preferredFormat: varchar("preferred_format", { length: 50 }),
   dominantHand: varchar("dominant_hand", { length: 20 }),
   regularSchedule: varchar("regular_schedule", { length: 255 }),
-  createdAt: timestamp("created_at").defaultNow()
+  
+  // Performance self-assessment (1-10 scale)
+  forehandStrength: integer("forehand_strength"),
+  backhandStrength: integer("backhand_strength"),
+  servePower: integer("serve_power"),
+  dinkAccuracy: integer("dink_accuracy"),
+  thirdShotConsistency: integer("third_shot_consistency"),
+  courtCoverage: integer("court_coverage"),
+  
+  // Match preferences
+  preferredSurface: varchar("preferred_surface", { length: 50 }),
+  indoorOutdoorPreference: varchar("indoor_outdoor_preference", { length: 20 }),
+  competitiveIntensity: integer("competitive_intensity"),
+  mentorshipInterest: boolean("mentorship_interest").default(false),
+  
+  // Location data
+  homeCourtLocations: text("home_court_locations"), // Comma-separated or JSON string
+  travelRadiusKm: integer("travel_radius_km"),
+  
+  // Privacy settings - Default visibility profiles
+  privacyProfile: varchar("privacy_profile", { length: 30 }).default("standard"),
+  
+  // System fields
+  createdAt: timestamp("created_at").defaultNow(),
+  lastUpdated: timestamp("last_updated").defaultNow()
+  
   // Note: avatarUrl doesn't exist in the database (remove references to it in code)
 });
 
@@ -485,6 +544,16 @@ export const insertUserBlockListSchema = createInsertSchema(userBlockList)
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 
+// Re-export privacy types from the schema/privacy.ts
+export {
+  UserPrivacySetting,
+  InsertUserPrivacySetting,
+  PrivacyProfile,
+  InsertPrivacyProfile,
+  ContactPreference,
+  InsertContactPreference
+};
+
 export type Tournament = typeof tournaments.$inferSelect;
 export type InsertTournament = z.infer<typeof insertTournamentSchema>;
 
@@ -565,11 +634,9 @@ export const matchFeedbackSchema = z.object({
   comments: z.string().optional()
 });
 
-// Export everything from the communication preferences schema
-export * from './schema/communication-preferences';
-
-// Export everything from the partner preferences schema
-export * from './schema/partner-preferences';
+// External schema modules
+import './schema/communication-preferences';
+import './schema/partner-preferences';
 
 // VALMAT - Match Validation System
 // Match validation table to track individual participants' validations

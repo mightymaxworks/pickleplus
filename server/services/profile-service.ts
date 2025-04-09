@@ -23,29 +23,51 @@ interface UserWithIndexSignature extends User {
 // Define the fields that contribute to profile completion
 // with their respective weights (total should be 100)
 const PROFILE_FIELDS: ProfileFields = {
-  // Basic fields (30%)
-  bio: { weight: 5, category: 'basic' },
-  location: { weight: 5, category: 'basic' },
-  skillLevel: { weight: 5, category: 'basic' },
-  playingSince: { weight: 5, category: 'basic' },
-  preferredFormat: { weight: 5, category: 'basic' },
-  dominantHand: { weight: 5, category: 'basic' },
+  // Basic fields (25%)
+  bio: { weight: 3, category: 'basic' },
+  location: { weight: 3, category: 'basic' },
+  skillLevel: { weight: 3, category: 'basic' },
+  playingSince: { weight: 3, category: 'basic' },
+  preferredFormat: { weight: 3, category: 'basic' },
+  dominantHand: { weight: 2, category: 'basic' },
+  yearOfBirth: { weight: 2, category: 'basic' },
+  height: { weight: 2, category: 'basic' },
+  reach: { weight: 2, category: 'basic' },
+  privateMessagePreference: { weight: 2, category: 'basic' },
   
-  // Pickleball-specific fields (40%)
-  preferredPosition: { weight: 5, category: 'pickleball' },
-  paddleBrand: { weight: 5, category: 'pickleball' },
-  paddleModel: { weight: 5, category: 'pickleball' },
-  playingStyle: { weight: 5, category: 'pickleball' },
-  shotStrengths: { weight: 5, category: 'pickleball' },
-  playerGoals: { weight: 5, category: 'pickleball' },
-  regularSchedule: { weight: 5, category: 'pickleball' },
-  lookingForPartners: { weight: 5, category: 'pickleball' },
+  // Equipment preferences (15%)
+  preferredPosition: { weight: 3, category: 'equipment' },
+  paddleBrand: { weight: 3, category: 'equipment' },
+  paddleModel: { weight: 3, category: 'equipment' },
+  backupPaddleBrand: { weight: 2, category: 'equipment' },
+  backupPaddleModel: { weight: 2, category: 'equipment' },
+  otherEquipment: { weight: 2, category: 'equipment' },
   
-  // Social/Community fields (20%)
-  coach: { weight: 5, category: 'social' },
-  clubs: { weight: 5, category: 'social' },
-  leagues: { weight: 5, category: 'social' },
-  socialHandles: { weight: 5, category: 'social' },
+  // Playing style and preferences (20%)
+  playingStyle: { weight: 3, category: 'playing' },
+  shotStrengths: { weight: 3, category: 'playing' },
+  regularSchedule: { weight: 3, category: 'playing' },
+  lookingForPartners: { weight: 3, category: 'playing' },
+  playerGoals: { weight: 3, category: 'playing' },
+  preferredSurface: { weight: 2, category: 'playing' },
+  indoorOutdoorPreference: { weight: 2, category: 'playing' },
+  competitiveIntensity: { weight: 1, category: 'playing' },
+  
+  // Performance self-assessment (15%)
+  forehandStrength: { weight: 2.5, category: 'performance' },
+  backhandStrength: { weight: 2.5, category: 'performance' },
+  servePower: { weight: 2.5, category: 'performance' },
+  dinkAccuracy: { weight: 2.5, category: 'performance' },
+  thirdShotConsistency: { weight: 2.5, category: 'performance' },
+  courtCoverage: { weight: 2.5, category: 'performance' },
+  
+  // Social/Community fields (15%)
+  coach: { weight: 3, category: 'social' },
+  clubs: { weight: 3, category: 'social' },
+  leagues: { weight: 3, category: 'social' },
+  socialHandles: { weight: 2, category: 'social' },
+  mentorshipInterest: { weight: 2, category: 'social' },
+  homeCourtLocations: { weight: 2, category: 'social' },
   
   // Health fields (10%)
   mobilityLimitations: { weight: 3, category: 'health' },
@@ -121,7 +143,7 @@ export class ProfileService implements IProfileService {
       .update(users)
       .set({
         ...profileData,
-        profileLastUpdated: new Date(),
+        lastUpdated: new Date(),
       })
       .where(eq(users.id, userId))
       .returning();
@@ -194,13 +216,17 @@ export class ProfileService implements IProfileService {
     const incompleteFields: string[] = [];
     const completedCategories: Record<string, number> = {
       basic: 0,
-      pickleball: 0,
+      equipment: 0,
+      playing: 0,
+      performance: 0,
       social: 0,
       health: 0
     };
     const categoryTotals: Record<string, number> = {
       basic: 0,
-      pickleball: 0,
+      equipment: 0,
+      playing: 0,
+      performance: 0,
       social: 0,
       health: 0
     };

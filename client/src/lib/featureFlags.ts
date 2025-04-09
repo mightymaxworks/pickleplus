@@ -9,7 +9,8 @@ export const Features = {
   PASSPORT_QR: 'passport_qr',
   QUICK_MATCH: 'quick_match',
   SOCIAL_CONNECTIONS: 'social_connections',
-  GUIDANCE_MASCOT: 'guidance_mascot_enabled'
+  GUIDANCE_MASCOT: 'guidance_mascot_enabled',
+  ENHANCED_PROFILE: 'enhanced_profile'
 };
 
 // Singapore launch date: April 12th, 2025, 22:00 Singapore Time (GMT+8)
@@ -28,6 +29,7 @@ const DEFAULT_STATE: FeatureState = {
   [Features.QUICK_MATCH]: false,
   [Features.SOCIAL_CONNECTIONS]: true, // Social connections enabled for testing
   [Features.GUIDANCE_MASCOT]: true, // Guidance mascot enabled by default
+  [Features.ENHANCED_PROFILE]: true, // Enable enhanced profile features
 };
 
 // Check if we've passed the launch date

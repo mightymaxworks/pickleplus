@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { useFeatureFlag, Features } from '@/lib/featureFlags';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -138,11 +139,26 @@ export default function EnhancedProfile() {
     return <Activity className="h-4 w-4" />;
   };
   
+  // Check if the enhanced profile feature is enabled
+  const showEnhancedProfile = useFeatureFlag(Features.ENHANCED_PROFILE);
+          
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-8">
       <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-          <h1 className="text-2xl font-bold mb-4 md:mb-0">My Profile</h1>
+          <div className="flex items-center gap-3 mb-4 md:mb-0">
+            <h1 className="text-2xl font-bold">My Profile</h1>
+            
+            {showEnhancedProfile && (
+              <Badge 
+                variant="outline" 
+                className="cursor-pointer hover:bg-primary/10 transition-colors"
+                onClick={() => navigate('/profile/enhanced')}
+              >
+                Try Enhanced Profile <ChevronRight className="h-3 w-3 ml-1" />
+              </Badge>
+            )}
+          </div>
           
           <TabsList className="bg-muted rounded-lg">
             <TabsTrigger value="profile" className="data-[state=active]:bg-background">

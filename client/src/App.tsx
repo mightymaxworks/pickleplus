@@ -13,6 +13,7 @@ import RecordMatchPage from './pages/record-match-page'
 import MatchesPage from './pages/matches-page'
 import MatchRewardDemo from './pages/match-reward-demo'
 import EnhancedProfile from './pages/EnhancedProfile'
+import EnhancedProfilePage from './pages/EnhancedProfilePage'
 import ProfileEdit from './pages/ProfileEdit'
 import NotFound from './pages/not-found'
 
@@ -83,6 +84,9 @@ export default function App() {
             </Route>
             <Route path="/profile">
               {(params) => <ProtectedRoute component={EnhancedProfile} path="/profile" />}
+            </Route>
+            <Route path="/profile/enhanced">
+              {(params) => <ProtectedRoute component={EnhancedProfilePage} path="/profile/enhanced" />}
             </Route>
             <Route path="/profile/edit">
               {(params) => <ProtectedRoute component={ProfileEdit} path="/profile/edit" />}
