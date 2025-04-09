@@ -1,6 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { Server } from "http";
-import { isAuthenticated, isAdmin } from "./auth";
+import { isAuthenticated, isAdmin, setupAuth } from "./auth";
 import { db } from "./db";
 import { eq, and, or, desc, sql } from "drizzle-orm";
 import { storage } from "./storage";
@@ -13,6 +13,9 @@ import {
 } from "@shared/schema";
 
 export async function registerRoutes(app: express.Express): Promise<Server> {
+  // Setup authentication
+  setupAuth(app);
+  
   // API Routes
   console.log("[API] Setting up API routes...");
   
