@@ -222,11 +222,22 @@ export const xpTransactions = pgTable("xp_transactions", {
   userId: integer("user_id").notNull().references(() => users.id),
   amount: integer("amount").notNull(),
   source: varchar("source", { length: 100 }).notNull(),
+  description: varchar("description", { length: 255 }),
   timestamp: timestamp("timestamp").defaultNow().notNull(),
   metadata: jsonb("metadata"),
   matchId: integer("match_id").references(() => matches.id),
   tournamentId: integer("tournament_id").references(() => tournaments.id),
   achievementId: integer("achievement_id").references(() => achievements.id),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Profile completion tracking table - Tracks which profile fields have been completed
+export const profileCompletionTracking = pgTable("profile_completion_tracking", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  fieldName: varchar("field_name", { length: 100 }).notNull(),
+  completedAt: timestamp("completed_at").defaultNow().notNull(),
+  xpAwarded: integer("xp_awarded").default(0),
   createdAt: timestamp("created_at").defaultNow()
 });
 
@@ -544,9 +555,14 @@ export const insertExternalAccountSchema = createInsertSchema(externalAccounts)
 export const insertUserBlockListSchema = createInsertSchema(userBlockList)
   .omit({ id: true, createdAt: true });
 
+export const insertProfileCompletionTrackingSchema = createInsertSchema(profileCompletionTracking)
+  .omit({ id: true, createdAt: true, completedAt: true });
+
 // Define TypeScript types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type ProfileCompletionTracking = typeof profileCompletionTracking.$inferSelect;
+export type InsertProfileCompletionTracking = z.infer<typeof insertProfileCompletionTrackingSchema>;
 
 // Re-export privacy types from the schema/privacy.ts
 export {

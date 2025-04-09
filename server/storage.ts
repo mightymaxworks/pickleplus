@@ -1,5 +1,7 @@
 import {
   users, type User, type InsertUser,
+  profileCompletionTracking, type ProfileCompletionTracking, type InsertProfileCompletionTracking,
+  xpTransactions, type XpTransaction, type InsertXpTransaction
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, ne, and, or, desc, asc, sql } from "drizzle-orm";
@@ -30,6 +32,14 @@ export interface IStorage {
     avatarUrl: string | null; 
     avatarInitials: string; 
   }[]>;
+  
+  // Profile Completion Tracking
+  getCompletedProfileFields(userId: number): Promise<ProfileCompletionTracking[]>;
+  recordProfileFieldCompletion(userId: number, fieldName: string, xpAwarded: number): Promise<ProfileCompletionTracking>;
+  checkProfileFieldCompletion(userId: number, fieldName: string): Promise<boolean>;
+  
+  // XP Transactions
+  createXpTransaction(transaction: Omit<InsertXpTransaction, 'timestamp'>): Promise<XpTransaction>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -353,8 +363,16 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  // Helper method to calculate profile completion percentage
-  private calculateProfileCompletion(user: User): number {
+  // Method to calculate profile completion percentage
+  calculateProfileCompletion(user: User | number): number {
+    // If a numeric ID is passed, get the user first
+    if (typeof user === 'number') {
+      const userId = user;
+      return this.getUser(userId).then(userObj => {
+        if (!userObj) return 0;
+        return this.calculateProfileCompletion(userObj);
+      }) as unknown as number;
+    }
     if (!user) return 0;
     
     // Define the fields that contribute to profile completion with their weights
@@ -646,6 +664,117 @@ export class DatabaseStorage implements IStorage {
     } catch (outerError) {
       console.error("Outer error in searchUsers:", outerError);
       return []; // Empty array as last resort
+    }
+  }
+
+  // Profile Completion Tracking methods
+  async getCompletedProfileFields(userId: number): Promise<ProfileCompletionTracking[]> {
+    try {
+      // Validate userId
+      const numericId = Number(userId);
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] getCompletedProfileFields called with invalid ID: ${userId}`);
+        return [];
+      }
+
+      // Get all completed profile fields for this user
+      const completedFields = await db.select()
+        .from(profileCompletionTracking)
+        .where(eq(profileCompletionTracking.userId, numericId));
+      
+      return completedFields;
+    } catch (error) {
+      console.error('[Storage] getCompletedProfileFields error:', error);
+      return [];
+    }
+  }
+
+  async recordProfileFieldCompletion(userId: number, fieldName: string, xpAwarded: number): Promise<ProfileCompletionTracking> {
+    try {
+      // Validate params
+      const numericId = Number(userId);
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] recordProfileFieldCompletion called with invalid ID: ${userId}`);
+        throw new Error('Invalid user ID');
+      }
+
+      if (!fieldName || typeof fieldName !== 'string') {
+        console.log(`[Storage] recordProfileFieldCompletion called with invalid fieldName: ${fieldName}`);
+        throw new Error('Invalid field name');
+      }
+
+      const numericXp = Number(xpAwarded);
+      if (isNaN(numericXp) || !Number.isFinite(numericXp) || numericXp < 0) {
+        console.log(`[Storage] recordProfileFieldCompletion called with invalid XP amount: ${xpAwarded}`);
+        throw new Error('Invalid XP amount');
+      }
+
+      // Record the completion in the database
+      const [record] = await db.insert(profileCompletionTracking)
+        .values({
+          userId: numericId,
+          fieldName: fieldName,
+          xpAwarded: numericXp
+        })
+        .returning();
+
+      return record;
+    } catch (error) {
+      console.error('[Storage] recordProfileFieldCompletion error:', error);
+      throw error;
+    }
+  }
+
+  async checkProfileFieldCompletion(userId: number, fieldName: string): Promise<boolean> {
+    try {
+      // Validate params
+      const numericId = Number(userId);
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] checkProfileFieldCompletion called with invalid ID: ${userId}`);
+        return false;
+      }
+
+      if (!fieldName || typeof fieldName !== 'string') {
+        console.log(`[Storage] checkProfileFieldCompletion called with invalid fieldName: ${fieldName}`);
+        return false;
+      }
+
+      // Check if there's a record for this field
+      const existingRecord = await db.select()
+        .from(profileCompletionTracking)
+        .where(
+          and(
+            eq(profileCompletionTracking.userId, numericId),
+            eq(profileCompletionTracking.fieldName, fieldName)
+          )
+        )
+        .limit(1);
+
+      // Return true if a record exists, false otherwise
+      return existingRecord.length > 0;
+    } catch (error) {
+      console.error('[Storage] checkProfileFieldCompletion error:', error);
+      return false;
+    }
+  }
+
+  // XP Transaction methods
+  async createXpTransaction(transaction: Omit<InsertXpTransaction, 'timestamp'>): Promise<XpTransaction> {
+    try {
+      if (!transaction.userId || !transaction.amount || !transaction.source) {
+        console.log(`[Storage] createXpTransaction called with invalid transaction:`, transaction);
+        throw new Error('Invalid XP transaction data');
+      }
+
+      // Create the transaction record
+      const [record] = await db.insert(xpTransactions)
+        .values(transaction)
+        .returning();
+
+      return record;
+    } catch (error) {
+      console.error('[Storage] createXpTransaction error:', error);
+      throw error;
     }
   }
 }

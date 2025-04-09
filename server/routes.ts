@@ -147,7 +147,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     const percentage = await storage.calculateProfileCompletion(req.user.id);
-    const completedFields = await storage.getCompletedProfileFields(req.user.id);
+    const completedFieldsRecords = await storage.getCompletedProfileFields(req.user.id);
+    
+    // Extract just the field names from the records
+    const completedFields = completedFieldsRecords.map(record => record.fieldName);
     
     // Field name mapping for more user-friendly display
     const fieldNameMapping: Record<string, string> = {
@@ -192,6 +195,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
       xpEarned: 0, // Will be calculated in a future implementation
       potentialXp: 250 // Total possible XP for completing profile
     });
+  });
+  
+  // Route to track profile field completion and award XP
+  app.post("/api/profile/field-completion", isAuthenticated, async (req: Request, res: Response) => {
+    if (!req.user) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    const { fieldName, fieldType } = req.body;
+    
+    if (!fieldName || !fieldType) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+    
+    try {
+      // Check if this field has already been completed
+      const alreadyCompleted = await storage.checkProfileFieldCompletion(req.user.id, fieldName);
+      
+      if (alreadyCompleted) {
+        return res.status(200).json({ 
+          success: true, 
+          message: "Field already completed", 
+          alreadyAwarded: true,
+          xpAwarded: 0
+        });
+      }
+      
+      // Determine XP amount based on field type according to specification PKL-278651-XPPS-0001
+      let xpAmount = 5; // Default for basic fields
+      
+      switch (fieldType) {
+        case 'basic':
+          xpAmount = 5;
+          break;
+        case 'equipment':
+          xpAmount = 10;
+          break;
+        case 'playing-attribute':
+          xpAmount = 15;
+          break;
+        case 'skill-assessment':
+          xpAmount = 20;
+          break;
+        case 'profile-media':
+          xpAmount = 25;
+          break;
+        default:
+          xpAmount = 5;
+      }
+      
+      // Record the field completion
+      await storage.recordProfileFieldCompletion(req.user.id, fieldName, xpAmount);
+      
+      // Award XP to the user
+      const updatedUser = await storage.updateUserXP(req.user.id, xpAmount);
+      
+      // Create XP transaction record
+      await storage.createXpTransaction({
+        userId: req.user.id,
+        amount: xpAmount,
+        source: 'profile-completion',
+        metadata: { 
+          fieldName, 
+          fieldType,
+          description: `Completed profile field: ${fieldName}`
+        }
+      });
+      
+      return res.status(200).json({
+        success: true,
+        message: "XP awarded for field completion",
+        alreadyAwarded: false,
+        xpAwarded: xpAmount,
+        newXp: updatedUser?.xp || 0,
+        newLevel: updatedUser?.level || 1
+      });
+    } catch (error) {
+      console.error('[API] Error in field-completion route:', error);
+      return res.status(500).json({ error: "Failed to process field completion" });
+    }
   });
   
   app.patch("/api/profile/update", isAuthenticated, async (req: Request, res: Response) => {

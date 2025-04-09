@@ -84,6 +84,7 @@ export function ContextualProfileDetailsTab({ user }: ContextualProfileDetailsTa
               fieldLabel="Display Name"
               initialValue={user.displayName || null}
               placeholder="Enter your display name"
+              fieldType="basic"
             />
             
             <ContextualEditField
@@ -91,6 +92,7 @@ export function ContextualProfileDetailsTab({ user }: ContextualProfileDetailsTa
               fieldLabel="Location"
               initialValue={user.location || null}
               placeholder="Enter your location"
+              fieldType="basic"
             />
             
             <ContextualEditSelect
@@ -106,6 +108,7 @@ export function ContextualProfileDetailsTab({ user }: ContextualProfileDetailsTa
               fieldLabel="Playing Since"
               initialValue={user.playingSince || null}
               placeholder="Enter year started playing"
+              fieldType="basic"
             />
           </div>
         </div>
@@ -123,6 +126,7 @@ export function ContextualProfileDetailsTab({ user }: ContextualProfileDetailsTa
               type="number"
               placeholder="Enter your height in cm"
               validator={heightValidator}
+              fieldType="basic"
             />
             
             <ContextualEditField
@@ -132,6 +136,7 @@ export function ContextualProfileDetailsTab({ user }: ContextualProfileDetailsTa
               type="number"
               placeholder="Enter your reach in cm"
               validator={reachValidator}
+              fieldType="basic"
             />
             
             <ContextualEditField
@@ -141,6 +146,7 @@ export function ContextualProfileDetailsTab({ user }: ContextualProfileDetailsTa
               type="number"
               placeholder="Enter your birth year"
               validator={yearOfBirthValidator}
+              fieldType="basic"
             />
           </div>
         </div>
@@ -183,6 +189,7 @@ export function ContextualProfileDetailsTab({ user }: ContextualProfileDetailsTa
               initialValue={user.paddleBrand || null}
               placeholder="Enter your paddle brand"
               apiEndpoint="/api/profile/update"
+              fieldType="equipment"
             />
             
             <ContextualEditField
@@ -191,6 +198,7 @@ export function ContextualProfileDetailsTab({ user }: ContextualProfileDetailsTa
               initialValue={user.paddleModel || null}
               placeholder="Enter your paddle model"
               apiEndpoint="/api/profile/update"
+              fieldType="equipment"
             />
           </div>
         </div>
@@ -213,6 +221,7 @@ export function ContextualProfileDetailsTab({ user }: ContextualProfileDetailsTa
               validator={bioValidator}
               className="mb-4"
               apiEndpoint="/api/profile/update"
+              fieldType="profile-media"
             />
             
             <ContextualEditField
@@ -223,6 +232,7 @@ export function ContextualProfileDetailsTab({ user }: ContextualProfileDetailsTa
               validator={playerGoalsValidator}
               className="mb-4"
               apiEndpoint="/api/profile/update"
+              fieldType="playing-attribute"
             />
             
             <div className="space-y-3">
@@ -237,6 +247,7 @@ export function ContextualProfileDetailsTab({ user }: ContextualProfileDetailsTa
                 description="Show others that you're open to finding new playing partners"
                 initialValue={!!user.lookingForPartners}
                 apiEndpoint="/api/profile/update"
+                fieldType="playing-attribute"
               />
               
               <ContextualEditToggle
@@ -245,6 +256,7 @@ export function ContextualProfileDetailsTab({ user }: ContextualProfileDetailsTa
                 description="Indicate if you're interested in mentoring others or being mentored"
                 initialValue={!!user.mentorshipInterest}
                 apiEndpoint="/api/profile/update"
+                fieldType="playing-attribute"
               />
             </div>
           </div>

@@ -1,16 +1,20 @@
 /**
  * PKL-278651-CPEM-0001: Contextual Profile Editing Mode
+ * PKL-278651-XPPS-0001: Profile Completion XP Reward System Integration
  * 
  * This component provides contextual inline editing capabilities for profile fields.
- * It builds upon our existing ProfileInlineEdit component but integrates with the
+ * It builds upon our existing ProfileInlineEdit component and integrates with the
  * ProfileEditContext to support the contextual editing approach.
+ * 
+ * Additionally, it now tracks field completion for XP rewards based on the profile
+ * completion specification.
  */
 
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Pencil, Check, X } from 'lucide-react';
+import { Pencil, Check, X, Trophy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { queryClient } from '@/lib/queryClient';
@@ -27,6 +31,7 @@ interface ContextualEditFieldProps {
   validator?: z.ZodType<any, any>;
   className?: string;
   apiEndpoint?: string;
+  fieldType?: 'basic' | 'equipment' | 'playing-attribute' | 'skill-assessment' | 'profile-media';
 }
 
 export function ContextualEditField({
@@ -38,13 +43,16 @@ export function ContextualEditField({
   placeholder,
   validator,
   className = '',
-  apiEndpoint = '/api/profile/update'
+  apiEndpoint = '/api/profile/update',
+  fieldType = 'basic'
 }: ContextualEditFieldProps) {
   const { isEditMode, setHasUnsavedChanges } = useProfileEdit();
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState(initialValue !== null ? String(initialValue) : '');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showXpAward, setShowXpAward] = useState(false);
+  const [xpAwarded, setXpAwarded] = useState<number | null>(null);
   const { toast } = useToast();
 
   // Reset the value when initialValue changes (e.g. after a successful save)
@@ -96,6 +104,44 @@ export function ContextualEditField({
         body: JSON.stringify(payload)
       });
       
+      // Check if a value was provided and track field completion for XP
+      if (value && initialValue === null) {
+        try {
+          // Call the field completion API to track and reward XP
+          const response = await fetch('/api/profile/field-completion', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              fieldName,
+              fieldType
+            })
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            
+            // Only show XP toast if XP was awarded (not already awarded before)
+            if (result.success && !result.alreadyAwarded && result.xpAwarded > 0) {
+              setXpAwarded(result.xpAwarded);
+              setShowXpAward(true);
+              
+              // Show XP award toast
+              toast({
+                title: `+${result.xpAwarded} XP Earned!`,
+                description: `You earned XP for completing your ${fieldLabel.toLowerCase()}.`,
+                variant: "default",
+                className: "xp-toast bg-yellow-50 border-yellow-200"
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error tracking field completion:', error);
+        }
+      }
+      
       // Invalidate profile query to refresh data
       queryClient.invalidateQueries({ queryKey: ["/api/auth/current-user"] });
       
@@ -129,6 +175,17 @@ export function ContextualEditField({
     setValue(newValue);
     setHasUnsavedChanges(true);
   };
+
+  // UseEffect to hide XP award after a delay
+  useEffect(() => {
+    if (showXpAward) {
+      const timer = setTimeout(() => {
+        setShowXpAward(false);
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [showXpAward]);
 
   return (
     <div className={`group relative ${className}`}>
@@ -177,17 +234,25 @@ export function ContextualEditField({
               {initialValue || <span className="text-muted-foreground">Not specified</span>}
             </div>
           </div>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEdit();
-            }}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center">
+            {showXpAward && xpAwarded && (
+              <div className="flex items-center mr-2 animate-bounce">
+                <Trophy className="h-4 w-4 text-yellow-500 mr-1" />
+                <span className="text-xs font-semibold text-yellow-500">+{xpAwarded} XP</span>
+              </div>
+            )}
+            <Button
+              size="icon"
+              variant="ghost"
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEdit();
+              }}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       )}
     </div>
