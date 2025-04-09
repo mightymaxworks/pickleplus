@@ -522,7 +522,7 @@ const StreamlinedProfilePage: FC = () => {
                 ) : (
                   <div className={`w-full h-full ${
                     bannerPatternField && bannerPatternField !== 'none'
-                      ? `bg-pattern-${bannerPatternField}` 
+                      ? `banner-pattern-${bannerPatternField}` 
                       : "bg-gradient-to-r from-primary/80 via-primary/60 to-primary/40"
                   }`}></div>
                 )}
@@ -632,7 +632,7 @@ const StreamlinedProfilePage: FC = () => {
             />
           ) : (
             user.bannerPattern && user.bannerPattern !== 'none' ? (
-              <div className={`absolute inset-0 w-full h-full bg-pattern-${user.bannerPattern}`}></div>
+              <div className={`absolute inset-0 w-full h-full banner-pattern-${user.bannerPattern}`}></div>
             ) : null
           )}
           
