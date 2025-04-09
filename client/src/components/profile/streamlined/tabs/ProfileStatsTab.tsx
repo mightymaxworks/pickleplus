@@ -29,6 +29,7 @@ import {
 } from 'recharts';
 import { useToast } from '@/hooks/use-toast';
 import { queryClient } from '@/lib/queryClient';
+import { ExternalRatingsSection } from '@/components/profile/ExternalRatingsSection';
 
 interface ProfileStatsTabProps {
   user: any;
@@ -441,6 +442,19 @@ const ProfileStatsTab: FC<ProfileStatsTabProps> = ({ user, isEditMode }) => {
                 <span>Pro</span>
               </div>
             </div>
+            
+            {/* External Ratings Section */}
+            <ExternalRatingsSection 
+              user={user} 
+              isEditMode={isEditMode}
+              onSaveSuccess={() => {
+                queryClient.invalidateQueries({ queryKey: ['/api/auth/current-user'] });
+                toast({
+                  title: 'External ratings updated',
+                  description: 'Your external ratings have been updated successfully.'
+                });
+              }}
+            />
             
             <div className="text-sm text-muted-foreground">
               Self-assessed skill level following the International Pickleball Rating System.
