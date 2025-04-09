@@ -22,7 +22,7 @@ interface UserWithIndexSignature extends User {
 
 // Define the fields that contribute to profile completion
 // with their respective weights (total should be 100)
-const PROFILE_FIELDS: ProfileFields = {
+export const PROFILE_FIELDS: ProfileFields = {
   // Basic fields (25%)
   bio: { weight: 3, category: 'basic' },
   location: { weight: 3, category: 'basic' },

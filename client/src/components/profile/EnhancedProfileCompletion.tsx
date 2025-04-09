@@ -206,21 +206,38 @@ export function EnhancedProfileCompletion({ user, refreshTrigger = 0 }: { user: 
   const [previousPercentage, setPreviousPercentage] = useState(0);
   
   // Query to fetch detailed profile completion data
-  const { data: completionData, isLoading } = useQuery({
+  const { data: completionData, isLoading, error } = useQuery({
     queryKey: ["/api/profile/completion", refreshTrigger],
     queryFn: async () => {
-      const response = await fetch("/api/profile/completion", {
-        credentials: "include"
-      });
-      
-      if (!response.ok) {
-        throw new Error("Failed to fetch profile completion data");
+      console.log("Fetching profile completion data...");
+      try {
+        const response = await fetch("/api/profile/completion", {
+          credentials: "include"
+        });
+        
+        console.log("Profile completion response status:", response.status);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch profile completion data: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log("Profile completion data:", data);
+        return data;
+      } catch (err) {
+        console.error("Error fetching profile completion:", err);
+        throw err;
       }
-      
-      return response.json();
     },
     refetchOnWindowFocus: false
   });
+  
+  // Log any errors
+  useEffect(() => {
+    if (error) {
+      console.error("Profile completion query error:", error);
+    }
+  }, [error]);
   
   // Extract data from the completion endpoint response
   const { 

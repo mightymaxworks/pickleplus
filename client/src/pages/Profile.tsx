@@ -360,6 +360,18 @@ export default function Profile() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-6 col-span-2 md:col-span-1">
               <PersonalInformationCard user={user} />
+              {/* Debug output */}
+              <Card className="mb-4 border-red-500 border-2">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">DEBUG: Enhanced Profile Completion</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p>User object available: {user ? 'Yes' : 'No'}</p>
+                  <p>Profile completion: {user?.profileCompletionPct}%</p>
+                  <p>Is the component imported: Yes</p>
+                </CardContent>
+              </Card>
+              
               <EnhancedProfileCompletion 
                 user={user}
               />
