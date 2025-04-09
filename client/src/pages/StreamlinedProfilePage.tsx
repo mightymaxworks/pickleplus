@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
 import { queryClient } from '@/lib/queryClient';
 import { EnhancedUser } from '@/types/enhanced-user';
 import {
@@ -43,6 +44,9 @@ const StreamlinedProfilePage: FC = () => {
   const [bioField, setBioField] = useState('');
   const [playingStyleField, setPlayingStyleField] = useState('');
   const [playingSinceField, setPlayingSinceField] = useState('');
+  const [heightField, setHeightField] = useState('');
+  const [reachField, setReachField] = useState('');
+  const [preferredPositionField, setPreferredPositionField] = useState('');
   
   // Equipment tab fields
   const [paddleBrandField, setPaddleBrandField] = useState('');
@@ -56,6 +60,15 @@ const StreamlinedProfilePage: FC = () => {
   const [dominantHandField, setDominantHandField] = useState('');
   const [lookingForPartnersField, setLookingForPartnersField] = useState(false);
   const [mentorshipInterestField, setMentorshipInterestField] = useState(false);
+  
+  // Stats & Ratings tab fields
+  const [skillLevelField, setSkillLevelField] = useState('');
+  const [forehandStrengthField, setForehandStrengthField] = useState<number>(0);
+  const [backhandStrengthField, setBackhandStrengthField] = useState<number>(0);
+  const [servePowerField, setServePowerField] = useState<number>(0);
+  const [dinkAccuracyField, setDinkAccuracyField] = useState<number>(0); 
+  const [thirdShotConsistencyField, setThirdShotConsistencyField] = useState<number>(0);
+  const [courtCoverageField, setCourtCoverageField] = useState<number>(0);
 
   // Define dropdown options
   const playingStyleOptions = [
@@ -89,6 +102,24 @@ const StreamlinedProfilePage: FC = () => {
     { value: 'right', label: 'Right-Handed' },
     { value: 'left', label: 'Left-Handed' },
     { value: 'ambidextrous', label: 'Ambidextrous' },
+  ];
+  
+  const positionOptions = [
+    { value: 'forehand', label: 'Forehand' },
+    { value: 'backhand', label: 'Backhand' },
+    { value: 'both', label: 'Both Sides' },
+  ];
+  
+  const skillLevelOptions = [
+    { value: '2.0', label: '2.0' },
+    { value: '2.5', label: '2.5' },
+    { value: '3.0', label: '3.0' },
+    { value: '3.5', label: '3.5' },
+    { value: '4.0', label: '4.0' },
+    { value: '4.5', label: '4.5' },
+    { value: '5.0', label: '5.0' },
+    { value: '5.5', label: '5.5' },
+    { value: '6.0', label: '6.0+ (Pro)' },
   ];
   
   // Function to handle saving profile updates
@@ -141,6 +172,9 @@ const StreamlinedProfilePage: FC = () => {
       setBioField(user.bio || '');
       setPlayingStyleField(user.playingStyle || '');
       setPlayingSinceField(user.playingSince || '');
+      setHeightField(user.height?.toString() || '');
+      setReachField(user.reach?.toString() || '');
+      setPreferredPositionField(user.preferredPosition || '');
       
       // Equipment tab fields
       setPaddleBrandField(user.paddleBrand || '');
@@ -154,6 +188,15 @@ const StreamlinedProfilePage: FC = () => {
       setDominantHandField(user.dominantHand || '');
       setLookingForPartnersField(user.lookingForPartners || false);
       setMentorshipInterestField(user.mentorshipInterest || false);
+      
+      // Stats & Ratings tab fields
+      setSkillLevelField(user.skillLevel || '');
+      setForehandStrengthField(user.forehandStrength || 0);
+      setBackhandStrengthField(user.backhandStrength || 0);
+      setServePowerField(user.servePower || 0);
+      setDinkAccuracyField(user.dinkAccuracy || 0);
+      setThirdShotConsistencyField(user.thirdShotConsistency || 0);
+      setCourtCoverageField(user.courtCoverage || 0);
     }
   }, [user]);
 
@@ -511,6 +554,161 @@ const StreamlinedProfilePage: FC = () => {
                     </div>
                   )}
                 </div>
+                
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold mb-4">Physical Attributes</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {/* Height */}
+                    <div>
+                      <h4 className="text-sm font-medium text-muted-foreground mb-2">Height (cm)</h4>
+                      {isEditMode && editingFields.height ? (
+                        <div className="space-y-2">
+                          <Input 
+                            type="number"
+                            value={heightField}
+                            onChange={(e) => setHeightField(e.target.value)}
+                            placeholder="Your height in cm"
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => {
+                                setHeightField(user.height?.toString() || '');
+                                setEditingFields(prev => ({ ...prev, height: false }));
+                              }}
+                            >
+                              <X className="h-4 w-4 mr-1" /> Cancel
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              onClick={() => saveProfileField('height', heightField)}
+                            >
+                              <Check className="h-4 w-4 mr-1" /> Save
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div 
+                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                          onClick={() => {
+                            if (isEditMode) {
+                              setEditingFields(prev => ({ ...prev, height: true }));
+                            }
+                          }}
+                        >
+                          <p>{user.height || 'Not specified'}</p>
+                          {isEditMode && (
+                            <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Reach */}
+                    <div>
+                      <h4 className="text-sm font-medium text-muted-foreground mb-2">Reach (cm)</h4>
+                      {isEditMode && editingFields.reach ? (
+                        <div className="space-y-2">
+                          <Input 
+                            type="number"
+                            value={reachField}
+                            onChange={(e) => setReachField(e.target.value)}
+                            placeholder="Your arm reach in cm"
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => {
+                                setReachField(user.reach?.toString() || '');
+                                setEditingFields(prev => ({ ...prev, reach: false }));
+                              }}
+                            >
+                              <X className="h-4 w-4 mr-1" /> Cancel
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              onClick={() => saveProfileField('reach', reachField)}
+                            >
+                              <Check className="h-4 w-4 mr-1" /> Save
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div 
+                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                          onClick={() => {
+                            if (isEditMode) {
+                              setEditingFields(prev => ({ ...prev, reach: true }));
+                            }
+                          }}
+                        >
+                          <p>{user.reach || 'Not specified'}</p>
+                          {isEditMode && (
+                            <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Preferred Position */}
+                    <div>
+                      <h4 className="text-sm font-medium text-muted-foreground mb-2">Preferred Position</h4>
+                      {isEditMode && editingFields.preferredPosition ? (
+                        <div className="space-y-2">
+                          <Select 
+                            value={preferredPositionField} 
+                            onValueChange={(value) => setPreferredPositionField(value)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select your preferred court position" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {positionOptions.map(option => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => {
+                                setPreferredPositionField(user.preferredPosition || '');
+                                setEditingFields(prev => ({ ...prev, preferredPosition: false }));
+                              }}
+                            >
+                              <X className="h-4 w-4 mr-1" /> Cancel
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              onClick={() => saveProfileField('preferredPosition', preferredPositionField)}
+                            >
+                              <Check className="h-4 w-4 mr-1" /> Save
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div 
+                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                          onClick={() => {
+                            if (isEditMode) {
+                              setEditingFields(prev => ({ ...prev, preferredPosition: true }));
+                            }
+                          }}
+                        >
+                          <p>{user.preferredPosition || 'Not specified'}</p>
+                          {isEditMode && (
+                            <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </Card>
           </TabsContent>
@@ -518,11 +716,14 @@ const StreamlinedProfilePage: FC = () => {
           <TabsContent value="stats" className="mt-0">
             <Card className="p-6">
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Player Statistics</h3>
-                <p className="text-muted-foreground">
-                  Detailed statistics about your performance will appear here.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Player Statistics</h3>
+                  {isEditMode && (
+                    <p className="text-xs text-muted-foreground">Click on any field to edit</p>
+                  )}
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <h4 className="text-sm font-medium mb-2">CourtIQ™ Rating</h4>
                     <div className="text-3xl font-bold">{user.rankingPoints || 0}</div>
@@ -530,6 +731,420 @@ const StreamlinedProfilePage: FC = () => {
                   <div>
                     <h4 className="text-sm font-medium mb-2">Win Rate</h4>
                     <div className="text-3xl font-bold">{user.totalMatches && user.matchesWon ? Math.round((user.matchesWon / user.totalMatches) * 100) : 0}%</div>
+                  </div>
+                </div>
+                
+                <div className="mt-8">
+                  <h3 className="text-lg font-semibold mb-4">Performance Metrics</h3>
+                  <div className="space-y-6">
+                    {/* Skill Level */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-medium text-muted-foreground">Skill Level</h4>
+                        <Badge>{user.skillLevel || 'Not set'}</Badge>
+                      </div>
+                      
+                      {isEditMode && editingFields.skillLevel ? (
+                        <div className="space-y-2">
+                          <Select 
+                            value={skillLevelField} 
+                            onValueChange={(value) => setSkillLevelField(value)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select your skill level" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {skillLevelOptions.map(option => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => {
+                                setSkillLevelField(user.skillLevel || '');
+                                setEditingFields(prev => ({ ...prev, skillLevel: false }));
+                              }}
+                            >
+                              <X className="h-4 w-4 mr-1" /> Cancel
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              onClick={() => saveProfileField('skillLevel', skillLevelField)}
+                            >
+                              <Check className="h-4 w-4 mr-1" /> Save
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div 
+                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                          onClick={() => {
+                            if (isEditMode) {
+                              setEditingFields(prev => ({ ...prev, skillLevel: true }));
+                            }
+                          }}
+                        >
+                          <Progress value={user.skillLevel ? (parseFloat(user.skillLevel) / 7) * 100 : 0} className="h-2" />
+                          {isEditMode && (
+                            <Edit2 className="h-4 w-4 absolute top-0 right-2 text-muted-foreground" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Forehand Strength */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-medium text-muted-foreground">Forehand Strength</h4>
+                      </div>
+                      
+                      {isEditMode && editingFields.forehandStrength ? (
+                        <div className="space-y-2">
+                          <Slider
+                            value={[forehandStrengthField || 0]}
+                            min={0}
+                            max={10}
+                            step={1}
+                            onValueChange={(values) => setForehandStrengthField(values[0])}
+                          />
+                          <div className="text-center text-sm text-muted-foreground">
+                            {forehandStrengthField || 0}/10
+                          </div>
+                          
+                          <div className="flex justify-end gap-2 mt-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => {
+                                setForehandStrengthField(user.forehandStrength || 0);
+                                setEditingFields(prev => ({ ...prev, forehandStrength: false }));
+                              }}
+                            >
+                              <X className="h-4 w-4 mr-1" /> Cancel
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              onClick={() => saveProfileField('forehandStrength', forehandStrengthField.toString())}
+                            >
+                              <Check className="h-4 w-4 mr-1" /> Save
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div 
+                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                          onClick={() => {
+                            if (isEditMode) {
+                              setEditingFields(prev => ({ ...prev, forehandStrength: true }));
+                            }
+                          }}
+                        >
+                          <Progress value={user.forehandStrength ? (user.forehandStrength / 10) * 100 : 0} className="h-2" />
+                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                            <span>Rating: {user.forehandStrength || 'Not rated'}/10</span>
+                          </div>
+                          {isEditMode && (
+                            <Edit2 className="h-4 w-4 absolute top-0 right-2 text-muted-foreground" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Backhand Strength */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-medium text-muted-foreground">Backhand Strength</h4>
+                      </div>
+                      
+                      {isEditMode && editingFields.backhandStrength ? (
+                        <div className="space-y-2">
+                          <Slider
+                            value={[backhandStrengthField || 0]}
+                            min={0}
+                            max={10}
+                            step={1}
+                            onValueChange={(values) => setBackhandStrengthField(values[0])}
+                          />
+                          <div className="text-center text-sm text-muted-foreground">
+                            {backhandStrengthField || 0}/10
+                          </div>
+                          
+                          <div className="flex justify-end gap-2 mt-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => {
+                                setBackhandStrengthField(user.backhandStrength || 0);
+                                setEditingFields(prev => ({ ...prev, backhandStrength: false }));
+                              }}
+                            >
+                              <X className="h-4 w-4 mr-1" /> Cancel
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              onClick={() => saveProfileField('backhandStrength', backhandStrengthField.toString())}
+                            >
+                              <Check className="h-4 w-4 mr-1" /> Save
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div 
+                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                          onClick={() => {
+                            if (isEditMode) {
+                              setEditingFields(prev => ({ ...prev, backhandStrength: true }));
+                            }
+                          }}
+                        >
+                          <Progress value={user.backhandStrength ? (user.backhandStrength / 10) * 100 : 0} className="h-2" />
+                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                            <span>Rating: {user.backhandStrength || 'Not rated'}/10</span>
+                          </div>
+                          {isEditMode && (
+                            <Edit2 className="h-4 w-4 absolute top-0 right-2 text-muted-foreground" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Serve Power */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-medium text-muted-foreground">Serve Power</h4>
+                      </div>
+                      
+                      {isEditMode && editingFields.servePower ? (
+                        <div className="space-y-2">
+                          <Slider
+                            value={[servePowerField || 0]}
+                            min={0}
+                            max={10}
+                            step={1}
+                            onValueChange={(values) => setServePowerField(values[0])}
+                          />
+                          <div className="text-center text-sm text-muted-foreground">
+                            {servePowerField || 0}/10
+                          </div>
+                          
+                          <div className="flex justify-end gap-2 mt-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => {
+                                setServePowerField(user.servePower || 0);
+                                setEditingFields(prev => ({ ...prev, servePower: false }));
+                              }}
+                            >
+                              <X className="h-4 w-4 mr-1" /> Cancel
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              onClick={() => saveProfileField('servePower', servePowerField.toString())}
+                            >
+                              <Check className="h-4 w-4 mr-1" /> Save
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div 
+                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                          onClick={() => {
+                            if (isEditMode) {
+                              setEditingFields(prev => ({ ...prev, servePower: true }));
+                            }
+                          }}
+                        >
+                          <Progress value={user.servePower ? (user.servePower / 10) * 100 : 0} className="h-2" />
+                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                            <span>Rating: {user.servePower || 'Not rated'}/10</span>
+                          </div>
+                          {isEditMode && (
+                            <Edit2 className="h-4 w-4 absolute top-0 right-2 text-muted-foreground" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Dink Accuracy */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-medium text-muted-foreground">Dink Accuracy</h4>
+                      </div>
+                      
+                      {isEditMode && editingFields.dinkAccuracy ? (
+                        <div className="space-y-2">
+                          <Slider
+                            value={[dinkAccuracyField || 0]}
+                            min={0}
+                            max={10}
+                            step={1}
+                            onValueChange={(values) => setDinkAccuracyField(values[0])}
+                          />
+                          <div className="text-center text-sm text-muted-foreground">
+                            {dinkAccuracyField || 0}/10
+                          </div>
+                          
+                          <div className="flex justify-end gap-2 mt-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => {
+                                setDinkAccuracyField(user.dinkAccuracy || 0);
+                                setEditingFields(prev => ({ ...prev, dinkAccuracy: false }));
+                              }}
+                            >
+                              <X className="h-4 w-4 mr-1" /> Cancel
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              onClick={() => saveProfileField('dinkAccuracy', dinkAccuracyField.toString())}
+                            >
+                              <Check className="h-4 w-4 mr-1" /> Save
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div 
+                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                          onClick={() => {
+                            if (isEditMode) {
+                              setEditingFields(prev => ({ ...prev, dinkAccuracy: true }));
+                            }
+                          }}
+                        >
+                          <Progress value={user.dinkAccuracy ? (user.dinkAccuracy / 10) * 100 : 0} className="h-2" />
+                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                            <span>Rating: {user.dinkAccuracy || 'Not rated'}/10</span>
+                          </div>
+                          {isEditMode && (
+                            <Edit2 className="h-4 w-4 absolute top-0 right-2 text-muted-foreground" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Third Shot Consistency */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-medium text-muted-foreground">Third Shot Consistency</h4>
+                      </div>
+                      
+                      {isEditMode && editingFields.thirdShotConsistency ? (
+                        <div className="space-y-2">
+                          <Slider
+                            value={[thirdShotConsistencyField || 0]}
+                            min={0}
+                            max={10}
+                            step={1}
+                            onValueChange={(values) => setThirdShotConsistencyField(values[0])}
+                          />
+                          <div className="text-center text-sm text-muted-foreground">
+                            {thirdShotConsistencyField || 0}/10
+                          </div>
+                          
+                          <div className="flex justify-end gap-2 mt-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => {
+                                setThirdShotConsistencyField(user.thirdShotConsistency || 0);
+                                setEditingFields(prev => ({ ...prev, thirdShotConsistency: false }));
+                              }}
+                            >
+                              <X className="h-4 w-4 mr-1" /> Cancel
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              onClick={() => saveProfileField('thirdShotConsistency', thirdShotConsistencyField.toString())}
+                            >
+                              <Check className="h-4 w-4 mr-1" /> Save
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div 
+                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                          onClick={() => {
+                            if (isEditMode) {
+                              setEditingFields(prev => ({ ...prev, thirdShotConsistency: true }));
+                            }
+                          }}
+                        >
+                          <Progress value={user.thirdShotConsistency ? (user.thirdShotConsistency / 10) * 100 : 0} className="h-2" />
+                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                            <span>Rating: {user.thirdShotConsistency || 'Not rated'}/10</span>
+                          </div>
+                          {isEditMode && (
+                            <Edit2 className="h-4 w-4 absolute top-0 right-2 text-muted-foreground" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Court Coverage */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-medium text-muted-foreground">Court Coverage</h4>
+                      </div>
+                      
+                      {isEditMode && editingFields.courtCoverage ? (
+                        <div className="space-y-2">
+                          <Slider
+                            value={[courtCoverageField || 0]}
+                            min={0}
+                            max={10}
+                            step={1}
+                            onValueChange={(values) => setCourtCoverageField(values[0])}
+                          />
+                          <div className="text-center text-sm text-muted-foreground">
+                            {courtCoverageField || 0}/10
+                          </div>
+                          
+                          <div className="flex justify-end gap-2 mt-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => {
+                                setCourtCoverageField(user.courtCoverage || 0);
+                                setEditingFields(prev => ({ ...prev, courtCoverage: false }));
+                              }}
+                            >
+                              <X className="h-4 w-4 mr-1" /> Cancel
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              onClick={() => saveProfileField('courtCoverage', courtCoverageField.toString())}
+                            >
+                              <Check className="h-4 w-4 mr-1" /> Save
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div 
+                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                          onClick={() => {
+                            if (isEditMode) {
+                              setEditingFields(prev => ({ ...prev, courtCoverage: true }));
+                            }
+                          }}
+                        >
+                          <Progress value={user.courtCoverage ? (user.courtCoverage / 10) * 100 : 0} className="h-2" />
+                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                            <span>Rating: {user.courtCoverage || 'Not rated'}/10</span>
+                          </div>
+                          {isEditMode && (
+                            <Edit2 className="h-4 w-4 absolute top-0 right-2 text-muted-foreground" />
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
