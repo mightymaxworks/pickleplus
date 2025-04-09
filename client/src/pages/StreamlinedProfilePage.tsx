@@ -11,7 +11,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
 import { 
   UserCircle, Settings, Award, Clock, Info, Dumbbell, BookOpen,
-  Trophy, MapPin, BadgeCheck, Medal, Edit2, Pencil, Check, X, Calendar
+  Trophy, MapPin, BadgeCheck, Medal, Edit2, Pencil, Check, X, Calendar,
+  Star, TrendingUp
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -92,6 +93,11 @@ const StreamlinedProfilePage: FC = () => {
   const [dinkAccuracyField, setDinkAccuracyField] = useState<number>(0); 
   const [thirdShotConsistencyField, setThirdShotConsistencyField] = useState<number>(0);
   const [courtCoverageField, setCourtCoverageField] = useState<number>(0);
+  
+  // External ratings fields
+  const [duprRatingField, setDuprRatingField] = useState('');
+  const [utprRatingField, setUtprRatingField] = useState('');
+  const [wprRatingField, setWprRatingField] = useState('');
 
   // Define dropdown options
   const playingStyleOptions = [
@@ -347,6 +353,68 @@ const StreamlinedProfilePage: FC = () => {
     }
   };
   
+  // Helper functions for external ratings
+  const getExternalRatingPercentage = (user: EnhancedUser): number => {
+    // Find the highest verified rating and calculate its percentage value (assuming 7.0 is max)
+    let highestRating = 0;
+    
+    if (user.duprRating) {
+      const rating = parseFloat(user.duprRating);
+      if (!isNaN(rating) && rating > highestRating) {
+        highestRating = rating;
+      }
+    }
+    
+    if (user.utprRating) {
+      const rating = parseFloat(user.utprRating);
+      if (!isNaN(rating) && rating > highestRating) {
+        highestRating = rating;
+      }
+    }
+    
+    if (user.wprRating) {
+      const rating = parseFloat(user.wprRating);
+      if (!isNaN(rating) && rating > highestRating) {
+        highestRating = rating;
+      }
+    }
+    
+    // Calculate percentage (assuming 7.0 is max rating)
+    return (highestRating / 7) * 100;
+  };
+  
+  const getDisplayRating = (user: EnhancedUser): string => {
+    // Return highest rating with type or 'Not set' if none available
+    let highestRating = 0;
+    let ratingType = '';
+    
+    if (user.duprRating) {
+      const rating = parseFloat(user.duprRating);
+      if (!isNaN(rating) && rating > highestRating) {
+        highestRating = rating;
+        ratingType = 'DUPR';
+      }
+    }
+    
+    if (user.utprRating) {
+      const rating = parseFloat(user.utprRating);
+      if (!isNaN(rating) && rating > highestRating) {
+        highestRating = rating;
+        ratingType = 'UTPR';
+      }
+    }
+    
+    if (user.wprRating) {
+      const rating = parseFloat(user.wprRating);
+      if (!isNaN(rating) && rating > highestRating) {
+        highestRating = rating;
+        ratingType = 'WPR';
+      }
+    }
+    
+    return highestRating > 0 ? `${highestRating} (${ratingType})` : '';
+  };
+
   // Function to handle saving profile updates
   const saveProfileField = async (fieldName: string, value: string | boolean | number | null) => {
     try {
@@ -433,6 +501,11 @@ const StreamlinedProfilePage: FC = () => {
       setDinkAccuracyField(user.dinkAccuracy || 0);
       setThirdShotConsistencyField(user.thirdShotConsistency || 0);
       setCourtCoverageField(user.courtCoverage || 0);
+      
+      // External ratings fields
+      setDuprRatingField(user.duprRating || '');
+      setUtprRatingField(user.utprRating || '');
+      setWprRatingField(user.wprRating || '');
     }
   }, [user]);
 
@@ -710,53 +783,72 @@ const StreamlinedProfilePage: FC = () => {
           </div>
         </Card>
         
-        {/* Skill Level Card */}
+        {/* External Rating Card */}
         <Card className="overflow-hidden">
           <div className="p-4">
             <div className="flex justify-between items-center mb-2">
-              <div className="font-medium text-sm">Skill Level</div>
+              <div className="font-medium text-sm">External Rating</div>
               {isEditMode ? (
                 <Button 
                   size="sm" 
                   variant="ghost" 
                   className="h-8 w-8 p-0"
-                  onClick={() => setEditingFields(prev => ({ ...prev, skillLevel: true }))}
+                  onClick={() => setEditingFields(prev => ({ ...prev, externalRatings: true }))}
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
-              ) : <BadgeCheck className="h-4 w-4 text-yellow-500" />}
+              ) : <Star className="h-4 w-4 text-yellow-500" />}
             </div>
-            {isEditMode && editingFields.skillLevel ? (
+            {isEditMode && editingFields.externalRatings ? (
               <div className="space-y-2">
-                <Select 
-                  value={skillLevelField} 
-                  onValueChange={(value) => setSkillLevelField(value)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select skill level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {skillLevelOptions.map(option => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="space-y-2">
+                  <Label htmlFor="duprRating">DUPR Rating</Label>
+                  <Input
+                    id="duprRating"
+                    value={duprRatingField}
+                    onChange={(e) => setDuprRatingField(e.target.value)}
+                    placeholder="e.g., 4.5"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="utprRating">UTPR Rating</Label>
+                  <Input
+                    id="utprRating"
+                    value={utprRatingField}
+                    onChange={(e) => setUtprRatingField(e.target.value)}
+                    placeholder="e.g., 4.0"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="wprRating">WPR Rating</Label>
+                  <Input
+                    id="wprRating"
+                    value={wprRatingField}
+                    onChange={(e) => setWprRatingField(e.target.value)}
+                    placeholder="e.g., 4.8"
+                  />
+                </div>
                 <div className="flex justify-end gap-2">
                   <Button 
                     variant="outline" 
                     size="sm"
                     onClick={() => {
-                      setSkillLevelField(user.skillLevel || '');
-                      setEditingFields(prev => ({ ...prev, skillLevel: false }));
+                      setDuprRatingField(user.duprRating || '');
+                      setUtprRatingField(user.utprRating || '');
+                      setWprRatingField(user.wprRating || '');
+                      setEditingFields(prev => ({ ...prev, externalRatings: false }));
                     }}
                   >
                     <X className="h-4 w-4 mr-1" /> Cancel
                   </Button>
                   <Button 
                     size="sm"
-                    onClick={() => saveProfileField('skillLevel', skillLevelField)}
+                    onClick={() => {
+                      saveProfileField('duprRating', duprRatingField);
+                      saveProfileField('utprRating', utprRatingField);
+                      saveProfileField('wprRating', wprRatingField);
+                      setEditingFields(prev => ({ ...prev, externalRatings: false }));
+                    }}
                   >
                     <Check className="h-4 w-4 mr-1" /> Save
                   </Button>
@@ -764,11 +856,31 @@ const StreamlinedProfilePage: FC = () => {
               </div>
             ) : (
               <>
+                {/* Display the highest verified rating for progress bar */}
                 <div className="mb-2">
-                  <Progress value={user.skillLevel ? (parseFloat(user.skillLevel) / 7) * 100 : 0} className="h-2" />
+                  <Progress 
+                    value={getExternalRatingPercentage(user)} 
+                    className="h-2" 
+                  />
                 </div>
-                <div className="text-sm font-semibold">
-                  {user.skillLevel || 'Not set'}
+                <div className="text-sm font-semibold flex items-center">
+                  {getDisplayRating(user) || 'Not set'}
+                  {user.externalRatingsVerified && (
+                    <Badge variant="outline" className="ml-2 text-xs bg-green-100 text-green-800">
+                      Verified
+                    </Badge>
+                  )}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {user.duprRating && (
+                    <span className="mr-2">DUPR: {user.duprRating}</span>
+                  )}
+                  {user.utprRating && (
+                    <span className="mr-2">UTPR: {user.utprRating}</span>
+                  )}
+                  {user.wprRating && (
+                    <span>WPR: {user.wprRating}</span>
+                  )}
                 </div>
               </>
             )}
