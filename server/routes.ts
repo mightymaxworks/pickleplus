@@ -5,6 +5,7 @@ import { db } from "./db";
 import { eq, and, or, desc, sql } from "drizzle-orm";
 import { storage } from "./storage";
 import { matchRoutes } from "./api/match";
+import rankingRoutes from "./api/ranking";
 
 // Import necessary schema
 import { 
@@ -19,8 +20,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // API Routes
   console.log("[API] Setting up API routes...");
   
-  // Register match API routes
+  // Register API route modules
   app.use("/api/match", matchRoutes);
+  app.use("/api/ranking", rankingRoutes);
   
   // API routes
   
@@ -138,15 +140,22 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Multi-dimensional rankings leaderboard
   app.get("/api/multi-rankings/leaderboard", async (req: Request, res: Response) => {
     try {
-      // Return mock data
+      // Return sample data with the current user at the top position
+      const currentUserId = req.user?.id || 1;
+      const userData = await storage.getUser(currentUserId);
+      const username = userData?.username || "mightymax";
+      const displayName = userData?.displayName || "MightyMax";
+      const avatarUrl = userData?.avatarUrl || null;
+      const avatarInitials = userData?.avatarInitials || "MX";
+      
       res.json({
         leaderboard: [
           {
-            userId: 1,
-            username: "john_doe",
-            displayName: "John Doe",
-            avatarUrl: null,
-            avatarInitials: "JD",
+            userId: currentUserId,
+            username: username,
+            displayName: displayName,
+            avatarUrl: avatarUrl,
+            avatarInitials: avatarInitials,
             countryCode: "US",
             position: 1,
             pointsTotal: 1200,
@@ -197,6 +206,162 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     } catch (error) {
       console.error("[API] Error getting multi-dimensional rankings:", error);
       res.status(500).json({ error: "Server error getting rankings" });
+    }
+  });
+  
+  // Multi-dimensional rankings position
+  app.get("/api/multi-rankings/position", async (req: Request, res: Response) => {
+    try {
+      const userId = req.query.userId ? parseInt(req.query.userId as string) : (req.user?.id || 1);
+      const format = req.query.format as string || 'singles';
+      const ageDivision = req.query.ageDivision as string || '19plus';
+      
+      // Return sample data
+      res.json({
+        userId: userId,
+        format: format,
+        ageDivision: ageDivision,
+        ratingTierId: 1,
+        rankingPoints: 1200,
+        rank: 1,
+        totalPlayers: 250,
+        skillRating: 4.5
+      });
+    } catch (error) {
+      console.error("[API] Error getting ranking position:", error);
+      res.status(500).json({ error: "Server error getting ranking position" });
+    }
+  });
+  
+  // Multi-dimensional rankings history
+  app.get("/api/multi-rankings/history", async (req: Request, res: Response) => {
+    try {
+      const userId = req.query.userId ? parseInt(req.query.userId as string) : (req.user?.id || 1);
+      
+      // Return sample ranking history data
+      res.json([
+        {
+          id: 1,
+          userId: userId,
+          timestamp: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
+          rankingPoints: 950,
+          rank: 5,
+          format: 'singles',
+          ageDivision: '19plus',
+          skillRating: 4.2
+        },
+        {
+          id: 2,
+          userId: userId,
+          timestamp: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+          rankingPoints: 1050,
+          rank: 3,
+          format: 'singles',
+          ageDivision: '19plus',
+          skillRating: 4.3
+        },
+        {
+          id: 3,
+          userId: userId,
+          timestamp: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+          rankingPoints: 1150,
+          rank: 2,
+          format: 'singles',
+          ageDivision: '19plus',
+          skillRating: 4.4
+        },
+        {
+          id: 4,
+          userId: userId,
+          timestamp: new Date().toISOString(),
+          rankingPoints: 1200,
+          rank: 1,
+          format: 'singles',
+          ageDivision: '19plus',
+          skillRating: 4.5
+        }
+      ]);
+    } catch (error) {
+      console.error("[API] Error getting ranking history:", error);
+      res.status(500).json({ error: "Server error getting ranking history" });
+    }
+  });
+  
+  // Rating tiers
+  app.get("/api/multi-rankings/rating-tiers", async (req: Request, res: Response) => {
+    try {
+      // Return sample rating tiers
+      res.json([
+        {
+          id: 1,
+          name: "Elite",
+          minRating: 4.5,
+          maxRating: 5.0,
+          badgeUrl: null,
+          colorCode: "#6a0dad",
+          protectionLevel: 3,
+          description: "Top-tier players with exceptional skills",
+          order: 1
+        },
+        {
+          id: 2,
+          name: "Advanced",
+          minRating: 4.0,
+          maxRating: 4.49,
+          badgeUrl: null,
+          colorCode: "#0000ff", 
+          protectionLevel: 2,
+          description: "Highly skilled players with advanced technique",
+          order: 2
+        },
+        {
+          id: 3,
+          name: "Intermediate+",
+          minRating: 3.5,
+          maxRating: 3.99,
+          badgeUrl: null,
+          colorCode: "#008000",
+          protectionLevel: 1,
+          description: "Players with solid fundamentals and some specialized skills",
+          order: 3
+        },
+        {
+          id: 4,
+          name: "Intermediate",
+          minRating: 3.0,
+          maxRating: 3.49,
+          badgeUrl: null,
+          colorCode: "#ffa500",
+          protectionLevel: 1,
+          description: "Players with good fundamentals",
+          order: 4
+        },
+        {
+          id: 5,
+          name: "Beginner+",
+          minRating: 2.5,
+          maxRating: 2.99,
+          badgeUrl: null,
+          colorCode: "#ff69b4",
+          protectionLevel: 0,
+          description: "Players developing fundamental skills",
+          order: 5
+        },
+        {
+          id: 6,
+          name: "Beginner",
+          minRating: 0,
+          maxRating: 2.49,
+          badgeUrl: null,
+          colorCode: "#a9a9a9",
+          protectionLevel: 0,
+          description: "New players learning the game",
+          order: 6
+        }
+      ]);
+    } catch (error) {
+      console.error("[API] Error getting rating tiers:", error);
+      res.status(500).json({ error: "Server error getting rating tiers" });
     }
   });
   
