@@ -179,7 +179,7 @@ export function StatsVisualization({
       },
       {
         skill: 'Third Shot',
-        value: statistics.thirdShotSuccessRate || 0
+        value: statistics.thirdShotSuccessRate !== undefined && statistics.thirdShotSuccessRate !== null ? statistics.thirdShotSuccessRate : 0
       },
       {
         skill: 'W/E Ratio',
@@ -246,7 +246,7 @@ export function StatsVisualization({
             >
               <XAxis dataKey="name" />
               <YAxis domain={[0, 100]} label={{ value: '%', position: 'insideTopLeft', offset: 0 }} />
-              <Tooltip formatter={(value) => [`${typeof value === 'number' ? value.toFixed(1) : value}%`, 'Success Rate']} />
+              <Tooltip formatter={(value) => [`${typeof value === 'number' ? value.toFixed(1) : (value || '0.0')}%`, 'Success Rate']} />
               <Legend />
               <Bar dataKey="value" name="Success Rate">
                 {shotSuccessData.map((entry, index) => (
@@ -311,7 +311,7 @@ export function StatsVisualization({
                   fill="#FF5722"
                   fillOpacity={0.6}
                 />
-                <Tooltip formatter={(value) => [`${typeof value === 'number' ? value.toFixed(1) : value}%`, 'Rating']} />
+                <Tooltip formatter={(value) => [`${typeof value === 'number' ? value.toFixed(1) : (value || '0.0')}%`, 'Rating']} />
               </RadarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -330,22 +330,22 @@ export function StatsVisualization({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-muted/50 p-3 rounded-md">
               <div className="text-sm text-muted-foreground">Total Points</div>
-              <div className="text-2xl font-bold">{statistics.totalPoints || 0}</div>
+              <div className="text-2xl font-bold">{statistics.totalPoints !== undefined && statistics.totalPoints !== null ? statistics.totalPoints : 0}</div>
             </div>
             
             <div className="bg-muted/50 p-3 rounded-md">
               <div className="text-sm text-muted-foreground">Avg Rally Length</div>
-              <div className="text-2xl font-bold">{statistics.rallyLengthAvg?.toFixed(1) || 0}</div>
+              <div className="text-2xl font-bold">{statistics.rallyLengthAvg !== undefined && statistics.rallyLengthAvg !== null ? statistics.rallyLengthAvg.toFixed(1) : '0.0'}</div>
             </div>
             
             <div className="bg-muted/50 p-3 rounded-md">
               <div className="text-sm text-muted-foreground">Longest Rally</div>
-              <div className="text-2xl font-bold">{statistics.longestRally || 0}</div>
+              <div className="text-2xl font-bold">{statistics.longestRally !== undefined && statistics.longestRally !== null ? statistics.longestRally : 0}</div>
             </div>
             
             <div className="bg-muted/50 p-3 rounded-md">
               <div className="text-sm text-muted-foreground">Time at Net</div>
-              <div className="text-2xl font-bold">{statistics.timeAtNetPct || 0}%</div>
+              <div className="text-2xl font-bold">{statistics.timeAtNetPct !== undefined && statistics.timeAtNetPct !== null ? statistics.timeAtNetPct : 0}%</div>
             </div>
           </div>
         </CardContent>

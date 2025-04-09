@@ -273,7 +273,7 @@ export function BasicStatsRecorder({
                             onValueChange={(values) => field.onChange(values[0])}
                             className="mt-2"
                           />
-                          <div className="text-sm text-center">{field.value?.toFixed(1)} shots</div>
+                          <div className="text-sm text-center">{field.value !== undefined && field.value !== null ? field.value.toFixed(1) : '0.0'} shots</div>
                         </div>
                       </FormControl>
                       <FormMessage />
