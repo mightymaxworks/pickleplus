@@ -87,8 +87,11 @@ export function ExternalRatingsSection({ user, isEditable = false, isCurrentUser
       
       console.log('Submitting external ratings update:', updateData);
       
-      // Submit data
-      const response = await apiRequest('POST', '/api/profile/update', updateData);
+      // Submit data - Note that the endpoint is expecting PATCH not POST
+      console.log('Making PATCH request to /api/profile/update with credentials included');
+      const response = await apiRequest('PATCH', '/api/profile/update', updateData);
+      console.log('PATCH /api/profile/update response status:', response?.status || 'unknown');
+      console.log('Response cookies present:', document.cookie ? 'Yes' : 'No');
       console.log('External ratings update response:', response);
       
       // Reset form to view mode

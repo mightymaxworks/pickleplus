@@ -341,10 +341,22 @@ export class DatabaseStorage implements IStorage {
       });
       
       // Update the user profile with validated data
-      const [updatedUser] = await db.update(users)
-        .set(validData)
-        .where(eq(users.id, numericId))
-        .returning();
+      console.log(`[Storage] updateUserProfile - SQL UPDATE operation. Data to update:`, JSON.stringify(validData, null, 2));
+      console.log(`[Storage] updateUserProfile - Updating user with id=${numericId}`);
+      
+      let updatedUser;
+      try {
+        const [result] = await db.update(users)
+          .set(validData)
+          .where(eq(users.id, numericId))
+          .returning();
+        
+        updatedUser = result;
+        console.log(`[Storage] updateUserProfile - SQL UPDATE successful. Updated user data:`, JSON.stringify(updatedUser, null, 2));
+      } catch (sqlError) {
+        console.error(`[Storage] updateUserProfile - SQL UPDATE ERROR:`, sqlError);
+        throw sqlError;
+      }
         
       if (!updatedUser) {
         console.log(`[Storage] updateUserProfile - Failed to update user with ID ${numericId}`);
