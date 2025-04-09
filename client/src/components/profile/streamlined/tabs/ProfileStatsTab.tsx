@@ -2,7 +2,7 @@
  * PKL-278651-CIQP-0001: CourtIQ™ Skill Profiling System
  * Enhanced profile stats tab with radar chart visualization and skill editing
  */
-import React, { FC, useState } from 'react';
+import React, { FC, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -58,7 +58,7 @@ const skillDescriptions = {
 const ProfileStatsTab: FC<ProfileStatsTabProps> = ({ user, isEditMode }) => {
   const { toast } = useToast();
   
-  // State for skill editing
+  // State for skill editing - automatically enable when isEditMode is true
   const [editingSkills, setEditingSkills] = useState(false);
   const [skillValues, setSkillValues] = useState({
     forehandStrength: user.forehandStrength || 0,
@@ -68,6 +68,15 @@ const ProfileStatsTab: FC<ProfileStatsTabProps> = ({ user, isEditMode }) => {
     thirdShotConsistency: user.thirdShotConsistency || 0,
     courtCoverage: user.courtCoverage || 0
   });
+  
+  // Automatically enable editing skills when in edit mode
+  useEffect(() => {
+    if (isEditMode) {
+      setEditingSkills(true);
+    } else {
+      setEditingSkills(false);
+    }
+  }, [isEditMode]);
 
   // Format data for radar chart
   const formatSkillsForRadar = () => {
@@ -197,39 +206,9 @@ const ProfileStatsTab: FC<ProfileStatsTabProps> = ({ user, isEditMode }) => {
               CourtIQ™ Skill Profile
             </CardTitle>
             
-            {isEditMode && !editingSkills && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-xs flex items-center gap-1"
-                onClick={() => setEditingSkills(true)}
-              >
-                <Edit2 className="h-3.5 w-3.5" />
-                Edit Skills
-              </Button>
-            )}
-            
-            {isEditMode && editingSkills && (
+            {/* Only show Save/Cancel buttons when in edit mode */}
+            {isEditMode && (
               <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="text-xs flex items-center gap-1"
-                  onClick={() => {
-                    setSkillValues({
-                      forehandStrength: user.forehandStrength || 0,
-                      backhandStrength: user.backhandStrength || 0,
-                      servePower: user.servePower || 0,
-                      dinkAccuracy: user.dinkAccuracy || 0,
-                      thirdShotConsistency: user.thirdShotConsistency || 0,
-                      courtCoverage: user.courtCoverage || 0
-                    });
-                    setEditingSkills(false);
-                  }}
-                >
-                  <X className="h-3.5 w-3.5" />
-                  Cancel
-                </Button>
                 <Button 
                   size="sm" 
                   className="text-xs flex items-center gap-1"
@@ -243,7 +222,7 @@ const ProfileStatsTab: FC<ProfileStatsTabProps> = ({ user, isEditMode }) => {
           </div>
           <CardDescription>
             Track and visualize your pickleball skills on a scale of 1-10
-            {editingSkills && (
+            {isEditMode && (
               <div className="mt-2 p-2 bg-muted/30 rounded-md border border-muted text-xs">
                 <span className="font-semibold">Editing Mode:</span> Move the sliders below to adjust your skill ratings from 1-10
               </div>
@@ -252,14 +231,23 @@ const ProfileStatsTab: FC<ProfileStatsTabProps> = ({ user, isEditMode }) => {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row gap-6">
-            <div className="md:w-1/2 mx-auto">
-              {/* Radar Chart */}
-              <div className="h-64 w-full max-w-[320px] md:max-w-full mx-auto">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart cx="50%" cy="50%" outerRadius="75%" data={formatSkillsForRadar()}>
+            {/* Only show radar chart if some skills have values */}
+            {Object.values(skillValues).some(v => v > 0) && (
+              <div className="md:w-1/2 mx-auto mb-6 md:mb-0">
+                {/* Radar Chart with simpler structure */}
+                <div className="h-64 w-full" style={{ maxWidth: '100%' }}>
+                  <RadarChart 
+                    width={300} 
+                    height={250} 
+                    cx={150} 
+                    cy={125} 
+                    outerRadius={100} 
+                    data={formatSkillsForRadar()}
+                    style={{ margin: '0 auto' }}
+                  >
                     <PolarGrid />
-                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#888', fontSize: 11 }} />
-                    <PolarRadiusAxis angle={30} domain={[0, 10]} tickCount={6} />
+                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#888', fontSize: 12 }} />
+                    <PolarRadiusAxis domain={[0, 10]} tickCount={6} />
                     <Radar
                       name="Skills"
                       dataKey="A"
@@ -269,9 +257,22 @@ const ProfileStatsTab: FC<ProfileStatsTabProps> = ({ user, isEditMode }) => {
                     />
                     <RechartTooltip />
                   </RadarChart>
-                </ResponsiveContainer>
+                </div>
               </div>
-            </div>
+            )}
+            
+            {/* Show placeholder if no skill values */}
+            {!Object.values(skillValues).some(v => v > 0) && (
+              <div className="md:w-1/2 mx-auto mb-6 md:mb-0 flex flex-col items-center justify-center h-64 border-2 border-dashed border-gray-200 rounded-lg">
+                <HelpCircle className="h-10 w-10 text-muted-foreground mb-2" />
+                <p className="text-sm text-center text-muted-foreground max-w-[200px]">
+                  {isEditMode ? 
+                    "Adjust your skill ratings to see your radar chart visualization" : 
+                    "No skill ratings available yet"
+                  }
+                </p>
+              </div>
+            )}
             
             <div className="md:w-1/2">
               <div className="mb-4">
