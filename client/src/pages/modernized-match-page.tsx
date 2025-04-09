@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { QuickMatchRecorder } from "@/components/match/QuickMatchRecorder";
+import { QuickValidationButton } from "@/components/match/QuickValidationButton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,7 +29,11 @@ import {
   BarChart4,
   Zap,
   Filter,
-  XCircle
+  XCircle,
+  Clock,
+  CheckCircle,
+  AlertTriangle,
+  AlertCircle
 } from "lucide-react";
 
 /**
@@ -118,7 +123,7 @@ export default function ModernizedMatchPage() {
   
   // Get opposing player name
   const getOpponentName = (match: any, currentUserId: number) => {
-    const opponent = match.players.find((p: any) => p.userId !== currentUserId);
+    const opponent = match.players?.find((p: any) => p.userId !== currentUserId);
     if (!opponent?.userId || !match.playerNames) return "Opponent";
     return match.playerNames[opponent.userId]?.displayName || match.playerNames[opponent.userId]?.username || "Opponent";
   };
@@ -305,14 +310,14 @@ export default function ModernizedMatchPage() {
                                   {isWinner ? 'Victory against ' : 'Loss to '} {opponent}
                                 </div>
                                 <div className="text-sm text-muted-foreground">
-                                  {match.formatType === 'singles' ? 'Singles' : 'Doubles'} • {formatDate(match.date)}
+                                  {match.formatType === 'singles' ? 'Singles' : 'Doubles'} • {formatDate(match.date || new Date().toISOString())}
                                 </div>
                               </div>
                             </div>
                             <div className={`text-lg font-semibold px-3 py-1 rounded-full ${
                               isWinner ? 'bg-green-500/10 text-green-600' : 'bg-red-100 text-red-500'
                             }`}>
-                              {match.players[0].score} - {match.players[1].score}
+                              {match.players?.[0]?.score || 0} - {match.players?.[1]?.score || 0}
                             </div>
                           </div>
                         </CardContent>
@@ -479,100 +484,289 @@ export default function ModernizedMatchPage() {
         </TabsContent>
         
         <TabsContent value="validations" className="mt-8">
-          {/* Pending Validations */}
+          {/* PKL-278651-VALMAT-0002-UI: Enhanced Match Validation UI */}
           <div className="space-y-8 mx-auto max-w-5xl">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">Pending Match Validations</h2>
-              <Button variant="outline" size="sm" onClick={() => refetchMatches()}>
-                Refresh
-              </Button>
-            </div>
-            
-            {matchesLoading ? (
-              <Card className="p-8 text-center">
-                <div className="flex justify-center items-center">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left column: Validation info */}
+              <div className="lg:col-span-1">
+                <Card className="shadow-md border-primary/20">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg flex items-center">
+                      <Clock className="mr-2 h-5 w-5 text-primary" />
+                      VALMAT™ System
+                    </CardTitle>
+                    <CardDescription>
+                      Match Validation System
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-4">
+                      <div className="border-b pb-2">
+                        <p className="text-sm text-muted-foreground">
+                          The VALMAT™ system ensures fairness by requiring match participants to validate results. 
+                          This prevents inaccurate match records and maintains integrity in the rankings.
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <div className="bg-green-100 dark:bg-green-900/20 rounded-full p-1.5">
+                            <CheckCircle className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                          </div>
+                          <div className="text-sm">
+                            <span className="font-medium">Confirmed</span>: Match details verified by player
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <div className="bg-yellow-100 dark:bg-yellow-900/20 rounded-full p-1.5">
+                            <Clock className="h-3.5 w-3.5 text-yellow-600 dark:text-yellow-400" />
+                          </div>
+                          <div className="text-sm">
+                            <span className="font-medium">Pending</span>: Awaiting validation by one or more players
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <div className="bg-red-100 dark:bg-red-900/20 rounded-full p-1.5">
+                            <AlertTriangle className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
+                          </div>
+                          <div className="text-sm">
+                            <span className="font-medium">Disputed</span>: One or more players have reported an issue
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="text-sm text-amber-600 dark:text-amber-400 flex items-center pt-2">
+                        <AlertCircle className="h-4 w-4 mr-1.5" />
+                        <span>Unvalidated matches earn reduced XP and rating points.</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button 
+                      variant="outline" 
+                      className="w-full gap-1.5"
+                      onClick={() => refetchMatches()}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-refresh-cw"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
+                      Refresh Validation Status
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </div>
+              
+              {/* Right column: Pending validations list */}
+              <div className="lg:col-span-2">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold">Pending Validations</h2>
+                  <Badge variant="outline" className="bg-background">
+                    {recentMatches ? recentMatches.filter(m => m.validationStatus === 'pending').length : 0} Matches
+                  </Badge>
                 </div>
-              </Card>
-            ) : recentMatches && recentMatches.filter(m => m.validationStatus !== 'confirmed').length > 0 ? (
-              <div className="space-y-4">
-                {recentMatches
-                  .filter(m => m.validationStatus !== 'confirmed')
-                  .map((match: RecordedMatch) => {
-                    const userPlayer = match.players.find((p) => p.userId === user?.id);
-                    const isWinner = userPlayer?.isWinner;
-                    const opponent = getOpponentName(match, user?.id || 0);
-                    
-                    return (
-                      <Card key={match.id} className={`border-l-4 ${isWinner ? 'border-l-green-500' : 'border-l-gray-300'}`}>
-                        <CardContent className="p-4">
-                          <div className="flex flex-col md:flex-row justify-between">
-                            <div className="flex-1">
-                              <div className="font-medium flex items-center">
-                                {isWinner ? 'Victory against ' : 'Loss to '} {opponent}
-                                {match.validationStatus ? (
-                                  <Badge variant={match.validationStatus === 'disputed' ? 'destructive' : match.validationStatus === 'confirmed' ? 'default' : 'outline'} className="ml-2">
-                                    {match.validationStatus === 'disputed' ? 'Disputed' : match.validationStatus === 'confirmed' ? 'Confirmed' : 'Pending Validation'}
-                                  </Badge>
-                                ) : (
-                                  <Badge variant="outline" className="ml-2">
-                                    Pending Validation
-                                  </Badge>
-                                )}
-                              </div>
-                              <div className="text-sm text-muted-foreground">
-                                {match.formatType === 'singles' ? 'Singles' : 'Doubles'} • {formatDate(match.date)}
-                              </div>
-                              
-                              <div className="mt-3">
-                                <Dialog>
-                                  <DialogTrigger asChild>
-                                    <Button variant="outline" size="sm">
-                                      <CheckCircle2 className="h-4 w-4 mr-1" />
-                                      Validate Match
-                                    </Button>
-                                  </DialogTrigger>
-                                  <DialogContent>
-                                    <DialogHeader>
-                                      <DialogTitle>Validate Match</DialogTitle>
-                                    </DialogHeader>
-                                    <MatchValidation 
-                                      match={match} 
+                
+                {matchesLoading ? (
+                  <Card className="p-8 text-center">
+                    <div className="flex justify-center items-center">
+                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    </div>
+                  </Card>
+                ) : recentMatches && recentMatches.filter(m => m.validationStatus === 'pending').length > 0 ? (
+                  <div className="space-y-4">
+                    {recentMatches
+                      .filter(m => m.validationStatus === 'pending')
+                      .map((match: RecordedMatch) => {
+                        const userPlayer = match.players.find((p) => p.userId === user?.id);
+                        const isWinner = userPlayer?.isWinner;
+                        const opponent = getOpponentName(match, user?.id || 0);
+                        
+                        return (
+                          <Card key={match.id} className={`border-l-4 ${isWinner ? 'border-l-green-500' : 'border-l-gray-300'} shadow-sm hover:shadow-md transition-shadow`}>
+                            <CardContent className="p-4">
+                              <div className="flex flex-col md:flex-row justify-between">
+                                <div className="flex-1">
+                                  <div className="font-medium flex items-center">
+                                    {isWinner ? 'Victory against ' : 'Loss to '} {opponent}
+                                    <Badge variant="outline" className="ml-2 bg-yellow-50 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 border-yellow-200">
+                                      <Clock className="h-3 w-3 mr-1" />
+                                      Pending
+                                    </Badge>
+                                  </div>
+                                  <div className="text-sm text-muted-foreground mb-2">
+                                    {match.formatType === 'singles' ? 'Singles' : 'Doubles'} • {formatDate(match.date || new Date().toISOString())}
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-2 mt-3 mb-1">
+                                    {/* PKL-278651-VALMAT-0002-UI: Add QuickValidationButton */}
+                                    <QuickValidationButton 
+                                      match={match}
                                       onValidationComplete={() => {
                                         refetchMatches();
-                                      }} 
+                                      }}
                                     />
-                                  </DialogContent>
-                                </Dialog>
+                                    
+                                    <Dialog>
+                                      <DialogTrigger asChild>
+                                        <Button variant="outline" size="sm">
+                                          <CheckCircle2 className="h-4 w-4 mr-1" />
+                                          View Details
+                                        </Button>
+                                      </DialogTrigger>
+                                      <DialogContent>
+                                        <DialogHeader>
+                                          <DialogTitle>Match Details</DialogTitle>
+                                        </DialogHeader>
+                                        <MatchValidation 
+                                          match={match} 
+                                          onValidationComplete={() => {
+                                            refetchMatches();
+                                          }} 
+                                        />
+                                      </DialogContent>
+                                    </Dialog>
+                                  </div>
+                                </div>
+                                <div className="text-lg font-semibold mt-2 md:mt-0 flex flex-col items-end">
+                                  <div className={`px-3 py-1 rounded-full ${
+                                    isWinner ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                                  }`}>
+                                    {match.players?.[0]?.score || 0} - {match.players?.[1]?.score || 0}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                    {match.validationRequiredBy ? (
+                                      <span className="flex items-center">
+                                        <Clock className="h-3 w-3 mr-1 text-amber-500" />
+                                        Validate by {formatDate(match.validationRequiredBy)}
+                                      </span>
+                                    ) : (
+                                      <span className="flex items-center">
+                                        <Clock className="h-3 w-3 mr-1" />
+                                        Awaiting validation
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
-                            </div>
-                            <div className="text-lg font-semibold mt-2 md:mt-0">
-                              {match.players[0].score} - {match.players[1].score}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                  </div>
+                ) : (
+                  <Card className="p-8 text-center border-dashed">
+                    <CardTitle className="mb-2">No Pending Validations</CardTitle>
+                    <CardDescription>
+                      All your matches have been validated. Great job!
+                    </CardDescription>
+                    <CardFooter className="pt-6 pb-2 flex justify-center">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setMatchDialogOpen(true)}
+                        className="gap-2"
+                      >
+                        <PlusCircle className="h-4 w-4" />
+                        Record New Match
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                )}
+                
+                {/* Additional section for recent validations */}
+                <div className="mt-8">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold">Recently Validated</h2>
+                    <Badge variant="outline" className="bg-background">
+                      {recentMatches ? recentMatches.filter(m => m.validationStatus === 'confirmed' || m.validationStatus === 'validated').length : 0} Matches
+                    </Badge>
+                  </div>
+                  
+                  {recentMatches && recentMatches.filter(m => m.validationStatus === 'confirmed' || m.validationStatus === 'validated').length > 0 ? (
+                    <div className="space-y-3">
+                      {recentMatches
+                        .filter(m => m.validationStatus === 'confirmed' || m.validationStatus === 'validated')
+                        .slice(0, 3) // Show only the 3 most recent
+                        .map((match: RecordedMatch) => {
+                          const userPlayer = match.players.find((p) => p.userId === user?.id);
+                          const isWinner = userPlayer?.isWinner;
+                          const opponent = getOpponentName(match, user?.id || 0);
+                          
+                          return (
+                            <Card key={match.id} className="border-l-4 border-l-green-500 shadow-sm bg-green-50/30 dark:bg-green-900/10">
+                              <CardContent className="p-3">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <CheckCircle className="h-4 w-4 text-green-600" />
+                                    <span className="font-medium">{isWinner ? 'Victory vs. ' : 'Loss vs. '} {opponent}</span>
+                                    <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 border-green-200">
+                                      Validated
+                                    </Badge>
+                                  </div>
+                                  <div className="text-sm font-medium">
+                                    {match.players?.[0]?.score || 0} - {match.players?.[1]?.score || 0}
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                    </div>
+                  ) : (
+                    <Card className="p-4 text-center border-dashed">
+                      <CardDescription>
+                        No matches have been validated yet.
+                      </CardDescription>
+                    </Card>
+                  )}
+                </div>
+                
+                {/* Disputed matches section */}
+                {recentMatches && recentMatches.filter(m => m.validationStatus === 'disputed').length > 0 && (
+                  <div className="mt-8">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-xl font-bold text-red-600 dark:text-red-400 flex items-center">
+                        <AlertTriangle className="h-5 w-5 mr-2" />
+                        Disputed Matches
+                      </h2>
+                      <Badge variant="destructive">
+                        {recentMatches.filter(m => m.validationStatus === 'disputed').length} Issues
+                      </Badge>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      {recentMatches
+                        .filter(m => m.validationStatus === 'disputed')
+                        .map((match: RecordedMatch) => {
+                          const userPlayer = match.players.find((p) => p.userId === user?.id);
+                          const isWinner = userPlayer?.isWinner;
+                          const opponent = getOpponentName(match, user?.id || 0);
+                          
+                          return (
+                            <Card key={match.id} className="border-l-4 border-l-red-500 shadow-sm bg-red-50/30 dark:bg-red-900/10">
+                              <CardContent className="p-3">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <AlertTriangle className="h-4 w-4 text-red-600" />
+                                    <span className="font-medium">{isWinner ? 'Victory vs. ' : 'Loss vs. '} {opponent}</span>
+                                    <Badge variant="destructive">
+                                      Disputed
+                                    </Badge>
+                                  </div>
+                                  <div className="text-sm font-medium">
+                                    {match.players?.[0]?.score || 0} - {match.players?.[1]?.score || 0}
+                                  </div>
+                                </div>
+                                <div className="mt-2 pt-2 border-t text-sm text-muted-foreground">
+                                  An administrator will review this match. Check back later for updates.
+                                </div>
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                    </div>
+                  </div>
+                )}
               </div>
-            ) : (
-              <Card className="p-8 text-center border-dashed">
-                <CardTitle className="mb-2">No Pending Validations</CardTitle>
-                <CardDescription>
-                  All your matches have been validated. Great job!
-                </CardDescription>
-                <CardFooter className="pt-6 pb-2 flex justify-center">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setMatchDialogOpen(true)}
-                    className="gap-2"
-                  >
-                    <PlusCircle className="h-4 w-4" />
-                    Record New Match
-                  </Button>
-                </CardFooter>
-              </Card>
-            )}
+            </div>
           </div>
         </TabsContent>
       </Tabs>

@@ -17,7 +17,8 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { getMatchHistory, RecordedMatch } from '@/lib/sdk/matchSDK';
-import { ChevronDown, Calendar as CalendarIcon, Trophy, CheckCircle, Clock, Filter, SlidersHorizontal, ArrowDown, ArrowUp } from 'lucide-react';
+import { ChevronDown, Calendar as CalendarIcon, Trophy, CheckCircle, Clock, Filter, SlidersHorizontal, ArrowDown, ArrowUp, AlertTriangle } from 'lucide-react';
+import { QuickValidationButton } from '@/components/match/QuickValidationButton';
 
 /**
  * PKL-278651-HIST-0001-UI-01: FilterBar component
@@ -381,8 +382,29 @@ function MatchList({ matches, isLoading }: MatchListProps) {
                     <span>{match.formatType === 'singles' ? 'Singles' : 'Doubles'} Match</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <CheckCircle className="h-3 w-3" />
-                    <span>{match.validationStatus}</span>
+                    {match.validationStatus === 'pending' ? (
+                      <Clock className="h-3 w-3 text-yellow-600" />
+                    ) : match.validationStatus === 'disputed' ? (
+                      <AlertTriangle className="h-3 w-3 text-red-600" />
+                    ) : (
+                      <CheckCircle className="h-3 w-3 text-green-600" />
+                    )}
+                    <span className="capitalize">{match.validationStatus}</span>
+                    
+                    {/* PKL-278651-VALMAT-0002-UI: Add quick validation button */}
+                    {match.validationStatus === 'pending' && (
+                      <div className="ml-2">
+                        <QuickValidationButton 
+                          match={match} 
+                          size="sm"
+                          variant="outline"
+                          className="py-0 px-2 h-5 text-xs"
+                          onValidationComplete={() => {
+                            // This will be handled by the query invalidation in the component
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
                 
