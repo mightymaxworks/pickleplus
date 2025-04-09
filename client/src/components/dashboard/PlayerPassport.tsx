@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { PicklePlusNewLogo } from '@/components/icons/PicklePlusNewLogo';
-import { Trophy, Scan, RotateCw } from 'lucide-react';
+import { Trophy, Scan, RotateCw, Loader2 } from 'lucide-react';
 import { User } from '@shared/schema';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useUserGlobalRankingPosition } from '@/hooks/use-pcp-global-rankings';
+import { useMatchStats } from '@/hooks/use-match-statistics';
 
 interface PlayerPassportProps {
   user: User;
@@ -16,6 +18,10 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
   const [cardHeight, setCardHeight] = useState(isSmallScreen ? 350 : 400);
   const frontRef = useRef<HTMLDivElement>(null);
   const backRef = useRef<HTMLDivElement>(null);
+  
+  // Fetch real data from API
+  const { data: rankingPosition, isLoading: isRankingLoading } = useUserGlobalRankingPosition(user.id);
+  const { data: matchStats, isLoading: isMatchStatsLoading } = useMatchStats(user.id);
   
   // Debug log function to help us identify sizing issues
   const logDimensions = () => {
@@ -68,6 +74,20 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
         .substring(0, 2);
     }
     return user.username.substring(0, 2).toUpperCase();
+  };
+  
+  // Function to get the appropriate suffix for rankings (1st, 2nd, 3rd, etc.)
+  const getRankSuffix = (rank: number): string => {
+    if (rank % 100 >= 11 && rank % 100 <= 13) {
+      return 'th';
+    }
+    
+    switch (rank % 10) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
   };
   
   // For extra small screens, use a simpler non-flippable passport
@@ -141,15 +161,39 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
             <div className="grid grid-cols-3 gap-1 text-center">
               <div className="bg-gray-100 dark:bg-gray-800 p-1.5 rounded-lg">
                 <div className="text-xs text-gray-500 dark:text-gray-400">Rating</div>
-                <div className="font-bold text-sm text-blue-600 dark:text-blue-400">1,248</div>
+                {isRankingLoading ? (
+                  <div className="flex justify-center">
+                    <Loader2 className="h-4 w-4 animate-spin text-blue-600 dark:text-blue-400" />
+                  </div>
+                ) : (
+                  <div className="font-bold text-sm text-blue-600 dark:text-blue-400">
+                    {rankingPosition?.rankingPoints.toLocaleString() || 0}
+                  </div>
+                )}
               </div>
               <div className="bg-gray-100 dark:bg-gray-800 p-1.5 rounded-lg">
                 <div className="text-xs text-gray-500 dark:text-gray-400">Matches</div>
-                <div className="font-bold text-sm text-green-600 dark:text-green-400">{user.totalMatches || 24}</div>
+                {isMatchStatsLoading ? (
+                  <div className="flex justify-center">
+                    <Loader2 className="h-4 w-4 animate-spin text-green-600 dark:text-green-400" />
+                  </div>
+                ) : (
+                  <div className="font-bold text-sm text-green-600 dark:text-green-400">
+                    {matchStats?.totalMatches || 0}
+                  </div>
+                )}
               </div>
               <div className="bg-gray-100 dark:bg-gray-800 p-1.5 rounded-lg">
                 <div className="text-xs text-gray-500 dark:text-gray-400">Rank</div>
-                <div className="font-bold text-sm text-purple-600 dark:text-purple-400">7th</div>
+                {isRankingLoading ? (
+                  <div className="flex justify-center">
+                    <Loader2 className="h-4 w-4 animate-spin text-purple-600 dark:text-purple-400" />
+                  </div>
+                ) : (
+                  <div className="font-bold text-sm text-purple-600 dark:text-purple-400">
+                    {rankingPosition?.rank ? `${rankingPosition.rank}${getRankSuffix(rankingPosition.rank)}` : '-'}
+                  </div>
+                )}
               </div>
             </div>
             
@@ -247,15 +291,39 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
             <div className="grid grid-cols-3 gap-2 text-center">
               <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg">
                 <div className="text-sm text-gray-500 dark:text-gray-400">Rating</div>
-                <div className="font-bold text-blue-600 dark:text-blue-400">1,248</div>
+                {isRankingLoading ? (
+                  <div className="flex justify-center">
+                    <Loader2 className="h-4 w-4 animate-spin text-blue-600 dark:text-blue-400" />
+                  </div>
+                ) : (
+                  <div className="font-bold text-blue-600 dark:text-blue-400">
+                    {rankingPosition?.rankingPoints.toLocaleString() || 0}
+                  </div>
+                )}
               </div>
               <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg">
                 <div className="text-sm text-gray-500 dark:text-gray-400">Matches</div>
-                <div className="font-bold text-green-600 dark:text-green-400">{user.totalMatches || 24}</div>
+                {isMatchStatsLoading ? (
+                  <div className="flex justify-center">
+                    <Loader2 className="h-4 w-4 animate-spin text-green-600 dark:text-green-400" />
+                  </div>
+                ) : (
+                  <div className="font-bold text-green-600 dark:text-green-400">
+                    {matchStats?.totalMatches || 0}
+                  </div>
+                )}
               </div>
               <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg">
                 <div className="text-sm text-gray-500 dark:text-gray-400">Rank</div>
-                <div className="font-bold text-purple-600 dark:text-purple-400">7th</div>
+                {isRankingLoading ? (
+                  <div className="flex justify-center">
+                    <Loader2 className="h-4 w-4 animate-spin text-purple-600 dark:text-purple-400" />
+                  </div>
+                ) : (
+                  <div className="font-bold text-purple-600 dark:text-purple-400">
+                    {rankingPosition?.rank ? `${rankingPosition.rank}${getRankSuffix(rankingPosition.rank)}` : '-'}
+                  </div>
+                )}
               </div>
             </div>
             

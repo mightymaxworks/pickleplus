@@ -20,8 +20,8 @@ export function PassportQrCodeCard({ user }: PassportQrCodeCardProps) {
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedId, setCopiedId] = useState(false);
   
-  // Generate a fixed passport ID if one doesn't exist (for demo purposes)
-  const formattedPassportId = user.passportId || `PKL-${Math.floor(100000 + Math.random() * 900000)}`;
+  // Use the user's real passport ID, no mock data
+  const formattedPassportId = user.passportId || `${user.id}`;
   
   // Get the raw passport ID without PKL- prefix and dashes
   const rawPassportId = formattedPassportId.replace(/^PKL-/, '').replace(/-/g, '');
