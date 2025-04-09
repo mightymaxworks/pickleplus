@@ -149,15 +149,14 @@ export default function EnhancedProfile() {
           <div className="flex items-center gap-3 mb-4 md:mb-0">
             <h1 className="text-2xl font-bold">My Profile</h1>
             
-            {showEnhancedProfile && (
-              <Badge 
-                variant="outline" 
-                className="cursor-pointer hover:bg-primary/10 transition-colors"
-                onClick={() => navigate('/profile/enhanced')}
-              >
-                Try Enhanced Profile <ChevronRight className="h-3 w-3 ml-1" />
-              </Badge>
-            )}
+            {/* Always show Enhanced Profile badge */}
+            <Badge 
+              variant="outline" 
+              className="cursor-pointer hover:bg-primary/10 transition-colors"
+              onClick={() => navigate('/profile/enhanced')}
+            >
+              Try Enhanced Profile <ChevronRight className="h-3 w-3 ml-1" />
+            </Badge>
           </div>
           
           <TabsList className="bg-muted rounded-lg">

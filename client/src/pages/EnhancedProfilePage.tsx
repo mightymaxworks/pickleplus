@@ -26,11 +26,11 @@ export default function EnhancedProfilePage() {
       setLocation("/login");
     }
     
-    // If enhanced profile is not enabled, redirect to standard profile
-    if (!showEnhancedProfile) {
-      setLocation("/profile");
-    }
-  }, [isAuthenticated, user, setLocation, showEnhancedProfile]);
+    // Comment out feature flag check to enable access for debugging
+    // if (!showEnhancedProfile) {
+    //   setLocation("/profile");
+    // }
+  }, [isAuthenticated, user, setLocation]);
   
   // Create a safe enhanced user object from the current user
   const enhancedUser: EnhancedUser = {
