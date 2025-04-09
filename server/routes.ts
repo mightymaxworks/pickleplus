@@ -22,7 +22,7 @@ import {
   userDailyMatches
 } from "@shared/schema";
 import { ZodError } from "zod";
-import { generatePassportId, validatePassportId } from "./utils/passport-id";
+import { generateUniquePassportCode, isValidPassportCode } from "./utils/passport-code";
 import { xpService } from "./services";
 
 // Import API route modules
@@ -729,26 +729,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Get user by passport ID
+  // Get user by passport code
   app.get("/api/passport/:passportId", async (req: Request, res: Response) => {
     try {
       const { passportId } = req.params;
       
-      // Validate passport ID format
-      if (!passportId || !validatePassportId(passportId)) {
-        return res.status(400).json({ message: "Invalid passport ID format" });
+      // Validate passport code format
+      if (!passportId || !isValidPassportCode(passportId)) {
+        return res.status(400).json({ message: "Invalid passport code format" });
       }
       
-      const user = await storage.getUserByPassportId(passportId);
+      const user = await storage.getUserByPassportCode(passportId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
       
-      // Return limited public info for the passport ID lookup
+      // Return limited public info for the passport code lookup
       const publicUserInfo = {
         id: user.id,
         displayName: user.displayName,
-        passportId: user.passportId,
+        passportCode: user.passportCode,
         avatarInitials: user.avatarInitials,
         level: user.level,
         rankingPoints: user.rankingPoints
@@ -756,7 +756,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(publicUserInfo);
     } catch (error) {
-      res.status(500).json({ message: "Error retrieving user by passport ID" });
+      res.status(500).json({ message: "Error retrieving user by passport code" });
     }
   });
   
@@ -770,9 +770,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Missing required parameters' });
       }
       
-      // Validate passport ID format
-      if (!validatePassportId(passportId)) {
-        return res.status(400).json({ message: "Invalid passport ID format" });
+      // Validate passport code format
+      if (!isValidPassportCode(passportId)) {
+        return res.status(400).json({ message: "Invalid passport code format" });
       }
       
       // Validate the token (in a real app, this would be a more secure validation)
@@ -795,8 +795,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Invalid token format' });
       }
       
-      // Get user by passport ID
-      const user = await storage.getUserByPassportId(passportId);
+      // Get user by passport code
+      const user = await storage.getUserByPassportCode(passportId);
       
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
@@ -809,7 +809,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         displayName: user.displayName,
         skillLevel: user.skillLevel,
         avatarInitials: user.avatarInitials,
-        passportId: user.passportId,
+        passportCode: user.passportCode,
         level: user.level
       };
       
@@ -954,7 +954,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       if (!passportId) {
-        return res.status(400).json({ message: "Passport ID is required" });
+        return res.status(400).json({ message: "Passport code is required" });
       }
       
       // Verify the tournament exists
@@ -963,10 +963,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Tournament not found" });
       }
       
-      // Find user by passport ID
-      const user = await storage.getUserByPassportId(passportId);
+      // Find user by passport code
+      const user = await storage.getUserByPassportCode(passportId);
       if (!user) {
-        return res.status(404).json({ message: "User not found. Invalid passport ID" });
+        return res.status(404).json({ message: "User not found. Invalid passport code" });
       }
       
       // Check if user is registered for the tournament
@@ -2873,7 +2873,7 @@ function getRandomReason(pointChange: number): string {
               id: user.id,
               username: user.username,
               displayName: user.displayName || user.username,
-              passportId: user.passportId,
+              passportCode: user.passportCode,
               avatarUrl: null,
               avatarInitials: user.avatarInitials || user.username?.substring(0, 2).toUpperCase()
             }));
@@ -2904,7 +2904,7 @@ function getRandomReason(pointChange: number): string {
           id: user.id,
           username: user.username,
           displayName: user.displayName || user.username,
-          passportId: user.passportId || null,
+          passportCode: user.passportCode || null,
           avatarUrl: null, // Safe default
           avatarInitials: user.avatarInitials || (user.username ? user.username.substring(0, 2).toUpperCase() : "?")
         }));

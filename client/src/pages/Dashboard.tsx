@@ -5,11 +5,14 @@ import { PlayerPassport } from '@/components/dashboard/PlayerPassport';
 import { PCPRankings } from '@/components/dashboard/PCPRankings';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
-import { Bolt, BarChart3, Trophy, Award, Star, TrendingUp, Activity } from 'lucide-react';
+import { Bolt, BarChart3, Trophy, Award, Star, TrendingUp, Activity, Copy, Check } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Dashboard() {
   const { user } = useAuth();
   const [isLoaded, setIsLoaded] = useState(false);
+  const { toast } = useToast();
+  const [codeCopied, setCodeCopied] = useState(false);
   
   // Animate elements in sequence after initial load
   useEffect(() => {
@@ -68,6 +71,30 @@ export default function Dashboard() {
                 <h2 className="text-2xl md:text-3xl font-bold mb-1 text-gray-800 dark:text-gray-100">
                   Welcome, <span className="text-indigo-500 dark:text-indigo-400">{user.displayName || user.username}</span>
                 </h2>
+                <div className="flex items-center gap-3 mb-2">
+                  {user.passportCode && (
+                    <div className="inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-700">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Passport Code:</span>
+                      <code className="text-sm font-mono font-medium text-blue-600 dark:text-blue-400">{user.passportCode}</code>
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(user.passportCode || '');
+                          setCodeCopied(true);
+                          toast({
+                            title: "Copied!",
+                            description: "Passport code copied to clipboard",
+                            duration: 2000,
+                          });
+                          setTimeout(() => setCodeCopied(false), 2000);
+                        }}
+                        className="ml-1 p-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                        title="Copy code"
+                      >
+                        {codeCopied ? <Check size={14} className="text-green-500" /> : <Copy size={14} className="text-gray-500" />}
+                      </button>
+                    </div>
+                  )}
+                </div>
                 <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base max-w-xl">
                   Your pickleball journey continues. Track your progress, join tournaments, and connect with the community.
                 </p>

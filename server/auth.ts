@@ -6,6 +6,7 @@ import bcryptjs from "bcryptjs";
 import { storage } from "./storage";
 import { User, insertUserSchema } from "@shared/schema";
 import { z } from "zod";
+import { generateUniquePassportCode } from "./utils/passport-code";
 
 declare global {
   namespace Express {
@@ -27,6 +28,9 @@ export const registerSchema = insertUserSchema
   .extend({
     // Override the password field to add validation
     password: z.string().min(8, "Password must be at least 8 characters"),
+    // Make firstName and lastName required for new registrations
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
   });
 
 // Also export registerUserSchema for backward compatibility
@@ -138,11 +142,28 @@ export function setupAuth(app: Express) {
 
       // Hash the password
       const hashedPassword = await hashPassword(validatedData.password);
+      
+      // Generate a unique passport code
+      const passportCode = await generateUniquePassportCode();
+      if (!passportCode) {
+        return res.status(500).json({ message: "Failed to generate unique passport code" });
+      }
 
-      // Create user with hashed password
+      // Set avatar initials from name
+      const firstName = validatedData.firstName || '';
+      const lastName = validatedData.lastName || '';
+      const avatarInitials = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+      
+      // If displayName is not provided, use firstName + lastName
+      const displayName = validatedData.displayName || `${firstName} ${lastName}`;
+
+      // Create user with hashed password and passport code
       const user = await storage.createUser({
         ...validatedData,
         password: hashedPassword,
+        passportCode,
+        avatarInitials,
+        displayName,
       });
 
       // Log the user in automatically after registration

@@ -30,7 +30,7 @@ export interface IStorage {
   getUserById(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByIdentifier(identifier: string): Promise<User | undefined>;
-  getUserByPassportId(passportId: string): Promise<User | undefined>;
+  getUserByPassportCode(passportCode: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, update: Partial<InsertUser>): Promise<User | undefined>;
   updateUserProfile(id: number, profileData: any): Promise<User | undefined>;
@@ -41,7 +41,7 @@ export interface IStorage {
     id: number; 
     username: string; 
     displayName: string; 
-    passportId: string | null; 
+    passportCode: string | null; 
     avatarUrl: string | null; 
     avatarInitials: string; 
   }[]>;
@@ -236,20 +236,20 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async getUserByPassportId(passportId: string): Promise<User | undefined> {
+  async getUserByPassportCode(passportCode: string): Promise<User | undefined> {
     try {
-      // Validate passportId is not empty or invalid
-      if (!passportId || typeof passportId !== 'string' || passportId.trim() === '') {
-        console.log(`[Storage] getUserByPassportId called with invalid passportId: ${passportId}`);
+      // Validate passportCode is not empty or invalid
+      if (!passportCode || typeof passportCode !== 'string' || passportCode.trim() === '') {
+        console.log(`[Storage] getUserByPassportCode called with invalid passport code: ${passportCode}`);
         return undefined;
       }
       
-      console.log(`[Storage] getUserByPassportId called with passportId: ${passportId}`);
+      console.log(`[Storage] getUserByPassportCode called with passport code: ${passportCode}`);
       
       // Select all fields from the user table
       const [user] = await db.select()
         .from(users)
-        .where(eq(users.passportId, passportId));
+        .where(eq(users.passportCode, passportCode));
       
       // Add any missing fields expected in the User type
       if (user) {
@@ -269,7 +269,7 @@ export class DatabaseStorage implements IStorage {
       
       return user;
     } catch (error) {
-      console.error('[Storage] getUserByPassportId error:', error);
+      console.error('[Storage] getUserByPassportCode error:', error);
       return undefined;
     }
   }
@@ -645,7 +645,7 @@ export class DatabaseStorage implements IStorage {
     id: number; 
     username: string; 
     displayName: string; 
-    passportId: string | null; 
+    passportCode: string | null; 
     avatarUrl: string | null; 
     avatarInitials: string; 
   }[]> {
@@ -707,7 +707,7 @@ export class DatabaseStorage implements IStorage {
           username: users.username,
           displayName: users.displayName,
           email: users.email,
-          passportId: users.passportId,
+          passportCode: users.passportCode,
           avatarInitials: users.avatarInitials,
           location: users.location
         })
@@ -728,7 +728,7 @@ export class DatabaseStorage implements IStorage {
           id: user.id,
           username: user.username,
           displayName: user.displayName || user.username,
-          passportId: user.passportId || null,
+          passportCode: user.passportCode || null,
           avatarUrl: null, // Safe default
           avatarInitials: user.avatarInitials || (user.username ? user.username.substring(0, 2).toUpperCase() : "??")
         }));
@@ -771,7 +771,7 @@ export class DatabaseStorage implements IStorage {
             id: user.id,
             username: user.username,
             displayName: user.displayName || user.username,
-            passportId: null,
+            passportCode: null,
             avatarUrl: null,
             avatarInitials: user.username?.substring(0, 2).toUpperCase() || "??"
           }));
