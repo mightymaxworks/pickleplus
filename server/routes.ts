@@ -114,6 +114,68 @@ const upload = multer({
 // Session handling is now in auth.ts
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Route specifically for external ratings update (used for debugging, will log more info)
+  app.post("/api/profile/update-external-ratings", isAuthenticated, async (req: Request, res: Response) => {
+    if (!req.user) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    try {
+      console.log("[Routes] /api/profile/update-external-ratings - Request body:", JSON.stringify(req.body, null, 2));
+      console.log("[Routes] /api/profile/update-external-ratings - User ID:", req.user.id);
+      
+      // Get the current user data to compare later for XP rewards
+      const oldUser = await storage.getUser(req.user.id);
+      if (!oldUser) {
+        console.log("[Routes] /api/profile/update-external-ratings - User not found with ID:", req.user.id);
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      console.log("[Routes] /api/profile/update-external-ratings - Old user external ratings:");
+      console.log("  DUPR Rating:", oldUser.duprRating);
+      console.log("  DUPR Profile URL:", oldUser.duprProfileUrl);
+      console.log("  UTPR Rating:", oldUser.utprRating);
+      console.log("  UTPR Profile URL:", oldUser.utprProfileUrl);
+      console.log("  WPR Rating:", oldUser.wprRating);
+      console.log("  WPR Profile URL:", oldUser.wprProfileUrl);
+      
+      // Prepare the update data
+      const updateData = {
+        duprRating: req.body.duprRating || null,
+        duprProfileUrl: req.body.duprProfileUrl || null,
+        utprRating: req.body.utprRating || null,
+        utprProfileUrl: req.body.utprProfileUrl || null,
+        wprRating: req.body.wprRating || null,
+        wprProfileUrl: req.body.wprProfileUrl || null,
+        lastExternalRatingUpdate: new Date().toISOString(),
+      };
+      
+      console.log("[Routes] /api/profile/update-external-ratings - Update data:", updateData);
+      
+      // Update the user's profile
+      const updatedUser = await storage.updateUserProfile(req.user.id, updateData);
+      if (!updatedUser) {
+        console.log("[Routes] /api/profile/update-external-ratings - Failed to update profile for user:", req.user.id);
+        return res.status(404).json({ error: "Failed to update profile" });
+      }
+      
+      console.log("[Routes] /api/profile/update-external-ratings - Updated user external ratings:");
+      console.log("  DUPR Rating:", updatedUser.duprRating);
+      console.log("  DUPR Profile URL:", updatedUser.duprProfileUrl);
+      console.log("  UTPR Rating:", updatedUser.utprRating);
+      console.log("  UTPR Profile URL:", updatedUser.utprProfileUrl);
+      console.log("  WPR Rating:", updatedUser.wprRating);
+      console.log("  WPR Profile URL:", updatedUser.wprProfileUrl);
+      
+      res.json({
+        success: true,
+        user: updatedUser
+      });
+    } catch (error) {
+      console.error('Error updating external ratings:', error);
+      res.status(500).json({ error: "Failed to update external ratings" });
+    }
+  });
   // Trust proxy - important for secure cookies in production
   app.set('trust proxy', 1);
 
