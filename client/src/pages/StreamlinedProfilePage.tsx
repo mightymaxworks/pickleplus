@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/select";
 import ProfileStatsTab from '@/components/profile/streamlined/tabs/ProfileStatsTab';
 import { EditableProfileHeader } from '@/components/profile/EditableProfileHeader';
+import { EnhancedProfileCompletion } from '@/components/profile/EnhancedProfileCompletion';
 
 /**
  * Streamlined Profile Page
@@ -830,6 +831,11 @@ const StreamlinedProfilePage: FC = () => {
 
         <div className="mt-4">
           <TabsContent value="overview" className="mt-0">
+            {/* Profile Completion Progress Bar */}
+            <Card className="p-4 mb-4">
+              <EnhancedProfileCompletion />
+            </Card>
+            
             <Card className="p-6">
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
