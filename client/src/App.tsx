@@ -17,6 +17,7 @@ import EnhancedProfilePage from './pages/EnhancedProfilePage'
 import ContextualEnhancedProfile from './pages/ContextualEnhancedProfile'
 import ProfileEdit from './pages/ProfileEdit'
 import StreamlinedProfilePage from './pages/StreamlinedProfilePage'
+import { LeaderboardPage } from './pages/LeaderboardPage'
 import LandingPageTest from './pages/LandingPageTest'
 import NotFound from './pages/not-found'
 
@@ -108,6 +109,11 @@ export default function App() {
             </Route>
             <Route path="/admin">
               {(params) => <ProtectedRoute component={Dashboard} path="/admin" />}
+            </Route>
+            
+            {/* Leaderboard Route */}
+            <Route path="/leaderboard">
+              {(params) => <ProtectedRoute component={LeaderboardPage} path="/leaderboard" />}
             </Route>
             
             {/* For now we'll keep the Match Reward Demo accessible */}
