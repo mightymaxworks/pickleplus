@@ -65,26 +65,28 @@ export function PCPRankings({ user }: PCPRankingsProps) {
     
     // Calculate recent ranking gains/losses
     const recentHistory = history
-      .filter(entry => new Date(entry.createdAt || '') >= sevenDaysAgo)
+      .filter(entry => new Date(entry.timestamp || '') >= sevenDaysAgo)
       .filter(entry => entry.format === format && entry.ageDivision === ageDivision);
     
     const recentGain = recentHistory.reduce((acc, entry) => {
+      // If we don't have old/new ranking fields, use a default gain of 0
+      if (!entry.oldRanking || !entry.newRanking) return acc;
       return acc + (entry.newRanking - entry.oldRanking);
     }, 0);
     
     // Determine tier based on points
     const userTier = tiers.find(tier => 
       position.rankingPoints >= tier.minRating && 
-      position.rankingPoints <= tier.maxRating
+      position.rankingPoints <= (tier.maxRating || 5.0)
     ) || tiers[0];
     
     // Format top players from leaderboard
-    const topPlayers = leaderboard.slice(0, 3).map(player => ({
+    const topPlayers = Array.isArray(leaderboard) ? leaderboard.slice(0, 3).map(player => ({
       name: player.displayName || player.username,
-      points: player.rankingPoints,
-      rank: player.rank,
+      points: player.pointsTotal || player.rankingPoints || 0,
+      rank: player.position || player.rank || 0,
       userId: player.userId
-    }));
+    })) : [];
     
     return {
       points: position.rankingPoints,

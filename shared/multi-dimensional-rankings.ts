@@ -40,23 +40,43 @@ export interface RankingHistoryEntry {
   ratingTierId: number | null;
   oldRanking: number;
   newRanking: number;
-  reason: string;
-  matchId: number | null;
-  tournamentId: number | null;
-  createdAt: Date | null;
+  reason?: string;
+  matchId?: number | null;
+  tournamentId?: number | null;
+  createdAt?: Date | string | null;
+  timestamp?: string;
+  rankingPoints?: number;
+  rank?: number;
+  skillRating?: number;
 }
 
 /**
  * Entry for the leaderboard
  */
 export interface LeaderboardEntry {
-  id: number;
+  id?: number;
   userId: number;
   username: string;
   displayName: string | null;
-  avatarInitials: string | null;
-  rankingPoints: number;
-  rank: number;
+  avatarInitials?: string | null;
+  avatarUrl?: string | null;
+  countryCode?: string;
+  rankingPoints?: number;
+  rank?: number;
+  position?: number;
+  pointsTotal?: number;
+  specialty?: string;
+  ratings?: {
+    serve?: number;
+    return?: number;
+    dinking?: number;
+    third_shot?: number;
+    court_movement?: number;
+    strategy?: number;
+    offensive?: number;
+    defensive?: number;
+    [key: string]: number | undefined;
+  };
 }
 
 /**

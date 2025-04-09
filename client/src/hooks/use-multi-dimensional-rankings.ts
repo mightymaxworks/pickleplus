@@ -12,6 +12,7 @@ interface RankingPosition {
   rankingPoints: number;
   rank: number;
   totalPlayers: number;
+  skillRating?: number;
 }
 
 interface RatingTier {
@@ -26,6 +27,16 @@ interface RatingTier {
   order: number;
 }
 
+interface LeaderboardResponse {
+  leaderboard: LeaderboardEntry[];
+  categories: string[];
+  tiers: {
+    name: string;
+    minRating: number;
+    color: string;
+  }[];
+}
+
 /**
  * Get the multi-dimensional ranking leaderboard
  */
@@ -36,7 +47,7 @@ export function useMultiDimensionalLeaderboard(
   limit = 100,
   offset = 0
 ) {
-  return useQuery<LeaderboardEntry[]>({
+  return useQuery<LeaderboardResponse>({
     queryKey: [
       '/api/multi-rankings/leaderboard',
       format,
@@ -169,10 +180,11 @@ export function useMultiDimensionalRankingData(
   const error = leaderboardQuery.error || positionQuery.error || historyQuery.error || tiersQuery.error;
 
   return {
-    leaderboard: leaderboardQuery.data || [],
+    leaderboard: leaderboardQuery.data?.leaderboard || [],
     position: positionQuery.data,
     history: historyQuery.data || [],
     tiers: tiersQuery.data || [],
+    categories: leaderboardQuery.data?.categories || [],
     isLoading,
     isError,
     error,
