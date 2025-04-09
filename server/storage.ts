@@ -58,6 +58,8 @@ export interface IStorage {
   // PKL-278651-MATCH-0002-XR - Enhanced Match Recording System
   // Match operations
   getMatch(id: number): Promise<Match | undefined>;
+  getRecentMatches(userId: number, limit?: number): Promise<Match[]>;
+  getMatchesByUser(userId: number, limit?: number, offset?: number): Promise<Match[]>;
   createMatch(matchData: InsertMatch): Promise<Match>;
   
   // Match Statistics
@@ -777,8 +779,7 @@ export class DatabaseStorage implements IStorage {
           id: user.id,
           username: user.username,
           displayName: user.displayName || user.username,
-          passportCode: user.passportId || null,
-          passportId: user.passportId || null,
+          passportCode: user.passportCode || null, 
           avatarUrl: null, // Safe default
           avatarInitials: user.avatarInitials || (user.username ? user.username.substring(0, 2).toUpperCase() : "??")
         }));
@@ -822,7 +823,6 @@ export class DatabaseStorage implements IStorage {
             username: user.username,
             displayName: user.displayName || user.username,
             passportCode: null,
-            passportId: null,
             avatarUrl: null,
             avatarInitials: user.username?.substring(0, 2).toUpperCase() || "??"
           }));
@@ -991,6 +991,73 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('[Storage] createMatch error:', error);
       throw error;
+    }
+  }
+  
+  async getRecentMatches(userId: number, limit: number = 10): Promise<Match[]> {
+    try {
+      // Validate userId is a proper number to avoid database errors
+      const numericUserId = Number(userId);
+      
+      if (isNaN(numericUserId) || !Number.isFinite(numericUserId) || numericUserId < 1) {
+        console.log(`[Storage] getRecentMatches called with invalid userId: ${userId}`);
+        return [];
+      }
+      
+      console.log(`[Storage] getRecentMatches called with userId: ${numericUserId}, limit: ${limit}`);
+      
+      // Find matches where the user was a player or partner
+      const recentMatches = await db.select()
+        .from(matches)
+        .where(
+          or(
+            eq(matches.playerOneId, numericUserId),
+            eq(matches.playerTwoId, numericUserId),
+            eq(matches.playerOnePartnerId, numericUserId),
+            eq(matches.playerTwoPartnerId, numericUserId)
+          )
+        )
+        .orderBy(desc(matches.matchDate))
+        .limit(limit);
+      
+      return recentMatches;
+    } catch (error) {
+      console.error('[Storage] getRecentMatches error:', error);
+      return [];
+    }
+  }
+  
+  async getMatchesByUser(userId: number, limit: number = 20, offset: number = 0): Promise<Match[]> {
+    try {
+      // Validate userId is a proper number to avoid database errors
+      const numericUserId = Number(userId);
+      
+      if (isNaN(numericUserId) || !Number.isFinite(numericUserId) || numericUserId < 1) {
+        console.log(`[Storage] getMatchesByUser called with invalid userId: ${userId}`);
+        return [];
+      }
+      
+      console.log(`[Storage] getMatchesByUser called with userId: ${numericUserId}, limit: ${limit}, offset: ${offset}`);
+      
+      // Find matches where the user was a player or partner
+      const userMatches = await db.select()
+        .from(matches)
+        .where(
+          or(
+            eq(matches.playerOneId, numericUserId),
+            eq(matches.playerTwoId, numericUserId),
+            eq(matches.playerOnePartnerId, numericUserId),
+            eq(matches.playerTwoPartnerId, numericUserId)
+          )
+        )
+        .orderBy(desc(matches.matchDate))
+        .limit(limit)
+        .offset(offset);
+      
+      return userMatches;
+    } catch (error) {
+      console.error('[Storage] getMatchesByUser error:', error);
+      return [];
     }
   }
   
