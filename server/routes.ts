@@ -4,6 +4,7 @@ import { isAuthenticated, isAdmin } from "./auth";
 import { db } from "./db";
 import { eq, and, or, desc, sql } from "drizzle-orm";
 import { storage } from "./storage";
+import { matchRoutes } from "./api/match";
 
 // Import necessary schema
 import { 
@@ -13,6 +14,9 @@ import {
 export async function registerRoutes(app: express.Express): Promise<Server> {
   // API Routes
   console.log("[API] Setting up API routes...");
+  
+  // Register match API routes
+  app.use("/api/match", matchRoutes);
   
   // API routes
   
