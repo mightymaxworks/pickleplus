@@ -71,7 +71,7 @@ export function EnhancedHeroSection() {
                 <div className="w-4 h-4 mr-1.5 bg-white/20 rounded-full flex items-center justify-center">
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 </div>
-                <span>Free forever</span>
+                <span>Free to create an account</span>
               </div>
               <div className="flex items-center">
                 <div className="w-4 h-4 mr-1.5 bg-white/20 rounded-full flex items-center justify-center">
@@ -83,7 +83,7 @@ export function EnhancedHeroSection() {
                 <div className="w-4 h-4 mr-1.5 bg-white/20 rounded-full flex items-center justify-center">
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 </div>
-                <span>5,000+ active players</span>
+                <span>Join our growing community</span>
               </div>
             </div>
           </motion.div>
