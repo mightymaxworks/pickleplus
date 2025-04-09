@@ -11,7 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
 import { 
   UserCircle, Settings, Award, Clock, Info, Dumbbell, BookOpen,
-  Trophy, MapPin, BadgeCheck, Medal, Edit2, Check, X, Calendar
+  Trophy, MapPin, BadgeCheck, Medal, Edit2, Pencil, Check, X, Calendar
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
