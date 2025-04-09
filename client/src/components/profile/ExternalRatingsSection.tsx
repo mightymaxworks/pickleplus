@@ -20,9 +20,10 @@ interface ExternalRatingsProps {
   onSaveSuccess?: () => void;
 }
 
-export function ExternalRatingsSection({ user, isEditable = false, isCurrentUser = false }: ExternalRatingsProps) {
+export function ExternalRatingsSection({ user, isEditable = false, isCurrentUser = false, isEditMode = false, onSaveSuccess }: ExternalRatingsProps) {
   const { toast } = useToast();
-  const [isEditing, setIsEditing] = useState(false);
+  // Initialize editing state based on isEditMode
+  const [isEditing, setIsEditing] = useState(isEditMode);
   
   const [form, setForm] = useState({
     duprRating: user.duprRating || '',
@@ -115,6 +116,11 @@ export function ExternalRatingsSection({ user, isEditable = false, isCurrentUser
       
       // Invalidate cached user data
       queryClient.invalidateQueries({ queryKey: ['/api/auth/current-user'] });
+      
+      // Call onSaveSuccess callback if provided
+      if (onSaveSuccess) {
+        onSaveSuccess();
+      }
       
       toast({
         title: "External Ratings Updated",

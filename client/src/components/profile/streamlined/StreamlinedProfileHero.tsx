@@ -119,11 +119,7 @@ const StreamlinedProfileHero: FC<StreamlinedProfileHeroProps> = ({ user, classNa
                     Founding Member
                   </Badge>
                 )}
-                {user.skillLevel && (
-                  <Badge variant="outline" className="bg-primary/10">
-                    {user.skillLevel} Skill Level
-                  </Badge>
-                )}
+
               </div>
             </div>
           </div>
