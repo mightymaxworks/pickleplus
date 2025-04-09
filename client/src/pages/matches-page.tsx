@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { ChevronRight, Plus, Clock, Trophy, AlertCircle, CheckCircle, Users } from "lucide-react";
+import { ChevronRight, Plus, Clock, Trophy, AlertCircle, AlertTriangle, CheckCircle, Users } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { motion } from "framer-motion";
 
@@ -332,8 +332,27 @@ export function MatchesPage() {
                                     <span>{match.formatType === 'singles' ? 'Singles' : 'Doubles'} Match</span>
                                   </div>
                                   <div className="flex items-center gap-1">
-                                    <CheckCircle className="h-3 w-3" />
-                                    <span>Validated</span>
+                                    {match.validationStatus === 'validated' ? (
+                                      <>
+                                        <CheckCircle className="h-3 w-3 text-green-500" />
+                                        <span>Validated</span>
+                                      </>
+                                    ) : match.validationStatus === 'disputed' ? (
+                                      <>
+                                        <AlertTriangle className="h-3 w-3 text-amber-500" />
+                                        <span>Disputed</span>
+                                      </>
+                                    ) : match.validationStatus === 'confirmed' ? (
+                                      <>
+                                        <CheckCircle className="h-3 w-3 text-blue-500" />
+                                        <span>Confirmed</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Clock className="h-3 w-3 text-amber-500" />
+                                        <span>Pending</span>
+                                      </>
+                                    )}
                                   </div>
                                 </div>
                                 
