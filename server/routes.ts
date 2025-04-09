@@ -269,60 +269,14 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     res.send(htmlContent);
   });
   
-  // Add a root route handler that serves the test page
-  app.get("/", (req: Request, res: Response) => {
-    console.log("[ROOT] Serving root HTML page");
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Pickle+ Server Status</title>
-          <style>
-            body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-            h1 { color: #FF5722; }
-            .card { border: 1px solid #eee; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
-            .links { margin-top: 30px; }
-            .btn { display: inline-block; background: #FF5722; color: white; padding: 10px 20px; 
-                  text-decoration: none; border-radius: 4px; margin-right: 10px; }
-          </style>
-        </head>
-        <body>
-          <h1>Pickle+ Server</h1>
-          <div class="card">
-            <h2>Server Status</h2>
-            <p>👍 The server is up and running. The API endpoints are available.</p>
-            <p>👉 You are seeing this page because the Vite middleware that serves the React application is not working correctly.</p>
-          </div>
-          <div class="card">
-            <h2>Troubleshooting</h2>
-            <p>Possible issues:</p>
-            <ul>
-              <li>The Vite middleware configuration may need adjustment</li>
-              <li>The React application may have errors preventing it from loading</li>
-              <li>The frontend build process may need to be restarted</li>
-            </ul>
-          </div>
-          <div class="links">
-            <a href="/test-page" class="btn">View Test Page</a>
-            <a href="/api/health" class="btn">Check API Health</a>
-          </div>
-        </body>
-      </html>
-    `;
-    res.setHeader('Content-Type', 'text/html');
-    res.send(htmlContent);
-  });
+  // Remove the root route handler to allow Vite to handle it
+  // This ensures the Vite middleware can correctly serve the React application
   
-  // Handle 404 errors
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    console.log(`[404] Route not found: ${req.path}`);
-    if (req.path.startsWith('/api')) {
-      // For API routes, return JSON
-      res.status(404).json({ error: "API endpoint not found", path: req.path });
-    } else {
-      // For other routes, redirect to the root page
-      res.redirect('/');
-    }
+  // Handle 404 errors for API routes only
+  // Let Vite handle other routes for the React app
+  app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
+    console.log(`[404] API route not found: ${req.path}`);
+    res.status(404).json({ error: "API endpoint not found", path: req.path });
   });
   
   // Server is started in index.ts, so we just need to return null here
