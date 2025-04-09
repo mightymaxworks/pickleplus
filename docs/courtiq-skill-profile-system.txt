@@ -1,0 +1,255 @@
+# CourtIQ™ Skill Profile System Documentation
+# Pickle+ Platform
+# Last Updated: April 9, 2025
+
+## OVERVIEW
+
+The CourtIQ™ Skill Profile System is a proprietary multi-dimensional rating framework designed to 
+provide pickleball players with detailed insights into their strengths, weaknesses, and areas for 
+improvement. Unlike traditional single-number rating systems, CourtIQ™ uses advanced statistical 
+analysis of match data to generate a comprehensive skill profile visualized through an interactive 
+radar chart.
+
+## CORE COMPONENTS
+
+### 1. Skill Dimensions
+
+The system tracks and evaluates player performance across 8 key dimensions:
+
+a) Serve Strength (SRV): Measures effectiveness of the serve as an offensive weapon
+b) Return Accuracy (RET): Evaluates ability to effectively return serves
+c) Net Play (NET): Assesses volleying skills and net control
+d) Dinking/Soft Game (DNK): Measures control and consistency in soft-game exchanges
+e) Power Shots/Drives (PWR): Evaluates driving and power shot effectiveness
+f) Court Movement/Footwork (MOV): Tracks court coverage and positioning
+g) Strategic Awareness (STR): Measures shot selection and tactical decision-making
+h) Mental Toughness (MNT): Evaluates performance under pressure and focus
+
+### 2. Rating Scale
+
+Each dimension is rated on a normalized 0-100 scale:
+- 0-20: Beginner 
+- 21-40: Intermediate
+- 41-60: Advanced Intermediate
+- 61-80: Advanced
+- 81-100: Elite/Professional
+
+A composite CourtIQ™ Rating is calculated as a weighted average of all dimensions,
+adjusted for match context and level of competition.
+
+## DATA COLLECTION METHODOLOGY
+
+### 1. Match Recording System
+
+The Enhanced Match Recording System captures detailed performance metrics during match play:
+
+a) Shot-by-Shot Tracking
+   - Success rates for specific shot types
+   - Error categorization (forced vs. unforced)
+   - Positional data (where shots are made from and placed to)
+
+b) Context-Aware Analysis
+   - Performance in high-pressure points
+   - Adaptability to different opponents
+   - Effectiveness against different playing styles
+
+### 2. Statistical Processing
+
+Raw match data undergoes multi-stage processing:
+
+a) Initial Calculation
+   - Performance metrics are converted to dimension-specific scores
+   - Example: 
+     ServeStrength = (AcesPercentage × 0.4) + (UnreturnedServesPercentage × 0.3) + (ServiceWinPercentage × 0.3)
+
+b) Opponent-Adjusted Calibration
+   - Scores are weighted based on opponent skill levels
+   - Win against stronger opponent in a dimension = larger improvement
+
+c) Confidence Interval Determination
+   - New players have wider confidence intervals
+   - More match data narrows the confidence range
+   - Displayed visually as thickness of radar chart lines
+
+### 3. Progressive Rating Updates
+
+Ratings update dynamically using exponential weighted averages:
+
+a) Formula: NewRating = CurrentRating × 0.7 + MatchPerformance × 0.3
+
+b) Recent matches have more influence than older ones
+
+c) System becomes more "certain" about ratings as more data is collected:
+   - Provisional status for first 5-10 matches
+   - Established status for 11-30 matches
+   - Mature status for 31+ matches
+
+## TECHNICAL IMPLEMENTATION
+
+### 1. Database Schema
+
+a) player_dimensions
+   - user_id (FK)
+   - dimension_id
+   - current_value (0-100)
+   - confidence_interval
+   - last_updated
+   - matches_analyzed
+
+b) dimension_history
+   - user_id (FK)
+   - dimension_id
+   - value
+   - timestamp
+   - match_id (FK)
+
+c) match_dimension_impacts
+   - match_id (FK)
+   - user_id (FK)
+   - dimension_id
+   - previous_value
+   - new_value
+   - impact_reason
+
+### 2. API Endpoints
+
+a) GET /api/courtiq/profile/:userId
+   - Returns current dimension values and confidence intervals
+   - Includes composite CourtIQ™ Rating
+
+b) GET /api/courtiq/profile/:userId/history
+   - Returns historical progression of each dimension
+   - Supports date range filtering
+
+c) GET /api/courtiq/profile/:userId/recommendations
+   - Generates personalized improvement suggestions based on weakest dimensions
+   - Links to training resources
+
+d) GET /api/courtiq/profile/compare?user1=X&user2=Y
+   - Provides side-by-side comparison of two players
+   - Highlights complementary strengths for potential doubles partners
+
+### 3. Update Triggers
+
+a) Post-Match Processing
+   - Dimension values update immediately after match validation
+   - Players receive notification of changes
+
+b) Periodic Recalibration
+   - Daily batch processing to normalize ratings across player population
+   - Weekly calculation of percentile rankings by dimension
+
+## USER EXPERIENCE
+
+### 1. Profile Creation
+
+New players enter the system through one of these methods:
+
+a) Guided Self-Assessment (provisional rating)
+   - Years playing pickleball
+   - Sports background
+   - Self-reported strengths/weaknesses
+
+b) Placement Matches
+   - System analyzes 3-5 initial matches
+   - Creates baseline profile with wide confidence intervals
+   - Clearly labeled as "Provisional"
+
+### 2. Profile Visualization
+
+The primary interface is an interactive radar chart:
+
+a) Visual Elements:
+   - Octagonal shape representing 8 dimensions
+   - Colored regions indicating strength levels
+   - Confidence interval thickness
+   - Historical overlays
+
+b) Interaction Features:
+   - Dimension tooltips with detailed statistics
+   - Comparison toggle for friend/benchmark profiles
+   - Time-based slider to view progression
+
+### 3. Growth Tracking
+
+Players can monitor their development through:
+
+a) Dimension History Timeline
+   - Chronological progression charts
+   - Match impact annotations
+   - Trend indicators
+
+b) Achievements & Milestones
+   - Dimension-specific achievement badges
+   - Level-up notifications
+   - Statistical percentile rankings
+
+c) Improvement Recommendations
+   - AI-generated suggestions based on skill gaps
+   - Practice drills tailored to weakest dimensions
+   - Partner recommendations for complementary practice
+
+### 4. Social Integration
+
+The skill profile facilitates community interaction:
+
+a) Match-Making
+   - Finds players with similar overall profiles
+   - Identifies players with specific dimensional strengths for targeted practice
+
+b) Team Formation
+   - Suggests doubles partners with complementary skills
+   - Team strength analysis for tournament participation
+
+c) Community Benchmarking
+   - Percentile rankings within age/region groups
+   - Comparative progression rates
+
+## IMPLEMENTATION PHASES
+
+### Phase 1: Core System Launch
+- Basic dimension tracking
+- Simple radar chart visualization
+- Match data collection framework
+
+### Phase 2: Enhanced Analytics
+- Confidence interval visualization
+- Historical progression tracking
+- Basic improvement recommendations
+
+### Phase 3: Advanced Features
+- AI-driven personalized coaching recommendations
+- Video analysis integration
+- Tournament performance prediction
+
+## TECHNICAL DEPENDENCIES
+
+- Frontend: React with Recharts for radar visualization
+- API: Express.js endpoints for data retrieval/processing
+- Storage: PostgreSQL with specialized statistical functions
+- Analysis: Custom algorithms for dimension calculations
+
+## BUSINESS IMPACT
+
+The CourtIQ™ Skill Profile System delivers value through:
+
+1. Player Engagement
+   - Detailed insights drive platform retention
+   - Achievement system encourages regular play and recording
+
+2. Competitive Differentiation
+   - Proprietary multi-dimensional analysis vs. single-number systems
+   - Creates platform lock-in through accumulated performance history
+
+3. Premium Opportunity
+   - Advanced analysis features for premium/founding members
+   - Partnership opportunities with coaches for targeted instruction
+
+4. Data Asset
+   - Aggregated performance data enables research insights
+   - Potential licensing opportunities to equipment manufacturers
+
+---
+Confidential & Proprietary
+Pickle+ Platform
+© 2025 All Rights Reserved

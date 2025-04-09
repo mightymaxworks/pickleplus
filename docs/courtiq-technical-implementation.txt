@@ -1,0 +1,1169 @@
+# CourtIQ™ Skill Profile System - Technical Implementation Guide
+# Pickle+ Platform
+# Last Updated: April 9, 2025
+
+## DATABASE SCHEMA IMPLEMENTATION
+
+### Core Tables
+
+```typescript
+// In shared/courtiq-schema.ts
+
+// 1. Player Dimensions Table
+export const playerDimensions = pgTable('player_dimensions', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  dimensionId: integer('dimension_id').references(() => skillDimensions.id),
+  currentValue: decimal('current_value', { precision: 5, scale: 2 }).notNull(),
+  confidenceInterval: decimal('confidence_interval', { precision: 5, scale: 2 }).notNull(),
+  lastUpdated: timestamp('last_updated').defaultNow(),
+  matchesAnalyzed: integer('matches_analyzed').default(0),
+  
+  // Unique constraint to ensure one record per user/dimension
+  uniqueUserDimension: uniqueIndex('unique_user_dimension').on(userId, dimensionId)
+});
+
+// 2. Skill Dimensions Reference Table
+export const skillDimensions = pgTable('skill_dimensions', {
+  id: serial('id').primaryKey(),
+  code: varchar('code', { length: 3 }).notNull().unique(), // e.g., SRV, RET, NET
+  name: varchar('name', { length: 50 }).notNull(),
+  description: text('description'),
+  weightInComposite: decimal('weight_in_composite', { precision: 3, scale: 2 }).default('1.00'),
+  displayOrder: integer('display_order').default(0)
+});
+
+// 3. Dimension History Table
+export const dimensionHistory = pgTable('dimension_history', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  dimensionId: integer('dimension_id').references(() => skillDimensions.id),
+  value: decimal('value', { precision: 5, scale: 2 }).notNull(),
+  timestamp: timestamp('timestamp').defaultNow(),
+  matchId: integer('match_id').references(() => matches.id),
+  
+  // Index for performance on historical queries
+  userTimestampIdx: index('user_timestamp_idx').on(userId, timestamp)
+});
+
+// 4. Match Dimension Impacts Table
+export const matchDimensionImpacts = pgTable('match_dimension_impacts', {
+  id: serial('id').primaryKey(),
+  matchId: integer('match_id').references(() => matches.id, { onDelete: 'cascade' }),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  dimensionId: integer('dimension_id').references(() => skillDimensions.id),
+  previousValue: decimal('previous_value', { precision: 5, scale: 2 }).notNull(),
+  newValue: decimal('new_value', { precision: 5, scale: 2 }).notNull(),
+  impactReason: text('impact_reason'),
+  
+  // Index for querying recent impacts
+  matchUserIdx: index('match_user_idx').on(matchId, userId)
+});
+
+// 5. Composite Rating Table
+export const compositeRatings = pgTable('composite_ratings', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).unique(),
+  courtIQRating: decimal('courtiq_rating', { precision: 6, scale: 2 }).notNull(),
+  confidenceInterval: decimal('confidence_interval', { precision: 5, scale: 2 }).notNull(),
+  lastUpdated: timestamp('last_updated').defaultNow(),
+  tier: varchar('tier', { length: 20 }), // e.g., "Advanced", "Pro"
+  percentile: decimal('percentile', { precision: 5, scale: 2 }),
+  isProvisional: boolean('is_provisional').default(true)
+});
+
+// 6. Skill Improvement Recommendations
+export const skillImprovementRecs = pgTable('skill_improvement_recs', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  dimensionId: integer('dimension_id').references(() => skillDimensions.id),
+  recommendationType: varchar('recommendation_type', { length: 30 }), // e.g., "Drill", "Partner Practice"
+  recommendationText: text('recommendation_text').notNull(),
+  resourceLink: varchar('resource_link', { length: 255 }),
+  createdAt: timestamp('created_at').defaultNow(),
+  isCompleted: boolean('is_completed').default(false),
+  
+  // Index for fast retrieval of active recommendations
+  userActiveIdx: index('user_active_idx').on(userId, isCompleted)
+});
+```
+
+## API IMPLEMENTATION
+
+### Core API Routes
+
+```typescript
+// In server/routes.ts
+
+// 1. Get Current Skill Profile
+app.get('/api/courtiq/profile/:userId', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    
+    // Check if authorized to view this profile
+    if (req.user.id !== userId && !req.user.isAdmin) {
+      // Check friendship status or other sharing permissions
+      const hasAccess = await profileVisibilityCheck(req.user.id, userId);
+      if (!hasAccess) {
+        return res.status(403).json({ message: 'You do not have permission to view this profile' });
+      }
+    }
+    
+    // Fetch the player's dimensions
+    const dimensions = await db.query.playerDimensions.findMany({
+      where: eq(playerDimensions.userId, userId),
+      with: {
+        dimension: true
+      },
+      orderBy: (dims, { asc }) => [asc(dims.dimension.displayOrder)]
+    });
+    
+    // Fetch composite rating
+    const compositeRating = await db.query.compositeRatings.findFirst({
+      where: eq(compositeRatings.userId, userId)
+    });
+    
+    // Format for radar chart visualization
+    const radarData = dimensions.map(dim => ({
+      dimensionCode: dim.dimension.code,
+      dimensionName: dim.dimension.name,
+      value: parseFloat(dim.currentValue.toString()),
+      confidenceInterval: parseFloat(dim.confidenceInterval.toString())
+    }));
+    
+    return res.status(200).json({
+      userId,
+      radarData,
+      compositeRating: compositeRating ? {
+        rating: parseFloat(compositeRating.courtIQRating.toString()),
+        confidence: parseFloat(compositeRating.confidenceInterval.toString()),
+        tier: compositeRating.tier,
+        percentile: compositeRating.percentile ? parseFloat(compositeRating.percentile.toString()) : null,
+        isProvisional: compositeRating.isProvisional
+      } : null,
+      lastUpdated: dimensions.length > 0 ? dimensions[0].lastUpdated : null,
+      matchesAnalyzed: dimensions.length > 0 ? dimensions[0].matchesAnalyzed : 0
+    });
+  } catch (error) {
+    console.error('Error fetching CourtIQ profile:', error);
+    return res.status(500).json({ message: 'Failed to retrieve skill profile' });
+  }
+});
+
+// 2. Get Skill Profile History
+app.get('/api/courtiq/profile/:userId/history', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const dimensionCode = req.query.dimension as string;
+    const timeframe = req.query.timeframe as string || '6m'; // Default 6 months
+    
+    // Calculate date range based on timeframe
+    const endDate = new Date();
+    let startDate = new Date();
+    
+    switch (timeframe) {
+      case '1m':
+        startDate.setMonth(endDate.getMonth() - 1);
+        break;
+      case '3m':
+        startDate.setMonth(endDate.getMonth() - 3);
+        break;
+      case '6m':
+        startDate.setMonth(endDate.getMonth() - 6);
+        break;
+      case '1y':
+        startDate.setFullYear(endDate.getFullYear() - 1);
+        break;
+      case 'all':
+        startDate = new Date(0); // Beginning of time
+        break;
+      default:
+        startDate.setMonth(endDate.getMonth() - 6);
+    }
+    
+    // Construct the query
+    let query = db.select().from(dimensionHistory)
+      .where(and(
+        eq(dimensionHistory.userId, userId),
+        gte(dimensionHistory.timestamp, startDate),
+        lte(dimensionHistory.timestamp, endDate)
+      ))
+      .innerJoin(skillDimensions, eq(dimensionHistory.dimensionId, skillDimensions.id))
+      .orderBy(dimensionHistory.timestamp);
+    
+    // Add dimension filter if specified
+    if (dimensionCode) {
+      query = query.where(eq(skillDimensions.code, dimensionCode));
+    }
+    
+    const historyData = await query;
+    
+    // Group by dimension for timeline visualization
+    const groupedByDimension = historyData.reduce((acc, record) => {
+      const dimCode = record.skill_dimensions.code;
+      if (!acc[dimCode]) {
+        acc[dimCode] = [];
+      }
+      
+      acc[dimCode].push({
+        timestamp: record.dimension_history.timestamp,
+        value: parseFloat(record.dimension_history.value.toString()),
+        matchId: record.dimension_history.matchId
+      });
+      
+      return acc;
+    }, {} as Record<string, any[]>);
+    
+    return res.status(200).json({
+      userId,
+      timeframe,
+      dimensionHistories: groupedByDimension
+    });
+  } catch (error) {
+    console.error('Error fetching skill history:', error);
+    return res.status(500).json({ message: 'Failed to retrieve skill history' });
+  }
+});
+
+// 3. Get Improvement Recommendations
+app.get('/api/courtiq/profile/:userId/recommendations', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    
+    // Only allow access to your own recommendations
+    if (req.user.id !== userId) {
+      return res.status(403).json({ message: 'You can only view your own recommendations' });
+    }
+    
+    // Get active recommendations
+    const recommendations = await db.query.skillImprovementRecs.findMany({
+      where: and(
+        eq(skillImprovementRecs.userId, userId),
+        eq(skillImprovementRecs.isCompleted, false)
+      ),
+      with: {
+        dimension: true
+      },
+      orderBy: (recs, { asc }) => [asc(recs.createdAt)]
+    });
+    
+    // Get the player's current dimensions to provide context
+    const dimensions = await db.query.playerDimensions.findMany({
+      where: eq(playerDimensions.userId, userId),
+      with: {
+        dimension: true
+      }
+    });
+    
+    // Create a map of dimension values for easy access
+    const dimensionValues = dimensions.reduce((acc, dim) => {
+      acc[dim.dimensionId] = parseFloat(dim.currentValue.toString());
+      return acc;
+    }, {} as Record<number, number>);
+    
+    // Format recommendations with context
+    const formattedRecs = recommendations.map(rec => ({
+      id: rec.id,
+      dimensionCode: rec.dimension.code,
+      dimensionName: rec.dimension.name,
+      currentValue: dimensionValues[rec.dimensionId] || 0,
+      type: rec.recommendationType,
+      recommendation: rec.recommendationText,
+      resourceLink: rec.resourceLink,
+      createdAt: rec.createdAt
+    }));
+    
+    return res.status(200).json({
+      userId,
+      recommendations: formattedRecs
+    });
+  } catch (error) {
+    console.error('Error fetching recommendations:', error);
+    return res.status(500).json({ message: 'Failed to retrieve recommendations' });
+  }
+});
+
+// 4. Compare Skill Profiles
+app.get('/api/courtiq/profile/compare', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const user1Id = parseInt(req.query.user1 as string);
+    const user2Id = parseInt(req.query.user2 as string);
+    
+    // Ensure both IDs are valid
+    if (isNaN(user1Id) || isNaN(user2Id)) {
+      return res.status(400).json({ message: 'Invalid user IDs' });
+    }
+    
+    // Check permissions for both profiles
+    const canViewUser1 = req.user.id === user1Id || req.user.isAdmin || await profileVisibilityCheck(req.user.id, user1Id);
+    const canViewUser2 = req.user.id === user2Id || req.user.isAdmin || await profileVisibilityCheck(req.user.id, user2Id);
+    
+    if (!canViewUser1 || !canViewUser2) {
+      return res.status(403).json({ message: 'You do not have permission to compare these profiles' });
+    }
+    
+    // Fetch profiles for both users
+    const [user1Dimensions, user2Dimensions] = await Promise.all([
+      db.query.playerDimensions.findMany({
+        where: eq(playerDimensions.userId, user1Id),
+        with: { dimension: true }
+      }),
+      db.query.playerDimensions.findMany({
+        where: eq(playerDimensions.userId, user2Id),
+        with: { dimension: true }
+      })
+    ]);
+    
+    // Create comparison data
+    const comparisonData = skillDimensions.map(dim => {
+      const user1Dim = user1Dimensions.find(d => d.dimensionId === dim.id);
+      const user2Dim = user2Dimensions.find(d => d.dimensionId === dim.id);
+      
+      return {
+        dimensionCode: dim.code,
+        dimensionName: dim.name,
+        user1Value: user1Dim ? parseFloat(user1Dim.currentValue.toString()) : 0,
+        user2Value: user2Dim ? parseFloat(user2Dim.currentValue.toString()) : 0,
+        difference: user1Dim && user2Dim ? 
+          parseFloat(user1Dim.currentValue.toString()) - parseFloat(user2Dim.currentValue.toString()) : 
+          0
+      };
+    });
+    
+    // Calculate compatibility score for doubles (higher when skills are complementary)
+    const compatibilityScore = calculateDoublesCompatibility(user1Dimensions, user2Dimensions);
+    
+    return res.status(200).json({
+      user1Id,
+      user2Id,
+      comparisonData,
+      compatibilityScore,
+      compatibilityAnalysis: generateCompatibilityAnalysis(comparisonData, compatibilityScore)
+    });
+  } catch (error) {
+    console.error('Error comparing profiles:', error);
+    return res.status(500).json({ message: 'Failed to compare profiles' });
+  }
+});
+```
+
+## FRONTEND IMPLEMENTATION
+
+### Skill Profile Component
+
+```tsx
+// In client/src/components/profile/CourtIQSkillProfile.tsx
+
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import {
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ResponsiveContainer,
+  Tooltip
+} from 'recharts';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { 
+  Calendar, 
+  ChevronDown, 
+  ChevronUp, 
+  Download, 
+  Info,
+  Share2
+} from 'lucide-react';
+
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
+// Type definitions for the component
+interface SkillProfileProps {
+  userId: number;
+  showComparison?: boolean;
+  comparisonUserId?: number;
+}
+
+interface DimensionData {
+  dimensionCode: string;
+  dimensionName: string;
+  value: number;
+  confidenceInterval: number;
+}
+
+interface CompositeRating {
+  rating: number;
+  confidence: number;
+  tier: string;
+  percentile: number | null;
+  isProvisional: boolean;
+}
+
+interface ProfileData {
+  userId: number;
+  radarData: DimensionData[];
+  compositeRating: CompositeRating | null;
+  lastUpdated: string | null;
+  matchesAnalyzed: number;
+}
+
+// Main component
+export function CourtIQSkillProfile({ userId, showComparison = false, comparisonUserId }: SkillProfileProps) {
+  const [timeframe, setTimeframe] = useState<'current' | '1m' | '3m' | '6m' | '1y'>('current');
+  const [selectedDimension, setSelectedDimension] = useState<string | null>(null);
+  
+  // Fetch current skill profile
+  const { data: profileData, isLoading, error } = useQuery({
+    queryKey: ['/api/courtiq/profile', userId],
+    enabled: !!userId
+  });
+  
+  // Fetch comparison profile if needed
+  const { data: comparisonData, isLoading: isComparisonLoading } = useQuery({
+    queryKey: ['/api/courtiq/profile', comparisonUserId],
+    enabled: showComparison && !!comparisonUserId
+  });
+  
+  // Fetch historical data if timeframe is not 'current'
+  const { data: historyData, isLoading: isHistoryLoading } = useQuery({
+    queryKey: ['/api/courtiq/profile', userId, 'history', timeframe, selectedDimension],
+    enabled: timeframe !== 'current' && !!userId
+  });
+  
+  // Handle loading state
+  if (isLoading) {
+    return <SkillProfileSkeleton />;
+  }
+  
+  // Handle error state
+  if (error || !profileData) {
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
+        <p className="text-red-800">Unable to load skill profile data.</p>
+        <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
+          Try Again
+        </Button>
+      </div>
+    );
+  }
+  
+  // Process data for radar chart
+  const chartData = processChartData(profileData, comparisonData);
+  
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      {/* Header section */}
+      <div className="bg-gradient-to-r from-[#FF5722]/10 to-[#FF5722]/5 px-4 py-3 border-b border-gray-100">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-gray-800 flex items-center">
+              CourtIQ™ Skill Profile
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" className="h-6 w-6 p-0 ml-1" aria-label="Info">
+                    <Info className="h-4 w-4 text-gray-500" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="max-w-sm">
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-sm">About CourtIQ™ Skill Profile</h4>
+                    <p className="text-sm text-gray-600">
+                      This radar chart displays your skill levels across 8 key pickleball dimensions,
+                      calculated from your match history and performance data.
+                    </p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Last updated: {profileData.lastUpdated ? new Date(profileData.lastUpdated).toLocaleDateString() : 'Never'}
+                    </p>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </h3>
+            <p className="text-xs text-gray-500">
+              Based on {profileData.matchesAnalyzed} matches
+              {profileData.compositeRating?.isProvisional && (
+                <span className="ml-1 text-amber-600 font-medium">• Provisional</span>
+              )}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="sm" className="text-gray-500">
+              <Share2 className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">Share</span>
+            </Button>
+            <Button variant="ghost" size="sm" className="text-gray-500">
+              <Download className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">Export</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+      
+      {/* Composite rating display */}
+      {profileData.compositeRating && (
+        <div className="px-4 py-2 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+          <div className="flex items-center">
+            <div className="bg-[#FF5722] text-white rounded-full h-10 w-10 flex items-center justify-center font-bold mr-3">
+              {Math.floor(profileData.compositeRating.rating / 100)}
+            </div>
+            <div>
+              <div className="font-semibold text-gray-800">
+                {profileData.compositeRating.rating.toFixed(0)} CourtIQ™ Rating
+              </div>
+              <div className="text-xs text-gray-500 flex items-center">
+                {profileData.compositeRating.tier} Level
+                {profileData.compositeRating.percentile && (
+                  <span className="ml-2 bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">
+                    Top {profileData.compositeRating.percentile}%
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          {/* Rating trend indicator */}
+          <div className="flex items-center">
+            <div className="flex flex-col items-end mr-2">
+              <div className="text-xs font-medium text-green-600 flex items-center">
+                <ChevronUp className="h-3 w-3" />
+                +23
+              </div>
+              <div className="text-xs text-gray-500">30 days</div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Tabs for current vs historical view */}
+      <Tabs defaultValue="current" className="w-full" onValueChange={(val) => setTimeframe(val as any)}>
+        <div className="px-4 pt-2">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="current">Current</TabsTrigger>
+            <TabsTrigger value="1m">1 Month</TabsTrigger>
+            <TabsTrigger value="3m">3 Months</TabsTrigger>
+            <TabsTrigger value="6m">6 Months</TabsTrigger>
+            <TabsTrigger value="1y">1 Year</TabsTrigger>
+          </TabsList>
+        </div>
+        
+        <TabsContent value="current" className="p-4">
+          {/* Current skill radar chart */}
+          <div className="w-full h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
+                <PolarGrid stroke="#e5e7eb" />
+                <PolarAngleAxis 
+                  dataKey="dimensionName" 
+                  tick={{ fill: '#4b5563', fontSize: 12 }} 
+                  strokeWidth={0}
+                />
+                <PolarRadiusAxis 
+                  angle={90} 
+                  domain={[0, 100]} 
+                  tick={{ fill: '#6b7280' }} 
+                  stroke="#e5e7eb"
+                  tickCount={5}
+                />
+                <Radar
+                  name="Your Skills"
+                  dataKey="value"
+                  stroke="#FF5722"
+                  fill="#FF5722"
+                  fillOpacity={0.3}
+                />
+                {showComparison && comparisonData && (
+                  <Radar
+                    name="Comparison"
+                    dataKey="comparisonValue"
+                    stroke="#2196F3"
+                    fill="#2196F3"
+                    fillOpacity={0.3}
+                  />
+                )}
+                <Tooltip 
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload;
+                      return (
+                        <div className="bg-white p-2 rounded shadow-md border border-gray-200 text-xs">
+                          <p className="font-semibold">{data.dimensionName}</p>
+                          <p className="text-[#FF5722]">Your skill: {data.value}/100</p>
+                          {showComparison && data.comparisonValue !== undefined && (
+                            <p className="text-[#2196F3]">Comparison: {data.comparisonValue}/100</p>
+                          )}
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+          
+          {/* Dimension legend with interaction */}
+          <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {chartData.map(dim => (
+              <div 
+                key={dim.dimensionCode}
+                className="p-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors border border-gray-100"
+                onClick={() => setSelectedDimension(dim.dimensionCode)}
+              >
+                <div className="text-xs font-medium text-gray-500">{dim.dimensionName}</div>
+                <div className="flex items-center justify-between mt-1">
+                  <div className="flex items-center">
+                    <div className="h-2 w-2 rounded-full bg-[#FF5722] mr-1"></div>
+                    <div className="text-sm font-semibold">{dim.value}</div>
+                  </div>
+                  {dim.trending && (
+                    <div className={`text-xs ${dim.trending === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                      {dim.trending === 'up' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="1m" className="p-4">
+          {isHistoryLoading ? (
+            <Skeleton className="w-full h-80" />
+          ) : (
+            <HistoricalChartView historyData={historyData} timeframe="1m" />
+          )}
+        </TabsContent>
+        
+        <TabsContent value="3m" className="p-4">
+          {isHistoryLoading ? (
+            <Skeleton className="w-full h-80" />
+          ) : (
+            <HistoricalChartView historyData={historyData} timeframe="3m" />
+          )}
+        </TabsContent>
+        
+        <TabsContent value="6m" className="p-4">
+          {isHistoryLoading ? (
+            <Skeleton className="w-full h-80" />
+          ) : (
+            <HistoricalChartView historyData={historyData} timeframe="6m" />
+          )}
+        </TabsContent>
+        
+        <TabsContent value="1y" className="p-4">
+          {isHistoryLoading ? (
+            <Skeleton className="w-full h-80" />
+          ) : (
+            <HistoricalChartView historyData={historyData} timeframe="1y" />
+          )}
+        </TabsContent>
+      </Tabs>
+      
+      {/* Skills gap analysis - shown only in comparison mode */}
+      {showComparison && comparisonData && (
+        <div className="px-4 py-3 border-t border-gray-100 bg-gray-50">
+          <h4 className="text-sm font-semibold text-gray-700 mb-2">Skills Gap Analysis</h4>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-[#FF5722]/10 p-2 rounded border border-[#FF5722]/20">
+              <p className="text-xs font-medium">Your Strengths vs. Comparison</p>
+              <ul className="text-xs mt-1 space-y-1">
+                {getSkillsGapAnalysis(chartData, 'strengths').map((item, i) => (
+                  <li key={i} className="flex items-center">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#FF5722] mr-1"></span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="bg-[#2196F3]/10 p-2 rounded border border-[#2196F3]/20">
+              <p className="text-xs font-medium">Areas to Improve vs. Comparison</p>
+              <ul className="text-xs mt-1 space-y-1">
+                {getSkillsGapAnalysis(chartData, 'weaknesses').map((item, i) => (
+                  <li key={i} className="flex items-center">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#2196F3] mr-1"></span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Helper component for historical view
+function HistoricalChartView({ historyData, timeframe }) {
+  // Implementation details would depend on the structure of historyData
+  // This would show line charts of dimension(s) over time
+  return (
+    <div className="text-center text-gray-500">
+      Historical data visualization for {timeframe} timeframe
+      {/* Implement proper historical data visualization here */}
+    </div>
+  );
+}
+
+// Skeleton loader
+function SkillProfileSkeleton() {
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="px-4 py-3 border-b border-gray-100">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-4 w-24 mt-2" />
+      </div>
+      <div className="p-4">
+        <Skeleton className="h-80 w-full rounded-lg" />
+      </div>
+    </div>
+  );
+}
+
+// Helper function to process chart data
+function processChartData(profileData: ProfileData, comparisonData?: ProfileData) {
+  return profileData.radarData.map(dim => ({
+    ...dim,
+    trending: determineTrend(dim.dimensionCode), // This would use historical data in reality
+    comparisonValue: comparisonData?.radarData.find(d => d.dimensionCode === dim.dimensionCode)?.value
+  }));
+}
+
+// Helper to determine trend (would use real historical data in production)
+function determineTrend(dimensionCode: string): 'up' | 'down' | null {
+  // Simplified demo implementation
+  const trends: Record<string, 'up' | 'down' | null> = {
+    SRV: 'up',
+    RET: null,
+    NET: 'up',
+    DNK: 'down',
+    PWR: 'up',
+    MOV: null,
+    STR: 'up',
+    MNT: null
+  };
+  
+  return trends[dimensionCode] || null;
+}
+
+// Helper to generate skills gap analysis
+function getSkillsGapAnalysis(chartData: any[], type: 'strengths' | 'weaknesses') {
+  if (type === 'strengths') {
+    return chartData
+      .filter(dim => dim.value > (dim.comparisonValue || 0) + 10)
+      .map(dim => `${dim.dimensionName} (+${dim.value - (dim.comparisonValue || 0)})`);
+  } else {
+    return chartData
+      .filter(dim => (dim.comparisonValue || 0) > dim.value + 10)
+      .map(dim => `${dim.dimensionName} (-${(dim.comparisonValue || 0) - dim.value})`);
+  }
+}
+```
+
+## DATA PROCESSING UTILITIES
+
+```typescript
+// In server/modules/courtiq/skillCalculator.ts
+
+import { 
+  matches, 
+  matchStatistics,
+  playerDimensions,
+  dimensionHistory,
+  matchDimensionImpacts,
+  compositeRatings
+} from '@shared/courtiq-schema';
+import { db } from '@server/db';
+import { eq, and, lte, gte } from 'drizzle-orm';
+
+/**
+ * Calculate and update player skill dimensions after a match
+ */
+export async function processMatchImpact(matchId: number): Promise<void> {
+  try {
+    // 1. Get match details
+    const match = await db.query.matches.findFirst({
+      where: eq(matches.id, matchId),
+      with: {
+        statistics: true
+      }
+    });
+    
+    if (!match) {
+      throw new Error(`Match with id ${matchId} not found`);
+    }
+    
+    // 2. Get all players involved in the match
+    const playerIds = [
+      match.player1Id, 
+      match.player2Id
+    ];
+    
+    if (match.isDoubles) {
+      playerIds.push(match.player3Id!, match.player4Id!);
+    }
+    
+    // 3. Process each player
+    for (const playerId of playerIds) {
+      await updatePlayerDimensions(playerId, matchId, match);
+    }
+    
+    console.log(`Successfully processed match impact for match ID: ${matchId}`);
+  } catch (error) {
+    console.error('Error processing match impact:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update skill dimensions for a specific player based on match performance
+ */
+async function updatePlayerDimensions(
+  playerId: number, 
+  matchId: number, 
+  match: any
+): Promise<void> {
+  // 1. Get current dimensions for the player
+  const currentDimensions = await db.query.playerDimensions.findMany({
+    where: eq(playerDimensions.userId, playerId)
+  });
+  
+  // If player has no dimensions yet, create initial ones
+  if (currentDimensions.length === 0) {
+    await initializePlayerDimensions(playerId);
+    return;
+  }
+  
+  // 2. Calculate dimension impacts based on match performance
+  const dimensionImpacts = calculateDimensionImpacts(playerId, match);
+  
+  // 3. Update each dimension
+  for (const [dimensionId, impact] of Object.entries(dimensionImpacts)) {
+    const dimId = parseInt(dimensionId);
+    const dimension = currentDimensions.find(d => d.dimensionId === dimId);
+    
+    if (!dimension) continue;
+    
+    // Get previous value
+    const previousValue = parseFloat(dimension.currentValue.toString());
+    
+    // Calculate new value with exponential moving average
+    // 70% weight to current value, 30% to new impact
+    let newValue = previousValue * 0.7 + impact.value * 0.3;
+    
+    // Ensure value is within bounds
+    newValue = Math.max(0, Math.min(100, newValue));
+    
+    // Update confidence interval - narrows with more matches
+    const newConfidence = calculateNewConfidenceInterval(
+      parseFloat(dimension.confidenceInterval.toString()),
+      dimension.matchesAnalyzed
+    );
+    
+    // 4. Save the updated dimension
+    await db.update(playerDimensions)
+      .set({
+        currentValue: newValue,
+        confidenceInterval: newConfidence,
+        matchesAnalyzed: dimension.matchesAnalyzed + 1,
+        lastUpdated: new Date()
+      })
+      .where(and(
+        eq(playerDimensions.userId, playerId),
+        eq(playerDimensions.dimensionId, dimId)
+      ));
+    
+    // 5. Record the history entry
+    await db.insert(dimensionHistory).values({
+      userId: playerId,
+      dimensionId: dimId,
+      value: newValue,
+      matchId: matchId,
+      timestamp: new Date()
+    });
+    
+    // 6. Record the impact reason
+    await db.insert(matchDimensionImpacts).values({
+      matchId: matchId,
+      userId: playerId,
+      dimensionId: dimId,
+      previousValue: previousValue,
+      newValue: newValue,
+      impactReason: impact.reason
+    });
+  }
+  
+  // 7. Update the composite rating
+  await updateCompositeRating(playerId);
+}
+
+/**
+ * Calculate new confidence interval - narrows as more matches are played
+ */
+function calculateNewConfidenceInterval(currentInterval: number, matchesPlayed: number): number {
+  // Confidence interval reduction formula - narrows more slowly as it gets tighter
+  const reduction = Math.min(0.1, currentInterval * 0.05);
+  return Math.max(2.0, currentInterval - reduction);
+}
+
+/**
+ * Calculate dimension impacts based on match performance
+ */
+function calculateDimensionImpacts(playerId: number, match: any): Record<number, { value: number, reason: string }> {
+  // This would be a complex algorithm in production
+  // Example simplified implementation:
+  
+  // Get match statistics for this player
+  const playerStats = match.statistics.find((s: any) => s.playerId === playerId);
+  
+  if (!playerStats) {
+    return {};
+  }
+  
+  // This is a simplified example - real implementation would be much more complex
+  return {
+    // Serve Strength (SRV) - dimension ID 1
+    1: {
+      value: calculateServeStrength(playerStats, match),
+      reason: "Based on serve effectiveness and aces"
+    },
+    // Return Accuracy (RET) - dimension ID 2
+    2: {
+      value: calculateReturnAccuracy(playerStats, match),
+      reason: "Based on return rate and placement"
+    },
+    // Net Play (NET) - dimension ID 3
+    3: {
+      value: calculateNetPlay(playerStats, match),
+      reason: "Based on net performance and volley success"
+    },
+    // Continue for other dimensions...
+  };
+}
+
+/**
+ * Initialize dimensions for a new player
+ */
+async function initializePlayerDimensions(playerId: number): Promise<void> {
+  // Get all dimension IDs
+  const dimensions = await db.query.skillDimensions.findMany();
+  
+  // Create initial dimensions at 50% with wide confidence intervals
+  for (const dimension of dimensions) {
+    await db.insert(playerDimensions).values({
+      userId: playerId,
+      dimensionId: dimension.id,
+      currentValue: 50.0, // Starting at 50%
+      confidenceInterval: 20.0, // Wide confidence interval
+      matchesAnalyzed: 0,
+      lastUpdated: new Date()
+    });
+    
+    // Also create history entries
+    await db.insert(dimensionHistory).values({
+      userId: playerId,
+      dimensionId: dimension.id,
+      value: 50.0,
+      timestamp: new Date()
+    });
+  }
+  
+  // Initialize composite rating
+  await db.insert(compositeRatings).values({
+    userId: playerId,
+    courtIQRating: 500.0, // Starting rating
+    confidenceInterval: 100.0, // Wide confidence
+    tier: 'Beginner',
+    isProvisional: true,
+    lastUpdated: new Date()
+  });
+}
+
+/**
+ * Update composite rating based on dimension values
+ */
+async function updateCompositeRating(playerId: number): Promise<void> {
+  // Get all dimensions for the player
+  const dimensions = await db.query.playerDimensions.findMany({
+    where: eq(playerDimensions.userId, playerId),
+    with: {
+      dimension: true // to get weights
+    }
+  });
+  
+  if (dimensions.length === 0) return;
+  
+  // Calculate weighted average of dimensions
+  let totalWeight = 0;
+  let weightedSum = 0;
+  
+  for (const dim of dimensions) {
+    const weight = parseFloat(dim.dimension.weightInComposite.toString());
+    const value = parseFloat(dim.currentValue.toString());
+    
+    weightedSum += value * weight;
+    totalWeight += weight;
+  }
+  
+  // Calculate composite rating (scaled to 0-1500 range)
+  const compositeValue = (weightedSum / totalWeight) * 15;
+  
+  // Get current composite rating
+  const currentRating = await db.query.compositeRatings.findFirst({
+    where: eq(compositeRatings.userId, playerId)
+  });
+  
+  // Determine tier based on rating
+  const tier = determineTier(compositeValue);
+  
+  // Determine if still provisional
+  const isProvisional = dimensions[0].matchesAnalyzed < 10;
+  
+  if (currentRating) {
+    // Update existing rating
+    await db.update(compositeRatings)
+      .set({
+        courtIQRating: compositeValue,
+        confidenceInterval: calculateCompositeConfidenceInterval(dimensions),
+        tier,
+        isProvisional,
+        lastUpdated: new Date()
+      })
+      .where(eq(compositeRatings.userId, playerId));
+  } else {
+    // Create new rating
+    await db.insert(compositeRatings).values({
+      userId: playerId,
+      courtIQRating: compositeValue,
+      confidenceInterval: calculateCompositeConfidenceInterval(dimensions),
+      tier,
+      isProvisional: true,
+      lastUpdated: new Date()
+    });
+  }
+}
+
+/**
+ * Calculate composite confidence interval based on dimension confidence intervals
+ */
+function calculateCompositeConfidenceInterval(dimensions: any[]): number {
+  // Root mean square of individual confidence intervals
+  return Math.sqrt(
+    dimensions.reduce((sum, dim) => {
+      const confidence = parseFloat(dim.confidenceInterval.toString());
+      return sum + (confidence * confidence);
+    }, 0) / dimensions.length
+  );
+}
+
+/**
+ * Determine tier based on composite rating
+ */
+function determineTier(rating: number): string {
+  if (rating < 300) return 'Beginner';
+  if (rating < 600) return 'Novice';
+  if (rating < 900) return 'Intermediate';
+  if (rating < 1200) return 'Advanced';
+  if (rating < 1400) return 'Expert';
+  return 'Elite';
+}
+
+// Dimension-specific calculation functions
+// These would be much more complex in reality, incorporating opponent strength,
+// match context, and detailed statistics
+
+function calculateServeStrength(stats: any, match: any): number {
+  // Example calculation
+  return (
+    (stats.aces / Math.max(1, stats.servesAttempted) * 100) * 0.4 +
+    (stats.servicePointsWon / Math.max(1, stats.servesAttempted) * 100) * 0.6
+  );
+}
+
+function calculateReturnAccuracy(stats: any, match: any): number {
+  // Example calculation
+  return (
+    (stats.returnPointsWon / Math.max(1, stats.returnsAttempted) * 100) * 0.7 +
+    (stats.winners / Math.max(1, stats.totalShots) * 100) * 0.3
+  );
+}
+
+function calculateNetPlay(stats: any, match: any): number {
+  // Example calculation
+  return (
+    (stats.volleyWinners / Math.max(1, stats.volleysAttempted) * 100) * 0.5 +
+    (stats.netPointsWon / Math.max(1, stats.netPointsPlayed) * 100) * 0.5
+  );
+}
+
+// Additional dimension calculation functions would follow...
+```
+
+## IMPLEMENTATION PLAN
+
+### Phase 1: Core System Setup (1-2 weeks)
+1. Create database schema and migrations
+2. Implement basic API endpoints
+3. Develop radar chart visualization component
+4. Set up match data collection framework
+
+### Phase 2: Data Processing Systems (2-3 weeks)
+1. Implement dimension calculation algorithms
+2. Build match impact processing system
+3. Create historical tracking features
+4. Develop confidence interval visualization
+
+### Phase 3: User Experience Refinement (2 weeks)
+1. Add interactive dimension details
+2. Implement comparison features
+3. Create improvement recommendations
+4. Build mobile responsiveness
+
+### Phase 4: Integration with Match System (1-2 weeks)
+1. Connect to Enhanced Match Recording System
+2. Add real-time dimension updates
+3. Implement animation effects for skill changes
+4. Create notification system for significant changes
+
+### Phase 5: Advanced Features (2-3 weeks)
+1. Implement social comparison features
+2. Build team compatibility analysis
+3. Create personalized improvement paths
+4. Develop administration tools for data quality
+
+## TESTING SCENARIOS
+
+1. New Player Setup
+   - Create new player account
+   - Verify initial radar chart with 50% values
+   - Check provisional status indicator
+
+2. Match Impact Processing
+   - Record test match with various statistics
+   - Verify dimension updates are calculated correctly
+   - Test confidence interval narrowing
+
+3. Historical Views
+   - Record multiple matches over time
+   - Verify dimension history is tracked correctly
+   - Test different timeframe views
+
+4. Comparison Features
+   - Test side-by-side radar charts with two players
+   - Verify skills gap analysis is accurate
+   - Test compatibility score calculation
+
+5. Edge Cases
+   - Test extreme skill differences
+   - Verify confidence intervals behave correctly with limited data
+   - Test system resilience with missing match statistics
+
+---
+Confidential & Proprietary
+Pickle+ Platform
+© 2025 All Rights Reserved
