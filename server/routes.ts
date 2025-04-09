@@ -8,7 +8,8 @@ import { matchRoutes } from "./api/match";
 
 // Import necessary schema
 import { 
-  matches, matchValidations, users
+  matches, matchValidations, users, 
+  type InsertMatch
 } from "@shared/schema";
 
 export async function registerRoutes(app: express.Express): Promise<Server> {
@@ -208,6 +209,43 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
             h1 { color: #FF5722; }
             .card { border: 1px solid #eee; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
           </style>
+          <script>
+            // Add client-side debugging
+            console.log("Test page loaded");
+            
+            // Try to diagnose frontend loading issue
+            window.addEventListener('load', () => {
+              console.log("Window loaded. Checking src folder access...");
+              
+              // Check if we can fetch the main.tsx file
+              fetch('/src/main.tsx')
+                .then(response => {
+                  console.log("main.tsx fetch status:", response.status);
+                  if (response.ok) {
+                    console.log("Successfully fetched main.tsx");
+                  } else {
+                    console.error("Failed to fetch main.tsx");
+                  }
+                })
+                .catch(error => {
+                  console.error("Error fetching main.tsx:", error);
+                });
+                
+              // Check if we can fetch index.html directly
+              fetch('/index.html')
+                .then(response => {
+                  console.log("index.html fetch status:", response.status);
+                  if (response.ok) {
+                    console.log("Successfully fetched index.html");
+                  } else {
+                    console.error("Failed to fetch index.html");
+                  }
+                })
+                .catch(error => {
+                  console.error("Error fetching index.html:", error);
+                });
+            });
+          </script>
         </head>
         <body>
           <h1>Pickle+ Test Page</h1>
@@ -222,7 +260,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
           <div class="card">
             <h2>Frontend Status</h2>
             <p>If you're seeing this page, the server is working but there may be issues with the Vite middleware or the React application.</p>
-            <p>Check the console logs for more information.</p>
+            <p>Check the browser console logs for diagnostic information.</p>
           </div>
         </body>
       </html>
