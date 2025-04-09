@@ -2,7 +2,7 @@ import express, { type Express, Request, Response, NextFunction } from "express"
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin, hashPassword } from "./auth";
-import { PROFILE_FIELDS } from "./services/profile-service";
+import { PROFILE_FIELDS, ProfileService } from "./services/profile-service";
 import { db, client } from "./db";
 import { eq, and, or, sql, desc, asc, inArray, lt, between } from "drizzle-orm";
 import multer from "multer";
@@ -155,7 +155,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Use the ProfileService to get detailed field breakdown
-      const { ProfileService } = require("./services/profile-service");
       const profileService = new ProfileService();
       const fieldBreakdown = profileService.getFieldBreakdown(userRecord);
       const percentage = userRecord.profileCompletionPct || await storage.calculateProfileCompletion(req.user.id);
