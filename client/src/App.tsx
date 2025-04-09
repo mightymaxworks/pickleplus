@@ -17,6 +17,7 @@ import EnhancedProfilePage from './pages/EnhancedProfilePage'
 import ContextualEnhancedProfile from './pages/ContextualEnhancedProfile'
 import ProfileEdit from './pages/ProfileEdit'
 import StreamlinedProfilePage from './pages/StreamlinedProfilePage'
+import LandingPageTest from './pages/LandingPageTest'
 import NotFound from './pages/not-found'
 
 import { useAuth } from './hooks/useAuth'
@@ -64,6 +65,7 @@ export default function App() {
             <Route path="/register" component={EnhancedAuthPage} />
             <Route path="/auth" component={EnhancedAuthPage} />
             <Route path="/test-routing" component={TestRoutingPage} />
+            <Route path="/landing-test" component={LandingPageTest} />
             
             {/* Protected Routes */}
             <Route path="/dashboard">

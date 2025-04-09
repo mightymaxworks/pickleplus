@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 
 interface Particle {
@@ -13,148 +13,152 @@ interface Particle {
 
 interface ParticleBackgroundProps {
   count?: number;
+  colors?: string[];
   minSize?: number;
   maxSize?: number;
   minSpeed?: number;
   maxSpeed?: number;
-  colors?: string[];
+  className?: string;
 }
 
 export function ParticleBackground({
   count = 50,
-  minSize = 2,
-  maxSize = 6,
-  minSpeed = 0.1,
-  maxSpeed = 0.5,
-  colors = ['#FFFFFF', '#FF9800', '#FF5722', '#F3D6C6', '#FFF8F5']
+  colors = ['#FF5722', '#4CAF50', '#2196F3', '#9C27B0', '#FFC107'],
+  minSize = 3,
+  maxSize = 10,
+  minSpeed = 0.05,
+  maxSpeed = 0.2,
+  className = '',
 }: ParticleBackgroundProps) {
-  const [particles, setParticles] = useState<Particle[]>([]);
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const containerRef = useRef<HTMLDivElement>(null);
-  const animationRef = useRef<number>(0);
-  const lastTimeRef = useRef<number>(0);
-  
-  // Generate initial particles
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const particlesRef = useRef<Particle[]>([]);
+  const frameIdRef = useRef<number>(0);
+
   useEffect(() => {
-    if (!containerRef.current) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animationFrameId: number;
+    let width = 0;
+    let height = 0;
     
-    const { clientWidth, clientHeight } = containerRef.current;
-    setDimensions({ width: clientWidth, height: clientHeight });
-    
-    const initialParticles: Particle[] = Array.from({ length: count }, () => ({
-      x: Math.random() * clientWidth,
-      y: Math.random() * clientHeight,
-      size: minSize + Math.random() * (maxSize - minSize),
-      color: colors[Math.floor(Math.random() * colors.length)],
-      speedX: (Math.random() - 0.5) * (maxSpeed - minSpeed) + minSpeed,
-      speedY: (Math.random() - 0.5) * (maxSpeed - minSpeed) + minSpeed,
-      opacity: 0.1 + Math.random() * 0.5
-    }));
-    
-    setParticles(initialParticles);
-  }, [count, minSize, maxSize, minSpeed, maxSpeed, colors]);
-  
-  // Update dimensions on resize
-  useEffect(() => {
-    const handleResize = () => {
-      if (!containerRef.current) return;
+    const resizeCanvas = () => {
+      if (!canvas || !canvas.parentElement) return;
       
-      const { clientWidth, clientHeight } = containerRef.current;
-      setDimensions({ width: clientWidth, height: clientHeight });
+      width = canvas.parentElement.clientWidth;
+      height = canvas.parentElement.clientHeight;
       
-      // Adjust particle positions to fit the new dimensions
-      setParticles(prevParticles => {
-        return prevParticles.map(p => ({
-          ...p,
-          x: Math.min(p.x, clientWidth),
-          y: Math.min(p.y, clientHeight)
-        }));
-      });
-    };
-    
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-  
-  // Animation loop
-  useEffect(() => {
-    if (particles.length === 0 || !containerRef.current) return;
-    
-    const animateParticles = (timestamp: number) => {
-      if (!lastTimeRef.current) lastTimeRef.current = timestamp;
-      const deltaTime = timestamp - lastTimeRef.current;
-      lastTimeRef.current = timestamp;
+      canvas.width = width;
+      canvas.height = height;
       
-      setParticles(prevParticles => {
-        return prevParticles.map(p => {
-          let newX = p.x + p.speedX * deltaTime * 0.05;
-          let newY = p.y + p.speedY * deltaTime * 0.05;
-          
-          // Bounce off walls
-          if (newX < 0 || newX > dimensions.width) {
-            p.speedX *= -1;
-            newX = Math.max(0, Math.min(newX, dimensions.width));
-          }
-          
-          if (newY < 0 || newY > dimensions.height) {
-            p.speedY *= -1;
-            newY = Math.max(0, Math.min(newY, dimensions.height));
-          }
-          
-          return {
-            ...p,
-            x: newX,
-            y: newY
-          };
-        });
-      });
-      
-      animationRef.current = requestAnimationFrame(animateParticles);
-    };
-    
-    animationRef.current = requestAnimationFrame(animateParticles);
-    
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
+      // Recreate particles on resize if we have none
+      if (particlesRef.current.length === 0) {
+        createParticles();
       }
     };
-  }, [particles, dimensions]);
-  
+
+    const createParticles = () => {
+      particlesRef.current = Array.from({ length: count }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        size: minSize + Math.random() * (maxSize - minSize),
+        color: colors[Math.floor(Math.random() * colors.length)],
+        speedX: (Math.random() - 0.5) * (maxSpeed - minSpeed) + (Math.random() > 0.5 ? minSpeed : -minSpeed),
+        speedY: (Math.random() - 0.5) * (maxSpeed - minSpeed) + (Math.random() > 0.5 ? minSpeed : -minSpeed),
+        opacity: 0.1 + Math.random() * 0.5
+      }));
+    };
+
+    const updateParticles = () => {
+      particlesRef.current.forEach(particle => {
+        particle.x += particle.speedX;
+        particle.y += particle.speedY;
+
+        // Bounce off edges
+        if (particle.x < 0 || particle.x > width) {
+          particle.speedX *= -1;
+        }
+
+        if (particle.y < 0 || particle.y > height) {
+          particle.speedY *= -1;
+        }
+      });
+    };
+
+    const drawParticles = () => {
+      if (!ctx) return;
+      
+      ctx.clearRect(0, 0, width, height);
+      
+      particlesRef.current.forEach(particle => {
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+        ctx.fillStyle = particle.color + Math.floor(particle.opacity * 255).toString(16).padStart(2, '0');
+        ctx.fill();
+      });
+    };
+
+    const connectParticles = () => {
+      if (!ctx) return;
+      
+      const connectionDistance = 100;
+      const particles = particlesRef.current;
+      
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          if (distance < connectionDistance) {
+            const opacity = 1 - (distance / connectionDistance);
+            
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(255,255,255,${opacity * 0.15})`;
+            ctx.lineWidth = 1;
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+    };
+
+    const animate = () => {
+      updateParticles();
+      drawParticles();
+      connectParticles();
+      frameIdRef.current = window.requestAnimationFrame(animate);
+    };
+
+    // Initialize
+    resizeCanvas();
+    createParticles();
+    animate();
+
+    // Handle resize
+    window.addEventListener('resize', resizeCanvas);
+
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+      window.cancelAnimationFrame(frameIdRef.current);
+    };
+  }, [count, colors, minSize, maxSize, minSpeed, maxSpeed]);
+
   return (
-    <div
-      ref={containerRef}
-      className="absolute inset-0 overflow-hidden"
-      style={{ pointerEvents: 'none' }}
+    <motion.div 
+      className={`h-full w-full overflow-hidden ${className}`}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 1.5 }}
     >
-      {particles.map((particle, index) => (
-        <motion.div
-          key={`particle-${index}`}
-          className="absolute rounded-full"
-          style={{
-            width: particle.size,
-            height: particle.size,
-            backgroundColor: particle.color,
-            x: particle.x,
-            y: particle.y,
-            opacity: particle.opacity,
-          }}
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ 
-            scale: 1, 
-            opacity: particle.opacity,
-            x: particle.x,
-            y: particle.y,
-          }}
-          transition={{ 
-            duration: 1.5,
-            delay: index * 0.02,
-            opacity: { duration: 1 },
-            x: { type: 'spring', stiffness: 5 },
-            y: { type: 'spring', stiffness: 5 }
-          }}
-        />
-      ))}
-    </div>
+      <canvas 
+        ref={canvasRef} 
+        className="absolute inset-0 w-full h-full"
+      />
+    </motion.div>
   );
 }
