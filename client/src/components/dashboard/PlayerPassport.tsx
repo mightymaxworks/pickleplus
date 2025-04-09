@@ -5,7 +5,7 @@ import { Trophy, Scan, RotateCw, Loader2 } from 'lucide-react';
 import { User } from '@shared/schema';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useUserGlobalRankingPosition } from '@/hooks/use-pcp-global-rankings';
-import { useMatchStats } from '@/hooks/use-match-statistics';
+import { useMatchStatistics } from '@/hooks/use-match-statistics';
 
 interface PlayerPassportProps {
   user: User;
@@ -21,7 +21,7 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
   
   // Fetch real data from API
   const { data: rankingPosition, isLoading: isRankingLoading } = useUserGlobalRankingPosition(user.id);
-  const { data: matchStats, isLoading: isMatchStatsLoading } = useMatchStats(user.id);
+  const { data: matchStats, isLoading: isMatchStatsLoading } = useMatchStatistics({ userId: user.id });
   
   // Debug log function to help us identify sizing issues
   const logDimensions = () => {

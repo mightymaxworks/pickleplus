@@ -5,14 +5,26 @@ import { PlayerPassport } from '@/components/dashboard/PlayerPassport';
 import { PCPRankings } from '@/components/dashboard/PCPRankings';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
-import { Bolt, BarChart3, Trophy, Award, Star, TrendingUp, Activity, Copy, Check } from 'lucide-react';
+import { Bolt, BarChart3, Trophy, Award, Star, TrendingUp, Activity, Copy, Check, Loader2, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useMatchStatistics } from '@/hooks/use-match-statistics';
+import { useCourtIQPerformance } from '@/hooks/use-courtiq-performance';
 
 export default function Dashboard() {
   const { user } = useAuth();
   const [isLoaded, setIsLoaded] = useState(false);
   const { toast } = useToast();
   const [codeCopied, setCodeCopied] = useState(false);
+  
+  // Fetch match statistics and CourtIQ performance data
+  const { data: matchStats, isLoading: isMatchStatsLoading } = useMatchStatistics({ 
+    userId: user?.id,
+    enabled: !!user
+  });
+  const { data: courtIQData, isLoading: isCourtIQLoading } = useCourtIQPerformance({
+    userId: user?.id,
+    enabled: !!user
+  });
   
   // Animate elements in sequence after initial load
   useEffect(() => {
@@ -27,7 +39,8 @@ export default function Dashboard() {
   
   // Dynamic stats for animations
   const xpPercentage = Math.min((user.xp || 520) / 10, 100);
-  const winRate = user.totalMatches ? Math.round((user.matchesWon || 16) / (user.totalMatches || 24) * 100) : 67;
+  const winRate = matchStats?.winRate || 
+    (user.totalMatches ? Math.round((user.matchesWon || 16) / (user.totalMatches || 24) * 100) : 67);
   
   return (
     <DashboardLayout>
@@ -331,7 +344,9 @@ export default function Dashboard() {
                               animate={{ opacity: isLoaded ? 1 : 0 }}
                               transition={{ delay: 0.8, duration: 0.3 }}
                             >
-                              {user.totalMatches || 24}
+                              {isMatchStatsLoading ? (
+                                <Loader2 className="h-5 w-5 animate-spin mx-auto text-blue-500" />
+                              ) : matchStats?.totalMatches || 0}
                             </motion.span>
                           </div>
                           <div className="flex items-center text-xs text-blue-600 dark:text-blue-400">
@@ -357,7 +372,9 @@ export default function Dashboard() {
                               animate={{ opacity: isLoaded ? 1 : 0 }}
                               transition={{ delay: 0.8, duration: 0.3 }}
                             >
-                              {user.matchesWon || 16}
+                              {isMatchStatsLoading ? (
+                                <Loader2 className="h-5 w-5 animate-spin mx-auto text-green-500" />
+                              ) : matchStats?.matchesWon || 0}
                             </motion.span>
                           </div>
                           <div className="flex items-center text-xs text-green-600 dark:text-green-400">
@@ -519,13 +536,42 @@ export default function Dashboard() {
                               animate={{ opacity: isLoaded ? 1 : 0, scale: isLoaded ? 1 : 0.5 }}
                               transition={{ delay: 1, duration: 0.8 }}
                             >
-                              <polygon 
-                                points="50,15 80,32 75,70 45,85 20,65 25,30" 
-                                fill="url(#radarGradient)" 
-                                fillOpacity="0.3" 
-                                stroke="url(#radarGradient)" 
-                                strokeWidth="2" 
-                              />
+                              {isCourtIQLoading ? (
+                                <circle cx="50" cy="50" r="25" fill="none" stroke="#d1d5db" strokeWidth="2" strokeDasharray="5,5">
+                                  <animateTransform 
+                                    attributeName="transform" 
+                                    attributeType="XML" 
+                                    type="rotate"
+                                    from="0 50 50"
+                                    to="360 50 50" 
+                                    dur="1.5s" 
+                                    repeatCount="indefinite" 
+                                  />
+                                </circle>
+                              ) : !courtIQData?.skills ? (
+                                <polygon 
+                                  points="50,50 50,50 50,50 50,50 50,50 50,50" 
+                                  fill="url(#radarGradient)" 
+                                  fillOpacity="0.3" 
+                                  stroke="url(#radarGradient)" 
+                                  strokeWidth="2" 
+                                />
+                              ) : (
+                                <polygon 
+                                  points={`
+                                    50,${50 - (courtIQData.skills.power / 100) * 40}
+                                    ${50 + (courtIQData.skills.speed / 100) * 35},${50 - (courtIQData.skills.speed / 100) * 20}
+                                    ${50 + (courtIQData.skills.precision / 100) * 35},${50 + (courtIQData.skills.precision / 100) * 20}
+                                    50,${50 + (courtIQData.skills.strategy / 100) * 40}
+                                    ${50 - (courtIQData.skills.control / 100) * 35},${50 + (courtIQData.skills.control / 100) * 20}
+                                    ${50 - (courtIQData.skills.consistency / 100) * 35},${50 - (courtIQData.skills.consistency / 100) * 20}
+                                  `}
+                                  fill="url(#radarGradient)" 
+                                  fillOpacity="0.3" 
+                                  stroke="url(#radarGradient)" 
+                                  strokeWidth="2" 
+                                />
+                              )}
                               <defs>
                                 <linearGradient id="radarGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                                   <stop offset="0%" stopColor="#673AB7" />
@@ -533,13 +579,47 @@ export default function Dashboard() {
                                 </linearGradient>
                               </defs>
                               
-                              {/* Skill points */}
-                              <circle cx="50" cy="15" r="2.5" fill="#673AB7" />
-                              <circle cx="80" cy="32" r="2.5" fill="#7E57C2" />
-                              <circle cx="75" cy="70" r="2.5" fill="#9575CD" />
-                              <circle cx="45" cy="85" r="2.5" fill="#B39DDB" />
-                              <circle cx="20" cy="65" r="2.5" fill="#D1C4E9" />
-                              <circle cx="25" cy="30" r="2.5" fill="#EDE7F6" />
+                              {/* Skill points - only show when data is loaded */}
+                              {!isCourtIQLoading && courtIQData?.skills && (
+                                <>
+                                  <circle 
+                                    cx="50" 
+                                    cy={50 - (courtIQData.skills.power / 100) * 40} 
+                                    r="2.5" 
+                                    fill="#673AB7" 
+                                  />
+                                  <circle 
+                                    cx={50 + (courtIQData.skills.speed / 100) * 35} 
+                                    cy={50 - (courtIQData.skills.speed / 100) * 20} 
+                                    r="2.5" 
+                                    fill="#7E57C2" 
+                                  />
+                                  <circle 
+                                    cx={50 + (courtIQData.skills.precision / 100) * 35} 
+                                    cy={50 + (courtIQData.skills.precision / 100) * 20} 
+                                    r="2.5" 
+                                    fill="#9575CD" 
+                                  />
+                                  <circle 
+                                    cx="50" 
+                                    cy={50 + (courtIQData.skills.strategy / 100) * 40} 
+                                    r="2.5" 
+                                    fill="#B39DDB" 
+                                  />
+                                  <circle 
+                                    cx={50 - (courtIQData.skills.control / 100) * 35} 
+                                    cy={50 + (courtIQData.skills.control / 100) * 20} 
+                                    r="2.5" 
+                                    fill="#D1C4E9" 
+                                  />
+                                  <circle 
+                                    cx={50 - (courtIQData.skills.consistency / 100) * 35} 
+                                    cy={50 - (courtIQData.skills.consistency / 100) * 20} 
+                                    r="2.5" 
+                                    fill="#EDE7F6" 
+                                  />
+                                </>
+                              )}
                             </motion.svg>
                             
                             {/* Center point */}
@@ -550,7 +630,11 @@ export default function Dashboard() {
                               transition={{ delay: 1.2, duration: 0.5, type: 'spring' }}
                             >
                               <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#673AB7] to-[#9C27B0] flex items-center justify-center text-white font-bold shadow-lg">
-                                <span className="text-sm">1248</span>
+                                {isCourtIQLoading ? (
+                                  <Loader2 className="h-5 w-5 animate-spin text-white" />
+                                ) : (
+                                  <span className="text-sm">{courtIQData?.overallRating || 0}</span>
+                                )}
                               </div>
                             </motion.div>
                           </div>
@@ -560,32 +644,54 @@ export default function Dashboard() {
                     
                     {/* Skill attributes visualization */}
                     <div className="grid grid-cols-3 gap-2 mt-3">
-                      {[
-                        { label: 'Power', value: 82, color: 'from-red-500 to-red-700' },
-                        { label: 'Control', value: 75, color: 'from-blue-500 to-blue-700' },
-                        { label: 'Strategy', value: 88, color: 'from-green-500 to-green-700' }
-                      ].map((skill, index) => (
-                        <motion.div 
-                          key={skill.label}
-                          className="space-y-1"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 10 }}
-                          transition={{ delay: 1.4 + (index * 0.1), duration: 0.3 }}
-                        >
-                          <div className="flex justify-between text-xs">
-                            <span className="text-gray-600 dark:text-gray-400">{skill.label}</span>
-                            <span className="font-medium">{skill.value}%</span>
-                          </div>
-                          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                            <motion.div
-                              className={`h-full bg-gradient-to-r ${skill.color} rounded-full`}
-                              initial={{ width: '0%' }}
-                              animate={{ width: isLoaded ? `${skill.value}%` : '0%' }}
-                              transition={{ delay: 1.5 + (index * 0.1), duration: 1 }}
-                            ></motion.div>
-                          </div>
-                        </motion.div>
-                      ))}
+                      {isCourtIQLoading ? (
+                        <div className="col-span-3 flex justify-center py-4">
+                          <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
+                        </div>
+                      ) : !courtIQData?.skills ? (
+                        <div className="col-span-3 text-center py-4 text-sm text-gray-500">
+                          <AlertCircle className="h-5 w-5 mx-auto mb-2 text-amber-500" />
+                          <p>No skill data available yet</p>
+                          <p className="text-xs mt-1">Play more matches to see your skill breakdown</p>
+                        </div>
+                      ) : (
+                        // Map through real skills data once it's loaded
+                        Object.entries(courtIQData.skills)
+                          .slice(0, 3) // Show top 3 skills
+                          .map(([key, value], index) => {
+                            const skillColors = {
+                              power: 'from-red-500 to-red-700',
+                              speed: 'from-orange-500 to-orange-700',
+                              precision: 'from-yellow-500 to-yellow-700',
+                              strategy: 'from-green-500 to-green-700',
+                              control: 'from-blue-500 to-blue-700',
+                              consistency: 'from-indigo-500 to-indigo-700'
+                            };
+                            
+                            return (
+                              <motion.div 
+                                key={key}
+                                className="space-y-1"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 10 }}
+                                transition={{ delay: 1.4 + (index * 0.1), duration: 0.3 }}
+                              >
+                                <div className="flex justify-between text-xs">
+                                  <span className="text-gray-600 dark:text-gray-400 capitalize">{key}</span>
+                                  <span className="font-medium">{value}%</span>
+                                </div>
+                                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                  <motion.div
+                                    className={`h-full bg-gradient-to-r ${skillColors[key as keyof typeof skillColors] || 'from-purple-500 to-purple-700'} rounded-full`}
+                                    initial={{ width: '0%' }}
+                                    animate={{ width: isLoaded ? `${value}%` : '0%' }}
+                                    transition={{ delay: 1.5 + (index * 0.1), duration: 1 }}
+                                  ></motion.div>
+                                </div>
+                              </motion.div>
+                            );
+                          })
+                      )}
                     </div>
                   </CardContent>
                 </Card>

@@ -1,63 +1,75 @@
 /**
- * Hook for interacting with match statistics API
+ * PKL-278651-STATS-0002-RD: Match Statistics Dashboard Integration
+ * This hook fetches match statistics for a user
  */
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from '@tanstack/react-query';
 
-export interface MatchStats {
+export interface MatchStatistics {
   totalMatches: number;
   matchesWon: number;
-  winPercentage: number;
+  matchesLost: number;
+  winRate: number;
+  totalSets: number;
+  setsWon: number;
   totalPoints: number;
-  averagePointsPerMatch: number;
+  pointsWon: number;
+  avgPointsPerMatch: number;
   longestWinStreak: number;
-  currentWinStreak: number;
-  recentMatches: any[];
+  currentStreak: number;
+  // Recent matches
+  recentMatches: Array<{
+    id: number;
+    date: string;
+    opponent: string;
+    result: 'win' | 'loss';
+    score: string;
+    format: 'singles' | 'doubles' | 'mixed';
+  }>;
+}
+
+export interface MatchStatisticsOptions {
+  userId?: number;
+  timeRange?: 'all' | '30days' | '90days' | '6months' | '1year';
+  matchType?: 'casual' | 'competitive' | 'tournament' | 'league';
+  formatType?: 'singles' | 'doubles' | 'mixed';
+  enabled?: boolean;
 }
 
 /**
- * Get match statistics for a user
+ * Hook to fetch match statistics
  */
-export function useMatchStats(userId?: number) {
-  return useQuery<MatchStats>({
-    queryKey: ['/api/match/stats', userId],
-    queryFn: async ({ queryKey }) => {
-      const url = queryKey[0] as string;
-      const currentUserId = queryKey[1] as number | undefined;
-      
-      const queryParams = new URLSearchParams();
-      if (currentUserId !== undefined) queryParams.append('userId', currentUserId.toString());
-      
-      const response = await fetch(`${url}?${queryParams.toString()}`);
-      if (!response.ok) {
+export function useMatchStatistics(options: MatchStatisticsOptions = {}) {
+  const {
+    userId,
+    timeRange = 'all',
+    matchType,
+    formatType,
+    enabled = true
+  } = options;
+
+  // Build query parameters
+  const queryParams = new URLSearchParams();
+  if (userId) queryParams.append('userId', userId.toString());
+  if (timeRange) queryParams.append('timeRange', timeRange);
+  if (matchType) queryParams.append('matchType', matchType);
+  if (formatType) queryParams.append('formatType', formatType);
+
+  // Construct query key with all parameters for proper caching
+  const queryKeyParts: any[] = ['/api/match/stats'];
+  if (userId) queryKeyParts.push({ userId });
+  if (timeRange) queryKeyParts.push({ timeRange });
+  if (matchType) queryKeyParts.push({ matchType });
+  if (formatType) queryKeyParts.push({ formatType });
+
+  return useQuery<MatchStatistics>({
+    queryKey: queryKeyParts,
+    queryFn: async () => {
+      const res = await fetch(`/api/match/stats${queryParams.toString() ? `?${queryParams}` : ''}`);
+      if (!res.ok) {
         throw new Error('Failed to fetch match statistics');
       }
-      return response.json();
+      return res.json();
     },
-    enabled: userId !== undefined,
-  });
-}
-
-/**
- * Get recent matches for a user
- */
-export function useRecentMatches(userId?: number, limit = 5) {
-  return useQuery<any[]>({
-    queryKey: ['/api/match/recent', userId, limit],
-    queryFn: async ({ queryKey }) => {
-      const url = queryKey[0] as string;
-      const currentUserId = queryKey[1] as number | undefined;
-      const currentLimit = queryKey[2] as number;
-      
-      const queryParams = new URLSearchParams();
-      if (currentUserId !== undefined) queryParams.append('userId', currentUserId.toString());
-      queryParams.append('limit', currentLimit.toString());
-      
-      const response = await fetch(`${url}?${queryParams.toString()}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch recent matches');
-      }
-      return response.json();
-    },
-    enabled: userId !== undefined,
+    enabled
   });
 }
