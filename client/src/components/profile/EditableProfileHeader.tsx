@@ -56,19 +56,11 @@ export function EditableProfileHeader({ user, tierInfo }: EditableProfileHeaderP
           </div>
         </div>
         
-        {/* Action button */}
+        {/* Action button - removed for contextual editing */}
         <div className="mt-4 flex justify-center">
-          <Button
-            variant="outline"
-            size="sm"
-            asChild
-            className="gap-1.5"
-          >
-            <Link href="/profile/edit">
-              <Edit className="h-3.5 w-3.5" />
-              Edit Profile
-            </Link>
-          </Button>
+          <div className="text-sm text-muted-foreground">
+            Click on any field to edit directly
+          </div>
         </div>
       </CardContent>
     </Card>

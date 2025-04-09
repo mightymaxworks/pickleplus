@@ -45,7 +45,7 @@ export function ContextualEditToggle({
 
   // When the toggle changes, automatically save the value
   const handleToggle = async (checked: boolean) => {
-    if (!isEditMode) return;
+    // Remove edit mode check to allow direct editing
     
     setValue(checked);
     setHasUnsavedChanges(true);
@@ -58,7 +58,7 @@ export function ContextualEditToggle({
       
       // Send PATCH request to update profile
       await apiRequest(
-        "PATCH",
+        "PATCH", // Ensure this is a string, not an object
         apiEndpoint,
         payload
       );
@@ -97,7 +97,7 @@ export function ContextualEditToggle({
         id={fieldName} 
         checked={value}
         onCheckedChange={handleToggle}
-        disabled={isSubmitting || !isEditMode}
+        disabled={isSubmitting}
       />
       <div className="grid gap-1.5">
         <Label htmlFor={fieldName} className="font-medium">{fieldLabel}</Label>

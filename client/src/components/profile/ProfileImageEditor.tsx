@@ -20,8 +20,16 @@ import {
   Loader2 
 } from "lucide-react";
 
+interface User {
+  id: number;
+  username?: string;
+  displayName?: string;
+  avatarUrl?: string | null;
+  // Add other properties as needed
+}
+
 interface ProfileImageEditorProps {
-  user: any;
+  user: User;
 }
 
 export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
@@ -84,8 +92,12 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
       const formData = new FormData();
       formData.append("profileImage", selectedFile);
       
-      // Send to API
-      await apiRequest("POST", "/api/profile/upload-image", formData);
+      // Send to API - formData needs special handling in fetch
+      const response = await fetch("/api/profile/upload-image", {
+        method: "POST",
+        credentials: "include",
+        body: formData, // Don't set Content-Type header for multipart/form-data
+      });
       
       // Update UI
       queryClient.invalidateQueries({ queryKey: ["/api/auth/current-user"] });
@@ -136,7 +148,7 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
   // Get initials for avatar fallback
   const getInitials = () => {
     if (user.displayName) {
-      return user.displayName.split(' ').map(n => n[0]).join('').toUpperCase();
+      return user.displayName.split(' ').map((n: string) => n[0]).join('').toUpperCase();
     }
     return user.username?.substring(0, 2).toUpperCase() || "?";
   };
