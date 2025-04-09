@@ -19,6 +19,7 @@ import ProfileEdit from './pages/ProfileEdit'
 import StreamlinedProfilePage from './pages/StreamlinedProfilePage'
 import { LeaderboardPage } from './pages/LeaderboardPage'
 import LandingPageTest from './pages/LandingPageTest'
+import MasteryPathsPage from './pages/MasteryPathsPage'
 import NotFound from './pages/not-found'
 
 import { useAuth } from './hooks/useAuth'
@@ -114,6 +115,11 @@ export default function App() {
             {/* Leaderboard Route */}
             <Route path="/leaderboard">
               {(params) => <ProtectedRoute component={LeaderboardPage} path="/leaderboard" />}
+            </Route>
+            
+            {/* Mastery Paths Route */}
+            <Route path="/mastery-paths">
+              {(params) => <ProtectedRoute component={MasteryPathsPage} path="/mastery-paths" />}
             </Route>
             
             {/* For now we'll keep the Match Reward Demo accessible */}

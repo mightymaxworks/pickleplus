@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
-import { Bell, Menu, X, User, Home, LogOut, Settings, Calendar, Shield, Activity, Trophy } from 'lucide-react';
+import { Bell, Menu, X, User, Home, LogOut, Settings, Calendar, Shield, Activity, Trophy, Award } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PicklePlusNewLogo } from '../icons/PicklePlusNewLogo';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
@@ -134,6 +134,10 @@ export function AppHeader() {
                 <Trophy className="mr-2 h-4 w-4" />
                 Leaderboard
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/mastery-paths")}>
+                <Award className="mr-2 h-4 w-4" />
+                Mastery Paths
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate("/settings")}>
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
@@ -169,6 +173,7 @@ export function AppHeader() {
               {[
                 { label: 'Dashboard', icon: <Home size={18} />, path: '/dashboard' },
                 { label: 'Matches', icon: <Calendar size={18} />, path: '/matches' },
+                { label: 'Mastery Paths', icon: <Award size={18} />, path: '/mastery-paths' },
                 { label: 'Profile', icon: <User size={18} />, path: '/profile' },
                 { label: 'Settings', icon: <Settings size={18} />, path: '/settings' }
               ].map((item, i) => {

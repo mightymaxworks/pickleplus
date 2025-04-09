@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PlayerPassport } from '@/components/dashboard/PlayerPassport';
 import { PCPRankings } from '@/components/dashboard/PCPRankings';
+import MasteryPathsDisplay from '@/components/mastery/MasteryPathsDisplay';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { Bolt, BarChart3, Trophy, Award, Star, TrendingUp, Activity, Copy, Check, Loader2, AlertCircle } from 'lucide-react';
@@ -167,6 +168,54 @@ export default function Dashboard() {
             transition={{ delay: 0.2, duration: 0.5 }}
           >
             <PCPRankings user={user} />
+          </motion.div>
+          
+          {/* Mastery Paths Section */}
+          <motion.div 
+            className="md:col-span-12"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25, duration: 0.5 }}
+          >
+            <div className="flex items-center mb-4">
+              <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-400 to-indigo-500 text-transparent bg-clip-text">
+                CourtIQ™ Mastery Status
+              </h3>
+              <div className="ml-2 text-xs bg-gradient-to-r from-purple-400 to-indigo-500 text-white px-2 py-0.5 rounded-full">
+                Adaptive System
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-1">
+                <MasteryPathsDisplay />
+              </div>
+              <div className="md:col-span-2 hidden md:block">
+                <Card className="shadow-lg border border-gray-100/20 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm overflow-hidden h-full">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
+                  <CardContent className="p-4 relative z-10">
+                    <div className="w-full h-full flex items-center justify-center p-2">
+                      <div className="text-center p-6">
+                        <h3 className="text-lg font-semibold mb-3">Your CourtIQ™ Journey</h3>
+                        <p className="text-gray-500 dark:text-gray-400 mb-4">
+                          The CourtIQ™ Mastery Path system adapts to your playing style and skill level, 
+                          providing personalized tier recommendations and progression paths.
+                        </p>
+                        <div className="flex justify-center">
+                          <a 
+                            href="/mastery-paths" 
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 transition-all"
+                          >
+                            <Award size={16} />
+                            Explore All Paths
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </motion.div>
           
           {/* Stats Section */}
