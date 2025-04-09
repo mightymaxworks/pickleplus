@@ -84,22 +84,22 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Match API endpoints
   app.post("/api/match/record", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      console.log("[Match API] POST /api/match/record called - MOCK RESPONSE");
+      console.log("[Match API] POST /api/match/record called");
       if (!req.user) {
         return res.status(401).json({ error: "Not authenticated" });
       }
       console.log("[Match API] Request body:", JSON.stringify(req.body, null, 2));
       
-      return res.status(201).json({
-        id: 999,
+      // Use the storage interface to create a match
+      const matchData: InsertMatch = {
+        ...req.body,
+        submitterId: req.user.id,
+        validationStatus: "pending", // Initially pending until validated
         matchDate: new Date(),
-        validationStatus: "confirmed",
-        playerNames: {},
-        formatType: req.body.formatType,
-        scoringSystem: req.body.scoringSystem,
-        players: req.body.players,
-        gameScores: req.body.gameScores
-      });
+      };
+      
+      const match = await storage.createMatch(matchData);
+      return res.status(201).json(match);
     } catch (error) {
       console.error("[Match API] Error recording match:", error);
       return res.status(500).json({ error: "Server error recording match" });
@@ -116,38 +116,15 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       const userId = req.query.userId ? parseInt(req.query.userId as string, 10) : req.user.id;
       const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
       
-      // Return mock data for now
-      res.json([
-        {
-          id: 999,
-          date: new Date().toISOString(),
-          formatType: "singles",
-          scoringSystem: "traditional",
-          pointsToWin: 11,
-          players: [
-            {
-              userId: req.user.id,
-              score: 11,
-              isWinner: true
-            },
-            {
-              userId: 456,
-              score: 5,
-              isWinner: false
-            }
-          ],
-          playerNames: {
-            [req.user.id]: {
-              displayName: req.user.displayName || req.user.username,
-              username: req.user.username
-            },
-            456: {
-              displayName: "Demo Player",
-              username: "demo_player"
-            }
-          }
-        }
-      ]);
+      // Use storage interface to get recent matches
+      const matches = await storage.getRecentMatches(userId, limit);
+      
+      // If no matches, return empty array
+      if (!matches || matches.length === 0) {
+        return res.json([]);
+      }
+      
+      res.json(matches);
     } catch (error) {
       console.error("[Match API] Error getting recent matches:", error);
       res.status(500).json({ error: "Server error getting recent matches" });
