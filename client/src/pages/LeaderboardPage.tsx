@@ -182,7 +182,8 @@ export function LeaderboardPage() {
             Global PCP Rankings
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            View and filter the Pickle+ Competitive Points (PCP) global leaderboard
+            View and filter the Pickle+ Competitive Points (PCP) global leaderboard. 
+            Players are ranked by PCP points, with skill ratings shown from the CourtIQ™ system.
           </p>
         </div>
         
@@ -359,12 +360,36 @@ export function LeaderboardPage() {
                     <TableHead className="text-center" onClick={() => handleSort('points')}>
                       <div className="flex items-center justify-center cursor-pointer">
                         <span>PCP Score</span>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="ml-1 h-3 w-3 text-gray-400" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs max-w-xs">Pickle+ Competitive Points determine your ranking position on the leaderboard</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                         {sortField === 'points' && (
                           <ArrowUpDown className="ml-1 h-4 w-4" />
                         )}
                       </div>
                     </TableHead>
-                    <TableHead className="hidden md:table-cell text-center">Rating</TableHead>
+                    <TableHead className="hidden md:table-cell text-center">
+                      <div className="flex items-center justify-center">
+                        <span>CourtIQ™</span>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="ml-1 h-3 w-3 text-gray-400" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs max-w-xs">CourtIQ™ skill rating determines your tier color and is separate from PCP points</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                    </TableHead>
                     <TableHead className="hidden sm:table-cell text-center">Country</TableHead>
                     <TableHead className="hidden lg:table-cell">Specialty</TableHead>
                   </TableRow>
