@@ -33,8 +33,13 @@ const calculateXpProgress = (currentXp: number, currentLevel: number) => {
 const StreamlinedQuickStats: FC<StreamlinedQuickStatsProps> = ({ user, className = '' }) => {
   const xpProgress = calculateXpProgress(user.xp || 0, user.level || 1);
   
-  const skillLevelValue = parseFloat(user.skillLevel || '0');
-  const skillLevelPercentage = (skillLevelValue / 7) * 100; // Assuming max skill level is 7.0
+  // Prioritize verified external ratings over self-assessment
+  const verifiedRating = user.externalRatingsVerified && (user.duprRating || user.utprRating || user.wprRating);
+  const displayRating = verifiedRating || user.skillLevel || '0';
+  
+  // Use the value for progress bar (assuming max rating is 7.0)
+  const ratingValue = parseFloat(displayRating || '0');
+  const ratingPercentage = (ratingValue / 7) * 100; // Assuming max rating is 7.0
   
   // Calculate win rate if there are matches played
   const winRate = user.totalMatches ? Math.round((user.matchesWon / user.totalMatches) * 100) : 0;
@@ -66,18 +71,34 @@ const StreamlinedQuickStats: FC<StreamlinedQuickStatsProps> = ({ user, className
         </CardContent>
       </Card>
       
-      {/* Skill Level Card */}
+      {/* External Rating Card */}
       <Card className="overflow-hidden">
         <CardContent className="p-4">
           <div className="flex justify-between items-center mb-2">
-            <div className="font-medium text-sm">Skill Level</div>
+            <div className="font-medium text-sm">External Rating</div>
             <Star className="h-4 w-4 text-yellow-500" />
           </div>
           <div className="mb-2">
-            <Progress value={skillLevelPercentage} className="h-2" />
+            <Progress value={ratingPercentage} className="h-2" />
           </div>
-          <div className="text-sm font-semibold">
-            {user.skillLevel || 'Not set'}
+          <div className="text-sm font-semibold flex items-center">
+            {displayRating || 'Not set'}
+            {user.externalRatingsVerified && (
+              <Badge variant="outline" className="ml-2 text-xs bg-green-100 text-green-800">
+                Verified
+              </Badge>
+            )}
+          </div>
+          <div className="text-xs text-muted-foreground mt-1">
+            {user.duprRating && (
+              <span className="mr-2">DUPR: {user.duprRating}</span>
+            )}
+            {user.utprRating && (
+              <span className="mr-2">UTPR: {user.utprRating}</span>
+            )}
+            {user.wprRating && (
+              <span>WPR: {user.wprRating}</span>
+            )}
           </div>
         </CardContent>
       </Card>
