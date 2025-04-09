@@ -191,7 +191,7 @@ const ProfileStatsTab: FC<ProfileStatsTabProps> = ({ user, isEditMode }) => {
       {/* CourtIQ™ Skill Profile Card */}
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <CardTitle className="text-lg flex items-center gap-2">
               <Award className="h-5 w-5 text-primary" />
               CourtIQ™ Skill Profile
@@ -243,17 +243,22 @@ const ProfileStatsTab: FC<ProfileStatsTabProps> = ({ user, isEditMode }) => {
           </div>
           <CardDescription>
             Track and visualize your pickleball skills on a scale of 1-10
+            {editingSkills && (
+              <div className="mt-2 p-2 bg-muted/30 rounded-md border border-muted text-xs">
+                <span className="font-semibold">Editing Mode:</span> Move the sliders below to adjust your skill ratings from 1-10
+              </div>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row gap-6">
-            <div className="md:w-1/2">
+            <div className="md:w-1/2 mx-auto">
               {/* Radar Chart */}
-              <div className="h-72 w-full">
+              <div className="h-64 w-full max-w-[320px] md:max-w-full mx-auto">
                 <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart cx="50%" cy="50%" outerRadius="80%" data={formatSkillsForRadar()}>
+                  <RadarChart cx="50%" cy="50%" outerRadius="75%" data={formatSkillsForRadar()}>
                     <PolarGrid />
-                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#888', fontSize: 12 }} />
+                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#888', fontSize: 11 }} />
                     <PolarRadiusAxis angle={30} domain={[0, 10]} tickCount={6} />
                     <Radar
                       name="Skills"
@@ -324,18 +329,35 @@ const ProfileStatsTab: FC<ProfileStatsTabProps> = ({ user, isEditMode }) => {
                             </Tooltip>
                           </TooltipProvider>
                         </div>
-                        <span>{value || 'Not rated'}</span>
+                        <span className="font-medium">{value || 'Not rated'}</span>
                       </div>
                       
                       {editingSkills ? (
-                        <Slider
-                          value={[value as number]}
-                          min={0}
-                          max={10}
-                          step={1}
-                          className="py-2"
-                          onValueChange={(value) => handleSkillChange(skill, value)}
-                        />
+                        <div className="relative pt-6 pb-2">
+                          <div className="flex justify-between text-xs text-muted-foreground absolute top-0 left-0 right-0 px-1">
+                            <span>1</span>
+                            <span>2</span>
+                            <span>3</span>
+                            <span>4</span>
+                            <span>5</span>
+                            <span>6</span>
+                            <span>7</span>
+                            <span>8</span>
+                            <span>9</span>
+                            <span>10</span>
+                          </div>
+                          <Slider
+                            value={[value as number]}
+                            min={0}
+                            max={10}
+                            step={1}
+                            className="py-4"
+                            onValueChange={(value) => handleSkillChange(skill, value)}
+                          />
+                          <div className="text-center text-xs text-muted-foreground mt-1">
+                            {editingSkills && <span>← Slide to adjust rating →</span>}
+                          </div>
+                        </div>
                       ) : (
                         <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                           <div 
