@@ -1,6 +1,13 @@
 import React from 'react';
 import { useLocation, useSearch } from 'wouter';
 import { motion } from 'framer-motion';
+
+// Utility function to convert ratings from 0-5 scale to 0-9 scale
+function convertRatingScale(rating: number | undefined): number {
+  if (rating === undefined) return 0;
+  // Convert from 0-5 scale to 0-9 scale
+  return parseFloat((rating * 1.8).toFixed(1));
+}
 import { 
   Medal, 
   Trophy, 
@@ -154,7 +161,8 @@ export function LeaderboardPage() {
     if (!tiers || tiersLoading) return undefined;
     
     // Use the player's overall CourtIQ rating if available
-    // Fall back to 4.0 if no rating is available
+    // Fall back to 4.0 if no rating is available (using original 0-5 scale)
+    // We don't convert to 0-9 here since the tiers from the API are still in 0-5 scale
     const rating = player.ratings?.overall || 4.0;
     
     const tier = tiers.find(t => 
@@ -384,7 +392,7 @@ export function LeaderboardPage() {
                               <Info className="ml-1 h-3 w-3 text-gray-400" />
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p className="text-xs max-w-xs">CourtIQ™ skill rating (0-5 scale) determines your tier color and is separate from PCP points</p>
+                              <p className="text-xs max-w-xs">CourtIQ™ skill rating (0-9 scale) determines your tier color and is separate from PCP points</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
@@ -460,7 +468,7 @@ export function LeaderboardPage() {
                             }} 
                             className="text-xs font-normal"
                           >
-                            {player.ratings?.overall || "4.5"}
+                            {convertRatingScale(player.ratings?.overall) || "8.1"}
                           </Badge>
                         </TableCell>
                         <TableCell className="hidden sm:table-cell text-center">
@@ -512,7 +520,7 @@ export function LeaderboardPage() {
           CourtIQ™ Rating Tiers
         </h3>
         <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-          CourtIQ™ uses a 0-5 scale for player skill ratings, matching industry standards like DUPR
+          CourtIQ™ uses a unique 0-9 scale for player skill ratings, setting us apart from other rating systems
         </p>
         <div className="flex flex-wrap gap-3">
           {tiersLoading ? (
@@ -531,8 +539,8 @@ export function LeaderboardPage() {
                 }}
                 className="text-xs"
               >
-                {tier.name}: {tier.minRating.toFixed(1)}
-                {tier.maxRating ? ` - ${tier.maxRating.toFixed(1)}` : "+"}
+                {tier.name}: {convertRatingScale(tier.minRating).toFixed(1)}
+                {tier.maxRating ? ` - ${convertRatingScale(tier.maxRating).toFixed(1)}` : "+"}
               </Badge>
             ))
           )}
