@@ -34,6 +34,8 @@ export interface EnhancedUser {
   paddleModel?: string;
   backupPaddleBrand?: string;
   backupPaddleModel?: string;
+  apparelBrand?: string;
+  shoesBrand?: string;
   otherEquipment?: string;
   preferredPosition?: string;
   

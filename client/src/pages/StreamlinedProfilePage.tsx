@@ -53,6 +53,8 @@ const StreamlinedProfilePage: FC = () => {
   const [paddleModelField, setPaddleModelField] = useState('');
   const [backupPaddleBrandField, setBackupPaddleBrandField] = useState('');
   const [backupPaddleModelField, setBackupPaddleModelField] = useState('');
+  const [apparelBrandField, setApparelBrandField] = useState('');
+  const [shoesBrandField, setShoesBrandField] = useState('');
   const [otherEquipmentField, setOtherEquipmentField] = useState('');
   
   // Preferences tab fields
@@ -88,6 +90,32 @@ const StreamlinedProfilePage: FC = () => {
     { value: 'Paddletek', label: 'Paddletek' },
     { value: 'ProKennex', label: 'ProKennex' },
     { value: 'Gamma', label: 'Gamma' },
+    { value: 'Other', label: 'Other' },
+  ];
+  
+  const apparelBrandOptions = [
+    { value: 'Nike', label: 'Nike' },
+    { value: 'Adidas', label: 'Adidas' },
+    { value: 'Under Armour', label: 'Under Armour' },
+    { value: 'New Balance', label: 'New Balance' },
+    { value: 'Fila', label: 'Fila' },
+    { value: 'Lululemon', label: 'Lululemon' },
+    { value: 'Wilson', label: 'Wilson' },
+    { value: 'SHOT3', label: 'SHOT3' },
+    { value: 'Joola', label: 'Joola' },
+    { value: 'Other', label: 'Other' },
+  ];
+  
+  const shoesBrandOptions = [
+    { value: 'Asics', label: 'Asics' },
+    { value: 'Nike', label: 'Nike' },
+    { value: 'Adidas', label: 'Adidas' },
+    { value: 'New Balance', label: 'New Balance' },
+    { value: 'K-Swiss', label: 'K-Swiss' },
+    { value: 'Under Armour', label: 'Under Armour' },
+    { value: 'Wilson', label: 'Wilson' },
+    { value: 'Babolat', label: 'Babolat' },
+    { value: 'Fila', label: 'Fila' },
     { value: 'Other', label: 'Other' },
   ];
   
@@ -181,6 +209,8 @@ const StreamlinedProfilePage: FC = () => {
       setPaddleModelField(user.paddleModel || '');
       setBackupPaddleBrandField(user.backupPaddleBrand || '');
       setBackupPaddleModelField(user.backupPaddleModel || '');
+      setApparelBrandField(user.apparelBrand || '');
+      setShoesBrandField(user.shoesBrand || '');
       setOtherEquipmentField(user.otherEquipment || '');
       
       // Preferences tab fields
@@ -215,28 +245,67 @@ const StreamlinedProfilePage: FC = () => {
 
   return (
     <div className="container px-4 pb-16 max-w-screen-xl mx-auto">
+      {/* Sticky Header/Navigation */}
+      <div className="sticky top-0 z-20 bg-background pt-2 pb-2 border-b">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10 border-2 border-primary/20">
+              {user.avatarUrl ? (
+                <AvatarImage src={user.avatarUrl} alt={user.displayName || user.username} />
+              ) : null}
+              <AvatarFallback className="text-sm bg-primary text-primary-foreground">
+                {user.avatarInitials || user.username.substring(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h1 className="text-lg font-bold truncate">
+                {user.displayName || user.username}
+              </h1>
+              <div className="flex items-center text-muted-foreground text-xs">
+                <MapPin className="h-3 w-3 mr-1" />
+                {user.location || 'No location set'}
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            {user.isFoundingMember && (
+              <Badge variant="secondary" className="flex items-center gap-1 hidden sm:flex">
+                <Medal className="h-3 w-3" />
+                Founding Member
+              </Badge>
+            )}
+            {user.skillLevel && (
+              <Badge variant="outline" className="bg-primary/10 hidden sm:flex">
+                {user.skillLevel} Skill Level
+              </Badge>
+            )}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="bg-background/80 backdrop-blur-sm"
+              onClick={() => setIsEditMode(!isEditMode)}
+            >
+              {isEditMode ? (
+                <>
+                  <X className="h-4 w-4 mr-2" />
+                  Exit Edit Mode
+                </>
+              ) : (
+                <>
+                  <Edit2 className="h-4 w-4 mr-2" />
+                  Edit Profile
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
+      
       {/* Hero Section with Profile Header */}
-      <Card className="w-full overflow-hidden relative">
+      <Card className="w-full overflow-hidden relative mt-4">
         {/* Banner/Background */}
         <div className="h-40 bg-gradient-to-r from-primary/80 via-primary/60 to-primary/40 flex items-end justify-end p-4">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="bg-background/80 backdrop-blur-sm"
-            onClick={() => setIsEditMode(!isEditMode)}
-          >
-            {isEditMode ? (
-              <>
-                <X className="h-4 w-4 mr-2" />
-                Exit Edit Mode
-              </>
-            ) : (
-              <>
-                <Edit2 className="h-4 w-4 mr-2" />
-                Edit Profile
-              </>
-            )}
-          </Button>
         </div>
 
         {/* Profile Content */}
@@ -1302,13 +1371,119 @@ const StreamlinedProfilePage: FC = () => {
                 </div>
                 
                 <div className="mt-4">
-                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Other Equipment</h4>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Apparel Brand</h4>
+                  {isEditMode && editingFields.apparelBrand ? (
+                    <div className="space-y-2">
+                      <Select 
+                        value={apparelBrandField} 
+                        onValueChange={(value) => setApparelBrandField(value)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select your apparel brand" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {apparelBrandOptions.map(option => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <div className="flex justify-end gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => {
+                            setApparelBrandField(user.apparelBrand || '');
+                            setEditingFields(prev => ({ ...prev, apparelBrand: false }));
+                          }}
+                        >
+                          <X className="h-4 w-4 mr-1" /> Cancel
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          onClick={() => saveProfileField('apparelBrand', apparelBrandField)}
+                        >
+                          <Check className="h-4 w-4 mr-1" /> Save
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div 
+                      className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                      onClick={() => {
+                        if (isEditMode) {
+                          setEditingFields(prev => ({ ...prev, apparelBrand: true }));
+                        }
+                      }}
+                    >
+                      <p>{user.apparelBrand || 'Not specified'}</p>
+                      {isEditMode && (
+                        <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
+                      )}
+                    </div>
+                  )}
+                  
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2 mt-4">Shoes Brand</h4>
+                  {isEditMode && editingFields.shoesBrand ? (
+                    <div className="space-y-2">
+                      <Select 
+                        value={shoesBrandField} 
+                        onValueChange={(value) => setShoesBrandField(value)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select your shoes brand" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {shoesBrandOptions.map(option => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <div className="flex justify-end gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => {
+                            setShoesBrandField(user.shoesBrand || '');
+                            setEditingFields(prev => ({ ...prev, shoesBrand: false }));
+                          }}
+                        >
+                          <X className="h-4 w-4 mr-1" /> Cancel
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          onClick={() => saveProfileField('shoesBrand', shoesBrandField)}
+                        >
+                          <Check className="h-4 w-4 mr-1" /> Save
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div 
+                      className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                      onClick={() => {
+                        if (isEditMode) {
+                          setEditingFields(prev => ({ ...prev, shoesBrand: true }));
+                        }
+                      }}
+                    >
+                      <p>{user.shoesBrand || 'Not specified'}</p>
+                      {isEditMode && (
+                        <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
+                      )}
+                    </div>
+                  )}
+                  
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2 mt-4">Other Equipment</h4>
                   {isEditMode && editingFields.otherEquipment ? (
                     <div className="space-y-2">
                       <Textarea 
                         value={otherEquipmentField}
                         onChange={(e) => setOtherEquipmentField(e.target.value)}
-                        placeholder="List any other equipment you use (bags, shoes, accessories, etc.)"
+                        placeholder="List any other equipment you use (bags, accessories, etc.)"
                         className="min-h-[80px]"
                       />
                       <div className="flex justify-end gap-2">
