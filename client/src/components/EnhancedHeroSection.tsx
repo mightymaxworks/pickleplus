@@ -49,7 +49,7 @@ export function EnhancedHeroSection() {
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 justify-center md:justify-start">
               <Button 
                 size="lg"
-                className="text-[#FF5722] bg-white hover:bg-white/90 shadow-lg text-base sm:text-lg px-6 sm:px-8 py-6 h-auto font-medium"
+                className="text-[#FF5722] bg-white hover:bg-white/90 shadow-lg text-base sm:text-lg px-4 sm:px-8 py-4 sm:py-6 h-auto font-medium w-full sm:w-auto"
                 onClick={() => navigate("/auth")}
               >
                 Create Free Account
@@ -57,12 +57,12 @@ export function EnhancedHeroSection() {
               <Button 
                 size="lg" 
                 variant="outline"
-                className="text-white border-white border-2 bg-white/10 hover:bg-white/20 text-base sm:text-lg px-6 sm:px-8 py-6 h-auto font-medium"
+                className="text-white border-white border-2 bg-white/10 hover:bg-white/20 text-base sm:text-lg px-4 sm:px-8 py-4 sm:py-6 h-auto font-medium w-full sm:w-auto flex items-center justify-center"
                 onClick={() => {
                   document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
                 }}
               >
-                See How It Works <ArrowRight className="ml-2 h-5 w-5" />
+                <span className="whitespace-nowrap mr-2">See How It Works</span> <ArrowRight className="h-5 w-5" />
               </Button>
             </div>
             
@@ -103,32 +103,37 @@ export function EnhancedHeroSection() {
               <div className="relative bg-white rounded-2xl shadow-2xl overflow-hidden">
                 {/* Header with logo */}
                 <div className="bg-gradient-to-r from-[#FF5722] to-[#FF9800] pt-4 pb-6 px-5 text-white">
-                  <div className="flex justify-between items-center">
-                    <div className="font-bold text-xl">Player Passport</div>
+                  <div className="flex flex-col sm:flex-row justify-center sm:justify-between items-center">
+                    <div className="font-bold text-xl mb-2 sm:mb-0">Player Passport</div>
                     <PicklePlusLogo className="h-8 w-auto" />
                   </div>
                   
                   {/* CourtIQ badge */}
-                  <div className="absolute top-16 right-3 bg-black/20 px-2 py-1 rounded-full text-xs font-medium flex items-center">
+                  <div className="absolute hidden sm:flex top-16 right-3 bg-black/20 px-2 py-1 rounded-full text-xs font-medium items-center">
+                    <div className="w-2 h-2 bg-blue-300 rounded-full mr-1"></div>
+                    Powered by CourtIQ™
+                  </div>
+                  {/* Mobile CourtIQ badge */}
+                  <div className="flex sm:hidden justify-center mt-2 bg-black/20 px-2 py-1 rounded-full text-xs font-medium items-center w-fit mx-auto">
                     <div className="w-2 h-2 bg-blue-300 rounded-full mr-1"></div>
                     Powered by CourtIQ™
                   </div>
                   
                   {/* Player info */}
-                  <div className="flex items-center mt-3">
-                    <div className="h-16 w-16 rounded-full bg-white p-0.5 mr-3 shadow-lg">
+                  <div className="flex flex-col sm:flex-row sm:items-center mt-3">
+                    <div className="h-16 w-16 rounded-full bg-white p-0.5 mx-auto sm:mx-0 sm:mr-3 shadow-lg mb-2 sm:mb-0">
                       <div className="h-full w-full rounded-full bg-gradient-to-r from-[#2196F3] to-[#03A9F4] flex items-center justify-center text-white font-bold text-2xl">
                         JS
                       </div>
                     </div>
-                    <div>
+                    <div className="text-center sm:text-left">
                       <div className="font-bold text-2xl">John Smith</div>
-                      <div className="flex items-center text-sm text-white/80 mt-1">
-                        <div className="font-medium bg-white/20 rounded-full px-2 py-0.5 flex items-center">
+                      <div className="flex flex-col sm:flex-row items-center text-sm text-white/80 mt-1">
+                        <div className="font-medium bg-white/20 rounded-full px-2 py-0.5 flex items-center mb-1 sm:mb-0">
                           <span className="w-1.5 h-1.5 bg-white rounded-full mr-1"></span>
                           3.5 Intermediate+
                         </div>
-                        <div className="ml-2 text-xs">Passport: XP39R45</div>
+                        <div className="sm:ml-2 text-xs">Passport: XP39R45</div>
                       </div>
                     </div>
                   </div>
@@ -176,12 +181,12 @@ export function EnhancedHeroSection() {
                   </div>
                   
                   {/* Activity badge - latest achievement */}
-                  <div className="mt-4 flex items-center gap-2 bg-gradient-to-r from-[#2196F3]/5 to-[#03A9F4]/5 p-2 rounded-lg border border-[#2196F3]/10">
+                  <div className="mt-4 flex flex-wrap items-center gap-2 bg-gradient-to-r from-[#2196F3]/5 to-[#03A9F4]/5 p-2 rounded-lg border border-[#2196F3]/10">
                     <div className="bg-[#2196F3] rounded-full p-1 text-white">
                       <Trophy size={16} />
                     </div>
-                    <div className="text-xs text-gray-700">Won mixed doubles tournament at Willow Park</div>
-                    <div className="text-[10px] text-[#2196F3] ml-auto font-medium">+100 RP</div>
+                    <div className="text-xs text-gray-700 flex-1 min-w-0">Won mixed doubles tournament at Willow Park</div>
+                    <div className="text-[10px] text-[#2196F3] font-medium ml-auto mt-0 sm:mt-0">+100 RP</div>
                   </div>
                 </div>
               </div>
