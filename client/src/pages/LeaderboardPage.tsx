@@ -384,7 +384,7 @@ export function LeaderboardPage() {
                               <Info className="ml-1 h-3 w-3 text-gray-400" />
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p className="text-xs max-w-xs">CourtIQ™ skill rating determines your tier color and is separate from PCP points</p>
+                              <p className="text-xs max-w-xs">CourtIQ™ skill rating (0-5 scale) determines your tier color and is separate from PCP points</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
@@ -512,7 +512,7 @@ export function LeaderboardPage() {
           CourtIQ™ Rating Tiers
         </h3>
         <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-          Player ratings are based on the CourtIQ™ multi-dimensional skill rating system
+          CourtIQ™ uses a 0-5 scale for player skill ratings, matching industry standards like DUPR
         </p>
         <div className="flex flex-wrap gap-3">
           {tiersLoading ? (
