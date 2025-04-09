@@ -149,14 +149,17 @@ export function LeaderboardPage() {
     }
   };
   
-  // Get tier color for a player
+  // Get tier color for a player based on CourtIQ™ rating
   const getTierColor = (player: LeaderboardEntry) => {
     if (!tiers || tiersLoading) return undefined;
     
-    const points = player.rankingPoints || player.pointsTotal || 0;
+    // Use the player's overall CourtIQ rating if available
+    // Fall back to 4.0 if no rating is available
+    const rating = player.ratings?.overall || 4.0;
+    
     const tier = tiers.find(t => 
-      points >= t.minRating && 
-      points <= (t.maxRating || 5.0)
+      rating >= t.minRating && 
+      rating <= (t.maxRating || 5.0)
     );
     
     return tier?.colorCode || undefined;
@@ -481,8 +484,11 @@ export function LeaderboardPage() {
       >
         <h3 className="text-sm font-medium mb-3 flex items-center">
           <Medal className="w-4 h-4 mr-1 text-blue-500" />
-          Rating Tiers
+          CourtIQ™ Rating Tiers
         </h3>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+          Player ratings are based on the CourtIQ™ multi-dimensional skill rating system
+        </p>
         <div className="flex flex-wrap gap-3">
           {tiersLoading ? (
             <div className="flex gap-2">
