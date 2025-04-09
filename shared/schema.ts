@@ -94,11 +94,14 @@ export const users = pgTable("users", {
   // Privacy settings - Default visibility profiles
   privacyProfile: varchar("privacy_profile", { length: 30 }).default("standard"),
   
+  // Profile customization
+  avatarUrl: text("avatar_url"),
+  bannerUrl: text("banner_url"),
+  bannerPattern: varchar("banner_pattern", { length: 50 }),
+  
   // System fields
   createdAt: timestamp("created_at").defaultNow(),
   lastUpdated: timestamp("last_updated").defaultNow()
-  
-  // Note: avatarUrl doesn't exist in the database (remove references to it in code)
 });
 
 // Tournaments table

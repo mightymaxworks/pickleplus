@@ -221,8 +221,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Profile Image Upload
-  app.post("/api/profile/upload-image", isAuthenticated, async (req: Request, res: Response) => {
+  // Avatar Upload
+  app.post("/api/profile/upload-avatar", isAuthenticated, async (req: Request, res: Response) => {
     if (!req.user) {
       return res.status(401).json({ error: "Not authenticated" });
     }
@@ -234,7 +234,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // 3. Store it in cloud storage or file system
       // 4. Save the URL in the database
       
-      console.log("Profile image upload requested for user", req.user.id);
+      console.log("Avatar upload requested for user", req.user.id);
       
       // For this prototype, we'll mock the behavior
       // In a real implementation, we would save the URL after uploading to cloud storage
@@ -246,21 +246,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       if (!updatedUser) {
-        return res.status(404).json({ error: "Failed to update profile image" });
+        return res.status(404).json({ error: "Failed to update avatar" });
       }
       
       // Return success response with the updated user
       res.json({
         success: true,
-        message: "Profile image uploaded successfully",
+        message: "Avatar uploaded successfully",
         user: {
           id: updatedUser.id,
           avatarUrl: updatedUser.avatarUrl
         }
       });
     } catch (error) {
-      console.error('Error uploading profile image:', error);
-      res.status(500).json({ error: "Failed to upload profile image" });
+      console.error('Error uploading avatar:', error);
+      res.status(500).json({ error: "Failed to upload avatar" });
+    }
+  });
+  
+  // Banner Upload
+  app.post("/api/profile/upload-banner", isAuthenticated, async (req: Request, res: Response) => {
+    if (!req.user) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    try {
+      // In a real implementation, we would:
+      // 1. Use multipart middleware like multer to handle file uploads
+      // 2. Process the image (resize, optimize)
+      // 3. Store it in cloud storage or file system
+      // 4. Save the URL in the database
+      
+      console.log("Banner upload requested for user", req.user.id);
+      
+      // For this prototype, we'll mock the behavior
+      // In a real implementation, we would save the URL after uploading to cloud storage
+      const mockBannerUrl = `https://picsum.photos/1200/400`;
+      
+      // Update user with new banner URL
+      const updatedUser = await storage.updateUserProfile(req.user.id, {
+        bannerUrl: mockBannerUrl,
+        bannerPattern: null // Clear any pattern when setting a custom image
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ error: "Failed to update banner" });
+      }
+      
+      // Return success response with the updated user
+      res.json({
+        success: true,
+        message: "Banner uploaded successfully",
+        user: {
+          id: updatedUser.id,
+          bannerUrl: updatedUser.bannerUrl
+        }
+      });
+    } catch (error) {
+      console.error('Error uploading banner:', error);
+      res.status(500).json({ error: "Failed to upload banner" });
     }
   });
   
@@ -271,23 +315,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      // Update user to remove avatar URL
-      const updatedUser = await storage.updateUserProfile(req.user.id, {
-        avatarUrl: null
-      });
+      const { type } = req.query;
+      
+      if (!type || (type !== 'avatar' && type !== 'banner')) {
+        return res.status(400).json({ error: "Image type must be 'avatar' or 'banner'" });
+      }
+      
+      // Update user to remove the specified image URL
+      const updateData = type === 'avatar' 
+        ? { avatarUrl: null }
+        : { bannerUrl: null, bannerPattern: null };
+      
+      const updatedUser = await storage.updateUserProfile(req.user.id, updateData);
       
       if (!updatedUser) {
-        return res.status(404).json({ error: "Failed to remove profile image" });
+        return res.status(404).json({ error: `Failed to remove ${type}` });
       }
       
       // Return success response
       res.json({
         success: true,
-        message: "Profile image removed successfully"
+        message: `${type.charAt(0).toUpperCase() + type.slice(1)} removed successfully`
       });
     } catch (error) {
-      console.error('Error removing profile image:', error);
-      res.status(500).json({ error: "Failed to remove profile image" });
+      console.error('Error removing image:', error);
+      res.status(500).json({ error: "Failed to remove image" });
     }
   });
 

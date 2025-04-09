@@ -19,8 +19,12 @@ export interface EnhancedUser {
   isAdmin?: boolean;
   createdAt?: Date;
   lastUpdated?: Date;
+  
+  // Profile customization
   avatarInitials?: string;
   avatarUrl?: string | null;
+  bannerUrl?: string | null;
+  bannerPattern?: string | null;
   
   // Profile completion
   profileCompletionPct?: number;

@@ -161,8 +161,147 @@ const StreamlinedProfilePage: FC = () => {
     { value: '6.0', label: '6.0+ (Pro)' },
   ];
   
+  // Avatar and banner states
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const [bannerPatternField, setBannerPatternField] = useState('');
+  
+  // Banner pattern options
+  const bannerPatternOptions = [
+    { value: '', label: 'No Pattern' },
+    { value: 'pickleball', label: 'Pickleball Pattern' },
+    { value: 'court', label: 'Court Lines' },
+    { value: 'geometric', label: 'Geometric' },
+    { value: 'gradient', label: 'Gradient' },
+  ];
+  
+  // Function to handle avatar file selection
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setAvatarFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  // Function to handle banner file selection
+  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setBannerFile(file);
+      setBannerPatternField(''); // Clear pattern when file is selected
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setBannerPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  // Function to handle saving avatar
+  const saveAvatar = async () => {
+    if (!avatarFile) {
+      setEditingFields(prev => ({ ...prev, avatar: false }));
+      return;
+    }
+    
+    try {
+      const formData = new FormData();
+      formData.append('avatar', avatarFile);
+      
+      const response = await fetch('/api/profile/upload-avatar', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload avatar');
+      }
+      
+      // Invalidate the user query to refresh the data
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/current-user'] });
+      
+      // Exit edit mode for this field
+      setEditingFields(prev => ({ ...prev, avatar: false }));
+      setAvatarFile(null);
+      
+      toast({
+        title: 'Avatar updated',
+        description: 'Your profile picture has been updated successfully.',
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error updating avatar:', error);
+      toast({
+        title: 'Error updating avatar',
+        description: 'There was an error updating your profile picture. Please try again.',
+        variant: 'destructive',
+      });
+      
+      return false;
+    }
+  };
+  
+  // Function to handle saving banner
+  const saveBanner = async () => {
+    try {
+      if (bannerFile) {
+        const formData = new FormData();
+        formData.append('banner', bannerFile);
+        
+        const response = await fetch('/api/profile/upload-banner', {
+          method: 'POST',
+          credentials: 'include',
+          body: formData,
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to upload banner');
+        }
+      } else if (bannerPatternField) {
+        await saveProfileField('bannerPattern', bannerPatternField);
+        await saveProfileField('bannerUrl', '');
+      }
+      
+      // Invalidate the user query to refresh the data
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/current-user'] });
+      
+      // Exit edit mode for this field
+      setEditingFields(prev => ({ ...prev, banner: false }));
+      setBannerFile(null);
+      
+      toast({
+        title: 'Banner updated',
+        description: 'Your profile banner has been updated successfully.',
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error updating banner:', error);
+      toast({
+        title: 'Error updating banner',
+        description: 'There was an error updating your profile banner. Please try again.',
+        variant: 'destructive',
+      });
+      
+      return false;
+    }
+  };
+  
   // Function to handle saving profile updates
-  const saveProfileField = async (fieldName: string, value: string | boolean) => {
+  const saveProfileField = async (fieldName: string, value: string | boolean | number | null) => {
     try {
       await fetch('/api/profile/update', {
         method: 'PATCH',
@@ -241,6 +380,13 @@ const StreamlinedProfilePage: FC = () => {
     }
   }, [user]);
 
+  // Initialize banner pattern field when user data is loaded
+  useEffect(() => {
+    if (user) {
+      setBannerPatternField(user.bannerPattern || '');
+    }
+  }, [user?.bannerPattern]);
+  
   if (isLoading) {
     return <ProfileSkeleton />;
   }
@@ -253,9 +399,176 @@ const StreamlinedProfilePage: FC = () => {
     });
     return <div className="p-4">Failed to load profile data</div>;
   }
+  
+  // Avatar edit modal
+  const renderAvatarEditModal = () => {
+    if (!editingFields.avatar) return null;
+    
+    return (
+      <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md overflow-hidden">
+          <CardHeader>
+            <CardTitle>Update Profile Picture</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col items-center space-y-4">
+              <div className="w-32 h-32 relative mx-auto">
+                {avatarPreview ? (
+                  <img 
+                    src={avatarPreview} 
+                    alt="Avatar preview" 
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                ) : user.avatarUrl ? (
+                  <img 
+                    src={user.avatarUrl} 
+                    alt={user.displayName || user.username} 
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                ) : (
+                  <div className="w-full h-full rounded-full bg-primary flex items-center justify-center text-2xl text-primary-foreground">
+                    {user.avatarInitials || user.username.substring(0, 2).toUpperCase()}
+                  </div>
+                )}
+              </div>
+              
+              <div className="w-full">
+                <Label htmlFor="avatar-upload">Choose an image</Label>
+                <Input 
+                  id="avatar-upload" 
+                  type="file" 
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="mt-1"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Recommended: 300x300px or larger square image.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+          <div className="flex justify-end gap-2 p-4 pt-0">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setAvatarFile(null);
+                setAvatarPreview(null);
+                setEditingFields(prev => ({ ...prev, avatar: false }));
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={saveAvatar}>
+              Save
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  };
+  
+  // Banner edit modal
+  const renderBannerEditModal = () => {
+    if (!editingFields.banner) return null;
+    
+    return (
+      <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-lg overflow-hidden">
+          <CardHeader>
+            <CardTitle>Update Profile Banner</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {/* Banner preview */}
+              <div className="aspect-[3/1] relative rounded-md overflow-hidden border">
+                {bannerPreview ? (
+                  <img 
+                    src={bannerPreview} 
+                    alt="Banner preview" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : user.bannerUrl ? (
+                  <img 
+                    src={user.bannerUrl} 
+                    alt="Current banner" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className={`w-full h-full ${
+                    bannerPatternField 
+                      ? `bg-pattern-${bannerPatternField}` 
+                      : "bg-gradient-to-r from-primary/80 via-primary/60 to-primary/40"
+                  }`}></div>
+                )}
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="banner-upload">Upload custom banner image</Label>
+                  <Input 
+                    id="banner-upload" 
+                    type="file" 
+                    accept="image/*"
+                    onChange={handleBannerChange}
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Recommended: 1200x400px or larger image.
+                  </p>
+                </div>
+                
+                <div className="pt-2">
+                  <Label>Or choose a pattern</Label>
+                  <Select 
+                    value={bannerPatternField} 
+                    onValueChange={(value) => {
+                      setBannerPatternField(value);
+                      setBannerFile(null);
+                      setBannerPreview(null);
+                    }}
+                  >
+                    <SelectTrigger className="w-full mt-1">
+                      <SelectValue placeholder="Select a pattern" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {bannerPatternOptions.map(option => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+          <div className="flex justify-end gap-2 p-4 pt-0">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setBannerFile(null);
+                setBannerPreview(null);
+                setBannerPatternField(user?.bannerPattern || '');
+                setEditingFields(prev => ({ ...prev, banner: false }));
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={saveBanner}>
+              Save
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  };
 
   return (
     <div className="container px-4 pb-16 max-w-screen-xl mx-auto">
+      {/* Avatar and Banner Edit Modals */}
+      {renderAvatarEditModal()}
+      {renderBannerEditModal()}
+      
       {/* Standardized Header using AppHeader component */}
       <AppHeader />
       
@@ -284,7 +597,35 @@ const StreamlinedProfilePage: FC = () => {
       {/* Hero Section with Profile Header */}
       <Card className="w-full overflow-hidden relative mt-4">
         {/* Banner/Background */}
-        <div className="h-40 bg-gradient-to-r from-primary/80 via-primary/60 to-primary/40 flex items-end justify-end p-4">
+        <div className={`h-40 relative ${!user.bannerUrl ? "bg-gradient-to-r from-primary/80 via-primary/60 to-primary/40" : ""} flex items-end justify-end`}>
+          {user.bannerUrl ? (
+            <img 
+              src={user.bannerUrl} 
+              alt="Profile banner" 
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          ) : (
+            user.bannerPattern ? (
+              <div className={`absolute inset-0 w-full h-full bg-pattern-${user.bannerPattern}`}></div>
+            ) : null
+          )}
+          
+          {/* Edit Banner Button (Only visible in edit mode) */}
+          {isEditMode && (
+            <div className="absolute inset-0 bg-black/20 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div className="bg-background/80 backdrop-blur-sm p-2 rounded-md shadow-lg">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="text-xs flex items-center gap-1"
+                  onClick={() => setEditingFields(prev => ({ ...prev, banner: true }))}
+                >
+                  <Edit2 className="h-3.5 w-3.5" />
+                  Change Banner
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Profile Content */}
@@ -300,6 +641,42 @@ const StreamlinedProfilePage: FC = () => {
                   {user.avatarInitials || user.username.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
+              
+              {/* Profile Completion Indicator */}
+              {user.profileCompletionPct !== undefined && user.profileCompletionPct < 100 && (
+                <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-0.5">
+                  <div className="relative w-6 h-6 bg-muted rounded-full flex items-center justify-center text-xs font-medium">
+                    <svg viewBox="0 0 100 100" className="absolute inset-0">
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="10"
+                        strokeDasharray={`${user.profileCompletionPct * 2.51} 251`}
+                        strokeLinecap="round"
+                        className="text-primary transform -rotate-90 origin-center"
+                      />
+                    </svg>
+                    <span>{user.profileCompletionPct}%</span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Edit Avatar Button (Only visible in edit mode) */}
+              {isEditMode && (
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-full flex items-center justify-center">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="text-white/90 text-xs"
+                    onClick={() => setEditingFields(prev => ({ ...prev, avatar: true }))}
+                  >
+                    <Edit2 className="h-5 w-5" />
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 
