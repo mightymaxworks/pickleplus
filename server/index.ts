@@ -1,5 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerMockRoutes } from "./mock-routes";
+import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import cors from 'cors';
 
@@ -53,7 +53,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = registerMockRoutes(app);
+  const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

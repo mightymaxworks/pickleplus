@@ -3064,6 +3064,10 @@ function getRandomReason(pointChange: number): string {
           console.error("[Match API] Database error creating match:", dbError);
           return res.status(500).json({ error: "Database error creating match" });
         }
+      } catch (error) {
+        console.error("[Match API] Error in outer match creation block:", error);
+        return res.status(500).json({ error: "Server error creating match" });
+      }
       
       if (!match) {
         return res.status(500).json({ error: "Failed to create match" });

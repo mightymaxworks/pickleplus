@@ -58,44 +58,28 @@ export class DatabaseStorage implements IStorage {
       
       console.log(`[Storage] getUser called with valid ID: ${numericId}`);
       
-      const [user] = await db.select({
-        id: users.id,
-        username: users.username,
-        email: users.email,
-        password: users.password,
-        displayName: users.displayName,
-        yearOfBirth: users.yearOfBirth,
-        passportId: users.passportId,
-        location: users.location,
-        playingSince: users.playingSince,
-        skillLevel: users.skillLevel,
-        level: users.level,
-        xp: users.xp,
-        rankingPoints: users.rankingPoints,
-        lastMatchDate: users.lastMatchDate,
-        avatarInitials: users.avatarInitials,
-        totalMatches: users.totalMatches,
-        matchesWon: users.matchesWon,
-        totalTournaments: users.totalTournaments,
-        isFoundingMember: users.isFoundingMember,
-        isAdmin: users.isAdmin,
-        xpMultiplier: users.xpMultiplier,
-        bio: users.bio,
-        preferredPosition: users.preferredPosition,
-        paddleBrand: users.paddleBrand,
-        paddleModel: users.paddleModel,
-        playingStyle: users.playingStyle,
-        shotStrengths: users.shotStrengths,
-        preferredFormat: users.preferredFormat,
-        dominantHand: users.dominantHand,
-        createdAt: users.createdAt,
-      }).from(users).where(eq(users.id, numericId));
+      // Select all fields from the user table
+      const [user] = await db.select()
+        .from(users)
+        .where(eq(users.id, numericId));
       
-      // Add the missing fields that are expected in the User type
+      // Add any missing fields expected in the User type, but don't override existing values
       if (user) {
-        (user as any).avatarUrl = null;
-        (user as any).profileCompletionPct = 0;
-        (user as any).regularSchedule = null;
+        if (!('avatarUrl' in user)) {
+          (user as any).avatarUrl = null;
+        }
+        
+        // Use default profileCompletionPct from database if available, otherwise 0
+        if (user.profileCompletionPct === undefined || user.profileCompletionPct === null) {
+          (user as any).profileCompletionPct = 0;
+        }
+        
+        if (!('regularSchedule' in user)) {
+          (user as any).regularSchedule = null;
+        }
+        
+        // Log the fields we care about for debugging
+        console.log(`[Storage] Retrieved user ${numericId} with profileCompletionPct=${user.profileCompletionPct}, paddleBrand=${user.paddleBrand}, paddleModel=${user.paddleModel}`);
       }
       
       return user;
@@ -132,44 +116,25 @@ export class DatabaseStorage implements IStorage {
         return undefined;
       }
       
-      const [user] = await db.select({
-        id: users.id,
-        username: users.username,
-        email: users.email,
-        password: users.password,
-        displayName: users.displayName,
-        yearOfBirth: users.yearOfBirth,
-        passportId: users.passportId,
-        location: users.location,
-        playingSince: users.playingSince,
-        skillLevel: users.skillLevel,
-        level: users.level,
-        xp: users.xp,
-        rankingPoints: users.rankingPoints,
-        lastMatchDate: users.lastMatchDate,
-        avatarInitials: users.avatarInitials,
-        totalMatches: users.totalMatches,
-        matchesWon: users.matchesWon,
-        totalTournaments: users.totalTournaments,
-        isFoundingMember: users.isFoundingMember,
-        isAdmin: users.isAdmin,
-        xpMultiplier: users.xpMultiplier,
-        bio: users.bio,
-        preferredPosition: users.preferredPosition,
-        paddleBrand: users.paddleBrand,
-        paddleModel: users.paddleModel,
-        playingStyle: users.playingStyle,
-        shotStrengths: users.shotStrengths,
-        preferredFormat: users.preferredFormat,
-        dominantHand: users.dominantHand,
-        createdAt: users.createdAt,
-      }).from(users).where(eq(users.username, username));
+      // Select all fields from the user table
+      const [user] = await db.select()
+        .from(users)
+        .where(eq(users.username, username));
       
-      // Add the missing fields that are expected in the User type
+      // Add any missing fields expected in the User type
       if (user) {
-        (user as any).avatarUrl = null;
-        (user as any).profileCompletionPct = 0;
-        (user as any).regularSchedule = null;
+        if (!('avatarUrl' in user)) {
+          (user as any).avatarUrl = null;
+        }
+        
+        // Use default profileCompletionPct from database if available, otherwise 0
+        if (user.profileCompletionPct === undefined || user.profileCompletionPct === null) {
+          (user as any).profileCompletionPct = 0;
+        }
+        
+        if (!('regularSchedule' in user)) {
+          (user as any).regularSchedule = null;
+        }
       }
       
       return user;
@@ -181,49 +146,35 @@ export class DatabaseStorage implements IStorage {
   
   async getUserByIdentifier(identifier: string): Promise<User | undefined> {
     try {
-      const [user] = await db.select({
-        id: users.id,
-        username: users.username,
-        email: users.email,
-        password: users.password,
-        displayName: users.displayName,
-        yearOfBirth: users.yearOfBirth,
-        passportId: users.passportId,
-        location: users.location,
-        playingSince: users.playingSince,
-        skillLevel: users.skillLevel,
-        level: users.level,
-        xp: users.xp,
-        rankingPoints: users.rankingPoints,
-        lastMatchDate: users.lastMatchDate,
-        avatarInitials: users.avatarInitials,
-        totalMatches: users.totalMatches,
-        matchesWon: users.matchesWon,
-        totalTournaments: users.totalTournaments,
-        isFoundingMember: users.isFoundingMember,
-        isAdmin: users.isAdmin,
-        xpMultiplier: users.xpMultiplier,
-        bio: users.bio,
-        preferredPosition: users.preferredPosition,
-        paddleBrand: users.paddleBrand,
-        paddleModel: users.paddleModel,
-        playingStyle: users.playingStyle,
-        shotStrengths: users.shotStrengths,
-        preferredFormat: users.preferredFormat,
-        dominantHand: users.dominantHand,
-        createdAt: users.createdAt,
-      }).from(users).where(
-        or(
-          eq(users.username, identifier),
-          eq(users.email, identifier)
-        )
-      );
+      if (!identifier || typeof identifier !== 'string') {
+        console.log(`[Storage] getUserByIdentifier called with invalid identifier: ${identifier}`);
+        return undefined;
+      }
       
-      // Add the missing fields that are expected in the User type
+      // Select all fields from the user table
+      const [user] = await db.select()
+        .from(users)
+        .where(
+          or(
+            eq(users.username, identifier),
+            eq(users.email, identifier)
+          )
+        );
+      
+      // Add any missing fields expected in the User type
       if (user) {
-        (user as any).avatarUrl = null;
-        (user as any).profileCompletionPct = 0;
-        (user as any).regularSchedule = null;
+        if (!('avatarUrl' in user)) {
+          (user as any).avatarUrl = null;
+        }
+        
+        // Use default profileCompletionPct from database if available, otherwise 0
+        if (user.profileCompletionPct === undefined || user.profileCompletionPct === null) {
+          (user as any).profileCompletionPct = 0;
+        }
+        
+        if (!('regularSchedule' in user)) {
+          (user as any).regularSchedule = null;
+        }
       }
       
       return user;
@@ -243,44 +194,25 @@ export class DatabaseStorage implements IStorage {
       
       console.log(`[Storage] getUserByPassportId called with passportId: ${passportId}`);
       
-      const [user] = await db.select({
-        id: users.id,
-        username: users.username,
-        email: users.email,
-        password: users.password,
-        displayName: users.displayName,
-        yearOfBirth: users.yearOfBirth,
-        passportId: users.passportId,
-        location: users.location,
-        playingSince: users.playingSince,
-        skillLevel: users.skillLevel,
-        level: users.level,
-        xp: users.xp,
-        rankingPoints: users.rankingPoints,
-        lastMatchDate: users.lastMatchDate,
-        avatarInitials: users.avatarInitials,
-        totalMatches: users.totalMatches,
-        matchesWon: users.matchesWon,
-        totalTournaments: users.totalTournaments,
-        isFoundingMember: users.isFoundingMember,
-        isAdmin: users.isAdmin,
-        xpMultiplier: users.xpMultiplier,
-        bio: users.bio,
-        preferredPosition: users.preferredPosition,
-        paddleBrand: users.paddleBrand,
-        paddleModel: users.paddleModel,
-        playingStyle: users.playingStyle,
-        shotStrengths: users.shotStrengths,
-        preferredFormat: users.preferredFormat,
-        dominantHand: users.dominantHand,
-        createdAt: users.createdAt,
-      }).from(users).where(eq(users.passportId, passportId));
+      // Select all fields from the user table
+      const [user] = await db.select()
+        .from(users)
+        .where(eq(users.passportId, passportId));
       
-      // Add the missing fields that are expected in the User type
+      // Add any missing fields expected in the User type
       if (user) {
-        (user as any).avatarUrl = null;
-        (user as any).profileCompletionPct = 0;
-        (user as any).regularSchedule = null;
+        if (!('avatarUrl' in user)) {
+          (user as any).avatarUrl = null;
+        }
+        
+        // Use default profileCompletionPct from database if available, otherwise 0
+        if (user.profileCompletionPct === undefined || user.profileCompletionPct === null) {
+          (user as any).profileCompletionPct = 0;
+        }
+        
+        if (!('regularSchedule' in user)) {
+          (user as any).regularSchedule = null;
+        }
       }
       
       return user;
@@ -307,11 +239,28 @@ export class DatabaseStorage implements IStorage {
       
       console.log(`[Storage] updateUser called with valid ID: ${numericId}`);
       
+      // Update the user record
       const [updatedUser] = await db.update(users)
         .set(update)
         .where(eq(users.id, numericId))
         .returning();
+      
+      // Add any missing fields expected in the User type
+      if (updatedUser) {
+        if (!('avatarUrl' in updatedUser)) {
+          (updatedUser as any).avatarUrl = null;
+        }
         
+        // Use default profileCompletionPct from database if available, otherwise 0
+        if (updatedUser.profileCompletionPct === undefined || updatedUser.profileCompletionPct === null) {
+          (updatedUser as any).profileCompletionPct = 0;
+        }
+        
+        if (!('regularSchedule' in updatedUser)) {
+          (updatedUser as any).regularSchedule = null;
+        }
+      }
+      
       return updatedUser;
     } catch (error) {
       console.error('[Storage] updateUser error:', error);
@@ -355,6 +304,17 @@ export class DatabaseStorage implements IStorage {
       // Calculate new profile completion percentage
       const newCompletion = this.calculateProfileCompletion(updatedUser);
       
+      // Add any missing fields expected in the User type
+      if (updatedUser) {
+        if (!('avatarUrl' in updatedUser)) {
+          (updatedUser as any).avatarUrl = null;
+        }
+        
+        if (!('regularSchedule' in updatedUser)) {
+          (updatedUser as any).regularSchedule = null;
+        }
+      }
+      
       // Update the profile completion percentage if it changed
       if (newCompletion !== previousCompletion) {
         console.log(`[Storage] updateUserProfile - Profile completion changed from ${previousCompletion}% to ${newCompletion}% for user ${numericId}`);
@@ -363,7 +323,18 @@ export class DatabaseStorage implements IStorage {
           .set({ profileCompletionPct: newCompletion })
           .where(eq(users.id, numericId))
           .returning();
+        
+        // Add any missing fields to finalUser too
+        if (finalUser) {
+          if (!('avatarUrl' in finalUser)) {
+            (finalUser as any).avatarUrl = null;
+          }
           
+          if (!('regularSchedule' in finalUser)) {
+            (finalUser as any).regularSchedule = null;
+          }
+        }
+        
         return finalUser;
       }
       
@@ -473,6 +444,22 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(users.id, numericId))
         .returning();
+      
+      // Add any missing fields expected in the User type
+      if (updatedUser) {
+        if (!('avatarUrl' in updatedUser)) {
+          (updatedUser as any).avatarUrl = null;
+        }
+        
+        // Use default profileCompletionPct from database if available, otherwise 0
+        if (updatedUser.profileCompletionPct === undefined || updatedUser.profileCompletionPct === null) {
+          (updatedUser as any).profileCompletionPct = 0;
+        }
+        
+        if (!('regularSchedule' in updatedUser)) {
+          (updatedUser as any).regularSchedule = null;
+        }
+      }
       
       return updatedUser;
     } catch (error) {
