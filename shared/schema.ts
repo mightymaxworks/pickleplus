@@ -97,6 +97,16 @@ export const users = pgTable("users", {
   homeCourtLocations: text("home_court_locations"), // Comma-separated or JSON string
   travelRadiusKm: integer("travel_radius_km"),
   
+  // External Rating Systems - PKL-278651-EXTR-0001
+  duprRating: varchar("dupr_rating", { length: 10 }),
+  duprProfileUrl: varchar("dupr_profile_url", { length: 255 }),
+  utprRating: varchar("utpr_rating", { length: 10 }),
+  utprProfileUrl: varchar("utpr_profile_url", { length: 255 }),
+  wprRating: varchar("wpr_rating", { length: 10 }),
+  wprProfileUrl: varchar("wpr_profile_url", { length: 255 }),
+  externalRatingsVerified: boolean("external_ratings_verified").default(false),
+  lastExternalRatingUpdate: timestamp("last_external_rating_update"),
+  
   // Privacy settings - Default visibility profiles
   privacyProfile: varchar("privacy_profile", { length: 30 }).default("standard"),
   

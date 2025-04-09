@@ -64,6 +64,16 @@ export interface EnhancedUser {
   homeCourtLocations?: string;
   travelRadiusKm?: number;
   
+  // External Rating Systems - PKL-278651-EXTR-0001
+  duprRating?: string;
+  duprProfileUrl?: string;
+  utprRating?: string;
+  utprProfileUrl?: string;
+  wprRating?: string;
+  wprProfileUrl?: string;
+  externalRatingsVerified?: boolean;
+  lastExternalRatingUpdate?: Date;
+  
   // Playing style preferences
   playingStyle?: string;
   shotStrengths?: string;

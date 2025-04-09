@@ -2,15 +2,17 @@ import { User } from "../../types";
 import { EnhancedUser } from "../../types/enhanced-user";
 import { BarChart, Dumbbell, Medal, Trophy } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { ExternalRatingsSection } from "./ExternalRatingsSection";
 
 interface PlayerStatisticsProps {
   user: EnhancedUser;
+  isCurrentUser?: boolean;
 }
 
-export default function PlayerStatistics({ user }: PlayerStatisticsProps) {
+export default function PlayerStatistics({ user, isCurrentUser = false }: PlayerStatisticsProps) {
   // Calculate win rate if data is available
-  const winRate = user.totalMatches > 0 
-    ? Math.round((user.matchesWon / user.totalMatches) * 100) 
+  const winRate = user.totalMatches && user.totalMatches > 0 
+    ? Math.round(((user.matchesWon || 0) / user.totalMatches) * 100) 
     : 0;
   
   return (
@@ -55,10 +57,13 @@ export default function PlayerStatistics({ user }: PlayerStatisticsProps) {
         </div>
       </div>
       
+      {/* External Ratings Section */}
+      <ExternalRatingsSection user={user} isEditable={true} isCurrentUser={isCurrentUser} />
+      
       <div className="pt-4 border-t">
         <h3 className="text-lg font-medium mb-4">Recent Activity</h3>
         
-        {user.totalMatches > 0 ? (
+        {user.totalMatches && user.totalMatches > 0 ? (
           <div className="space-y-3">
             <div className="bg-muted/30 rounded-md p-3">
               <div className="flex justify-between items-center">
