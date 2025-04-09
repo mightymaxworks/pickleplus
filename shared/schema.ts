@@ -87,6 +87,11 @@ export const users = pgTable("users", {
   competitiveIntensity: integer("competitive_intensity"),
   lookingForPartners: boolean("looking_for_partners").default(false),
   mentorshipInterest: boolean("mentorship_interest").default(false),
+  playerGoals: text("player_goals"),
+  preferredMatchDuration: varchar("preferred_match_duration", { length: 50 }),
+  fitnessLevel: varchar("fitness_level", { length: 50 }),
+  mobilityLimitations: text("mobility_limitations"),
+  privateMessagePreference: varchar("private_message_preference", { length: 50 }).default("all"),
   
   // Location data
   homeCourtLocations: text("home_court_locations"), // Comma-separated or JSON string

@@ -189,13 +189,10 @@ const StreamlinedProfilePage: FC = () => {
   
   // Options for new fields
   const surfaceOptions = [
-    { value: 'concrete', label: 'Concrete' },
-    { value: 'asphalt', label: 'Asphalt' },
-    { value: 'composite', label: 'Composite' },
-    { value: 'clay', label: 'Clay' },
-    { value: 'cushioned', label: 'Cushioned' },
-    { value: 'wood', label: 'Wood (Indoor)' },
-    { value: 'turf', label: 'Artificial Turf' },
+    { value: 'wooden', label: 'Wooden' },
+    { value: 'outdoor_tennis', label: 'Outdoor Tennis' },
+    { value: 'indoor_tennis', label: 'Indoor Tennis' },
+    { value: 'pickleball_mats', label: 'Pickleball Mats' },
     { value: 'any', label: 'Any Surface' },
   ];
   
@@ -718,14 +715,63 @@ const StreamlinedProfilePage: FC = () => {
           <div className="p-4">
             <div className="flex justify-between items-center mb-2">
               <div className="font-medium text-sm">Skill Level</div>
-              <BadgeCheck className="h-4 w-4 text-yellow-500" />
+              {isEditMode ? (
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="h-8 w-8 p-0"
+                  onClick={() => setEditingFields(prev => ({ ...prev, skillLevel: true }))}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              ) : <BadgeCheck className="h-4 w-4 text-yellow-500" />}
             </div>
-            <div className="mb-2">
-              <Progress value={user.skillLevel ? (parseFloat(user.skillLevel) / 7) * 100 : 0} className="h-2" />
-            </div>
-            <div className="text-sm font-semibold">
-              {user.skillLevel || 'Not set'}
-            </div>
+            {isEditMode && editingFields.skillLevel ? (
+              <div className="space-y-2">
+                <Select 
+                  value={skillLevelField} 
+                  onValueChange={(value) => setSkillLevelField(value)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select skill level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {skillLevelOptions.map(option => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div className="flex justify-end gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setSkillLevelField(user.skillLevel || '');
+                      setEditingFields(prev => ({ ...prev, skillLevel: false }));
+                    }}
+                  >
+                    <X className="h-4 w-4 mr-1" /> Cancel
+                  </Button>
+                  <Button 
+                    size="sm"
+                    onClick={() => saveProfileField('skillLevel', skillLevelField)}
+                  >
+                    <Check className="h-4 w-4 mr-1" /> Save
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="mb-2">
+                  <Progress value={user.skillLevel ? (parseFloat(user.skillLevel) / 7) * 100 : 0} className="h-2" />
+                </div>
+                <div className="text-sm font-semibold">
+                  {user.skillLevel || 'Not set'}
+                </div>
+              </>
+            )}
           </div>
         </Card>
         
