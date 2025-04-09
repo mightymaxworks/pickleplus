@@ -1,40 +1,119 @@
 /**
- * PKL-278651-SPUI-0001: Profile Stats & Ratings Tab
- * Detailed view of player performance metrics and ratings
+ * PKL-278651-CIQP-0001: CourtIQ™ Skill Profiling System
+ * Enhanced profile stats tab with radar chart visualization and skill editing
  */
-import { FC } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { FC, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Slider } from '@/components/ui/slider';
+import { Button } from '@/components/ui/button';
 import { 
   Activity, Award, TrendingUp, BarChart, ArrowUpRight, 
-  ArrowRight, Target, Zap 
+  ArrowRight, Target, Zap, Info, Edit2, Save, X, HelpCircle
 } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ResponsiveContainer,
+  Tooltip as RechartTooltip
+} from 'recharts';
+import { useToast } from '@/hooks/use-toast';
+import { queryClient } from '@/lib/queryClient';
 
 interface ProfileStatsTabProps {
   user: any;
+  isEditMode: boolean;
 }
 
 // Helper function to get a color based on rating value
 const getRatingColor = (value: number | null): string => {
   if (!value) return 'bg-gray-200';
-  if (value >= 80) return 'bg-green-500';
-  if (value >= 60) return 'bg-blue-500';
-  if (value >= 40) return 'bg-yellow-500';
-  if (value >= 20) return 'bg-orange-500';
+  if (value >= 8) return 'bg-green-500';
+  if (value >= 6) return 'bg-blue-500';
+  if (value >= 4) return 'bg-yellow-500';
+  if (value >= 2) return 'bg-orange-500';
   return 'bg-red-500';
 };
 
-const ProfileStatsTab: FC<ProfileStatsTabProps> = ({ user }) => {
-  // CourtIQ™ System Data (placeholder)
+// Skill descriptions for tooltips
+const skillDescriptions = {
+  forehandStrength: "Power and control of your forehand shots",
+  backhandStrength: "Technique and consistency of your backhand shots",
+  servePower: "Speed and placement of your serves",
+  dinkAccuracy: "Precision of soft shots near the net",
+  thirdShotConsistency: "Accuracy of third shot drops and drives",
+  courtCoverage: "Mobility and court positioning"
+};
+
+const ProfileStatsTab: FC<ProfileStatsTabProps> = ({ user, isEditMode }) => {
+  const { toast } = useToast();
+  
+  // State for skill editing
+  const [editingSkills, setEditingSkills] = useState(false);
+  const [skillValues, setSkillValues] = useState({
+    forehandStrength: user.forehandStrength || 0,
+    backhandStrength: user.backhandStrength || 0,
+    servePower: user.servePower || 0,
+    dinkAccuracy: user.dinkAccuracy || 0,
+    thirdShotConsistency: user.thirdShotConsistency || 0,
+    courtCoverage: user.courtCoverage || 0
+  });
+
+  // Format data for radar chart
+  const formatSkillsForRadar = () => {
+    return [
+      {
+        subject: 'Forehand',
+        A: skillValues.forehandStrength || 0,
+        fullMark: 10,
+      },
+      {
+        subject: 'Backhand',
+        A: skillValues.backhandStrength || 0,
+        fullMark: 10,
+      },
+      {
+        subject: 'Serve',
+        A: skillValues.servePower || 0,
+        fullMark: 10,
+      },
+      {
+        subject: 'Dink',
+        A: skillValues.dinkAccuracy || 0,
+        fullMark: 10,
+      },
+      {
+        subject: '3rd Shot',
+        A: skillValues.thirdShotConsistency || 0,
+        fullMark: 10,
+      },
+      {
+        subject: 'Coverage',
+        A: skillValues.courtCoverage || 0,
+        fullMark: 10,
+      },
+    ];
+  };
+  
+  // CourtIQ™ System Data
   const courtIQData = {
     overall: user.rankingPoints || 0,
-    forehand: user.forehandStrength || null,
-    backhand: user.backhandStrength || null,
-    serve: user.servePower || null,
-    dink: user.dinkAccuracy || null,
-    thirdShot: user.thirdShotConsistency || null,
-    courtCoverage: user.courtCoverage || null
+    forehand: user.forehandStrength || 0,
+    backhand: user.backhandStrength || 0,
+    serve: user.servePower || 0,
+    dink: user.dinkAccuracy || 0,
+    thirdShot: user.thirdShotConsistency || 0,
+    courtCoverage: user.courtCoverage || 0
   };
   
   // Recent Progress (placeholder)
@@ -44,7 +123,7 @@ const ProfileStatsTab: FC<ProfileStatsTabProps> = ({ user }) => {
     trend: 'up' // 'up', 'down', or 'stable'
   };
   
-  // Match Performance Stats (placeholder)
+  // Match Performance Stats
   const matchStats = {
     totalMatches: user.totalMatches || 0,
     wins: user.matchesWon || 0,
@@ -59,130 +138,215 @@ const ProfileStatsTab: FC<ProfileStatsTabProps> = ({ user }) => {
   const skillLevelValue = parseFloat(user.skillLevel || '0');
   const skillLevelPercentage = (skillLevelValue / 7) * 100; // Assuming max skill level is 7.0
   
+  // Calculate average skill rating
+  const calculateAverageSkill = () => {
+    const values = Object.values(skillValues).filter(val => val !== 0 && val !== null);
+    if (values.length === 0) return 0;
+    return Math.round((values.reduce((a, b) => (a as number) + (b as number), 0) as number) / values.length * 10) / 10;
+  };
+  
+  // Handle slider changes
+  const handleSkillChange = (skill: string, value: number[]) => {
+    setSkillValues(prev => ({
+      ...prev,
+      [skill]: value[0]
+    }));
+  };
+  
+  // Save skill values
+  const saveSkills = async () => {
+    try {
+      const response = await fetch('/api/profile/update', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(skillValues),
+      });
+      
+      if (!response.ok) throw new Error('Failed to update skills');
+      
+      // Invalidate the user query to refresh the data
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/current-user'] });
+      
+      setEditingSkills(false);
+      
+      toast({
+        title: 'Skills updated',
+        description: 'Your CourtIQ™ skill profile has been updated successfully.',
+      });
+    } catch (error) {
+      console.error('Error updating skills:', error);
+      toast({
+        title: 'Error updating skills',
+        description: 'There was an error updating your skills. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+  
   return (
     <div className="space-y-6">
-      {/* CourtIQ™ Rating Card */}
+      {/* CourtIQ™ Skill Profile Card */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Award className="h-5 w-5 text-primary" />
-            CourtIQ™ Rating
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Award className="h-5 w-5 text-primary" />
+              CourtIQ™ Skill Profile
+            </CardTitle>
+            
+            {isEditMode && !editingSkills && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-xs flex items-center gap-1"
+                onClick={() => setEditingSkills(true)}
+              >
+                <Edit2 className="h-3.5 w-3.5" />
+                Edit Skills
+              </Button>
+            )}
+            
+            {isEditMode && editingSkills && (
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-xs flex items-center gap-1"
+                  onClick={() => {
+                    setSkillValues({
+                      forehandStrength: user.forehandStrength || 0,
+                      backhandStrength: user.backhandStrength || 0,
+                      servePower: user.servePower || 0,
+                      dinkAccuracy: user.dinkAccuracy || 0,
+                      thirdShotConsistency: user.thirdShotConsistency || 0,
+                      courtCoverage: user.courtCoverage || 0
+                    });
+                    setEditingSkills(false);
+                  }}
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Cancel
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="text-xs flex items-center gap-1"
+                  onClick={saveSkills}
+                >
+                  <Save className="h-3.5 w-3.5" />
+                  Save Skills
+                </Button>
+              </div>
+            )}
+          </div>
+          <CardDescription>
+            Track and visualize your pickleball skills on a scale of 1-10
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col sm:flex-row justify-between mb-6">
-            <div className="mb-4 sm:mb-0">
-              <div className="text-3xl font-bold">{courtIQData.overall}</div>
-              <div className="text-sm text-muted-foreground">Overall Rating</div>
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="md:w-1/2">
+              {/* Radar Chart */}
+              <div className="h-72 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart cx="50%" cy="50%" outerRadius="80%" data={formatSkillsForRadar()}>
+                    <PolarGrid />
+                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#888', fontSize: 12 }} />
+                    <PolarRadiusAxis angle={30} domain={[0, 10]} tickCount={6} />
+                    <Radar
+                      name="Skills"
+                      dataKey="A"
+                      stroke="#FF5722"
+                      fill="#FF5722"
+                      fillOpacity={0.6}
+                    />
+                    <RechartTooltip />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
             
-            <div className="flex items-center gap-2">
-              <Badge 
-                variant="outline" 
-                className="px-3 py-1 bg-primary/10"
-              >
-                <ArrowUpRight className="h-3 w-3 mr-1" />
-                +{recentProgress.lastMonth} pts this month
-              </Badge>
+            <div className="md:w-1/2">
+              <div className="mb-4">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm font-medium">Average Skill Rating</span>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs max-w-[200px]">
+                            Average of all your skill ratings on a scale of 1-10
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <span className="text-xl font-bold">{calculateAverageSkill()}</span>
+                </div>
+                <Progress 
+                  value={calculateAverageSkill() * 10} 
+                  className="h-2 mt-2" 
+                />
+              </div>
               
-              <Badge 
-                variant="outline" 
-                className="px-3 py-1"
-              >
-                <TrendingUp className="h-3 w-3 mr-1" />
-                {courtIQData.overall >= 1800 ? 'Elite' : 
-                  courtIQData.overall >= 1500 ? 'Advanced' : 
-                  courtIQData.overall >= 1200 ? 'Intermediate' : 
-                  courtIQData.overall >= 800 ? 'Competitive' : 'Beginner'}
-              </Badge>
-            </div>
-          </div>
-          
-          {/* Attribute Ratings */}
-          <div className="space-y-4">
-            <h4 className="text-sm font-medium mb-2">Skill Breakdown</h4>
-            
-            {/* Forehand */}
-            <div className="space-y-1">
-              <div className="flex justify-between items-center text-sm">
-                <span>Forehand</span>
-                <span>{courtIQData.forehand || 'Not rated'}</span>
-              </div>
-              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div 
-                  className={`h-full ${getRatingColor(courtIQData.forehand)}`}
-                  style={{ width: `${courtIQData.forehand || 0}%` }}
-                ></div>
-              </div>
-            </div>
-            
-            {/* Backhand */}
-            <div className="space-y-1">
-              <div className="flex justify-between items-center text-sm">
-                <span>Backhand</span>
-                <span>{courtIQData.backhand || 'Not rated'}</span>
-              </div>
-              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div 
-                  className={`h-full ${getRatingColor(courtIQData.backhand)}`}
-                  style={{ width: `${courtIQData.backhand || 0}%` }}
-                ></div>
-              </div>
-            </div>
-            
-            {/* Serve */}
-            <div className="space-y-1">
-              <div className="flex justify-between items-center text-sm">
-                <span>Serve Power</span>
-                <span>{courtIQData.serve || 'Not rated'}</span>
-              </div>
-              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div 
-                  className={`h-full ${getRatingColor(courtIQData.serve)}`}
-                  style={{ width: `${courtIQData.serve || 0}%` }}
-                ></div>
-              </div>
-            </div>
-            
-            {/* Dink Accuracy */}
-            <div className="space-y-1">
-              <div className="flex justify-between items-center text-sm">
-                <span>Dink Accuracy</span>
-                <span>{courtIQData.dink || 'Not rated'}</span>
-              </div>
-              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div 
-                  className={`h-full ${getRatingColor(courtIQData.dink)}`}
-                  style={{ width: `${courtIQData.dink || 0}%` }}
-                ></div>
-              </div>
-            </div>
-            
-            {/* Third Shot */}
-            <div className="space-y-1">
-              <div className="flex justify-between items-center text-sm">
-                <span>Third Shot Consistency</span>
-                <span>{courtIQData.thirdShot || 'Not rated'}</span>
-              </div>
-              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div 
-                  className={`h-full ${getRatingColor(courtIQData.thirdShot)}`}
-                  style={{ width: `${courtIQData.thirdShot || 0}%` }}
-                ></div>
-              </div>
-            </div>
-            
-            {/* Court Coverage */}
-            <div className="space-y-1">
-              <div className="flex justify-between items-center text-sm">
-                <span>Court Coverage</span>
-                <span>{courtIQData.courtCoverage || 'Not rated'}</span>
-              </div>
-              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div 
-                  className={`h-full ${getRatingColor(courtIQData.courtCoverage)}`}
-                  style={{ width: `${courtIQData.courtCoverage || 0}%` }}
-                ></div>
+              {/* Attribute Ratings with Sliders in Edit Mode */}
+              <div className="space-y-4">
+                {Object.entries(skillValues).map(([skill, value]) => {
+                  const displayName = {
+                    forehandStrength: 'Forehand',
+                    backhandStrength: 'Backhand',
+                    servePower: 'Serve Power',
+                    dinkAccuracy: 'Dink Accuracy',
+                    thirdShotConsistency: 'Third Shot',
+                    courtCoverage: 'Court Coverage'
+                  }[skill];
+                  
+                  const description = skillDescriptions[skill as keyof typeof skillDescriptions];
+                  
+                  return (
+                    <div key={skill} className="space-y-1">
+                      <div className="flex justify-between items-center text-sm">
+                        <div className="flex items-center gap-1">
+                          <span>{displayName}</span>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs max-w-[200px]">{description}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                        <span>{value || 'Not rated'}</span>
+                      </div>
+                      
+                      {editingSkills ? (
+                        <Slider
+                          value={[value as number]}
+                          min={0}
+                          max={10}
+                          step={1}
+                          className="py-2"
+                          onValueChange={(value) => handleSkillChange(skill, value)}
+                        />
+                      ) : (
+                        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full ${getRatingColor(value as number)}`}
+                            style={{ width: `${(value as number) * 10}%` }}
+                          ></div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
