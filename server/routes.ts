@@ -3370,13 +3370,25 @@ function getRandomReason(pointChange: number): string {
       }
       
       // Handle special serializations needed for certain data types
-      if (filteredMatchData.gameScores && typeof filteredMatchData.gameScores !== 'string') {
+      if (filteredMatchData.gameScores) {
         try {
-          // Ensure gameScores is properly stringified for JSON column
-          filteredMatchData.gameScores = JSON.stringify(filteredMatchData.gameScores);
+          // Check if gameScores needs to be stringified
+          if (typeof filteredMatchData.gameScores !== 'string') {
+            // Ensure gameScores is properly stringified for JSON column
+            console.log("[Match API] Converting gameScores to JSON string:", filteredMatchData.gameScores);
+            filteredMatchData.gameScores = JSON.stringify(filteredMatchData.gameScores);
+          } else {
+            // Already a string, make sure it's valid JSON
+            console.log("[Match API] gameScores is already a string:", filteredMatchData.gameScores);
+            // Validate it's proper JSON by parsing and re-stringifying
+            const parsed = JSON.parse(filteredMatchData.gameScores);
+            filteredMatchData.gameScores = JSON.stringify(parsed);
+          }
         } catch (e) {
-          console.error("[Match API] Failed to stringify gameScores:", e);
-          delete filteredMatchData.gameScores;
+          console.error("[Match API] Failed to process gameScores:", e);
+          console.error("[Match API] Original gameScores:", filteredMatchData.gameScores);
+          // Instead of removing it, set to empty array JSON
+          filteredMatchData.gameScores = "[]";
         }
       }
       
@@ -3562,8 +3574,17 @@ function getRandomReason(pointChange: number): string {
         scoringSystem,
         pointsToWin,
         players,
-        gameScores
+        gameScores: parseGameScores(match.gameScores) // Use the utility function to ensure proper format
       };
+      
+      // Add more debug info
+      console.log("[Match API] Returning recorded match:", {
+        id: recordedMatch.id,
+        playerCount: Object.keys(recordedMatch.playerNames || {}).length,
+        formatType: recordedMatch.formatType,
+        gameScoresType: typeof recordedMatch.gameScores,
+        gameScoresLength: Array.isArray(recordedMatch.gameScores) ? recordedMatch.gameScores.length : 'N/A'
+      });
       
       res.status(201).json(recordedMatch);
       
