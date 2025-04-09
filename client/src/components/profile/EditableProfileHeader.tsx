@@ -66,10 +66,16 @@ export function EditableProfileHeader({ user, tierInfo }: EditableProfileHeaderP
                 </Badge>
               )}
               
-              {/* CourtIQ Rating */}
+              {/* Skill Level */}
               <Badge variant="outline" className={`flex items-center gap-1 px-3 py-1 ${user.isFoundingMember ? 'border-amber-400 text-amber-500' : 'border-[#2196F3] text-[#2196F3]'}`}>
                 <Medal className="h-3.5 w-3.5" />
                 {user.skillLevel || '4.5'} Skill Level
+              </Badge>
+              
+              {/* CourtIQ Rating */}
+              <Badge variant="outline" className={`flex items-center gap-1 px-3 py-1 ${user.isFoundingMember ? 'border-amber-400 text-amber-500' : 'border-[#4CAF50] text-[#4CAF50]'}`}>
+                <Trophy className="h-3.5 w-3.5" />
+                {user.rankingPoints || '0'} CourtIQ™ Pts
               </Badge>
             </div>
             
