@@ -1,13 +1,7 @@
 import React from 'react';
 import { useLocation, useSearch } from 'wouter';
 import { motion } from 'framer-motion';
-
-// Utility function to convert ratings from 0-5 scale to 0-9 scale
-function convertRatingScale(rating: number | undefined): number {
-  if (rating === undefined) return 0;
-  // Convert from 0-5 scale to 0-9 scale
-  return parseFloat((rating * 1.8).toFixed(1));
-}
+import { convertRatingScale, useTierRules } from '@/hooks/use-tier-rules';
 import { 
   Medal, 
   Trophy, 
@@ -171,6 +165,22 @@ export function LeaderboardPage() {
     );
     
     return tier?.colorCode || undefined;
+  };
+  
+  // Use the tier rules hook to get rule information
+  const { getTierRuleExplanation } = useTierRules();
+  
+  // Get tier-specific rules description
+  const getTierRules = (tier: any) => {
+    const ruleExplanations = getTierRuleExplanation(tier.name);
+    
+    return (
+      <ul className="text-xs list-disc pl-4 mt-1 space-y-1">
+        {ruleExplanations.map((explanation, index) => (
+          <li key={index}>{explanation}</li>
+        ))}
+      </ul>
+    );
   };
   
   // Format division name for display
@@ -517,12 +527,13 @@ export function LeaderboardPage() {
       >
         <h3 className="text-sm font-medium mb-3 flex items-center">
           <Medal className="w-4 h-4 mr-1 text-blue-500" />
-          CourtIQ™ Rating Tiers
+          CourtIQ™ Rating Tiers & Rules
         </h3>
         <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-          CourtIQ™ uses a unique 0-9 scale for player skill ratings, setting us apart from other rating systems
+          CourtIQ™ uses a unique 0-9 scale for player skill ratings, setting us apart from other rating systems.
+          Each tier has different ranking rules based on your skill level.
         </p>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3 mb-4">
           {tiersLoading ? (
             <div className="flex gap-2">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -531,19 +542,57 @@ export function LeaderboardPage() {
             </div>
           ) : (
             tiers?.map((tier) => (
-              <Badge
-                key={tier.id}
-                style={{
-                  backgroundColor: tier.colorCode || undefined,
-                  color: "white"
-                }}
-                className="text-xs"
-              >
-                {tier.name}: {convertRatingScale(tier.minRating).toFixed(1)}
-                {tier.maxRating ? ` - ${convertRatingScale(tier.maxRating).toFixed(1)}` : "+"}
-              </Badge>
+              <TooltipProvider key={tier.id}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge
+                      style={{
+                        backgroundColor: tier.colorCode || undefined,
+                        color: "white"
+                      }}
+                      className="text-xs cursor-help"
+                    >
+                      {tier.name}: {convertRatingScale(tier.minRating).toFixed(1)}
+                      {tier.maxRating ? ` - ${convertRatingScale(tier.maxRating).toFixed(1)}` : "+"}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent className="w-64 p-0">
+                    <div className="p-3">
+                      <h4 className="font-bold text-sm">{tier.name}</h4>
+                      <p className="text-xs mt-1">{tier.description}</p>
+                      <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                        <p className="text-xs font-semibold">Tier-Specific Rules:</p>
+                        {getTierRules(tier)}
+                      </div>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             ))
           )}
+        </div>
+        
+        <div className="text-xs text-gray-600 dark:text-gray-300 space-y-1 border-t border-gray-200 dark:border-gray-700 pt-3">
+          <h4 className="font-medium text-sm mb-2 flex items-center">
+            <Info className="w-3 h-3 mr-1 text-blue-500" />
+            How Tier Rules Impact Your Ranking
+          </h4>
+          <p className="text-xs flex items-start mb-1">
+            <Badge variant="outline" className="ml-1 mr-2 h-5">1</Badge>
+            <span>Players in <span className="font-semibold">higher tiers</span> have different rules than those in lower tiers</span>
+          </p>
+          <p className="text-xs flex items-start mb-1">
+            <Badge variant="outline" className="ml-1 mr-2 h-5">2</Badge>
+            <span>Elite tiers (7.2+) can lose points for defeats, while beginner tiers are protected from point loss</span>
+          </p>
+          <p className="text-xs flex items-start mb-1">
+            <Badge variant="outline" className="ml-1 mr-2 h-5">3</Badge>
+            <span>Beginner and intermediate tiers (0-7.1) receive bonus points for consistency and improvement</span>
+          </p>
+          <p className="text-xs flex items-start">
+            <Badge variant="outline" className="ml-1 mr-2 h-5">4</Badge>
+            <span>All tiers gain bonus points for defeating higher-rated players and performing well in tournaments</span>
+          </p>
         </div>
       </motion.div>
       

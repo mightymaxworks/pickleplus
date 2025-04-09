@@ -30,6 +30,7 @@ import {
 } from "../../../shared/courtiq-schema";
 import { xpSystem } from "../xp/xpSystem";
 import { Division, Format } from "../rating/ratingSystem";
+import { tierRulesSystem } from "../rating/tierRules";
 
 // Export events that other modules can listen for
 export const CourtIQRankingEvents = {
@@ -264,6 +265,9 @@ export class RankingSystem {
     eventTierMultiplier: number;
     formatMultiplier: number;
     total: number;
+    tierRulesApplied?: boolean;
+    tierExplanation?: string[];
+    appliedRules?: string[];
   }> {
     // 1. Get base points
     const basePoints = BASE_POINTS[matchType];
@@ -288,8 +292,8 @@ export class RankingSystem {
     // 6. Apply format multiplier
     const formatMultiplier = FORMAT_MULTIPLIERS[format];
     
-    // 7. Calculate total points
-    const totalPoints = Math.round(
+    // 7. Calculate standard total points
+    const standardTotalPoints = Math.round(
       (basePoints + winBonus) * 
       qualityFactor * 
       matchTypeMultiplier * 
@@ -297,7 +301,46 @@ export class RankingSystem {
       formatMultiplier
     );
     
-    // 8. Add ranking history record
+    // 8. Apply tier-specific rules
+    // Get opponent average rating for tier rules
+    let avgOpponentRating = 0;
+    if (opponentIds.length > 0) {
+      const opponentRatings = await Promise.all(
+        opponentIds.map(async (id) => {
+          const rating = await db.query.playerRatings.findFirst({
+            where: and(
+              eq(playerRatings.userId, id),
+              eq(playerRatings.division, division),
+              eq(playerRatings.format, format)
+            ),
+            columns: { rating: true }
+          });
+          return rating ? rating.rating : 0;
+        })
+      );
+      
+      const validRatings = opponentRatings.filter(r => r > 0);
+      avgOpponentRating = validRatings.length > 0 
+        ? validRatings.reduce((sum, r) => sum + r, 0) / validRatings.length 
+        : 0;
+    }
+    
+    // Apply tier rules
+    const tierRulesResult = await tierRulesSystem.applyTierRules(
+      userId,
+      standardTotalPoints,
+      isWinner,
+      division,
+      format,
+      matchType,
+      eventTier,
+      avgOpponentRating
+    );
+    
+    // Use the modified points from tier rules
+    const totalPoints = tierRulesResult.modifiedPoints;
+    
+    // 9. Add ranking history record
     if (matchId || tournamentId) {
       const userRanking = await this.getUserRankingPoints(userId, division, format);
       const oldRanking = userRanking?.points || 0;
@@ -307,16 +350,18 @@ export class RankingSystem {
       await db.execute(sql`
         INSERT INTO ranking_history (
           user_id, old_ranking, new_ranking, reason, 
-          match_id, tournament_id, created_at
+          match_id, tournament_id, created_at,
+          notes
         ) VALUES (
           ${userId}, ${oldRanking}, ${newRanking}, 
           ${isWinner ? 'match_win' : 'match_participation'}, 
-          ${matchId}, ${tournamentId}, NOW()
+          ${matchId}, ${tournamentId}, NOW(),
+          ${tierRulesResult.explanation.join(', ')}
         )
       `);
     }
     
-    // 9. Return the point breakdown
+    // 10. Return the point breakdown with tier rule information
     return {
       base: basePoints,
       winBonus,
@@ -324,7 +369,10 @@ export class RankingSystem {
       matchTypeMultiplier,
       eventTierMultiplier,
       formatMultiplier,
-      total: totalPoints
+      total: totalPoints,
+      tierRulesApplied: tierRulesResult.explanation.length > 0,
+      tierExplanation: tierRulesResult.explanation,
+      appliedRules: tierRulesResult.appliedRules
     };
   }
   
