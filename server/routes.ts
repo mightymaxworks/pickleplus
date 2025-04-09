@@ -3988,6 +3988,82 @@ function getRandomReason(pointChange: number): string {
   // VALMAT - Match Validation Endpoints
   
   // 1. Match Validation Endpoint - Validate or dispute a match
+  // PKL-278651-VALMAT-0003-UX: Enhanced Match Validation UI - Get validation details
+  app.get("/api/match/:matchId/validations", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      const userId = req.user.id;
+      const { matchId } = req.params;
+      
+      // Check if the match exists
+      const match = await db.select().from(matches).where(eq(matches.id, parseInt(matchId))).limit(1);
+      if (!match || match.length === 0) {
+        return res.status(404).json({ error: "Match not found" });
+      }
+      
+      // Get all participants for the match
+      const currentMatch = match[0];
+      
+      // Determine all participants
+      const participants = [
+        currentMatch.playerOneId,
+        currentMatch.playerTwoId
+      ];
+      
+      // Add partners if it's a doubles match
+      if (currentMatch.formatType === 'doubles') {
+        if (currentMatch.playerOnePartnerId) participants.push(currentMatch.playerOnePartnerId);
+        if (currentMatch.playerTwoPartnerId) participants.push(currentMatch.playerTwoPartnerId);
+      }
+      
+      // Check if the user is part of this match
+      const isUserInMatch = participants.includes(userId);
+      
+      if (!isUserInMatch && !req.user.isAdmin) {
+        return res.status(403).json({ error: "You can only view validation details for matches you participated in" });
+      }
+      
+      // Get all validations for this match
+      const validations = await db.select()
+        .from(matchValidations)
+        .where(eq(matchValidations.matchId, parseInt(matchId)));
+      
+      // Format validation data for the client
+      const participantValidations = participants.map(participantId => {
+        const existingValidation = validations.find(v => v.userId === participantId);
+        
+        if (existingValidation) {
+          return {
+            userId: participantId,
+            status: existingValidation.status,
+            validatedAt: existingValidation.validatedAt?.toISOString(),
+            notes: existingValidation.notes
+          };
+        } else {
+          return {
+            userId: participantId,
+            status: 'pending'
+          };
+        }
+      });
+      
+      // Return the validation details
+      return res.json({
+        matchId: parseInt(matchId),
+        validationStatus: currentMatch.validationStatus,
+        validationRequiredBy: currentMatch.validationRequiredBy?.toISOString(),
+        participantValidations
+      });
+      
+    } catch (error) {
+      console.error("[VALMAT] Error getting match validation details:", error);
+      return res.status(500).json({ error: "Server error retrieving validation details" });
+    }
+  });
+
   app.post("/api/match/validate/:matchId", isAuthenticated, async (req: Request, res: Response) => {
     try {
       if (!req.user) {

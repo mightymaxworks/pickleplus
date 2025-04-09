@@ -46,11 +46,21 @@ export interface MatchData {
   matchType?: 'casual' | 'competitive' | 'tournament' | 'league';
 }
 
+// Interface for participant validation status
+export interface ParticipantValidation {
+  userId: number;
+  status: 'pending' | 'confirmed' | 'disputed';
+  validatedAt?: string;
+  notes?: string;
+}
+
 export interface RecordedMatch extends MatchData {
   id: number;
   date: string;
   validationStatus?: 'pending' | 'confirmed' | 'disputed' | 'validated'; 
   validatedBy?: number[];
+  validationRequiredBy?: string;
+  participantValidations?: ParticipantValidation[];
   feedback?: {
     enjoymentRating?: number;
     skillMatchRating?: number;
@@ -614,7 +624,7 @@ export async function provideMatchFeedback(
   comments?: string
 ): Promise<{ success: boolean }> {
   try {
-    const response = await apiRequest("POST", `/api/match/feedback/${matchId}`, {
+    const response = await apiRequest("POST", `/api/match/${matchId}/feedback`, {
       enjoymentRating,
       skillMatchRating,
       comments
@@ -659,6 +669,37 @@ export async function getDailyMatchLimits(): Promise<{
   }
 }
 
+/**
+ * Get validation details for a match
+ * @param matchId The ID of the match
+ * @returns Detailed validation information including participant statuses
+ */
+export async function getMatchValidationDetails(matchId: number): Promise<{
+  matchId: number;
+  validationStatus: 'pending' | 'confirmed' | 'disputed' | 'validated';
+  validationRequiredBy?: string;
+  participantValidations: ParticipantValidation[];
+}> {
+  try {
+    const response = await apiRequest("GET", `/api/match/${matchId}/validations`);
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `Server returned ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error("matchSDK: Error getting match validation details:", error);
+    // Return a default structure with empty validations
+    return {
+      matchId,
+      validationStatus: 'pending',
+      participantValidations: []
+    };
+  }
+}
+
 // Export as a single SDK object
 export const matchSDK = {
   recordMatch,
@@ -666,6 +707,7 @@ export const matchSDK = {
   getMatchHistory,
   getMatchStats,
   validateMatch,
+  getMatchValidationDetails,
   provideMatchFeedback,
   getDailyMatchLimits
 };
