@@ -197,7 +197,67 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
         return res.json([]);
       }
       
-      res.json(matches);
+      // Collect all user IDs from matches to fetch user data
+      const playerIds = new Set<number>();
+      
+      for (const match of matches) {
+        if (match.playerOneId && match.playerOneId !== userId) playerIds.add(match.playerOneId);
+        if (match.playerTwoId && match.playerTwoId !== userId) playerIds.add(match.playerTwoId);
+        if (match.playerOnePartnerId) playerIds.add(match.playerOnePartnerId);
+        if (match.playerTwoPartnerId) playerIds.add(match.playerTwoPartnerId);
+      }
+      
+      // Fetch user data for all players
+      const playerData: Record<number, { 
+        displayName: string; 
+        username: string; 
+        avatarUrl?: string; 
+        avatarInitials?: string;
+      }> = {};
+      
+      // Add current user's data
+      const currentUser = await storage.getUser(userId);
+      if (currentUser) {
+        playerData[userId] = {
+          displayName: currentUser.displayName || 'You',
+          username: currentUser.username || 'you',
+          avatarUrl: currentUser.avatarUrl || undefined,
+          avatarInitials: currentUser.avatarInitials || 
+                       (currentUser.displayName ? currentUser.displayName.charAt(0).toUpperCase() : 'Y')
+        };
+      }
+      
+      // Add opponent data
+      for (const playerId of playerIds) {
+        try {
+          const player = await storage.getUser(playerId);
+          if (player) {
+            playerData[playerId] = {
+              displayName: player.displayName || `Player ${playerId}`,
+              username: player.username || `player${playerId}`,
+              avatarUrl: player.avatarUrl || undefined,
+              avatarInitials: player.avatarInitials || 
+                          (player.displayName ? player.displayName.charAt(0).toUpperCase() : `P${playerId}`)
+            };
+          }
+        } catch (error) {
+          console.error(`Error fetching user data for player ${playerId}:`, error);
+          // Add default data if player fetch fails
+          playerData[playerId] = {
+            displayName: `Player ${playerId}`,
+            username: `player${playerId}`,
+            avatarInitials: `P${playerId}`
+          };
+        }
+      }
+      
+      // Enhance matches with player data
+      const enhancedMatches = matches.map(match => ({
+        ...match,
+        playerNames: playerData
+      }));
+      
+      res.json(enhancedMatches);
     } catch (error) {
       console.error("[Match API] Error getting recent matches:", error);
       res.status(500).json({ error: "Server error getting recent matches" });
