@@ -32,9 +32,10 @@ import { Features, useFeatureFlag } from "@/lib/featureFlags";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { Link } from "wouter";
 
-// Import our new component
+// Import our components
 import { PersonalInformationCard } from "@/components/profile/PersonalInformationCard";
 import { ProfileCompletenessCard } from "@/components/profile/ProfileCompletenessCard";
+import { EnhancedProfileCompletion } from "@/components/profile/EnhancedProfileCompletion";
 import { PassportQrCodeCard } from "@/components/profile/PassportQrCodeCard";
 import { QuickActionsCard } from "@/components/profile/QuickActionsCard";
 import { UpcomingTournamentsCard } from "@/components/profile/UpcomingTournamentsCard";
@@ -359,9 +360,8 @@ export default function Profile() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-6 col-span-2 md:col-span-1">
               <PersonalInformationCard user={user} />
-              <ProfileCompletenessCard 
-                user={user} 
-                profileCompletion={profileCompletionPct} 
+              <EnhancedProfileCompletion 
+                user={user}
               />
             </div>
             
