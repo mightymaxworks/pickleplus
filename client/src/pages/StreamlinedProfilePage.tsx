@@ -4,13 +4,15 @@
  */
 import { FC, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
 import { 
   UserCircle, Settings, Award, Clock, Info, Dumbbell, BookOpen,
-  Trophy, MapPin, BadgeCheck, Medal, Edit2, Check, X, Calendar, Clipboard
+  Trophy, MapPin, BadgeCheck, Medal, Edit2, Check, X, Calendar, Clipboard,
+  Home, Activity, User, Shield, LogOut
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +32,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 /**
  * Streamlined Profile Page
@@ -39,6 +48,7 @@ const StreamlinedProfilePage: FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingFields, setEditingFields] = useState<Record<string, boolean>>({});
+  const [, navigate] = useLocation();
   
   // Overview tab fields
   const [bioField, setBioField] = useState('');
@@ -247,24 +257,50 @@ const StreamlinedProfilePage: FC = () => {
     <div className="container px-4 pb-16 max-w-screen-xl mx-auto">
       {/* Sticky Header/Navigation */}
       <div className="sticky top-0 z-20 bg-background pt-2 pb-2 border-b">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10 border-2 border-primary/20">
-              {user.avatarUrl ? (
-                <AvatarImage src={user.avatarUrl} alt={user.displayName || user.username} />
-              ) : null}
-              <AvatarFallback className="text-sm bg-primary text-primary-foreground">
-                {user.avatarInitials || user.username.substring(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h1 className="text-lg font-bold truncate">
-                {user.displayName || user.username}
-              </h1>
-              <div className="flex items-center text-muted-foreground text-xs">
-                <MapPin className="h-3 w-3 mr-1" />
-                {user.location || 'No location set'}
+        <div className="container mx-auto px-4 flex justify-between items-center">
+          <div 
+            className="flex items-center cursor-pointer" 
+            onClick={() => navigate("/dashboard")}
+          >
+            {user.isFoundingMember ? (
+              <div className="text-lg font-bold text-primary flex items-center">
+                <Medal className="h-5 w-5 mr-2 text-yellow-500" />
+                Pickle+
               </div>
+            ) : (
+              <div className="text-lg font-bold text-primary">Pickle+</div>
+            )}
+          </div>
+          
+          <div className="flex-1 mx-6">
+            <div className="flex items-center justify-center">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="mr-2"
+                onClick={() => navigate("/dashboard")}
+              >
+                <Home className="h-4 w-4 mr-2" />
+                Dashboard
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="mr-2"
+                onClick={() => navigate("/matches")}
+              >
+                <Activity className="h-4 w-4 mr-2" />
+                Matches
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="mr-2"
+                onClick={() => navigate("/leaderboard")}
+              >
+                <Trophy className="h-4 w-4 mr-2" />
+                Leaderboard
+              </Button>
             </div>
           </div>
           
@@ -298,6 +334,42 @@ const StreamlinedProfilePage: FC = () => {
                 </>
               )}
             </Button>
+            
+            <div className="flex items-center ml-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Avatar className="h-8 w-8 cursor-pointer">
+                    {user.avatarUrl ? (
+                      <AvatarImage src={user.avatarUrl} alt={user.displayName || user.username} />
+                    ) : null}
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                      {user.avatarInitials || user.username.substring(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate("/profile/streamlined")}>
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/settings")}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </DropdownMenuItem>
+                  {user.isAdmin && (
+                    <DropdownMenuItem onClick={() => navigate("/admin/dashboard")}>
+                      <Shield className="mr-2 h-4 w-4" />
+                      Admin Panel
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate("/auth/logout")}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
       </div>
