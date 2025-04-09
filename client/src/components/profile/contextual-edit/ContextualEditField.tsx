@@ -52,12 +52,8 @@ export function ContextualEditField({
     setValue(initialValue !== null ? String(initialValue) : '');
   }, [initialValue]);
 
-  // When global edit mode changes, reset editing state
-  useEffect(() => {
-    if (!isEditMode) {
-      setIsEditing(false);
-    }
-  }, [isEditMode]);
+  // No longer need to reset editing state based on global mode
+  // This allows for truly contextual editing
 
   const handleEdit = () => {
     // Always allow editing without requiring edit mode
