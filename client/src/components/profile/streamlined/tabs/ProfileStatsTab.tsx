@@ -232,6 +232,35 @@ const ProfileStatsTab: FC<ProfileStatsTabProps> = ({ user, isEditMode }) => {
   
   return (
     <div className="space-y-6">
+      
+      {/* External Ratings Card */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Target className="h-5 w-5 text-primary" />
+            Rating Systems
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {/* External Ratings Section */}
+            <ExternalRatingsSection 
+              user={user} 
+              isEditMode={isEditMode}
+              isCurrentUser={true}
+              isEditable={true}
+              onSaveSuccess={() => {
+                queryClient.invalidateQueries({ queryKey: ['/api/auth/current-user'] });
+                toast({
+                  title: 'External ratings updated',
+                  description: 'Your external ratings have been updated successfully.'
+                });
+              }}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* CourtIQ™ Skill Profile Card */}
       <Card>
         <CardHeader className="pb-3">
@@ -413,51 +442,6 @@ const ProfileStatsTab: FC<ProfileStatsTabProps> = ({ user, isEditMode }) => {
                   );
                 })}
               </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Skill Level Card */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Target className="h-5 w-5 text-primary" />
-            Skill Level
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Current Skill Level</span>
-              <Badge variant="outline">{user.skillLevel || 'Not set'}</Badge>
-            </div>
-            
-            <div className="space-y-2">
-              <Progress value={skillLevelPercentage} className="h-2" />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Beginner</span>
-                <span>Intermediate</span>
-                <span>Advanced</span>
-                <span>Pro</span>
-              </div>
-            </div>
-            
-            {/* External Ratings Section */}
-            <ExternalRatingsSection 
-              user={user} 
-              isEditMode={isEditMode}
-              onSaveSuccess={() => {
-                queryClient.invalidateQueries({ queryKey: ['/api/auth/current-user'] });
-                toast({
-                  title: 'External ratings updated',
-                  description: 'Your external ratings have been updated successfully.'
-                });
-              }}
-            />
-            
-            <div className="text-sm text-muted-foreground">
-              Self-assessed skill level following the International Pickleball Rating System.
             </div>
           </div>
         </CardContent>

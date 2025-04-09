@@ -16,6 +16,8 @@ interface ExternalRatingsProps {
   user: EnhancedUser;
   isEditable?: boolean;
   isCurrentUser?: boolean;
+  isEditMode?: boolean;
+  onSaveSuccess?: () => void;
 }
 
 export function ExternalRatingsSection({ user, isEditable = false, isCurrentUser = false }: ExternalRatingsProps) {
