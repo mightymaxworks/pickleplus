@@ -123,7 +123,7 @@ export function BasicStatsRecorder({
       };
       
       // Submit to API
-      const response = await apiRequest('POST', '/api/match/statistics', statsData);
+      const response = await apiRequest('POST', '/api/match/api/statistics', statsData);
       
       if (!response.ok) {
         const errorData = await response.json();

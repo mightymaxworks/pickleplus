@@ -64,8 +64,9 @@ matchRouter.get('/:id([0-9]+)/statistics', async (req: Request, res: Response) =
 
 /**
  * Create or update match statistics
+ * Using precise path to avoid conflicts with other routes
  */
-matchRouter.post('/statistics', isAuthenticated, async (req: Request, res: Response) => {
+matchRouter.post('/api/statistics', isAuthenticated, async (req: Request, res: Response) => {
   try {
     const validationResult = insertMatchStatisticsSchema.safeParse(req.body);
     if (!validationResult.success) {
