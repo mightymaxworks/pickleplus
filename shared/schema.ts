@@ -62,6 +62,8 @@ export const users = pgTable("users", {
   paddleModel: varchar("paddle_model", { length: 50 }),
   backupPaddleBrand: varchar("backup_paddle_brand", { length: 50 }),
   backupPaddleModel: varchar("backup_paddle_model", { length: 50 }),
+  apparelBrand: varchar("apparel_brand", { length: 50 }),
+  shoesBrand: varchar("shoes_brand", { length: 50 }),
   otherEquipment: text("other_equipment"),
   
   // Playing style and preferences
