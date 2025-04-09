@@ -1,8 +1,16 @@
 import {
   users, type User, type InsertUser,
   profileCompletionTracking, type ProfileCompletionTracking, type InsertProfileCompletionTracking,
-  xpTransactions, type XpTransaction, type InsertXpTransaction
+  xpTransactions, type XpTransaction, type InsertXpTransaction,
+  matches, type Match, type InsertMatch
 } from "@shared/schema";
+
+// PKL-278651-MATCH-0002-XR - Enhanced Match Recording System
+import {
+  matchStatistics, type MatchStatistics, type InsertMatchStatistics,
+  performanceImpacts, type PerformanceImpact, type InsertPerformanceImpact,
+  matchHighlights, type MatchHighlight, type InsertMatchHighlight
+} from "@shared/match-statistics-schema";
 import { db } from "./db";
 import { eq, ne, and, or, desc, asc, sql } from "drizzle-orm";
 import session from "express-session";
@@ -40,6 +48,24 @@ export interface IStorage {
   
   // XP Transactions
   createXpTransaction(transaction: Omit<InsertXpTransaction, 'timestamp'>): Promise<XpTransaction>;
+  
+  // PKL-278651-MATCH-0002-XR - Enhanced Match Recording System
+  // Match operations
+  getMatch(id: number): Promise<Match | undefined>;
+  createMatch(matchData: InsertMatch): Promise<Match>;
+  
+  // Match Statistics
+  getMatchStatistics(matchId: number): Promise<MatchStatistics | undefined>;
+  createMatchStatistics(stats: InsertMatchStatistics): Promise<MatchStatistics>;
+  updateMatchStatistics(id: number, updates: Partial<InsertMatchStatistics>): Promise<MatchStatistics | undefined>;
+  
+  // Performance Impacts
+  getPerformanceImpacts(matchId: number, userId?: number): Promise<PerformanceImpact[]>;
+  createPerformanceImpact(impact: InsertPerformanceImpact): Promise<PerformanceImpact>;
+  
+  // Match Highlights
+  getMatchHighlights(matchId: number, userId?: number): Promise<MatchHighlight[]>;
+  createMatchHighlight(highlight: InsertMatchHighlight): Promise<MatchHighlight>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -862,6 +888,256 @@ export class DatabaseStorage implements IStorage {
       return record;
     } catch (error) {
       console.error('[Storage] createXpTransaction error:', error);
+      throw error;
+    }
+  }
+  
+  // PKL-278651-MATCH-0002-XR - Enhanced Match Recording System
+  // Match operations
+  async getMatch(id: number): Promise<Match | undefined> {
+    try {
+      // Validate id is a proper number to avoid database errors
+      const numericId = Number(id);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] getMatch called with invalid ID: ${id}, converted to ${numericId}`);
+        return undefined;
+      }
+      
+      console.log(`[Storage] getMatch called with valid ID: ${numericId}`);
+      
+      // Select all fields from the matches table
+      const [match] = await db.select()
+        .from(matches)
+        .where(eq(matches.id, numericId));
+      
+      return match;
+    } catch (error) {
+      console.error('[Storage] getMatch error:', error);
+      return undefined;
+    }
+  }
+  
+  async createMatch(matchData: InsertMatch): Promise<Match> {
+    try {
+      console.log(`[Storage] createMatch called with data:`, JSON.stringify(matchData));
+      
+      // Insert the match record
+      const [match] = await db.insert(matches)
+        .values(matchData)
+        .returning();
+      
+      if (!match) {
+        throw new Error("Failed to create match in database");
+      }
+      
+      return match;
+    } catch (error) {
+      console.error('[Storage] createMatch error:', error);
+      throw error;
+    }
+  }
+  
+  // Match Statistics
+  async getMatchStatistics(matchId: number): Promise<MatchStatistics | undefined> {
+    try {
+      // Validate matchId is a proper number to avoid database errors
+      const numericId = Number(matchId);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] getMatchStatistics called with invalid matchId: ${matchId}`);
+        return undefined;
+      }
+      
+      console.log(`[Storage] getMatchStatistics called with valid matchId: ${numericId}`);
+      
+      // Select all fields from the match_statistics table
+      const [stats] = await db.select()
+        .from(matchStatistics)
+        .where(eq(matchStatistics.matchId, numericId));
+      
+      return stats;
+    } catch (error) {
+      console.error('[Storage] getMatchStatistics error:', error);
+      return undefined;
+    }
+  }
+  
+  async createMatchStatistics(stats: InsertMatchStatistics): Promise<MatchStatistics> {
+    try {
+      console.log(`[Storage] createMatchStatistics called with data:`, JSON.stringify(stats));
+      
+      if (!stats.matchId) {
+        console.log(`[Storage] createMatchStatistics called with invalid stats: missing matchId`);
+        throw new Error("Invalid match statistics: missing matchId");
+      }
+      
+      // Insert the match statistics record
+      const [result] = await db.insert(matchStatistics)
+        .values(stats)
+        .returning();
+      
+      if (!result) {
+        throw new Error("Failed to create match statistics in database");
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('[Storage] createMatchStatistics error:', error);
+      throw error;
+    }
+  }
+  
+  async updateMatchStatistics(id: number, updates: Partial<InsertMatchStatistics>): Promise<MatchStatistics | undefined> {
+    try {
+      // Validate id is a proper number to avoid database errors
+      const numericId = Number(id);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] updateMatchStatistics called with invalid ID: ${id}`);
+        return undefined;
+      }
+      
+      console.log(`[Storage] updateMatchStatistics called with valid ID: ${numericId} and updates:`, JSON.stringify(updates));
+      
+      // Update the match statistics record
+      const [updatedStats] = await db.update(matchStatistics)
+        .set({
+          ...updates,
+          updatedAt: new Date()
+        })
+        .where(eq(matchStatistics.id, numericId))
+        .returning();
+      
+      return updatedStats;
+    } catch (error) {
+      console.error('[Storage] updateMatchStatistics error:', error);
+      return undefined;
+    }
+  }
+  
+  // Performance Impacts
+  async getPerformanceImpacts(matchId: number, userId?: number): Promise<PerformanceImpact[]> {
+    try {
+      // Validate matchId is a proper number to avoid database errors
+      const numericMatchId = Number(matchId);
+      
+      if (isNaN(numericMatchId) || !Number.isFinite(numericMatchId) || numericMatchId < 1) {
+        console.log(`[Storage] getPerformanceImpacts called with invalid matchId: ${matchId}`);
+        return [];
+      }
+      
+      console.log(`[Storage] getPerformanceImpacts called with valid matchId: ${numericMatchId}`);
+      
+      // If userId is provided, query with both match and user filters
+      if (userId) {
+        const numericUserId = Number(userId);
+        
+        if (!isNaN(numericUserId) && Number.isFinite(numericUserId) && numericUserId >= 1) {
+          const impacts = await db.select().from(performanceImpacts)
+            .where(and(
+              eq(performanceImpacts.matchId, numericMatchId),
+              eq(performanceImpacts.userId, numericUserId)
+            ));
+          return impacts;
+        }
+      }
+      
+      // If no valid userId, just filter by matchId
+      const impacts = await db.select().from(performanceImpacts)
+        .where(eq(performanceImpacts.matchId, numericMatchId));
+      
+      return impacts;
+    } catch (error) {
+      console.error('[Storage] getPerformanceImpacts error:', error);
+      return [];
+    }
+  }
+  
+  async createPerformanceImpact(impact: InsertPerformanceImpact): Promise<PerformanceImpact> {
+    try {
+      console.log(`[Storage] createPerformanceImpact called with data:`, JSON.stringify(impact));
+      
+      if (!impact.matchId || !impact.userId) {
+        console.log(`[Storage] createPerformanceImpact called with invalid impact: missing required fields`);
+        throw new Error("Invalid performance impact: missing required fields");
+      }
+      
+      // Insert the performance impact record
+      const [result] = await db.insert(performanceImpacts)
+        .values(impact)
+        .returning();
+      
+      if (!result) {
+        throw new Error("Failed to create performance impact in database");
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('[Storage] createPerformanceImpact error:', error);
+      throw error;
+    }
+  }
+  
+  // Match Highlights
+  async getMatchHighlights(matchId: number, userId?: number): Promise<MatchHighlight[]> {
+    try {
+      // Validate matchId is a proper number to avoid database errors
+      const numericMatchId = Number(matchId);
+      
+      if (isNaN(numericMatchId) || !Number.isFinite(numericMatchId) || numericMatchId < 1) {
+        console.log(`[Storage] getMatchHighlights called with invalid matchId: ${matchId}`);
+        return [];
+      }
+      
+      console.log(`[Storage] getMatchHighlights called with valid matchId: ${numericMatchId}`);
+      
+      // If userId is provided, query with both match and user filters
+      if (userId) {
+        const numericUserId = Number(userId);
+        
+        if (!isNaN(numericUserId) && Number.isFinite(numericUserId) && numericUserId >= 1) {
+          const highlights = await db.select().from(matchHighlights)
+            .where(and(
+              eq(matchHighlights.matchId, numericMatchId),
+              eq(matchHighlights.userId, numericUserId)
+            ));
+          return highlights;
+        }
+      }
+      
+      // If no valid userId, just filter by matchId
+      const highlights = await db.select().from(matchHighlights)
+        .where(eq(matchHighlights.matchId, numericMatchId));
+      
+      return highlights;
+    } catch (error) {
+      console.error('[Storage] getMatchHighlights error:', error);
+      return [];
+    }
+  }
+  
+  async createMatchHighlight(highlight: InsertMatchHighlight): Promise<MatchHighlight> {
+    try {
+      console.log(`[Storage] createMatchHighlight called with data:`, JSON.stringify(highlight));
+      
+      if (!highlight.matchId || !highlight.userId || !highlight.highlightType || !highlight.description) {
+        console.log(`[Storage] createMatchHighlight called with invalid highlight: missing required fields`);
+        throw new Error("Invalid match highlight: missing required fields");
+      }
+      
+      // Insert the match highlight record
+      const [result] = await db.insert(matchHighlights)
+        .values(highlight)
+        .returning();
+      
+      if (!result) {
+        throw new Error("Failed to create match highlight in database");
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('[Storage] createMatchHighlight error:', error);
       throw error;
     }
   }

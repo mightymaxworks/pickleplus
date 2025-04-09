@@ -20,6 +20,9 @@ import {
   type InsertContactPreference
 } from "./schema/privacy";
 
+// Import match statistics schema (PKL-278651-MATCH-0002-XR - Enhanced Match Recording System)
+import './match-statistics-schema';
+
 // User table
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -672,6 +675,7 @@ export const matchFeedbackSchema = z.object({
 // External schema modules
 import './schema/communication-preferences';
 import './schema/partner-preferences';
+import './match-statistics-schema'; // PKL-278651-MATCH-0002-XR - Enhanced Match Recording System
 
 // VALMAT - Match Validation System
 // Match validation table to track individual participants' validations
@@ -720,7 +724,10 @@ export const userDailyMatchesRelations = relations(userDailyMatches, ({ one }) =
   user: one(users, { fields: [userDailyMatches.userId], references: [users.id] })
 }));
 
-// Update match relations to include VALMAT tables
+// Import required types for enhanced match recording system
+import { matchStatistics, performanceImpacts, matchHighlights } from './match-statistics-schema';
+
+// Update match relations to include VALMAT tables and Enhanced Match Recording System tables
 export const matchRelationsExtended = relations(matches, ({ one, many }) => ({
   playerOne: one(users, { fields: [matches.playerOneId], references: [users.id], relationName: "playerOne" }),
   playerTwo: one(users, { fields: [matches.playerTwoId], references: [users.id], relationName: "playerTwo" }),
@@ -731,7 +738,11 @@ export const matchRelationsExtended = relations(matches, ({ one, many }) => ({
   validations: many(matchValidations),
   feedback: many(matchFeedback),
   xpTransactions: many(xpTransactions),
-  rankingTransactions: many(rankingTransactions)
+  rankingTransactions: many(rankingTransactions),
+  // PKL-278651-MATCH-0002-XR - Enhanced Match Recording System
+  statistics: many(matchStatistics),
+  performanceImpacts: many(performanceImpacts),
+  highlights: many(matchHighlights)
 }));
 
 // Create insert schemas for VALMAT tables
