@@ -104,10 +104,17 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
                   {user.displayName || user.username}
                 </div>
                 <div className="text-xs text-white/90">
-                  <div className="bg-white/20 rounded-full px-2 py-0.5 flex items-center inline-block">
-                    <Trophy size={10} className="text-yellow-300 mr-1" />
-                    {user.skillLevel || '3.5 Intermediate+'}
-                  </div>
+                    {user.duprRating ? (
+                    <div className="bg-white/20 rounded-full px-2 py-0.5 flex items-center inline-block">
+                      <Trophy size={10} className="text-yellow-300 mr-1" />
+                      DUPR {user.duprRating}
+                    </div>
+                  ) : (
+                    <div className="bg-white/20 rounded-full px-2 py-0.5 flex items-center inline-block">
+                      <Trophy size={10} className="text-yellow-300 mr-1" />
+                      CourtIQ™ Player
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -200,10 +207,17 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
                   {user.displayName || user.username}
                 </div>
                 <div className="text-sm text-white/90">
-                  <div className="bg-white/20 rounded-full px-2 py-0.5 flex items-center inline-block">
-                    <Trophy size={12} className="text-yellow-300 mr-1" />
-                    {user.skillLevel || '3.5 Intermediate+'}
-                  </div>
+                    {user.duprRating ? (
+                    <div className="bg-white/20 rounded-full px-2 py-0.5 flex items-center inline-block">
+                      <Trophy size={12} className="text-yellow-300 mr-1" />
+                      DUPR {user.duprRating}
+                    </div>
+                  ) : (
+                    <div className="bg-white/20 rounded-full px-2 py-0.5 flex items-center inline-block">
+                      <Trophy size={12} className="text-yellow-300 mr-1" />
+                      CourtIQ™ Player
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
