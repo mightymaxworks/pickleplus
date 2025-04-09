@@ -36,6 +36,7 @@ import { Link } from "wouter";
 import { PersonalInformationCard } from "@/components/profile/PersonalInformationCard";
 import { ProfileCompletenessCard } from "@/components/profile/ProfileCompletenessCard";
 import { EnhancedProfileCompletion } from "@/components/profile/EnhancedProfileCompletion";
+import { TestProfileComponent } from "@/components/profile/TestProfileComponent";
 import { PassportQrCodeCard } from "@/components/profile/PassportQrCodeCard";
 import { QuickActionsCard } from "@/components/profile/QuickActionsCard";
 import { UpcomingTournamentsCard } from "@/components/profile/UpcomingTournamentsCard";
@@ -372,7 +373,18 @@ export default function Profile() {
                 </CardContent>
               </Card>
               
-              <EnhancedProfileCompletion 
+              {/* Debug info */}
+              <Card className="mb-4 bg-red-100 border-red-500">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg text-red-700">DEBUG</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-red-800">Attempting to render EnhancedProfileCompletion below this</p>
+                </CardContent>
+              </Card>
+              
+              {/* Using Test Component Instead */}
+              <TestProfileComponent 
                 user={user}
               />
             </div>
