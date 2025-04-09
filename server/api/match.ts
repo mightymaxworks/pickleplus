@@ -18,8 +18,10 @@ const matchRouter = Router();
 
 /**
  * Get a specific match by ID
+ * 
+ * Only handles numeric IDs to avoid conflicts with other '/api/match/*' routes
  */
-matchRouter.get('/:id', async (req: Request, res: Response) => {
+matchRouter.get('/:id([0-9]+)', async (req: Request, res: Response) => {
   try {
     const matchId = parseInt(req.params.id);
     if (isNaN(matchId)) {
@@ -41,7 +43,7 @@ matchRouter.get('/:id', async (req: Request, res: Response) => {
 /**
  * Get match statistics for a specific match
  */
-matchRouter.get('/:id/statistics', async (req: Request, res: Response) => {
+matchRouter.get('/:id([0-9]+)/statistics', async (req: Request, res: Response) => {
   try {
     const matchId = parseInt(req.params.id);
     if (isNaN(matchId)) {
@@ -104,7 +106,7 @@ matchRouter.post('/statistics', isAuthenticated, async (req: Request, res: Respo
 /**
  * Get performance impacts for a specific match
  */
-matchRouter.get('/:id/impacts', isAuthenticated, async (req: Request, res: Response) => {
+matchRouter.get('/:id([0-9]+)/impacts', isAuthenticated, async (req: Request, res: Response) => {
   try {
     const matchId = parseInt(req.params.id);
     if (isNaN(matchId)) {
@@ -125,7 +127,7 @@ matchRouter.get('/:id/impacts', isAuthenticated, async (req: Request, res: Respo
 /**
  * Create a performance impact for a match
  */
-matchRouter.post('/:id/impacts', isAuthenticated, async (req: Request, res: Response) => {
+matchRouter.post('/:id([0-9]+)/impacts', isAuthenticated, async (req: Request, res: Response) => {
   try {
     const matchId = parseInt(req.params.id);
     if (isNaN(matchId)) {
@@ -172,7 +174,7 @@ matchRouter.post('/:id/impacts', isAuthenticated, async (req: Request, res: Resp
 /**
  * Get highlights for a specific match
  */
-matchRouter.get('/:id/highlights', async (req: Request, res: Response) => {
+matchRouter.get('/:id([0-9]+)/highlights', async (req: Request, res: Response) => {
   try {
     const matchId = parseInt(req.params.id);
     if (isNaN(matchId)) {
@@ -193,7 +195,7 @@ matchRouter.get('/:id/highlights', async (req: Request, res: Response) => {
 /**
  * Create a highlight for a match
  */
-matchRouter.post('/:id/highlights', isAuthenticated, async (req: Request, res: Response) => {
+matchRouter.post('/:id([0-9]+)/highlights', isAuthenticated, async (req: Request, res: Response) => {
   try {
     const matchId = parseInt(req.params.id);
     if (isNaN(matchId)) {
