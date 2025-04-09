@@ -60,9 +60,8 @@ export function ContextualEditField({
   }, [isEditMode]);
 
   const handleEdit = () => {
-    if (isEditMode) {
-      setIsEditing(true);
-    }
+    // Always allow editing without requiring edit mode
+    setIsEditing(true);
   };
 
   const handleCancel = () => {
@@ -167,7 +166,10 @@ export function ContextualEditField({
           {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
         </div>
       ) : (
-        <div className="flex items-center justify-between">
+        <div 
+          className="flex items-center justify-between cursor-pointer hover:bg-muted/40 p-2 rounded-md -mx-2"
+          onClick={handleEdit}
+        >
           <div>
             <div className="text-sm font-medium text-muted-foreground mb-1">
               {fieldLabel}
@@ -176,16 +178,17 @@ export function ContextualEditField({
               {initialValue || <span className="text-muted-foreground">Not specified</span>}
             </div>
           </div>
-          {isEditMode && (
-            <Button
-              size="icon"
-              variant="ghost"
-              className="opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={handleEdit}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-          )}
+          <Button
+            size="icon"
+            variant="ghost"
+            className="opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEdit();
+            }}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
         </div>
       )}
     </div>
