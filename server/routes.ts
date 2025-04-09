@@ -3908,6 +3908,83 @@ function getRandomReason(pointChange: number): string {
     }
   });
   
+  // Match Statistics API - Create or update match statistics
+  app.post("/api/match/statistics", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      const userId = req.user.id;
+      const { matchId, ...statsData } = req.body;
+      
+      if (!matchId) {
+        return res.status(400).json({ error: "Match ID is required" });
+      }
+      
+      // Check if match exists
+      const match = await db.select().from(matches).where(eq(matches.id, matchId)).limit(1);
+      if (!match || match.length === 0) {
+        return res.status(404).json({ error: "Match not found" });
+      }
+      
+      // Check if user is a player in this match
+      const isPlayerInMatch = 
+        match[0].playerOneId === userId || 
+        match[0].playerTwoId === userId || 
+        match[0].playerOnePartnerId === userId || 
+        match[0].playerTwoPartnerId === userId;
+        
+      if (!isPlayerInMatch && !req.user.isAdmin) {
+        return res.status(403).json({ error: "You are not authorized to add statistics to this match" });
+      }
+      
+      // Check if statistics already exist for this match
+      const existingStats = await storage.getMatchStatistics(matchId);
+      
+      let result;
+      if (existingStats) {
+        // Update existing statistics
+        result = await storage.updateMatchStatistics(existingStats.id, statsData);
+        res.status(200).json({ message: "Match statistics updated successfully", statistics: result });
+      } else {
+        // Create new statistics
+        result = await storage.createMatchStatistics({ matchId, ...statsData });
+        res.status(201).json({ message: "Match statistics created successfully", statistics: result });
+      }
+    } catch (error) {
+      console.error("[Match API] Error saving match statistics:", error);
+      res.status(500).json({ error: "Server error saving match statistics" });
+    }
+  });
+
+  // Get match statistics for a specific match
+  app.get("/api/match/:matchId/statistics", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      const { matchId } = req.params;
+      
+      if (!matchId) {
+        return res.status(400).json({ error: "Match ID is required" });
+      }
+      
+      // Get statistics for the match
+      const statistics = await storage.getMatchStatistics(parseInt(matchId));
+      
+      if (!statistics) {
+        return res.status(404).json({ error: "No statistics found for this match" });
+      }
+      
+      res.status(200).json(statistics);
+    } catch (error) {
+      console.error("[Match API] Error getting match statistics:", error);
+      res.status(500).json({ error: "Server error getting match statistics" });
+    }
+  });
+  
   // VALMAT - Match Validation Endpoints
   
   // 1. Match Validation Endpoint - Validate or dispute a match
