@@ -33,7 +33,7 @@ export async function generateUniquePassportCode(maxAttempts = 10): Promise<stri
     // Check if code already exists in database
     const existingUser = await db.select({ id: users.id })
       .from(users)
-      .where(eq(users.passportCode, code))
+      .where(eq(users.passportId, code))
       .limit(1);
     
     if (existingUser.length === 0) {

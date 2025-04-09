@@ -72,13 +72,13 @@ export default function Dashboard() {
                   Welcome, <span className="text-indigo-500 dark:text-indigo-400">{user.displayName || user.username}</span>
                 </h2>
                 <div className="flex items-center gap-3 mb-2">
-                  {user.passportCode && (
+                  {user.passportId && (
                     <div className="inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-700">
                       <span className="text-xs text-gray-500 dark:text-gray-400">Passport Code:</span>
-                      <code className="text-sm font-mono font-medium text-blue-600 dark:text-blue-400">{user.passportCode}</code>
+                      <code className="text-sm font-mono font-medium text-blue-600 dark:text-blue-400">{user.passportId}</code>
                       <button 
                         onClick={() => {
-                          navigator.clipboard.writeText(user.passportCode || '');
+                          navigator.clipboard.writeText(user.passportId || '');
                           setCodeCopied(true);
                           toast({
                             title: "Copied!",

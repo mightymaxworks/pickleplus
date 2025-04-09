@@ -161,7 +161,7 @@ export function setupAuth(app: Express) {
       const user = await storage.createUser({
         ...validatedData,
         password: hashedPassword,
-        passportCode,
+        passportId: passportCode,
         avatarInitials,
         displayName,
       });

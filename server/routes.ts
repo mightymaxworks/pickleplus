@@ -748,7 +748,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const publicUserInfo = {
         id: user.id,
         displayName: user.displayName,
-        passportCode: user.passportCode,
+        passportCode: user.passportId,
         avatarInitials: user.avatarInitials,
         level: user.level,
         rankingPoints: user.rankingPoints
@@ -809,7 +809,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         displayName: user.displayName,
         skillLevel: user.skillLevel,
         avatarInitials: user.avatarInitials,
-        passportCode: user.passportCode,
+        passportCode: user.passportId,
         level: user.level
       };
       
@@ -2873,7 +2873,7 @@ function getRandomReason(pointChange: number): string {
               id: user.id,
               username: user.username,
               displayName: user.displayName || user.username,
-              passportCode: user.passportCode,
+              passportCode: user.passportId,
               avatarUrl: null,
               avatarInitials: user.avatarInitials || user.username?.substring(0, 2).toUpperCase()
             }));
@@ -2904,7 +2904,7 @@ function getRandomReason(pointChange: number): string {
           id: user.id,
           username: user.username,
           displayName: user.displayName || user.username,
-          passportCode: user.passportCode || null,
+          passportCode: user.passportId || null,
           avatarUrl: null, // Safe default
           avatarInitials: user.avatarInitials || (user.username ? user.username.substring(0, 2).toUpperCase() : "?")
         }));

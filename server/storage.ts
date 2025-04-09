@@ -249,7 +249,7 @@ export class DatabaseStorage implements IStorage {
       // Select all fields from the user table
       const [user] = await db.select()
         .from(users)
-        .where(eq(users.passportCode, passportCode));
+        .where(eq(users.passportId, passportCode));
       
       // Add any missing fields expected in the User type
       if (user) {
@@ -707,7 +707,7 @@ export class DatabaseStorage implements IStorage {
           username: users.username,
           displayName: users.displayName,
           email: users.email,
-          passportCode: users.passportCode,
+          passportCode: users.passportId,
           avatarInitials: users.avatarInitials,
           location: users.location
         })
@@ -728,7 +728,7 @@ export class DatabaseStorage implements IStorage {
           id: user.id,
           username: user.username,
           displayName: user.displayName || user.username,
-          passportCode: user.passportCode || null,
+          passportCode: user.passportId || null,
           avatarUrl: null, // Safe default
           avatarInitials: user.avatarInitials || (user.username ? user.username.substring(0, 2).toUpperCase() : "??")
         }));
