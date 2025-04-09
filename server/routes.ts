@@ -111,19 +111,71 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       }
       console.log("[Match API] Request body:", JSON.stringify(req.body, null, 2));
       
+      // Extract winner information
+      const winnerId = req.body.players ? 
+        req.body.players.find((p: any) => p.isWinner)?.userId : undefined;
+      
+      if (!winnerId) {
+        console.error("[Match API] Error: No winner defined in the match data");
+        return res.status(400).json({ error: "Match data missing winner information" });
+      }
+      
+      // Extract player IDs from the players array
+      let playerOneId, playerTwoId, playerOnePartnerId, playerTwoPartnerId;
+      
+      if (req.body.players && req.body.players.length >= 2) {
+        playerOneId = req.body.players[0].userId;
+        playerTwoId = req.body.players[1].userId;
+        playerOnePartnerId = req.body.players[0].partnerId || null;
+        playerTwoPartnerId = req.body.players[1].partnerId || null;
+      } else {
+        console.error("[Match API] Error: Invalid players data structure");
+        return res.status(400).json({ error: "Invalid players data structure" });
+      }
+      
+      // Get scorePlayerOne and scorePlayerTwo from the players array
+      const scorePlayerOne = req.body.players[0].score;
+      const scorePlayerTwo = req.body.players[1].score;
+      
+      if (!scorePlayerOne || !scorePlayerTwo) {
+        console.error("[Match API] Error: Missing score information");
+        return res.status(400).json({ error: "Match data missing score information" });
+      }
+      
       // Use the storage interface to create a match
       const matchData: InsertMatch = {
-        ...req.body,
+        playerOneId,
+        playerTwoId,
+        playerOnePartnerId,
+        playerTwoPartnerId,
+        winnerId,
+        scorePlayerOne,
+        scorePlayerTwo,
+        formatType: req.body.formatType || "singles",
+        scoringSystem: req.body.scoringSystem || "traditional",
+        pointsToWin: req.body.pointsToWin || 11,
+        division: req.body.division || "open",
+        matchType: req.body.matchType || "casual",
+        eventTier: req.body.eventTier || "local",
+        gameScores: req.body.gameScores || [],
+        notes: req.body.notes || "",
         submitterId: req.user.id,
         validationStatus: "pending", // Initially pending until validated
         matchDate: new Date(),
       };
       
+      console.log("[Match API] Processed match data:", JSON.stringify(matchData, null, 2));
+      
       const match = await storage.createMatch(matchData);
       return res.status(201).json(match);
     } catch (error) {
       console.error("[Match API] Error recording match:", error);
-      return res.status(500).json({ error: "Server error recording match" });
+      // More detailed error response
+      let errorMessage = "Server error recording match";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      return res.status(500).json({ error: errorMessage });
     }
   });
   
