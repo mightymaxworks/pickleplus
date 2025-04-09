@@ -207,7 +207,7 @@ const ProfilePreferencesTab: FC<ProfilePreferencesTabProps> = ({ user }) => {
     setLookingForPartners(newValue);
     
     try {
-      await fetch('/api/profile/update', {
+      const response = await fetch('/api/profile/update', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -217,8 +217,13 @@ const ProfilePreferencesTab: FC<ProfilePreferencesTabProps> = ({ user }) => {
           lookingForPartners: newValue
         })
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update preference');
+      }
 
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/current-user'] });
+      // Force refresh user data
+      await queryClient.invalidateQueries({ queryKey: ['/api/auth/current-user'] });
       
       toast({
         title: 'Preference updated',
@@ -243,7 +248,7 @@ const ProfilePreferencesTab: FC<ProfilePreferencesTabProps> = ({ user }) => {
     setMentorshipInterest(newValue);
     
     try {
-      await fetch('/api/profile/update', {
+      const response = await fetch('/api/profile/update', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -253,14 +258,19 @@ const ProfilePreferencesTab: FC<ProfilePreferencesTabProps> = ({ user }) => {
           mentorshipInterest: newValue
         })
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update preference');
+      }
 
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/current-user'] });
+      // Force refresh user data
+      await queryClient.invalidateQueries({ queryKey: ['/api/auth/current-user'] });
       
       toast({
         title: 'Preference updated',
         description: newValue 
-          ? 'You are now listed as interested in mentorship' 
-          : 'You are no longer listed as interested in mentorship',
+          ? 'You are now interested in mentorship' 
+          : 'You are no longer interested in mentorship',
       });
     } catch (err) {
       console.error('Error updating preference:', err);

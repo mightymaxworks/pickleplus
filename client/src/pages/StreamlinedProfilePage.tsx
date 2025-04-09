@@ -1780,9 +1780,11 @@ const StreamlinedProfilePage: FC = () => {
                       {isEditMode ? (
                         <Switch 
                           checked={lookingForPartnersField}
-                          onCheckedChange={(value) => {
+                          onCheckedChange={async (value) => {
                             setLookingForPartnersField(value);
-                            saveProfileField('lookingForPartners', value);
+                            await saveProfileField('lookingForPartners', value);
+                            // Force query invalidation to ensure UI is updated
+                            queryClient.invalidateQueries({ queryKey: ['/api/auth/current-user'] });
                           }}
                         />
                       ) : (
@@ -1801,9 +1803,11 @@ const StreamlinedProfilePage: FC = () => {
                       {isEditMode ? (
                         <Switch 
                           checked={mentorshipInterestField}
-                          onCheckedChange={(value) => {
+                          onCheckedChange={async (value) => {
                             setMentorshipInterestField(value);
-                            saveProfileField('mentorshipInterest', value);
+                            await saveProfileField('mentorshipInterest', value);
+                            // Force query invalidation to ensure UI is updated
+                            queryClient.invalidateQueries({ queryKey: ['/api/auth/current-user'] });
                           }}
                         />
                       ) : (
