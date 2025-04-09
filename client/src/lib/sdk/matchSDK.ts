@@ -554,6 +554,9 @@ export async function getMatchStats(
   try {
     const response = await apiRequest("GET", `/api/match/stats?${queryParams}`);
     
+    console.log(`GET /api/match/stats?${queryParams} response status:`, response.status);
+    console.log("Response cookies present:", response.headers.get('set-cookie') ? "Yes" : "No");
+    
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.error || `Server returned ${response.status}`);
@@ -562,95 +565,7 @@ export async function getMatchStats(
     return await response.json();
   } catch (error) {
     console.error("Error fetching match stats:", error);
-    
-    // Return mock data if HTML detection occurs or API fails
-    console.log("Using offline stats data due to API error");
-    
-    // If we're in development, return mock stats for UI development
-    return {
-      totalMatches: 28,
-      matchesWon: 17,
-      matchesLost: 11,
-      winRate: 61,
-      avgScore: 9.3,
-      avgScoreChange: 0.7,
-      winRateChange: 3,
-      
-      currentWinStreak: 3,
-      bestWinStreak: 5,
-      currentLossStreak: 0,
-      
-      singlesMatches: 15,
-      singlesWins: 10,
-      singlesLosses: 5,
-      singlesWinRate: 67,
-      singlesAvgScore: 9.6,
-      
-      doublesMatches: 13,
-      doublesWins: 7,
-      doublesLosses: 6,
-      doublesWinRate: 54,
-      doublesAvgScore: 8.9,
-      
-      casualMatches: 18,
-      casualWinRate: 55,
-      competitiveMatches: 7,
-      competitiveWinRate: 71,
-      tournamentMatches: 3,
-      tournamentWinRate: 67,
-      
-      lastMatchDate: new Date().toISOString(),
-      firstMatchDate: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
-      
-      mostPlayedLocation: "Pickleball Paradise",
-      locations: [
-        { name: "Pickleball Paradise", matches: 15, winRate: 60 },
-        { name: "Community Center", matches: 8, winRate: 63 },
-        { name: "Local Club", matches: 5, winRate: 40 }
-      ],
-      
-      favoriteOpponent: "Johnny Pickleball",
-      topOpponents: [
-        { userId: 6, name: "Johnny Pickleball", username: "johnny_pickle", initials: "JP", matches: 6, wins: 4, losses: 2, winRate: 67 },
-        { userId: 7, name: "Sarah Spike", username: "sarah_spike", initials: "SS", matches: 5, wins: 3, losses: 2, winRate: 60 },
-        { userId: 8, name: "Michael Volley", username: "mike_volley", initials: "MV", matches: 4, wins: 2, losses: 2, winRate: 50 }
-      ],
-      
-      bestScore: "11-2",
-      worstScore: "5-11",
-      
-      performanceTrend: [
-        { date: "Jan", winRate: 50, avgScore: 8.1, matches: 4 },
-        { date: "Feb", winRate: 54, avgScore: 8.4, matches: 5 },
-        { date: "Mar", winRate: 60, avgScore: 9.1, matches: 10 },
-        { date: "Apr", winRate: 67, avgScore: 9.8, matches: 9 }
-      ],
-      
-      formatPerformance: [
-        { format: "Singles", wins: 10, losses: 5, winRate: 67 },
-        { format: "Doubles", wins: 7, losses: 6, winRate: 54 }
-      ],
-      
-      scoreDistribution: [
-        { score: "11-0", count: 1, percentage: 4 },
-        { score: "11-2", count: 2, percentage: 7 },
-        { score: "11-4", count: 3, percentage: 11 },
-        { score: "11-6", count: 5, percentage: 18 },
-        { score: "11-8", count: 4, percentage: 14 },
-        { score: "11-9", count: 2, percentage: 7 },
-        { score: "9-11", count: 3, percentage: 11 },
-        { score: "7-11", count: 4, percentage: 14 },
-        { score: "5-11", count: 2, percentage: 7 },
-        { score: "3-11", count: 2, percentage: 7 }
-      ],
-      
-      opponentAnalysis: [
-        { skill: "Beginner", winRate: 82, matches: 11 },
-        { skill: "Intermediate", winRate: 56, matches: 9 },
-        { skill: "Advanced", winRate: 43, matches: 7 },
-        { skill: "Elite", winRate: 0, matches: 1 }
-      ]
-    };
+    throw error; // Propagate the error to the caller
   }
 }
 

@@ -13,6 +13,9 @@ import {
   InsertPerformanceImpact,
   InsertMatchHighlight
 } from '@shared/match-statistics-schema';
+import { matches } from '@shared/schema';
+import { asc, count, desc, eq, sql } from 'drizzle-orm';
+import { db } from '../db';
 
 const matchRouter = Router();
 
@@ -237,6 +240,250 @@ matchRouter.post('/:id([0-9]+)/highlights', isAuthenticated, async (req: Request
   } catch (error) {
     console.error('[Match API] Error creating match highlight:', error);
     res.status(500).json({ error: 'Failed to create match highlight' });
+  }
+});
+
+/**
+ * PKL-278651-MATCH-0003-DS: Match Statistics Dashboard
+ * Get aggregated match statistics for a user
+ */
+matchRouter.get('/stats', async (req: Request, res: Response) => {
+  try {
+    // Get query parameters for filtering
+    const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
+    const timeRange = req.query.timeRange as string || 'all';
+    const matchType = req.query.matchType as 'casual' | 'competitive' | 'tournament' | 'league' | undefined;
+    const formatType = req.query.formatType as 'singles' | 'doubles' | 'mixed' | undefined;
+    
+    console.log('[Match API] Match stats request:', {
+      timeRange, matchType, formatType, userId
+    });
+    
+    let timeFilter;
+    
+    // Calculate the date range based on timeRange
+    const now = new Date();
+    switch (timeRange) {
+      case '30days':
+        timeFilter = new Date(now.setDate(now.getDate() - 30));
+        break;
+      case '90days':
+        timeFilter = new Date(now.setDate(now.getDate() - 90));
+        break;
+      case '6months':
+        timeFilter = new Date(now.setMonth(now.getMonth() - 6));
+        break;
+      case '1year':
+        timeFilter = new Date(now.setFullYear(now.getFullYear() - 1));
+        break;
+      case 'all':
+      default:
+        timeFilter = undefined;
+        break;
+    }
+    
+    // Get all matches for the user with filters
+    // Build the query with all filters
+    let matchesQuery = db.select().from(matches);
+    
+    // Apply user filter if provided
+    if (userId) {
+      matchesQuery = matchesQuery.where(
+        sql`(${matches.playerOneId} = ${userId} OR ${matches.playerTwoId} = ${userId} OR ${matches.playerOnePartnerId} = ${userId} OR ${matches.playerTwoPartnerId} = ${userId})`
+      );
+    }
+    
+    // Apply time filter if provided
+    if (timeFilter) {
+      matchesQuery = matchesQuery.where(
+        sql`${matches.matchDate} >= ${timeFilter}`
+      );
+    }
+    
+    // Apply match type filter if provided
+    if (matchType) {
+      matchesQuery = matchesQuery.where(
+        sql`${matches.matchType} = ${matchType}`
+      );
+    }
+    
+    // Apply format type filter if provided
+    if (formatType) {
+      matchesQuery = matchesQuery.where(
+        sql`${matches.formatType} = ${formatType}`
+      );
+    }
+    
+    // Order by match date descending
+    matchesQuery = matchesQuery.orderBy(desc(matches.matchDate));
+    
+    // Execute the query
+    const userMatches = await matchesQuery;
+    
+    // Calculate basic statistics
+    const totalMatches = userMatches.length;
+    let matchesWon = 0;
+    let singlesMatches = 0;
+    let singlesWins = 0;
+    let doublesMatches = 0;
+    let doublesWins = 0;
+    let casualMatches = 0;
+    let casualWins = 0;
+    let competitiveMatches = 0;
+    let competitiveWins = 0;
+    let tournamentMatches = 0;
+    let tournamentWins = 0;
+    let leagueMatches = 0;
+    let leagueWins = 0;
+    let totalScore = 0;
+    let currentWinStreak = 0;
+    let currentLossStreak = 0;
+    let bestWinStreak = 0;
+    let tempWinStreak = 0;
+    
+    // Recent match info
+    const lastMatchDate = userMatches.length > 0 ? userMatches[0].matchDate?.toISOString() : null;
+    const firstMatchDate = userMatches.length > 0 ? userMatches[userMatches.length - 1].matchDate?.toISOString() : null;
+    
+    // Process match data to calculate statistics
+    for (let i = 0; i < userMatches.length; i++) {
+      const match = userMatches[i];
+      
+      // Check if user won this match
+      const userIsWinner = userId ? 
+        (match.winnerId === userId || 
+         (match.formatType === 'doubles' && match.winnerTeam === 'team1' && 
+          (match.playerOneId === userId || match.playerOnePartnerId === userId)) ||
+         (match.formatType === 'doubles' && match.winnerTeam === 'team2' && 
+          (match.playerTwoId === userId || match.playerTwoPartnerId === userId))
+        ) : 
+        false;
+      
+      // Count wins
+      if (userIsWinner) {
+        matchesWon++;
+        
+        // Update current win streak
+        tempWinStreak++;
+        currentLossStreak = 0;
+        
+        // Check if this sets a new best win streak
+        if (tempWinStreak > bestWinStreak) {
+          bestWinStreak = tempWinStreak;
+        }
+      } else {
+        // Reset win streak counter on loss
+        tempWinStreak = 0;
+        currentLossStreak++;
+      }
+      
+      // Set the current win streak at the end
+      if (i === 0) {
+        currentWinStreak = tempWinStreak;
+      }
+      
+      // Count by format type
+      if (match.formatType === 'singles') {
+        singlesMatches++;
+        if (userIsWinner) singlesWins++;
+      } else if (match.formatType === 'doubles') {
+        doublesMatches++;
+        if (userIsWinner) doublesWins++;
+      }
+      
+      // Count by match type
+      switch (match.matchType) {
+        case 'casual':
+          casualMatches++;
+          if (userIsWinner) casualWins++;
+          break;
+        case 'competitive':
+          competitiveMatches++;
+          if (userIsWinner) competitiveWins++;
+          break;
+        case 'tournament':
+          tournamentMatches++;
+          if (userIsWinner) tournamentWins++;
+          break;
+        case 'league':
+          leagueMatches++;
+          if (userIsWinner) leagueWins++;
+          break;
+      }
+      
+      // Calculate score
+      // For simplicity, using the primary score only
+      const userScore = userId ? 
+        (match.playerOneId === userId || match.playerOnePartnerId === userId) ? 
+          parseInt(match.scorePlayerOne.split('-')[0] || '0') : 
+          parseInt(match.scorePlayerTwo.split('-')[0] || '0') : 
+        0;
+      
+      totalScore += userScore;
+    }
+    
+    // Calculate averages and percentages
+    const winRate = totalMatches > 0 ? Math.round((matchesWon / totalMatches) * 100) : 0;
+    const avgScore = totalMatches > 0 ? Number((totalScore / totalMatches).toFixed(1)) : 0;
+    const singlesWinRate = singlesMatches > 0 ? Math.round((singlesWins / singlesMatches) * 100) : 0;
+    const doublesWinRate = doublesMatches > 0 ? Math.round((doublesWins / doublesMatches) * 100) : 0;
+    const casualWinRate = casualMatches > 0 ? Math.round((casualWins / casualMatches) * 100) : 0;
+    const competitiveWinRate = competitiveMatches > 0 ? Math.round((competitiveWins / competitiveMatches) * 100) : 0;
+    const tournamentWinRate = tournamentMatches > 0 ? Math.round((tournamentWins / tournamentMatches) * 100) : 0;
+    const leagueWinRate = leagueMatches > 0 ? Math.round((leagueWins / leagueMatches) * 100) : 0;
+    
+    // Get the recent matches for the performance trend (limit to last 10)
+    const recentMatches = userMatches.slice(0, 10);
+
+    // Generate comprehensive statistics for the dashboard
+    const stats = {
+      // Basic statistics
+      totalMatches,
+      matchesWon,
+      matchesLost: totalMatches - matchesWon,
+      winRate,
+      avgScore,
+      
+      // Streaks
+      currentWinStreak,
+      bestWinStreak,
+      currentLossStreak,
+      
+      // Format specific
+      singlesMatches,
+      singlesWins,
+      singlesLosses: singlesMatches - singlesWins,
+      singlesWinRate,
+      singlesAvgScore: singlesMatches > 0 ? Number((totalScore / singlesMatches).toFixed(1)) : 0,
+      
+      doublesMatches,
+      doublesWins,
+      doublesLosses: doublesMatches - doublesWins,
+      doublesWinRate,
+      doublesAvgScore: doublesMatches > 0 ? Number((totalScore / doublesMatches).toFixed(1)) : 0,
+      
+      // Match type specific
+      casualMatches,
+      casualWinRate,
+      competitiveMatches,
+      competitiveWinRate,
+      tournamentMatches,
+      tournamentWinRate,
+      leagueMatches,
+      leagueWinRate,
+      
+      // Time data
+      lastMatchDate,
+      firstMatchDate,
+      
+      // Recent matches for performance trend
+      recentMatches
+    };
+    
+    res.json(stats);
+  } catch (error) {
+    console.error('[Match API] Error getting match stats:', error);
+    res.status(500).json({ error: 'Failed to get match statistics' });
   }
 });
 
