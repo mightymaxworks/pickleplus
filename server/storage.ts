@@ -90,6 +90,17 @@ export class DatabaseStorage implements IStorage {
         
         // Log the fields we care about for debugging
         console.log(`[Storage] Retrieved user ${numericId} with profileCompletionPct=${user.profileCompletionPct}, paddleBrand=${user.paddleBrand}, paddleModel=${user.paddleModel}`);
+        
+        // Log external ratings for debugging
+        console.log(`[Storage] External ratings for user ${numericId}: DUPR=${user.duprRating || 'None'}, UTPR=${user.utprRating || 'None'}, WPR=${user.wprRating || 'None'}, Verified=${user.externalRatingsVerified}, Last Updated=${user.lastExternalRatingUpdate || 'Never'}`);
+        
+        // Debug if properties are missing from the user object
+        if (!('duprRating' in user)) {
+          console.log(`[Storage] CRITICAL ERROR: duprRating property is missing from user object!`);
+        }
+        if (!('duprProfileUrl' in user)) {
+          console.log(`[Storage] CRITICAL ERROR: duprProfileUrl property is missing from user object!`);
+        }
       }
       
       return user;

@@ -228,7 +228,7 @@ export function setupAuth(app: Express) {
   });
 
   // Current user route
-  app.get("/api/auth/current-user", (req, res) => {
+  app.get("/api/auth/current-user", async (req, res) => {
     console.log("Current user check - Is authenticated:", req.isAuthenticated());
     console.log("Current user check - Session ID:", req.sessionID);
     console.log("Current user check - Cookie:", req.headers.cookie);
@@ -242,10 +242,24 @@ export function setupAuth(app: Express) {
       return res.status(401).json({ message: "Not authenticated" });
     }
     
-    console.log("User is authenticated, returning user:", req.user);
-    
-    // Return the user data without the password
-    const { password, ...userWithoutPassword } = req.user as User;
-    res.json(userWithoutPassword);
+    try {
+      // Instead of using the cached session user, fetch the fresh user data from database
+      const userId = (req.user as User).id;
+      const freshUserData = await storage.getUser(userId);
+      
+      if (!freshUserData) {
+        console.log("User authenticated but not found in database:", userId);
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      console.log("User is authenticated, returning fresh user data for ID:", userId);
+      
+      // Return the user data without the password
+      const { password, ...userWithoutPassword } = freshUserData;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error fetching current user:", error);
+      res.status(500).json({ message: "Server error fetching user data" });
+    }
   });
 }
