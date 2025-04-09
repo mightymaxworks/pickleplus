@@ -96,6 +96,15 @@ export default function UserDropdownMenu({ user }: UserDropdownMenuProps) {
               />
               
               <DropdownItem 
+                icon={<UserCircle size={16} />} 
+                label="Contextual Profile (New)" 
+                onClick={() => {
+                  navigate("/profile/contextual");
+                  closeDropdown();
+                }}
+              />
+              
+              <DropdownItem 
                 icon={<Settings size={16} />} 
                 label="Settings" 
                 onClick={() => {
