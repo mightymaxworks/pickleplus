@@ -63,9 +63,23 @@ export function AppHeader() {
       transition={{ type: 'spring', damping: 20, stiffness: 100 }}
     >
       <div className="px-4 sm:px-6 py-3 flex items-center justify-between">
+        {/* Mobile Menu Toggle */}
+        <motion.button
+          className="md:hidden p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          {mobileMenuOpen ? (
+            <X size={22} className="text-gray-600 dark:text-gray-300" />
+          ) : (
+            <Menu size={22} className="text-gray-600 dark:text-gray-300" />
+          )}
+        </motion.button>
+        
         {/* Logo aligned to the left */}
         <motion.div
-          className="flex items-center justify-start flex-1"
+          className="flex items-center justify-center flex-1"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
