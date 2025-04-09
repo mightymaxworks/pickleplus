@@ -20,6 +20,7 @@ export interface EnhancedUser {
   createdAt?: Date;
   lastUpdated?: Date;
   avatarInitials?: string;
+  avatarUrl?: string | null;
   
   // Profile completion
   profileCompletionPct?: number;

@@ -2,19 +2,32 @@
  * PKL-278651-SPUI-0001: Streamlined Profile User Interface
  * A sleek, modern profile interface with persistent top navigation and mobile-optimized experience
  */
-import { FC, useState } from 'react';
+import { FC, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
 import { 
   UserCircle, Settings, Award, Clock, Info, Dumbbell, BookOpen,
-  Trophy, MapPin, BadgeCheck, Medal
+  Trophy, MapPin, BadgeCheck, Medal, Edit2, Check, X, Calendar, Clipboard
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { queryClient } from '@/lib/queryClient';
+import { EnhancedUser } from '@/types/enhanced-user';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 /**
  * Streamlined Profile Page
@@ -22,11 +35,73 @@ import { Progress } from '@/components/ui/progress';
  */
 const StreamlinedProfilePage: FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingFields, setEditingFields] = useState<Record<string, boolean>>({});
+  
+  // Editing state for the bio field
+  const [bioField, setBioField] = useState('');
+  const [playingStyleField, setPlayingStyleField] = useState('');
+  const [playingSinceField, setPlayingSinceField] = useState('');
+
+  // Define playing style options
+  const playingStyleOptions = [
+    { value: 'aggressive', label: 'Aggressive' },
+    { value: 'defensive', label: 'Defensive' },
+    { value: 'strategic', label: 'Strategic' },
+    { value: 'all-court', label: 'All-Court' },
+  ];
+  
+  // Function to handle saving profile updates
+  const saveProfileField = async (fieldName: string, value: string) => {
+    try {
+      await fetch('/api/profile/update', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          [fieldName]: value,
+        }),
+      });
+      
+      // Invalidate the user query to refresh the data
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/current-user'] });
+      
+      // Exit edit mode for this field
+      setEditingFields(prev => ({ ...prev, [fieldName]: false }));
+      
+      toast({
+        title: 'Profile updated',
+        description: 'Your profile has been updated successfully.',
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: 'Error updating profile',
+        description: 'There was an error updating your profile. Please try again.',
+        variant: 'destructive',
+      });
+      
+      return false;
+    }
+  };
 
   // Fetch current user data
-  const { data: user, isLoading, error } = useQuery({
+  const { data: user, isLoading, error } = useQuery<EnhancedUser>({
     queryKey: ['/api/auth/current-user'],
   });
+  
+  // Initialize form fields when user data is loaded
+  useEffect(() => {
+    if (user) {
+      setBioField(user.bio || '');
+      setPlayingStyleField(user.playingStyle || '');
+      setPlayingSinceField(user.playingSince || '');
+    }
+  }, [user]);
 
   if (isLoading) {
     return <ProfileSkeleton />;
@@ -47,6 +122,24 @@ const StreamlinedProfilePage: FC = () => {
       <Card className="w-full overflow-hidden relative">
         {/* Banner/Background */}
         <div className="h-40 bg-gradient-to-r from-primary/80 via-primary/60 to-primary/40 flex items-end justify-end p-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="bg-background/80 backdrop-blur-sm"
+            onClick={() => setIsEditMode(!isEditMode)}
+          >
+            {isEditMode ? (
+              <>
+                <X className="h-4 w-4 mr-2" />
+                Exit Edit Mode
+              </>
+            ) : (
+              <>
+                <Edit2 className="h-4 w-4 mr-2" />
+                Edit Profile
+              </>
+            )}
+          </Button>
         </div>
 
         {/* Profile Content */}
@@ -163,7 +256,7 @@ const StreamlinedProfilePage: FC = () => {
                 {user.totalMatches || 0} matches played
               </div>
               <div className="text-sm font-semibold">
-                {user.totalMatches ? Math.round((user.matchesWon / user.totalMatches) * 100) : 0}% win rate
+                {user.totalMatches && user.matchesWon ? Math.round((user.matchesWon / user.totalMatches) * 100) : 0}% win rate
               </div>
             </div>
           </div>
@@ -209,20 +302,160 @@ const StreamlinedProfilePage: FC = () => {
           <TabsContent value="overview" className="mt-0">
             <Card className="p-6">
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Player Information</h3>
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Player Information</h3>
+                  {isEditMode && (
+                    <p className="text-xs text-muted-foreground">Click on any field to edit</p>
+                  )}
+                </div>
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <h4 className="text-sm font-medium text-muted-foreground mb-2">Bio</h4>
-                    <p>{user.bio || 'No bio specified'}</p>
+                    {isEditMode && editingFields.bio ? (
+                      <div className="space-y-2">
+                        <Textarea 
+                          value={bioField}
+                          onChange={(e) => setBioField(e.target.value)}
+                          className="min-h-[100px] resize-none"
+                          placeholder="Write a short bio about yourself"
+                        />
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => {
+                              setBioField(user.bio || '');
+                              setEditingFields(prev => ({ ...prev, bio: false }));
+                            }}
+                          >
+                            <X className="h-4 w-4 mr-1" /> Cancel
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            onClick={() => saveProfileField('bio', bioField)}
+                          >
+                            <Check className="h-4 w-4 mr-1" /> Save
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div 
+                        className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                        onClick={() => {
+                          if (isEditMode) {
+                            setEditingFields(prev => ({ ...prev, bio: true }));
+                          }
+                        }}
+                      >
+                        <p>{user.bio || 'No bio specified'}</p>
+                        {isEditMode && (
+                          <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
+                        )}
+                      </div>
+                    )}
                   </div>
+                  
                   <div>
                     <h4 className="text-sm font-medium text-muted-foreground mb-2">Playing Style</h4>
-                    <p>{user.playingStyle || 'Not specified'}</p>
+                    {isEditMode && editingFields.playingStyle ? (
+                      <div className="space-y-2">
+                        <Select 
+                          value={playingStyleField} 
+                          onValueChange={(value) => setPlayingStyleField(value)}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select your playing style" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {playingStyleOptions.map(option => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => {
+                              setPlayingStyleField(user.playingStyle || '');
+                              setEditingFields(prev => ({ ...prev, playingStyle: false }));
+                            }}
+                          >
+                            <X className="h-4 w-4 mr-1" /> Cancel
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            onClick={() => saveProfileField('playingStyle', playingStyleField)}
+                          >
+                            <Check className="h-4 w-4 mr-1" /> Save
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div 
+                        className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                        onClick={() => {
+                          if (isEditMode) {
+                            setEditingFields(prev => ({ ...prev, playingStyle: true }));
+                          }
+                        }}
+                      >
+                        <p>{user.playingStyle || 'Not specified'}</p>
+                        {isEditMode && (
+                          <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
+                
                 <div className="mt-4">
                   <h4 className="text-sm font-medium text-muted-foreground mb-2">Playing Since</h4>
-                  <p>{user.playingSince || 'Not specified'}</p>
+                  {isEditMode && editingFields.playingSince ? (
+                    <div className="space-y-2">
+                      <Input 
+                        type="text"
+                        value={playingSinceField}
+                        onChange={(e) => setPlayingSinceField(e.target.value)}
+                        placeholder="When did you start playing? (e.g., 2023)"
+                      />
+                      <div className="flex justify-end gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => {
+                            setPlayingSinceField(user.playingSince || '');
+                            setEditingFields(prev => ({ ...prev, playingSince: false }));
+                          }}
+                        >
+                          <X className="h-4 w-4 mr-1" /> Cancel
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          onClick={() => saveProfileField('playingSince', playingSinceField)}
+                        >
+                          <Check className="h-4 w-4 mr-1" /> Save
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div 
+                      className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                      onClick={() => {
+                        if (isEditMode) {
+                          setEditingFields(prev => ({ ...prev, playingSince: true }));
+                        }
+                      }}
+                    >
+                      <p>{user.playingSince || 'Not specified'}</p>
+                      {isEditMode && (
+                        <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </Card>
@@ -242,7 +475,7 @@ const StreamlinedProfilePage: FC = () => {
                   </div>
                   <div>
                     <h4 className="text-sm font-medium mb-2">Win Rate</h4>
-                    <div className="text-3xl font-bold">{user.totalMatches ? Math.round((user.matchesWon / user.totalMatches) * 100) : 0}%</div>
+                    <div className="text-3xl font-bold">{user.totalMatches && user.matchesWon ? Math.round((user.matchesWon / user.totalMatches) * 100) : 0}%</div>
                   </div>
                 </div>
               </div>
