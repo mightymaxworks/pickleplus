@@ -172,6 +172,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   { label: 'Matches', icon: <Calendar size={18} />, path: '/matches' },
                   { label: 'Tournaments', icon: <Award size={18} />, path: '/tournaments' },
                   { label: 'Community', icon: <Users size={18} />, path: '/community' },
+                  { label: 'Mastery Paths', icon: <Award size={18} />, path: '/mastery-paths' },
                   { label: 'Profile', icon: <UserIcon size={18} />, path: '/profile' },
                   { label: 'Settings', icon: <Settings size={18} />, path: '/settings' }
                 ].map((item, i) => {
