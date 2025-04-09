@@ -146,55 +146,158 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ error: "Not authenticated" });
     }
     
-    const percentage = await storage.calculateProfileCompletion(req.user.id);
-    const completedFieldsRecords = await storage.getCompletedProfileFields(req.user.id);
+    try {
+      // Get the full user record with all fields
+      const userRecord = await storage.getUser(req.user.id);
+      if (!userRecord) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Use the ProfileService to get detailed field breakdown
+      const profileService = new (require("./services/profile-service").ProfileService)();
+      const fieldBreakdown = profileService.getFieldBreakdown(userRecord);
+      const percentage = userRecord.profileCompletionPct || await storage.calculateProfileCompletion(req.user.id);
     
-    // Extract just the field names from the records
-    const completedFields = completedFieldsRecords.map(record => record.fieldName);
-    
-    // Field name mapping for more user-friendly display
-    const fieldNameMapping: Record<string, string> = {
-      'bio': 'Bio',
-      'location': 'Location',
-      'skillLevel': 'Skill Level',
-      'playingSince': 'Playing Since',
-      'preferredPosition': 'Court Position',
-      'paddleBrand': 'Paddle Brand',
-      'paddleModel': 'Paddle Model',
-      'playingStyle': 'Playing Style',
-      'shotStrengths': 'Shot Strengths',
-      'preferredFormat': 'Game Format',
-      'dominantHand': 'Dominant Hand',
-      'regularSchedule': 'Playing Schedule',
-      'lookingForPartners': 'Partner Status',
-      'partnerPreferences': 'Partner Preferences',
-      'playerGoals': 'Goals',
-      'coach': 'Coach',
-      'clubs': 'Clubs',
-      'leagues': 'Leagues',
-      'socialHandles': 'Social Media',
-      'mobilityLimitations': 'Mobility Considerations',
-      'preferredMatchDuration': 'Match Duration',
-      'fitnessLevel': 'Fitness Level'
-    };
-    
-    // Get all possible profile fields
-    const allFields = Object.keys(fieldNameMapping);
-    
-    // Determine incomplete fields
-    const incompleteFields = allFields.filter(field => !completedFields.includes(field));
-    
-    // Map the field names to their user-friendly versions
-    const mappedCompletedFields = completedFields.map(field => fieldNameMapping[field] || field);
-    const mappedIncompleteFields = incompleteFields.map(field => fieldNameMapping[field] || field);
-    
-    res.json({
-      completionPercentage: percentage,
-      completedFields: mappedCompletedFields,
-      incompleteFields: mappedIncompleteFields,
-      xpEarned: 0, // Will be calculated in a future implementation
-      potentialXp: 250 // Total possible XP for completing profile
-    });
+      // Field name mapping for more user-friendly display
+      const fieldNameMapping: Record<string, string> = {
+        // Personal/Basic info
+        'bio': 'Bio',
+        'location': 'Location',
+        'yearOfBirth': 'Year of Birth', 
+        'displayName': 'Display Name',
+        'height': 'Height',
+        'reach': 'Reach',
+        
+        // Equipment fields
+        'paddleBrand': 'Paddle Brand',
+        'paddleModel': 'Paddle Model',
+        'backupPaddleBrand': 'Backup Paddle Brand',
+        'backupPaddleModel': 'Backup Paddle Model',
+        'apparelBrand': 'Apparel Brand',
+        'shoesBrand': 'Shoes Brand',
+        'otherEquipment': 'Other Equipment',
+        
+        // Playing style fields
+        'skillLevel': 'Skill Level',
+        'playingSince': 'Playing Since',
+        'preferredFormat': 'Game Format',
+        'dominantHand': 'Dominant Hand',
+        'preferredPosition': 'Court Position',
+        'playingStyle': 'Playing Style',
+        'shotStrengths': 'Shot Strengths',
+        
+        // Preference fields
+        'regularSchedule': 'Playing Schedule',
+        'lookingForPartners': 'Partner Status',
+        'mentorshipInterest': 'Mentorship Interest',
+        'preferredSurface': 'Preferred Surface',
+        'indoorOutdoorPreference': 'Indoor/Outdoor Preference',
+        'competitiveIntensity': 'Competitive Intensity',
+        'homeCourtLocations': 'Home Court Locations',
+        'travelRadiusKm': 'Travel Radius',
+        
+        // Performance self-assessment
+        'forehandStrength': 'Forehand Strength',
+        'backhandStrength': 'Backhand Strength',
+        'servePower': 'Serve Power',
+        'dinkAccuracy': 'Dink Accuracy',
+        'thirdShotConsistency': 'Third Shot Consistency',
+        'courtCoverage': 'Court Coverage',
+        
+        // Social/Community fields
+        'coach': 'Coach',
+        'clubs': 'Clubs',
+        'leagues': 'Leagues',
+        'socialHandles': 'Social Media',
+        'partnerPreferences': 'Partner Preferences',
+        'playerGoals': 'Goals',
+        
+        // Health fields
+        'mobilityLimitations': 'Mobility Considerations',
+        'preferredMatchDuration': 'Match Duration',
+        'fitnessLevel': 'Fitness Level'
+      };
+      
+      // Define category mappings for the frontend
+      const categoryMapping: Record<string, string> = {
+        'basic': 'personal',
+        'equipment': 'equipment',
+        'playing': 'playing',
+        'performance': 'skills',
+        'social': 'social',
+        'health': 'health'
+      };
+      
+      // Get incomplete field categories
+      const categorizedIncompleteFields: Record<string, string[]> = {
+        personal: [],
+        equipment: [],
+        playing: [],
+        preferences: [],
+        skills: [],
+        social: [],
+        health: [],
+        other: []
+      };
+      
+      // Map the fields to categories
+      fieldBreakdown.incompleteFields.forEach(field => {
+        // Find the field in the profile service data
+        const fieldConfig = (require("./services/profile-service").PROFILE_FIELDS)[field];
+        
+        if (fieldConfig) {
+          const category = fieldConfig.category;
+          const mappedCategory = categoryMapping[category] || 'other';
+          const fieldLabel = fieldNameMapping[field] || field;
+          
+          if (categorizedIncompleteFields[mappedCategory]) {
+            categorizedIncompleteFields[mappedCategory].push(fieldLabel);
+          } else {
+            categorizedIncompleteFields.other.push(fieldLabel);
+          }
+        } else {
+          // If field is not found in profile service, put it in other
+          const fieldLabel = fieldNameMapping[field] || field;
+          categorizedIncompleteFields.other.push(fieldLabel);
+        }
+      });
+      
+      // Map completed fields to user-friendly names
+      const mappedCompletedFields = fieldBreakdown.completedFields.map(
+        field => fieldNameMapping[field] || field
+      );
+      
+      // Get tier information for XP rewards
+      const XP_REWARD_TIERS = [
+        { threshold: 25, reward: 25, label: "Bronze" },
+        { threshold: 50, reward: 50, label: "Silver" },
+        { threshold: 75, reward: 75, label: "Gold" },
+        { threshold: 100, reward: 100, label: "Platinum" }
+      ];
+      
+      // Find the current tier
+      const currentTier = XP_REWARD_TIERS.find(tier => percentage < tier.threshold);
+      const previousTiers = XP_REWARD_TIERS.filter(tier => percentage >= tier.threshold);
+      const highestAchievedTier = previousTiers.length > 0 ? 
+        previousTiers[previousTiers.length - 1] : null;
+      
+      res.json({
+        completionPercentage: percentage,
+        completedFields: mappedCompletedFields,
+        incompleteFields: Object.values(categorizedIncompleteFields).flat(),
+        categorizedIncompleteFields,
+        categoryCompletion: fieldBreakdown.completedCategories,
+        currentTier: currentTier || null,
+        highestAchievedTier,
+        xpEarned: previousTiers.reduce((sum, tier) => sum + tier.reward, 0),
+        potentialXp: 250,
+        totalFields: fieldBreakdown.completedFields.length + fieldBreakdown.incompleteFields.length,
+        completedFieldsCount: fieldBreakdown.completedFields.length
+      });
+    } catch (error) {
+      console.error("Error in profile completion endpoint:", error);
+      res.status(500).json({ error: "Failed to get profile completion data" });
+    }
   });
   
   // Route to track profile field completion and award XP
