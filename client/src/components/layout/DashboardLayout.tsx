@@ -40,6 +40,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
+          className="cursor-pointer"
+          onClick={() => navigate("/dashboard")}
         >
           <PicklePlusNewLogo height="56px" className="mb-6" preserveAspectRatio={true} />
         </motion.div>
@@ -102,11 +104,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
           >
-            <PicklePlusNewLogo 
-              height={isExtraSmallScreen ? "24px" : "32px"}
-              width="auto"
-              preserveAspectRatio={true}
-            />
+            <div 
+              className="cursor-pointer"
+              onClick={() => navigate("/dashboard")}
+            >
+              <PicklePlusNewLogo 
+                height={isExtraSmallScreen ? "24px" : "32px"}
+                width="auto"
+                preserveAspectRatio={true}
+              />
+            </div>
           </motion.div>
           
           {/* Right side actions */}
