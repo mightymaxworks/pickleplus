@@ -1,22 +1,16 @@
 /**
- * PKL-278651-MATCH-0002-XR - Enhanced Match Recording System
- * Match Statistics Schema - Extends the core match system with detailed statistics tracking
+ * PKL-278651-MATCH-0003-DS: Match Statistics Schema
+ * This file defines the schema for match statistics, performance impacts, and match highlights
  */
+import { pgTable, serial, integer, text, jsonb, timestamp, real } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+import { matches } from "./schema";
 
-import { pgTable, serial, integer, varchar, text, timestamp, boolean, json, jsonb, date, real } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
-import { createInsertSchema } from 'drizzle-zod';
-import { z } from 'zod';
-import { matches, users } from './schema';
-
-/**
- * Match Statistics table - Tracks detailed performance metrics for each match
- * 
- * Note: This schema has been updated to match the actual database structure
- */
+// Match Statistics Table
 export const matchStatistics = pgTable("match_statistics", {
   id: serial("id").primaryKey(),
-  matchId: integer("match_id").notNull().references(() => matches.id),
+  matchId: integer("match_id").references(() => matches.id).notNull(),
   
   // General statistics
   totalPoints: integer("total_points"),
@@ -40,94 +34,83 @@ export const matchStatistics = pgTable("match_statistics", {
   // Technical statistics
   thirdShotSuccessRate: real("third_shot_success_rate"),
   timeAtNetPct: real("time_at_net_pct"),
-  
-  // Physical statistics
   distanceCoveredMeters: real("distance_covered_meters"),
   avgShotSpeedKph: real("avg_shot_speed_kph"),
   
-  // Additional data
+  // Metadata for additional fields
   metadata: jsonb("metadata"),
   
   // Timestamps
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at")
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at"),
 });
 
-/**
- * Player Performance Impact - Tracks how match performances affect player skill dimensions
- * 
- * Note: This schema has been updated to match the actual database structure
- */
+// Performance Impact Table
 export const performanceImpacts = pgTable("performance_impacts", {
   id: serial("id").primaryKey(),
-  matchId: integer("match_id").notNull().references(() => matches.id),
-  userId: integer("user_id").notNull().references(() => users.id),
-  
-  // The skill dimension being impacted
-  dimension: varchar("dimension", { length: 50 }).notNull(),
-  
-  // The impact value (positive or negative)
+  matchId: integer("match_id").references(() => matches.id).notNull(),
+  userId: integer("user_id").notNull(),
+  dimension: text("dimension").notNull(),
   impactValue: integer("impact_value").notNull(),
-  
-  // Explanation for the impact
   reason: text("reason"),
-  
-  // Additional metadata
   metadata: jsonb("metadata"),
-  
-  // Timestamps
-  createdAt: timestamp("created_at").defaultNow(),
-  processedAt: timestamp("processed_at")
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-/**
- * Match Performance Highlights - Notable moments or achievements during the match
- */
+// Match Highlights Table
 export const matchHighlights = pgTable("match_highlights", {
   id: serial("id").primaryKey(),
-  matchId: integer("match_id").notNull().references(() => matches.id),
-  userId: integer("user_id").notNull().references(() => users.id),
-  
-  highlightType: varchar("highlight_type", { length: 50 }).notNull(), // "exceptional_play", "critical_moment", etc.
+  matchId: integer("match_id").references(() => matches.id).notNull(),
+  userId: integer("user_id").notNull(),
+  highlightType: text("highlight_type").notNull(),
   description: text("description").notNull(),
-  timestampSeconds: integer("timestamp_seconds"), // Timestamp within the match when the highlight occurred
-  
-  metadata: jsonb("metadata"), // Any additional structured data
-  
-  createdAt: timestamp("created_at").defaultNow()
+  timestampSeconds: integer("timestamp_seconds"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Create relationships
-export const matchStatisticsRelations = relations(matchStatistics, ({ one }) => ({
-  match: one(matches, { fields: [matchStatistics.matchId], references: [matches.id] })
-}));
+// Zod insert schemas
+export const insertMatchStatisticsSchema = createInsertSchema(matchStatistics, {
+  matchId: z.number(),
+  totalPoints: z.number().int().optional(),
+  rallyLengthAvg: z.number().optional(),
+  longestRally: z.number().int().optional(),
+  unforcedErrors: z.number().int().optional(),
+  winners: z.number().int().optional(),
+  netPointsWon: z.number().int().optional(),
+  netPointsTotal: z.number().int().optional(),
+  dinkPointsWon: z.number().int().optional(),
+  dinkPointsTotal: z.number().int().optional(),
+  servePointsWon: z.number().int().optional(),
+  servePointsTotal: z.number().int().optional(),
+  returnPointsWon: z.number().int().optional(),
+  returnPointsTotal: z.number().int().optional(),
+  thirdShotSuccessRate: z.number().optional(),
+  timeAtNetPct: z.number().optional(),
+  distanceCoveredMeters: z.number().optional(),
+  avgShotSpeedKph: z.number().optional(),
+  metadata: z.any().optional(),
+}).omit({ id: true, createdAt: true, updatedAt: true });
 
-export const performanceImpactsRelations = relations(performanceImpacts, ({ one }) => ({
-  match: one(matches, { fields: [performanceImpacts.matchId], references: [matches.id] }),
-  user: one(users, { fields: [performanceImpacts.userId], references: [users.id] })
-}));
+export const insertPerformanceImpactSchema = createInsertSchema(performanceImpacts, {
+  matchId: z.number(),
+  userId: z.number(),
+  dimension: z.string().min(1),
+  impactValue: z.number().int(),
+  reason: z.string().optional(),
+  metadata: z.any().optional(),
+}).omit({ id: true, createdAt: true });
 
-export const matchHighlightsRelations = relations(matchHighlights, ({ one }) => ({
-  match: one(matches, { fields: [matchHighlights.matchId], references: [matches.id] }),
-  user: one(users, { fields: [matchHighlights.userId], references: [users.id] })
-}));
+export const insertMatchHighlightSchema = createInsertSchema(matchHighlights, {
+  matchId: z.number(),
+  userId: z.number(),
+  highlightType: z.string().min(1),
+  description: z.string().min(1),
+  timestampSeconds: z.number().int().optional(),
+  metadata: z.any().optional(),
+}).omit({ id: true, createdAt: true });
 
-// Create insert schemas
-export const insertMatchStatisticsSchema = createInsertSchema(matchStatistics)
-  .omit({ id: true, createdAt: true, updatedAt: true });
-
-export const insertPerformanceImpactsSchema = createInsertSchema(performanceImpacts)
-  .omit({ id: true, createdAt: true, processedAt: true });
-
-export const insertMatchHighlightsSchema = createInsertSchema(matchHighlights)
-  .omit({ id: true, createdAt: true });
-
-// Define types using the schemas
+// TypeScript types for inserts
 export type InsertMatchStatistics = z.infer<typeof insertMatchStatisticsSchema>;
-export type InsertPerformanceImpact = z.infer<typeof insertPerformanceImpactsSchema>;
-export type InsertMatchHighlight = z.infer<typeof insertMatchHighlightsSchema>;
-
-// Export table types as well
-export type MatchStatistics = typeof matchStatistics.$inferSelect;
-export type PerformanceImpact = typeof performanceImpacts.$inferSelect;
-export type MatchHighlight = typeof matchHighlights.$inferSelect;
+export type InsertPerformanceImpact = z.infer<typeof insertPerformanceImpactSchema>;
+export type InsertMatchHighlight = z.infer<typeof insertMatchHighlightSchema>;

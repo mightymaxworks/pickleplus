@@ -7,10 +7,15 @@ import {
 
 // PKL-278651-MATCH-0002-XR - Enhanced Match Recording System
 import {
-  matchStatistics, type MatchStatistics, type InsertMatchStatistics,
-  performanceImpacts, type PerformanceImpact, type InsertPerformanceImpact,
-  matchHighlights, type MatchHighlight, type InsertMatchHighlight
+  matchStatistics, type InsertMatchStatistics,
+  performanceImpacts, type InsertPerformanceImpact,
+  matchHighlights, type InsertMatchHighlight
 } from "@shared/match-statistics-schema";
+
+// Define types for database results
+type MatchStatistics = typeof matchStatistics.$inferSelect;
+type PerformanceImpact = typeof performanceImpacts.$inferSelect;
+type MatchHighlight = typeof matchHighlights.$inferSelect;
 import { db } from "./db";
 import { eq, ne, and, or, desc, asc, sql } from "drizzle-orm";
 import session from "express-session";

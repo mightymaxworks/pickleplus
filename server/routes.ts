@@ -28,6 +28,7 @@ import { xpService } from "./services";
 // Import API route modules
 import xpRoutes from "./api/xp";
 import rankingRoutes from "./api/ranking";
+import { matchRoutes } from "./api/match";
 
 // Import CourtIQ and XP systems
 import { courtIQService as courtIQSystem } from "./modules/rating/courtiq";
@@ -193,6 +194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register API route modules
   app.use('/api/xp', xpRoutes);
   app.use('/api/ranking', rankingRoutes);
+  app.use('/api/match', matchRoutes);
   
   // Add a logging middleware for debugging authentication
   app.use((req: Request, res: Response, next: NextFunction) => {
