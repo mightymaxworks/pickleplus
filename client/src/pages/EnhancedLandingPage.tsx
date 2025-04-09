@@ -1,20 +1,22 @@
 import { useLocation, Link } from "wouter";
+import { EnhancedHeroSection } from '@/components/EnhancedHeroSection';
+import { CourtIQExplanationSection } from '@/components/CourtIQExplanationSection';
+import { RatingSystemsIntegrationSection } from '@/components/RatingSystemsIntegrationSection';
+import { EnhancedChangelogSection } from '@/components/EnhancedChangelogSection';
+import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import React from "react";
 import { PicklePlusNewLogo } from "../components/icons/PicklePlusNewLogo";
-import { Button } from "@/components/ui/button";
 import { 
-  ChevronDown, 
   Award, 
-  Calendar, 
   BarChart, 
-  ArrowRight, 
+  Calendar,
   Users, 
-  Trophy, 
   Zap,
-  Star,
   Check,
-  MapPin
+  Star,
+  ChevronDown,
+  Trophy
 } from "lucide-react";
 
 // Enhanced animation variants with more refined animations
@@ -89,51 +91,6 @@ const EnhancedFeatureCard = ({
   );
 };
 
-// Enhanced testimonial component
-const Testimonial = ({ 
-  quote, 
-  author, 
-  role, 
-  imageSrc,
-  improvement
-}: {
-  quote: string,
-  author: string,
-  role: string,
-  imageSrc?: string,
-  improvement: string
-}) => {
-  return (
-    <motion.div 
-      className="bg-white rounded-xl p-6 shadow-md border border-gray-100"
-      variants={fadeIn}
-    >
-      <div className="flex items-start gap-4 mb-4">
-        <div className="h-12 w-12 rounded-full bg-gradient-to-r from-[#2196F3] to-[#03A9F4] flex-shrink-0 flex items-center justify-center text-white font-bold text-lg">
-          {imageSrc ? (
-            <img src={imageSrc} alt={author} className="h-12 w-12 rounded-full object-cover" />
-          ) : (
-            author.substring(0, 2)
-          )}
-        </div>
-        <div>
-          <h4 className="font-bold text-lg">{author}</h4>
-          <p className="text-sm text-gray-500">{role}</p>
-        </div>
-      </div>
-      <p className="text-gray-700 italic mb-4">"{quote}"</p>
-      <div className="flex items-center gap-2 bg-[#4CAF50]/10 rounded-lg p-2 text-sm">
-        <div className="bg-[#4CAF50] rounded-full p-1 text-white">
-          <Check size={14} />
-        </div>
-        <span className="text-gray-700">
-          {improvement}
-        </span>
-      </div>
-    </motion.div>
-  );
-};
-
 export default function EnhancedLandingPage() {
   const [, navigate] = useLocation();
   
@@ -152,175 +109,17 @@ export default function EnhancedLandingPage() {
         </div>
       </header>
       
-      {/* Enhanced Hero Section with animated elements */}
-      <section className="relative bg-gradient-to-br from-[#FF5722] via-[#FF7043] to-[#FF8A65] text-white py-20 md:py-28 overflow-hidden">
-        {/* Animated pattern overlay */}
-        <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10 animate-pulse"></div>
-        
-        {/* Animated pickle ball shapes in background */}
-        <div className="absolute top-20 right-10 w-20 h-20 bg-white/10 rounded-full blur-sm animate-float"></div>
-        <div className="absolute bottom-10 left-10 w-16 h-16 bg-white/10 rounded-full blur-sm animate-float-delayed"></div>
-        <div className="absolute top-1/2 left-1/4 w-12 h-12 bg-white/10 rounded-full blur-sm animate-float-slow"></div>
-        
-        <div className="container mx-auto px-4 sm:px-6 relative z-10">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8 md:gap-10">
-            <motion.div 
-              className="w-full md:w-1/2 text-center md:text-left"
-              initial="hidden"
-              animate="visible"
-              variants={slideIn("left")}
-            >
-              <div className="mb-2 inline-block bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 text-sm font-medium">
-                🔥 Level up your Pickleball game
-              </div>
-              <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl font-bold mb-4 leading-tight">
-                Your Pickleball Journey, <span className="text-yellow-200">Powered by CourtIQ™</span>
-              </h1>
-              <p className="text-base xs:text-lg sm:text-xl mb-6 md:mb-8 text-white/90 leading-relaxed">
-                Pickle+ Passport with CourtIQ™ analytics tracks your progress, connects you with the community, and elevates your game with real-time insights and rewards.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-                <Link href="/auth">
-                  <Button 
-                    size="lg" 
-                    className="bg-white text-[#FF5722] hover:bg-white/90 w-full sm:w-auto"
-                  >
-                    Get Started
-                  </Button>
-                </Link>
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="border-white border-2 text-white hover:bg-white/10 hover:border-white w-full sm:w-auto bg-black/20"
-                  onClick={() => {
-                    document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                >
-                  See Features
-                </Button>
-              </div>
-              
-              {/* Founding member highlight */}
-              <div className="mt-8 inline-flex items-center gap-2 bg-black/20 backdrop-blur-sm rounded-full px-4 py-2">
-                <Star className="text-yellow-300 h-5 w-5" />
-                <span className="text-yellow-200 font-medium">Limited Founding Member slots available - Pickle+</span>
-              </div>
-            </motion.div>
-            
-            {/* Simple Static Player Passport Card - Mobile Optimized */}
-            <motion.div 
-              className="w-full md:w-1/2 flex justify-center mt-10 md:mt-0"
-              initial="hidden"
-              animate="visible"
-              variants={slideIn("right")}
-            >
-              <div className="relative w-full max-w-[320px] xs:max-w-[350px] sm:max-w-md">
-                {/* Static instruction tag */}
-                <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-full shadow-lg z-10 flex items-center space-x-2">
-                  <Star className="h-3 w-3 sm:h-4 sm:w-4 text-[#FF5722]" />
-                  <span className="text-[10px] sm:text-xs font-medium text-gray-800">Player Passport Preview</span>
-                </div>
-                
-                {/* Live updates notification */}
-                <div className="absolute -right-2 sm:-right-4 -top-2 sm:-top-4 bg-[#4CAF50] text-white text-[10px] xs:text-xs font-bold px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full z-10 shadow-lg flex items-center">
-                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full mr-1 animate-ping"></div>
-                  LIVE
-                </div>
-                
-                {/* Simplified static passport */}
-                <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
-                  {/* Header with logo */}
-                  <div className="bg-gradient-to-r from-[#FF5722] to-[#FF9800] pt-3 pb-5 px-5 text-white">
-                    <div className="flex justify-between items-center">
-                      <div className="font-bold text-lg">Pickle+ Digital Passport</div>
-                      <div className="h-10 w-auto">
-                        <PicklePlusNewLogo width={80} preserveAspectRatio={true} />
-                      </div>
-                    </div>
-                    
-                    {/* CourtIQ badge */}
-                    <div className="absolute top-16 right-2 bg-black/20 backdrop-blur-sm px-2 py-1 rounded text-xs font-medium flex items-center">
-                      <div className="w-2 h-2 bg-blue-300 rounded-full mr-1 animate-pulse"></div>
-                      <span>Powered by CourtIQ™</span>
-                    </div>
-                    
-                    {/* Player info */}
-                    <div className="flex items-center mt-2">
-                      <div className="h-16 w-16 rounded-full bg-white p-0.5 mr-3 shadow-lg">
-                        <div className="h-full w-full rounded-full bg-gradient-to-r from-[#2196F3] to-[#03A9F4] flex items-center justify-center text-white font-bold text-xl">
-                          JS
-                        </div>
-                      </div>
-                      <div>
-                        <div className="font-bold text-xl">John Smith</div>
-                        <div className="flex items-center text-sm text-white/80 mt-0.5">
-                          <div className="font-medium bg-white/20 backdrop-blur-sm rounded-full px-2 py-0.5">
-                            3.5 Intermediate+
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Stats section */}
-                  <div className="p-4 sm:p-6">
-                    {/* XP Progress */}
-                    <div className="bg-gray-50 rounded-lg p-3 mb-4 border border-gray-100">
-                      <div className="flex justify-between items-center mb-1">
-                        <div className="font-bold text-gray-700">Level 5</div>
-                        <div className="text-[#FF5722] font-medium text-sm">520/1000 XP</div>
-                      </div>
-                      <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                        <div className="bg-gradient-to-r from-[#FF5722] to-[#FF9800] h-full rounded-full w-[52%]"></div>
-                      </div>
-                    </div>
-                    
-                    {/* CourtIQ metrics in a grid */}
-                    <div className="grid grid-cols-3 gap-3 mb-4">
-                      <div className="bg-[#FF5722]/10 border border-[#FF5722]/20 rounded-lg p-3 text-center">
-                        <div className="text-[#FF5722] font-bold text-lg mb-0.5">Lvl 5</div>
-                        <div className="text-xs text-gray-600">CourtIQ XP</div>
-                      </div>
-                      <div className="bg-[#2196F3]/10 border border-[#2196F3]/20 rounded-lg p-3 text-center">
-                        <div className="text-[#2196F3] font-bold text-lg mb-0.5">1,248</div>
-                        <div className="text-xs text-gray-600">CourtIQ Rating</div>
-                      </div>
-                      <div className="bg-[#673AB7]/10 border border-[#673AB7]/20 rounded-lg p-3 text-center">
-                        <div className="text-[#673AB7] font-bold text-lg mb-0.5">7th</div>
-                        <div className="text-xs text-gray-600">CourtIQ Rank</div>
-                      </div>
-                    </div>
-                    
-                    {/* Additional stats */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-[#4CAF50]/10 border border-[#4CAF50]/20 rounded-lg p-2 text-center">
-                        <div className="text-[#4CAF50] font-bold text-lg">3</div>
-                        <div className="text-xs text-gray-600">Tournaments</div>
-                      </div>
-                      <div className="bg-[#FF9800]/10 border border-[#FF9800]/20 rounded-lg p-2 text-center">
-                        <div className="text-[#FF9800] font-bold text-lg">24</div>
-                        <div className="text-xs text-gray-600">Matches Played</div>
-                      </div>
-                    </div>
-                    
-                    {/* Recent activity */}
-                    <div className="mt-4 flex items-center gap-2 bg-gradient-to-r from-[#2196F3]/5 to-[#03A9F4]/5 p-2 rounded-lg border border-[#2196F3]/10">
-                      <div className="bg-[#2196F3] rounded-full p-1 text-white">
-                        <Trophy size={16} />
-                      </div>
-                      <div className="text-xs text-gray-700">Won mixed doubles tournament at Willow Park</div>
-                      <div className="text-[10px] text-[#2196F3] ml-auto font-medium">+100 RP</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white/80 animate-bounce">
-            <ChevronDown size={24} />
-          </div>
-        </div>
-      </section>
+      {/* Enhanced Hero Section */}
+      <EnhancedHeroSection />
+      
+      {/* CourtIQ Explanation Section */}
+      <CourtIQExplanationSection />
+      
+      {/* Rating Systems Integration Section */}
+      <RatingSystemsIntegrationSection />
+      
+      {/* Enhanced Changelog Section */}
+      <EnhancedChangelogSection />
 
       {/* Features Section with enhanced card design */}
       <section id="features" className="py-16 sm:py-24 bg-gray-50 overflow-hidden">
