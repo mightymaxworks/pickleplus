@@ -39,6 +39,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import ProfileStatsTab from '@/components/profile/streamlined/tabs/ProfileStatsTab';
+import { EditableProfileHeader } from '@/components/profile/EditableProfileHeader';
 
 /**
  * Streamlined Profile Page
@@ -621,120 +622,17 @@ const StreamlinedProfilePage: FC = () => {
         </Button>
       </div>
     
-      {/* Hero Section with Profile Header */}
-      <Card className="w-full overflow-hidden relative mt-4">
-        {/* Banner/Background */}
-        <div className={`h-40 relative ${!user.bannerUrl ? "bg-gradient-to-r from-primary/80 via-primary/60 to-primary/40" : ""} flex items-end justify-end`}>
-          {user.bannerUrl ? (
-            <img 
-              src={user.bannerUrl} 
-              alt="Profile banner" 
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          ) : (
-            user.bannerPattern && user.bannerPattern !== 'none' ? (
-              <div className={`absolute inset-0 w-full h-full banner-pattern-${user.bannerPattern}`}></div>
-            ) : null
-          )}
-          
-          {/* Edit Banner Button (Only visible in edit mode) */}
-          {isEditMode && (
-            <div className="absolute inset-0 bg-black/20 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
-              <div className="bg-background/80 backdrop-blur-sm p-2 rounded-md shadow-lg">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="text-xs flex items-center gap-1"
-                  onClick={() => setEditingFields(prev => ({ ...prev, banner: true }))}
-                >
-                  <Edit2 className="h-3.5 w-3.5" />
-                  Change Banner
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Profile Content */}
-        <div className="px-6 pb-6 pt-14 relative">
-          {/* Profile Picture */}
-          <div className="absolute -top-12 left-6">
-            <div className="relative group">
-              <Avatar className="h-24 w-24 border-4 border-background">
-                {user.avatarUrl ? (
-                  <AvatarImage src={user.avatarUrl} alt={user.displayName || user.username} />
-                ) : null}
-                <AvatarFallback className="text-xl bg-primary text-primary-foreground">
-                  {user.avatarInitials || user.username.substring(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              
-              {/* Profile Completion Indicator */}
-              {user.profileCompletionPct !== undefined && user.profileCompletionPct < 100 && (
-                <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-0.5">
-                  <div className="relative w-6 h-6 bg-muted rounded-full flex items-center justify-center text-xs font-medium">
-                    <svg viewBox="0 0 100 100" className="absolute inset-0">
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="40"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="10"
-                        strokeDasharray={`${user.profileCompletionPct * 2.51} 251`}
-                        strokeLinecap="round"
-                        className="text-primary transform -rotate-90 origin-center"
-                      />
-                    </svg>
-                    <span>{user.profileCompletionPct}%</span>
-                  </div>
-                </div>
-              )}
-              
-              {/* Edit Avatar Button (Only visible in edit mode) */}
-              {isEditMode && (
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-full flex items-center justify-center">
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="text-white/90 text-xs"
-                    onClick={() => setEditingFields(prev => ({ ...prev, avatar: true }))}
-                  >
-                    <Edit2 className="h-5 w-5" />
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* User Info */}
-          <div className="ml-28 sm:flex sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-2xl font-bold truncate">
-                {user.displayName || user.username}
-              </h1>
-              <div className="flex items-center text-muted-foreground text-sm mt-1">
-                <MapPin className="h-3 w-3 mr-1" />
-                {user.location || 'No location set'}
-              </div>
-            </div>
-            
-            <div className="flex mt-2 sm:mt-0 gap-2">
-              {user.isFoundingMember && (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  <Medal className="h-3 w-3" />
-                  Founding Member
-                </Badge>
-              )}
-              {user.skillLevel && (
-                <Badge variant="outline" className="bg-primary/10">
-                  {user.skillLevel} Skill Level
-                </Badge>
-              )}
-            </div>
-          </div>
-        </div>
-      </Card>
+      {/* Hero Section with Enhanced Profile Header */}
+      <div className="mt-4">
+        {/* Import EditableProfileHeader instead of the inline implementation */}
+        <EditableProfileHeader
+          user={user}
+          tierInfo={{
+            name: 'Bronze', // Default tier if ranking not available
+            description: 'Ranking tier based on Court Points'
+          }}
+        />
+      </div>
       
       {/* Quick Stats Bar */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 my-4">
