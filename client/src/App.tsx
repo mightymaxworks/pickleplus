@@ -16,6 +16,7 @@ import EnhancedProfile from './pages/EnhancedProfile'
 import EnhancedProfilePage from './pages/EnhancedProfilePage'
 import ContextualEnhancedProfile from './pages/ContextualEnhancedProfile'
 import ProfileEdit from './pages/ProfileEdit'
+import StreamlinedProfilePage from './pages/StreamlinedProfilePage'
 import NotFound from './pages/not-found'
 
 import { useAuth } from './hooks/useAuth'
@@ -94,6 +95,9 @@ export default function App() {
             </Route>
             <Route path="/profile/edit">
               {(params) => <ProtectedRoute component={ProfileEdit} path="/profile/edit" />}
+            </Route>
+            <Route path="/profile/streamlined">
+              {(params) => <ProtectedRoute component={StreamlinedProfilePage} path="/profile/streamlined" />}
             </Route>
             <Route path="/record-match">
               {(params) => <ProtectedRoute component={RecordMatchPage} path="/record-match" />}
