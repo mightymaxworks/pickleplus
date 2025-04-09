@@ -154,24 +154,30 @@ const ProfileStatsTab: FC<ProfileStatsTabProps> = ({ user, isEditMode }) => {
     return Math.round((values.reduce((a, b) => (a as number) + (b as number), 0) as number) / values.length * 10) / 10;
   };
   
-  // Handle slider changes
-  const handleSkillChange = (skill: string, value: number[]) => {
-    setSkillValues(prev => ({
-      ...prev,
-      [skill]: value[0]
-    }));
+  // Debounce function to avoid too many API calls
+  const debounce = (func: Function, delay: number) => {
+    let timeoutId: NodeJS.Timeout;
+    return (...args: any[]) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => func(...args), delay);
+    };
   };
   
-  // Save skill values
-  const saveSkills = async () => {
+  // Track if we've shown success toast recently to avoid too many toasts
+  const [showedSuccessToast, setShowedSuccessToast] = useState(false);
+
+  // Save skill values - we'll call this automatically after slider changes
+  const saveSkills = async (newValues?: any) => {
     try {
+      const valuesToSave = newValues || skillValues;
+      
       const response = await fetch('/api/profile/update', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify(skillValues),
+        body: JSON.stringify(valuesToSave),
       });
       
       if (!response.ok) throw new Error('Failed to update skills');
@@ -179,19 +185,47 @@ const ProfileStatsTab: FC<ProfileStatsTabProps> = ({ user, isEditMode }) => {
       // Invalidate the user query to refresh the data
       queryClient.invalidateQueries({ queryKey: ['/api/auth/current-user'] });
       
-      setEditingSkills(false);
-      
-      toast({
-        title: 'Skills updated',
-        description: 'Your CourtIQ™ skill profile has been updated successfully.',
-      });
+      // Show a subtle success toast the first time only
+      if (!showedSuccessToast) {
+        toast({
+          title: 'Changes saved',
+          description: 'Your skills are automatically saved as you adjust them',
+          duration: 3000,
+        });
+        
+        setShowedSuccessToast(true);
+        
+        // Reset the flag after 20 seconds so it can show again if they come back later
+        setTimeout(() => {
+          setShowedSuccessToast(false);
+        }, 20000);
+      }
     } catch (error) {
       console.error('Error updating skills:', error);
       toast({
-        title: 'Error updating skills',
-        description: 'There was an error updating your skills. Please try again.',
+        title: 'Error saving changes',
+        description: 'Your changes couldn\'t be saved. Please try again.',
         variant: 'destructive',
       });
+    }
+  };
+  
+  // Create a debounced version of saveSkills that waits 800ms after slider stops moving
+  const debouncedSaveSkills = debounce(saveSkills, 800);
+  
+  // Handle slider changes - now with auto-save
+  const handleSkillChange = (skill: string, value: number[]) => {
+    const newValues = {
+      ...skillValues,
+      [skill]: value[0]
+    };
+    
+    // Update local state immediately
+    setSkillValues(newValues);
+    
+    // Save changes automatically after short delay
+    if (isEditMode) {
+      debouncedSaveSkills(newValues);
     }
   };
   
@@ -206,17 +240,24 @@ const ProfileStatsTab: FC<ProfileStatsTabProps> = ({ user, isEditMode }) => {
               CourtIQ™ Skill Profile
             </CardTitle>
             
-            {/* Only show Save/Cancel buttons when in edit mode */}
+            {/* Auto-saving is enabled, no need for a save button */}
             {isEditMode && (
-              <div className="flex gap-2">
-                <Button 
-                  size="sm" 
-                  className="text-xs flex items-center gap-1"
-                  onClick={saveSkills}
-                >
-                  <Save className="h-3.5 w-3.5" />
-                  Save Skills
-                </Button>
+              <div className="text-xs text-muted-foreground flex items-center">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-1">
+                        <span>Auto-saving</span>
+                        <Save className="h-3.5 w-3.5 text-muted-foreground" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs max-w-[200px]">
+                        Changes are saved automatically as you adjust the sliders
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             )}
           </div>
