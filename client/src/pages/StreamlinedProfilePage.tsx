@@ -25,7 +25,7 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { queryClient } from '@/lib/queryClient';
 import { EnhancedUser } from '@/types/enhanced-user';
-import { PicklePlusLogo } from '@/components/icons/PicklePlusLogo';
+import { AppHeader } from '@/components/layout/AppHeader';
 import {
   Select,
   SelectContent,
@@ -256,103 +256,29 @@ const StreamlinedProfilePage: FC = () => {
 
   return (
     <div className="container px-4 pb-16 max-w-screen-xl mx-auto">
-      {/* Sticky Header/Navigation */}
-      <div className="sticky top-0 z-20 bg-white py-3 border-b shadow-sm">
-        <div className="container mx-auto px-4 flex justify-between items-center">
-          {/* Logo on the left */}
-          <div 
-            className="flex items-center cursor-pointer" 
-            onClick={() => navigate("/dashboard")}
-          >
-            <PicklePlusLogo className="h-8" />
-          </div>
-          
-          {/* Right side with notification and user menu */}
-          <div className="flex items-center">
-            {/* Notification Bell */}
-            <div className="relative mr-4 cursor-pointer">
-              <Bell className="h-5 w-5 text-gray-500" />
-              <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
-                3
-              </span>
-            </div>
-            
-            {/* Edit Profile Button (Only visible on profile page) */}
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="mr-3 bg-background/80 backdrop-blur-sm hidden md:flex"
-              onClick={() => setIsEditMode(!isEditMode)}
-            >
-              {isEditMode ? (
-                <>
-                  <X className="h-4 w-4 mr-2" />
-                  Exit Edit
-                </>
-              ) : (
-                <>
-                  <Edit2 className="h-4 w-4 mr-2" />
-                  Edit Profile
-                </>
-              )}
-            </Button>
-            
-            {/* User Avatar and Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <div className="flex items-center cursor-pointer">
-                  <Avatar className="h-10 w-10 bg-blue-500 text-white">
-                    {user.avatarUrl ? (
-                      <AvatarImage src={user.avatarUrl} alt={user.displayName || user.username} />
-                    ) : null}
-                    <AvatarFallback className="bg-blue-500 text-white text-sm">
-                      {user.avatarInitials || user.username.substring(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  {/* Mobile menu button */}
-                  <div className="ml-2 md:hidden">
-                    <Button variant="ghost" size="icon">
-                      <Menu className="h-5 w-5" />
-                    </Button>
-                  </div>
-                </div>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={() => navigate("/profile")}>
-                  <User className="mr-2 h-4 w-4" />
-                  Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/dashboard")}>
-                  <Home className="mr-2 h-4 w-4" />
-                  Dashboard
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/matches")}>
-                  <Activity className="mr-2 h-4 w-4" />
-                  Matches
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/leaderboard")}>
-                  <Trophy className="mr-2 h-4 w-4" />
-                  Leaderboard
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/settings")}>
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </DropdownMenuItem>
-                {user.isAdmin && (
-                  <DropdownMenuItem onClick={() => navigate("/admin/dashboard")}>
-                    <Shield className="mr-2 h-4 w-4" />
-                    Admin Panel
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate("/auth/logout")}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
+      {/* Standardized Header using AppHeader component */}
+      <AppHeader />
+      
+      {/* Edit Profile Button (Only visible on profile page) - Floating button */}
+      <div className="fixed bottom-6 right-6 z-20 md:static md:mt-4 md:mb-2 md:float-right">
+        <Button 
+          variant={isEditMode ? "destructive" : "default"}
+          size="sm" 
+          className="shadow-lg md:shadow-none"
+          onClick={() => setIsEditMode(!isEditMode)}
+        >
+          {isEditMode ? (
+            <>
+              <X className="h-4 w-4 mr-2" />
+              Exit Edit
+            </>
+          ) : (
+            <>
+              <Edit2 className="h-4 w-4 mr-2" />
+              Edit Profile
+            </>
+          )}
+        </Button>
       </div>
       
       {/* Hero Section with Profile Header */}
@@ -622,7 +548,7 @@ const StreamlinedProfilePage: FC = () => {
                           }
                         }}
                       >
-                        <p>{user.playingStyle || 'Not specified'}</p>
+                        <p className="capitalize">{user.playingStyle || 'Not specified'}</p>
                         {isEditMode && (
                           <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
                         )}
@@ -677,10 +603,11 @@ const StreamlinedProfilePage: FC = () => {
                   )}
                 </div>
                 
+                {/* Physical Attributes Section */}
                 <div className="mt-6">
                   <h3 className="text-lg font-semibold mb-4">Physical Attributes</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {/* Height */}
+                    {/* Height Field */}
                     <div>
                       <h4 className="text-sm font-medium text-muted-foreground mb-2">Height (cm)</h4>
                       {isEditMode && editingFields.height ? (
@@ -694,7 +621,7 @@ const StreamlinedProfilePage: FC = () => {
                           <div className="flex justify-end gap-2">
                             <Button 
                               variant="outline" 
-                              size="sm" 
+                              size="sm"
                               onClick={() => {
                                 setHeightField(user.height?.toString() || '');
                                 setEditingFields(prev => ({ ...prev, height: false }));
@@ -703,8 +630,8 @@ const StreamlinedProfilePage: FC = () => {
                               <X className="h-4 w-4 mr-1" /> Cancel
                             </Button>
                             <Button 
-                              size="sm" 
-                              onClick={() => saveProfileField('height', heightField)}
+                              size="sm"
+                              onClick={() => saveProfileField('height', heightField ? parseInt(heightField) : null)}
                             >
                               <Check className="h-4 w-4 mr-1" /> Save
                             </Button>
@@ -726,109 +653,6 @@ const StreamlinedProfilePage: FC = () => {
                         </div>
                       )}
                     </div>
-                    
-                    {/* Reach */}
-                    <div>
-                      <h4 className="text-sm font-medium text-muted-foreground mb-2">Reach (cm)</h4>
-                      {isEditMode && editingFields.reach ? (
-                        <div className="space-y-2">
-                          <Input 
-                            type="number"
-                            value={reachField}
-                            onChange={(e) => setReachField(e.target.value)}
-                            placeholder="Your arm reach in cm"
-                          />
-                          <div className="flex justify-end gap-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => {
-                                setReachField(user.reach?.toString() || '');
-                                setEditingFields(prev => ({ ...prev, reach: false }));
-                              }}
-                            >
-                              <X className="h-4 w-4 mr-1" /> Cancel
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              onClick={() => saveProfileField('reach', reachField)}
-                            >
-                              <Check className="h-4 w-4 mr-1" /> Save
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div 
-                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
-                          onClick={() => {
-                            if (isEditMode) {
-                              setEditingFields(prev => ({ ...prev, reach: true }));
-                            }
-                          }}
-                        >
-                          <p>{user.reach || 'Not specified'}</p>
-                          {isEditMode && (
-                            <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Preferred Position */}
-                    <div>
-                      <h4 className="text-sm font-medium text-muted-foreground mb-2">Preferred Position</h4>
-                      {isEditMode && editingFields.preferredPosition ? (
-                        <div className="space-y-2">
-                          <Select 
-                            value={preferredPositionField} 
-                            onValueChange={(value) => setPreferredPositionField(value)}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select your preferred court position" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {positionOptions.map(option => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <div className="flex justify-end gap-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => {
-                                setPreferredPositionField(user.preferredPosition || '');
-                                setEditingFields(prev => ({ ...prev, preferredPosition: false }));
-                              }}
-                            >
-                              <X className="h-4 w-4 mr-1" /> Cancel
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              onClick={() => saveProfileField('preferredPosition', preferredPositionField)}
-                            >
-                              <Check className="h-4 w-4 mr-1" /> Save
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div 
-                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
-                          onClick={() => {
-                            if (isEditMode) {
-                              setEditingFields(prev => ({ ...prev, preferredPosition: true }));
-                            }
-                          }}
-                        >
-                          <p>{user.preferredPosition || 'Not specified'}</p>
-                          {isEditMode && (
-                            <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
-                          )}
-                        </div>
-                      )}
-                    </div>
                   </div>
                 </div>
               </div>
@@ -837,625 +661,145 @@ const StreamlinedProfilePage: FC = () => {
           
           <TabsContent value="stats" className="mt-0">
             <Card className="p-6">
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">Player Statistics</h3>
-                  {isEditMode && (
-                    <p className="text-xs text-muted-foreground">Click on any field to edit</p>
+              <h3 className="text-lg font-semibold mb-4">Stats & Ratings</h3>
+              <p className="text-muted-foreground">View and update your skill level and player ratings.</p>
+              
+              {/* Skill Level */}
+              <div className="mt-6">
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="text-sm font-medium text-muted-foreground">Skill Level</h4>
+                  {user.skillLevel && (
+                    <Badge variant="outline" className="bg-primary/10">
+                      {user.skillLevel}
+                    </Badge>
                   )}
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="text-sm font-medium mb-2">CourtIQ™ Rating</h4>
-                    <div className="text-3xl font-bold">{user.rankingPoints || 0}</div>
+                {isEditMode && editingFields.skillLevel ? (
+                  <div className="space-y-2">
+                    <Select
+                      value={skillLevelField}
+                      onValueChange={(value) => setSkillLevelField(value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your skill level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {skillLevelOptions.map(option => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <div className="flex justify-end gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setSkillLevelField(user.skillLevel || '');
+                          setEditingFields(prev => ({ ...prev, skillLevel: false }));
+                        }}
+                      >
+                        <X className="h-4 w-4 mr-1" /> Cancel
+                      </Button>
+                      <Button 
+                        size="sm"
+                        onClick={() => saveProfileField('skillLevel', skillLevelField)}
+                      >
+                        <Check className="h-4 w-4 mr-1" /> Save
+                      </Button>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-medium mb-2">Win Rate</h4>
-                    <div className="text-3xl font-bold">{user.totalMatches && user.matchesWon ? Math.round((user.matchesWon / user.totalMatches) * 100) : 0}%</div>
-                  </div>
-                </div>
-                
-                <div className="mt-8">
-                  <h3 className="text-lg font-semibold mb-4">Performance Metrics</h3>
-                  <div className="space-y-6">
-                    {/* Skill Level */}
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-medium text-muted-foreground">Skill Level</h4>
-                        <Badge>{user.skillLevel || 'Not set'}</Badge>
-                      </div>
-                      
-                      {isEditMode && editingFields.skillLevel ? (
-                        <div className="space-y-2">
-                          <Select 
-                            value={skillLevelField} 
-                            onValueChange={(value) => setSkillLevelField(value)}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select your skill level" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {skillLevelOptions.map(option => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          
-                          <div className="flex justify-end gap-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => {
-                                setSkillLevelField(user.skillLevel || '');
-                                setEditingFields(prev => ({ ...prev, skillLevel: false }));
-                              }}
-                            >
-                              <X className="h-4 w-4 mr-1" /> Cancel
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              onClick={() => saveProfileField('skillLevel', skillLevelField)}
-                            >
-                              <Check className="h-4 w-4 mr-1" /> Save
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div 
-                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
-                          onClick={() => {
-                            if (isEditMode) {
-                              setEditingFields(prev => ({ ...prev, skillLevel: true }));
-                            }
-                          }}
-                        >
-                          <Progress value={user.skillLevel ? (parseFloat(user.skillLevel) / 7) * 100 : 0} className="h-2" />
-                          {isEditMode && (
-                            <Edit2 className="h-4 w-4 absolute top-0 right-2 text-muted-foreground" />
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Forehand Strength */}
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-medium text-muted-foreground">Forehand Strength</h4>
-                      </div>
-                      
-                      {isEditMode && editingFields.forehandStrength ? (
-                        <div className="space-y-2">
-                          <Slider
-                            value={[forehandStrengthField || 0]}
-                            min={0}
-                            max={10}
-                            step={1}
-                            onValueChange={(values) => setForehandStrengthField(values[0])}
-                          />
-                          <div className="text-center text-sm text-muted-foreground">
-                            {forehandStrengthField || 0}/10
-                          </div>
-                          
-                          <div className="flex justify-end gap-2 mt-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => {
-                                setForehandStrengthField(user.forehandStrength || 0);
-                                setEditingFields(prev => ({ ...prev, forehandStrength: false }));
-                              }}
-                            >
-                              <X className="h-4 w-4 mr-1" /> Cancel
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              onClick={() => saveProfileField('forehandStrength', forehandStrengthField.toString())}
-                            >
-                              <Check className="h-4 w-4 mr-1" /> Save
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div 
-                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
-                          onClick={() => {
-                            if (isEditMode) {
-                              setEditingFields(prev => ({ ...prev, forehandStrength: true }));
-                            }
-                          }}
-                        >
-                          <Progress value={user.forehandStrength ? (user.forehandStrength / 10) * 100 : 0} className="h-2" />
-                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                            <span>Rating: {user.forehandStrength || 'Not rated'}/10</span>
-                          </div>
-                          {isEditMode && (
-                            <Edit2 className="h-4 w-4 absolute top-0 right-2 text-muted-foreground" />
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Backhand Strength */}
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-medium text-muted-foreground">Backhand Strength</h4>
-                      </div>
-                      
-                      {isEditMode && editingFields.backhandStrength ? (
-                        <div className="space-y-2">
-                          <Slider
-                            value={[backhandStrengthField || 0]}
-                            min={0}
-                            max={10}
-                            step={1}
-                            onValueChange={(values) => setBackhandStrengthField(values[0])}
-                          />
-                          <div className="text-center text-sm text-muted-foreground">
-                            {backhandStrengthField || 0}/10
-                          </div>
-                          
-                          <div className="flex justify-end gap-2 mt-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => {
-                                setBackhandStrengthField(user.backhandStrength || 0);
-                                setEditingFields(prev => ({ ...prev, backhandStrength: false }));
-                              }}
-                            >
-                              <X className="h-4 w-4 mr-1" /> Cancel
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              onClick={() => saveProfileField('backhandStrength', backhandStrengthField.toString())}
-                            >
-                              <Check className="h-4 w-4 mr-1" /> Save
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div 
-                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
-                          onClick={() => {
-                            if (isEditMode) {
-                              setEditingFields(prev => ({ ...prev, backhandStrength: true }));
-                            }
-                          }}
-                        >
-                          <Progress value={user.backhandStrength ? (user.backhandStrength / 10) * 100 : 0} className="h-2" />
-                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                            <span>Rating: {user.backhandStrength || 'Not rated'}/10</span>
-                          </div>
-                          {isEditMode && (
-                            <Edit2 className="h-4 w-4 absolute top-0 right-2 text-muted-foreground" />
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Serve Power */}
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-medium text-muted-foreground">Serve Power</h4>
-                      </div>
-                      
-                      {isEditMode && editingFields.servePower ? (
-                        <div className="space-y-2">
-                          <Slider
-                            value={[servePowerField || 0]}
-                            min={0}
-                            max={10}
-                            step={1}
-                            onValueChange={(values) => setServePowerField(values[0])}
-                          />
-                          <div className="text-center text-sm text-muted-foreground">
-                            {servePowerField || 0}/10
-                          </div>
-                          
-                          <div className="flex justify-end gap-2 mt-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => {
-                                setServePowerField(user.servePower || 0);
-                                setEditingFields(prev => ({ ...prev, servePower: false }));
-                              }}
-                            >
-                              <X className="h-4 w-4 mr-1" /> Cancel
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              onClick={() => saveProfileField('servePower', servePowerField.toString())}
-                            >
-                              <Check className="h-4 w-4 mr-1" /> Save
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div 
-                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
-                          onClick={() => {
-                            if (isEditMode) {
-                              setEditingFields(prev => ({ ...prev, servePower: true }));
-                            }
-                          }}
-                        >
-                          <Progress value={user.servePower ? (user.servePower / 10) * 100 : 0} className="h-2" />
-                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                            <span>Rating: {user.servePower || 'Not rated'}/10</span>
-                          </div>
-                          {isEditMode && (
-                            <Edit2 className="h-4 w-4 absolute top-0 right-2 text-muted-foreground" />
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Dink Accuracy */}
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-medium text-muted-foreground">Dink Accuracy</h4>
-                      </div>
-                      
-                      {isEditMode && editingFields.dinkAccuracy ? (
-                        <div className="space-y-2">
-                          <Slider
-                            value={[dinkAccuracyField || 0]}
-                            min={0}
-                            max={10}
-                            step={1}
-                            onValueChange={(values) => setDinkAccuracyField(values[0])}
-                          />
-                          <div className="text-center text-sm text-muted-foreground">
-                            {dinkAccuracyField || 0}/10
-                          </div>
-                          
-                          <div className="flex justify-end gap-2 mt-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => {
-                                setDinkAccuracyField(user.dinkAccuracy || 0);
-                                setEditingFields(prev => ({ ...prev, dinkAccuracy: false }));
-                              }}
-                            >
-                              <X className="h-4 w-4 mr-1" /> Cancel
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              onClick={() => saveProfileField('dinkAccuracy', dinkAccuracyField.toString())}
-                            >
-                              <Check className="h-4 w-4 mr-1" /> Save
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div 
-                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
-                          onClick={() => {
-                            if (isEditMode) {
-                              setEditingFields(prev => ({ ...prev, dinkAccuracy: true }));
-                            }
-                          }}
-                        >
-                          <Progress value={user.dinkAccuracy ? (user.dinkAccuracy / 10) * 100 : 0} className="h-2" />
-                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                            <span>Rating: {user.dinkAccuracy || 'Not rated'}/10</span>
-                          </div>
-                          {isEditMode && (
-                            <Edit2 className="h-4 w-4 absolute top-0 right-2 text-muted-foreground" />
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Third Shot Consistency */}
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-medium text-muted-foreground">Third Shot Consistency</h4>
-                      </div>
-                      
-                      {isEditMode && editingFields.thirdShotConsistency ? (
-                        <div className="space-y-2">
-                          <Slider
-                            value={[thirdShotConsistencyField || 0]}
-                            min={0}
-                            max={10}
-                            step={1}
-                            onValueChange={(values) => setThirdShotConsistencyField(values[0])}
-                          />
-                          <div className="text-center text-sm text-muted-foreground">
-                            {thirdShotConsistencyField || 0}/10
-                          </div>
-                          
-                          <div className="flex justify-end gap-2 mt-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => {
-                                setThirdShotConsistencyField(user.thirdShotConsistency || 0);
-                                setEditingFields(prev => ({ ...prev, thirdShotConsistency: false }));
-                              }}
-                            >
-                              <X className="h-4 w-4 mr-1" /> Cancel
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              onClick={() => saveProfileField('thirdShotConsistency', thirdShotConsistencyField.toString())}
-                            >
-                              <Check className="h-4 w-4 mr-1" /> Save
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div 
-                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
-                          onClick={() => {
-                            if (isEditMode) {
-                              setEditingFields(prev => ({ ...prev, thirdShotConsistency: true }));
-                            }
-                          }}
-                        >
-                          <Progress value={user.thirdShotConsistency ? (user.thirdShotConsistency / 10) * 100 : 0} className="h-2" />
-                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                            <span>Rating: {user.thirdShotConsistency || 'Not rated'}/10</span>
-                          </div>
-                          {isEditMode && (
-                            <Edit2 className="h-4 w-4 absolute top-0 right-2 text-muted-foreground" />
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Court Coverage */}
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-medium text-muted-foreground">Court Coverage</h4>
-                      </div>
-                      
-                      {isEditMode && editingFields.courtCoverage ? (
-                        <div className="space-y-2">
-                          <Slider
-                            value={[courtCoverageField || 0]}
-                            min={0}
-                            max={10}
-                            step={1}
-                            onValueChange={(values) => setCourtCoverageField(values[0])}
-                          />
-                          <div className="text-center text-sm text-muted-foreground">
-                            {courtCoverageField || 0}/10
-                          </div>
-                          
-                          <div className="flex justify-end gap-2 mt-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => {
-                                setCourtCoverageField(user.courtCoverage || 0);
-                                setEditingFields(prev => ({ ...prev, courtCoverage: false }));
-                              }}
-                            >
-                              <X className="h-4 w-4 mr-1" /> Cancel
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              onClick={() => saveProfileField('courtCoverage', courtCoverageField.toString())}
-                            >
-                              <Check className="h-4 w-4 mr-1" /> Save
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div 
-                          className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
-                          onClick={() => {
-                            if (isEditMode) {
-                              setEditingFields(prev => ({ ...prev, courtCoverage: true }));
-                            }
-                          }}
-                        >
-                          <Progress value={user.courtCoverage ? (user.courtCoverage / 10) * 100 : 0} className="h-2" />
-                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                            <span>Rating: {user.courtCoverage || 'Not rated'}/10</span>
-                          </div>
-                          {isEditMode && (
-                            <Edit2 className="h-4 w-4 absolute top-0 right-2 text-muted-foreground" />
-                          )}
-                        </div>
+                ) : (
+                  <div 
+                    className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                    onClick={() => {
+                      if (isEditMode) {
+                        setEditingFields(prev => ({ ...prev, skillLevel: true }));
+                      }
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <p>{user.skillLevel ? `${user.skillLevel} Skill Level` : 'Not specified'}</p>
+                      {isEditMode && (
+                        <Edit2 className="h-4 w-4 text-muted-foreground" />
                       )}
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             </Card>
           </TabsContent>
           
           <TabsContent value="equipment" className="mt-0">
             <Card className="p-6">
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">Equipment Details</h3>
+                  <h3 className="text-lg font-semibold">Equipment</h3>
                   {isEditMode && (
                     <p className="text-xs text-muted-foreground">Click on any field to edit</p>
                   )}
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-2">Primary Paddle</h4>
-                    {isEditMode && editingFields.paddleBrand ? (
+
+                {/* Primary Paddle */}
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Primary Paddle</h4>
+                  {isEditMode && (editingFields.paddleBrand || editingFields.paddleModel) ? (
+                    <div className="space-y-4">
                       <div className="space-y-2">
-                        <div className="grid grid-cols-1 gap-2">
-                          <Select 
-                            value={paddleBrandField} 
-                            onValueChange={(value) => setPaddleBrandField(value)}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select paddle brand" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {paddleBrandOptions.map(option => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          
-                          <Input 
-                            type="text"
-                            value={paddleModelField}
-                            onChange={(e) => setPaddleModelField(e.target.value)}
-                            placeholder="Paddle model (e.g., Genesis Pro Ai)"
-                          />
-                        </div>
-                        
-                        <div className="flex justify-end gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => {
-                              setPaddleBrandField(user.paddleBrand || '');
-                              setPaddleModelField(user.paddleModel || '');
-                              setEditingFields(prev => ({ ...prev, paddleBrand: false }));
-                            }}
-                          >
-                            <X className="h-4 w-4 mr-1" /> Cancel
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            onClick={async () => {
-                              await saveProfileField('paddleBrand', paddleBrandField);
+                        <Label htmlFor="paddleBrand">Brand</Label>
+                        <Select
+                          value={paddleBrandField}
+                          onValueChange={(value) => setPaddleBrandField(value)}
+                        >
+                          <SelectTrigger id="paddleBrand">
+                            <SelectValue placeholder="Select paddle brand" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {paddleBrandOptions.map(option => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="paddleModel">Model</Label>
+                        <Input
+                          id="paddleModel"
+                          value={paddleModelField}
+                          onChange={(e) => setPaddleModelField(e.target.value)}
+                          placeholder="e.g., Pro X, Carbon Elite, etc."
+                        />
+                      </div>
+                      
+                      <div className="flex justify-end gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            setPaddleBrandField(user.paddleBrand || '');
+                            setPaddleModelField(user.paddleModel || '');
+                            setEditingFields(prev => ({ 
+                              ...prev, 
+                              paddleBrand: false,
+                              paddleModel: false 
+                            }));
+                          }}
+                        >
+                          <X className="h-4 w-4 mr-1" /> Cancel
+                        </Button>
+                        <Button 
+                          size="sm"
+                          onClick={async () => {
+                            const brandSaved = await saveProfileField('paddleBrand', paddleBrandField);
+                            if (brandSaved) {
                               await saveProfileField('paddleModel', paddleModelField);
-                            }}
-                          >
-                            <Check className="h-4 w-4 mr-1" /> Save
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div 
-                        className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
-                        onClick={() => {
-                          if (isEditMode) {
-                            setEditingFields(prev => ({ ...prev, paddleBrand: true }));
-                          }
-                        }}
-                      >
-                        <p>{user.paddleBrand ? `${user.paddleBrand} ${user.paddleModel || ''}` : 'Not specified'}</p>
-                        {isEditMode && (
-                          <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-2">Backup Paddle</h4>
-                    {isEditMode && editingFields.backupPaddleBrand ? (
-                      <div className="space-y-2">
-                        <div className="grid grid-cols-1 gap-2">
-                          <Select 
-                            value={backupPaddleBrandField} 
-                            onValueChange={(value) => setBackupPaddleBrandField(value)}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select backup paddle brand" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {paddleBrandOptions.map(option => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          
-                          <Input 
-                            type="text"
-                            value={backupPaddleModelField}
-                            onChange={(e) => setBackupPaddleModelField(e.target.value)}
-                            placeholder="Backup paddle model"
-                          />
-                        </div>
-                        
-                        <div className="flex justify-end gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => {
-                              setBackupPaddleBrandField(user.backupPaddleBrand || '');
-                              setBackupPaddleModelField(user.backupPaddleModel || '');
-                              setEditingFields(prev => ({ ...prev, backupPaddleBrand: false }));
-                            }}
-                          >
-                            <X className="h-4 w-4 mr-1" /> Cancel
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            onClick={async () => {
-                              await saveProfileField('backupPaddleBrand', backupPaddleBrandField);
-                              await saveProfileField('backupPaddleModel', backupPaddleModelField);
-                            }}
-                          >
-                            <Check className="h-4 w-4 mr-1" /> Save
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div 
-                        className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
-                        onClick={() => {
-                          if (isEditMode) {
-                            setEditingFields(prev => ({ ...prev, backupPaddleBrand: true }));
-                          }
-                        }}
-                      >
-                        <p>{user.backupPaddleBrand ? `${user.backupPaddleBrand} ${user.backupPaddleModel || ''}` : 'Not specified'}</p>
-                        {isEditMode && (
-                          <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="mt-4">
-                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Apparel Brand</h4>
-                  {isEditMode && editingFields.apparelBrand ? (
-                    <div className="space-y-2">
-                      <Select 
-                        value={apparelBrandField} 
-                        onValueChange={(value) => setApparelBrandField(value)}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select your apparel brand" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {apparelBrandOptions.map(option => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <div className="flex justify-end gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => {
-                            setApparelBrandField(user.apparelBrand || '');
-                            setEditingFields(prev => ({ ...prev, apparelBrand: false }));
+                            }
                           }}
-                        >
-                          <X className="h-4 w-4 mr-1" /> Cancel
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          onClick={() => saveProfileField('apparelBrand', apparelBrandField)}
                         >
                           <Check className="h-4 w-4 mr-1" /> Save
                         </Button>
@@ -1466,108 +810,22 @@ const StreamlinedProfilePage: FC = () => {
                       className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
                       onClick={() => {
                         if (isEditMode) {
-                          setEditingFields(prev => ({ ...prev, apparelBrand: true }));
+                          setEditingFields(prev => ({ 
+                            ...prev, 
+                            paddleBrand: true,
+                            paddleModel: true 
+                          }));
                         }
                       }}
                     >
-                      <p>{user.apparelBrand || 'Not specified'}</p>
-                      {isEditMode && (
-                        <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
+                      {user.paddleBrand || user.paddleModel ? (
+                        <div>
+                          <div className="text-sm font-medium">{user.paddleBrand || 'Unknown Brand'}</div>
+                          <div className="text-muted-foreground">{user.paddleModel || 'Unknown Model'}</div>
+                        </div>
+                      ) : (
+                        <p className="text-muted-foreground">No paddle information</p>
                       )}
-                    </div>
-                  )}
-                  
-                  <h4 className="text-sm font-medium text-muted-foreground mb-2 mt-4">Shoes Brand</h4>
-                  {isEditMode && editingFields.shoesBrand ? (
-                    <div className="space-y-2">
-                      <Select 
-                        value={shoesBrandField} 
-                        onValueChange={(value) => setShoesBrandField(value)}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select your shoes brand" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {shoesBrandOptions.map(option => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <div className="flex justify-end gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => {
-                            setShoesBrandField(user.shoesBrand || '');
-                            setEditingFields(prev => ({ ...prev, shoesBrand: false }));
-                          }}
-                        >
-                          <X className="h-4 w-4 mr-1" /> Cancel
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          onClick={() => saveProfileField('shoesBrand', shoesBrandField)}
-                        >
-                          <Check className="h-4 w-4 mr-1" /> Save
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div 
-                      className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
-                      onClick={() => {
-                        if (isEditMode) {
-                          setEditingFields(prev => ({ ...prev, shoesBrand: true }));
-                        }
-                      }}
-                    >
-                      <p>{user.shoesBrand || 'Not specified'}</p>
-                      {isEditMode && (
-                        <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
-                      )}
-                    </div>
-                  )}
-                  
-                  <h4 className="text-sm font-medium text-muted-foreground mb-2 mt-4">Other Equipment</h4>
-                  {isEditMode && editingFields.otherEquipment ? (
-                    <div className="space-y-2">
-                      <Textarea 
-                        value={otherEquipmentField}
-                        onChange={(e) => setOtherEquipmentField(e.target.value)}
-                        placeholder="List any other equipment you use (bags, accessories, etc.)"
-                        className="min-h-[80px]"
-                      />
-                      <div className="flex justify-end gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => {
-                            setOtherEquipmentField(user.otherEquipment || '');
-                            setEditingFields(prev => ({ ...prev, otherEquipment: false }));
-                          }}
-                        >
-                          <X className="h-4 w-4 mr-1" /> Cancel
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          onClick={() => saveProfileField('otherEquipment', otherEquipmentField)}
-                        >
-                          <Check className="h-4 w-4 mr-1" /> Save
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div 
-                      className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
-                      onClick={() => {
-                        if (isEditMode) {
-                          setEditingFields(prev => ({ ...prev, otherEquipment: true }));
-                        }
-                      }}
-                    >
-                      <p>{user.otherEquipment || 'Not specified'}</p>
                       {isEditMode && (
                         <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
                       )}
@@ -1577,10 +835,10 @@ const StreamlinedProfilePage: FC = () => {
               </div>
             </Card>
           </TabsContent>
-          
+      
           <TabsContent value="preferences" className="mt-0">
             <Card className="p-6">
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold">Play Preferences</h3>
                   {isEditMode && (
@@ -1588,220 +846,66 @@ const StreamlinedProfilePage: FC = () => {
                   )}
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-2">Format Preference</h4>
-                    {isEditMode && editingFields.preferredFormat ? (
-                      <div className="space-y-2">
-                        <Select 
-                          value={preferredFormatField} 
-                          onValueChange={(value) => setPreferredFormatField(value)}
+                {/* Preferred Format */}
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Preferred Format</h4>
+                  {isEditMode && editingFields.preferredFormat ? (
+                    <div className="space-y-2">
+                      <Select 
+                        value={preferredFormatField} 
+                        onValueChange={(value) => setPreferredFormatField(value)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select your preferred format" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {formatOptions.map(option => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <div className="flex justify-end gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => {
+                            setPreferredFormatField(user.preferredFormat || '');
+                            setEditingFields(prev => ({ ...prev, preferredFormat: false }));
+                          }}
                         >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select preferred format" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {formatOptions.map(option => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        
-                        <div className="flex justify-end gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => {
-                              setPreferredFormatField(user.preferredFormat || '');
-                              setEditingFields(prev => ({ ...prev, preferredFormat: false }));
-                            }}
-                          >
-                            <X className="h-4 w-4 mr-1" /> Cancel
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            onClick={() => saveProfileField('preferredFormat', preferredFormatField)}
-                          >
-                            <Check className="h-4 w-4 mr-1" /> Save
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div 
-                        className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
-                        onClick={() => {
-                          if (isEditMode) {
-                            setEditingFields(prev => ({ ...prev, preferredFormat: true }));
-                          }
-                        }}
-                      >
-                        <p>{user.preferredFormat || 'Not specified'}</p>
-                        {isEditMode && (
-                          <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-2">Dominant Hand</h4>
-                    {isEditMode && editingFields.dominantHand ? (
-                      <div className="space-y-2">
-                        <Select 
-                          value={dominantHandField} 
-                          onValueChange={(value) => setDominantHandField(value)}
+                          <X className="h-4 w-4 mr-1" /> Cancel
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          onClick={() => saveProfileField('preferredFormat', preferredFormatField)}
                         >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select dominant hand" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {handOptions.map(option => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        
-                        <div className="flex justify-end gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => {
-                              setDominantHandField(user.dominantHand || '');
-                              setEditingFields(prev => ({ ...prev, dominantHand: false }));
-                            }}
-                          >
-                            <X className="h-4 w-4 mr-1" /> Cancel
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            onClick={() => saveProfileField('dominantHand', dominantHandField)}
-                          >
-                            <Check className="h-4 w-4 mr-1" /> Save
-                          </Button>
-                        </div>
+                          <Check className="h-4 w-4 mr-1" /> Save
+                        </Button>
                       </div>
-                    ) : (
-                      <div 
-                        className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
-                        onClick={() => {
-                          if (isEditMode) {
-                            setEditingFields(prev => ({ ...prev, dominantHand: true }));
-                          }
-                        }}
-                      >
-                        <p>{user.dominantHand || 'Not specified'}</p>
-                        {isEditMode && (
-                          <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-2">Looking for Partners</h4>
-                    {isEditMode && editingFields.lookingForPartners ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            id="looking-for-partners"
-                            checked={lookingForPartnersField}
-                            onCheckedChange={setLookingForPartnersField}
-                          />
-                          <Label htmlFor="looking-for-partners">
-                            {lookingForPartnersField ? 'Yes, I\'m looking for partners' : 'No, not looking for partners'}
-                          </Label>
-                        </div>
-                        
-                        <div className="flex justify-end gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => {
-                              setLookingForPartnersField(user.lookingForPartners || false);
-                              setEditingFields(prev => ({ ...prev, lookingForPartners: false }));
-                            }}
-                          >
-                            <X className="h-4 w-4 mr-1" /> Cancel
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            onClick={() => saveProfileField('lookingForPartners', lookingForPartnersField)}
-                          >
-                            <Check className="h-4 w-4 mr-1" /> Save
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div 
-                        className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
-                        onClick={() => {
-                          if (isEditMode) {
-                            setEditingFields(prev => ({ ...prev, lookingForPartners: true }));
-                          }
-                        }}
-                      >
-                        <p>{user.lookingForPartners ? 'Yes' : 'No'}</p>
-                        {isEditMode && (
-                          <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-2">Mentorship Interest</h4>
-                    {isEditMode && editingFields.mentorshipInterest ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            id="mentorship-interest"
-                            checked={mentorshipInterestField}
-                            onCheckedChange={setMentorshipInterestField}
-                          />
-                          <Label htmlFor="mentorship-interest">
-                            {mentorshipInterestField ? 'Yes, interested in mentorship' : 'No, not interested in mentorship'}
-                          </Label>
-                        </div>
-                        
-                        <div className="flex justify-end gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => {
-                              setMentorshipInterestField(user.mentorshipInterest || false);
-                              setEditingFields(prev => ({ ...prev, mentorshipInterest: false }));
-                            }}
-                          >
-                            <X className="h-4 w-4 mr-1" /> Cancel
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            onClick={() => saveProfileField('mentorshipInterest', mentorshipInterestField)}
-                          >
-                            <Check className="h-4 w-4 mr-1" /> Save
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div 
-                        className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
-                        onClick={() => {
-                          if (isEditMode) {
-                            setEditingFields(prev => ({ ...prev, mentorshipInterest: true }));
-                          }
-                        }}
-                      >
-                        <p>{user.mentorshipInterest ? 'Yes' : 'No'}</p>
-                        {isEditMode && (
-                          <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
-                        )}
-                      </div>
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    <div 
+                      className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                      onClick={() => {
+                        if (isEditMode) {
+                          setEditingFields(prev => ({ ...prev, preferredFormat: true }));
+                        }
+                      }}
+                    >
+                      <p className="capitalize">
+                        {user.preferredFormat === 'all' ? 'All Formats' : 
+                         user.preferredFormat === 'singles' ? 'Singles' :
+                         user.preferredFormat === 'doubles' ? 'Doubles' :
+                         user.preferredFormat === 'mixed' ? 'Mixed Doubles' :
+                         'Not specified'}
+                      </p>
+                      {isEditMode && (
+                        <Edit2 className="h-4 w-4 absolute top-2 right-2 text-muted-foreground" />
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </Card>
@@ -1809,18 +913,28 @@ const StreamlinedProfilePage: FC = () => {
           
           <TabsContent value="achievements" className="mt-0">
             <Card className="p-6">
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Player Achievements</h3>
-                <p className="text-muted-foreground">
-                  Your achievements will be displayed here as you earn them.
-                </p>
-                <div className="flex items-center gap-2 mt-4 p-4 border rounded-md bg-green-50">
-                  <Award className="h-6 w-6 text-green-600" />
-                  <div>
-                    <h4 className="font-medium">Profile Progress</h4>
-                    <p className="text-sm">Complete your profile to earn XP and unlock achievements.</p>
+              <h3 className="text-lg font-semibold mb-4">Achievements</h3>
+              <p className="text-muted-foreground">View your earned achievements and badges.</p>
+              
+              <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {user.isFoundingMember && (
+                  <div className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 border border-amber-200 dark:border-amber-700 rounded-lg p-4 flex flex-col items-center text-center">
+                    <Medal className="h-10 w-10 text-amber-500 mb-2" />
+                    <h4 className="font-semibold text-amber-800 dark:text-amber-300">Founding Member</h4>
+                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">Early supporter of the Pickle+ platform</p>
                   </div>
-                  <Badge className="ml-auto">{user.profileCompletionPct || 0}%</Badge>
+                )}
+                
+                <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 flex flex-col items-center text-center opacity-50">
+                  <Trophy className="h-10 w-10 text-gray-400 mb-2" />
+                  <h4 className="font-semibold text-gray-500">Tournament Winner</h4>
+                  <p className="text-xs text-gray-500 mt-1">Win your first tournament</p>
+                </div>
+                
+                <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 flex flex-col items-center text-center opacity-50">
+                  <Award className="h-10 w-10 text-gray-400 mb-2" />
+                  <h4 className="font-semibold text-gray-500">Perfect Match</h4>
+                  <p className="text-xs text-gray-500 mt-1">Win a match without losing a point</p>
                 </div>
               </div>
             </Card>
@@ -1828,37 +942,60 @@ const StreamlinedProfilePage: FC = () => {
           
           <TabsContent value="history" className="mt-0">
             <Card className="p-6">
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Match History</h3>
-                <p className="text-muted-foreground">
-                  {user.totalMatches ? 'Your recent matches will appear here.' : 'You have not played any matches yet.'}
-                </p>
-                <div className="mt-4">
-                  {user.totalMatches ? (
-                    <div className="border rounded-md p-4">
-                      <div className="grid grid-cols-3 font-medium mb-2">
-                        <div>Date</div>
-                        <div>Opponent</div>
-                        <div>Result</div>
-                      </div>
-                      {/* Sample match history row */}
-                      <div className="grid grid-cols-3 border-t py-2">
-                        <div>2025-04-02</div>
-                        <div>John Smith</div>
-                        <div><Badge variant="success">Win</Badge></div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-10 text-center">
-                      <Clock className="h-12 w-12 text-muted-foreground mb-4" />
-                      <h4 className="text-lg font-medium mb-2">No Matches Yet</h4>
-                      <p className="text-sm text-muted-foreground max-w-md">
-                        Start recording your matches to build your history and track your progress.
-                      </p>
-                    </div>
-                  )}
+              <h3 className="text-lg font-semibold mb-4">Match History</h3>
+              <p className="text-muted-foreground mb-6">View your recent match history and results.</p>
+              
+              {user.totalMatches === 0 ? (
+                <div className="py-8 text-center bg-muted/20 rounded-lg border border-dashed border-muted">
+                  <Calendar className="mx-auto h-10 w-10 text-muted-foreground mb-2" />
+                  <h4 className="text-lg font-medium mb-2">No Matches Recorded</h4>
+                  <p className="text-muted-foreground text-sm max-w-md mx-auto">
+                    You haven't recorded any matches yet. Start tracking your games to see your history and stats here.
+                  </p>
+                  <Button 
+                    variant="default" 
+                    className="mt-4"
+                    onClick={() => navigate('/record-match')}
+                  >
+                    <Clipboard className="h-4 w-4 mr-2" />
+                    Record a Match
+                  </Button>
                 </div>
-              </div>
+              ) : (
+                <div>
+                  <div className="rounded-md border">
+                    <div className="grid grid-cols-5 py-3 px-4 text-xs font-medium text-muted-foreground bg-muted/50">
+                      <div>Date</div>
+                      <div className="col-span-2">Opponent</div>
+                      <div>Score</div>
+                      <div>Result</div>
+                    </div>
+                    
+                    {/* Placeholder matches if needed */}
+                    <div className="grid grid-cols-5 py-3 px-4 text-sm border-t">
+                      <div>04/08/2025</div>
+                      <div className="col-span-2">Sarah Johnson</div>
+                      <div>11-7, 11-9</div>
+                      <div>
+                        <Badge variant="default" className="bg-green-500 hover:bg-green-600">
+                          Win
+                        </Badge>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-5 py-3 px-4 text-sm border-t">
+                      <div>04/05/2025</div>
+                      <div className="col-span-2">John Smith</div>
+                      <div>7-11, 9-11</div>
+                      <div>
+                        <Badge variant="outline" className="bg-red-100 text-red-800 hover:bg-red-100">
+                          Loss
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </Card>
           </TabsContent>
         </div>
@@ -1868,7 +1005,7 @@ const StreamlinedProfilePage: FC = () => {
 };
 
 /**
- * Profile Skeleton Loading State
+ * Skeleton loading state for the profile page
  */
 const ProfileSkeleton: FC = () => {
   return (
@@ -1882,41 +1019,36 @@ const ProfileSkeleton: FC = () => {
           </div>
           <Skeleton className="h-8 w-48 mb-2" />
           <Skeleton className="h-4 w-32 mb-4" />
-          <div className="flex gap-2">
-            <Skeleton className="h-8 w-20" />
-            <Skeleton className="h-8 w-20" />
-          </div>
         </div>
       </Card>
       
-      {/* Quick Stats Skeleton */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 my-4">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i} className="p-4">
-            <Skeleton className="h-4 w-20 mb-2" />
-            <Skeleton className="h-8 w-full" />
+      {/* Quick Stats Bar Skeleton */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 my-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card key={i} className="overflow-hidden">
+            <div className="p-4">
+              <div className="flex justify-between items-center mb-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-12" />
+              </div>
+              <Skeleton className="h-2 w-full mb-2" />
+              <Skeleton className="h-4 w-16" />
+            </div>
           </Card>
         ))}
       </div>
       
-      {/* Tab Navigation Skeleton */}
-      <div className="my-6">
-        <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-          {[...Array(6)].map((_, i) => (
-            <Skeleton key={i} className="h-10 w-28 rounded-md shrink-0" />
-          ))}
+      {/* Tabbed Content Skeleton */}
+      <div className="mt-6">
+        <div className="border-b pb-2 mb-4">
+          <Skeleton className="h-10 w-full" />
         </div>
-        
-        {/* Content Skeleton */}
         <Card className="p-6">
+          <Skeleton className="h-6 w-48 mb-4" />
           <div className="space-y-4">
-            <Skeleton className="h-6 w-32 mb-4" />
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="space-y-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-12 w-full" />
-              </div>
-            ))}
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
           </div>
         </Card>
       </div>
