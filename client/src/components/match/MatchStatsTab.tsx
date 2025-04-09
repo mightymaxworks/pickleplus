@@ -519,7 +519,7 @@ export default function MatchStatsTab() {
         <StatsSummaryCard
           title="Total Matches"
           value={stats.totalMatches}
-          change={`Last one ${formatDistanceToNow(new Date(stats.lastMatchDate), { addSuffix: true })}`}
+          change={stats.lastMatchDate ? `Last one ${formatDistanceToNow(new Date(stats.lastMatchDate), { addSuffix: true })}` : 'No recent matches'}
           icon={<Activity className="h-5 w-5 text-primary" />}
         />
         
