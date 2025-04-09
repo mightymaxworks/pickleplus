@@ -9,6 +9,10 @@ import rankingRoutes from "./api/ranking";
 import { rankingSystem } from "./modules/ranking/rankingSystem";
 import { registerMasteryPathsRoutes } from "./modules/mastery/masteryPathsRoutes";
 import { migrateMasteryPathsTables } from "./migrateMasteryPaths";
+import { 
+  registerValidationRoutes,
+  autoValidateMatchForSubmitter 
+} from "./modules/match/validation";
 
 // Import necessary schema
 import { 
@@ -38,6 +42,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Register Mastery Paths routes
   registerMasteryPathsRoutes(app);
+  
+  // Register Match Validation routes (PKL-278651-VALMAT-0001-FIX)
+  registerValidationRoutes(app);
   
   // API routes
   
@@ -159,7 +166,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
         eventTier: req.body.eventTier || "local",
         gameScores: req.body.gameScores || [],
         notes: req.body.notes || "",
-        submitterId: req.user.id,
+        // submitterId is not used in the DB schema, just use it for validation
         validationStatus: "pending", // Initially pending until validated
         matchDate: new Date(),
       };
@@ -167,6 +174,16 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       console.log("[Match API] Processed match data:", JSON.stringify(matchData, null, 2));
       
       const match = await storage.createMatch(matchData);
+      
+      // Auto-validate the match for the submitter (PKL-278651-VALMAT-0001-FIX)
+      try {
+        await autoValidateMatchForSubmitter(match.id, req.user.id);
+        console.log(`[Match API] Match ${match.id} auto-validated for submitter ${req.user.id}`);
+      } catch (validationError) {
+        console.error(`[Match API] Error auto-validating match for submitter:`, validationError);
+        // We don't fail the request if auto-validation fails
+      }
+      
       return res.status(201).json(match);
     } catch (error) {
       console.error("[Match API] Error recording match:", error);
