@@ -88,14 +88,14 @@ export function LeaderboardFilters({
             <div className="space-y-2">
               <Label htmlFor="tier-filter">Filter by Tier</Label>
               <Select
-                value={tierFilter || ""}
-                onValueChange={(value) => setTierFilter(value === "" ? undefined : value)}
+                value={tierFilter || "all"}
+                onValueChange={(value) => setTierFilter(value === "all" ? undefined : value)}
               >
                 <SelectTrigger id="tier-filter" className="w-full">
                   <SelectValue placeholder="All Tiers" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Tiers</SelectItem>
+                  <SelectItem value="all">All Tiers</SelectItem>
                   {!tiersLoading && tiers && tiers.map((tier) => (
                     <SelectItem key={tier.id} value={tier.name}>
                       <div className="flex items-center">
