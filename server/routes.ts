@@ -8,6 +8,7 @@ import { matchRoutes } from "./api/match";
 import rankingRoutes from "./api/ranking";
 import { rankingSystem } from "./modules/ranking/rankingSystem";
 import { registerMasteryPathsRoutes } from "./modules/mastery/masteryPathsRoutes";
+import { migrateMasteryPathsTables } from "./migrateMasteryPaths";
 
 // Import necessary schema
 import { 
@@ -25,6 +26,15 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Register API route modules
   app.use("/api/match", matchRoutes);
   app.use("/api/ranking", rankingRoutes);
+  
+  // Initialize Mastery Paths database tables
+  try {
+    console.log("[API] Initializing Mastery Paths database tables...");
+    await migrateMasteryPathsTables();
+    console.log("[API] Mastery Paths database tables initialized successfully");
+  } catch (error) {
+    console.error("[API] Error initializing Mastery Paths database tables:", error);
+  }
   
   // Register Mastery Paths routes
   registerMasteryPathsRoutes(app);

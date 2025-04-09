@@ -221,8 +221,8 @@ async function initializeTierRules(): Promise<void> {
         maxRatingGain: 60, // Higher maximum gain
         minRatingLoss: 0, // No rating loss for Explorer tier
         maxRatingLoss: tier.name === "Explorer" ? 0 : 15, // Limited loss for other tiers
-        underperformanceMultiplier: 0.5, // Reduced penalty
-        overperformanceMultiplier: 1.8, // Bonus for beating higher-rated players
+        underperformanceMultiplier: "0.50", // Reduced penalty (as string for decimal type)
+        overperformanceMultiplier: "1.80", // Bonus for beating higher-rated players (as string for decimal type)
         // Features unlocked
         features: [
           "match_recording",
@@ -252,8 +252,8 @@ async function initializeTierRules(): Promise<void> {
         maxRatingGain: 50,
         minRatingLoss: 5,
         maxRatingLoss: 25,
-        underperformanceMultiplier: 1.0, // Standard multiplier
-        overperformanceMultiplier: 1.5, // Good bonus for upsets
+        underperformanceMultiplier: "1.00", // Standard multiplier (as string for decimal type)
+        overperformanceMultiplier: "1.50", // Good bonus for upsets (as string for decimal type)
         // Features unlocked
         features: [
           "match_recording",
@@ -285,8 +285,8 @@ async function initializeTierRules(): Promise<void> {
         maxRatingGain: 40,
         minRatingLoss: 8,
         maxRatingLoss: 35,
-        underperformanceMultiplier: 1.2, // Higher penalty for underperformance
-        overperformanceMultiplier: 1.3, // Smaller bonus (harder to move up)
+        underperformanceMultiplier: "1.20", // Higher penalty for underperformance (as string for decimal type)
+        overperformanceMultiplier: "1.30", // Smaller bonus (harder to move up) (as string for decimal type)
         // Features unlocked
         features: [
           "match_recording",
