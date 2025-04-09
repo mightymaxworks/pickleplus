@@ -7,6 +7,7 @@ import { storage } from "./storage";
 import { matchRoutes } from "./api/match";
 import rankingRoutes from "./api/ranking";
 import { rankingSystem } from "./modules/ranking/rankingSystem";
+import { registerMasteryPathsRoutes } from "./modules/mastery/masteryPathsRoutes";
 
 // Import necessary schema
 import { 
@@ -24,6 +25,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Register API route modules
   app.use("/api/match", matchRoutes);
   app.use("/api/ranking", rankingRoutes);
+  
+  // Register Mastery Paths routes
+  registerMasteryPathsRoutes(app);
   
   // API routes
   

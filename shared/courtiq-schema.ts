@@ -125,6 +125,84 @@ export const ratingTiers = pgTable("rating_tiers", {
   order: integer("order").notNull() // For sorting (1 = lowest tier, 10 = highest tier)
 });
 
+// Mastery Paths tier configuration
+// Implements the new CourtIQ™ Mastery Paths system from PKL-278651-RATE-0004-MADV
+export const masteryTiers = pgTable("mastery_tiers", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(), // Tier name (e.g., "Explorer", "Legend")
+  path: text("path").notNull(), // Path name ("Foundation", "Evolution", "Pinnacle")
+  displayName: text("display_name").notNull(), // Display name (may include emoji or formatting)
+  tagline: text("tagline").notNull(), // Short tagline for the tier
+  minRating: integer("min_rating").notNull(), // Minimum rating for this tier (internal 1000-2500 scale)
+  maxRating: integer("max_rating").notNull(), // Maximum rating for this tier (internal 1000-2500 scale)
+  badgeUrl: text("badge_url"), // URL to the tier badge image
+  colorCode: text("color_code"), // Color code for UI display
+  description: text("description"), // Detailed description
+  order: integer("order").notNull(), // For sorting (1 = lowest tier, 9 = highest tier)
+  iconName: text("icon_name") // Icon name for this tier
+});
+
+// Mastery Path rules
+// Stores tier-specific rules for the Mastery Path system
+export const masteryRules = pgTable("mastery_rules", {
+  id: serial("id").primaryKey(),
+  tierId: integer("tier_id").notNull().references(() => masteryTiers.id),
+  // Promotion rules
+  promotionMatchesRequired: integer("promotion_matches_required").notNull(), // Matches needed above threshold to promote
+  promotionRequiresConsecutive: boolean("promotion_requires_consecutive").notNull().default(false),
+  promotionCelebrationLevel: text("promotion_celebration_level").notNull().default("basic"), // "basic", "enhanced", "premium"
+  promotionStartingPositionPct: integer("promotion_starting_position_pct").notNull().default(20), // 0-100
+  // Demotion rules
+  demotionGracePeriod: integer("demotion_grace_period").notNull(), // Number of matches protected after promotion
+  demotionMatchesRequired: integer("demotion_matches_required").notNull(), // Matches below threshold to demote
+  demotionRequiresConsecutive: boolean("demotion_requires_consecutive").notNull().default(false),
+  inactivityThresholdDays: integer("inactivity_threshold_days"), // Days before tier health warning
+  demotionBufferZonePct: integer("demotion_buffer_zone_pct").notNull().default(10), // 0-100
+  // Rating parameters
+  baseKFactor: integer("base_k_factor").notNull().default(32), // Base K-factor for this tier
+  minRatingGain: integer("min_rating_gain").notNull().default(5), // Minimum rating gain per match
+  maxRatingGain: integer("max_rating_gain").notNull().default(50), // Maximum rating gain per match
+  minRatingLoss: integer("min_rating_loss").notNull().default(0), // Minimum rating loss per match
+  maxRatingLoss: integer("max_rating_loss").notNull().default(30), // Maximum rating loss per match
+  underperformanceMultiplier: decimal("underperformance_multiplier", { precision: 3, scale: 2 }).notNull().default("1.00"),
+  overperformanceMultiplier: decimal("overperformance_multiplier", { precision: 3, scale: 2 }).notNull().default("1.00"),
+  // Features
+  features: text("features").array().default([]).notNull(), // Tier-specific features
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Player tier status
+// Tracks each player's status within the Mastery Path system
+export const playerTierStatus = pgTable("player_tier_status", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  tierId: integer("tier_id").notNull().references(() => masteryTiers.id),
+  rating: integer("rating").notNull(), // Current rating within tier (internal scale)
+  globalRank: integer("global_rank"), // Overall global rank
+  tierRank: integer("tier_rank"), // Rank within current tier
+  matchesInTier: integer("matches_in_tier").notNull().default(0), // Matches played in this tier
+  joinedTierAt: timestamp("joined_tier_at").defaultNow(), // When player entered this tier
+  matchesAboveThreshold: integer("matches_above_threshold").notNull().default(0), // For promotion tracking
+  matchesBelowThreshold: integer("matches_below_threshold").notNull().default(0), // For demotion tracking
+  gracePeriodRemainingMatches: integer("grace_period_remaining").notNull().default(0), // Grace period matches remaining
+  lastMatchDate: timestamp("last_match_date"), // Date of last match
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Tier progression history
+// Tracks tier promotions and demotions
+export const tierProgressions = pgTable("tier_progressions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  oldTierId: integer("old_tier_id").notNull().references(() => masteryTiers.id),
+  newTierId: integer("new_tier_id").notNull().references(() => masteryTiers.id),
+  ratingAtProgression: integer("rating_at_progression").notNull(),
+  reason: text("reason").notNull(), // "promotion", "demotion", "season_reset", "manual_adjustment"
+  matchId: integer("match_id"), // Match that caused the change, if applicable
+  createdAt: timestamp("created_at").defaultNow()
+});
+
 // Seasons table
 // Tracks season information
 export const seasons = pgTable("seasons", {
@@ -253,6 +331,48 @@ export const ratingProtectionsRelations = relations(ratingProtections, ({ one })
   })
 }));
 
+// Mastery Path relations
+export const masteryTiersRelations = relations(masteryTiers, ({ many }) => ({
+  rules: many(masteryRules),
+  playerTierStatuses: many(playerTierStatus)
+}));
+
+export const masteryRulesRelations = relations(masteryRules, ({ one }) => ({
+  tier: one(masteryTiers, {
+    fields: [masteryRules.tierId],
+    references: [masteryTiers.id]
+  })
+}));
+
+export const playerTierStatusRelations = relations(playerTierStatus, ({ one, many }) => ({
+  user: one(users, {
+    fields: [playerTierStatus.userId],
+    references: [users.id]
+  }),
+  tier: one(masteryTiers, {
+    fields: [playerTierStatus.tierId],
+    references: [masteryTiers.id]
+  }),
+  progressions: many(tierProgressions, { relationName: 'progressionsFromTier' })
+}));
+
+export const tierProgressionsRelations = relations(tierProgressions, ({ one }) => ({
+  user: one(users, {
+    fields: [tierProgressions.userId],
+    references: [users.id]
+  }),
+  oldTier: one(masteryTiers, {
+    fields: [tierProgressions.oldTierId],
+    references: [masteryTiers.id],
+    relationName: 'oldTierProgression'
+  }),
+  newTier: one(masteryTiers, {
+    fields: [tierProgressions.newTierId],
+    references: [masteryTiers.id],
+    relationName: 'newTierProgression'
+  })
+}));
+
 // Create insert schemas for validation
 
 export const insertPlayerRatingSchema = createInsertSchema(playerRatings)
@@ -284,6 +404,19 @@ export const insertTournamentEligibilitySchema = createInsertSchema(tournamentEl
 
 export const insertRankingTierSchema = createInsertSchema(rankingTiers)
   .omit({ id: true });
+
+// Mastery Paths insert schemas
+export const insertMasteryTierSchema = createInsertSchema(masteryTiers)
+  .omit({ id: true });
+
+export const insertMasteryRuleSchema = createInsertSchema(masteryRules)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+
+export const insertPlayerTierStatusSchema = createInsertSchema(playerTierStatus)
+  .omit({ id: true, joinedTierAt: true, updatedAt: true });
+
+export const insertTierProgressionSchema = createInsertSchema(tierProgressions)
+  .omit({ id: true, createdAt: true });
 
 // XP Levels table
 // Defines the level thresholds and unlocks
@@ -397,3 +530,16 @@ export type InsertXpMultiplier = z.infer<typeof insertXpMultiplierSchema>;
 
 export type RankingTier = typeof rankingTiers.$inferSelect;
 export type InsertRankingTier = z.infer<typeof insertRankingTierSchema>;
+
+// Mastery Path types
+export type MasteryTier = typeof masteryTiers.$inferSelect;
+export type InsertMasteryTier = z.infer<typeof insertMasteryTierSchema>;
+
+export type MasteryRule = typeof masteryRules.$inferSelect;
+export type InsertMasteryRule = z.infer<typeof insertMasteryRuleSchema>;
+
+export type PlayerTierStatus = typeof playerTierStatus.$inferSelect;
+export type InsertPlayerTierStatus = z.infer<typeof insertPlayerTierStatusSchema>;
+
+export type TierProgression = typeof tierProgressions.$inferSelect;
+export type InsertTierProgression = z.infer<typeof insertTierProgressionSchema>;
