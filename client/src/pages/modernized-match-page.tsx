@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { TiltCard } from "@/components/ui/tilt-card";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { 
   Loader2, 
   PlusCircle, 
