@@ -33,7 +33,7 @@ export function MatchTrends({ matches = [], className = '' }: MatchTrendsProps) 
     let losses = 0;
     
     matches.forEach(match => {
-      const userIsWinner = match.players.some(
+      const userIsWinner = match.players?.some(
         p => p.userId === userId && p.isWinner
       );
       
@@ -83,8 +83,8 @@ export function MatchTrends({ matches = [], className = '' }: MatchTrendsProps) 
     };
     
     matches.forEach(match => {
-      const userPlayer = match.players.find(p => p.userId === userId);
-      const opponentPlayer = match.players.find(p => p.userId !== userId);
+      const userPlayer = match.players?.find(p => p.userId === userId);
+      const opponentPlayer = match.players?.find(p => p.userId !== userId);
       
       if (!userPlayer || !opponentPlayer) return;
       
@@ -120,8 +120,8 @@ export function MatchTrends({ matches = [], className = '' }: MatchTrendsProps) 
     const userId = matches[0]?.players?.[0]?.userId; // Assuming first player is the user
     
     return matches.slice(0, 5).map((match, index) => {
-      const userPlayer = match.players.find(p => p.userId === userId);
-      const opponentPlayer = match.players.find(p => p.userId !== userId);
+      const userPlayer = match.players?.find(p => p.userId === userId);
+      const opponentPlayer = match.players?.find(p => p.userId !== userId);
       
       if (!userPlayer || !opponentPlayer) {
         return { name: `Match ${index + 1}`, score: 0, result: 'Unknown' };
