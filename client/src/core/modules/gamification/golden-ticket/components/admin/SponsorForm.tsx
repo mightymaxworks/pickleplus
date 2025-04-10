@@ -102,18 +102,39 @@ const SponsorForm: React.FC = () => {
 
   const onSubmit = async (data: FormValues) => {
     try {
-      // If a file was selected, upload it first
-      if (data.logoFile) {
-        await uploadLogoMutation.mutateAsync(data.logoFile);
-      }
-      
-      // Remove the file field before submitting to the API
+      // Remove the file field from the submitted data
       const { logoFile, ...submitData } = data;
       
+      // If a file was selected, upload it first and wait for the result
+      if (data.logoFile) {
+        const uploadResult = await uploadLogoMutation.mutateAsync(data.logoFile);
+        
+        // Update the submitData with the uploaded file info
+        submitData.logoPath = uploadResult.filePath;
+        submitData.logoUrl = uploadResult.url;
+        
+        console.log('File uploaded successfully, updated submit data:', submitData);
+      }
+      
+      // Make sure we have clean null values for any empty string fields
+      Object.keys(submitData).forEach((key) => {
+        const k = key as keyof typeof submitData;
+        // Handle empty strings by converting them to null
+        if (typeof submitData[k] === 'string' && submitData[k] === '') {
+          submitData[k] = null as any; // Using any to bypass TypeScript's strict type checking
+        }
+      });
+      
       // Then create the sponsor with the updated data
+      console.log('Submitting sponsor data:', submitData);
       mutation.mutate(submitData);
     } catch (error) {
       console.error('Error in form submission:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to process form submission',
+        variant: 'destructive',
+      });
     }
   };
   

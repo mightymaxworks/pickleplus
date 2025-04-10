@@ -130,11 +130,13 @@ export async function createSponsor(sponsor: {
   name: string;
   description?: string | null;
   logoUrl?: string | null;
+  logoPath?: string | null;
   website?: string | null;
   contactName?: string | null;
   contactEmail?: string | null;
   active: boolean;
 }): Promise<Sponsor> {
+  console.log('Creating sponsor with data:', sponsor);
   return debugApiRequest<Sponsor>("POST", `${API_BASE}/admin/sponsors`, sponsor);
 }
 

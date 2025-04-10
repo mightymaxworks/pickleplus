@@ -741,21 +741,34 @@ router.post('/admin/tickets/upload-image', isAdmin, upload.single('image'), asyn
  */
 router.post('/admin/sponsors', isAdmin, async (req: Request, res: Response) => {
   try {
+    console.log('Received sponsor creation request:', JSON.stringify(req.body, null, 2));
+    
     // Validate request body
     const parsedData = insertSponsorSchema.safeParse(req.body);
     
     if (!parsedData.success) {
+      console.error('Validation error:', parsedData.error.errors);
       return res.status(400).json({ 
         error: 'Invalid data', 
         details: parsedData.error.errors 
       });
     }
 
+    // Clean up any empty string values to be proper nulls
+    const cleanData = { ...parsedData.data };
+    Object.keys(cleanData).forEach((key) => {
+      const k = key as keyof typeof cleanData;
+      if (typeof cleanData[k] === 'string' && cleanData[k] === '') {
+        // Type assertion to avoid TypeScript errors
+        (cleanData as any)[k] = null;
+      }
+    });
+
+    console.log('Creating sponsor with clean data:', cleanData);
+
     // Create sponsor
     const sponsor = await db.insert(sponsors)
-      .values({
-        ...parsedData.data
-      })
+      .values(cleanData)
       .returning();
 
     return res.status(201).json(sponsor[0]);
