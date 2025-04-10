@@ -668,7 +668,7 @@ export default function ModernizedMatchPage() {
                         .filter(m => m.validationStatus === 'confirmed' || m.validationStatus === 'validated')
                         .slice(0, 3) // Show only the 3 most recent
                         .map((match: RecordedMatch) => {
-                          const userPlayer = match.players.find((p) => p.userId === user?.id);
+                          const userPlayer = match.players?.find((p) => p.userId === user?.id);
                           const isWinner = userPlayer?.isWinner;
                           const opponent = getOpponentName(match, user?.id || 0);
                           
@@ -718,7 +718,7 @@ export default function ModernizedMatchPage() {
                       {recentMatches
                         .filter(m => m.validationStatus === 'disputed')
                         .map((match: RecordedMatch) => {
-                          const userPlayer = match.players.find((p) => p.userId === user?.id);
+                          const userPlayer = match.players?.find((p) => p.userId === user?.id);
                           const isWinner = userPlayer?.isWinner;
                           const opponent = getOpponentName(match, user?.id || 0);
                           
