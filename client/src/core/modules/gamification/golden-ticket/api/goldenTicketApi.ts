@@ -16,17 +16,29 @@ async function debugApiRequest<T>(method: "GET" | "POST" | "PUT" | "PATCH" | "DE
     console.log(`Making API ${method} request to ${url}`, data ? { data } : '');
     const rawResponse = await apiRequest(method, url, data);
     
-    // Process the response to get JSON
+    // Handle 204 No Content responses properly - Framework 5.0 compliant
+    if (rawResponse.status === 204) {
+      console.log(`Received 204 No Content from ${url} - no data to parse`);
+      return {} as T; // Return empty object for void operations
+    }
+    
+    // Process the response to get JSON for other response types
     const text = await rawResponse.text();
     console.log(`Raw API text response from ${url}:`, text);
     
+    // Handle empty responses safely
     let jsonResponse;
-    try {
-      jsonResponse = JSON.parse(text);
-      console.log(`Parsed API response from ${url}:`, jsonResponse);
-    } catch (parseError) {
-      console.error(`Failed to parse JSON from ${url}:`, parseError);
-      throw new Error(`Invalid JSON response from ${url}`);
+    if (!text.trim()) {
+      console.log(`Empty response from ${url}, returning empty object`);
+      jsonResponse = {};
+    } else {
+      try {
+        jsonResponse = JSON.parse(text);
+        console.log(`Parsed API response from ${url}:`, jsonResponse);
+      } catch (parseError) {
+        console.error(`Failed to parse JSON from ${url}:`, parseError);
+        throw new Error(`Invalid JSON response from ${url}`);
+      }
     }
     
     // Enhanced debugging for sponsor list
