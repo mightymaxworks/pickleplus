@@ -172,8 +172,9 @@ const TournamentDiscoveryPage: React.FC = () => {
   // Handle bracket position click
   const handlePositionClick = useCallback((position: BracketPosition) => {
     if (position.isDiscovered) {
-      // If already discovered, just show the details
-      setCurrentDiscovery(position.description);
+      // If already discovered, show detailed feature information
+      setSelectedFeatureId(position.code);
+      setShowFeatureDetail(true);
       return;
     }
     
@@ -186,6 +187,14 @@ const TournamentDiscoveryPage: React.FC = () => {
     
     // Record discovery in API
     discoverPoint(position.code);
+    
+    // After discovering, prepare to show detailed information
+    setSelectedFeatureId(position.code);
+    
+    // Short delay before showing the detailed view to allow the discovery animation to complete
+    setTimeout(() => {
+      setShowFeatureDetail(true);
+    }, 1200);
   }, [discoverPoint]);
   
   // Calculate progress percentages for each tier
@@ -268,8 +277,15 @@ const TournamentDiscoveryPage: React.FC = () => {
             onClick={() => {
               if (!discovered) {
                 discoverPoint(point.id);
+                // Show feature information after a short delay
+                setTimeout(() => {
+                  setSelectedFeatureId(point.id);
+                  setShowFeatureDetail(true);
+                }, 1200);
               } else {
-                setCurrentDiscovery(point.description);
+                // Show detailed feature information for discovered points
+                setSelectedFeatureId(point.id);
+                setShowFeatureDetail(true);
               }
             }}
           >
