@@ -23,6 +23,52 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { nanoid } from 'nanoid';
+
+// Configure multer storage for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    let uploadPath = 'uploads';
+    
+    // Determine upload path based on upload type
+    if (req.path.includes('/sponsors/upload-logo')) {
+      uploadPath = 'uploads/sponsors';
+    } else if (req.path.includes('/tickets/upload-image')) {
+      uploadPath = 'uploads/golden-tickets';
+    }
+    
+    // Ensure directory exists
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    // Generate a unique filename with original extension
+    const fileExt = path.extname(file.originalname);
+    const fileName = `${nanoid(10)}-${Date.now()}${fileExt}`;
+    cb(null, fileName);
+  }
+});
+
+// File filter to validate uploaded files
+const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  // Allow only image files
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image files are allowed'));
+  }
+};
+
+// Configure multer upload
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 2 * 1024 * 1024 // 2MB file size limit
+  }
+});
 // Helper function to extract filter parameters
 const extractFilterParams = (query: any, allowedParams: string[]) => {
   const result: Record<string, any> = {};
@@ -693,5 +739,171 @@ export function registerGoldenTicketRoutes(app: any) {
   app.use('/api/golden-ticket', router);
   console.log('[API] Golden Ticket routes registered');
 }
+
+/**
+ * PKL-278651-GAME-0005-GOLD-ENH
+ * File Upload Routes for the Golden Ticket system
+ */
+
+/**
+ * Upload sponsor logo (admin)
+ */
+router.post('/admin/sponsors/upload-logo', isAdmin, upload.single('logo'), async (req: Request, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded', code: 'NO_FILE' });
+    }
+
+    // Create file URL (relative to server)
+    const filePath = req.file.path;
+    const fileUrl = `/uploads/sponsors/${path.basename(req.file.path)}`;
+
+    return res.status(201).json({
+      filePath,
+      url: fileUrl,
+      fileId: path.basename(req.file.path)
+    });
+  } catch (error) {
+    console.error('Error uploading sponsor logo:', error);
+    return res.status(500).json({ 
+      error: 'Error uploading file',
+      code: 'UPLOAD_FAILED',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
+ * Upload promotional image for golden ticket (admin)
+ */
+router.post('/admin/tickets/upload-image', isAdmin, upload.single('image'), async (req: Request, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded', code: 'NO_FILE' });
+    }
+
+    // Create file URL (relative to server)
+    const filePath = req.file.path;
+    const fileUrl = `/uploads/golden-tickets/${path.basename(req.file.path)}`;
+
+    return res.status(201).json({
+      filePath,
+      url: fileUrl,
+      fileId: path.basename(req.file.path)
+    });
+  } catch (error) {
+    console.error('Error uploading promotional image:', error);
+    return res.status(500).json({ 
+      error: 'Error uploading file',
+      code: 'UPLOAD_FAILED',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
+ * Create sponsor (admin) with file upload support
+ */
+router.post('/admin/sponsors', isAdmin, async (req: Request, res: Response) => {
+  try {
+    // Validate request body
+    const parsedData = insertSponsorSchema.safeParse(req.body);
+    
+    if (!parsedData.success) {
+      return res.status(400).json({ 
+        error: 'Invalid data', 
+        details: parsedData.error.errors 
+      });
+    }
+
+    // Create sponsor
+    const sponsor = await db.insert(sponsors)
+      .values({
+        ...parsedData.data
+      })
+      .returning();
+
+    return res.status(201).json(sponsor[0]);
+  } catch (error) {
+    console.error('Error creating sponsor:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+/**
+ * Update sponsor (admin) with file upload support
+ */
+router.patch('/admin/sponsors/:id', isAdmin, async (req: Request, res: Response) => {
+  try {
+    const sponsorId = parseInt(req.params.id);
+    
+    if (isNaN(sponsorId)) {
+      return res.status(400).json({ error: 'Invalid sponsor ID' });
+    }
+
+    // Validate request body against a partial schema
+    const updateSchema = insertSponsorSchema.partial();
+    const parsedData = updateSchema.safeParse(req.body);
+    
+    if (!parsedData.success) {
+      return res.status(400).json({ 
+        error: 'Invalid data', 
+        details: parsedData.error.errors 
+      });
+    }
+
+    // Update sponsor
+    const updated = await db.update(sponsors)
+      .set({
+        ...parsedData.data,
+        updatedAt: new Date()
+      })
+      .where(eq(sponsors.id, sponsorId))
+      .returning();
+
+    if (!updated.length) {
+      return res.status(404).json({ error: 'Sponsor not found' });
+    }
+
+    return res.json(updated[0]);
+  } catch (error) {
+    console.error('Error updating sponsor:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+/**
+ * Delete sponsor (admin)
+ */
+router.delete('/admin/sponsors/:id', isAdmin, async (req: Request, res: Response) => {
+  try {
+    const sponsorId = parseInt(req.params.id);
+    
+    if (isNaN(sponsorId)) {
+      return res.status(400).json({ error: 'Invalid sponsor ID' });
+    }
+
+    // Check if tickets exist for this sponsor
+    const ticketsCount = await db.select({ count: sql`count(*)` })
+      .from(goldenTickets)
+      .where(eq(goldenTickets.sponsorId, sponsorId));
+    
+    if (Number(ticketsCount[0]?.count || '0') > 0) {
+      return res.status(400).json({ 
+        error: 'Cannot delete sponsor with existing tickets',
+        suggestion: 'Set active to false instead'
+      });
+    }
+
+    // Delete sponsor
+    await db.delete(sponsors)
+      .where(eq(sponsors.id, sponsorId));
+
+    return res.status(204).end();
+  } catch (error) {
+    console.error('Error deleting sponsor:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
 
 export default router;

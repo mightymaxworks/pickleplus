@@ -1,31 +1,35 @@
 /**
- * PKL-278651-GAME-0005-GOLD
+ * PKL-278651-GAME-0005-GOLD-ENH
  * Sponsor Form Component
  * 
- * Form for creating new sponsors.
+ * Form for creating new sponsors with file upload support.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createSponsor } from '../../api/goldenTicketApi';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import FileUploadField from '../common/FileUploadField';
+import { uploadSponsorLogo } from '../../services/fileUploadService';
 
 // Form schema for creating sponsors (must match server schema)
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   description: z.string().optional().or(z.literal('')).nullable(),
   logoUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')).nullable(),
-  website: z.string().url('Must be a valid URL').optional().or(z.literal('')).nullable(), // Matches server field name
-  contactName: z.string().optional().or(z.literal('')).nullable(), // Added to match server schema
+  logoPath: z.string().optional().nullable(),
+  logoFile: z.any().optional().nullable(), // For file upload
+  website: z.string().url('Must be a valid URL').optional().or(z.literal('')).nullable(),
+  contactName: z.string().optional().or(z.literal('')).nullable(),
   contactEmail: z.string().email('Must be a valid email').optional().or(z.literal('')).nullable(),
-  active: z.boolean().default(true) // Added to match server schema
+  active: z.boolean().default(true)
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -72,8 +76,45 @@ const SponsorForm: React.FC = () => {
     }
   });
   
-  const onSubmit = (data: FormValues) => {
-    mutation.mutate(data);
+  // Upload logo mutation
+  const uploadLogoMutation = useMutation({
+    mutationFn: uploadSponsorLogo,
+    onSuccess: (response) => {
+      // Set the logoPath and logoUrl from the response
+      form.setValue('logoPath', response.filePath, { shouldValidate: true });
+      form.setValue('logoUrl', response.url, { shouldValidate: true });
+      
+      toast({
+        title: 'Success',
+        description: 'Logo uploaded successfully',
+        variant: 'default',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to upload logo',
+        variant: 'destructive',
+      });
+      console.error('Error uploading logo:', error);
+    }
+  });
+
+  const onSubmit = async (data: FormValues) => {
+    try {
+      // If a file was selected, upload it first
+      if (data.logoFile) {
+        await uploadLogoMutation.mutateAsync(data.logoFile);
+      }
+      
+      // Remove the file field before submitting to the API
+      const { logoFile, ...submitData } = data;
+      
+      // Then create the sponsor with the updated data
+      mutation.mutate(submitData);
+    } catch (error) {
+      console.error('Error in form submission:', error);
+    }
   };
   
   return (
@@ -102,7 +143,11 @@ const SponsorForm: React.FC = () => {
               <FormControl>
                 <Textarea 
                   placeholder="Brief description of the sponsor" 
-                  {...field} 
+                  value={field.value || ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
                   rows={3}
                 />
               </FormControl>
@@ -111,6 +156,21 @@ const SponsorForm: React.FC = () => {
           )}
         />
         
+        {/* File Upload Field */}
+        <FormField
+          control={form.control}
+          name="logoFile"
+          render={({ field }) => (
+            <FileUploadField
+              form={form}
+              name="logoFile"
+              label="Sponsor Logo"
+              description="Upload a logo for the sponsor (JPEG, PNG, WebP, GIF up to 2MB)"
+            />
+          )}
+        />
+        
+        {/* Keep URL option as backup */}
         <FormField
           control={form.control}
           name="logoUrl"
@@ -118,8 +178,18 @@ const SponsorForm: React.FC = () => {
             <FormItem>
               <FormLabel>Logo URL (optional)</FormLabel>
               <FormControl>
-                <Input placeholder="https://example.com/logo.png" {...field} />
+                <Input 
+                  placeholder="https://example.com/logo.png" 
+                  value={field.value || ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                />
               </FormControl>
+              <FormDescription>
+                Only needed if not uploading a file directly
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

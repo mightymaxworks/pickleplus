@@ -51,7 +51,15 @@ async function getTableColumns(tableName: string): Promise<string[]> {
     WHERE table_name = ${tableName}
   `);
   
-  return result.rows.map((row: any) => row.column_name);
+  // Handle different result format from drizzle execute
+  let columns: string[] = [];
+  if (Array.isArray(result)) {
+    columns = result.map((row: any) => row.column_name);
+  } else if (result && 'rows' in result && Array.isArray(result.rows)) {
+    columns = result.rows.map((row: any) => row.column_name);
+  }
+  
+  return columns;
 }
 
 // Run migration if this script is executed directly

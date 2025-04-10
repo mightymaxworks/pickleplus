@@ -6,7 +6,7 @@
  * including sponsor logos and promotional images.
  */
 
-import { debugApiRequest } from '../api/goldenTicketApi';
+// Remove debugApiRequest import as we're using fetch directly
 
 const API_BASE = '/api/golden-ticket';
 
