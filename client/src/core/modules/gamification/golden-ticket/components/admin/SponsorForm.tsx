@@ -67,7 +67,11 @@ const SponsorForm: React.FC = () => {
   const mutation = useMutation({
     mutationFn: createSponsor,
     onSuccess: () => {
+      // Force a complete cache refresh for sponsor data
+      console.log('Sponsor created successfully, invalidating queries...');
       queryClient.invalidateQueries({ queryKey: ['admin', 'sponsors'] });
+      queryClient.refetchQueries({ queryKey: ['admin', 'sponsors'] });
+      
       toast({
         title: 'Success',
         description: 'Sponsor created successfully',

@@ -20,10 +20,17 @@ async function debugApiRequest<T>(method: "GET" | "POST" | "PUT" | "PATCH" | "DE
     // Enhanced debugging for sponsor list
     if (url.includes('/sponsors')) {
       console.log('SPONSORS DEBUG - Response type:', typeof response);
-      console.log('SPONSORS DEBUG - Response keys:', Object.keys(response));
-      if (response && typeof response === 'object' && 'sponsors' in response) {
-        console.log('SPONSORS DEBUG - Number of sponsors:', response.sponsors.length);
-        console.log('SPONSORS DEBUG - First sponsor:', response.sponsors[0]);
+      if (response && typeof response === 'object') {
+        console.log('SPONSORS DEBUG - Response keys:', Object.keys(response));
+        
+        // Safely check and log sponsors array
+        const sponsorData = response as any;
+        if ('sponsors' in sponsorData && Array.isArray(sponsorData.sponsors)) {
+          console.log('SPONSORS DEBUG - Number of sponsors:', sponsorData.sponsors.length);
+          if (sponsorData.sponsors.length > 0) {
+            console.log('SPONSORS DEBUG - First sponsor:', sponsorData.sponsors[0]);
+          }
+        }
       }
     }
     
