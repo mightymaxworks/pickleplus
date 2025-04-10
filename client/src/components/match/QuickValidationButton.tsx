@@ -139,6 +139,11 @@ export function QuickValidationButton({
                 size={size}
                 className={`flex items-center ${className}`}
                 disabled={isDisabled}
+                type="button"
+                onClick={(e) => {
+                  // Prevent the event from being lost
+                  e.stopPropagation();
+                }}
               >
                 {renderStatusIcon()}
                 {getButtonLabel()}

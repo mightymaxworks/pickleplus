@@ -351,18 +351,18 @@ function MatchList({ matches, isLoading }: MatchListProps) {
                 <div className="w-32 sm:w-44 flex mb-2">
                   <div className="flex-1 bg-primary/10 rounded-l-md py-2 sm:py-3 flex justify-center">
                     <span className="text-xl sm:text-3xl font-bold text-primary">
-                      {match.players.find(p => p.userId === user?.id)?.score || '11'}
+                      {match.players?.find(p => p.userId === user?.id)?.score || match.scorePlayerOne || '11'}
                     </span>
                   </div>
                   <div className="flex-1 bg-muted rounded-r-md py-2 sm:py-3 flex justify-center">
                     <span className="text-xl sm:text-3xl font-bold">
-                      {match.players.find(p => p.userId !== user?.id)?.score || '4'}
+                      {match.players?.find(p => p.userId !== user?.id)?.score || match.scorePlayerTwo || '4'}
                     </span>
                   </div>
                 </div>
                 
                 {/* Win/Loss indicator */}
-                {match.players.find(p => p.userId === user?.id)?.isWinner ? (
+                {(match.players?.find(p => p.userId === user?.id)?.isWinner || (user?.id === match.winnerId)) ? (
                   <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800 px-3 text-xs h-5">
                     Win
                   </Badge>
