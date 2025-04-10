@@ -399,15 +399,15 @@ export default function MatchValidation({ match, onValidationComplete }: MatchVa
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">
                       <AvatarFallback>
-                        {match.playerNames?.[match.players[0].userId]?.avatarInitials || 
-                         match.playerNames?.[match.players[0].userId]?.displayName?.charAt(0) || 
+                        {match.playerNames?.[match.players?.[0]?.userId]?.avatarInitials || 
+                         match.playerNames?.[match.players?.[0]?.userId]?.displayName?.charAt(0) || 
                          "P1"}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <div className="font-medium">{match.playerNames?.[match.players[0].userId]?.displayName || "Player 1"}</div>
+                      <div className="font-medium">{match.playerNames?.[match.players?.[0]?.userId]?.displayName || "Player 1"}</div>
                       <div className="text-sm text-muted-foreground">
-                        {match.players[0].isWinner && (
+                        {match.players?.[0]?.isWinner && (
                           <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 text-xs">
                             Winner
                           </Badge>
@@ -415,21 +415,21 @@ export default function MatchValidation({ match, onValidationComplete }: MatchVa
                       </div>
                     </div>
                   </div>
-                  <div className="text-2xl font-bold">{match.players[0].score}</div>
+                  <div className="text-2xl font-bold">{match.players?.[0]?.score || 0}</div>
                 </div>
                 <div className="flex justify-between items-center mt-3">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">
                       <AvatarFallback>
-                        {match.playerNames?.[match.players[1].userId]?.avatarInitials || 
-                         match.playerNames?.[match.players[1].userId]?.displayName?.charAt(0) || 
+                        {match.playerNames?.[match.players?.[1]?.userId]?.avatarInitials || 
+                         match.playerNames?.[match.players?.[1]?.userId]?.displayName?.charAt(0) || 
                          "P2"}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <div className="font-medium">{match.playerNames?.[match.players[1].userId]?.displayName || "Player 2"}</div>
+                      <div className="font-medium">{match.playerNames?.[match.players?.[1]?.userId]?.displayName || "Player 2"}</div>
                       <div className="text-sm text-muted-foreground">
-                        {match.players[1].isWinner && (
+                        {match.players?.[1]?.isWinner && (
                           <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 text-xs">
                             Winner
                           </Badge>
@@ -437,19 +437,19 @@ export default function MatchValidation({ match, onValidationComplete }: MatchVa
                       </div>
                     </div>
                   </div>
-                  <div className="text-2xl font-bold">{match.players[1].score}</div>
+                  <div className="text-2xl font-bold">{match.players?.[1]?.score || 0}</div>
                 </div>
 
                 {/* Display doubles partners if present */}
-                {match.formatType === 'doubles' && match.players[0].partnerId && match.players[1].partnerId && (
+                {match.formatType === 'doubles' && match.players?.[0]?.partnerId && match.players?.[1]?.partnerId && (
                   <div className="mt-4 pt-3 border-t">
                     <div className="text-sm font-medium mb-2">Partners</div>
                     <div className="grid grid-cols-2 gap-2">
                       <div className="flex items-center gap-2">
                         <Avatar className="h-7 w-7">
                           <AvatarFallback className="text-xs">
-                            {match.playerNames?.[match.players[0].partnerId]?.avatarInitials || 
-                             match.playerNames?.[match.players[0].partnerId]?.displayName?.charAt(0) || 
+                            {match.playerNames?.[match.players?.[0]?.partnerId]?.avatarInitials || 
+                             match.playerNames?.[match.players?.[0]?.partnerId]?.displayName?.charAt(0) || 
                              "P3"}
                           </AvatarFallback>
                         </Avatar>
