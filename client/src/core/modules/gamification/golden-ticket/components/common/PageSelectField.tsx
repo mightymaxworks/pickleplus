@@ -64,9 +64,17 @@ export const PageSelectField: React.FC<PageSelectFieldProps> = ({
   onChange,
   availablePages
 }) => {
-  // Use either form values or direct value prop
+  // Use either form values or direct value prop - adding debug logs
   const isFormControlled = form && name;
   const selectedValues = isFormControlled ? (form.watch(name) || []) : value;
+  
+  // Debug logs
+  console.log('PageSelectField rendering:', { 
+    isFormControlled, 
+    selectedValues, 
+    providedValue: value,
+    availablePagesCount: availablePages.length 
+  });
   
   // Toggle selected page
   const togglePage = (page: ApplicationPage) => {
@@ -122,6 +130,16 @@ export const PageSelectField: React.FC<PageSelectFieldProps> = ({
         groups[group] = [];
       }
       groups[group].push(page);
+    });
+    
+    // Debug log for page groups
+    console.log('Page groups created:', {
+      groupKeys: Object.keys(groups),
+      totalGroupsCount: Object.keys(groups).length,
+      groupSizes: Object.keys(groups).reduce((acc, key) => {
+        acc[key] = groups[key].length;
+        return acc;
+      }, {} as Record<string, number>)
     });
     
     return groups;
@@ -246,6 +264,7 @@ export const PageSelectField: React.FC<PageSelectFieldProps> = ({
                     "w-full justify-between",
                     !selectedValues.length && "text-muted-foreground"
                   )}
+                  onClick={() => console.log('Popover trigger button clicked')}
                 >
                   {selectedValues.length > 0
                     ? `${selectedValues.length} page${selectedValues.length > 1 ? 's' : ''} selected`
@@ -253,14 +272,18 @@ export const PageSelectField: React.FC<PageSelectFieldProps> = ({
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[400px] p-0">
+              <PopoverContent 
+                className="w-[400px] p-0" 
+                onOpenAutoFocus={() => console.log('PopoverContent opened')}
+              >
                 <Command>
                   <CommandInput placeholder="Search pages..." />
                   <CommandEmpty>No pages found.</CommandEmpty>
                   <CommandList>
                     <ScrollArea className="h-[300px]">
-                      {Object.entries(pageGroups).map(([groupName, pages]) => (
-                        pages.length > 0 && (
+                      {Object.entries(pageGroups).map(([groupName, pages]) => {
+                        console.log('Rendering group:', { groupName, pagesCount: pages.length });
+                        return pages.length > 0 && (
                           <CommandGroup key={groupName} heading={groupName.charAt(0).toUpperCase() + groupName.slice(1)}>
                             {pages.map((page) => {
                               const isSelected = selectedValues.includes(page.path);
@@ -268,7 +291,10 @@ export const PageSelectField: React.FC<PageSelectFieldProps> = ({
                                 <CommandItem
                                   key={page.id}
                                   value={page.name}
-                                  onSelect={() => togglePage(page)}
+                                  onSelect={() => {
+                                    console.log('Item selected:', page.name);
+                                    togglePage(page);
+                                  }}
                                 >
                                   <div className={cn(
                                     "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
@@ -282,8 +308,8 @@ export const PageSelectField: React.FC<PageSelectFieldProps> = ({
                               );
                             })}
                           </CommandGroup>
-                        )
-                      ))}
+                        );
+                      })}
                     </ScrollArea>
                   </CommandList>
                   {selectedValues.length > 0 && (
@@ -291,7 +317,10 @@ export const PageSelectField: React.FC<PageSelectFieldProps> = ({
                       <CommandSeparator />
                       <CommandGroup>
                         <CommandItem 
-                          onSelect={clearPages}
+                          onSelect={() => {
+                            console.log('Clear all clicked');
+                            clearPages();
+                          }}
                           className="justify-center text-center"
                         >
                           Clear all

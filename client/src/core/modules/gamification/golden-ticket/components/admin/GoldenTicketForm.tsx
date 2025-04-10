@@ -27,6 +27,12 @@ import { uploadPromotionalImage } from '../../services/fileUploadService';
 import PageSelectField from '../common/PageSelectField';
 import { AVAILABLE_PAGES } from '../../data/availablePages';
 
+// Debug log for available pages
+console.log('GoldenTicketForm loaded with pages:', { 
+  availablePagesCount: AVAILABLE_PAGES.length,
+  firstPages: AVAILABLE_PAGES.slice(0, 3) 
+});
+
 // Form schema for creating golden tickets
 const formSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters'),
