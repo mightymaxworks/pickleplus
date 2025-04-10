@@ -18,35 +18,35 @@ const TOURNAMENT_DISCOVERY_POINTS = [
     id: 'tournament-bracket',
     name: 'Tournament Bracket',
     description: 'Discover how tournament brackets will work in Pickle+',
-    points: 25,
+    points: 15,
     tier: 'scout'
   },
   {
     id: 'tournament-scoring',
     name: 'Scoring System',
     description: 'Learn about the advanced scoring system for tournaments',
-    points: 50,
+    points: 15,
     tier: 'scout'
   },
   {
     id: 'tournament-registration',
     name: 'Tournament Registration',
     description: 'Explore how tournament registration will work',
-    points: 75,
+    points: 15,
     tier: 'strategist'
   },
   {
     id: 'seeding-algorithm',
     name: 'Seeding Algorithm',
     description: 'Discover how players will be seeded in tournaments',
-    points: 100,
+    points: 15,
     tier: 'strategist'
   },
   {
     id: 'tournament-rewards',
     name: 'Tournament Rewards',
     description: 'Learn about tournament rewards and prizes',
-    points: 150,
+    points: 15,
     tier: 'pioneer'
   }
 ];
