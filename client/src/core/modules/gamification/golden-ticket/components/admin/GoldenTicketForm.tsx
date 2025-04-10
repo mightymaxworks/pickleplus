@@ -18,8 +18,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, ImagePlus, X } from 'lucide-react';
+import { CalendarIcon, ImagePlus, X, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import GoldenTicketPreview from './GoldenTicketPreview';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -67,6 +68,9 @@ const GoldenTicketForm: React.FC = () => {
     queryKey: ['admin', 'sponsors'],
     queryFn: getSponsors
   });
+  
+  // State for form preview mode
+  const [showPreview, setShowPreview] = useState(false);
   
   // Default form values
   const defaultValues: Partial<FormValues> = {
@@ -730,13 +734,38 @@ const GoldenTicketForm: React.FC = () => {
           )}
         />
         
-        <Button 
-          type="submit" 
-          disabled={mutation.isPending || uploadImageMutation.isPending}
-          className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white"
-        >
-          {mutation.isPending || uploadImageMutation.isPending ? 'Creating...' : 'Create Golden Ticket'}
-        </Button>
+        <div className="flex gap-4 mt-4">
+          <Button 
+            type="submit" 
+            disabled={mutation.isPending || uploadImageMutation.isPending}
+            className="flex-1 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white"
+          >
+            {mutation.isPending || uploadImageMutation.isPending ? 'Creating...' : 'Create Golden Ticket'}
+          </Button>
+          
+          {/* Preview Button */}
+          <GoldenTicketPreview
+            ticketData={{
+              title: form.watch('title') || 'Golden Ticket Title',
+              description: form.watch('description') || 'Example golden ticket description text.',
+              rewardDescription: form.watch('rewardDescription') || 'Example reward description.',
+              promotionalImageUrl: form.watch('promotionalImageUrl'),
+              promotionalImagePath: form.watch('promotionalImagePath'),
+              sponsor: form.watch('sponsorId') ? 
+                sponsors.find(s => s.id === form.watch('sponsorId')) || null : null
+            }}
+            trigger={
+              <Button 
+                type="button"
+                variant="outline"
+                className="flex items-center gap-1"
+              >
+                <Eye className="h-4 w-4" />
+                Preview
+              </Button>
+            }
+          />
+        </div>
       </form>
     </Form>
   );
