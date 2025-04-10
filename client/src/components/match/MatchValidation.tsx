@@ -426,13 +426,18 @@ export default function MatchValidation({ match, onValidationComplete }: MatchVa
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">
                       <AvatarFallback>
-                        {match.playerNames?.[match.players?.[1]?.userId]?.avatarInitials || 
-                         match.playerNames?.[match.players?.[1]?.userId]?.displayName?.charAt(0) || 
-                         "P2"}
+                        {match.players && match.players[1] && match.playerNames && match.players[1].userId 
+                          ? (match.playerNames[match.players[1].userId]?.avatarInitials || 
+                             match.playerNames[match.players[1].userId]?.displayName?.charAt(0)) 
+                          : "P2"}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <div className="font-medium">{match.playerNames?.[match.players?.[1]?.userId]?.displayName || "Player 2"}</div>
+                      <div className="font-medium">
+                        {match.players && match.players[1] && match.playerNames && match.players[1].userId 
+                          ? match.playerNames[match.players[1].userId]?.displayName 
+                          : "Player 2"}
+                      </div>
                       <div className="text-sm text-muted-foreground">
                         {match.players?.[1]?.isWinner && (
                           <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 text-xs">
