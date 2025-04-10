@@ -670,6 +670,24 @@ const TournamentDiscoveryPage: React.FC = () => {
           onClose={() => setShowAlert(false)}
         />
       )}
+      
+      {/* Tournament Roadmap section */}
+      <div className="mt-12 py-8 border-t border-gray-200">
+        <h2 className="text-2xl font-bold text-center mb-6">Tournament Feature Roadmap</h2>
+        <TournamentRoadmap className="max-w-3xl mx-auto" />
+      </div>
+      
+      {/* Feature detail dialog */}
+      <TournamentFeatureDialog
+        feature={selectedFeatureId ? getTournamentFeatureDetail(selectedFeatureId) : null}
+        isOpen={showFeatureDetail}
+        onOpenChange={(open) => {
+          setShowFeatureDetail(open);
+          if (!open) {
+            setSelectedFeatureId('');
+          }
+        }}
+      />
     </div>
   );
 };
