@@ -2,129 +2,100 @@
  * PKL-278651-GAME-0001-MOD
  * useKonamiCode Hook
  * 
- * A hook that tracks keypresses and detects the Konami code or other custom key sequences.
+ * A hook that detects the Konami code sequence (up, up, down, down, left, right, left, right, B, A)
+ * and triggers a callback when detected.
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
-// Default Konami code: up, up, down, down, left, right, left, right, b, a
-const DEFAULT_KONAMI_CODE = [
-  'ArrowUp', 'ArrowUp', 
-  'ArrowDown', 'ArrowDown', 
-  'ArrowLeft', 'ArrowRight', 
-  'ArrowLeft', 'ArrowRight', 
-  'b', 'a'
+const KONAMI_CODE = [
+  'ArrowUp', 
+  'ArrowUp', 
+  'ArrowDown', 
+  'ArrowDown', 
+  'ArrowLeft', 
+  'ArrowRight', 
+  'ArrowLeft', 
+  'ArrowRight', 
+  'b', 
+  'a'
 ];
 
 interface UseKonamiCodeOptions {
-  code?: string[];
-  onDetected?: () => void;
-  resetOnDetected?: boolean;
-  timeLimit?: number;
+  onKonami: () => void;
+  resetOnSuccess?: boolean;
 }
 
-interface UseKonamiCodeResult {
-  konamiDetected: boolean;
-  progress: number;
+export default function useKonamiCode({ 
+  onKonami, 
+  resetOnSuccess = true 
+}: UseKonamiCodeOptions): { 
+  keysPressed: string[];
+  isActivated: boolean;
   reset: () => void;
-}
-
-export default function useKonamiCode({
-  code = DEFAULT_KONAMI_CODE,
-  onDetected,
-  resetOnDetected = true,
-  timeLimit = 5000, // 5 seconds between keypresses
-}: UseKonamiCodeOptions = {}): UseKonamiCodeResult {
-  const [konamiDetected, setKonamiDetected] = useState(false);
-  const [keySequence, setKeySequence] = useState<string[]>([]);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Reset the detection and key sequence
-  const reset = useCallback(() => {
-    setKonamiDetected(false);
-    setKeySequence([]);
-  }, []);
-
-  // Process key presses
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Convert key to lowercase for case-insensitive matching
-      const key = event.key;
-
-      // Clear the timeout if it exists
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-
-      // Set a new timeout to reset the sequence if no keys are pressed within the limit
-      timeoutRef.current = setTimeout(() => {
-        setKeySequence([]);
-      }, timeLimit);
-
-      // Add the new key to the sequence
-      setKeySequence(prevSequence => {
-        const newSequence = [...prevSequence, key];
-        
-        // Check if the new sequence matches the code
-        const isKonami = isMatchingSequence(newSequence, code);
-        
-        if (isKonami) {
-          setKonamiDetected(true);
-          
-          // Call the callback if provided
-          if (onDetected) {
-            onDetected();
-          }
-          
-          // Reset immediately or keep the detected state
-          if (resetOnDetected) {
-            return [];
-          }
-        }
-        
-        // Keep only the relevant part of the sequence
-        // If we have more keys than the code, remove the excess from the beginning
-        return newSequence.length > code.length 
-          ? newSequence.slice(newSequence.length - code.length) 
-          : newSequence;
-      });
-    };
-    
-    // Check if sequences match (case-insensitive)
-    const isMatchingSequence = (entered: string[], target: string[]): boolean => {
-      if (entered.length < target.length) return false;
-      
-      // Get the latest portion of the entered sequence that matches the target length
-      const relevantSequence = entered.slice(entered.length - target.length);
-      
-      // Compare each key
-      return relevantSequence.every((key, index) => {
-        // For letter keys, do case-insensitive comparison
-        if (target[index].length === 1 && /[a-zA-Z]/.test(target[index])) {
-          return key.toLowerCase() === target[index].toLowerCase();
-        }
-        // For special keys like ArrowUp, do exact comparison
-        return key === target[index];
-      });
-    };
-    
-    // Add event listener
-    window.addEventListener('keydown', handleKeyDown);
-    
-    // Clean up
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [code, onDetected, resetOnDetected, timeLimit]);
+} {
+  const [keysPressed, setKeysPressed] = useState<string[]>([]);
+  const [isActivated, setIsActivated] = useState(false);
   
-  // Calculate progress as percentage of completed sequence
-  const progress = Math.min(
-    100, 
-    Math.floor((keySequence.length / code.length) * 100)
+  // Handle keydown events
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      // Get the key from the event
+      const key = event.key.toLowerCase();
+      
+      // Update the keys pressed state by adding the new key
+      setKeysPressed((prev) => {
+        // Create a new array with the current keys and the new key
+        const updatedKeys = [...prev, key];
+        
+        // Only keep the last N keys (where N is the length of the Konami code)
+        if (updatedKeys.length > KONAMI_CODE.length) {
+          return updatedKeys.slice(-KONAMI_CODE.length);
+        }
+        
+        return updatedKeys;
+      });
+    },
+    []
   );
   
-  return { konamiDetected, progress, reset };
+  // Check if the Konami code has been entered
+  useEffect(() => {
+    // If there are not enough keys pressed, no need to check
+    if (keysPressed.length < KONAMI_CODE.length) {
+      return;
+    }
+    
+    // Check if the keys pressed match the Konami code
+    const isKonamiCode = keysPressed.join('').toLowerCase() === 
+      KONAMI_CODE.join('').toLowerCase();
+    
+    if (isKonamiCode && !isActivated) {
+      // Execute the callback
+      onKonami();
+      setIsActivated(true);
+      
+      // Reset if needed
+      if (resetOnSuccess) {
+        setKeysPressed([]);
+      }
+    }
+  }, [keysPressed, onKonami, isActivated, resetOnSuccess]);
+  
+  // Add and remove the keydown event listener
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyDown]);
+  
+  // Function to reset the state
+  const reset = useCallback(() => {
+    setKeysPressed([]);
+    setIsActivated(false);
+  }, []);
+  
+  return { keysPressed, isActivated, reset };
 }

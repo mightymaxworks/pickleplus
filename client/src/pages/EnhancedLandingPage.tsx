@@ -5,7 +5,7 @@ import { RatingSystemsIntegrationSection } from '@/components/RatingSystemsInteg
 import { EnhancedChangelogSection } from '@/components/EnhancedChangelogSection';
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { PicklePlusNewLogo } from "../components/icons/PicklePlusNewLogo";
 import { 
   Award, 
@@ -18,6 +18,10 @@ import {
   ChevronDown,
   Trophy
 } from "lucide-react";
+
+// Import gamification components and hooks for the easter egg demonstration
+import { useKonamiCode } from '@/core/modules/gamification/hooks';
+import { DiscoveryAlert } from '@/core/modules/gamification/components';
 
 // Enhanced animation variants with more refined animations
 const fadeIn = {
@@ -93,6 +97,19 @@ const EnhancedFeatureCard = ({
 
 export default function EnhancedLandingPage() {
   const [, navigate] = useLocation();
+  const [showDiscovery, setShowDiscovery] = useState(false);
+  
+  // Use the Konami code hook to trigger a discovery
+  useKonamiCode({
+    onKonami: () => {
+      console.log("Konami code activated!");
+      setShowDiscovery(true);
+      // Play a success sound
+      const audio = new Audio("/success.mp3");
+      audio.volume = 0.5;
+      audio.play().catch(e => console.log("Audio play failed:", e));
+    }
+  });
   
   return (
     <div className="enhanced-landing-page overflow-x-hidden w-full">
@@ -264,6 +281,29 @@ export default function EnhancedLandingPage() {
         </div>
       </footer>
 
+      {/* Discovery Alert */}
+      {showDiscovery && (
+        <DiscoveryAlert
+          notification={{
+            title: "You Found a Secret!",
+            message: "You've discovered the Konami Code Easter Egg! The Konami Code is a cheat code that originated from Konami games in the 1980s.",
+            level: "special",
+            autoHide: true,
+            duration: 10000,
+            reward: {
+              name: "Code Master",
+              description: "+50 XP for finding this hidden feature!",
+              type: "xp",
+              rarity: "rare",
+              value: {
+                xpAmount: 50
+              }
+            }
+          }}
+          onClose={() => setShowDiscovery(false)}
+        />
+      )}
+      
       {/* CSS Styles for specific animations */}
       <style>{`
         @keyframes float {
