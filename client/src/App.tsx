@@ -11,6 +11,7 @@ import TestRoutingPage from './pages/TestRoutingPage'
 import Dashboard from './pages/Dashboard'
 import RecordMatchPage from './pages/record-match-page'
 import MatchesPage from './pages/matches-page'
+import ModernizedMatchPage from './pages/modernized-match-page'
 import MatchRewardDemo from './pages/match-reward-demo'
 import EnhancedProfile from './pages/EnhancedProfile'
 import EnhancedProfilePage from './pages/EnhancedProfilePage'
@@ -74,7 +75,7 @@ export default function App() {
               {(params) => <ProtectedRoute component={Dashboard} path="/dashboard" />}
             </Route>
             <Route path="/matches">
-              {(params) => <ProtectedRoute component={MatchesPage} path="/matches" />}
+              {(params) => <ProtectedRoute component={ModernizedMatchPage} path="/matches" />}
             </Route>
             <Route path="/tournaments">
               {(params) => <ProtectedRoute component={Dashboard} path="/tournaments" />}
