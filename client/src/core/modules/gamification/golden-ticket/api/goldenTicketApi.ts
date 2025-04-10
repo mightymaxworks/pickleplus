@@ -13,9 +13,20 @@ const API_BASE = '/api/golden-ticket';
 // Custom API request wrapper for debugging
 async function debugApiRequest<T>(method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE", url: string, data?: any): Promise<T> {
   try {
-    console.log(`Making API ${method} request to ${url}`);
+    console.log(`Making API ${method} request to ${url}`, data ? { data } : '');
     const response = await apiRequest(method, url, data);
     console.log(`API response from ${url}:`, response);
+    
+    // Enhanced debugging for sponsor list
+    if (url.includes('/sponsors')) {
+      console.log('SPONSORS DEBUG - Response type:', typeof response);
+      console.log('SPONSORS DEBUG - Response keys:', Object.keys(response));
+      if (response && typeof response === 'object' && 'sponsors' in response) {
+        console.log('SPONSORS DEBUG - Number of sponsors:', response.sponsors.length);
+        console.log('SPONSORS DEBUG - First sponsor:', response.sponsors[0]);
+      }
+    }
+    
     return response as T;
   } catch (error) {
     console.error(`API error from ${url}:`, error);
