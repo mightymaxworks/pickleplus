@@ -5,7 +5,7 @@
  * This service provides methods for interacting with the tournament discovery API endpoints.
  */
 
-import { apiRequest } from '@lib/queryClient';
+import { apiRequest } from '@/lib/queryClient';
 
 /**
  * Types for tournament discovery API responses
@@ -45,39 +45,107 @@ export interface DiscoveryResponse {
  * Get all tournament discovery points
  */
 export async function getDiscoveryPoints(): Promise<DiscoveryPoint[]> {
-  return apiRequest<DiscoveryPoint[]>({
-    url: '/api/tournament-discovery/points',
-    method: 'GET'
-  });
+  try {
+    const response = await apiRequest(
+      'GET',
+      '/api/tournament-discovery/points'
+    );
+    
+    if (!response.ok) {
+      throw new Error(`Error fetching discovery points: ${response.status}`);
+    }
+    
+    const text = await response.text();
+    return JSON.parse(text);
+  } catch (error) {
+    console.error('Failed to fetch discovery points:', error);
+    return [];
+  }
 }
 
 /**
  * Get a specific discovery point
  */
 export async function getDiscoveryPoint(pointId: string): Promise<DiscoveryPoint> {
-  return apiRequest<DiscoveryPoint>({
-    url: `/api/tournament-discovery/points/${pointId}`,
-    method: 'GET'
-  });
+  try {
+    const response = await apiRequest(
+      'GET',
+      `/api/tournament-discovery/points/${pointId}`
+    );
+    
+    if (!response.ok) {
+      throw new Error(`Error fetching discovery point: ${response.status}`);
+    }
+    
+    const text = await response.text();
+    return JSON.parse(text);
+  } catch (error) {
+    console.error(`Failed to fetch discovery point ${pointId}:`, error);
+    throw error;
+  }
 }
 
 /**
  * Get the current user's discovery progress
  */
 export async function getUserDiscoveryProgress(): Promise<UserDiscoveryProgress> {
-  return apiRequest<UserDiscoveryProgress>({
-    url: '/api/tournament-discovery/my-discoveries',
-    method: 'GET'
-  });
+  try {
+    const response = await apiRequest(
+      'GET',
+      '/api/tournament-discovery/my-discoveries'
+    );
+    
+    if (response.status === 401) {
+      // Not authenticated, return default empty progress
+      return {
+        discoveries: [],
+        discoveredDetails: [],
+        totalPoints: 0,
+        completionPercentage: 0,
+        currentTier: 'none',
+        isComplete: false
+      };
+    }
+    
+    if (!response.ok) {
+      throw new Error(`Error fetching user discoveries: ${response.status}`);
+    }
+    
+    const text = await response.text();
+    return JSON.parse(text);
+  } catch (error) {
+    console.error('Failed to fetch user discoveries:', error);
+    // Return default empty progress on error
+    return {
+      discoveries: [],
+      discoveredDetails: [],
+      totalPoints: 0,
+      completionPercentage: 0,
+      currentTier: 'none',
+      isComplete: false
+    };
+  }
 }
 
 /**
  * Record a new discovery
  */
 export async function recordDiscovery(pointId: string): Promise<DiscoveryResponse> {
-  return apiRequest<DiscoveryResponse>({
-    url: '/api/tournament-discovery/discover',
-    method: 'POST',
-    data: { pointId }
-  });
+  try {
+    const response = await apiRequest(
+      'POST',
+      '/api/tournament-discovery/discover',
+      { pointId }
+    );
+    
+    if (!response.ok) {
+      throw new Error(`Error recording discovery: ${response.status}`);
+    }
+    
+    const text = await response.text();
+    return JSON.parse(text);
+  } catch (error) {
+    console.error(`Failed to record discovery ${pointId}:`, error);
+    throw error;
+  }
 }

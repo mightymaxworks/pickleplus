@@ -123,7 +123,7 @@ const TournamentDiscoveryPage: React.FC = () => {
           description: `You've discovered ${point.name}!`,
           type: 'xp',
           rarity: point.tier === 'pioneer' ? 'legendary' : (point.tier === 'strategist' ? 'rare' : 'common'),
-          value: { xpAmount: point.points }
+          value: { xpAmount: point.points, tokenType: undefined }
         }
       };
     });
@@ -569,7 +569,19 @@ const TournamentDiscoveryPage: React.FC = () => {
           open={showAlert}
           autoHide={true}
           hideDelay={5000}
-          reward={currentReward}
+          reward={{
+            id: currentReward.id,
+            name: currentReward.name,
+            description: currentReward.description,
+            type: currentReward.type === 'token' ? 'badge' : currentReward.type, // Convert 'token' to 'badge'
+            rarity: currentReward.rarity,
+            value: {
+              xpAmount: currentReward.value.xpAmount,
+              badgeId: currentReward.value.badgeId || currentReward.value.tokenType,
+              itemId: undefined,
+              currencyAmount: undefined
+            }
+          }}
           onClose={() => setShowAlert(false)}
         />
       )}
