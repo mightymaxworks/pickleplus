@@ -290,7 +290,7 @@ export default function ModernizedMatchPage() {
               ) : recentMatches && recentMatches.length > 0 ? (
                 <div className="space-y-3">
                   {recentMatches.slice(0, 3).map((match: RecordedMatch) => {
-                    const userPlayer = match.players.find((p) => p.userId === user?.id);
+                    const userPlayer = match.players?.find((p) => p.userId === user?.id);
                     const isWinner = userPlayer?.isWinner;
                     const opponent = getOpponentName(match, user?.id || 0);
                     
@@ -375,7 +375,7 @@ export default function ModernizedMatchPage() {
         </TabsContent>
         
         <TabsContent value="history" className="mt-8">
-          {/* MATCH-UI-278653[ENHANCE] - Comprehensive History View with advanced filtering */}
+          {/* PKL-278651-MATCH-0004-UIX: Modernized Match History using EnhancedMatchCard */}
           <div className="space-y-8 mx-auto max-w-5xl">
             {/* History Header with Stats Summary */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-muted/30 p-4 rounded-lg mb-6">
@@ -436,12 +436,12 @@ export default function ModernizedMatchPage() {
               </CardContent>
             </Card>
             
-            {/* Match Timeline - Full History */}
+            {/* PKL-278651-MATCH-0004-UIX: Enhanced Match Cards */}
             <Card className="border shadow-md overflow-hidden">
               <div className="bg-gradient-to-r from-primary/10 to-transparent px-6 py-4 border-b">
                 <CardTitle className="flex items-center text-xl">
                   <Activity className="h-5 w-5 mr-2 text-primary" />
-                  Complete Match Timeline
+                  Match History
                 </CardTitle>
               </div>
               <CardContent className="pb-6">
@@ -449,27 +449,8 @@ export default function ModernizedMatchPage() {
                   <div className="flex justify-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                   </div>
-                ) : recentMatches && recentMatches.length > 0 ? (
-                  <MatchTimeline 
-                    matches={recentMatches} 
-                    onMatchSelected={(match) => {
-                      // Implement match details modal
-                      console.log('Match selected:', match);
-                    }} 
-                  />
                 ) : (
-                  <div className="text-center py-8">
-                    <Trophy className="h-12 w-12 mx-auto text-muted-foreground opacity-20 mb-3" />
-                    <h3 className="font-medium text-lg">No Matches Yet</h3>
-                    <p className="text-muted-foreground">Record your first match to start building your history.</p>
-                    <Button 
-                      variant="outline" 
-                      className="mt-4"
-                      onClick={() => setMatchDialogOpen(true)}
-                    >
-                      Record First Match
-                    </Button>
-                  </div>
+                  <MatchHistoryTab />
                 )}
               </CardContent>
             </Card>
@@ -577,7 +558,7 @@ export default function ModernizedMatchPage() {
                     {recentMatches
                       .filter(m => m.validationStatus === 'pending')
                       .map((match: RecordedMatch) => {
-                        const userPlayer = match.players.find((p) => p.userId === user?.id);
+                        const userPlayer = match.players?.find((p) => p.userId === user?.id);
                         const isWinner = userPlayer?.isWinner;
                         const opponent = getOpponentName(match, user?.id || 0);
                         
