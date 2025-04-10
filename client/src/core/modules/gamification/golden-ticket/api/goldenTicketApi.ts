@@ -2,283 +2,155 @@
  * PKL-278651-GAME-0005-GOLD
  * Golden Ticket API Service
  * 
- * Client-side service for interacting with the golden ticket API endpoints.
+ * API service for interacting with the Golden Ticket backend.
  */
 
 import { apiRequest } from '@/lib/queryClient';
-import type { 
-  GoldenTicket, 
-  GoldenTicketClaim, 
-  Sponsor,
-  InsertGoldenTicket,
-  InsertSponsor
-} from '@shared/golden-ticket.schema';
+import { GoldenTicket, GoldenTicketClaim, Sponsor } from '@shared/golden-ticket.schema';
+
+const API_BASE = '/api/golden-ticket';
+
+// Ticket Management API
 
 /**
- * Types for additional API responses
+ * Fetch all available golden tickets
+ * @returns List of golden tickets
  */
-export interface TicketCheckResponse {
-  result: 'show-ticket' | 'no-ticket';
-  ticketId?: number;
-}
-
-export interface TicketClaimResponse {
-  success: boolean;
-  claim: GoldenTicketClaim;
+export async function getAllGoldenTickets(): Promise<GoldenTicket[]> {
+  return apiRequest(`${API_BASE}/admin/tickets`);
 }
 
 /**
- * Check if a golden ticket should be shown
+ * Fetch golden tickets that are available to the current user
+ * @returns List of golden tickets
  */
-export async function checkForGoldenTicket(): Promise<TicketCheckResponse> {
-  try {
-    const response = await apiRequest(
-      'GET',
-      '/api/golden-ticket/check'
-    );
-    
-    if (!response.ok) {
-      throw new Error(`Error checking for golden ticket: ${response.status}`);
-    }
-    
-    const text = await response.text();
-    return JSON.parse(text);
-  } catch (error) {
-    console.error('Failed to check for golden ticket:', error);
-    return { result: 'no-ticket' };
-  }
+export async function getMyGoldenTickets(): Promise<GoldenTicket[]> {
+  return apiRequest(`${API_BASE}/tickets`);
 }
 
 /**
- * Get a specific golden ticket by ID
+ * Create a new golden ticket
+ * @param ticket The ticket data
+ * @returns The created ticket
  */
-export async function getGoldenTicketById(id: number): Promise<GoldenTicket & { 
-  sponsorName?: string; 
-  sponsorLogoUrl?: string;
-  sponsorWebsite?: string;
-} | null> {
-  try {
-    const response = await apiRequest(
-      'GET',
-      `/api/golden-ticket/${id}`
-    );
-    
-    if (!response.ok) {
-      throw new Error(`Error fetching golden ticket: ${response.status}`);
-    }
-    
-    const text = await response.text();
-    return JSON.parse(text);
-  } catch (error) {
-    console.error(`Failed to fetch golden ticket ${id}:`, error);
-    return null;
-  }
+export async function createGoldenTicket(ticket: Omit<GoldenTicket, 'id' | 'createdAt' | 'updatedAt' | 'currentClaims'>): Promise<GoldenTicket> {
+  return apiRequest(`${API_BASE}/admin/tickets`, {
+    method: 'POST',
+    body: JSON.stringify(ticket),
+  });
 }
+
+/**
+ * Update an existing golden ticket
+ * @param id The ticket ID
+ * @param update The fields to update
+ * @returns The updated ticket
+ */
+export async function updateGoldenTicket(id: number, update: Partial<GoldenTicket>): Promise<GoldenTicket> {
+  return apiRequest(`${API_BASE}/admin/tickets/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(update),
+  });
+}
+
+/**
+ * Delete a golden ticket
+ * @param id The ticket ID
+ */
+export async function deleteGoldenTicket(id: number): Promise<void> {
+  return apiRequest(`${API_BASE}/admin/tickets/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+// Ticket Claims API
 
 /**
  * Claim a golden ticket
+ * @param ticketId The ticket ID to claim
+ * @returns The claim record
  */
-export async function claimGoldenTicket(ticketId: number): Promise<GoldenTicketClaim | null> {
-  try {
-    const response = await apiRequest(
-      'POST',
-      '/api/golden-ticket/claim',
-      { ticketId }
-    );
-    
-    if (!response.ok) {
-      throw new Error(`Error claiming golden ticket: ${response.status}`);
-    }
-    
-    const text = await response.text();
-    const data = JSON.parse(text) as TicketClaimResponse;
-    return data.claim;
-  } catch (error) {
-    console.error(`Failed to claim golden ticket ${ticketId}:`, error);
-    return null;
-  }
+export async function claimGoldenTicket(ticketId: number): Promise<GoldenTicketClaim> {
+  return apiRequest(`${API_BASE}/tickets/${ticketId}/claim`, {
+    method: 'POST',
+  });
 }
 
 /**
- * Get all golden tickets claimed by current user
+ * Get all claims for the current user
+ * @returns List of claims
  */
-export async function getMyGoldenTickets(): Promise<GoldenTicketClaim[]> {
-  try {
-    const response = await apiRequest(
-      'GET',
-      '/api/golden-ticket/my-tickets'
-    );
-    
-    if (!response.ok) {
-      throw new Error(`Error fetching my golden tickets: ${response.status}`);
-    }
-    
-    const text = await response.text();
-    return JSON.parse(text);
-  } catch (error) {
-    console.error('Failed to fetch my golden tickets:', error);
-    return [];
-  }
-}
-
-/**
- * Admin API functions
- */
-
-/**
- * Get all golden tickets (admin only)
- */
-export async function getAllGoldenTickets(): Promise<GoldenTicket[]> {
-  try {
-    const response = await apiRequest(
-      'GET',
-      '/api/admin/golden-tickets'
-    );
-    
-    if (!response.ok) {
-      throw new Error(`Error fetching all golden tickets: ${response.status}`);
-    }
-    
-    const text = await response.text();
-    return JSON.parse(text);
-  } catch (error) {
-    console.error('Failed to fetch all golden tickets:', error);
-    return [];
-  }
-}
-
-/**
- * Create a new golden ticket (admin only)
- */
-export async function createGoldenTicket(ticket: InsertGoldenTicket): Promise<GoldenTicket | null> {
-  try {
-    const response = await apiRequest(
-      'POST',
-      '/api/admin/golden-tickets',
-      ticket
-    );
-    
-    if (!response.ok) {
-      throw new Error(`Error creating golden ticket: ${response.status}`);
-    }
-    
-    const text = await response.text();
-    return JSON.parse(text);
-  } catch (error) {
-    console.error('Failed to create golden ticket:', error);
-    return null;
-  }
-}
-
-/**
- * Update a golden ticket (admin only)
- */
-export async function updateGoldenTicket(id: number, data: Partial<GoldenTicket>): Promise<GoldenTicket | null> {
-  try {
-    const response = await apiRequest(
-      'PUT',
-      `/api/admin/golden-tickets/${id}`,
-      data
-    );
-    
-    if (!response.ok) {
-      throw new Error(`Error updating golden ticket: ${response.status}`);
-    }
-    
-    const text = await response.text();
-    return JSON.parse(text);
-  } catch (error) {
-    console.error(`Failed to update golden ticket ${id}:`, error);
-    return null;
-  }
-}
-
-/**
- * Get all sponsors (admin only)
- */
-export async function getAllSponsors(): Promise<Sponsor[]> {
-  try {
-    const response = await apiRequest(
-      'GET',
-      '/api/admin/sponsors'
-    );
-    
-    if (!response.ok) {
-      throw new Error(`Error fetching sponsors: ${response.status}`);
-    }
-    
-    const text = await response.text();
-    return JSON.parse(text);
-  } catch (error) {
-    console.error('Failed to fetch sponsors:', error);
-    return [];
-  }
-}
-
-/**
- * Create a new sponsor (admin only)
- */
-export async function createSponsor(sponsor: InsertSponsor): Promise<Sponsor | null> {
-  try {
-    const response = await apiRequest(
-      'POST',
-      '/api/admin/sponsors',
-      sponsor
-    );
-    
-    if (!response.ok) {
-      throw new Error(`Error creating sponsor: ${response.status}`);
-    }
-    
-    const text = await response.text();
-    return JSON.parse(text);
-  } catch (error) {
-    console.error('Failed to create sponsor:', error);
-    return null;
-  }
+export async function getMyTicketClaims(): Promise<GoldenTicketClaim[]> {
+  return apiRequest(`${API_BASE}/claims`);
 }
 
 /**
  * Get all ticket claims (admin only)
+ * @returns List of all claims
  */
-export async function getTicketClaims(): Promise<GoldenTicketClaim[]> {
-  try {
-    const response = await apiRequest(
-      'GET',
-      '/api/admin/ticket-claims'
-    );
-    
-    if (!response.ok) {
-      throw new Error(`Error fetching ticket claims: ${response.status}`);
-    }
-    
-    const text = await response.text();
-    return JSON.parse(text);
-  } catch (error) {
-    console.error('Failed to fetch ticket claims:', error);
-    return [];
-  }
+export async function getAllClaims(): Promise<GoldenTicketClaim[]> {
+  return apiRequest(`${API_BASE}/admin/claims`);
 }
 
 /**
- * Update claim status (admin only)
+ * Update a claim status
+ * @param id The claim ID
+ * @param status The new status
+ * @returns The updated claim
  */
-export async function updateClaimStatus(id: number, status: string): Promise<GoldenTicketClaim | null> {
-  try {
-    const response = await apiRequest(
-      'PUT',
-      `/api/admin/ticket-claims/${id}`,
-      { status }
-    );
-    
-    if (!response.ok) {
-      throw new Error(`Error updating claim status: ${response.status}`);
-    }
-    
-    const text = await response.text();
-    return JSON.parse(text);
-  } catch (error) {
-    console.error(`Failed to update claim status for ${id}:`, error);
-    return null;
-  }
+export async function updateClaimStatus(id: number, status: string): Promise<GoldenTicketClaim> {
+  return apiRequest(`${API_BASE}/admin/claims/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  });
 }
+
+// Sponsor Management API
+
+/**
+ * Get all sponsors
+ * @returns List of sponsors
+ */
+export async function getAllSponsors(): Promise<Sponsor[]> {
+  return apiRequest(`${API_BASE}/admin/sponsors`);
+}
+
+/**
+ * Create a new sponsor
+ * @param sponsor The sponsor data
+ * @returns The created sponsor
+ */
+export async function createSponsor(sponsor: Omit<Sponsor, 'id' | 'createdAt' | 'updatedAt'>): Promise<Sponsor> {
+  return apiRequest(`${API_BASE}/admin/sponsors`, {
+    method: 'POST',
+    body: JSON.stringify(sponsor),
+  });
+}
+
+/**
+ * Update a sponsor
+ * @param id The sponsor ID
+ * @param update The fields to update
+ * @returns The updated sponsor
+ */
+export async function updateSponsor(id: number, update: Partial<Sponsor>): Promise<Sponsor> {
+  return apiRequest(`${API_BASE}/admin/sponsors/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(update),
+  });
+}
+
+/**
+ * Delete a sponsor
+ * @param id The sponsor ID
+ */
+export async function deleteSponsor(id: number): Promise<void> {
+  return apiRequest(`${API_BASE}/admin/sponsors/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+// Client-side aliases for better naming in admin interface
+export const getGoldenTickets = getAllGoldenTickets;
+export const getClaims = getAllClaims;
+export const getSponsors = getAllSponsors;

@@ -23,6 +23,7 @@ import LandingPageTest from './pages/LandingPageTest'
 import MasteryPathsPage from './pages/MasteryPathsPage'
 import TournamentDiscoveryPage from './pages/TournamentDiscoveryPage'
 import PrizeDrawingPage from './pages/admin/PrizeDrawingPage'
+import GoldenTicketAdmin from './pages/admin/GoldenTicketAdmin'
 import NotFound from './pages/not-found'
 
 import { useAuth } from './hooks/useAuth'
@@ -116,6 +117,9 @@ export default function App() {
             </Route>
             <Route path="/admin/prize-drawing">
               {(params) => <ProtectedRoute component={PrizeDrawingPage} path="/admin/prize-drawing" />}
+            </Route>
+            <Route path="/admin/golden-ticket">
+              {(params) => <ProtectedRoute component={GoldenTicketAdmin} path="/admin/golden-ticket" />}
             </Route>
             
             {/* Leaderboard Route */}
