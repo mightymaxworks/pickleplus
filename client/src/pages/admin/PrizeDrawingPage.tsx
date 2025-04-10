@@ -5,35 +5,31 @@
  * This page allows administrators to manage prize drawing pools and select winners
  */
 
-import React, { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import React, { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { formatDate, formatDateOnly } from '@/lib/utils';
+import { formatDate, formatDateOnly } from '../../lib/utils';
+import { apiRequest } from '../../lib/queryClient';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // UI Components
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Switch } from '@/components/ui/switch';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Progress } from '@/components/ui/progress';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Loader2, Check, Gift, Trophy, User, Users, Award, Calendar, Settings, Star, Trash, Bell, AlertTriangle, Tag } from 'lucide-react';
 
-// Icons
-import { Loader2, AlertCircle, Trophy, Check, Gift, Users, Calendar, Hash, Plus, Trash, Zap, Award } from 'lucide-react';
-
-// Types for the prize drawing data
 interface PrizeDrawingPool {
   id: number;
   name: string;
@@ -88,996 +84,1256 @@ interface DrawWinnersResponse {
   }[];
 }
 
+// Create form schema using Zod
+const poolFormSchema = z.object({
+  name: z.string().min(3, { message: "Name must be at least 3 characters" }),
+  description: z.string().nullable().optional(),
+  campaignId: z.string().min(1, { message: "Campaign ID is required" }),
+  prizeDescription: z.string().nullable().optional(),
+  maxWinners: z.coerce.number().positive({ message: "Must be at least 1" }).default(1),
+  startDate: z.string().optional(),
+  endDate: z.string().nullable().optional(),
+  drawingDate: z.string().nullable().optional(),
+  status: z.enum(['draft', 'active', 'completed', 'cancelled']).default('draft'),
+  requiresVerification: z.boolean().default(false)
+});
+
+type PoolFormValues = z.infer<typeof poolFormSchema>;
+
 /**
  * Pool Management component to display and edit prize drawing pools
  */
-const PoolManagement: React.FC = () => {
+function PoolManagement() {
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [currentPool, setCurrentPool] = useState<PrizeDrawingPool | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [activePool, setActivePool] = useState<number | null>(null);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    campaignId: 'tournament-discovery',
-    prizeDescription: '',
-    maxWinners: 1,
-    status: 'draft' as const,
-    requiresVerification: false
-  });
 
-  // Fetch pools data
+  // Query to fetch all pools
   const { data: pools, isLoading: isLoadingPools, error: poolsError } = useQuery({
     queryKey: ['/api/prize-drawings/pools-summary'],
     retry: 1
   });
 
-  // Create a new pool
+  // Form setup for pool creation/editing
+  const form = useForm<PoolFormValues>({
+    resolver: zodResolver(poolFormSchema),
+    defaultValues: {
+      name: '',
+      description: '',
+      campaignId: '',
+      prizeDescription: '',
+      maxWinners: 1,
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: null,
+      drawingDate: null,
+      status: 'draft',
+      requiresVerification: false
+    }
+  });
+
+  // Create pool mutation
   const createPoolMutation = useMutation({
-    mutationFn: (data: typeof formData) => 
-      apiRequest('/api/prize-drawings/pools', 'POST', data),
+    mutationFn: (data: PoolFormValues) => apiRequest('/api/prize-drawings/pools', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/prize-drawings/pools-summary'] });
-      setIsCreateDialogOpen(false);
-      resetForm();
+      form.reset();
       toast({
-        title: 'Success',
-        description: 'Prize drawing pool created successfully',
+        title: "Success",
+        description: "Prize drawing pool created successfully",
       });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
-        title: 'Error',
-        description: `Failed to create pool: ${error.message || 'Unknown error'}`,
-        variant: 'destructive',
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to create pool: ${error}`,
       });
     }
   });
 
-  // Update an existing pool
+  // Update pool mutation
   const updatePoolMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number, data: typeof formData }) => 
-      apiRequest(`/api/prize-drawings/pools/${id}`, 'PUT', data),
+    mutationFn: (data: PoolFormValues & { id: number }) => apiRequest(`/api/prize-drawings/pools/${data.id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/prize-drawings/pools-summary'] });
       setIsEditDialogOpen(false);
-      resetForm();
       toast({
-        title: 'Success',
-        description: 'Prize drawing pool updated successfully',
+        title: "Success",
+        description: "Prize drawing pool updated successfully",
       });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
-        title: 'Error',
-        description: `Failed to update pool: ${error.message || 'Unknown error'}`,
-        variant: 'destructive',
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to update pool: ${error}`,
       });
     }
   });
 
-  const handleCreatePool = (e: React.FormEvent) => {
-    e.preventDefault();
-    createPoolMutation.mutate(formData);
+  // Reset form for new pool creation
+  const resetForm = () => {
+    form.reset({
+      name: '',
+      description: '',
+      campaignId: '',
+      prizeDescription: '',
+      maxWinners: 1,
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: null,
+      drawingDate: null,
+      status: 'draft',
+      requiresVerification: false
+    });
   };
 
-  const handleUpdatePool = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (activePool) {
-      updatePoolMutation.mutate({ id: activePool, data: formData });
+  // Handle form submission
+  const onSubmit = (data: PoolFormValues) => {
+    if (currentPool) {
+      updatePoolMutation.mutate({ ...data, id: currentPool.id });
+    } else {
+      createPoolMutation.mutate(data);
     }
   };
 
+  // Open edit dialog for a pool
   const handleEditPool = (pool: PrizeDrawingPool) => {
-    setActivePool(pool.id);
-    setFormData({
+    setCurrentPool(pool);
+    form.reset({
       name: pool.name,
       description: pool.description || '',
       campaignId: pool.campaignId,
       prizeDescription: pool.prizeDescription || '',
       maxWinners: pool.maxWinners,
+      startDate: pool.startDate ? new Date(pool.startDate).toISOString().split('T')[0] : undefined,
+      endDate: pool.endDate ? new Date(pool.endDate).toISOString().split('T')[0] : null,
+      drawingDate: pool.drawingDate ? new Date(pool.drawingDate).toISOString().split('T')[0] : null,
       status: pool.status,
       requiresVerification: pool.requiresVerification
     });
     setIsEditDialogOpen(true);
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      description: '',
-      campaignId: 'tournament-discovery',
-      prizeDescription: '',
-      maxWinners: 1,
-      status: 'draft',
-      requiresVerification: false
-    });
-    setActivePool(null);
+  // Get status badge based on pool status
+  const getStatusBadge = (status: PrizeDrawingPool['status']) => {
+    switch (status) {
+      case 'draft':
+        return <Badge variant="outline">Draft</Badge>;
+      case 'active':
+        return <Badge variant="default">Active</Badge>;
+      case 'completed':
+        return <Badge variant="secondary">Completed</Badge>;
+      case 'cancelled':
+        return <Badge variant="destructive">Cancelled</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
   };
 
-  if (isLoadingPools) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-12 w-full" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    );
-  }
-
-  if (poolsError) {
-    return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>Failed to load prize drawing pools.</AlertDescription>
-      </Alert>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div>
+      <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Prize Drawing Pools</h2>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Create New Pool
-        </Button>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button onClick={resetForm} className="flex gap-2 items-center">
+              <Gift className="w-4 h-4" />
+              Create New Pool
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Create New Prize Drawing Pool</DialogTitle>
+              <DialogDescription>
+                Add a new prize drawing pool for tournament discoveries.
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Pool Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Tournament Discovery Special Prize" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Special prize pool for users who complete all tournament discoveries" 
+                          {...field} 
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="campaignId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Campaign ID</FormLabel>
+                        <FormControl>
+                          <Input placeholder="TOURN-DISC-001" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="maxWinners"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Max Winners</FormLabel>
+                        <FormControl>
+                          <Input type="number" min={1} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <FormField
+                  control={form.control}
+                  name="prizeDescription"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Prize Description</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Early Access Token to tournament features and special profile badge" 
+                          {...field} 
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="grid grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Start Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="endDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>End Date</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="date" 
+                            {...field} 
+                            value={field.value || ''} 
+                            onChange={(e) => field.onChange(e.target.value || null)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="drawingDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Drawing Date</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="date" 
+                            {...field} 
+                            value={field.value || ''} 
+                            onChange={(e) => field.onChange(e.target.value || null)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="draft">Draft</SelectItem>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="requiresVerification"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-end space-x-3 space-y-0 py-4">
+                        <FormControl>
+                          <Input
+                            type="checkbox"
+                            checked={field.value}
+                            onChange={field.onChange}
+                            className="w-4 h-4"
+                          />
+                        </FormControl>
+                        <FormLabel>Requires Verification</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button type="submit">
+                    {createPoolMutation.isPending || updatePoolMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      'Save Pool'
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Pool Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Edit Prize Drawing Pool</DialogTitle>
+              <DialogDescription>
+                Modify the details of this prize drawing pool.
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                {/* Same form fields as above */}
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Pool Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Tournament Discovery Special Prize" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Special prize pool for users who complete all tournament discoveries" 
+                          {...field} 
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="campaignId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Campaign ID</FormLabel>
+                        <FormControl>
+                          <Input placeholder="TOURN-DISC-001" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="maxWinners"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Max Winners</FormLabel>
+                        <FormControl>
+                          <Input type="number" min={1} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <FormField
+                  control={form.control}
+                  name="prizeDescription"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Prize Description</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Early Access Token to tournament features and special profile badge" 
+                          {...field} 
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="grid grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Start Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="endDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>End Date</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="date" 
+                            {...field} 
+                            value={field.value || ''} 
+                            onChange={(e) => field.onChange(e.target.value || null)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="drawingDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Drawing Date</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="date" 
+                            {...field} 
+                            value={field.value || ''} 
+                            onChange={(e) => field.onChange(e.target.value || null)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="draft">Draft</SelectItem>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="requiresVerification"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-end space-x-3 space-y-0 py-4">
+                        <FormControl>
+                          <Input
+                            type="checkbox"
+                            checked={field.value}
+                            onChange={field.onChange}
+                            className="w-4 h-4"
+                          />
+                        </FormControl>
+                        <FormLabel>Requires Verification</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button type="submit">
+                    {createPoolMutation.isPending || updatePoolMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      'Update Pool'
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {pools && pools.length === 0 ? (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center py-6">
-              <Trophy className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-lg font-medium">No prize drawing pools yet</p>
-              <p className="text-sm text-muted-foreground mb-4">
-                Create your first prize drawing pool to get started
-              </p>
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" /> Create Pool
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {isLoadingPools ? (
+        <div className="flex justify-center my-8">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      ) : poolsError ? (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>Failed to load prize drawing pools.</AlertDescription>
+        </Alert>
+      ) : pools && pools.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {pools && pools.map((pool: PrizeDrawingPool) => (
             <Card key={pool.id} className="overflow-hidden">
               <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
+                <div className="flex justify-between">
                   <div>
-                    <CardTitle className="text-xl">{pool.name}</CardTitle>
-                    <CardDescription className="mt-1 text-sm text-muted-foreground">
-                      Campaign: {pool.campaignId}
-                    </CardDescription>
+                    <CardTitle>{pool.name}</CardTitle>
+                    <CardDescription>Campaign: {pool.campaignId}</CardDescription>
                   </div>
-                  <Badge 
-                    variant={
-                      pool.status === 'active' ? 'default' :
-                      pool.status === 'completed' ? 'success' :
-                      pool.status === 'cancelled' ? 'destructive' : 'outline'
-                    }
-                  >
-                    {pool.status.charAt(0).toUpperCase() + pool.status.slice(1)}
-                  </Badge>
+                  <div>
+                    {getStatusBadge(pool.status)}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="pb-2">
-                {pool.description && (
-                  <p className="text-sm text-muted-foreground mb-4">{pool.description}</p>
-                )}
-                
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <div className="flex items-center text-sm">
-                      <Users className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>Entries: {pool.entryCount || 0}</span>
-                    </div>
+                <p className="text-sm mb-2">{pool.description || 'No description'}</p>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-4 w-4 opacity-70" />
+                    <span>Start: {formatDateOnly(new Date(pool.startDate))}</span>
                   </div>
-                  <div>
-                    <div className="flex items-center text-sm">
-                      <Trophy className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>Winners: {pool.winnerCount || 0} / {pool.maxWinners}</span>
-                    </div>
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-4 w-4 opacity-70" />
+                    <span>End: {pool.endDate ? formatDateOnly(new Date(pool.endDate)) : 'Open'}</span>
                   </div>
-                  <div>
-                    <div className="flex items-center text-sm">
-                      <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>Created: {formatDateOnly(new Date(pool.createdAt))}</span>
-                    </div>
+                  <div className="flex items-center gap-1">
+                    <Trophy className="h-4 w-4 opacity-70" />
+                    <span>Max Winners: {pool.maxWinners}</span>
                   </div>
-                  <div>
-                    {pool.drawingDate ? (
-                      <div className="flex items-center text-sm">
-                        <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <span>Drawn: {formatDateOnly(new Date(pool.drawingDate))}</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center text-sm">
-                        <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <span>No drawing yet</span>
-                      </div>
-                    )}
+                  <div className="flex items-center gap-1">
+                    <Users className="h-4 w-4 opacity-70" />
+                    <span>Entries: {pool.entryCount || 0}</span>
                   </div>
                 </div>
-                
-                {pool.prizeDescription && (
-                  <Alert className="mt-2">
-                    <Gift className="h-4 w-4" />
-                    <AlertTitle>Prize</AlertTitle>
-                    <AlertDescription className="text-xs">
-                      {pool.prizeDescription}
-                    </AlertDescription>
-                  </Alert>
-                )}
+                <div className="mt-2">
+                  <p className="text-sm font-medium">Prize: {pool.prizeDescription || 'Not specified'}</p>
+                </div>
               </CardContent>
               <CardFooter className="flex justify-between pt-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => handleEditPool(pool)}
-                >
-                  Edit Details
+                <Button variant="outline" size="sm" onClick={() => handleEditPool(pool)}>
+                  <Settings className="h-4 w-4 mr-1" />
+                  Edit
                 </Button>
-                <Button 
-                  variant="default" 
-                  size="sm" 
-                  asChild
-                >
-                  <a href={`#entries-${pool.id}`}>View Entries</a>
+                <Button variant="default" size="sm" asChild>
+                  <a href={`/admin/prize-drawing?pool=${pool.id}`}>
+                    <Users className="h-4 w-4 mr-1" />
+                    Manage Entries
+                  </a>
                 </Button>
               </CardFooter>
             </Card>
           ))}
         </div>
+      ) : (
+        <Alert>
+          <AlertTitle>No prize drawing pools found</AlertTitle>
+          <AlertDescription>
+            Create your first prize drawing pool to get started.
+          </AlertDescription>
+        </Alert>
       )}
-
-      {/* Create Pool Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <form onSubmit={handleCreatePool}>
-            <DialogHeader>
-              <DialogTitle>Create New Prize Drawing Pool</DialogTitle>
-              <DialogDescription>
-                Create a new pool for prize drawings. Users will be entered into this pool when completing specific actions.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Pool Name</Label>
-                <Input 
-                  id="name" 
-                  value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea 
-                  id="description" 
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="campaignId">Campaign ID</Label>
-                <Input 
-                  id="campaignId" 
-                  value={formData.campaignId}
-                  onChange={(e) => setFormData({...formData, campaignId: e.target.value})}
-                  required
-                />
-                <p className="text-xs text-muted-foreground">Unique identifier for the campaign this pool belongs to</p>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="prizeDescription">Prize Description</Label>
-                <Textarea 
-                  id="prizeDescription" 
-                  value={formData.prizeDescription}
-                  onChange={(e) => setFormData({...formData, prizeDescription: e.target.value})}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="maxWinners">Maximum Winners</Label>
-                  <Input 
-                    id="maxWinners" 
-                    type="number"
-                    min="1"
-                    value={formData.maxWinners}
-                    onChange={(e) => setFormData({...formData, maxWinners: parseInt(e.target.value)})}
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select 
-                    value={formData.status}
-                    onValueChange={(value) => setFormData({
-                      ...formData, 
-                      status: value as 'draft' | 'active' | 'completed' | 'cancelled'
-                    })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch 
-                  id="requiresVerification" 
-                  checked={formData.requiresVerification}
-                  onCheckedChange={(checked) => setFormData({...formData, requiresVerification: checked})}
-                />
-                <Label htmlFor="requiresVerification">Requires Verification</Label>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => {
-                  resetForm();
-                  setIsCreateDialogOpen(false);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit"
-                disabled={createPoolMutation.isPending}
-              >
-                {createPoolMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Create Pool
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Pool Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <form onSubmit={handleUpdatePool}>
-            <DialogHeader>
-              <DialogTitle>Edit Prize Drawing Pool</DialogTitle>
-              <DialogDescription>
-                Update the details of this prize drawing pool.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-name">Pool Name</Label>
-                <Input 
-                  id="edit-name" 
-                  value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-description">Description</Label>
-                <Textarea 
-                  id="edit-description" 
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-campaignId">Campaign ID</Label>
-                <Input 
-                  id="edit-campaignId" 
-                  value={formData.campaignId}
-                  onChange={(e) => setFormData({...formData, campaignId: e.target.value})}
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-prizeDescription">Prize Description</Label>
-                <Textarea 
-                  id="edit-prizeDescription" 
-                  value={formData.prizeDescription}
-                  onChange={(e) => setFormData({...formData, prizeDescription: e.target.value})}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-maxWinners">Maximum Winners</Label>
-                  <Input 
-                    id="edit-maxWinners" 
-                    type="number"
-                    min="1"
-                    value={formData.maxWinners}
-                    onChange={(e) => setFormData({...formData, maxWinners: parseInt(e.target.value)})}
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-status">Status</Label>
-                  <Select 
-                    value={formData.status}
-                    onValueChange={(value) => setFormData({
-                      ...formData, 
-                      status: value as 'draft' | 'active' | 'completed' | 'cancelled'
-                    })}
-                  >
-                    <SelectTrigger id="edit-status">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch 
-                  id="edit-requiresVerification" 
-                  checked={formData.requiresVerification}
-                  onCheckedChange={(checked) => setFormData({...formData, requiresVerification: checked})}
-                />
-                <Label htmlFor="edit-requiresVerification">Requires Verification</Label>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => {
-                  resetForm();
-                  setIsEditDialogOpen(false);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit"
-                disabled={updatePoolMutation.isPending}
-              >
-                {updatePoolMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Update Pool
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
-};
+}
 
 /**
  * Entries Management component to display and manage entries for a prize drawing pool
  */
-const EntriesManagement: React.FC = () => {
+function EntriesManagement({ poolId }: { poolId: number }) {
+  const [isDrawWinnersOpen, setIsDrawWinnersOpen] = useState(false);
+  const [numWinners, setNumWinners] = useState(1);
+  const [drawingInProgress, setDrawingInProgress] = useState(false);
+  const [selectedWinners, setSelectedWinners] = useState<DrawWinnersResponse['winners']>([]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedPoolId, setSelectedPoolId] = useState<number | null>(null);
-  const [numWinnersToDraw, setNumWinnersToDraw] = useState(1);
-  const [showDrawingDialog, setShowDrawingDialog] = useState(false);
-  const [drawingWinners, setDrawingWinners] = useState<any[]>([]);
-  const [showWinnerAnimation, setShowWinnerAnimation] = useState(false);
-  const [winnerIndex, setWinnerIndex] = useState(0);
-  const [isDrawingInProgress, setIsDrawingInProgress] = useState(false);
-
-  // Fetch pools data
+  
+  // Fetch pool details
   const { data: pools, isLoading: isLoadingPools } = useQuery({
     queryKey: ['/api/prize-drawings/pools-summary'],
     retry: 1
   });
-
-  // Fetch entries for the selected pool
+  
+  // Fetch entries for this pool
   const { data: entries, isLoading: isLoadingEntries } = useQuery({
-    queryKey: ['/api/prize-drawings/pools', selectedPoolId, 'entries'],
-    enabled: !!selectedPoolId,
-    retry: 1
+    queryKey: [`/api/prize-drawings/pools/${poolId}/entries`],
+    retry: 1,
+    enabled: !!poolId
   });
-
-  // Draw winners mutation
+  
+  // Get the current pool
+  const currentPool = pools?.find((p: PrizeDrawingPool) => p.id === poolId);
+  
+  // Mutation to draw winners
   const drawWinnersMutation = useMutation({
-    mutationFn: ({ poolId, numWinners }: { poolId: number, numWinners: number }) => 
-      apiRequest(`/api/prize-drawings/pools/${poolId}/draw`, 'POST', { numWinners }),
+    mutationFn: ({ poolId, numWinners }: { poolId: number; numWinners: number }) => {
+      return apiRequest(`/api/prize-drawings/pools/${poolId}/draw`, {
+        method: 'POST',
+        body: JSON.stringify({ numWinners })
+      });
+    },
     onSuccess: (data: DrawWinnersResponse) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/prize-drawings/pools/${poolId}/entries`] });
       queryClient.invalidateQueries({ queryKey: ['/api/prize-drawings/pools-summary'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/prize-drawings/pools', selectedPoolId, 'entries'] });
-      
-      // Start animation sequence
-      setDrawingWinners(data.winners);
-      setWinnerIndex(0);
-      setShowWinnerAnimation(true);
-      setIsDrawingInProgress(true);
-      
-      toast({
-        title: 'Success',
-        description: data.message,
-      });
+      setSelectedWinners(data.winners);
+      setDrawingInProgress(false);
     },
-    onError: (error: any) => {
-      setShowDrawingDialog(false);
+    onError: (error) => {
       toast({
-        title: 'Error',
-        description: `Failed to draw winners: ${error.message || 'Unknown error'}`,
-        variant: 'destructive',
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to draw winners: ${error}`,
       });
+      setDrawingInProgress(false);
     }
   });
-
-  // Mark as notified mutation
+  
+  // Mutation to mark an entry as notified
   const notifyWinnerMutation = useMutation({
-    mutationFn: (entryId: number) => 
-      apiRequest(`/api/prize-drawings/entries/${entryId}/notify`, 'POST', {}),
+    mutationFn: (entryId: number) => apiRequest(`/api/prize-drawings/entries/${entryId}/notify`, {
+      method: 'POST'
+    }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/prize-drawings/pools', selectedPoolId, 'entries'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/prize-drawings/pools/${poolId}/entries`] });
       toast({
-        title: 'Success',
-        description: 'Winner has been marked as notified',
+        title: "Success",
+        description: "Winner has been marked as notified",
       });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
-        title: 'Error',
-        description: `Failed to mark winner as notified: ${error.message || 'Unknown error'}`,
-        variant: 'destructive',
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to mark as notified: ${error}`,
       });
     }
   });
-
-  // Mark token as claimed mutation
+  
+  // Mutation to mark an entry's token as claimed
   const claimTokenMutation = useMutation({
-    mutationFn: (entryId: number) => 
-      apiRequest(`/api/prize-drawings/entries/${entryId}/claim`, 'POST', {}),
+    mutationFn: (entryId: number) => apiRequest(`/api/prize-drawings/entries/${entryId}/claim`, {
+      method: 'POST'
+    }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/prize-drawings/pools', selectedPoolId, 'entries'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/prize-drawings/pools/${poolId}/entries`] });
       toast({
-        title: 'Success',
-        description: 'Token has been marked as claimed',
+        title: "Success",
+        description: "Token has been marked as claimed",
       });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
-        title: 'Error',
-        description: `Failed to mark token as claimed: ${error.message || 'Unknown error'}`,
-        variant: 'destructive',
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to mark token as claimed: ${error}`,
       });
     }
   });
-
+  
   // Handle drawing winners
   const handleDrawWinners = () => {
-    if (!selectedPoolId) return;
-    
-    drawWinnersMutation.mutate({ 
-      poolId: selectedPoolId, 
-      numWinners: numWinnersToDraw 
-    });
-    setShowDrawingDialog(false);
+    setDrawingInProgress(true);
+    drawWinnersMutation.mutate({ poolId, numWinners });
   };
-
-  // Handle marking winner as notified
-  const handleMarkAsNotified = (entryId: number) => {
-    notifyWinnerMutation.mutate(entryId);
-  };
-
-  // Handle marking token as claimed
-  const handleMarkAsClaimed = (entryId: number) => {
-    claimTokenMutation.mutate(entryId);
-  };
-
-  // Animation effect for revealing winners
-  useEffect(() => {
-    if (showWinnerAnimation && drawingWinners.length > 0) {
-      if (winnerIndex < drawingWinners.length) {
-        const timer = setTimeout(() => {
-          setWinnerIndex(winnerIndex + 1);
-        }, 2000); // Reveal each winner after 2 seconds
-        return () => clearTimeout(timer);
-      } else {
-        // Animation complete
-        const timer = setTimeout(() => {
-          setShowWinnerAnimation(false);
-          setIsDrawingInProgress(false);
-        }, 3000);
-        return () => clearTimeout(timer);
-      }
+  
+  // Get entry method badge
+  const getEntryMethodBadge = (method: PrizeDrawingEntry['entryMethod']) => {
+    switch (method) {
+      case 'quest_completion':
+        return <Badge variant="secondary">Quest Completion</Badge>;
+      case 'admin_addition':
+        return <Badge variant="default">Admin Added</Badge>;
+      case 'invitation':
+        return <Badge variant="outline">Invitation</Badge>;
+      case 'referral':
+        return <Badge>Referral</Badge>;
+      default:
+        return <Badge variant="outline">{method}</Badge>;
     }
-  }, [showWinnerAnimation, winnerIndex, drawingWinners.length]);
-
-  if (isLoadingPools) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-12 w-full" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    );
-  }
-
-  // Calculate winners, entries, and available entries for drawing
-  const getPoolStats = (poolId: number) => {
-    if (!pools) return { totalEntries: 0, winnerCount: 0, availableForDrawing: 0 };
-    
-    const pool = pools.find((p: any) => p.id === poolId);
-    if (!pool) return { totalEntries: 0, winnerCount: 0, availableForDrawing: 0 };
-    
-    const totalEntries = pool.entryCount || 0;
-    const winnerCount = pool.winnerCount || 0;
-    
-    // If we have entries data, calculate more precisely
-    if (entries) {
-      const availableForDrawing = entries.filter((e: PrizeDrawingEntry) => !e.isWinner).length;
-      return { totalEntries, winnerCount, availableForDrawing };
-    }
-    
-    // Otherwise estimate
-    const availableForDrawing = totalEntries - winnerCount;
-    return { totalEntries, winnerCount, availableForDrawing };
   };
-
-  const stats = selectedPoolId ? getPoolStats(selectedPoolId) : { totalEntries: 0, winnerCount: 0, availableForDrawing: 0 };
-
+  
+  // Calculate stats for current entries
+  const winnerCount = entries ? entries.filter((e: PrizeDrawingEntry) => e.isWinner).length : 0;
+  const availableForDrawing = entries ? entries.filter((e: PrizeDrawingEntry) => !e.isWinner).length : 0;
+  
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4">
-        <div>
-          <Label htmlFor="pool-select">Select Prize Drawing Pool</Label>
-          <Select 
-            value={selectedPoolId?.toString() || ''}
-            onValueChange={(value) => setSelectedPoolId(parseInt(value))}
-          >
-            <SelectTrigger id="pool-select" className="w-[300px]">
-              <SelectValue placeholder="Select a pool" />
-            </SelectTrigger>
-            <SelectContent>
-              {pools && pools.length === 0 ? (
-                <div className="p-2 text-center text-sm text-muted-foreground">
-                  No pools available
-                </div>
-              ) : (
-                pools && pools.map((pool: PrizeDrawingPool) => (
-                  <SelectItem key={pool.id} value={pool.id.toString()}>
-                    {pool.name} ({pool.status})
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
+    <div>
+      {isLoadingPools || !currentPool ? (
+        <div className="flex justify-center my-8">
+          <Loader2 className="h-8 w-8 animate-spin" />
         </div>
-
-        {selectedPoolId && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center justify-center">
-                  <Users className="h-8 w-8 text-primary mb-2" />
-                  <p className="text-sm text-muted-foreground">Total Entries</p>
-                  <p className="text-3xl font-bold">{stats.totalEntries}</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center justify-center">
-                  <Trophy className="h-8 w-8 text-amber-500 mb-2" />
-                  <p className="text-sm text-muted-foreground">Winners Selected</p>
-                  <p className="text-3xl font-bold">{stats.winnerCount}</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center justify-center">
-                  <Users className="h-8 w-8 text-green-500 mb-2" />
-                  <p className="text-sm text-muted-foreground">Available for Drawing</p>
-                  <p className="text-3xl font-bold">{stats.availableForDrawing}</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {selectedPoolId && stats.availableForDrawing > 0 && (
-          <div className="flex justify-center">
-            <Button 
-              onClick={() => setShowDrawingDialog(true)}
-              disabled={isDrawingInProgress}
-              className="mt-4"
-            >
-              <Trophy className="mr-2 h-4 w-4" />
-              Draw Winners
-            </Button>
-          </div>
-        )}
-
-        {/* Draw Winners Dialog */}
-        <Dialog open={showDrawingDialog} onOpenChange={setShowDrawingDialog}>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Draw Winners</DialogTitle>
-              <DialogDescription>
-                Select how many winners to draw from the prize pool.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="numWinners">Number of Winners to Draw</Label>
-                  <Input 
-                    id="numWinners" 
-                    type="number"
-                    min="1"
-                    max={stats.availableForDrawing}
-                    value={numWinnersToDraw}
-                    onChange={(e) => setNumWinnersToDraw(parseInt(e.target.value))}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Maximum {stats.availableForDrawing} winners can be drawn
-                  </p>
-                </div>
-              </div>
+      ) : (
+        <>
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+            <div>
+              <h2 className="text-2xl font-bold">{currentPool.name}</h2>
+              <p className="text-muted-foreground">{currentPool.description}</p>
             </div>
-            <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setShowDrawingDialog(false)}
-              >
-                Cancel
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button variant="outline" asChild>
+                <a href="/admin/prize-drawing">
+                  Back to Pools
+                </a>
               </Button>
-              <Button 
-                onClick={handleDrawWinners}
-                disabled={drawWinnersMutation.isPending}
-              >
-                {drawWinnersMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Draw Winners
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Winner Animation Dialog */}
-        <Dialog open={showWinnerAnimation} onOpenChange={setShowWinnerAnimation}>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle className="text-center">
-                <Trophy className="h-10 w-10 text-amber-500 mx-auto mb-2" />
-                Drawing Winners!
-              </DialogTitle>
-            </DialogHeader>
-            <div className="py-8">
-              {winnerIndex === 0 ? (
-                <div className="text-center">
-                  <Loader2 className="h-16 w-16 animate-spin mx-auto mb-4 text-primary" />
-                  <p className="text-lg font-medium">Selecting winners...</p>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  <p className="text-center mb-4">
-                    {winnerIndex === drawingWinners.length ? 
-                      `All ${drawingWinners.length} winners have been selected!` : 
-                      `Winner ${winnerIndex} of ${drawingWinners.length}`}
-                  </p>
-                  
-                  <div className="space-y-4">
-                    {drawingWinners.slice(0, winnerIndex).map((winner, index) => (
-                      <div 
-                        key={winner.id} 
-                        className="flex items-center p-4 border rounded-lg bg-muted/50 animate-fadeIn"
+              <Dialog open={isDrawWinnersOpen} onOpenChange={setIsDrawWinnersOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    disabled={currentPool.status === 'completed' || currentPool.status === 'cancelled' || availableForDrawing === 0}
+                    className="flex gap-2"
+                  >
+                    <Trophy className="h-4 w-4" />
+                    Draw Winners
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Draw Winners</DialogTitle>
+                    <DialogDescription>
+                      Randomly select winners from the eligible entries.
+                    </DialogDescription>
+                  </DialogHeader>
+                  {drawingInProgress ? (
+                    <div className="flex flex-col items-center justify-center py-8">
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                       >
-                        <div className="flex-1 flex items-center">
-                          <Avatar className="h-10 w-10 mr-4">
-                            <AvatarFallback>
-                              {winner.user.username.substring(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">{winner.user.displayName || winner.user.username}</p>
-                            <p className="text-sm text-muted-foreground">{winner.user.email}</p>
-                          </div>
-                        </div>
-                        <Check className="h-5 w-5 text-green-500" />
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {winnerIndex < drawingWinners.length && (
-                    <div className="flex justify-center">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <Trophy className="h-16 w-16 text-primary" />
+                      </motion.div>
+                      <p className="mt-4 text-center">Selecting winners...</p>
                     </div>
+                  ) : selectedWinners.length > 0 ? (
+                    <div className="py-4">
+                      <h3 className="font-bold text-lg mb-4">🎉 Selected Winners 🎉</h3>
+                      <ul className="space-y-3">
+                        <AnimatePresence>
+                          {selectedWinners.map((winner, index) => (
+                            <motion.li
+                              key={winner.id}
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: index * 0.2 }}
+                              className="flex items-center gap-2 p-3 border rounded-md"
+                            >
+                              <div className="bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center mr-2">
+                                {index + 1}
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-medium">{winner.user.username}</p>
+                                <p className="text-sm text-muted-foreground">{winner.user.email}</p>
+                              </div>
+                              <Check className="h-5 w-5 text-green-500" />
+                            </motion.li>
+                          ))}
+                        </AnimatePresence>
+                      </ul>
+                      <div className="mt-6 text-center">
+                        <p>Winners have been recorded! You can now notify them.</p>
+                        <Button 
+                          onClick={() => {
+                            setSelectedWinners([]);
+                            setIsDrawWinnersOpen(false);
+                          }} 
+                          className="mt-4"
+                        >
+                          Close
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="py-4">
+                        <div className="mb-4">
+                          <p className="mb-2"><strong>Pool Status:</strong> {currentPool.status}</p>
+                          <p className="mb-2"><strong>Max Winners:</strong> {currentPool.maxWinners}</p>
+                          <p className="mb-2"><strong>Current Winners:</strong> {winnerCount}</p>
+                          <p><strong>Available Entries:</strong> {availableForDrawing}</p>
+                        </div>
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium mb-1">Number of Winners to Draw</label>
+                          <Input
+                            type="number"
+                            min={1}
+                            max={Math.min(currentPool.maxWinners - winnerCount, availableForDrawing)}
+                            value={numWinners}
+                            onChange={(e) => setNumWinners(parseInt(e.target.value))}
+                          />
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Maximum: {Math.min(currentPool.maxWinners - winnerCount, availableForDrawing)}
+                          </p>
+                        </div>
+                        {availableForDrawing === 0 ? (
+                          <Alert>
+                            <AlertTriangle className="h-4 w-4" />
+                            <AlertTitle>No eligible entries</AlertTitle>
+                            <AlertDescription>
+                              There are no eligible entries available for drawing.
+                            </AlertDescription>
+                          </Alert>
+                        ) : numWinners > Math.min(currentPool.maxWinners - winnerCount, availableForDrawing) ? (
+                          <Alert variant="destructive">
+                            <AlertTriangle className="h-4 w-4" />
+                            <AlertTitle>Invalid selection</AlertTitle>
+                            <AlertDescription>
+                              You cannot select more winners than available entries or max winners allowed.
+                            </AlertDescription>
+                          </Alert>
+                        ) : null}
+                      </div>
+                      <DialogFooter>
+                        <Button 
+                          onClick={handleDrawWinners}
+                          disabled={
+                            numWinners < 1 || 
+                            numWinners > Math.min(currentPool.maxWinners - winnerCount, availableForDrawing) ||
+                            availableForDrawing === 0
+                          }
+                        >
+                          Draw Winners
+                        </Button>
+                      </DialogFooter>
+                    </>
                   )}
-                </div>
-              )}
+                </DialogContent>
+              </Dialog>
             </div>
-            <DialogFooter>
-              <Button 
-                onClick={() => {
-                  setShowWinnerAnimation(false);
-                  setIsDrawingInProgress(false);
-                }}
-                disabled={winnerIndex < drawingWinners.length}
-              >
-                {winnerIndex < drawingWinners.length ? 'Drawing...' : 'Close'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {/* Entries Table */}
-      {selectedPoolId && (
-        <div id={`entries-${selectedPoolId}`} className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-xl font-bold">Entries</h3>
-            {entries && entries.length > 0 && (
-              <p className="text-sm text-muted-foreground">
-                Showing {entries.length} entries
-              </p>
-            )}
           </div>
-
-          {isLoadingEntries ? (
-            <Skeleton className="h-64 w-full" />
-          ) : entries && entries.length === 0 ? (
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <Card>
-              <CardContent className="pt-6">
-                <div className="text-center py-6">
-                  <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-lg font-medium">No entries yet</p>
-                  <p className="text-sm text-muted-foreground">
-                    Entries will appear here when users complete the requirements
-                  </p>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Total Entries</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold flex items-center">
+                  <Users className="mr-2 h-5 w-5 text-muted-foreground" />
+                  {entries ? entries.length : 0}
                 </div>
               </CardContent>
             </Card>
-          ) : (
             <Card>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[60px]">ID</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Entry Method</TableHead>
-                    <TableHead>Entry Date</TableHead>
-                    <TableHead className="text-center">Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {entries && entries.slice(0, 50).map((entry: PrizeDrawingEntry) => (
-                    <TableRow key={entry.id} className={entry.isWinner ? 'bg-yellow-100 dark:bg-yellow-900/20' : ''}>
-                      <TableCell>{entry.id}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-8 w-8">
-                            {entry.user.avatarUrl ? (
-                              <AvatarImage src={entry.user.avatarUrl} alt={entry.user.username} />
-                            ) : null}
-                            <AvatarFallback>
-                              {entry.user.username.substring(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="text-sm font-medium">{entry.user.displayName || entry.user.username}</p>
-                            <p className="text-xs text-muted-foreground">{entry.user.email}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {entry.entryMethod.split('_').map(word => 
-                            word.charAt(0).toUpperCase() + word.slice(1)
-                          ).join(' ')}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {formatDate(new Date(entry.entryDate))}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {entry.isWinner ? (
-                          <div className="flex flex-col items-center">
-                            <Badge variant="default" className="mb-1">
-                              <Trophy className="h-3 w-3 mr-1" /> Winner
-                            </Badge>
-                            {entry.hasBeenNotified && (
-                              <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300">
-                                <Check className="h-3 w-3 mr-1" /> Notified
-                              </Badge>
-                            )}
-                            {entry.tokenClaimed && (
-                              <Badge variant="outline" className="mt-1 bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300">
-                                <Gift className="h-3 w-3 mr-1" /> Claimed
-                              </Badge>
-                            )}
-                          </div>
-                        ) : (
-                          <Badge variant="outline">Entered</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {entry.isWinner && !entry.hasBeenNotified && (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            className="mr-2"
-                            onClick={() => handleMarkAsNotified(entry.id)}
-                            disabled={notifyWinnerMutation.isPending}
-                          >
-                            {notifyWinnerMutation.isPending ? (
-                              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                            ) : (
-                              <Check className="h-3 w-3 mr-1" />
-                            )}
-                            Mark Notified
-                          </Button>
-                        )}
-                        {entry.isWinner && entry.hasBeenNotified && !entry.tokenClaimed && (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleMarkAsClaimed(entry.id)}
-                            disabled={claimTokenMutation.isPending}
-                          >
-                            {claimTokenMutation.isPending ? (
-                              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                            ) : (
-                              <Award className="h-3 w-3 mr-1" />
-                            )}
-                            Mark Claimed
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-                {entries && entries.length > 50 && (
-                  <TableCaption>
-                    Showing first 50 entries of {entries.length} total entries
-                  </TableCaption>
-                )}
-              </Table>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Winners Selected</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold flex items-center">
+                  <Trophy className="mr-2 h-5 w-5 text-yellow-500" />
+                  {winnerCount} / {currentPool.maxWinners}
+                </div>
+              </CardContent>
             </Card>
-          )}
-        </div>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Tokens Claimed</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold flex items-center">
+                  <Tag className="mr-2 h-5 w-5 text-green-500" />
+                  {entries ? entries.filter((e: PrizeDrawingEntry) => e.tokenClaimed).length : 0}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <Tabs defaultValue="all">
+            <TabsList>
+              <TabsTrigger value="all">All Entries</TabsTrigger>
+              <TabsTrigger value="winners">Winners</TabsTrigger>
+              <TabsTrigger value="notified">Notified</TabsTrigger>
+              <TabsTrigger value="claimed">Claimed</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="all" className="mt-4">
+              {isLoadingEntries ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
+              ) : entries && entries.length > 0 ? (
+                <Table>
+                  <TableCaption>List of all entries in this prize drawing pool</TableCaption>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead>Entry Method</TableHead>
+                      <TableHead>Entry Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {entries && entries.slice(0, 50).map((entry: PrizeDrawingEntry) => (
+                      <TableRow key={entry.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <p className="font-medium">{entry.user.username}</p>
+                              <p className="text-xs text-muted-foreground">{entry.user.email}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {getEntryMethodBadge(entry.entryMethod)}
+                        </TableCell>
+                        <TableCell>
+                          {formatDate(new Date(entry.entryDate))}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            {entry.isWinner && <Badge variant="success">Winner</Badge>}
+                            {entry.hasBeenNotified && <Badge variant="outline">Notified</Badge>}
+                            {entry.tokenClaimed && <Badge variant="secondary">Claimed</Badge>}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            {entry.isWinner && !entry.hasBeenNotified && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => notifyWinnerMutation.mutate(entry.id)}
+                                disabled={notifyWinnerMutation.isPending}
+                              >
+                                <Bell className="h-4 w-4 mr-1" />
+                                Notify
+                              </Button>
+                            )}
+                            {entry.isWinner && entry.hasBeenNotified && !entry.tokenClaimed && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => claimTokenMutation.mutate(entry.id)}
+                                disabled={claimTokenMutation.isPending}
+                              >
+                                <Tag className="h-4 w-4 mr-1" />
+                                Mark Claimed
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <Alert>
+                  <AlertTitle>No entries found</AlertTitle>
+                  <AlertDescription>
+                    This prize drawing pool has no entries yet.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="winners" className="mt-4">
+              {isLoadingEntries ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
+              ) : entries && entries.some((e: PrizeDrawingEntry) => e.isWinner) ? (
+                <Table>
+                  <TableCaption>List of winners in this prize drawing pool</TableCaption>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead>Entry Method</TableHead>
+                      <TableHead>Drawing Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {entries.filter((e: PrizeDrawingEntry) => e.isWinner).map((entry: PrizeDrawingEntry) => (
+                      <TableRow key={entry.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <p className="font-medium">{entry.user.username}</p>
+                              <p className="text-xs text-muted-foreground">{entry.user.email}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {getEntryMethodBadge(entry.entryMethod)}
+                        </TableCell>
+                        <TableCell>
+                          {entry.drawingDate ? formatDate(new Date(entry.drawingDate)) : 'N/A'}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            {entry.hasBeenNotified && <Badge variant="outline">Notified</Badge>}
+                            {entry.tokenClaimed && <Badge variant="secondary">Claimed</Badge>}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            {!entry.hasBeenNotified && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => notifyWinnerMutation.mutate(entry.id)}
+                                disabled={notifyWinnerMutation.isPending}
+                              >
+                                <Bell className="h-4 w-4 mr-1" />
+                                Notify
+                              </Button>
+                            )}
+                            {entry.hasBeenNotified && !entry.tokenClaimed && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => claimTokenMutation.mutate(entry.id)}
+                                disabled={claimTokenMutation.isPending}
+                              >
+                                <Tag className="h-4 w-4 mr-1" />
+                                Mark Claimed
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <Alert>
+                  <AlertTitle>No winners selected</AlertTitle>
+                  <AlertDescription>
+                    No winners have been selected for this prize drawing pool yet.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="notified" className="mt-4">
+              {isLoadingEntries ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
+              ) : entries && entries.some((e: PrizeDrawingEntry) => e.hasBeenNotified) ? (
+                <Table>
+                  <TableCaption>List of notified winners in this prize drawing pool</TableCaption>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead>Entry Method</TableHead>
+                      <TableHead>Notification Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {entries.filter((e: PrizeDrawingEntry) => e.hasBeenNotified).map((entry: PrizeDrawingEntry) => (
+                      <TableRow key={entry.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <p className="font-medium">{entry.user.username}</p>
+                              <p className="text-xs text-muted-foreground">{entry.user.email}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {getEntryMethodBadge(entry.entryMethod)}
+                        </TableCell>
+                        <TableCell>
+                          {entry.notificationDate ? formatDate(new Date(entry.notificationDate)) : 'N/A'}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            {entry.tokenClaimed && <Badge variant="secondary">Claimed</Badge>}
+                            {!entry.tokenClaimed && <Badge variant="outline">Not Claimed</Badge>}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            {!entry.tokenClaimed && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => claimTokenMutation.mutate(entry.id)}
+                                disabled={claimTokenMutation.isPending}
+                              >
+                                <Tag className="h-4 w-4 mr-1" />
+                                Mark Claimed
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <Alert>
+                  <AlertTitle>No notified winners</AlertTitle>
+                  <AlertDescription>
+                    No winners have been notified for this prize drawing pool yet.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="claimed" className="mt-4">
+              {isLoadingEntries ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
+              ) : entries && entries.some((e: PrizeDrawingEntry) => e.tokenClaimed) ? (
+                <Table>
+                  <TableCaption>List of claimed tokens in this prize drawing pool</TableCaption>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead>Entry Method</TableHead>
+                      <TableHead>Claim Date</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {entries.filter((e: PrizeDrawingEntry) => e.tokenClaimed).map((entry: PrizeDrawingEntry) => (
+                      <TableRow key={entry.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <p className="font-medium">{entry.user.username}</p>
+                              <p className="text-xs text-muted-foreground">{entry.user.email}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {getEntryMethodBadge(entry.entryMethod)}
+                        </TableCell>
+                        <TableCell>
+                          {entry.claimDate ? formatDate(new Date(entry.claimDate)) : 'N/A'}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="success">Claimed</Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <Alert>
+                  <AlertTitle>No claimed tokens</AlertTitle>
+                  <AlertDescription>
+                    No winners have claimed their tokens for this prize drawing pool yet.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </TabsContent>
+          </Tabs>
+        </>
       )}
     </div>
   );
-};
+}
 
 /**
  * Main Prize Drawing Admin Page
  */
-const PrizeDrawingPage: React.FC = () => {
+export default function PrizeDrawingPage() {
+  // Get the pool ID from URL if provided
+  const searchParams = new URLSearchParams(window.location.search);
+  const poolId = searchParams.get('pool') ? parseInt(searchParams.get('pool') as string) : null;
+  
   return (
-    <div className="container py-6 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Prize Drawing Administration</h1>
+    <div className="container py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold">Prize Drawing Management</h1>
         <p className="text-muted-foreground">
-          Manage prize drawing pools and select winners for the Tournament Discovery Quest
+          Manage prize drawing pools and select winners for tournament discoveries
         </p>
       </div>
-
-      <Tabs defaultValue="pools" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="pools">Pools</TabsTrigger>
-          <TabsTrigger value="entries">Entries</TabsTrigger>
-        </TabsList>
-        <TabsContent value="pools" className="space-y-4">
-          <PoolManagement />
-        </TabsContent>
-        <TabsContent value="entries" className="space-y-4">
-          <EntriesManagement />
-        </TabsContent>
-      </Tabs>
+      
+      {poolId ? (
+        <EntriesManagement poolId={poolId} />
+      ) : (
+        <PoolManagement />
+      )}
     </div>
   );
-};
-
-export default PrizeDrawingPage;
+}

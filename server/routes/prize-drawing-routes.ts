@@ -6,64 +6,62 @@
  */
 
 import express, { Request, Response } from 'express';
-import { isAuthenticated, isAdmin } from '../auth';
+import { isAdmin } from '../auth';
 import { db } from '../db';
-import { sql, eq, and, desc, count, SQL } from 'drizzle-orm';
-import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import { 
-  prizeDrawingPools, 
-  prizeDrawingEntries, 
-  insertPrizeDrawingPoolSchema,
-  insertPrizeDrawingEntrySchema,
-  PrizeDrawingPool,
-  PrizeDrawingEntry
-} from '@shared/prize-drawing.schema';
-import { users } from '@shared/schema';
-import { migratePrizeDrawingTables } from '../../migrations/prize-drawing-migration';
+  prizeDrawingPools, prizeDrawingEntries, insertPrizeDrawingPoolSchema,
+  type PrizeDrawingPool, type PrizeDrawingEntry
+} from '../../shared/prize-drawing.schema';
+import { users } from '../../shared/schema';
+import { eq, asc, sql, and, desc } from 'drizzle-orm';
 
 /**
  * Register prize drawing routes
  */
 export function registerPrizeDrawingRoutes(app: express.Express) {
   console.log('[API] Registering Prize Drawing routes');
-  
-  // Ensure prize drawing tables exist
-  migratePrizeDrawingTables().catch(error => {
-    console.error('[API] Error migrating prize drawing tables:', error);
-  });
 
   /**
    * Get all prize drawing pools with summary data (entry count, winner count)
    */
   app.get('/api/prize-drawings/pools-summary', isAdmin, async (req: Request, res: Response) => {
     try {
-      const poolsWithCounts = await db.execute(sql`
-        SELECT 
-          p.*,
-          COUNT(DISTINCT e.id) AS entry_count,
-          COUNT(DISTINCT CASE WHEN e.is_winner = true THEN e.id END) AS winner_count
-        FROM prize_drawing_pools p
-        LEFT JOIN prize_drawing_entries e ON p.id = e.pool_id
-        GROUP BY p.id
-        ORDER BY p.created_at DESC
-      `);
+      // Get all pools
+      const pools = await db.query.prizeDrawingPools.findMany({
+        orderBy: [desc(prizeDrawingPools.createdAt)]
+      });
 
-      // Format dates properly
-      const formattedPools = poolsWithCounts.map((pool: any) => ({
-        ...pool,
-        startDate: pool.start_date,
-        endDate: pool.end_date,
-        drawingDate: pool.drawing_date,
-        createdAt: pool.created_at,
-        updatedAt: pool.updated_at,
-        entryCount: parseInt(pool.entry_count),
-        winnerCount: parseInt(pool.winner_count)
+      // Prepare the augmented pools with entry counts
+      const augmentedPools = await Promise.all(pools.map(async (pool) => {
+        // Get entry count for this pool
+        const entryCountResult = await db.select({ 
+          count: sql<number>`count(*)` 
+        }).from(prizeDrawingEntries).where(eq(prizeDrawingEntries.poolId, pool.id));
+        
+        // Get winner count for this pool
+        const winnerCountResult = await db.select({ 
+          count: sql<number>`count(*)` 
+        }).from(prizeDrawingEntries).where(
+          and(
+            eq(prizeDrawingEntries.poolId, pool.id),
+            eq(prizeDrawingEntries.isWinner, true)
+          )
+        );
+        
+        const entryCount = entryCountResult[0]?.count || 0;
+        const winnerCount = winnerCountResult[0]?.count || 0;
+        
+        return {
+          ...pool,
+          entryCount,
+          winnerCount
+        };
       }));
 
-      res.json(formattedPools);
+      res.json(augmentedPools);
     } catch (error) {
-      console.error('[API] Error getting prize drawing pools:', error);
-      res.status(500).json({ error: 'Error fetching prize drawing pools' });
+      console.error('Error getting prize drawing pools:', error);
+      res.status(500).json({ error: 'Failed to get prize drawing pools' });
     }
   });
 
@@ -72,26 +70,16 @@ export function registerPrizeDrawingRoutes(app: express.Express) {
    */
   app.post('/api/prize-drawings/pools', isAdmin, async (req: Request, res: Response) => {
     try {
-      // Validate request
-      const validationResult = insertPrizeDrawingPoolSchema.safeParse(req.body);
-      if (!validationResult.success) {
-        return res.status(400).json({ error: 'Invalid prize drawing pool data', details: validationResult.error });
-      }
-
-      // Convert string dates to Date objects
-      const data = {
-        ...validationResult.data,
-        startDate: validationResult.data.startDate ? new Date(validationResult.data.startDate) : new Date(),
-        endDate: validationResult.data.endDate ? new Date(validationResult.data.endDate) : null,
-        drawingDate: validationResult.data.drawingDate ? new Date(validationResult.data.drawingDate) : null
-      };
-
-      // Insert pool
-      const [newPool] = await db.insert(prizeDrawingPools).values(data).returning();
-      res.status(201).json(newPool);
+      // Validate request body
+      const validatedData = insertPrizeDrawingPoolSchema.parse(req.body);
+      
+      // Insert new pool
+      const newPool = await db.insert(prizeDrawingPools).values(validatedData).returning();
+      
+      res.status(201).json(newPool[0]);
     } catch (error) {
-      console.error('[API] Error creating prize drawing pool:', error);
-      res.status(500).json({ error: 'Error creating prize drawing pool' });
+      console.error('Error creating prize drawing pool:', error);
+      res.status(400).json({ error: 'Failed to create prize drawing pool' });
     }
   });
 
@@ -104,36 +92,24 @@ export function registerPrizeDrawingRoutes(app: express.Express) {
       if (isNaN(poolId)) {
         return res.status(400).json({ error: 'Invalid pool ID' });
       }
-
-      // Validate request
-      const validationResult = insertPrizeDrawingPoolSchema.safeParse(req.body);
-      if (!validationResult.success) {
-        return res.status(400).json({ error: 'Invalid prize drawing pool data', details: validationResult.error });
-      }
-
-      // Convert string dates to Date objects
-      const data = {
-        ...validationResult.data,
-        startDate: validationResult.data.startDate ? new Date(validationResult.data.startDate) : new Date(),
-        endDate: validationResult.data.endDate ? new Date(validationResult.data.endDate) : null,
-        drawingDate: validationResult.data.drawingDate ? new Date(validationResult.data.drawingDate) : null,
-        updatedAt: new Date()
-      };
-
+      
+      // Validate request body
+      const validatedData = insertPrizeDrawingPoolSchema.parse(req.body);
+      
       // Update pool
-      const [updatedPool] = await db.update(prizeDrawingPools)
-        .set(data)
+      const updatedPool = await db.update(prizeDrawingPools)
+        .set(validatedData)
         .where(eq(prizeDrawingPools.id, poolId))
         .returning();
-
-      if (!updatedPool) {
+      
+      if (updatedPool.length === 0) {
         return res.status(404).json({ error: 'Prize drawing pool not found' });
       }
-
-      res.json(updatedPool);
+      
+      res.json(updatedPool[0]);
     } catch (error) {
-      console.error('[API] Error updating prize drawing pool:', error);
-      res.status(500).json({ error: 'Error updating prize drawing pool' });
+      console.error('Error updating prize drawing pool:', error);
+      res.status(400).json({ error: 'Failed to update prize drawing pool' });
     }
   });
 
@@ -146,44 +122,46 @@ export function registerPrizeDrawingRoutes(app: express.Express) {
       if (isNaN(poolId)) {
         return res.status(400).json({ error: 'Invalid pool ID' });
       }
-
-      // Query entries with user info
-      const entries = await db
-        .select({
-          entry: prizeDrawingEntries,
-          user: {
-            id: users.id,
-            username: users.username,
-            email: users.email,
-            displayName: users.displayName,
-            avatarUrl: users.avatarUrl
-          }
-        })
-        .from(prizeDrawingEntries)
-        .innerJoin(users, eq(prizeDrawingEntries.userId, users.id))
-        .where(eq(prizeDrawingEntries.poolId, poolId))
-        .orderBy(desc(prizeDrawingEntries.entryDate));
-
-      // Format entries for client
-      const formattedEntries = entries.map(({ entry, user }) => ({
-        id: entry.id,
-        poolId: entry.poolId,
-        userId: entry.userId,
-        entryMethod: entry.entryMethod,
-        entryDate: entry.entryDate,
-        isWinner: entry.isWinner,
-        drawingDate: entry.drawingDate,
-        hasBeenNotified: entry.hasBeenNotified,
-        notificationDate: entry.notificationDate,
-        tokenClaimed: entry.tokenClaimed,
-        claimDate: entry.claimDate,
-        user
-      }));
-
-      res.json(formattedEntries);
+      
+      // Check if pool exists
+      const pool = await db.query.prizeDrawingPools.findFirst({
+        where: eq(prizeDrawingPools.id, poolId)
+      });
+      
+      if (!pool) {
+        return res.status(404).json({ error: 'Prize drawing pool not found' });
+      }
+      
+      // Get all entries for this pool with user information
+      const entries = await db.select({
+        id: prizeDrawingEntries.id,
+        poolId: prizeDrawingEntries.poolId,
+        userId: prizeDrawingEntries.userId,
+        entryMethod: prizeDrawingEntries.entryMethod,
+        entryDate: prizeDrawingEntries.entryDate,
+        isWinner: prizeDrawingEntries.isWinner,
+        drawingDate: prizeDrawingEntries.drawingDate,
+        hasBeenNotified: prizeDrawingEntries.hasBeenNotified,
+        notificationDate: prizeDrawingEntries.notificationDate,
+        tokenClaimed: prizeDrawingEntries.tokenClaimed,
+        claimDate: prizeDrawingEntries.claimDate,
+        user: {
+          id: users.id,
+          username: users.username,
+          email: users.email,
+          displayName: users.displayName,
+          avatarUrl: users.avatarUrl
+        }
+      })
+      .from(prizeDrawingEntries)
+      .innerJoin(users, eq(prizeDrawingEntries.userId, users.id))
+      .where(eq(prizeDrawingEntries.poolId, poolId))
+      .orderBy(asc(prizeDrawingEntries.entryDate));
+      
+      res.json(entries);
     } catch (error) {
-      console.error('[API] Error getting prize drawing entries:', error);
-      res.status(500).json({ error: 'Error fetching prize drawing entries' });
+      console.error('Error getting prize drawing entries:', error);
+      res.status(500).json({ error: 'Failed to get prize drawing entries' });
     }
   });
 
@@ -196,25 +174,43 @@ export function registerPrizeDrawingRoutes(app: express.Express) {
       if (isNaN(poolId)) {
         return res.status(400).json({ error: 'Invalid pool ID' });
       }
-
-      const numWinners = req.body.numWinners || 1;
-      if (numWinners < 1) {
-        return res.status(400).json({ error: 'Number of winners must be at least 1' });
+      
+      // Get numWinners from request body
+      const { numWinners } = req.body;
+      if (!numWinners || isNaN(numWinners) || numWinners < 1) {
+        return res.status(400).json({ error: 'Invalid number of winners' });
       }
-
-      // Get the pool to check if we can draw winners
-      const [pool] = await db
-        .select()
-        .from(prizeDrawingPools)
-        .where(eq(prizeDrawingPools.id, poolId));
-
+      
+      // Check if pool exists and get max winners
+      const pool = await db.query.prizeDrawingPools.findFirst({
+        where: eq(prizeDrawingPools.id, poolId)
+      });
+      
       if (!pool) {
         return res.status(404).json({ error: 'Prize drawing pool not found' });
       }
-
-      // Get entries that are not already winners
-      const availableEntries = await db
-        .select()
+      
+      // Get current winner count
+      const winnerCountResult = await db.select({ 
+        count: sql<number>`count(*)` 
+      }).from(prizeDrawingEntries).where(
+        and(
+          eq(prizeDrawingEntries.poolId, poolId),
+          eq(prizeDrawingEntries.isWinner, true)
+        )
+      );
+      
+      const currentWinnerCount = winnerCountResult[0]?.count || 0;
+      const maxAllowedWinners = pool.maxWinners - currentWinnerCount;
+      
+      if (numWinners > maxAllowedWinners) {
+        return res.status(400).json({ 
+          error: `Cannot select more than ${maxAllowedWinners} additional winners` 
+        });
+      }
+      
+      // Get all non-winner entries for this pool
+      const eligibleEntries = await db.select()
         .from(prizeDrawingEntries)
         .where(
           and(
@@ -222,79 +218,69 @@ export function registerPrizeDrawingRoutes(app: express.Express) {
             eq(prizeDrawingEntries.isWinner, false)
           )
         );
-
-      if (availableEntries.length === 0) {
-        return res.status(400).json({ error: 'No eligible entries available for drawing' });
+      
+      if (eligibleEntries.length === 0) {
+        return res.status(400).json({ error: 'No eligible entries found' });
       }
-
-      if (availableEntries.length < numWinners) {
+      
+      if (numWinners > eligibleEntries.length) {
         return res.status(400).json({ 
-          error: `Only ${availableEntries.length} eligible entries available, cannot draw ${numWinners} winners` 
+          error: `Cannot select more winners than available entries (${eligibleEntries.length})` 
         });
       }
-
+      
       // Randomly select winners
-      const winnerIndices: number[] = [];
-      while (winnerIndices.length < numWinners) {
-        const randomIndex = Math.floor(Math.random() * availableEntries.length);
-        if (!winnerIndices.includes(randomIndex)) {
-          winnerIndices.push(randomIndex);
-        }
-      }
-
-      const drawingDate = new Date();
-      const winners = [];
-
-      // Update each winner in the database
-      for (const index of winnerIndices) {
-        const entry = availableEntries[index];
-        
-        const [updatedEntry] = await db
-          .update(prizeDrawingEntries)
-          .set({
+      const shuffled = [...eligibleEntries].sort(() => 0.5 - Math.random());
+      const selectedEntries = shuffled.slice(0, numWinners);
+      const now = new Date();
+      
+      // Update selected entries as winners
+      const winners = await Promise.all(selectedEntries.map(async (entry) => {
+        const updated = await db.update(prizeDrawingEntries)
+          .set({ 
             isWinner: true,
-            drawingDate
+            drawingDate: now
           })
           .where(eq(prizeDrawingEntries.id, entry.id))
           .returning();
-
-        // Get user info for the winner
-        const [user] = await db
-          .select({
-            id: users.id,
-            username: users.username,
-            email: users.email,
-            displayName: users.displayName
-          })
-          .from(users)
-          .where(eq(users.id, entry.userId));
-
-        winners.push({
-          id: updatedEntry.id,
-          user,
-          entryDate: updatedEntry.entryDate,
-          drawingDate: updatedEntry.drawingDate,
-          hasBeenNotified: updatedEntry.hasBeenNotified
+        
+        // Get user details for the winner
+        const user = await db.query.users.findFirst({
+          where: eq(users.id, entry.userId),
+          columns: {
+            id: true,
+            username: true,
+            email: true
+          }
         });
+        
+        return {
+          id: updated[0].id,
+          user,
+          entryDate: updated[0].entryDate,
+          drawingDate: updated[0].drawingDate,
+          hasBeenNotified: updated[0].hasBeenNotified
+        };
+      }));
+      
+      // Update pool status if all winners have been selected
+      const newWinnerCount = currentWinnerCount + numWinners;
+      if (newWinnerCount >= pool.maxWinners) {
+        await db.update(prizeDrawingPools)
+          .set({ 
+            drawingDate: now,
+            status: 'completed'
+          })
+          .where(eq(prizeDrawingPools.id, poolId));
       }
-
-      // Update the pool drawing date
-      await db
-        .update(prizeDrawingPools)
-        .set({
-          drawingDate,
-          status: 'completed',
-          updatedAt: new Date()
-        })
-        .where(eq(prizeDrawingPools.id, poolId));
-
+      
       res.json({
-        message: `Successfully drew ${winners.length} winner${winners.length !== 1 ? 's' : ''}`,
+        message: `Successfully drew ${numWinners} winner(s)`,
         winners
       });
     } catch (error) {
-      console.error('[API] Error drawing winners:', error);
-      res.status(500).json({ error: 'Error drawing winners' });
+      console.error('Error drawing winners:', error);
+      res.status(500).json({ error: 'Failed to draw winners' });
     }
   });
 
@@ -307,26 +293,38 @@ export function registerPrizeDrawingRoutes(app: express.Express) {
       if (isNaN(entryId)) {
         return res.status(400).json({ error: 'Invalid entry ID' });
       }
-
-      // Update the entry
-      const notificationDate = new Date();
-      const [updatedEntry] = await db
-        .update(prizeDrawingEntries)
-        .set({
+      
+      // Check if entry exists and is a winner
+      const entry = await db.query.prizeDrawingEntries.findFirst({
+        where: eq(prizeDrawingEntries.id, entryId)
+      });
+      
+      if (!entry) {
+        return res.status(404).json({ error: 'Entry not found' });
+      }
+      
+      if (!entry.isWinner) {
+        return res.status(400).json({ error: 'Cannot mark non-winner as notified' });
+      }
+      
+      if (entry.hasBeenNotified) {
+        return res.status(400).json({ error: 'Entry has already been notified' });
+      }
+      
+      // Mark entry as notified
+      const now = new Date();
+      const updated = await db.update(prizeDrawingEntries)
+        .set({ 
           hasBeenNotified: true,
-          notificationDate
+          notificationDate: now
         })
         .where(eq(prizeDrawingEntries.id, entryId))
         .returning();
-
-      if (!updatedEntry) {
-        return res.status(404).json({ error: 'Prize drawing entry not found' });
-      }
-
-      res.json(updatedEntry);
+      
+      res.json(updated[0]);
     } catch (error) {
-      console.error('[API] Error marking entry as notified:', error);
-      res.status(500).json({ error: 'Error marking entry as notified' });
+      console.error('Error marking entry as notified:', error);
+      res.status(500).json({ error: 'Failed to mark entry as notified' });
     }
   });
 
@@ -339,26 +337,42 @@ export function registerPrizeDrawingRoutes(app: express.Express) {
       if (isNaN(entryId)) {
         return res.status(400).json({ error: 'Invalid entry ID' });
       }
-
-      // Update the entry
-      const claimDate = new Date();
-      const [updatedEntry] = await db
-        .update(prizeDrawingEntries)
-        .set({
+      
+      // Check if entry exists, is a winner, and has been notified
+      const entry = await db.query.prizeDrawingEntries.findFirst({
+        where: eq(prizeDrawingEntries.id, entryId)
+      });
+      
+      if (!entry) {
+        return res.status(404).json({ error: 'Entry not found' });
+      }
+      
+      if (!entry.isWinner) {
+        return res.status(400).json({ error: 'Cannot mark non-winner as claimed' });
+      }
+      
+      if (!entry.hasBeenNotified) {
+        return res.status(400).json({ error: 'Cannot mark unnotified entry as claimed' });
+      }
+      
+      if (entry.tokenClaimed) {
+        return res.status(400).json({ error: 'Token has already been claimed' });
+      }
+      
+      // Mark token as claimed
+      const now = new Date();
+      const updated = await db.update(prizeDrawingEntries)
+        .set({ 
           tokenClaimed: true,
-          claimDate
+          claimDate: now
         })
         .where(eq(prizeDrawingEntries.id, entryId))
         .returning();
-
-      if (!updatedEntry) {
-        return res.status(404).json({ error: 'Prize drawing entry not found' });
-      }
-
-      res.json(updatedEntry);
+      
+      res.json(updated[0]);
     } catch (error) {
-      console.error('[API] Error marking token as claimed:', error);
-      res.status(500).json({ error: 'Error marking token as claimed' });
+      console.error('Error marking token as claimed:', error);
+      res.status(500).json({ error: 'Failed to mark token as claimed' });
     }
   });
 }
