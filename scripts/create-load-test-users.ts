@@ -43,15 +43,15 @@ function generatePassportCode() {
 async function createTestUser(username: string, password: string, isAdmin = false) {
   console.log(`Checking if user '${username}' exists...`);
   
-  // Check if user exists
-  const existingUser = await db.select()
-    .from(users)
-    .where(eq(users.username, username))
-    .limit(1);
+  // Check if user exists using direct SQL query
+  const existingUserQuery = await db.execute(
+    `SELECT id FROM users WHERE username = $1 LIMIT 1`,
+    [username]
+  );
   
-  if (existingUser && existingUser.length > 0) {
-    console.log(`User '${username}' already exists with ID: ${existingUser[0].id}`);
-    return existingUser[0];
+  if (existingUserQuery.rows && existingUserQuery.rows.length > 0) {
+    console.log(`User '${username}' already exists with ID: ${existingUserQuery.rows[0].id}`);
+    return existingUserQuery.rows[0];
   }
   
   // Hash password
@@ -60,27 +60,41 @@ async function createTestUser(username: string, password: string, isAdmin = fals
   // Generate passport code (7-character alphanumeric)
   const passportCode = generatePassportCode();
   
-  // Create user
+  // Create user using a direct SQL query
   console.log(`Creating test user '${username}'...`);
   
-  const newUser = {
-    username: username,
-    email: `${username}@example.com`,
-    password: hashedPassword,
-    firstName: 'Load',
-    lastName: 'Test',
-    passport_code: passportCode,
-    role: isAdmin ? 'admin' : 'user',
-    profileCompletionPct: 60,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  };
+  const insertResult = await db.execute(
+    `INSERT INTO users (
+      username, 
+      email, 
+      password, 
+      first_name, 
+      last_name, 
+      display_name,
+      passport_id,
+      is_admin,
+      profile_completion_pct,
+      created_at,
+      last_updated
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`,
+    [
+      username,
+      `${username}@example.com`,
+      hashedPassword,
+      'Load',
+      'Test',
+      `Load Test ${isAdmin ? 'Admin' : 'User'}`,
+      passportCode,
+      isAdmin,
+      60,
+      new Date(),
+      new Date()
+    ]
+  );
   
-  const result = await db.insert(users).values(newUser).returning();
-  
-  if (result && result.length > 0) {
-    console.log(`Created user '${username}' with ID: ${result[0].id}`);
-    return result[0];
+  if (insertResult.rows && insertResult.rows.length > 0) {
+    console.log(`Created user '${username}' with ID: ${insertResult.rows[0].id}`);
+    return insertResult.rows[0];
   } else {
     console.error(`Failed to create user '${username}'`);
     return null;
