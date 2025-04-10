@@ -173,7 +173,7 @@ const GoldenTicketForm: React.FC = () => {
         currentAppearances: 0,
         // Handle sponsorId null/undefined issue
         sponsorId: submitData.sponsorId || null,
-        pagesToAppearOn: pagesToAppearOn,
+        pagesToAppearOn: pagesToAppearOn || null,
         // Ensure promotional image fields are included
         promotionalImageUrl: submitData.promotionalImageUrl || null,
         promotionalImagePath: submitData.promotionalImagePath || null,
@@ -464,7 +464,14 @@ const GoldenTicketForm: React.FC = () => {
               <FormItem>
                 <FormLabel>Discount Code (Optional)</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. PICKLE20" {...field} />
+                  <Input 
+                    placeholder="e.g. PICKLE20" 
+                    value={field.value || ''} 
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    name={field.name}
+                    ref={field.ref}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -478,7 +485,14 @@ const GoldenTicketForm: React.FC = () => {
               <FormItem>
                 <FormLabel>Discount Value (Optional)</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. 20% or $15" {...field} />
+                  <Input 
+                    placeholder="e.g. 20% or $15" 
+                    value={field.value || ''} 
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    name={field.name}
+                    ref={field.ref}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

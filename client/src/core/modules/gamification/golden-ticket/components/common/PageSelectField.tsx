@@ -112,10 +112,127 @@ export const PageSelectField: React.FC<PageSelectFieldProps> = ({
     }
   };
   
+  // Create page groups from available pages for the dropdown
+  const pageGroups = React.useMemo(() => {
+    const groups: Record<string, ApplicationPage[]> = {};
+    
+    availablePages.forEach(page => {
+      const group = page.group || 'general';
+      if (!groups[group]) {
+        groups[group] = [];
+      }
+      groups[group].push(page);
+    });
+    
+    return groups;
+  }, [availablePages]);
+  
+  // Content for direct usage (non-form)
+  const directContent = (
+    <div className="w-full">
+      {label && <div className="text-sm font-medium mb-2">{label}</div>}
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            className={cn(
+              "w-full justify-between",
+              !selectedValues.length && "text-muted-foreground"
+            )}
+          >
+            {selectedValues.length > 0
+              ? `${selectedValues.length} page${selectedValues.length > 1 ? 's' : ''} selected`
+              : "Select pages..."}
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[400px] p-0">
+          <Command>
+            <CommandInput placeholder="Search pages..." />
+            <CommandEmpty>No pages found.</CommandEmpty>
+            <CommandList>
+              <ScrollArea className="h-[300px]">
+                {Object.entries(pageGroups).map(([groupName, pages]) => (
+                  pages.length > 0 && (
+                    <CommandGroup key={groupName} heading={groupName.charAt(0).toUpperCase() + groupName.slice(1)}>
+                      {pages.map((page) => {
+                        const isSelected = selectedValues.includes(page.path);
+                        return (
+                          <CommandItem
+                            key={page.id}
+                            value={page.name}
+                            onSelect={() => togglePage(page)}
+                          >
+                            <div className={cn(
+                              "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                              isSelected ? "bg-primary text-primary-foreground" : "opacity-50"
+                            )}>
+                              {isSelected && <Check className="h-3 w-3" />}
+                            </div>
+                            <span className="flex-1">{page.name}</span>
+                            <span className="text-xs text-muted-foreground">{page.path}</span>
+                          </CommandItem>
+                        );
+                      })}
+                    </CommandGroup>
+                  )
+                ))}
+              </ScrollArea>
+            </CommandList>
+            {selectedValues.length > 0 && (
+              <>
+                <CommandSeparator />
+                <CommandGroup>
+                  <CommandItem 
+                    onSelect={clearPages}
+                    className="justify-center text-center"
+                  >
+                    Clear all
+                  </CommandItem>
+                </CommandGroup>
+              </>
+            )}
+          </Command>
+        </PopoverContent>
+      </Popover>
+      
+      {/* Show selected pages as badges */}
+      {selectedValues.length > 0 && (
+        <div className="flex flex-wrap gap-1 mt-2">
+          {selectedValues.map((pagePath: string) => {
+            const page = availablePages.find(p => p.path === pagePath);
+            return (
+              <Badge 
+                key={pagePath} 
+                variant="secondary"
+                className="flex items-center gap-1"
+              >
+                {page?.name || pagePath}
+                <X
+                  className="h-3 w-3 cursor-pointer"
+                  onClick={(e) => removePage(pagePath, e)}
+                />
+              </Badge>
+            );
+          })}
+        </div>
+      )}
+      
+      {description && <div className="text-sm text-muted-foreground mt-1">{description}</div>}
+    </div>
+  );
+  
+  // If not form-controlled, render direct content
+  if (!isFormControlled) {
+    return directContent;
+  }
+  
+  // Otherwise wrap in FormField for react-hook-form integration
   return (
     <FormField
-      control={form.control}
-      name={name}
+      control={form?.control}
+      name={name || ''}
       render={({ field }) => (
         <FormItem>
           <FormLabel>{label}</FormLabel>
@@ -142,7 +259,7 @@ export const PageSelectField: React.FC<PageSelectFieldProps> = ({
                   <CommandEmpty>No pages found.</CommandEmpty>
                   <CommandList>
                     <ScrollArea className="h-[300px]">
-                      {Object.entries(PAGE_GROUPS).map(([groupName, pages]) => (
+                      {Object.entries(pageGroups).map(([groupName, pages]) => (
                         pages.length > 0 && (
                           <CommandGroup key={groupName} heading={groupName.charAt(0).toUpperCase() + groupName.slice(1)}>
                             {pages.map((page) => {
@@ -191,7 +308,7 @@ export const PageSelectField: React.FC<PageSelectFieldProps> = ({
           {selectedValues.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2">
               {selectedValues.map((pagePath: string) => {
-                const page = AVAILABLE_PAGES.find(p => p.path === pagePath);
+                const page = availablePages.find(p => p.path === pagePath);
                 return (
                   <Badge 
                     key={pagePath} 

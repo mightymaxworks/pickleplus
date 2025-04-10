@@ -202,7 +202,14 @@ const SponsorForm: React.FC = () => {
             <FormItem>
               <FormLabel>Website URL (optional)</FormLabel>
               <FormControl>
-                <Input placeholder="https://example.com" {...field} />
+                <Input 
+                  placeholder="https://example.com" 
+                  value={field.value || ''} 
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -216,7 +223,14 @@ const SponsorForm: React.FC = () => {
             <FormItem>
               <FormLabel>Contact Name (optional)</FormLabel>
               <FormControl>
-                <Input placeholder="John Doe" {...field} />
+                <Input 
+                  placeholder="John Doe" 
+                  value={field.value || ''} 
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -230,7 +244,14 @@ const SponsorForm: React.FC = () => {
             <FormItem>
               <FormLabel>Contact Email (optional)</FormLabel>
               <FormControl>
-                <Input placeholder="contact@example.com" {...field} />
+                <Input 
+                  placeholder="contact@example.com" 
+                  value={field.value || ''} 
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
