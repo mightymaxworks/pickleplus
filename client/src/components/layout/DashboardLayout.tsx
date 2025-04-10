@@ -14,7 +14,7 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { user, isLoading, logoutMutation } = useAuth();
+  const { user, isLoading, logout } = useAuth();
   const [location, navigate] = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -23,9 +23,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const isSmallScreen = useMediaQuery('(max-width: 640px)');
   
   // Handle logout
-  const handleLogout = () => {
-    logoutMutation.mutate();
-    setMobileMenuOpen(false);
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setMobileMenuOpen(false);
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
   
   // Handle scroll detection for header styling

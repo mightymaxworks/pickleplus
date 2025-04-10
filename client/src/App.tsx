@@ -4,7 +4,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from './lib/queryClient'
 import { Toaster } from '@/components/ui/toaster'
 import { AuthProvider } from '@/hooks/use-auth'
-import Layout from '@/components/layout/Layout'
+import { Layout } from '@/components/layout/Layout'
 import EnhancedLandingPage from './pages/EnhancedLandingPage'
 import EnhancedAuthPage from './pages/EnhancedAuthPage'
 import TestAuthPage from './pages/TestAuthPage'
@@ -71,12 +71,24 @@ export default function App() {
         <AuthProvider>
           <Switch>
             {/* Public Routes */}
-            <Route path="/" component={EnhancedLandingPage} />
+            <Route path="/">
+              {(params) => (
+                <Layout>
+                  <EnhancedLandingPage />
+                </Layout>
+              )}
+            </Route>
             <Route path="/login" component={EnhancedAuthPage} />
             <Route path="/register" component={EnhancedAuthPage} />
             <Route path="/auth" component={EnhancedAuthPage} />
             <Route path="/test-routing" component={TestRoutingPage} />
-            <Route path="/landing-test" component={LandingPageTest} />
+            <Route path="/landing-test">
+              {(params) => (
+                <Layout>
+                  <LandingPageTest />
+                </Layout>
+              )}
+            </Route>
             
             {/* Protected Routes */}
             <Route path="/dashboard">
@@ -138,10 +150,22 @@ export default function App() {
             </Route>
             
             {/* For now we'll keep the Match Reward Demo accessible */}
-            <Route path="/demo/match-reward" component={MatchRewardDemo} />
+            <Route path="/demo/match-reward">
+              {(params) => (
+                <Layout>
+                  <MatchRewardDemo />
+                </Layout>
+              )}
+            </Route>
             
             {/* 404 Route */}
-            <Route component={NotFound} />
+            <Route>
+              {(params) => (
+                <Layout>
+                  <NotFound />
+                </Layout>
+              )}
+            </Route>
           </Switch>
         </AuthProvider>
       </QueryClientProvider>
