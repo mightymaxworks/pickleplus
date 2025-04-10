@@ -46,50 +46,70 @@ import { UseFormReturn } from 'react-hook-form';
 import { AVAILABLE_PAGES, PAGE_GROUPS, ApplicationPage } from '../../data/availablePages';
 
 interface PageSelectFieldProps {
-  form: UseFormReturn<any>;
-  name: string;
-  label: string;
+  form?: UseFormReturn<any>;
+  name?: string;
+  label?: string;
   description?: string;
+  value?: string[];
+  onChange?: (value: string[]) => void;
+  availablePages: ApplicationPage[];
 }
 
 export const PageSelectField: React.FC<PageSelectFieldProps> = ({
   form,
   name,
   label,
-  description
+  description,
+  value = [],
+  onChange,
+  availablePages
 }) => {
-  const selectedValues = form.watch(name) || [];
+  // Use either form values or direct value prop
+  const isFormControlled = form && name;
+  const selectedValues = isFormControlled ? (form.watch(name) || []) : value;
   
   // Toggle selected page
   const togglePage = (page: ApplicationPage) => {
-    const currentValues = form.getValues(name) || [];
+    const currentValues = isFormControlled ? (form.getValues(name) || []) : [...selectedValues];
     const pageIndex = currentValues.findIndex((p: string) => p === page.path);
     
+    let newValues: string[];
     if (pageIndex > -1) {
       // Remove if already selected
-      const newValues = [...currentValues];
+      newValues = [...currentValues];
       newValues.splice(pageIndex, 1);
-      form.setValue(name, newValues, { shouldValidate: true });
     } else {
       // Add if not already selected
-      form.setValue(name, [...currentValues, page.path], { shouldValidate: true });
+      newValues = [...currentValues, page.path];
+    }
+    
+    if (isFormControlled) {
+      form.setValue(name, newValues, { shouldValidate: true });
+    } else if (onChange) {
+      onChange(newValues);
     }
   };
   
   // Remove a specific page
   const removePage = (pagePath: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    const currentValues = form.getValues(name) || [];
-    form.setValue(
-      name, 
-      currentValues.filter((p: string) => p !== pagePath),
-      { shouldValidate: true }
-    );
+    const currentValues = isFormControlled ? (form.getValues(name) || []) : [...selectedValues];
+    const newValues = currentValues.filter((p: string) => p !== pagePath);
+    
+    if (isFormControlled) {
+      form.setValue(name, newValues, { shouldValidate: true });
+    } else if (onChange) {
+      onChange(newValues);
+    }
   };
   
   // Clear all selected pages
   const clearPages = () => {
-    form.setValue(name, [], { shouldValidate: true });
+    if (isFormControlled) {
+      form.setValue(name, [], { shouldValidate: true });
+    } else if (onChange) {
+      onChange([]);
+    }
   };
   
   return (

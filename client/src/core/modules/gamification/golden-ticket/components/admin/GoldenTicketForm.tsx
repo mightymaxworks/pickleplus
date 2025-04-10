@@ -1,11 +1,11 @@
 /**
- * PKL-278651-GAME-0005-GOLD
+ * PKL-278651-GAME-0005-GOLD-ENH
  * Golden Ticket Form Component
  * 
- * Form for creating new golden tickets.
+ * Form for creating new golden tickets with promotional image upload.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -18,10 +18,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, ImagePlus } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import FileUploadField from '../common/FileUploadField';
+import { uploadPromotionalImage } from '../../services/fileUploadService';
+import PageSelectField from '../common/PageSelectField';
+import { AVAILABLE_PAGES } from '../../data/availablePages';
 
 // Form schema for creating golden tickets
 const formSchema = z.object({
@@ -36,10 +40,14 @@ const formSchema = z.object({
   sponsorId: z.coerce.number().optional(),
   rewardDescription: z.string().min(5, 'Reward description must be at least 5 characters'),
   rewardType: z.string().default('physical'),
-  discountCode: z.string().optional(),
-  discountValue: z.string().optional(),
+  discountCode: z.string().optional().nullable(),
+  discountValue: z.string().optional().nullable(),
   status: z.enum(['draft', 'active', 'paused', 'completed', 'cancelled']).default('draft'),
-  pagesToAppearOn: z.string().optional()
+  pagesToAppearOn: z.string().optional(),
+  selectedPages: z.array(z.string()).optional(),
+  promotionalImageUrl: z.string().url('Must be a valid URL').optional().nullable(),
+  promotionalImagePath: z.string().optional().nullable(),
+  promotionalImageFile: z.any().optional().nullable(), // For file upload
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -115,18 +123,70 @@ const GoldenTicketForm: React.FC = () => {
     }
   });
   
-  const onSubmit = (data: FormValues) => {
-    // Process pages to appear on as an array if provided
-    const formattedData = {
-      ...data,
-      // Setting default values for required fields
-      currentAppearances: 0,
-      // Handle sponsorId null/undefined issue
-      sponsorId: data.sponsorId || null,
-      pagesToAppearOn: data.pagesToAppearOn ? data.pagesToAppearOn.split(',').map(page => page.trim()) : undefined
-    };
-    
-    mutation.mutate(formattedData);
+  // Upload image mutation
+  const uploadImageMutation = useMutation({
+    mutationFn: uploadPromotionalImage,
+    onSuccess: (response) => {
+      // Set the image path and URL from the response
+      form.setValue('promotionalImagePath', response.filePath, { shouldValidate: true });
+      form.setValue('promotionalImageUrl', response.url, { shouldValidate: true });
+      
+      toast({
+        title: 'Success',
+        description: 'Promotional image uploaded successfully',
+        variant: 'default',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to upload image',
+        variant: 'destructive',
+      });
+      console.error('Error uploading promotional image:', error);
+    }
+  });
+
+  const onSubmit = async (data: FormValues) => {
+    try {
+      // If a file was selected, upload it first
+      if (data.promotionalImageFile) {
+        await uploadImageMutation.mutateAsync(data.promotionalImageFile);
+      }
+      
+      // Process pages to appear on as an array if provided
+      let pagesToAppearOn;
+      if (data.selectedPages && data.selectedPages.length > 0) {
+        // Use the structured page selection if available
+        pagesToAppearOn = data.selectedPages;
+      } else if (data.pagesToAppearOn) {
+        // Fallback to comma-separated string
+        pagesToAppearOn = data.pagesToAppearOn.split(',').map(page => page.trim());
+      }
+      
+      // Remove the file field and build data object
+      const { promotionalImageFile, selectedPages, ...submitData } = data;
+      
+      const formattedData = {
+        ...submitData,
+        // Setting default values for required fields
+        currentAppearances: 0,
+        // Handle sponsorId null/undefined issue
+        sponsorId: submitData.sponsorId || null,
+        pagesToAppearOn: pagesToAppearOn,
+        // Ensure promotional image fields are included
+        promotionalImageUrl: submitData.promotionalImageUrl || null,
+        promotionalImagePath: submitData.promotionalImagePath || null,
+        // Ensure discount fields are properly handled
+        discountCode: submitData.discountCode || null,
+        discountValue: submitData.discountValue || null
+      };
+      
+      // Then create the golden ticket with the updated data
+      mutation.mutate(formattedData);
+    } catch (error) {
+      console.error('Error in form submission:', error);
+    }
   };
   
   return (
@@ -426,12 +486,35 @@ const GoldenTicketForm: React.FC = () => {
           />
         </div>
         
+        {/* Structured page selection with PageSelectField component */}
+        <FormField
+          control={form.control}
+          name="selectedPages"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Pages to Appear On (Structured)</FormLabel>
+              <FormControl>
+                <PageSelectField
+                  value={field.value || []}
+                  onChange={field.onChange}
+                  availablePages={AVAILABLE_PAGES}
+                />
+              </FormControl>
+              <FormDescription className="text-xs">
+                Select pages where this ticket can appear
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        {/* Legacy manual input for page paths */}
         <FormField
           control={form.control}
           name="pagesToAppearOn"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Pages to Appear On (Optional)</FormLabel>
+              <FormLabel>Pages to Appear On (Manual)</FormLabel>
               <FormControl>
                 <Input 
                   placeholder="e.g. /dashboard, /profile, /matches" 
@@ -439,7 +522,46 @@ const GoldenTicketForm: React.FC = () => {
                 />
               </FormControl>
               <FormDescription className="text-xs">
-                Comma-separated list of page paths where this ticket can appear
+                Comma-separated list of page paths (use structured selection above if possible)
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        {/* Promotional image upload */}
+        <FormField
+          control={form.control}
+          name="promotionalImageFile"
+          render={({ field }) => (
+            <FileUploadField
+              form={form}
+              name="promotionalImageFile"
+              label="Promotional Image"
+              description="Upload a promotional image for the golden ticket (JPEG, PNG, WebP, GIF up to 2MB)"
+            />
+          )}
+        />
+        
+        {/* Fallback URL option for image */}
+        <FormField
+          control={form.control}
+          name="promotionalImageUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Promotional Image URL (Optional)</FormLabel>
+              <FormControl>
+                <Input 
+                  placeholder="https://example.com/image.png" 
+                  value={field.value || ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                />
+              </FormControl>
+              <FormDescription className="text-xs">
+                Only needed if not uploading a file directly
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -476,10 +598,10 @@ const GoldenTicketForm: React.FC = () => {
         
         <Button 
           type="submit" 
-          disabled={mutation.isPending}
+          disabled={mutation.isPending || uploadImageMutation.isPending}
           className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white"
         >
-          {mutation.isPending ? 'Creating...' : 'Create Golden Ticket'}
+          {mutation.isPending || uploadImageMutation.isPending ? 'Creating...' : 'Create Golden Ticket'}
         </Button>
       </form>
     </Form>
