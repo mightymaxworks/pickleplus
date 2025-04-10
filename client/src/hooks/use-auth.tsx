@@ -7,41 +7,12 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 
-// Define user type with all the properties we need across the app
-export interface User {
-  id: number;
-  username: string;
-  email: string | null;
-  displayName?: string;
-  firstName?: string | null;
-  lastName?: string | null;
-  location?: string | null; 
-  bio?: string | null;
-  yearOfBirth?: number | null;
-  passportId?: string;
-  passportCode?: string;
-  level?: number;
-  xp?: number;
-  avatarUrl?: string;
-  avatarInitials?: string;
-  lastMatchDate?: string | null;
-  totalMatches?: number;
-  matchesWon?: number;
-  totalTournaments?: number;
-  isFoundingMember?: boolean;
-  isAdmin?: boolean;
-  xpMultiplier?: number;
-  profileCompletionPct?: number;
-  rankingPoints?: number;
-  playingSince?: string | null;
-  skillLevel?: string | null;
-  height?: number | null;
-  reach?: number | null;
-  preferredPosition?: string | null;
-  paddleBrand?: string | null;
-  paddleModel?: string | null;
-  createdAt?: string;
-}
+// Import the User type from the shared schema
+import type { User as SchemaUser } from '../../../shared/schema';
+
+// Export a client-side version of the User type with the same structure
+// This ensures type consistency throughout the application
+export type User = SchemaUser;
 
 // Registration data interface
 export interface RegisterData {

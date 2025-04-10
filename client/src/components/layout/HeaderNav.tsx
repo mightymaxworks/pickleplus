@@ -147,7 +147,7 @@ export function HeaderNav() {
                 { label: 'Mastery Paths', icon: <Award size={18} />, path: '/mastery-paths' },
                 { label: 'Profile', icon: <UserIcon size={18} />, path: '/profile' },
                 { label: 'Settings', icon: <Settings size={18} />, path: '/settings' },
-                ...(user?.role === 'admin' ? [{ label: 'Admin Panel', icon: <Shield size={18} />, path: '/admin/golden-ticket' }] : [])
+                ...(user?.isAdmin ? [{ label: 'Admin Panel', icon: <Shield size={18} />, path: '/admin/golden-ticket' }] : [])
               ].map((item, i) => {
                 const isActive = location === item.path;
                 
