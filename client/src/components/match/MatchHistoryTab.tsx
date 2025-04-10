@@ -315,12 +315,17 @@ function Pagination({ currentPage, totalPages, totalCount, matches, onPageChange
     }
   };
   
-  const displayTotalCount = totalCount || (matches?.length || 0);
-  const displayCurrentPage = displayTotalCount > 0 ? currentPage : 0;
+  // Use the length of matches when available, otherwise fallback to the API-provided totalCount
+  const visibleMatchesCount = matches?.length || 0;
+  const displayTotalCount = visibleMatchesCount > 0 ? Math.max(totalCount, visibleMatchesCount) : totalCount;
   
-  // Calculate actual values based on visible matches when API totalCount might be wrong
-  const startItem = displayTotalCount > 0 ? (displayCurrentPage - 1) * 10 + 1 : 0;
-  const endItem = Math.min(displayCurrentPage * 10, displayTotalCount);
+  // If we have visible matches or a known total count > 0, show the correct page, otherwise show page 0
+  const displayCurrentPage = (visibleMatchesCount > 0 || totalCount > 0) ? currentPage : 0;
+  
+  // Calculate actual values based on visible matches
+  const itemsPerPage = 10;
+  const startItem = displayTotalCount > 0 ? ((displayCurrentPage - 1) * itemsPerPage) + 1 : 0;
+  const endItem = Math.min(startItem + visibleMatchesCount - 1, displayTotalCount);
   
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mt-4 pb-10 mb-3">
