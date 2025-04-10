@@ -45,12 +45,18 @@ const GoldenTicketPreview: React.FC<GoldenTicketPreviewProps> = ({ ticketData, t
     setIsRevealed(false);
   };
   
-  // Determine image URL to use
-  const imageUrl = ticketData.promotionalImageUrl || 
+  // Determine image URLs to use
+  const promotionalImageUrl = ticketData.promotionalImageUrl || 
     (ticketData.promotionalImagePath ? `/${ticketData.promotionalImagePath}` : null);
     
-  // Debug logging for sponsor logo info
+  // Debug logging for image paths and sponsor info
   useEffect(() => {
+    console.log('GoldenTicketPreview - Promotional Image Info:', {
+      promotionalImageUrl: ticketData.promotionalImageUrl,
+      promotionalImagePath: ticketData.promotionalImagePath,
+      formattedImageUrl: promotionalImageUrl
+    });
+    
     if (ticketData.sponsor) {
       console.log('GoldenTicketPreview - Sponsor logo info:', {
         name: ticketData.sponsor.name,
@@ -61,7 +67,7 @@ const GoldenTicketPreview: React.FC<GoldenTicketPreviewProps> = ({ ticketData, t
             `/${ticketData.sponsor.logoPath}`) : null
       });
     }
-  }, [ticketData.sponsor]);
+  }, [ticketData.sponsor, ticketData.promotionalImageUrl, ticketData.promotionalImagePath, promotionalImageUrl]);
   
   const previewCard = (
     <Card className="overflow-hidden border-4 border-yellow-400 shadow-xl bg-gradient-to-r from-amber-50 to-yellow-50 max-w-sm mx-auto">
@@ -74,10 +80,10 @@ const GoldenTicketPreview: React.FC<GoldenTicketPreviewProps> = ({ ticketData, t
       </CardHeader>
       
       <CardContent className="pt-4">
-        {imageUrl && (
+        {promotionalImageUrl && (
           <div className="flex justify-center mb-3">
             <img 
-              src={imageUrl} 
+              src={promotionalImageUrl} 
               alt="Golden Ticket" 
               className="w-24 h-24 object-contain"
             />
@@ -116,12 +122,34 @@ const GoldenTicketPreview: React.FC<GoldenTicketPreviewProps> = ({ ticketData, t
               <span className="text-sm font-medium">{ticketData.sponsor.name}</span>
             </div>
             
+            {/* Show promotional image when sponsor is revealed */}
+            {promotionalImageUrl && (
+              <div className="mt-3 border border-blue-200 rounded-md p-2 bg-blue-50/50">
+                <h6 className="text-xs font-medium text-blue-800 mb-1">Promotional Offer:</h6>
+                <div className="flex justify-center">
+                  <img 
+                    src={promotionalImageUrl} 
+                    alt="Promotional offer" 
+                    className="h-32 object-contain"
+                    onError={(e) => {
+                      console.error('Error loading promotional image:', e);
+                      console.log('Promotional image path was:', promotionalImageUrl);
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-gray-600 mt-1 text-center italic">
+                  {ticketData.rewardDescription || 'Special offer from our sponsor'}
+                </p>
+              </div>
+            )}
+            
             {ticketData.sponsor.website && (
               <a 
                 href={ticketData.sponsor.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-blue-600 hover:underline flex items-center mt-1"
+                className="text-xs text-blue-600 hover:underline flex items-center mt-2"
               >
                 Visit website
                 <ExternalLink size={10} className="ml-1" />
