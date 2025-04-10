@@ -35,6 +35,9 @@ const formSchema = z.object({
   endDate: z.date(),
   sponsorId: z.coerce.number().optional(),
   rewardDescription: z.string().min(5, 'Reward description must be at least 5 characters'),
+  rewardType: z.string().default('physical'),
+  discountCode: z.string().optional(),
+  discountValue: z.string().optional(),
   status: z.enum(['draft', 'active', 'paused', 'completed', 'cancelled']).default('draft'),
   pagesToAppearOn: z.string().optional()
 });
@@ -62,6 +65,9 @@ const GoldenTicketForm: React.FC = () => {
     startDate: new Date(),
     endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
     rewardDescription: '',
+    rewardType: 'physical',
+    discountCode: '',
+    discountValue: '',
     status: 'draft',
     pagesToAppearOn: ''
   };
@@ -113,6 +119,8 @@ const GoldenTicketForm: React.FC = () => {
     // Process pages to appear on as an array if provided
     const formattedData = {
       ...data,
+      // Setting default values for required fields
+      currentAppearances: 0,
       pagesToAppearOn: data.pagesToAppearOn ? data.pagesToAppearOn.split(',').map(page => page.trim()) : undefined
     };
     
@@ -358,6 +366,63 @@ const GoldenTicketForm: React.FC = () => {
             </FormItem>
           )}
         />
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <FormField
+            control={form.control}
+            name="rewardType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Reward Type</FormLabel>
+                <Select 
+                  value={field.value}
+                  onValueChange={field.onChange}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select reward type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="physical">Physical Product</SelectItem>
+                    <SelectItem value="discount">Discount Code</SelectItem>
+                    <SelectItem value="service">Service</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="discountCode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Discount Code (Optional)</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. PICKLE20" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="discountValue"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Discount Value (Optional)</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. 20% or $15" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         
         <FormField
           control={form.control}

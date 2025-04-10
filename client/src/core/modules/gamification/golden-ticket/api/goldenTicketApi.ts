@@ -17,7 +17,9 @@ const API_BASE = '/api/golden-ticket';
  * @returns List of golden tickets
  */
 export async function getAllGoldenTickets(): Promise<GoldenTicket[]> {
-  return apiRequest(`${API_BASE}/admin/tickets`);
+  const response = await apiRequest(`${API_BASE}/admin/tickets`);
+  // Handle the nested response format
+  return response.tickets || [];
 }
 
 /**
@@ -89,7 +91,9 @@ export async function getMyTicketClaims(): Promise<GoldenTicketClaim[]> {
  * @returns List of all claims
  */
 export async function getAllClaims(): Promise<GoldenTicketClaim[]> {
-  return apiRequest(`${API_BASE}/admin/claims`);
+  const response = await apiRequest(`${API_BASE}/admin/claims`);
+  // Handle the nested response format
+  return response.claims || [];
 }
 
 /**
@@ -112,7 +116,9 @@ export async function updateClaimStatus(id: number, status: string): Promise<Gol
  * @returns List of sponsors
  */
 export async function getAllSponsors(): Promise<Sponsor[]> {
-  return apiRequest(`${API_BASE}/admin/sponsors`);
+  const response = await apiRequest(`${API_BASE}/admin/sponsors`);
+  // Handle the nested response format
+  return response.sponsors || [];
 }
 
 /**
