@@ -325,11 +325,11 @@ const TournamentDiscoveryPage: React.FC = () => {
           transition={{ duration: 0.5 }}
         >
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Tournament System Preview
+            Elevate Your Game Through Tournaments
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-4">
-            Explore our upcoming tournament system! Discover all features to qualify for 
-            exclusive early access through our prize drawing.
+            Discover how tournaments can accelerate your CourtIQ™ rating growth and player development.
+            Explore all features to qualify for exclusive early access to our tournament platform.
           </p>
           
           {/* Countdown to launch */}
@@ -427,7 +427,7 @@ const TournamentDiscoveryPage: React.FC = () => {
                       ></div>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      Discover basic tournament features
+                      Discover how tournaments can enhance your player journey
                     </p>
                   </div>
                   
@@ -448,7 +448,7 @@ const TournamentDiscoveryPage: React.FC = () => {
                       ></div>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      Explore intermediate tournament concepts
+                      Learn how tournaments accelerate your CourtIQ™ development
                     </p>
                   </div>
                   
@@ -469,7 +469,7 @@ const TournamentDiscoveryPage: React.FC = () => {
                       ></div>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      Master advanced tournament features
+                      Unlock the full potential of your CourtIQ™ profile through tournaments
                     </p>
                   </div>
                 </div>
@@ -644,7 +644,7 @@ const TournamentDiscoveryPage: React.FC = () => {
       
       {/* Tournament Roadmap section */}
       <div className="mt-12 py-8 border-t border-gray-200">
-        <h2 className="text-2xl font-bold text-center mb-6">Tournament Feature Roadmap</h2>
+        <h2 className="text-2xl font-bold text-center mb-6">Your CourtIQ™ Tournament Journey</h2>
         <TournamentRoadmap className="max-w-3xl mx-auto" />
       </div>
       
