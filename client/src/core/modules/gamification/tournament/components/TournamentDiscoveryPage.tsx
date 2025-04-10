@@ -14,7 +14,6 @@ import {
   Trophy, 
   Star, 
   Crown, 
-  Info, 
   Medal, 
   Award, 
   AlertTriangle,
@@ -26,14 +25,13 @@ import {
   Rocket,
   CalendarRange
 } from 'lucide-react';
-import TournamentBracket from './TournamentBracket';
 import { BracketPosition, TournamentReward } from '../types';
 import { DiscoveryAlert, ProgressTracker, RewardDisplay } from '../../components';
 import { useTournamentDiscovery } from '../context/TournamentDiscoveryContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DiscoveryPoint } from '../api/tournamentDiscoveryApi';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+// Removed Tabs imports as we're using a simpler layout now
 import { cva } from 'class-variance-authority';
 import { getTournamentFeatureDetail } from '../data/tournamentFeatureDetails';
 import TournamentFeatureDialog from './TournamentFeatureDialog';
@@ -77,7 +75,7 @@ const TournamentDiscoveryPage: React.FC = () => {
   const [showAlert, setShowAlert] = useState(false);
   const [currentReward, setCurrentReward] = useState<TournamentReward | null>(null);
   const [currentDiscovery, setCurrentDiscovery] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<string>("bracket");
+  // Removed bracket/list tab state as we're only using list view now
   const [countdown, setCountdown] = useState<{days: number, hours: number, minutes: number, seconds: number}>({
     days: 0, hours: 0, minutes: 0, seconds: 0
   });
@@ -539,120 +537,81 @@ const TournamentDiscoveryPage: React.FC = () => {
               <Loader2 className="animate-spin text-primary h-12 w-12" />
             </div>
           ) : (
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <div className="w-full">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Tournament Features</h2>
-                <TabsList>
-                  <TabsTrigger value="bracket">Bracket View</TabsTrigger>
-                  <TabsTrigger value="list">List View</TabsTrigger>
-                </TabsList>
               </div>
               
-              <TabsContent value="bracket" className="mt-0">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="bg-white rounded-lg p-4 border border-gray-200"
-                >
-                  <div className="flex items-center mb-4">
-                    <p className="text-sm text-gray-500 flex items-center">
-                      <Info size={14} className="mr-1" /> 
-                      Click on highlighted areas to discover features
-                    </p>
+              {/* List view content - now the only view */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="bg-white rounded-lg p-4 border border-gray-200"
+              >
+                <h3 className="font-medium text-gray-900 mb-4">Discover By Tier</h3>
+                
+                {/* Scout Tier */}
+                <div className="mb-6">
+                  <div className="flex items-center mb-3">
+                    <Badge className={tierBadgeStyles({ tier: "scout" })}>Scout</Badge>
+                    <div className="h-px flex-1 bg-blue-100 mx-3"></div>
+                    <span className="text-xs text-gray-500">{tierProgress.scout}% complete</span>
                   </div>
                   
-                  <TournamentBracket
-                    discoveredPositions={tournamentPositions}
-                    onPositionClick={handlePositionClick}
-                    animateUndiscovered={true}
-                    className="mb-4"
-                  />
-                  
-                  {currentDiscovery && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-md"
-                    >
-                      <h3 className="font-medium text-gray-900">Feature Details</h3>
-                      <p className="text-sm text-gray-600 mt-1">{currentDiscovery}</p>
-                    </motion.div>
-                  )}
-                </motion.div>
-              </TabsContent>
-              
-              <TabsContent value="list" className="mt-0">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="bg-white rounded-lg p-4 border border-gray-200"
-                >
-                  <h3 className="font-medium text-gray-900 mb-4">Discover By Tier</h3>
-                  
-                  {/* Scout Tier */}
-                  <div className="mb-6">
-                    <div className="flex items-center mb-3">
-                      <Badge className={tierBadgeStyles({ tier: "scout" })}>Scout</Badge>
-                      <div className="h-px flex-1 bg-blue-100 mx-3"></div>
-                      <span className="text-xs text-gray-500">{tierProgress.scout}% complete</span>
-                    </div>
+                  <div className="grid grid-cols-1 gap-4">
+                    {pointsByTier.scout.map(renderDiscoveryCard)}
                     
-                    <div className="grid grid-cols-1 gap-4">
-                      {pointsByTier.scout.map(renderDiscoveryCard)}
-                      
-                      {pointsByTier.scout.length === 0 && (
-                        <div className="text-center py-4 text-gray-500">
-                          <AlertTriangle size={24} className="mx-auto mb-2" />
-                          <p>No scout-tier features available</p>
-                        </div>
-                      )}
-                    </div>
+                    {pointsByTier.scout.length === 0 && (
+                      <div className="text-center py-4 text-gray-500">
+                        <AlertTriangle size={24} className="mx-auto mb-2" />
+                        <p>No scout-tier features available</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Strategist Tier */}
+                <div className="mb-6">
+                  <div className="flex items-center mb-3">
+                    <Badge className={tierBadgeStyles({ tier: "strategist" })}>Strategist</Badge>
+                    <div className="h-px flex-1 bg-purple-100 mx-3"></div>
+                    <span className="text-xs text-gray-500">{tierProgress.strategist}% complete</span>
                   </div>
                   
-                  {/* Strategist Tier */}
-                  <div className="mb-6">
-                    <div className="flex items-center mb-3">
-                      <Badge className={tierBadgeStyles({ tier: "strategist" })}>Strategist</Badge>
-                      <div className="h-px flex-1 bg-purple-100 mx-3"></div>
-                      <span className="text-xs text-gray-500">{tierProgress.strategist}% complete</span>
-                    </div>
+                  <div className="grid grid-cols-1 gap-4">
+                    {pointsByTier.strategist.map(renderDiscoveryCard)}
                     
-                    <div className="grid grid-cols-1 gap-4">
-                      {pointsByTier.strategist.map(renderDiscoveryCard)}
-                      
-                      {pointsByTier.strategist.length === 0 && (
-                        <div className="text-center py-4 text-gray-500">
-                          <AlertTriangle size={24} className="mx-auto mb-2" />
-                          <p>No strategist-tier features available</p>
-                        </div>
-                      )}
-                    </div>
+                    {pointsByTier.strategist.length === 0 && (
+                      <div className="text-center py-4 text-gray-500">
+                        <AlertTriangle size={24} className="mx-auto mb-2" />
+                        <p>No strategist-tier features available</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Pioneer Tier */}
+                <div>
+                  <div className="flex items-center mb-3">
+                    <Badge className={tierBadgeStyles({ tier: "pioneer" })}>Pioneer</Badge>
+                    <div className="h-px flex-1 bg-amber-100 mx-3"></div>
+                    <span className="text-xs text-gray-500">{tierProgress.pioneer}% complete</span>
                   </div>
                   
-                  {/* Pioneer Tier */}
-                  <div>
-                    <div className="flex items-center mb-3">
-                      <Badge className={tierBadgeStyles({ tier: "pioneer" })}>Pioneer</Badge>
-                      <div className="h-px flex-1 bg-amber-100 mx-3"></div>
-                      <span className="text-xs text-gray-500">{tierProgress.pioneer}% complete</span>
-                    </div>
+                  <div className="grid grid-cols-1 gap-4">
+                    {pointsByTier.pioneer.map(renderDiscoveryCard)}
                     
-                    <div className="grid grid-cols-1 gap-4">
-                      {pointsByTier.pioneer.map(renderDiscoveryCard)}
-                      
-                      {pointsByTier.pioneer.length === 0 && (
-                        <div className="text-center py-4 text-gray-500">
-                          <AlertTriangle size={24} className="mx-auto mb-2" />
-                          <p>No pioneer-tier features available</p>
-                        </div>
-                      )}
-                    </div>
+                    {pointsByTier.pioneer.length === 0 && (
+                      <div className="text-center py-4 text-gray-500">
+                        <AlertTriangle size={24} className="mx-auto mb-2" />
+                        <p>No pioneer-tier features available</p>
+                      </div>
+                    )}
                   </div>
-                </motion.div>
-              </TabsContent>
-            </Tabs>
+                </div>
+              </motion.div>
+              </div>
           )}
         </div>
       </div>
