@@ -186,7 +186,16 @@ const TournamentDiscoveryPage: React.FC = () => {
     
     // Safely set current reward if it exists
     if (position.reward) {
-      setCurrentReward(position.reward);
+      // Make a clean copy to avoid type issues
+      const reward: TournamentReward = {
+        id: position.reward.id,
+        name: position.reward.name,
+        description: position.reward.description,
+        type: position.reward.type,
+        rarity: position.reward.rarity,
+        value: position.reward.value
+      };
+      setCurrentReward(reward);
     }
     
     setCurrentDiscovery(position.description);
