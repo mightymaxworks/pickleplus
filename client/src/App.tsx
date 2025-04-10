@@ -21,6 +21,7 @@ import StreamlinedProfilePage from './pages/StreamlinedProfilePage'
 import { LeaderboardPage } from './pages/LeaderboardPage'
 import LandingPageTest from './pages/LandingPageTest'
 import MasteryPathsPage from './pages/MasteryPathsPage'
+import TournamentDiscoveryPage from './pages/TournamentDiscoveryPage'
 import PrizeDrawingPage from './pages/admin/PrizeDrawingPage'
 import NotFound from './pages/not-found'
 
@@ -79,7 +80,7 @@ export default function App() {
               {(params) => <ProtectedRoute component={ModernizedMatchPage} path="/matches" />}
             </Route>
             <Route path="/tournaments">
-              {(params) => <ProtectedRoute component={Dashboard} path="/tournaments" />}
+              {(params) => <ProtectedRoute component={TournamentDiscoveryPage} path="/tournaments" />}
             </Route>
             <Route path="/training">
               {(params) => <ProtectedRoute component={Dashboard} path="/training" />}
