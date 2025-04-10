@@ -454,19 +454,19 @@ export default function MatchValidation({ match, onValidationComplete }: MatchVa
                           </AvatarFallback>
                         </Avatar>
                         <span className="text-sm truncate">
-                          {match.playerNames?.[match.players[0].partnerId]?.displayName || "Partner 1"}
+                          {match.playerNames?.[match.players?.[0]?.partnerId]?.displayName || "Partner 1"}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Avatar className="h-7 w-7">
                           <AvatarFallback className="text-xs">
-                            {match.playerNames?.[match.players[1].partnerId]?.avatarInitials || 
-                             match.playerNames?.[match.players[1].partnerId]?.displayName?.charAt(0) || 
+                            {match.playerNames?.[match.players?.[1]?.partnerId]?.avatarInitials || 
+                             match.playerNames?.[match.players?.[1]?.partnerId]?.displayName?.charAt(0) || 
                              "P4"}
                           </AvatarFallback>
                         </Avatar>
                         <span className="text-sm truncate">
-                          {match.playerNames?.[match.players[1].partnerId]?.displayName || "Partner 2"}
+                          {match.playerNames?.[match.players?.[1]?.partnerId]?.displayName || "Partner 2"}
                         </span>
                       </div>
                     </div>
