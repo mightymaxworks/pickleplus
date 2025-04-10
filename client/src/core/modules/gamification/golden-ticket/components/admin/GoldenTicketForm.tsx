@@ -177,8 +177,8 @@ const GoldenTicketForm: React.FC = () => {
               <FormItem>
                 <FormLabel>Sponsor (Optional)</FormLabel>
                 <Select 
-                  value={field.value?.toString() || ''}
-                  onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}
+                  value={field.value?.toString() || 'none'}
+                  onValueChange={(value) => field.onChange(value && value !== 'none' ? parseInt(value) : undefined)}
                   disabled={isLoadingSponsors}
                 >
                   <FormControl>
@@ -187,7 +187,7 @@ const GoldenTicketForm: React.FC = () => {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">No sponsor</SelectItem>
+                    <SelectItem value="none">No sponsor</SelectItem>
                     {sponsors.map((sponsor) => (
                       <SelectItem key={sponsor.id} value={sponsor.id.toString()}>
                         {sponsor.name}
