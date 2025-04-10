@@ -1,9 +1,12 @@
 /**
- * PKL-278651-GAME-0003-DISC
- * Tournament Feature Details
+ * PKL-278651-GAME-0004-PART
+ * Tournament Feature Details (Participant-Focused with CourtIQ Integration)
  * 
  * This file contains detailed descriptions and information about tournament features
  * that players can discover through the Tournament Discovery experience.
+ * 
+ * Updated to focus on participant benefits rather than organizational aspects
+ * with integrated CourtIQ rating system connections.
  * 
  * Following Framework 4.0 guidelines, this module maintains separation of concerns by
  * keeping content separate from presentation logic.
@@ -26,17 +29,18 @@ export interface TournamentFeatureDetail {
 export const tournamentFeatureDetails: Record<string, TournamentFeatureDetail> = {
   'tournament-bracket': {
     id: 'tournament-bracket',
-    title: 'Interactive Tournament Brackets',
-    shortDescription: 'Dynamic, real-time tournament brackets that update as matches are completed.',
-    fullDescription: `Experience our state-of-the-art tournament bracket system with real-time updates, 
-    match predictions, and interactive player cards. The bracket system supports various tournament formats 
-    including single elimination, double elimination, and round robin.`,
+    title: 'Your Path to Victory',
+    shortDescription: 'Track your journey through tournaments with real-time updates and match alerts.',
+    fullDescription: `Follow your path to victory with our immersive tournament experience. See exactly 
+    where you stand in the competition, who you'll face next, and your potential path to the finals. 
+    Your CourtIQ™ rating is prominently displayed alongside your opponents, giving you insights 
+    into each matchup before you step on the court.`,
     keyPoints: [
-      'Responsive design for both mobile and desktop viewing',
-      'Real-time score updates as matches progress',
-      'Interactive player cards with performance statistics',
-      'Share your bracket position and matches with friends',
-      'Automated notifications for upcoming matches'
+      'Visualize your exact path through the tournament',
+      'Receive instant notifications about your upcoming matches',
+      'Compare CourtIQ™ ratings with potential opponents',
+      'Share your tournament progress with friends and followers',
+      'Review past match data to prepare for upcoming opponents'
     ],
     launchDate: 'April 30, 2025',
     demoAvailable: true
@@ -44,18 +48,18 @@ export const tournamentFeatureDetails: Record<string, TournamentFeatureDetail> =
   
   'tournament-scoring': {
     id: 'tournament-scoring',
-    title: 'Advanced Scoring System',
-    shortDescription: 'Comprehensive scoring system with detailed match statistics and analytics.',
-    fullDescription: `Our tournament scoring system provides comprehensive match analytics beyond 
-    basic win/loss tracking. Track detailed performance metrics including shot accuracy, first serve percentage,
-    match momentum, and more. The system integrates with our CourtIQ™ rating algorithm to provide accurate 
-    post-tournament rating adjustments.`,
+    title: 'Performance Insights & Rating Boosts',
+    shortDescription: 'Grow your CourtIQ™ rating through tournament play with detailed performance analytics.',
+    fullDescription: `Maximize your skill development with our comprehensive tournament performance tracking.
+    Every shot, serve, and rally is analyzed to provide you with actionable insights that improve your game.
+    Your CourtIQ™ rating receives priority updates after tournament play, giving your competitive profile 
+    an immediate boost based on your performance against varied opponents.`,
     keyPoints: [
-      'Real-time score tracking during matches',
-      'Performance metrics like shot accuracy and serve percentage',
-      'Match momentum visualization',
-      'Integration with CourtIQ™ rating system',
-      'Exportable match summaries and historical comparisons'
+      'Receive detailed breakdown of your tournament performance strengths',
+      'Get CourtIQ™ rating updates in real-time as tournaments progress',
+      'Identify specific areas to improve based on tournament competition',
+      'Compare your performance metrics against higher-rated players',
+      'Track your rating evolution through tournament participation'
     ],
     launchDate: 'April 30, 2025',
     demoAvailable: false
