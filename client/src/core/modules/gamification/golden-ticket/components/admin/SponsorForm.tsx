@@ -23,8 +23,6 @@ import { uploadSponsorLogo } from '../../services/fileUploadService';
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   description: z.string().optional().or(z.literal('')).nullable(),
-  // Remove the strict URL validation for logoUrl since we don't show it in the form anymore
-  // and it might be a relative path from file upload
   logoPath: z.string().optional().nullable(),
   logoFile: z.any().optional().nullable(), // For file upload
   website: z.string()
@@ -93,7 +91,6 @@ const SponsorForm: React.FC = () => {
     onSuccess: (response) => {
       // Set only the logoPath from the response
       form.setValue('logoPath', response.filePath, { shouldValidate: true });
-      // We no longer use logoUrl field
       
       toast({
         title: 'Success',
@@ -128,11 +125,12 @@ const SponsorForm: React.FC = () => {
       }
       
       // Make sure we have clean null values for any empty string fields
-      Object.keys(submitData).forEach((key) => {
-        const k = key as keyof typeof submitData;
+      // Use a type assertion to work with the partial data
+      const typedData = submitData as Record<string, string | null | boolean>;
+      Object.keys(typedData).forEach((key) => {
         // Handle empty strings by converting them to null
-        if (typeof submitData[k] === 'string' && submitData[k] === '') {
-          submitData[k] = null as any; // Using any to bypass TypeScript's strict type checking
+        if (typeof typedData[key] === 'string' && typedData[key] === '') {
+          typedData[key] = null;
         }
       });
       
