@@ -5,7 +5,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 
 // Define user type
 export interface User {
@@ -64,6 +64,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     queryKey: ['/api/auth/current-user'],
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: true,
+    retry: 0, // Don't retry if the user is not authenticated
+    refetchInterval: false,
   });
   
   const isAuthenticated = !!user;
@@ -76,17 +78,30 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const response = await apiRequest('POST', '/api/auth/login', { username: usernameOrEmail, password });
       
       console.log('Making POST request to /api/auth/login with credentials included');
+      console.log('POST /api/auth/login response status:', response.status);
       
       if (!response.ok) {
         const errorData = await response.json();
-        console.log('POST /api/auth/login response status:', response.status);
-        console.log('Response cookies present:', response.headers.get('set-cookie') ? 'Yes' : 'No');
         throw new Error(errorData.message || 'Login failed');
       }
       
-      // Refetch user data
-      await refetch();
+      // Get the user data from the response and manually update cache
+      try {
+        const userData = await response.json();
+        console.log('Login successful - user data:', userData);
+        
+        // Manually update the cache with the retrieved user data
+        queryClient.setQueryData(['/api/auth/current-user'], userData);
+        
+        // Still refetch to ensure we have latest data
+        await refetch();
+      } catch (parseError) {
+        console.error('Error parsing user data from login response:', parseError);
+        // Still refetch even if we couldn't parse the response
+        await refetch();
+      }
     } catch (err: any) {
+      console.error('Login error:', err);
       setError(err.message || 'Login failed');
       throw err;
     }
@@ -98,14 +113,28 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setError(null);
       const response = await apiRequest('POST', '/api/auth/register', data);
       
+      console.log('POST /api/auth/register response status:', response.status);
+      
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Registration failed');
       }
       
+      // Try to get the user data from the response
+      try {
+        const userData = await response.json();
+        console.log('Registration successful - user data:', userData);
+        
+        // Manually update the cache with the retrieved user data
+        queryClient.setQueryData(['/api/auth/current-user'], userData);
+      } catch (parseError) {
+        console.error('Error parsing user data from registration response:', parseError);
+      }
+      
       // Refetch user data
       await refetch();
     } catch (err: any) {
+      console.error('Registration error:', err);
       setError(err.message || 'Registration failed');
       throw err;
     }
@@ -114,16 +143,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // Logout function
   const logout = async () => {
     try {
+      console.log('Attempting to logout user');
       const response = await apiRequest('POST', '/api/auth/logout', {});
+      console.log('POST /api/auth/logout response status:', response.status);
       
       if (!response.ok) {
         throw new Error('Logout failed');
       }
       
+      // Clear auth data from cache
+      queryClient.setQueryData(['/api/auth/current-user'], null);
+      
       // Refetch to update state (should return null/unauthenticated)
       await refetch();
       
+      console.log('User logged out successfully');
     } catch (err: any) {
+      console.error('Logout error:', err);
       setError(err.message || 'Logout failed');
     }
   };
@@ -133,10 +169,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setError(null);
   }, [user]);
   
+  // Ensure user has the right type - this avoids TypeScript errors
+  const typedUser = user as User | null;
+  
   return (
     <AuthContext.Provider
       value={{
-        user: user || null,
+        user: typedUser,
         isLoading,
         isAuthenticated,
         login,
