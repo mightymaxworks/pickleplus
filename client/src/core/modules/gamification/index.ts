@@ -2,48 +2,39 @@
  * PKL-278651-GAME-0001-MOD
  * Gamification Module
  * 
- * This module provides gamification features to the application.
- * It includes components for displaying discoveries, rewards, and progress.
- * It also includes hooks for triggering discoveries.
+ * This is the main entry point for the gamification module.
+ * It exports all components, hooks, and APIs for use in the application.
  */
 
-// Core gamification context and provider
-import { GamificationProvider, GamificationContext, useGamification } from './context/GamificationContext';
+// Export context and provider
+export { 
+  GamificationProvider, 
+  useGamification 
+} from './context/GamificationContext';
 
-// API
-import * as gamificationAPI from './api/gamificationAPI';
-import * as gamificationTypes from './api/types';
+// Export API and types
+export * as gamificationAPI from './api/gamificationAPI';
+export * from './api/types';
 
-// Engine
-import * as discoveryEngine from './engine/discoveryEngine';
+// Export components
+export * from './components';
 
-// Components
-import { DiscoveryAlert, RewardDisplay, ProgressTracker } from './components';
+// Export hooks
+export * from './hooks';
 
-// Hooks
-import { useDiscoveryTrigger, useKonamiCode, useDiscoveryTracking } from './hooks';
-
-// Export all
-export {
-  // Context
-  GamificationProvider,
-  GamificationContext,
-  useGamification,
+/**
+ * Initialize the gamification module
+ * This function should be called once at the start of the application
+ */
+export function initGamificationModule() {
+  console.log('Gamification module initialized');
   
-  // API
-  gamificationAPI,
-  gamificationTypes,
+  // Add global event listeners or perform other initialization as needed
   
-  // Engine
-  discoveryEngine,
-  
-  // Components
-  DiscoveryAlert,
-  RewardDisplay,
-  ProgressTracker,
-  
-  // Hooks
-  useDiscoveryTrigger,
-  useKonamiCode,
-  useDiscoveryTracking
-};
+  return {
+    cleanup: () => {
+      // Clean up any resources when the module is unloaded
+      console.log('Gamification module cleanup');
+    }
+  };
+}

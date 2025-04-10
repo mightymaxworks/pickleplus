@@ -2,130 +2,119 @@
  * PKL-278651-GAME-0001-MOD
  * useKonamiCode Hook
  * 
- * A hook that listens for the Konami Code keyboard sequence and triggers a callback when detected.
+ * A hook that enables the Konami Code easter egg functionality.
  * The Konami Code is: Up, Up, Down, Down, Left, Right, Left, Right, B, A
  */
 
 import { useState, useEffect, useCallback } from 'react';
 
-interface UseKonamiCodeProps {
-  onKonami: () => void;
-  allowMultipleTriggers?: boolean;
-  resetTimeout?: number;
-}
-
-// Define the key sequence for the Konami Code
 const KONAMI_CODE = [
-  'ArrowUp', 'ArrowUp', 
-  'ArrowDown', 'ArrowDown', 
-  'ArrowLeft', 'ArrowRight', 
-  'ArrowLeft', 'ArrowRight', 
-  'b', 'a'
+  'ArrowUp',
+  'ArrowUp',
+  'ArrowDown',
+  'ArrowDown',
+  'ArrowLeft',
+  'ArrowRight',
+  'ArrowLeft',
+  'ArrowRight',
+  'KeyB',
+  'KeyA'
 ];
 
+interface UseKonamiCodeProps {
+  onKonami?: () => void;
+  resetOnSuccess?: boolean;
+  disabled?: boolean;
+}
+
 /**
- * A hook that listens for the Konami Code keyboard sequence and triggers a callback when detected.
+ * A hook that enables the Konami Code easter egg functionality.
+ * The Konami Code is: Up, Up, Down, Down, Left, Right, Left, Right, B, A
  * 
  * @param {UseKonamiCodeProps} props - The hook properties
- * @param {Function} props.onKonami - Callback function to trigger when the Konami Code is detected
- * @param {boolean} [props.allowMultipleTriggers=false] - Whether to allow the code to be triggered multiple times
- * @param {number} [props.resetTimeout=10000] - Time in milliseconds to reset the sequence if not completed
- * @returns {boolean} - Whether the Konami Code was triggered
+ * @param {Function} [props.onKonami] - Callback function to run when the Konami code is successfully entered
+ * @param {boolean} [props.resetOnSuccess=true] - Whether to reset the code entry after a successful entry
+ * @param {boolean} [props.disabled=false] - Whether the Konami code functionality is disabled
+ * @returns {object} - State object containing whether the Konami code was activated
  */
 export default function useKonamiCode({
   onKonami,
-  allowMultipleTriggers = false,
-  resetTimeout = 10000
-}: UseKonamiCodeProps): boolean {
-  // State to track the current position in the sequence
+  resetOnSuccess = true,
+  disabled = false
+}: UseKonamiCodeProps = {}) {
+  // Track the keys that have been pressed
   const [keysPressed, setKeysPressed] = useState<string[]>([]);
   
-  // State to track whether the Konami Code was triggered
-  const [konamiTriggered, setKonamiTriggered] = useState(false);
+  // Track whether the Konami code has been activated
+  const [konamiActivated, setKonamiActivated] = useState(false);
   
-  // Timer reference for sequence reset
-  const [resetTimer, setResetTimer] = useState<number | null>(null);
-  
-  // Handle key press events
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent) => {
-      // If already triggered and multiple triggers not allowed, exit
-      if (konamiTriggered && !allowMultipleTriggers) return;
+  // Handle key presses
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    // If disabled, do nothing
+    if (disabled) return;
+    
+    // If Konami code has been activated and we're not resetting, do nothing
+    if (konamiActivated && !resetOnSuccess) return;
+    
+    // Get the key code from the event
+    const { code } = event;
+    
+    // Update the array of keys pressed
+    setKeysPressed(prevKeys => {
+      // Get the expected key at this position
+      const expectedKey = KONAMI_CODE[prevKeys.length];
       
-      // Get the pressed key
-      const key = event.key.toLowerCase();
-      
-      // Update keys pressed
-      const updatedKeysPressed = [...keysPressed, key];
-      setKeysPressed(updatedKeysPressed);
-      
-      // Reset the timer
-      if (resetTimer) {
-        window.clearTimeout(resetTimer);
-      }
-      
-      // Start a new reset timer
-      const newTimer = window.setTimeout(() => {
-        setKeysPressed([]);
-      }, resetTimeout);
-      
-      setResetTimer(newTimer);
-      
-      // Check if the Konami Code sequence is matched
-      const codeMatched = isKonamiCodeMatched(updatedKeysPressed);
-      
-      if (codeMatched) {
-        // Trigger the callback
-        onKonami();
+      // If the key matches what we expect next in the sequence
+      if (code === expectedKey) {
+        // Add this key to the array
+        const newKeys = [...prevKeys, code];
         
-        // Mark as triggered
-        setKonamiTriggered(true);
-        
-        // Reset the sequence
-        setKeysPressed([]);
-        
-        // Reset the triggered state after a delay if multiple triggers are allowed
-        if (allowMultipleTriggers) {
-          setTimeout(() => {
-            setKonamiTriggered(false);
-          }, 1000);
+        // If the full Konami code has been entered
+        if (newKeys.length === KONAMI_CODE.length) {
+          // Activate the Konami code
+          setKonamiActivated(true);
+          
+          // Call the callback function
+          if (onKonami) onKonami();
+          
+          // Reset the keys if needed
+          return resetOnSuccess ? [] : newKeys;
         }
+        
+        return newKeys;
       }
-    },
-    [keysPressed, konamiTriggered, allowMultipleTriggers, onKonami, resetTimer, resetTimeout]
-  );
-  
-  // Check if the Konami Code sequence is matched
-  const isKonamiCodeMatched = (keys: string[]): boolean => {
-    // Must have at least as many keys as the Konami Code
-    if (keys.length < KONAMI_CODE.length) return false;
-    
-    // Get the last n keys where n is the length of the Konami Code
-    const lastKeys = keys.slice(keys.length - KONAMI_CODE.length);
-    
-    // Check if the last keys match the Konami Code
-    for (let i = 0; i < KONAMI_CODE.length; i++) {
-      if (lastKeys[i].toLowerCase() !== KONAMI_CODE[i].toLowerCase()) {
-        return false;
+      
+      // If this is the first key in the sequence and it's the first key of the Konami code
+      if (code === KONAMI_CODE[0]) {
+        return [code];
       }
-    }
-    
-    return true;
-  };
+      
+      // Otherwise reset the sequence
+      return [];
+    });
+  }, [disabled, konamiActivated, resetOnSuccess, onKonami]);
   
-  // Add and remove the event listener
+  // Set up the event listener
   useEffect(() => {
+    // If disabled, don't set up the listener
+    if (disabled) return;
+    
+    // Add the event listener
     window.addEventListener('keydown', handleKeyDown);
     
+    // Clean up the event listener
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      
-      // Clear any existing timer
-      if (resetTimer) {
-        window.clearTimeout(resetTimer);
-      }
     };
-  }, [handleKeyDown, resetTimer]);
+  }, [disabled, handleKeyDown]);
   
-  return konamiTriggered;
+  // Return the state of the Konami code
+  return {
+    konamiActivated,
+    progress: keysPressed.length / KONAMI_CODE.length,
+    reset: () => {
+      setKeysPressed([]);
+      setKonamiActivated(false);
+    }
+  };
 }

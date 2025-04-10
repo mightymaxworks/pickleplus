@@ -6,6 +6,6 @@
  */
 
 // Export all hooks
-export { default as useDiscoveryTrigger } from './useDiscoveryTrigger';
 export { default as useKonamiCode } from './useKonamiCode';
+export { default as useDiscoveryTrigger } from './useDiscoveryTrigger';
 export { default as useDiscoveryTracking } from './useDiscoveryTracking';

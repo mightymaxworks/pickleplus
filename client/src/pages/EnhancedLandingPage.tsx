@@ -284,20 +284,20 @@ export default function EnhancedLandingPage() {
       {/* Discovery Alert */}
       {showDiscovery && (
         <DiscoveryAlert
-          notification={{
-            title: "You Found a Secret!",
-            message: "You've discovered the Konami Code Easter Egg! The Konami Code is a cheat code that originated from Konami games in the 1980s.",
-            level: "special",
-            autoHide: true,
-            duration: 10000,
-            reward: {
-              name: "Code Master",
-              description: "+50 XP for finding this hidden feature!",
-              type: "xp",
-              rarity: "rare",
-              value: {
-                xpAmount: 50
-              }
+          title="You Found a Secret!"
+          message="You've discovered the Konami Code Easter Egg! The Konami Code is a cheat code that originated from Konami games in the 1980s: Up, Up, Down, Down, Left, Right, Left, Right, B, A."
+          level="special"
+          open={showDiscovery}
+          autoHide={true}
+          hideDelay={10000}
+          reward={{
+            id: 1,
+            name: "Code Master",
+            description: "+50 XP for finding this hidden feature!",
+            type: "xp",
+            rarity: "rare",
+            value: {
+              xpAmount: 50
             }
           }}
           onClose={() => setShowDiscovery(false)}
