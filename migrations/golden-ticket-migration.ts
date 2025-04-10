@@ -6,7 +6,7 @@
  */
 
 import { sql } from 'drizzle-orm';
-import { client } from '../server/db';
+import { client as pgClient } from '../server/db';
 import {
   ticketStatusEnum,
   claimStatusEnum,
@@ -27,20 +27,20 @@ export async function migrateGoldenTicketTables(): Promise<void> {
 
   if (!ticketStatusEnumExists) {
     console.log('Creating ticket_status enum type...');
-    await client.execute(sql`
+    await pgClient`
       CREATE TYPE ticket_status AS ENUM (
         'draft', 'active', 'paused', 'completed', 'cancelled'
       )
-    `);
+    `;
   }
 
   if (!claimStatusEnumExists) {
     console.log('Creating claim_status enum type...');
-    await client.execute(sql`
+    await pgClient`
       CREATE TYPE claim_status AS ENUM (
         'pending', 'approved', 'fulfilled', 'rejected', 'expired'
       )
-    `);
+    `;
   }
 
   // Create tables in order of dependencies
@@ -68,12 +68,12 @@ export async function migrateGoldenTicketTables(): Promise<void> {
  */
 async function checkTableExists(tableName: string): Promise<boolean> {
   try {
-    const result = await client.execute(sql`
+    const result = await pgClient`
       SELECT EXISTS (
         SELECT FROM information_schema.tables 
         WHERE table_name = ${tableName}
       )
-    `);
+    `;
     
     return result[0]?.exists === true;
   } catch (error) {
@@ -87,12 +87,12 @@ async function checkTableExists(tableName: string): Promise<boolean> {
  */
 async function checkEnumExists(enumName: string): Promise<boolean> {
   try {
-    const result = await client.execute(sql`
+    const result = await pgClient`
       SELECT EXISTS (
         SELECT FROM pg_type 
         WHERE typname = ${enumName}
       )
-    `);
+    `;
     
     return result[0]?.exists === true;
   } catch (error) {
@@ -106,7 +106,7 @@ async function checkEnumExists(enumName: string): Promise<boolean> {
  */
 async function createSponsorsTable(): Promise<void> {
   console.log('Creating sponsors table...');
-  await client.execute(sql`
+  await pgClient`
     CREATE TABLE sponsors (
       id SERIAL PRIMARY KEY,
       name TEXT NOT NULL,
@@ -119,7 +119,7 @@ async function createSponsorsTable(): Promise<void> {
       created_at TIMESTAMP NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMP NOT NULL DEFAULT NOW()
     )
-  `);
+  `;
   console.log('Sponsors table created successfully!');
 }
 
@@ -128,7 +128,7 @@ async function createSponsorsTable(): Promise<void> {
  */
 async function createGoldenTicketsTable(): Promise<void> {
   console.log('Creating golden_tickets table...');
-  await client.execute(sql`
+  await pgClient`
     CREATE TABLE golden_tickets (
       id SERIAL PRIMARY KEY,
       title TEXT NOT NULL,
@@ -151,7 +151,7 @@ async function createGoldenTicketsTable(): Promise<void> {
       created_at TIMESTAMP NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMP NOT NULL DEFAULT NOW()
     )
-  `);
+  `;
   console.log('Golden tickets table created successfully!');
 }
 
@@ -160,7 +160,7 @@ async function createGoldenTicketsTable(): Promise<void> {
  */
 async function createGoldenTicketClaimsTable(): Promise<void> {
   console.log('Creating golden_ticket_claims table...');
-  await client.execute(sql`
+  await pgClient`
     CREATE TABLE golden_ticket_claims (
       id SERIAL PRIMARY KEY,
       ticket_id INTEGER NOT NULL REFERENCES golden_tickets(id),
@@ -173,21 +173,23 @@ async function createGoldenTicketClaimsTable(): Promise<void> {
       admin_notes TEXT,
       updated_at TIMESTAMP NOT NULL DEFAULT NOW()
     )
-  `);
+  `;
   console.log('Golden ticket claims table created successfully!');
 }
 
 /**
  * Run migration if this script is executed directly
+ * Using import.meta.url to check instead of require.main in ES modules
  */
-if (process.argv[1] === __filename) {
-  migrateGoldenTicketTables()
-    .then(() => {
-      console.log('Migration completed successfully');
-      process.exit(0);
-    })
-    .catch((error) => {
-      console.error('Migration failed:', error);
-      process.exit(1);
-    });
-}
+// This check is commented out as we're using the run-golden-ticket-migration.ts script
+// if (import.meta.url === `file://${process.argv[1]}`) {
+//   migrateGoldenTicketTables()
+//     .then(() => {
+//       console.log('Migration completed successfully');
+//       process.exit(0);
+//     })
+//     .catch((error) => {
+//       console.error('Migration failed:', error);
+//       process.exit(1);
+//     });
+// }
