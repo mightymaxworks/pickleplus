@@ -613,14 +613,14 @@ export async function getMatchStats(
  */
 export async function validateMatch(
   matchId: number,
-  isConfirmed: boolean,
+  status: 'confirmed' | 'disputed',
   notes?: string
 ): Promise<{ id: number; status: string }> {
   try {
-    const status = isConfirmed ? "confirmed" : "disputed";
     console.log(`matchSDK: Validating match ${matchId} with status: ${status}`);
     
     const response = await apiRequest("POST", `/api/match/validate/${matchId}`, {
+      matchId, // Add matchId to request body to match schema expectations
       status,
       notes
     });
