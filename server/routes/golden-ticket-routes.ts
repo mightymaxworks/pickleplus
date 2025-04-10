@@ -5,11 +5,11 @@
  * API routes for the golden ticket promotional system.
  */
 
-import express, { Request, Response, Router } from 'express';
+import { Request, Response, Router, Express } from 'express';
 import { z } from 'zod';
 import { db } from '../db';
 import { isAdmin, isAuthenticated } from '../auth';
-import { asc, desc, eq, and, sql, gt, lt, ilike, inArray } from 'drizzle-orm';
+import { asc, desc, eq, and, or, sql, gt, lt, ilike, inArray } from 'drizzle-orm';
 import { 
   sponsors, 
   goldenTickets, 
@@ -18,7 +18,20 @@ import {
   insertGoldenTicketSchema,
   insertGoldenTicketClaimSchema
 } from '../../shared/golden-ticket.schema';
-import { extractFilterParams } from '../utils/query-helpers';
+// Helper function to extract filter parameters
+const extractFilterParams = (query: any, allowedParams: string[]) => {
+  const result: Record<string, any> = {};
+  
+  if (!query) return result;
+  
+  allowedParams.forEach(param => {
+    if (query[param] !== undefined) {
+      result[param] = query[param];
+    }
+  });
+  
+  return result;
+};
 
 const router = Router();
 
@@ -671,7 +684,7 @@ router.delete('/admin/sponsors/:id', isAdmin, async (req: Request, res: Response
   }
 });
 
-export function registerGoldenTicketRoutes(app: Express) {
+export function registerGoldenTicketRoutes(app: any) {
   app.use('/api/golden-ticket', router);
   console.log('[API] Golden Ticket routes registered');
 }
