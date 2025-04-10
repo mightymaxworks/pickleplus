@@ -9,12 +9,12 @@ export const environments = {
     apiTimeout: 30000, // 30 seconds
     testUsers: {
       standard: {
-        username: "loadtest_user",
-        password: "pickleballRocks2025!"
+        username: "testuser",
+        password: "password123"
       },
       admin: {
-        username: "loadtest_admin",
-        password: "adminPass2025!"
+        username: "mightymax",
+        password: "password123"
       }
     }
   },

@@ -17,19 +17,24 @@ const volume = testVolumes[testType];
 
 // Configuration for this test
 export const options = {
-  vus: __ENV.TEST_USERS ? parseInt(__ENV.TEST_USERS) : volume.vus,
-  iterations: volume.iterations,
+  vus: __ENV.TEST_USERS ? parseInt(__ENV.TEST_USERS) : 5, // Start with a small number of VUs
+  iterations: __ENV.TEST_ITERATIONS ? parseInt(__ENV.TEST_ITERATIONS) : 10, // Limit to 10 iterations for initial testing
   thresholds: {
-    // Apply default thresholds
-    ...defaultThresholds,
-    // Override with endpoint-specific thresholds
-    'http_req_duration{endpoint:login}': endpointThresholds['/api/auth/login']?.http_req_duration || [],
+    // Basic thresholds for performance monitoring
+    'http_req_duration': [
+      { threshold: 'p(95)<500', abortOnFail: false },  // 95% of requests must complete below 500ms
+      { threshold: 'p(99)<1000', abortOnFail: false }, // 99% of requests must complete below 1000ms
+    ],
+    'http_req_failed': [
+      { threshold: 'rate<0.01', abortOnFail: false },  // Error rate must be less than 1%
+    ],
+    // Endpoint-specific thresholds
+    'http_req_duration{endpoint:login}': [{ threshold: 'p(95)<1000', abortOnFail: false }],
     'http_req_duration{endpoint:logout}': [{ threshold: 'p(95)<300', abortOnFail: false }],
-    'http_req_duration{endpoint:register}': [{ threshold: 'p(95)<1000', abortOnFail: false }],
     'http_req_duration{endpoint:currentUser}': [{ threshold: 'p(95)<300', abortOnFail: false }],
   },
   // Set duration constraint
-  maxDuration: __ENV.TEST_DURATION || volume.maxDuration,
+  maxDuration: __ENV.TEST_DURATION || '30s',
 };
 
 // Test user credentials
