@@ -15,10 +15,11 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, ImagePlus } from 'lucide-react';
+import { CalendarIcon, ImagePlus, X } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -505,100 +506,156 @@ const GoldenTicketForm: React.FC = () => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Pages to Appear On</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <Select
-                    onValueChange={(value) => {
-                      // Don't remove existing values, just add new one if not already present
-                      if (!field.value?.includes(value)) {
-                        const newValues = [...(field.value || []), value];
-                        field.onChange(newValues);
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder={
-                        field.value?.length 
-                          ? `${field.value.length} page${field.value.length !== 1 ? 's' : ''} selected` 
-                          : "Select pages..."
-                      } />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectLabel>Dashboard</SelectLabel>
-                        {AVAILABLE_PAGES.filter(p => p.group === 'dashboard').map(page => (
-                          <SelectItem key={page.id} value={page.path}>{page.name}</SelectItem>
-                        ))}
-                      </SelectGroup>
-                      <SelectGroup>
-                        <SelectLabel>Profile</SelectLabel>
-                        {AVAILABLE_PAGES.filter(p => p.group === 'profile').map(page => (
-                          <SelectItem key={page.id} value={page.path}>{page.name}</SelectItem>
-                        ))}
-                      </SelectGroup>
-                      <SelectGroup>
-                        <SelectLabel>Matches</SelectLabel>
-                        {AVAILABLE_PAGES.filter(p => p.group === 'matches').map(page => (
-                          <SelectItem key={page.id} value={page.path}>{page.name}</SelectItem>
-                        ))}
-                      </SelectGroup>
-                      <SelectGroup>
-                        <SelectLabel>Tournaments</SelectLabel>
-                        {AVAILABLE_PAGES.filter(p => p.group === 'tournaments').map(page => (
-                          <SelectItem key={page.id} value={page.path}>{page.name}</SelectItem>
-                        ))}
-                      </SelectGroup>
-                      <SelectGroup>
-                        <SelectLabel>Community</SelectLabel>
-                        {AVAILABLE_PAGES.filter(p => p.group === 'community').map(page => (
-                          <SelectItem key={page.id} value={page.path}>{page.name}</SelectItem>
-                        ))}
-                      </SelectGroup>
-                      <SelectGroup>
-                        <SelectLabel>Rewards</SelectLabel>
-                        {AVAILABLE_PAGES.filter(p => p.group === 'rewards').map(page => (
-                          <SelectItem key={page.id} value={page.path}>{page.name}</SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
+              <div className="space-y-2">
+                <div className="text-xs text-gray-500">
+                  Current selection: {field.value?.length || 0} pages
                 </div>
                 
-                {/* Show selected pages as badges */}
-                {field.value?.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {field.value.map((pagePath: string) => {
-                      const page = AVAILABLE_PAGES.find(p => p.path === pagePath);
-                      return (
-                        <Badge 
-                          key={pagePath} 
-                          variant="secondary"
-                          className="flex items-center gap-1"
-                        >
-                          {page?.name || pagePath}
-                          <X
-                            className="h-3 w-3 cursor-pointer"
-                            onClick={() => {
-                              const newValues = field.value.filter((p: string) => p !== pagePath);
-                              field.onChange(newValues);
-                            }}
-                          />
-                        </Badge>
-                      );
-                    })}
-                    {field.value.length > 1 && (
+                {/* Dashboard Group */}
+                <div className="border rounded-md p-2 mb-2">
+                  <div className="font-medium mb-1">Dashboard</div>
+                  <div className="flex flex-wrap gap-1">
+                    {AVAILABLE_PAGES.filter(p => p.group === 'dashboard').map(page => (
                       <Badge 
-                        variant="outline"
+                        key={page.id} 
+                        variant={field.value?.includes(page.path) ? "default" : "outline"}
                         className="cursor-pointer"
-                        onClick={() => field.onChange([])}
+                        onClick={() => {
+                          const newValues = field.value?.includes(page.path)
+                            ? field.value.filter(p => p !== page.path)
+                            : [...(field.value || []), page.path];
+                          field.onChange(newValues);
+                        }}
                       >
-                        Clear all
+                        {page.name}
                       </Badge>
-                    )}
+                    ))}
                   </div>
+                </div>
+                
+                {/* Profile Group */}
+                <div className="border rounded-md p-2 mb-2">
+                  <div className="font-medium mb-1">Profile</div>
+                  <div className="flex flex-wrap gap-1">
+                    {AVAILABLE_PAGES.filter(p => p.group === 'profile').map(page => (
+                      <Badge 
+                        key={page.id} 
+                        variant={field.value?.includes(page.path) ? "default" : "outline"}
+                        className="cursor-pointer"
+                        onClick={() => {
+                          const newValues = field.value?.includes(page.path)
+                            ? field.value.filter(p => p !== page.path)
+                            : [...(field.value || []), page.path];
+                          field.onChange(newValues);
+                        }}
+                      >
+                        {page.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Matches Group */}
+                <div className="border rounded-md p-2 mb-2">
+                  <div className="font-medium mb-1">Matches</div>
+                  <div className="flex flex-wrap gap-1">
+                    {AVAILABLE_PAGES.filter(p => p.group === 'matches').map(page => (
+                      <Badge 
+                        key={page.id} 
+                        variant={field.value?.includes(page.path) ? "default" : "outline"}
+                        className="cursor-pointer"
+                        onClick={() => {
+                          const newValues = field.value?.includes(page.path)
+                            ? field.value.filter(p => p !== page.path)
+                            : [...(field.value || []), page.path];
+                          field.onChange(newValues);
+                        }}
+                      >
+                        {page.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Tournaments Group */}
+                <div className="border rounded-md p-2 mb-2">
+                  <div className="font-medium mb-1">Tournaments</div>
+                  <div className="flex flex-wrap gap-1">
+                    {AVAILABLE_PAGES.filter(p => p.group === 'tournaments').map(page => (
+                      <Badge 
+                        key={page.id} 
+                        variant={field.value?.includes(page.path) ? "default" : "outline"}
+                        className="cursor-pointer"
+                        onClick={() => {
+                          const newValues = field.value?.includes(page.path)
+                            ? field.value.filter(p => p !== page.path)
+                            : [...(field.value || []), page.path];
+                          field.onChange(newValues);
+                        }}
+                      >
+                        {page.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Community Group */}
+                <div className="border rounded-md p-2 mb-2">
+                  <div className="font-medium mb-1">Community</div>
+                  <div className="flex flex-wrap gap-1">
+                    {AVAILABLE_PAGES.filter(p => p.group === 'community').map(page => (
+                      <Badge 
+                        key={page.id} 
+                        variant={field.value?.includes(page.path) ? "default" : "outline"}
+                        className="cursor-pointer"
+                        onClick={() => {
+                          const newValues = field.value?.includes(page.path)
+                            ? field.value.filter(p => p !== page.path)
+                            : [...(field.value || []), page.path];
+                          field.onChange(newValues);
+                        }}
+                      >
+                        {page.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Rewards Group */}
+                <div className="border rounded-md p-2 mb-2">
+                  <div className="font-medium mb-1">Rewards</div>
+                  <div className="flex flex-wrap gap-1">
+                    {AVAILABLE_PAGES.filter(p => p.group === 'rewards').map(page => (
+                      <Badge 
+                        key={page.id} 
+                        variant={field.value?.includes(page.path) ? "default" : "outline"}
+                        className="cursor-pointer"
+                        onClick={() => {
+                          const newValues = field.value?.includes(page.path)
+                            ? field.value.filter(p => p !== page.path)
+                            : [...(field.value || []), page.path];
+                          field.onChange(newValues);
+                        }}
+                      >
+                        {page.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                
+                {field.value?.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => field.onChange([])}
+                    className="mt-2"
+                  >
+                    Clear all selections
+                  </Button>
                 )}
-              </FormControl>
-              <FormDescription className="text-xs">
+              </div>
+              <FormDescription className="text-xs mt-2">
                 Select pages where this ticket can appear
               </FormDescription>
               <FormMessage />
