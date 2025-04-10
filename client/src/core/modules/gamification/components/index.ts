@@ -2,15 +2,10 @@
  * PKL-278651-GAME-0001-MOD
  * Gamification Components
  * 
- * Exports all components for the gamification module.
+ * This file exports all components for the gamification module.
  */
 
-import DiscoveryAlert from './DiscoveryAlert';
-import RewardDisplay from './RewardDisplay';
-import ProgressTracker from './ProgressTracker';
-
-export {
-  DiscoveryAlert,
-  RewardDisplay,
-  ProgressTracker
-};
+// Export all components
+export { default as DiscoveryAlert } from './DiscoveryAlert';
+export { default as RewardDisplay } from './RewardDisplay';
+export { default as ProgressTracker } from './ProgressTracker';

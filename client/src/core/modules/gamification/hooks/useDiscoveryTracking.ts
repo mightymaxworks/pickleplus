@@ -2,95 +2,133 @@
  * PKL-278651-GAME-0001-MOD
  * useDiscoveryTracking Hook
  * 
- * A hook that tracks discoveries for a specific campaign.
+ * A hook that provides tracking functionality for user discoveries and campaign progress.
  */
 
-import { useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useGamification } from '../context/GamificationContext';
+import { Campaign, CampaignProgress, UserDiscovery, Reward } from '../api/types';
 
-interface UseDiscoveryTrackingOptions {
-  campaignId?: number;
+interface DiscoveryStats {
+  totalDiscovered: number;
+  totalPoints: number;
+  campaigns: {
+    id: number;
+    name: string;
+    progress: number;
+    discovered: number;
+    total: number;
+  }[];
+  recentDiscoveries: {
+    code: string;
+    timestamp: string;
+    rewardClaimed: boolean;
+  }[];
+  rewards: {
+    id: number;
+    name: string;
+    description: string;
+    rarity: string;
+    claimed: boolean;
+    claimedAt?: string;
+  }[];
 }
 
-interface UseDiscoveryTrackingResult {
-  totalDiscoveries: number;
-  discoveredCount: number;
-  completionPercentage: number;
-  isComplete: boolean;
-  discoveredCodes: string[];
-  getNextHint: () => string | null;
-}
-
-export default function useDiscoveryTracking({
-  campaignId
-}: UseDiscoveryTrackingOptions = {}): UseDiscoveryTrackingResult {
-  const { state, getActiveCampaignIds, getCampaignProgress } = useGamification();
+/**
+ * A hook that provides tracking functionality for user discoveries and campaign progress.
+ * 
+ * @returns {Object} - Discovery tracking information and functions
+ * @returns {DiscoveryStats} - Current discovery statistics
+ * @returns {function} - refreshStats - Function to refresh the statistics
+ * @returns {function} - getCompletionPercentage - Function to get the completion percentage for a campaign
+ */
+export default function useDiscoveryTracking() {
+  // Get gamification context
+  const { 
+    state, 
+    getCampaignProgress 
+  } = useGamification();
   
-  // Get active campaign IDs if not specified
-  const activeCampaignIds = useMemo(() => {
-    return campaignId ? [campaignId] : getActiveCampaignIds();
-  }, [campaignId, getActiveCampaignIds]);
+  // State for discovery statistics
+  const [stats, setStats] = useState<DiscoveryStats>({
+    totalDiscovered: 0,
+    totalPoints: 0,
+    campaigns: [],
+    recentDiscoveries: [],
+    rewards: []
+  });
   
-  // Calculate total stats across all specified campaigns
-  const stats = useMemo(() => {
-    let totalDiscoveries = 0;
-    let discoveredCount = 0;
-    const discoveredCodes: string[] = [];
+  // Function to refresh statistics
+  const refreshStats = useCallback(() => {
+    const { campaigns, userDiscoveries, campaignProgress, rewards } = state;
     
-    // Process each campaign
-    activeCampaignIds.forEach(id => {
-      const progress = getCampaignProgress(id);
-      if (progress) {
-        totalDiscoveries += progress.totalDiscoveries;
-        discoveredCount += progress.discoveredCount;
-      }
+    // Calculate total discoveries
+    const totalDiscovered = Object.keys(userDiscoveries).length;
+    
+    // Calculate total points
+    const totalPoints = Object.values(campaignProgress).reduce(
+      (sum, campaign) => sum + campaign.totalPoints, 
+      0
+    );
+    
+    // Process campaign progress
+    const campaignStats = campaigns
+      .filter(campaign => campaign.isActive)
+      .map(campaign => {
+        const progress = getCampaignProgress(campaign.id);
+        return {
+          id: campaign.id,
+          name: campaign.name,
+          progress: progress?.completionPercentage || 0,
+          discovered: progress?.discoveredCount || 0,
+          total: progress?.totalDiscoveries || 10 // Default to 10 if unknown
+        };
+      });
+    
+    // Process recent discoveries
+    const recentDiscoveries = Object.entries(userDiscoveries)
+      .map(([code, data]) => ({
+        code,
+        timestamp: data.discoveredAt,
+        rewardClaimed: data.rewardClaimed
+      }))
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, 5); // Get only the 5 most recent
+    
+    // Process rewards
+    const rewardStats = rewards.map(reward => ({
+      id: reward.id || 0,
+      name: reward.name,
+      description: reward.description,
+      rarity: reward.rarity,
+      claimed: Boolean((reward as any).claimed), // Type cast to access potential dynamic property
+      claimedAt: (reward as any).claimedAt // Type cast to access potential dynamic property
+    }));
+    
+    // Update statistics
+    setStats({
+      totalDiscovered,
+      totalPoints,
+      campaigns: campaignStats,
+      recentDiscoveries,
+      rewards: rewardStats
     });
-    
-    // Get all discovered codes
-    Object.entries(state.userDiscoveries).forEach(([code, status]) => {
-      if (status.discovered) {
-        discoveredCodes.push(code);
-      }
-    });
-    
-    const completionPercentage = totalDiscoveries > 0 
-      ? Math.round((discoveredCount / totalDiscoveries) * 100) 
-      : 0;
-      
-    const isComplete = completionPercentage >= 100;
-    
-    return {
-      totalDiscoveries,
-      discoveredCount,
-      completionPercentage,
-      isComplete,
-      discoveredCodes
-    };
-  }, [activeCampaignIds, getCampaignProgress, state.userDiscoveries]);
+  }, [state, getCampaignProgress]);
   
-  // Get next hint (simplified placeholder implementation)
-  const getNextHint = (): string | null => {
-    // In a real implementation, this would look up available hints
-    // based on the user's current progress and return an appropriate hint
-    
-    // For now, return a placeholder message based on progress
-    if (stats.isComplete) {
-      return null; // No more hints if complete
-    }
-    
-    if (stats.completionPercentage > 75) {
-      return "You're almost there! Look for hidden interactions in areas you haven't explored yet.";
-    } else if (stats.completionPercentage > 50) {
-      return "You're making great progress! Try using keyboard shortcuts or exploring the settings.";
-    } else if (stats.completionPercentage > 25) {
-      return "Keep exploring! Some discoveries may be hidden in profile-related features.";
-    } else {
-      return "Just starting out? Try clicking on logos or exploring the landing page carefully.";
-    }
-  };
+  // Get completion percentage for a specific campaign
+  const getCompletionPercentage = useCallback((campaignId: number): number => {
+    const progress = getCampaignProgress(campaignId);
+    return progress?.completionPercentage || 0;
+  }, [getCampaignProgress]);
+  
+  // Initialize and update statistics when state changes
+  useEffect(() => {
+    refreshStats();
+  }, [refreshStats, state]);
   
   return {
-    ...stats,
-    getNextHint
+    stats,
+    refreshStats,
+    getCompletionPercentage
   };
 }

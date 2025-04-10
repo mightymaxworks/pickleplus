@@ -2,377 +2,444 @@
  * PKL-278651-GAME-0001-MOD
  * Gamification Context
  * 
- * This file provides the context for the gamification module.
+ * This context provides state management and API access for the gamification module.
  */
 
-import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/hooks/useAuth';
-import { 
-  getActiveCampaigns, 
-  getUserDiscoveries,
-} from '../api/gamificationAPI';
-import type { 
-  GamificationState, 
-  DiscoveryEvent,
-  DiscoveryNotification,
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import * as gamificationAPI from '../api/gamificationAPI';
+import {
+  Campaign,
+  CampaignProgress,
   DiscoveryPoint,
+  UserDiscovery,
   Reward,
-  CampaignStatus
+  DiscoveryEvent,
+  DiscoveryContext
 } from '../api/types';
 
-// Define actions
-type GamificationAction =
-  | { type: 'INITIALIZE_SUCCESS'; payload: Partial<GamificationState> }
-  | { type: 'INITIALIZE_ERROR'; payload: string }
-  | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'ADD_DISCOVERY'; payload: { code: string; status: { discovered: boolean; discoveredAt: string; rewardClaimed: boolean; rewardClaimedAt?: string } } }
-  | { type: 'UPDATE_CAMPAIGN_PROGRESS'; payload: { campaignId: number; progress: CampaignStatus } }
-  | { type: 'SHOW_NOTIFICATION'; payload: DiscoveryNotification }
-  | { type: 'HIDE_NOTIFICATION' }
-  | { type: 'CLAIM_REWARD'; payload: { code: string, rewardId: number } };
+// Define the gamification state
+interface GamificationState {
+  // User's discoveries
+  userDiscoveries: Record<string, {
+    discovered: boolean;
+    discoveredAt: string;
+    rewardClaimed: boolean;
+  }>;
+  
+  // Active campaigns
+  campaigns: Campaign[];
+  
+  // Campaign progress
+  campaignProgress: Record<number, CampaignProgress>;
+  
+  // User's rewards
+  rewards: Reward[];
+  
+  // Discovery events
+  events: DiscoveryEvent[];
+  
+  // Loading state
+  isLoading: boolean;
+  
+  // Error state
+  error: string | null;
+}
 
-// Define context interface
+// Define the gamification context
 interface GamificationContextValue {
+  // Current state
   state: GamificationState;
+  
+  // API actions
   triggerDiscovery: (code: string, context?: Record<string, any>) => Promise<boolean>;
   checkDiscovery: (code: string) => boolean;
-  claimReward: (rewardId: number) => Promise<Reward | null>;
-  showNotification: (notification: DiscoveryNotification) => void;
-  hideNotification: () => void;
+  claimReward: (rewardId: number) => Promise<boolean>;
+  
+  // Helper functions
   getActiveCampaignIds: () => number[];
-  getCampaignProgress: (campaignId: number) => CampaignStatus | null;
+  getCampaignProgress: (campaignId: number) => {
+    completionPercentage: number;
+    discoveredCount: number;
+    totalDiscoveries: number;
+    isComplete: boolean;
+    totalPoints: number;
+  } | null;
+  
+  // Reset state (for testing)
   resetState: () => void;
 }
 
 // Initial state
 const initialState: GamificationState = {
-  initialized: false,
-  activeCampaigns: [],
   userDiscoveries: {},
+  campaigns: [],
   campaignProgress: {},
-  currentNotification: null,
+  rewards: [],
+  events: [],
   isLoading: false,
   error: null
 };
 
-// Create context
-export const GamificationContext = createContext<GamificationContextValue | null>(null);
+// Create the context
+const GamificationContext = createContext<GamificationContextValue | null>(null);
 
-// Reducer function
-function gamificationReducer(state: GamificationState, action: GamificationAction): GamificationState {
-  switch (action.type) {
-    case 'INITIALIZE_SUCCESS':
-      return {
-        ...state,
-        ...action.payload,
-        initialized: true,
-        isLoading: false,
-        error: null
-      };
-    case 'INITIALIZE_ERROR':
-      return {
-        ...state,
-        error: action.payload,
-        isLoading: false
-      };
-    case 'SET_LOADING':
-      return {
-        ...state,
-        isLoading: action.payload
-      };
-    case 'ADD_DISCOVERY':
-      return {
-        ...state,
-        userDiscoveries: {
-          ...state.userDiscoveries,
-          [action.payload.code]: action.payload.status
-        }
-      };
-    case 'UPDATE_CAMPAIGN_PROGRESS':
-      return {
-        ...state,
-        campaignProgress: {
-          ...state.campaignProgress,
-          [action.payload.campaignId]: action.payload.progress
-        }
-      };
-    case 'SHOW_NOTIFICATION':
-      return {
-        ...state,
-        currentNotification: action.payload
-      };
-    case 'HIDE_NOTIFICATION':
-      return {
-        ...state,
-        currentNotification: null
-      };
-    case 'CLAIM_REWARD':
-      return {
-        ...state,
-        userDiscoveries: {
-          ...state.userDiscoveries,
-          [action.payload.code]: {
-            ...state.userDiscoveries[action.payload.code],
-            rewardClaimed: true,
-            rewardClaimedAt: new Date().toISOString()
-          }
-        }
-      };
-    default:
-      return state;
+// Custom hook to use the gamification context
+function useGamification(): GamificationContextValue {
+  const context = useContext(GamificationContext);
+  
+  if (!context) {
+    throw new Error('useGamification must be used within a GamificationProvider');
   }
+  
+  return context;
 }
 
-// Provider component
-export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
-  const [state, dispatch] = useReducer(gamificationReducer, initialState);
-  const [discoveryEvents, setDiscoveryEvents] = useState<DiscoveryEvent[]>([]);
+// Gamification provider component
+interface GamificationProviderProps {
+  children: React.ReactNode;
+  initialData?: Partial<GamificationState>;
+  simulationMode?: boolean;
+}
 
-  // Fetch active campaigns
-  const { data: campaigns } = useQuery({
-    queryKey: ['/api/gamification/campaigns'],
-    queryFn: getActiveCampaigns,
-    enabled: !!user && !state.initialized,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+function GamificationProvider({
+  children,
+  initialData,
+  simulationMode = false
+}: GamificationProviderProps): JSX.Element {
+  // State
+  const [state, setState] = useState<GamificationState>({
+    ...initialState,
+    ...initialData
   });
-
-  // Fetch user discoveries
-  const { data: userDiscoveriesData } = useQuery({
-    queryKey: ['/api/gamification/user/discoveries'],
-    queryFn: getUserDiscoveries,
-    enabled: !!user && !state.initialized,
-    staleTime: 60 * 1000, // 1 minute
-  });
-
-  // Initialize state when data is loaded
+  
+  // Load initial data
   useEffect(() => {
-    if (campaigns && userDiscoveriesData && !state.initialized) {
-      // Process discoveries
-      const userDiscoveries: Record<string, { discovered: boolean; discoveredAt: string; rewardClaimed: boolean; rewardClaimedAt?: string }> = {};
-      const campaignProgress: Record<number, CampaignStatus> = {};
-      
-      // Process user discoveries
-      userDiscoveriesData.discoveries.forEach(discovery => {
-        userDiscoveries[discovery.discoveryDetails.code] = {
-          discovered: true,
-          discoveredAt: discovery.discoveredAt,
-          rewardClaimed: discovery.rewardClaimed,
-          rewardClaimedAt: discovery.rewardClaimedAt
-        };
-      });
-      
-      // Process campaign progress
-      userDiscoveriesData.campaigns.forEach(campaign => {
-        campaignProgress[campaign.campaignId] = {
-          campaignId: campaign.campaignId,
-          name: campaign.campaignDetails.name,
-          totalDiscoveries: 0, // Will be calculated below
-          discoveredCount: campaign.discoveries,
-          completionPercentage: campaign.progress.percentage,
-          isComplete: !!campaign.completedAt,
-          completedAt: campaign.completedAt,
-          totalPoints: campaign.totalPoints,
-          progress: campaign.progress
-        };
-      });
-      
-      // Count total discoveries per campaign
-      campaigns.forEach(campaign => {
-        if (campaignProgress[campaign.id]) {
-          // If we have progress for this campaign, update total discoveries
-          // This is a placeholder since we don't have the actual count yet
-          campaignProgress[campaign.id].totalDiscoveries = campaignProgress[campaign.id].discoveredCount * 2; // Just an estimate
-        }
-      });
-      
-      dispatch({
-        type: 'INITIALIZE_SUCCESS',
-        payload: {
-          activeCampaigns: campaigns,
-          userDiscoveries,
-          campaignProgress
-        }
-      });
-    }
-  }, [campaigns, userDiscoveriesData, state.initialized]);
-
-  // Process discovery events
-  useEffect(() => {
-    const processDiscoveryEvents = async () => {
-      if (discoveryEvents.length > 0 && user) {
-        dispatch({ type: 'SET_LOADING', payload: true });
-        
-        // Process the first event
-        const event = discoveryEvents[0];
-        
-        try {
-          // In a real implementation, we would call the API:
-          // const result = await recordDiscovery(event);
-          // 
-          // For now, we'll simulate success
-          const simulatedResult = {
-            success: true,
-            isNew: true,
-            discovery: {
-              id: 123,
-              code: event.code,
-              name: `Discovery ${event.code}`,
-              content: {
-                title: `You found ${event.code}!`,
-                message: "You've unlocked an easter egg!",
-                imageUrl: ""
+    async function loadInitialData() {
+      if (simulationMode) {
+        // In simulation mode, just set some dummy data
+        setState(prev => ({
+          ...prev,
+          campaigns: [
+            {
+              id: 1,
+              name: 'Platform Discovery',
+              description: 'Discover hidden features and learn about the platform',
+              isActive: true,
+              startDate: new Date().toISOString(),
+              config: {
+                theme: 'discovery',
+                showInList: true
               }
-            } as DiscoveryPoint,
-            reward: null
-          };
-          
-          if (simulatedResult.success) {
-            // Add the discovery to state
-            dispatch({
-              type: 'ADD_DISCOVERY',
-              payload: {
-                code: event.code,
-                status: {
-                  discovered: true,
-                  discoveredAt: event.timestamp,
-                  rewardClaimed: false
-                }
+            }
+          ],
+          campaignProgress: {
+            1: {
+              campaignId: 1,
+              discoveries: 0,
+              totalPoints: 0,
+              progress: {
+                percentage: 0,
+                milestones: {},
+                lastActivity: new Date().toISOString()
               }
-            });
-            
-            // Show notification
-            dispatch({
-              type: 'SHOW_NOTIFICATION',
-              payload: {
-                title: simulatedResult.discovery.content.title,
-                message: simulatedResult.discovery.content.message,
-                level: 'success',
-                imageUrl: simulatedResult.discovery.content.imageUrl,
-                reward: simulatedResult.reward || undefined,
-                autoHide: true,
-                duration: 5000
-              }
-            });
-            
-            // TODO: Update campaign progress
+            }
           }
-        } catch (error) {
-          console.error('Error processing discovery event:', error);
-        }
-        
-        // Remove the processed event
-        setDiscoveryEvents(prevEvents => prevEvents.slice(1));
-        dispatch({ type: 'SET_LOADING', payload: false });
+        }));
+        return;
       }
-    };
-    
-    processDiscoveryEvents();
-  }, [discoveryEvents, user]);
-  
-  // Functions to expose via context
-  const triggerDiscovery = async (code: string, context?: Record<string, any>): Promise<boolean> => {
-    if (!user) return false;
-    
-    // Check if already discovered
-    if (state.userDiscoveries[code]?.discovered) {
-      return false; // Already discovered
+      
+      try {
+        setState(prev => ({ ...prev, isLoading: true, error: null }));
+        
+        // Load campaigns
+        const campaigns = await gamificationAPI.getCampaigns();
+        
+        // Load user discoveries
+        const userDiscoveriesResponse = await gamificationAPI.getUserDiscoveries();
+        
+        // Format user discoveries
+        const userDiscoveries: Record<string, {
+          discovered: boolean;
+          discoveredAt: string;
+          rewardClaimed: boolean;
+        }> = {};
+        
+        // Process user discoveries
+        userDiscoveriesResponse.discoveries.forEach(discovery => {
+          const discoveryDetails = discovery.discoveryDetails;
+          if (discoveryDetails) {
+            userDiscoveries[discoveryDetails.code] = {
+              discovered: true,
+              discoveredAt: discovery.discoveredAt,
+              rewardClaimed: discovery.rewardClaimed
+            };
+          }
+        });
+        
+        // Process campaign progress
+        const campaignProgress: Record<number, CampaignProgress> = {};
+        userDiscoveriesResponse.campaigns.forEach(campaign => {
+          campaignProgress[campaign.campaignId] = {
+            campaignId: campaign.campaignId,
+            discoveries: campaign.discoveries,
+            totalPoints: campaign.totalPoints,
+            progress: campaign.progress || {
+              percentage: 0,
+              milestones: {},
+              lastActivity: new Date().toISOString()
+            }
+          };
+        });
+        
+        // Load rewards
+        const rewards = await gamificationAPI.getUserRewards();
+        
+        // Update state
+        setState(prev => ({
+          ...prev,
+          campaigns,
+          userDiscoveries,
+          campaignProgress,
+          rewards,
+          isLoading: false
+        }));
+      } catch (error) {
+        console.error('Error loading gamification data:', error);
+        setState(prev => ({
+          ...prev,
+          isLoading: false,
+          error: 'Error loading gamification data. Please try again later.'
+        }));
+      }
     }
     
-    // Queue the discovery event
-    setDiscoveryEvents(prev => [
-      ...prev,
-      {
-        code,
-        timestamp: new Date().toISOString(),
-        context
-      }
-    ]);
-    
-    return true;
-  };
+    loadInitialData();
+  }, [simulationMode]);
   
-  const checkDiscovery = (code: string): boolean => {
+  // Check if a discovery has been found
+  const checkDiscovery = useCallback((code: string) => {
     return !!state.userDiscoveries[code]?.discovered;
-  };
+  }, [state.userDiscoveries]);
   
-  const claimReward = async (rewardId: number): Promise<Reward | null> => {
-    if (!user) return null;
-    
-    dispatch({ type: 'SET_LOADING', payload: true });
+  // Trigger a discovery
+  const triggerDiscovery = useCallback(async (
+    code: string,
+    context?: Record<string, any>
+  ): Promise<boolean> => {
+    // Check if the discovery has already been found
+    if (checkDiscovery(code)) {
+      return false;
+    }
     
     try {
-      // In a real implementation, we would call the API:
-      // const result = await claimRewardApi(rewardId);
-      //
-      // For now, we'll simulate success
-      // TODO: Implement actual API call
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
       
-      dispatch({ type: 'SET_LOADING', payload: false });
-      return null;
+      // Trigger the discovery
+      let result;
+      
+      if (simulationMode) {
+        result = await gamificationAPI.simulateDiscovery(code, context);
+      } else {
+        result = await gamificationAPI.recordDiscovery(code, context);
+      }
+      
+      if (!result.success) {
+        setState(prev => ({
+          ...prev,
+          isLoading: false,
+          error: 'Failed to trigger discovery. Code may be invalid.'
+        }));
+        return false;
+      }
+      
+      // Update state with new discovery
+      setState(prev => {
+        // Update user discoveries
+        const userDiscoveries = {
+          ...prev.userDiscoveries,
+          [code]: {
+            discovered: true,
+            discoveredAt: new Date().toISOString(),
+            rewardClaimed: false
+          }
+        };
+        
+        // Update campaign progress
+        let campaignProgress = { ...prev.campaignProgress };
+        if (result.discovery) {
+          const campaignId = result.discovery.campaignId;
+          const campaign = campaignProgress[campaignId] || {
+            campaignId,
+            discoveries: 0,
+            totalPoints: 0,
+            progress: {
+              percentage: 0,
+              milestones: {},
+              lastActivity: new Date().toISOString()
+            }
+          };
+          
+          campaignProgress[campaignId] = {
+            ...campaign,
+            discoveries: campaign.discoveries + 1,
+            totalPoints: campaign.totalPoints + (result.discovery.pointValue || 0)
+          };
+        }
+        
+        // Update rewards if needed
+        let rewards = [...prev.rewards];
+        if (result.reward) {
+          rewards = [result.reward, ...rewards];
+        }
+        
+        // Add to events log
+        const events = [...prev.events, {
+          code,
+          timestamp: new Date().toISOString(),
+          context: context || {},
+          discoveryId: result.discovery?.id || 0
+        }];
+        
+        return {
+          ...prev,
+          userDiscoveries,
+          campaignProgress,
+          rewards,
+          events,
+          isLoading: false
+        };
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error triggering discovery:', error);
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: 'Error triggering discovery. Please try again later.'
+      }));
+      return false;
+    }
+  }, [checkDiscovery, simulationMode]);
+  
+  // Claim a reward
+  const claimReward = useCallback(async (rewardId: number): Promise<boolean> => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      
+      // Claim the reward
+      const result = await gamificationAPI.claimReward(rewardId);
+      
+      if (!result.success) {
+        setState(prev => ({
+          ...prev,
+          isLoading: false,
+          error: result.message || 'Failed to claim reward'
+        }));
+        return false;
+      }
+      
+      // Update reward status
+      setState(prev => {
+        // Update the rewards list
+        const rewards = prev.rewards.map(reward => {
+          if (reward.id === rewardId) {
+            return {
+              ...reward,
+              claimed: true,
+              claimedAt: new Date().toISOString()
+            };
+          }
+          return reward;
+        });
+        
+        // Handle discovery reward claims
+        const userDiscoveries = { ...prev.userDiscoveries };
+        
+        // Find the discovery associated with this reward (simplistic approach)
+        // In a real app, we'd have a proper mapping
+        Object.keys(userDiscoveries).forEach(code => {
+          if (userDiscoveries[code].discovered && !userDiscoveries[code].rewardClaimed) {
+            userDiscoveries[code] = {
+              ...userDiscoveries[code],
+              rewardClaimed: true
+            };
+          }
+        });
+        
+        return {
+          ...prev,
+          rewards,
+          userDiscoveries,
+          isLoading: false
+        };
+      });
+      
+      return true;
     } catch (error) {
       console.error('Error claiming reward:', error);
-      dispatch({ type: 'SET_LOADING', payload: false });
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: 'Error claiming reward. Please try again later.'
+      }));
+      return false;
+    }
+  }, []);
+  
+  // Get active campaign IDs
+  const getActiveCampaignIds = useCallback(() => {
+    return state.campaigns
+      .filter(campaign => campaign.isActive)
+      .map(campaign => campaign.id);
+  }, [state.campaigns]);
+  
+  // Get campaign progress
+  const getCampaignProgress = useCallback((campaignId: number) => {
+    if (!state.campaignProgress[campaignId]) {
       return null;
     }
-  };
-  
-  const showNotification = (notification: DiscoveryNotification) => {
-    dispatch({ type: 'SHOW_NOTIFICATION', payload: notification });
     
-    // Auto-hide if specified
-    if (notification.autoHide && notification.duration) {
-      setTimeout(() => {
-        hideNotification();
-      }, notification.duration);
-    }
-  };
+    // Get total discoveries for this campaign
+    // In a real app, we'd fetch this from the API or have it in state already
+    const totalDiscoveries = 10; // Placeholder
+    
+    const progress = state.campaignProgress[campaignId];
+    const completionPercentage = Math.min(
+      100,
+      Math.round((progress.discoveries / totalDiscoveries) * 100)
+    );
+    
+    return {
+      completionPercentage,
+      discoveredCount: progress.discoveries,
+      totalDiscoveries,
+      isComplete: completionPercentage >= 100,
+      totalPoints: progress.totalPoints
+    };
+  }, [state.campaignProgress]);
   
-  const hideNotification = () => {
-    dispatch({ type: 'HIDE_NOTIFICATION' });
-  };
-  
-  const getActiveCampaignIds = () => {
-    return state.activeCampaigns.map(campaign => campaign.id);
-  };
-  
-  const getCampaignProgress = (campaignId: number) => {
-    return state.campaignProgress[campaignId] || null;
-  };
-  
-  const resetState = () => {
-    dispatch({ 
-      type: 'INITIALIZE_SUCCESS', 
-      payload: initialState 
-    });
-  };
+  // Reset state (for testing)
+  const resetState = useCallback(() => {
+    setState(initialState);
+  }, []);
   
   // Context value
-  const contextValue: GamificationContextValue = {
+  const value: GamificationContextValue = {
     state,
     triggerDiscovery,
     checkDiscovery,
     claimReward,
-    showNotification,
-    hideNotification,
     getActiveCampaignIds,
     getCampaignProgress,
     resetState
   };
   
   return (
-    <GamificationContext.Provider value={contextValue}>
+    <GamificationContext.Provider value={value}>
       {children}
     </GamificationContext.Provider>
   );
-};
+}
 
-// Custom hook for using the gamification context
-export const useGamification = () => {
-  const context = useContext(GamificationContext);
-  if (!context) {
-    throw new Error('useGamification must be used within a GamificationProvider');
-  }
-  return context;
-};
+export { GamificationContext, GamificationProvider, useGamification };
