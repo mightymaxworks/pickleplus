@@ -111,10 +111,11 @@ export const goldenTicketClaimsRelations = relations(goldenTicketClaims, ({ one 
 export const insertSponsorSchema = createInsertSchema(sponsors, {
   name: z.string().min(2),
   description: z.string().optional(),
-  logoUrl: z.string().url().optional(),
-  website: z.string().url().optional(),
-  contactName: z.string().optional(),
-  contactEmail: z.string().email().optional(),
+  logoUrl: z.string().url().optional().nullable(),
+  logoPath: z.string().optional().nullable(),
+  website: z.string().url().optional().nullable(),
+  contactName: z.string().optional().nullable(),
+  contactEmail: z.string().email().optional().nullable(),
   active: z.boolean().default(true),
 }).omit({ id: true, createdAt: true, updatedAt: true });
 
@@ -122,7 +123,7 @@ export const insertGoldenTicketSchema = createInsertSchema(goldenTickets, {
   title: z.string().min(3),
   description: z.string().min(5),
   campaignId: z.string().min(2),
-  sponsorId: z.number().optional(),
+  sponsorId: z.number().optional().nullable(),
   appearanceRate: z.number().min(1).max(100),
   maxAppearances: z.number().int().min(1),
   maxClaims: z.number().int().min(1),
@@ -130,8 +131,10 @@ export const insertGoldenTicketSchema = createInsertSchema(goldenTickets, {
   endDate: z.date(),
   rewardDescription: z.string().min(5),
   rewardType: z.string().default('physical'),
-  discountCode: z.string().optional(),
-  discountValue: z.string().optional(),
+  discountCode: z.string().optional().nullable(),
+  discountValue: z.string().optional().nullable(),
+  promotionalImageUrl: z.string().url().optional().nullable(),
+  promotionalImagePath: z.string().optional().nullable(),
   pagesToAppearOn: z.array(z.string()).optional(),
   status: z.enum(['draft', 'active', 'paused', 'completed', 'cancelled']).default('draft'),
 }).omit({ id: true, createdAt: true, updatedAt: true, currentAppearances: true, currentClaims: true });

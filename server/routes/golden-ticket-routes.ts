@@ -1,8 +1,9 @@
 /**
- * PKL-278651-GAME-0005-GOLD
+ * PKL-278651-GAME-0005-GOLD-ENH
  * Golden Ticket Routes
  * 
- * API routes for the golden ticket promotional system.
+ * API routes for the golden ticket promotional system
+ * including enhanced file upload functionality.
  */
 
 import { Request, Response, Router, Express } from 'express';
@@ -18,6 +19,10 @@ import {
   insertGoldenTicketSchema,
   insertGoldenTicketClaimSchema
 } from '../../shared/golden-ticket.schema';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import { nanoid } from 'nanoid';
 // Helper function to extract filter parameters
 const extractFilterParams = (query: any, allowedParams: string[]) => {
   const result: Record<string, any> = {};
