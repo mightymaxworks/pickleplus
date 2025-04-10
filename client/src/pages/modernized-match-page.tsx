@@ -13,6 +13,7 @@ import MatchTimeline from "@/components/match/MatchTimeline";
 import MatchTrends from "@/components/match/MatchTrends";
 import ContextualFilters from "@/components/match/ContextualFilters";
 import MatchValidation from "@/components/match/MatchValidation";
+import MatchHistoryTab from "@/components/match/MatchHistoryTab";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
