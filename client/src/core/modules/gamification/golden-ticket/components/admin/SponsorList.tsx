@@ -59,7 +59,7 @@ const SponsorList: React.FC<SponsorListProps> = ({ sponsors, isLoading }) => {
           <CardContent className="p-4">
             <div className="flex items-start space-x-3">
               <Avatar className="h-10 w-10">
-                <AvatarImage src={sponsor.logoUrl || ''} alt={sponsor.name} />
+                <AvatarImage src={sponsor.logoPath || ''} alt={sponsor.name} />
                 <AvatarFallback className="bg-blue-100 text-blue-800">
                   {sponsor.name.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
@@ -82,7 +82,7 @@ const SponsorList: React.FC<SponsorListProps> = ({ sponsors, isLoading }) => {
                     <div>Email: {sponsor.contactEmail}</div>
                   )}
                   
-                  {sponsor.websiteUrl && (
+                  {sponsor.website && (
                     <Button 
                       variant="link" 
                       size="sm" 
@@ -90,7 +90,7 @@ const SponsorList: React.FC<SponsorListProps> = ({ sponsors, isLoading }) => {
                       asChild
                     >
                       <a 
-                        href={sponsor.websiteUrl}
+                        href={sponsor.website}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center"
