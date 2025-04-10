@@ -24,39 +24,6 @@ import PrizeDrawingPage from './pages/admin/PrizeDrawingPage'
 import GoldenTicketAdmin from './pages/admin/GoldenTicketAdmin'
 import NotFound from './pages/not-found'
 
-// A protected route component
-const ProtectedRoute = ({ component: Component, path }: { component: React.ComponentType<any>; path: string }) => {
-  // Create a routing component that will handle redirection to login
-  // This must be rendered INSIDE the route so it has access to the auth context
-  const ProtectedRouteContent = () => {
-    const { user, isLoading } = useAuth();
-    const [, navigate] = useLocation();
-    
-    // If the auth state is still loading, show nothing
-    if (isLoading) return null;
-    
-    // If no user is authenticated, redirect to auth page
-    if (!user) {
-      navigate("/auth");
-      return null;
-    }
-    
-    // If authenticated, render the component wrapped in the layout
-    return (
-      <Layout>
-        <Component />
-      </Layout>
-    );
-  };
-  
-  // Return a route with the correct path that will render our protected content
-  return (
-    <Route path={path}>
-      {() => <ProtectedRouteContent />}
-    </Route>
-  );
-};
-
 export default function App() {
   // Add location hook to debug routing
   const [location] = useLocation();
@@ -72,61 +39,128 @@ export default function App() {
     <Fragment>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <Switch>
-            {/* Public Routes */}
-            <Route path="/" component={EnhancedLandingPage} />
-            <Route path="/login" component={EnhancedAuthPage} />
-            <Route path="/register" component={EnhancedAuthPage} />
-            <Route path="/auth" component={EnhancedAuthPage} />
-            <Route path="/test-routing" component={TestRoutingPage} />
-            <Route path="/landing-test">
-              {() => (
-                <Layout>
-                  <LandingPageTest />
-                </Layout>
-              )}
-            </Route>
-            
-            {/* Protected Routes */}
-            <ProtectedRoute path="/dashboard" component={Dashboard} />
-            <ProtectedRoute path="/matches" component={ModernizedMatchPage} />
-            <ProtectedRoute path="/tournaments" component={TournamentDiscoveryPage} />
-            <ProtectedRoute path="/training" component={Dashboard} />
-            <ProtectedRoute path="/community" component={Dashboard} />
-            <ProtectedRoute path="/passport" component={Dashboard} />
-            <ProtectedRoute path="/profile" component={StreamlinedProfilePage} />
-            <ProtectedRoute path="/profile/enhanced" component={EnhancedProfilePage} />
-            <ProtectedRoute path="/profile/contextual" component={ContextualEnhancedProfile} />
-            <ProtectedRoute path="/profile/edit" component={ProfileEdit} />
-            <ProtectedRoute path="/profile/streamlined" component={StreamlinedProfilePage} />
-            <ProtectedRoute path="/record-match" component={RecordMatchPage} />
-            <ProtectedRoute path="/admin" component={Dashboard} />
-            <ProtectedRoute path="/admin/prize-drawing" component={PrizeDrawingPage} />
-            <ProtectedRoute path="/admin/golden-ticket" component={GoldenTicketAdmin} />
-            <ProtectedRoute path="/leaderboard" component={LeaderboardPage} />
-            <ProtectedRoute path="/mastery-paths" component={MasteryPathsPage} />
-            
-            {/* For now we'll keep the Match Reward Demo accessible */}
-            <Route path="/demo/match-reward">
-              {() => (
-                <Layout>
-                  <MatchRewardDemo />
-                </Layout>
-              )}
-            </Route>
-            
-            {/* 404 Route */}
-            <Route>
-              {() => (
-                <Layout>
-                  <NotFound />
-                </Layout>
-              )}
-            </Route>
-          </Switch>
+          <AppRoutes />
         </AuthProvider>
       </QueryClientProvider>
       <Toaster />
     </Fragment>
   )
+}
+
+// Component with all routes - This ensures it's inside the AuthProvider context
+function AppRoutes() {
+  return (
+    <Switch>
+      {/* Public Routes */}
+      <Route path="/" component={EnhancedLandingPage} />
+      <Route path="/login" component={EnhancedAuthPage} />
+      <Route path="/register" component={EnhancedAuthPage} />
+      <Route path="/auth" component={EnhancedAuthPage} />
+      <Route path="/test-routing" component={TestRoutingPage} />
+      <Route path="/landing-test">
+        {() => (
+          <Layout>
+            <LandingPageTest />
+          </Layout>
+        )}
+      </Route>
+      
+      {/* Protected Routes */}
+      <Route path="/dashboard">
+        {() => <ProtectedComponent component={Dashboard} />}
+      </Route>
+      <Route path="/matches">
+        {() => <ProtectedComponent component={ModernizedMatchPage} />}
+      </Route>
+      <Route path="/tournaments">
+        {() => <ProtectedComponent component={TournamentDiscoveryPage} />}
+      </Route>
+      <Route path="/training">
+        {() => <ProtectedComponent component={Dashboard} />}
+      </Route>
+      <Route path="/community">
+        {() => <ProtectedComponent component={Dashboard} />}
+      </Route>
+      <Route path="/passport">
+        {() => <ProtectedComponent component={Dashboard} />}
+      </Route>
+      <Route path="/profile">
+        {() => <ProtectedComponent component={StreamlinedProfilePage} />}
+      </Route>
+      <Route path="/profile/enhanced">
+        {() => <ProtectedComponent component={EnhancedProfilePage} />}
+      </Route>
+      <Route path="/profile/contextual">
+        {() => <ProtectedComponent component={ContextualEnhancedProfile} />}
+      </Route>
+      <Route path="/profile/edit">
+        {() => <ProtectedComponent component={ProfileEdit} />}
+      </Route>
+      <Route path="/profile/streamlined">
+        {() => <ProtectedComponent component={StreamlinedProfilePage} />}
+      </Route>
+      <Route path="/record-match">
+        {() => <ProtectedComponent component={RecordMatchPage} />}
+      </Route>
+      <Route path="/admin">
+        {() => <ProtectedComponent component={Dashboard} />}
+      </Route>
+      <Route path="/admin/prize-drawing">
+        {() => <ProtectedComponent component={PrizeDrawingPage} />}
+      </Route>
+      <Route path="/admin/golden-ticket">
+        {() => <ProtectedComponent component={GoldenTicketAdmin} />}
+      </Route>
+      <Route path="/leaderboard">
+        {() => <ProtectedComponent component={LeaderboardPage} />}
+      </Route>
+      <Route path="/mastery-paths">
+        {() => <ProtectedComponent component={MasteryPathsPage} />}
+      </Route>
+      
+      {/* For now we'll keep the Match Reward Demo accessible */}
+      <Route path="/demo/match-reward">
+        {() => (
+          <Layout>
+            <MatchRewardDemo />
+          </Layout>
+        )}
+      </Route>
+      
+      {/* 404 Route */}
+      <Route>
+        {() => (
+          <Layout>
+            <NotFound />
+          </Layout>
+        )}
+      </Route>
+    </Switch>
+  );
+}
+
+// Protected component wrapper
+function ProtectedComponent({ component: Component }: { component: React.ComponentType<any> }) {
+  const { user, isLoading } = useAuth();
+  const [, navigate] = useLocation();
+  
+  // Always define hooks at the top level, not inside conditionals
+  useEffect(() => {
+    if (!isLoading && !user) {
+      navigate("/auth");
+    }
+  }, [isLoading, user, navigate]);
+  
+  // Show loading indicator while authentication state is loading
+  if (isLoading) return <div>Loading...</div>;
+  
+  // If no user is logged in, don't render the component
+  if (!user) return null;
+  
+  // User is authenticated, render the protected component
+  return (
+    <Layout>
+      <Component />
+    </Layout>
+  );
 }
