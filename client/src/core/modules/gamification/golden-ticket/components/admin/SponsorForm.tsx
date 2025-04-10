@@ -17,13 +17,15 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 
-// Form schema for creating sponsors
+// Form schema for creating sponsors (must match server schema)
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   description: z.string().optional().or(z.literal('')),
   logoUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
-  websiteUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
-  contactEmail: z.string().email('Must be a valid email').optional().or(z.literal(''))
+  website: z.string().url('Must be a valid URL').optional().or(z.literal('')), // Matches server field name
+  contactName: z.string().optional().or(z.literal('')), // Added to match server schema
+  contactEmail: z.string().email('Must be a valid email').optional().or(z.literal('')),
+  active: z.boolean().default(true) // Added to match server schema
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -37,8 +39,10 @@ const SponsorForm: React.FC = () => {
     name: '',
     description: '',
     logoUrl: '',
-    websiteUrl: '',
-    contactEmail: ''
+    website: '', // Updated to match schema
+    contactName: '', // Added
+    contactEmail: '',
+    active: true // Added
   };
   
   const form = useForm<FormValues>({
@@ -123,12 +127,26 @@ const SponsorForm: React.FC = () => {
         
         <FormField
           control={form.control}
-          name="websiteUrl"
+          name="website"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Website URL (optional)</FormLabel>
               <FormControl>
                 <Input placeholder="https://example.com" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="contactName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Contact Name (optional)</FormLabel>
+              <FormControl>
+                <Input placeholder="John Doe" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
