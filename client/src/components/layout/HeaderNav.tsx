@@ -1,14 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { useAuth } from '@/hooks/use-auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, User as UserIcon, Menu, X, Home, Calendar, Award, Users, LogOut, Shield, Settings } from 'lucide-react';
 import { PicklePlusNewLogo } from '@/components/icons/PicklePlusNewLogo';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { Button } from '@/components/ui/button';
+import { User } from '@shared/schema';
 
-export function HeaderNav() {
-  const { user, isLoading, isAuthenticated, logout } = useAuth();
+// Define interface for HeaderNav props
+interface HeaderNavProps {
+  user: User | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  logout: () => Promise<void>;
+}
+
+export function HeaderNav({ user, isLoading, isAuthenticated, logout }: HeaderNavProps) {
   const [location, navigate] = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
