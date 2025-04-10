@@ -748,9 +748,18 @@ const GoldenTicketForm: React.FC = () => {
             // Debug the selected sponsor
             const sponsorId = form.watch('sponsorId');
             const selectedSponsor = sponsorId ? sponsors.find(s => s.id === sponsorId) : null;
+            const promotionalImageUrl = form.watch('promotionalImageUrl');
+            const promotionalImagePath = form.watch('promotionalImagePath');
+            
             console.log('DEBUG Preview - Selected Sponsor ID:', sponsorId);
             console.log('DEBUG Preview - All Available Sponsors:', sponsors);
             console.log('DEBUG Preview - Found Sponsor:', selectedSponsor);
+            console.log('DEBUG Preview - Promotional Image Data:', {
+              promotionalImageUrl,
+              promotionalImagePath,
+              hasImageUrl: !!promotionalImageUrl,
+              hasImagePath: !!promotionalImagePath
+            });
             
             return (
               <GoldenTicketPreview
@@ -758,8 +767,8 @@ const GoldenTicketForm: React.FC = () => {
                   title: form.watch('title') || 'Golden Ticket Title',
                   description: form.watch('description') || 'Example golden ticket description text.',
                   rewardDescription: form.watch('rewardDescription') || 'Example reward description.',
-                  promotionalImageUrl: form.watch('promotionalImageUrl'),
-                  promotionalImagePath: form.watch('promotionalImagePath'),
+                  promotionalImageUrl: promotionalImageUrl,
+                  promotionalImagePath: promotionalImagePath,
                   sponsor: selectedSponsor
                 }}
                 trigger={
