@@ -34,6 +34,7 @@ export const sponsors = pgTable('sponsors', {
   name: text('name').notNull(),
   description: text('description'),
   logoUrl: text('logo_url'),
+  logoPath: text('logo_path'), // File path to uploaded logo
   website: text('website'),
   contactName: text('contact_name'),
   contactEmail: text('contact_email'),
@@ -60,6 +61,8 @@ export const goldenTickets = pgTable('golden_tickets', {
   rewardType: text('reward_type').default('physical'),
   discountCode: text('discount_code'),
   discountValue: text('discount_value'),
+  promotionalImageUrl: text('promotional_image_url'), // URL to display the promotional image
+  promotionalImagePath: text('promotional_image_path'), // File path to uploaded image
   pagesToAppearOn: text('pages_to_appear_on').array(), // array of page paths where ticket can appear
   status: ticketStatusEnum('status').default('draft').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
