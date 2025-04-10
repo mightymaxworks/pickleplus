@@ -10,6 +10,19 @@ import { GoldenTicket, GoldenTicketClaim, Sponsor } from '@shared/golden-ticket.
 
 const API_BASE = '/api/golden-ticket';
 
+// Custom API request wrapper for debugging
+async function debugApiRequest<T>(method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE", url: string, data?: any): Promise<T> {
+  try {
+    console.log(`Making API ${method} request to ${url}`);
+    const response = await apiRequest(method, url, data);
+    console.log(`API response from ${url}:`, response);
+    return response as T;
+  } catch (error) {
+    console.error(`API error from ${url}:`, error);
+    throw error;
+  }
+}
+
 // Ticket Management API
 
 /**
@@ -17,7 +30,7 @@ const API_BASE = '/api/golden-ticket';
  * @returns List of golden tickets
  */
 export async function getAllGoldenTickets(): Promise<GoldenTicket[]> {
-  const response = await apiRequest(`${API_BASE}/admin/tickets`);
+  const response = await debugApiRequest<any>("GET", `${API_BASE}/admin/tickets`);
   // Handle the nested response format
   return response.tickets || [];
 }
@@ -27,7 +40,7 @@ export async function getAllGoldenTickets(): Promise<GoldenTicket[]> {
  * @returns List of golden tickets
  */
 export async function getMyGoldenTickets(): Promise<GoldenTicket[]> {
-  return apiRequest(`${API_BASE}/tickets`);
+  return debugApiRequest<GoldenTicket[]>("GET", `${API_BASE}/tickets`);
 }
 
 /**
@@ -36,10 +49,7 @@ export async function getMyGoldenTickets(): Promise<GoldenTicket[]> {
  * @returns The created ticket
  */
 export async function createGoldenTicket(ticket: Omit<GoldenTicket, 'id' | 'createdAt' | 'updatedAt' | 'currentClaims'>): Promise<GoldenTicket> {
-  return apiRequest(`${API_BASE}/admin/tickets`, {
-    method: 'POST',
-    body: JSON.stringify(ticket),
-  });
+  return debugApiRequest<GoldenTicket>("POST", `${API_BASE}/admin/tickets`, ticket);
 }
 
 /**
@@ -49,10 +59,7 @@ export async function createGoldenTicket(ticket: Omit<GoldenTicket, 'id' | 'crea
  * @returns The updated ticket
  */
 export async function updateGoldenTicket(id: number, update: Partial<GoldenTicket>): Promise<GoldenTicket> {
-  return apiRequest(`${API_BASE}/admin/tickets/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify(update),
-  });
+  return debugApiRequest<GoldenTicket>("PATCH", `${API_BASE}/admin/tickets/${id}`, update);
 }
 
 /**
@@ -60,9 +67,7 @@ export async function updateGoldenTicket(id: number, update: Partial<GoldenTicke
  * @param id The ticket ID
  */
 export async function deleteGoldenTicket(id: number): Promise<void> {
-  return apiRequest(`${API_BASE}/admin/tickets/${id}`, {
-    method: 'DELETE',
-  });
+  return debugApiRequest<void>("DELETE", `${API_BASE}/admin/tickets/${id}`);
 }
 
 // Ticket Claims API
@@ -73,9 +78,7 @@ export async function deleteGoldenTicket(id: number): Promise<void> {
  * @returns The claim record
  */
 export async function claimGoldenTicket(ticketId: number): Promise<GoldenTicketClaim> {
-  return apiRequest(`${API_BASE}/tickets/${ticketId}/claim`, {
-    method: 'POST',
-  });
+  return debugApiRequest<GoldenTicketClaim>("POST", `${API_BASE}/tickets/${ticketId}/claim`);
 }
 
 /**
@@ -83,7 +86,7 @@ export async function claimGoldenTicket(ticketId: number): Promise<GoldenTicketC
  * @returns List of claims
  */
 export async function getMyTicketClaims(): Promise<GoldenTicketClaim[]> {
-  return apiRequest(`${API_BASE}/claims`);
+  return debugApiRequest<GoldenTicketClaim[]>("GET", `${API_BASE}/claims`);
 }
 
 /**
@@ -91,7 +94,7 @@ export async function getMyTicketClaims(): Promise<GoldenTicketClaim[]> {
  * @returns List of all claims
  */
 export async function getAllClaims(): Promise<GoldenTicketClaim[]> {
-  const response = await apiRequest(`${API_BASE}/admin/claims`);
+  const response = await debugApiRequest<any>("GET", `${API_BASE}/admin/claims`);
   // Handle the nested response format
   return response.claims || [];
 }
@@ -103,10 +106,7 @@ export async function getAllClaims(): Promise<GoldenTicketClaim[]> {
  * @returns The updated claim
  */
 export async function updateClaimStatus(id: number, status: string): Promise<GoldenTicketClaim> {
-  return apiRequest(`${API_BASE}/admin/claims/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify({ status }),
-  });
+  return debugApiRequest<GoldenTicketClaim>("PATCH", `${API_BASE}/admin/claims/${id}`, { status });
 }
 
 // Sponsor Management API
@@ -116,7 +116,7 @@ export async function updateClaimStatus(id: number, status: string): Promise<Gol
  * @returns List of sponsors
  */
 export async function getAllSponsors(): Promise<Sponsor[]> {
-  const response = await apiRequest(`${API_BASE}/admin/sponsors`);
+  const response = await debugApiRequest<any>("GET", `${API_BASE}/admin/sponsors`);
   // Handle the nested response format
   return response.sponsors || [];
 }
@@ -127,10 +127,7 @@ export async function getAllSponsors(): Promise<Sponsor[]> {
  * @returns The created sponsor
  */
 export async function createSponsor(sponsor: Omit<Sponsor, 'id' | 'createdAt' | 'updatedAt'>): Promise<Sponsor> {
-  return apiRequest(`${API_BASE}/admin/sponsors`, {
-    method: 'POST',
-    body: JSON.stringify(sponsor),
-  });
+  return debugApiRequest<Sponsor>("POST", `${API_BASE}/admin/sponsors`, sponsor);
 }
 
 /**
@@ -140,10 +137,7 @@ export async function createSponsor(sponsor: Omit<Sponsor, 'id' | 'createdAt' | 
  * @returns The updated sponsor
  */
 export async function updateSponsor(id: number, update: Partial<Sponsor>): Promise<Sponsor> {
-  return apiRequest(`${API_BASE}/admin/sponsors/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify(update),
-  });
+  return debugApiRequest<Sponsor>("PATCH", `${API_BASE}/admin/sponsors/${id}`, update);
 }
 
 /**
@@ -151,9 +145,7 @@ export async function updateSponsor(id: number, update: Partial<Sponsor>): Promi
  * @param id The sponsor ID
  */
 export async function deleteSponsor(id: number): Promise<void> {
-  return apiRequest(`${API_BASE}/admin/sponsors/${id}`, {
-    method: 'DELETE',
-  });
+  return debugApiRequest<void>("DELETE", `${API_BASE}/admin/sponsors/${id}`);
 }
 
 // Client-side aliases for better naming in admin interface
