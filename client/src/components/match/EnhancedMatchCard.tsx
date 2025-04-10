@@ -253,24 +253,23 @@ export function EnhancedMatchCard({ match, onValidationComplete }: EnhancedMatch
           )}
           
           {/* Match details toggle */}
-          <CollapsibleTrigger
-            asChild
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="p-0 h-7 w-7 ml-auto"
             onClick={() => setDetailsOpen(!detailsOpen)}
-            className="ml-auto"
           >
-            <Button variant="ghost" size="sm" className="p-0 h-7 w-7">
-              {detailsOpen ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-            </Button>
-          </CollapsibleTrigger>
+            {detailsOpen ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </Button>
         </div>
       </div>
 
       {/* Collapsible details */}
-      <Collapsible open={detailsOpen}>
+      <Collapsible open={detailsOpen} onOpenChange={setDetailsOpen}>
         <CollapsibleContent className="pt-3 mt-3 border-t border-gray-200 dark:border-gray-800">
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div className="flex items-center gap-1 text-muted-foreground">
