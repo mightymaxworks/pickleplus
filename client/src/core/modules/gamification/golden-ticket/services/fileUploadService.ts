@@ -108,28 +108,63 @@ export async function uploadSponsorLogo(file: File): Promise<FileUploadResponse>
  * @returns Promise with upload response
  */
 export async function uploadPromotionalImage(file: File): Promise<FileUploadResponse> {
+  console.log('Starting promotional image upload for:', {
+    fileName: file.name,
+    fileType: file.type,
+    fileSize: `${(file.size / 1024).toFixed(2)} KB`
+  });
+  
   const error = validateFile(file);
   if (error) {
+    console.error('Validation error:', error);
     throw error;
   }
 
   const formData = new FormData();
   formData.append('image', file);
 
-  // Create a custom wrapper to handle FormData
-  const response = await fetch(`${API_BASE}/admin/tickets/upload-image`, {
-    method: 'POST',
-    credentials: 'include',
-    body: formData,
-  });
+  console.log('Uploading to:', `${API_BASE}/admin/tickets/upload-image`);
+  
+  try {
+    // Create a custom wrapper to handle FormData
+    const response = await fetch(`${API_BASE}/admin/tickets/upload-image`, {
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+    });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw {
-      message: errorData.error || 'Error uploading file',
-      code: errorData.code || 'UPLOAD_FAILED',
-    };
+    if (!response.ok) {
+      const responseText = await response.text();
+      let errorData;
+      try {
+        errorData = JSON.parse(responseText);
+      } catch (e) {
+        console.error('Failed to parse error response:', responseText);
+        errorData = { error: 'Unknown error', code: 'PARSE_ERROR' };
+      }
+      
+      console.error('Upload failed with status:', response.status, errorData);
+      
+      throw {
+        message: errorData.error || 'Error uploading file',
+        code: errorData.code || 'UPLOAD_FAILED',
+      };
+    }
+
+    const responseData = await response.json();
+    console.log('Upload successful, server response:', responseData);
+    
+    return responseData;
+  } catch (error) {
+    console.error('Exception during upload:', error);
+    
+    if (error instanceof Error) {
+      throw {
+        message: error.message || 'Error uploading file',
+        code: 'UPLOAD_EXCEPTION',
+      };
+    }
+    
+    throw error;
   }
-
-  return await response.json();
 }

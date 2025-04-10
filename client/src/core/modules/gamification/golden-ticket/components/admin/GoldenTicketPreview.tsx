@@ -53,11 +53,15 @@ const GoldenTicketPreview: React.FC<GoldenTicketPreviewProps> = ({ ticketData, t
   
   // Determine image URLs to use with proper path formatting
   const promotionalImageUrl = ticketData.promotionalImageUrl ? 
+    // If there's a direct URL, use it
     ticketData.promotionalImageUrl : 
+    // Otherwise try to use the file path
     (ticketData.promotionalImagePath ? 
+      // Make sure the path starts with a slash for proper URL formatting
       (ticketData.promotionalImagePath.startsWith('/') ? 
         ticketData.promotionalImagePath : 
         `/${ticketData.promotionalImagePath}`) : 
+      // No image available
       null);
     
   // Debug logging for image paths and sponsor info

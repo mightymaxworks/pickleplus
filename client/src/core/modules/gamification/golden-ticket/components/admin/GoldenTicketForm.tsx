@@ -137,9 +137,17 @@ const GoldenTicketForm: React.FC = () => {
   const uploadImageMutation = useMutation({
     mutationFn: uploadPromotionalImage,
     onSuccess: (response) => {
+      console.log('Image upload successful, response:', response);
+      
       // Set the image path and URL from the response
       form.setValue('promotionalImagePath', response.filePath, { shouldValidate: true });
       form.setValue('promotionalImageUrl', response.url, { shouldValidate: true });
+      
+      // Additional log to verify values are set
+      console.log('After setting values in form:', {
+        promotionalImagePath: form.getValues('promotionalImagePath'),
+        promotionalImageUrl: form.getValues('promotionalImageUrl')
+      });
       
       toast({
         title: 'Success',
@@ -148,12 +156,13 @@ const GoldenTicketForm: React.FC = () => {
       });
     },
     onError: (error: any) => {
+      console.error('Error uploading promotional image. Details:', error);
+      
       toast({
         title: 'Error',
         description: error.message || 'Failed to upload image',
         variant: 'destructive',
       });
-      console.error('Error uploading promotional image:', error);
     }
   });
 

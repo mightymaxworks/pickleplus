@@ -49,10 +49,18 @@ export const FileUploadField: React.FC<FileUploadFieldProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
     
+    // Log file details for debugging
+    console.log('FileUploadField - File selected:', {
+      name: file.name,
+      type: file.type,
+      size: `${(file.size / 1024).toFixed(2)} KB`
+    });
+    
     // Validate the file
     const error = validateFile(file, allowedTypes, maxSize);
     
     if (error) {
+      console.error('FileUploadField - Validation error:', error);
       form.setError(name, {
         type: 'manual',
         message: error.message
@@ -67,7 +75,13 @@ export const FileUploadField: React.FC<FileUploadFieldProps> = ({
     if (file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = () => {
-        setPreview(reader.result as string);
+        const dataUrl = reader.result as string;
+        console.log('FileUploadField - Preview generated');
+        setPreview(dataUrl);
+        
+        // Set a temporary URL for the image in the form so the preview can show it
+        // This will be replaced with the real URL after upload
+        form.setValue(`${name.replace('File', 'Url')}`, dataUrl, { shouldValidate: false });
       };
       reader.readAsDataURL(file);
     }
@@ -89,9 +103,17 @@ export const FileUploadField: React.FC<FileUploadFieldProps> = ({
     
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
+      
+      console.log('FileUploadField - File dropped:', {
+        name: file.name,
+        type: file.type,
+        size: `${(file.size / 1024).toFixed(2)} KB`
+      });
+      
       const error = validateFile(file, allowedTypes, maxSize);
       
       if (error) {
+        console.error('FileUploadField - Drag validation error:', error);
         form.setError(name, {
           type: 'manual',
           message: error.message
@@ -104,7 +126,13 @@ export const FileUploadField: React.FC<FileUploadFieldProps> = ({
       if (file.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onload = () => {
-          setPreview(reader.result as string);
+          const dataUrl = reader.result as string;
+          console.log('FileUploadField - Drag preview generated');
+          setPreview(dataUrl);
+          
+          // Set a temporary URL for the image in the form so the preview can show it
+          // This will be replaced with the real URL after upload
+          form.setValue(`${name.replace('File', 'Url')}`, dataUrl, { shouldValidate: false });
         };
         reader.readAsDataURL(file);
       }
