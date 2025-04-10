@@ -3,7 +3,8 @@ import { Route, Switch, useLocation } from 'wouter'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from './lib/queryClient'
 import { Toaster } from '@/components/ui/toaster'
-import { AuthProvider } from '@/hooks/useAuth'
+import { AuthProvider } from '@/hooks/use-auth'
+import Layout from '@/components/layout/Layout'
 import EnhancedLandingPage from './pages/EnhancedLandingPage'
 import EnhancedAuthPage from './pages/EnhancedAuthPage'
 import TestAuthPage from './pages/TestAuthPage'
@@ -26,7 +27,7 @@ import PrizeDrawingPage from './pages/admin/PrizeDrawingPage'
 import GoldenTicketAdmin from './pages/admin/GoldenTicketAdmin'
 import NotFound from './pages/not-found'
 
-import { useAuth } from './hooks/useAuth'
+import { useAuth } from './hooks/use-auth'
 
 // Protected route component
 function ProtectedRoute({ 
@@ -46,7 +47,11 @@ function ProtectedRoute({
     return null;
   }
   
-  return <Component {...rest} />;
+  return (
+    <Layout>
+      <Component {...rest} />
+    </Layout>
+  );
 }
 
 export default function App() {
