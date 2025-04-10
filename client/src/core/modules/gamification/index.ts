@@ -2,39 +2,39 @@
  * PKL-278651-GAME-0001-MOD
  * Gamification Module
  * 
- * This is the main entry point for the gamification module.
- * It exports all components, hooks, and APIs for use in the application.
+ * This file exports the entire gamification module with all its components, hooks, and utilities.
+ * The module enables discovery-based gamification features throughout the Pickle+ platform.
  */
 
-// Export context and provider
+// Re-export the components
+import * as GamificationComponents from './components';
+export { GamificationComponents };
+
+// Re-export the hooks
+import * as GamificationHooks from './hooks';
+export { GamificationHooks };
+
+// Export types
+import { Reward } from './components/DiscoveryAlert';
+import { Campaign } from './components/ProgressTracker';
+import { DiscoveryItem, DiscoveryCampaign } from './hooks/useDiscoveryTracking';
+
+export type { 
+  Reward,
+  Campaign,
+  DiscoveryItem,
+  DiscoveryCampaign
+};
+
+// Direct component and hook exports for convenience
 export { 
-  GamificationProvider, 
-  useGamification 
-} from './context/GamificationContext';
+  DiscoveryAlert, 
+  RewardDisplay, 
+  ProgressTracker 
+} from './components';
 
-// Export API and types
-export * as gamificationAPI from './api/gamificationAPI';
-export * from './api/types';
-
-// Export components
-export * from './components';
-
-// Export hooks
-export * from './hooks';
-
-/**
- * Initialize the gamification module
- * This function should be called once at the start of the application
- */
-export function initGamificationModule() {
-  console.log('Gamification module initialized');
-  
-  // Add global event listeners or perform other initialization as needed
-  
-  return {
-    cleanup: () => {
-      // Clean up any resources when the module is unloaded
-      console.log('Gamification module cleanup');
-    }
-  };
-}
+export { 
+  useKonamiCode, 
+  useDiscoveryTrigger, 
+  useDiscoveryTracking 
+} from './hooks';

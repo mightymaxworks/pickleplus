@@ -2,133 +2,216 @@
  * PKL-278651-GAME-0001-MOD
  * useDiscoveryTracking Hook
  * 
- * A hook that provides tracking functionality for user discoveries and campaign progress.
+ * This hook tracks user discoveries and provides progress information.
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { useGamification } from '../context/GamificationContext';
-import { Campaign, CampaignProgress, UserDiscovery, Reward } from '../api/types';
 
-interface DiscoveryStats {
-  totalDiscovered: number;
-  totalPoints: number;
-  campaigns: {
-    id: number;
-    name: string;
-    progress: number;
-    discovered: number;
-    total: number;
-  }[];
-  recentDiscoveries: {
-    code: string;
-    timestamp: string;
-    rewardClaimed: boolean;
-  }[];
-  rewards: {
-    id: number;
-    name: string;
-    description: string;
-    rarity: string;
-    claimed: boolean;
-    claimedAt?: string;
-  }[];
+// Types for the hook
+export interface DiscoveryItem {
+  id: number;
+  code: string;
+  name: string;
+  discovered: boolean;
+  discoveredAt?: Date;
+}
+
+export interface DiscoveryCampaign {
+  id: number;
+  name: string;
+  description: string;
+  discoveries: DiscoveryItem[];
+  completionPercentage: number;
+  isComplete: boolean;
+}
+
+export interface UseDiscoveryTrackingOptions {
+  campaignId?: number;
+  onCampaignComplete?: (campaignId: number) => void;
+  localStorageKey?: string;
 }
 
 /**
- * A hook that provides tracking functionality for user discoveries and campaign progress.
+ * useDiscoveryTracking Hook
  * 
- * @returns {Object} - Discovery tracking information and functions
- * @returns {DiscoveryStats} - Current discovery statistics
- * @returns {function} - refreshStats - Function to refresh the statistics
- * @returns {function} - getCompletionPercentage - Function to get the completion percentage for a campaign
+ * Tracks user discoveries and provides progress information.
+ * Can persist progress to localStorage optionally.
+ * 
+ * @param {UseDiscoveryTrackingOptions} options - Configuration options
+ * @returns {object} - Methods and state for discovery tracking
  */
-export default function useDiscoveryTracking() {
-  // Get gamification context
-  const { 
-    state, 
-    getCampaignProgress 
-  } = useGamification();
+export default function useDiscoveryTracking({
+  campaignId,
+  onCampaignComplete,
+  localStorageKey = 'pickle_plus_discoveries'
+}: UseDiscoveryTrackingOptions = {}) {
+  // State to track discoveries
+  const [campaigns, setCampaigns] = useState<DiscoveryCampaign[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
-  // State for discovery statistics
-  const [stats, setStats] = useState<DiscoveryStats>({
-    totalDiscovered: 0,
-    totalPoints: 0,
-    campaigns: [],
-    recentDiscoveries: [],
-    rewards: []
+  // Get the current campaign if an ID is provided
+  const currentCampaign = campaignId 
+    ? campaigns.find(c => c.id === campaignId) 
+    : campaigns[0];
+  
+  // Load discoveries from localStorage on mount
+  useEffect(() => {
+    try {
+      setLoading(true);
+      const savedData = localStorage.getItem(localStorageKey);
+      if (savedData) {
+        const parsedData = JSON.parse(savedData);
+        if (Array.isArray(parsedData)) {
+          setCampaigns(parsedData);
+        }
+      }
+      setLoading(false);
+    } catch (err) {
+      console.error('Error loading discovery data:', err);
+      setError('Failed to load discovery data');
+      setLoading(false);
+    }
+  }, [localStorageKey]);
+  
+  // Save discoveries to localStorage when they change
+  useEffect(() => {
+    if (campaigns.length > 0) {
+      try {
+        localStorage.setItem(localStorageKey, JSON.stringify(campaigns));
+      } catch (err) {
+        console.error('Error saving discovery data:', err);
+        setError('Failed to save discovery data');
+      }
+    }
+  }, [campaigns, localStorageKey]);
+  
+  // Track a discovery
+  const trackDiscovery = useCallback((discoveryCode: string) => {
+    setCampaigns(prevCampaigns => {
+      // Create a copy of the campaigns
+      const updatedCampaigns = [...prevCampaigns];
+      
+      // Find the campaign containing this discovery
+      let found = false;
+      for (const campaign of updatedCampaigns) {
+        const discoveryIndex = campaign.discoveries.findIndex(d => d.code === discoveryCode);
+        
+        if (discoveryIndex >= 0) {
+          found = true;
+          
+          // Skip if already discovered
+          if (campaign.discoveries[discoveryIndex].discovered) {
+            return prevCampaigns;
+          }
+          
+          // Mark as discovered
+          campaign.discoveries[discoveryIndex] = {
+            ...campaign.discoveries[discoveryIndex],
+            discovered: true,
+            discoveredAt: new Date()
+          };
+          
+          // Update campaign completion metrics
+          const discoveredCount = campaign.discoveries.filter(d => d.discovered).length;
+          const totalCount = campaign.discoveries.length;
+          const newCompletionPercentage = Math.round((discoveredCount / totalCount) * 100);
+          const wasComplete = campaign.isComplete;
+          const isNowComplete = discoveredCount === totalCount;
+          
+          campaign.completionPercentage = newCompletionPercentage;
+          campaign.isComplete = isNowComplete;
+          
+          // If campaign was just completed, trigger callback
+          if (!wasComplete && isNowComplete && onCampaignComplete) {
+            onCampaignComplete(campaign.id);
+          }
+          
+          break;
+        }
+      }
+      
+      if (!found) {
+        console.warn(`Discovery code not found in any campaign: ${discoveryCode}`);
+        return prevCampaigns;
+      }
+      
+      return updatedCampaigns;
+    });
+  }, [onCampaignComplete]);
+  
+  // Reset all discoveries or for a specific campaign
+  const resetDiscoveries = useCallback((specificCampaignId?: number) => {
+    setCampaigns(prevCampaigns => {
+      // If no specific campaign ID, reset all
+      if (specificCampaignId === undefined) {
+        return prevCampaigns.map(campaign => ({
+          ...campaign,
+          completionPercentage: 0,
+          isComplete: false,
+          discoveries: campaign.discoveries.map(d => ({
+            ...d,
+            discovered: false,
+            discoveredAt: undefined
+          }))
+        }));
+      }
+      
+      // Otherwise reset just the specified campaign
+      return prevCampaigns.map(campaign => {
+        if (campaign.id === specificCampaignId) {
+          return {
+            ...campaign,
+            completionPercentage: 0,
+            isComplete: false,
+            discoveries: campaign.discoveries.map(d => ({
+              ...d,
+              discovered: false,
+              discoveredAt: undefined
+            }))
+          };
+        }
+        return campaign;
+      });
+    });
+  }, []);
+  
+  // Add a new campaign
+  const addCampaign = useCallback((campaign: Omit<DiscoveryCampaign, 'completionPercentage' | 'isComplete'>) => {
+    setCampaigns(prevCampaigns => [
+      ...prevCampaigns,
+      {
+        ...campaign,
+        completionPercentage: 0,
+        isComplete: false
+      }
+    ]);
+  }, []);
+  
+  // Calculate stats for all campaigns
+  const totalStats = campaigns.reduce((stats, campaign) => {
+    const discoveredCount = campaign.discoveries.filter(d => d.discovered).length;
+    const totalCount = campaign.discoveries.length;
+    
+    return {
+      totalDiscoveries: stats.totalDiscoveries + totalCount,
+      discoveredCount: stats.discoveredCount + discoveredCount,
+      completedCampaigns: stats.completedCampaigns + (campaign.isComplete ? 1 : 0)
+    };
+  }, {
+    totalDiscoveries: 0,
+    discoveredCount: 0,
+    completedCampaigns: 0
   });
   
-  // Function to refresh statistics
-  const refreshStats = useCallback(() => {
-    const { campaigns, userDiscoveries, campaignProgress, rewards } = state;
-    
-    // Calculate total discoveries
-    const totalDiscovered = Object.keys(userDiscoveries).length;
-    
-    // Calculate total points
-    const totalPoints = Object.values(campaignProgress).reduce(
-      (sum, campaign) => sum + campaign.totalPoints, 
-      0
-    );
-    
-    // Process campaign progress
-    const campaignStats = campaigns
-      .filter(campaign => campaign.isActive)
-      .map(campaign => {
-        const progress = getCampaignProgress(campaign.id);
-        return {
-          id: campaign.id,
-          name: campaign.name,
-          progress: progress?.completionPercentage || 0,
-          discovered: progress?.discoveredCount || 0,
-          total: progress?.totalDiscoveries || 10 // Default to 10 if unknown
-        };
-      });
-    
-    // Process recent discoveries
-    const recentDiscoveries = Object.entries(userDiscoveries)
-      .map(([code, data]) => ({
-        code,
-        timestamp: data.discoveredAt,
-        rewardClaimed: data.rewardClaimed
-      }))
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-      .slice(0, 5); // Get only the 5 most recent
-    
-    // Process rewards
-    const rewardStats = rewards.map(reward => ({
-      id: reward.id || 0,
-      name: reward.name,
-      description: reward.description,
-      rarity: reward.rarity,
-      claimed: Boolean((reward as any).claimed), // Type cast to access potential dynamic property
-      claimedAt: (reward as any).claimedAt // Type cast to access potential dynamic property
-    }));
-    
-    // Update statistics
-    setStats({
-      totalDiscovered,
-      totalPoints,
-      campaigns: campaignStats,
-      recentDiscoveries,
-      rewards: rewardStats
-    });
-  }, [state, getCampaignProgress]);
-  
-  // Get completion percentage for a specific campaign
-  const getCompletionPercentage = useCallback((campaignId: number): number => {
-    const progress = getCampaignProgress(campaignId);
-    return progress?.completionPercentage || 0;
-  }, [getCampaignProgress]);
-  
-  // Initialize and update statistics when state changes
-  useEffect(() => {
-    refreshStats();
-  }, [refreshStats, state]);
-  
   return {
-    stats,
-    refreshStats,
-    getCompletionPercentage
+    campaigns,
+    currentCampaign,
+    loading,
+    error,
+    totalStats,
+    trackDiscovery,
+    resetDiscoveries,
+    addCampaign
   };
 }
