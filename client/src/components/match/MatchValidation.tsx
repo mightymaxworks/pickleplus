@@ -393,7 +393,7 @@ export default function MatchValidation({ match, onValidationComplete }: MatchVa
                   Match Details
                 </div>
                 <div className="text-sm text-muted-foreground mt-1">
-                  {match.formatType === 'singles' ? 'Singles' : 'Doubles'} Match • {format(new Date(match.date), 'MMMM d, yyyy')}
+                  {match.formatType === 'singles' ? 'Singles' : 'Doubles'} Match • {match.matchDate ? format(parseISO(match.matchDate), 'MMMM d, yyyy') : 'Unknown date'}
                 </div>
                 <div className="flex justify-between items-center mt-4">
                   <div className="flex items-center gap-3">
