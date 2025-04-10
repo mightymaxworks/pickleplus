@@ -43,8 +43,7 @@ const formSchema = z.object({
   discountCode: z.string().optional().nullable(),
   discountValue: z.string().optional().nullable(),
   status: z.enum(['draft', 'active', 'paused', 'completed', 'cancelled']).default('draft'),
-  pagesToAppearOn: z.string().optional(),
-  selectedPages: z.array(z.string()).optional(),
+  selectedPages: z.array(z.string()).default([]),
   promotionalImageUrl: z.string().url('Must be a valid URL').optional().nullable(),
   promotionalImagePath: z.string().optional().nullable(),
   promotionalImageFile: z.any().optional().nullable(), // For file upload
@@ -77,7 +76,7 @@ const GoldenTicketForm: React.FC = () => {
     discountCode: '',
     discountValue: '',
     status: 'draft',
-    pagesToAppearOn: ''
+    selectedPages: []
   };
   
   const form = useForm<FormValues>({
@@ -154,15 +153,8 @@ const GoldenTicketForm: React.FC = () => {
         await uploadImageMutation.mutateAsync(data.promotionalImageFile);
       }
       
-      // Process pages to appear on as an array if provided
-      let pagesToAppearOn;
-      if (data.selectedPages && data.selectedPages.length > 0) {
-        // Use the structured page selection if available
-        pagesToAppearOn = data.selectedPages;
-      } else if (data.pagesToAppearOn) {
-        // Fallback to comma-separated string
-        pagesToAppearOn = data.pagesToAppearOn.split(',').map(page => page.trim());
-      }
+      // Use the structured page selection from the form
+      const pagesToAppearOn = data.selectedPages || [];
       
       // Remove the file field and build data object
       const { promotionalImageFile, selectedPages, ...submitData } = data;
@@ -173,7 +165,7 @@ const GoldenTicketForm: React.FC = () => {
         currentAppearances: 0,
         // Handle sponsorId null/undefined issue
         sponsorId: submitData.sponsorId || null,
-        pagesToAppearOn: pagesToAppearOn || null,
+        pagesToAppearOn: pagesToAppearOn,
         // Ensure promotional image fields are included
         promotionalImageUrl: submitData.promotionalImageUrl || null,
         promotionalImagePath: submitData.promotionalImagePath || null,
@@ -506,7 +498,7 @@ const GoldenTicketForm: React.FC = () => {
           name="selectedPages"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Pages to Appear On (Structured)</FormLabel>
+              <FormLabel>Pages to Appear On</FormLabel>
               <FormControl>
                 <PageSelectField
                   value={field.value || []}
@@ -516,27 +508,6 @@ const GoldenTicketForm: React.FC = () => {
               </FormControl>
               <FormDescription className="text-xs">
                 Select pages where this ticket can appear
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        {/* Legacy manual input for page paths */}
-        <FormField
-          control={form.control}
-          name="pagesToAppearOn"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Pages to Appear On (Manual)</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="e.g. /dashboard, /profile, /matches" 
-                  {...field} 
-                />
-              </FormControl>
-              <FormDescription className="text-xs">
-                Comma-separated list of page paths (use structured selection above if possible)
               </FormDescription>
               <FormMessage />
             </FormItem>
