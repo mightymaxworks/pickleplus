@@ -22,7 +22,9 @@ import {
   Clock,
   CheckCircle2,
   Users,
-  Zap
+  Zap,
+  Rocket,
+  CalendarRange
 } from 'lucide-react';
 import TournamentBracket from './TournamentBracket';
 import { BracketPosition, TournamentReward } from '../types';
@@ -33,6 +35,9 @@ import { Button } from '@/components/ui/button';
 import { DiscoveryPoint } from '../api/tournamentDiscoveryApi';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cva } from 'class-variance-authority';
+import { getTournamentFeatureDetail } from '../data/tournamentFeatureDetails';
+import TournamentFeatureDialog from './TournamentFeatureDialog';
+import TournamentRoadmap from './TournamentRoadmap';
 
 // CSS styles for tier badges
 const tierBadgeStyles = cva("rounded-full px-2 py-0.5 text-xs font-medium", {
@@ -68,7 +73,7 @@ const TournamentDiscoveryPage: React.FC = () => {
     hasCompletedTier
   } = useTournamentDiscovery();
   
-  // State for discovery alerts and countdown
+  // State for discovery alerts, countdown, and feature detail dialog
   const [showAlert, setShowAlert] = useState(false);
   const [currentReward, setCurrentReward] = useState<TournamentReward | null>(null);
   const [currentDiscovery, setCurrentDiscovery] = useState<string>('');
@@ -76,6 +81,8 @@ const TournamentDiscoveryPage: React.FC = () => {
   const [countdown, setCountdown] = useState<{days: number, hours: number, minutes: number, seconds: number}>({
     days: 0, hours: 0, minutes: 0, seconds: 0
   });
+  const [showFeatureDetail, setShowFeatureDetail] = useState(false);
+  const [selectedFeatureId, setSelectedFeatureId] = useState<string>('');
   
   // Countdown timer to tournament launch
   useEffect(() => {
