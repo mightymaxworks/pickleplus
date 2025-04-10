@@ -2,119 +2,120 @@
  * PKL-278651-GAME-0001-MOD
  * useKonamiCode Hook
  * 
- * A hook that enables the Konami Code easter egg functionality.
- * The Konami Code is: Up, Up, Down, Down, Left, Right, Left, Right, B, A
+ * This hook implements the classic Konami Code sequence detection
+ * (Up, Up, Down, Down, Left, Right, Left, Right, B, A).
  */
 
 import { useState, useEffect, useCallback } from 'react';
 
+// The Konami Code sequence
 const KONAMI_CODE = [
-  'ArrowUp',
-  'ArrowUp',
-  'ArrowDown',
-  'ArrowDown',
-  'ArrowLeft',
-  'ArrowRight',
-  'ArrowLeft',
-  'ArrowRight',
-  'KeyB',
+  'ArrowUp', 
+  'ArrowUp', 
+  'ArrowDown', 
+  'ArrowDown', 
+  'ArrowLeft', 
+  'ArrowRight', 
+  'ArrowLeft', 
+  'ArrowRight', 
+  'KeyB', 
   'KeyA'
 ];
 
-interface UseKonamiCodeProps {
-  onKonami?: () => void;
-  resetOnSuccess?: boolean;
-  disabled?: boolean;
+export interface UseKonamiCodeOptions {
+  onComplete?: () => void;
+  resetOnComplete?: boolean;
 }
 
 /**
- * A hook that enables the Konami Code easter egg functionality.
- * The Konami Code is: Up, Up, Down, Down, Left, Right, Left, Right, B, A
+ * useKonamiCode Hook
  * 
- * @param {UseKonamiCodeProps} props - The hook properties
- * @param {Function} [props.onKonami] - Callback function to run when the Konami code is successfully entered
- * @param {boolean} [props.resetOnSuccess=true] - Whether to reset the code entry after a successful entry
- * @param {boolean} [props.disabled=false] - Whether the Konami code functionality is disabled
- * @returns {object} - State object containing whether the Konami code was activated
+ * Detects when the user enters the Konami Code sequence
+ * 
+ * @param {UseKonamiCodeOptions} options - Configuration options
+ * @returns {object} - Konami code state and control methods
  */
 export default function useKonamiCode({
-  onKonami,
-  resetOnSuccess = true,
-  disabled = false
-}: UseKonamiCodeProps = {}) {
-  // Track the keys that have been pressed
-  const [keysPressed, setKeysPressed] = useState<string[]>([]);
-  
-  // Track whether the Konami code has been activated
+  onComplete,
+  resetOnComplete = true
+}: UseKonamiCodeOptions = {}) {
+  // Track the sequence of keys that have been pressed
+  const [sequence, setSequence] = useState<string[]>([]);
+  // Track if the Konami Code has been activated
   const [konamiActivated, setKonamiActivated] = useState(false);
   
-  // Handle key presses
+  // Check if the current sequence matches the Konami Code
+  const checkKonamiCode = useCallback(() => {
+    // Compare the current sequence with the Konami Code
+    const isKonamiCode = sequence.length === KONAMI_CODE.length &&
+      sequence.every((key, index) => key === KONAMI_CODE[index]);
+    
+    if (isKonamiCode && !konamiActivated) {
+      // Activate the Konami Code
+      setKonamiActivated(true);
+      
+      // Call the onComplete callback if provided
+      if (onComplete) {
+        onComplete();
+      }
+      
+      // Reset the sequence if configured to do so
+      if (resetOnComplete) {
+        setSequence([]);
+      }
+    }
+    
+    return isKonamiCode;
+  }, [sequence, konamiActivated, onComplete, resetOnComplete]);
+  
+  // Handle keydown events
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    // If disabled, do nothing
-    if (disabled) return;
+    // Use event.code for better key identification
+    const key = event.code;
     
-    // If Konami code has been activated and we're not resetting, do nothing
-    if (konamiActivated && !resetOnSuccess) return;
+    // Get the expected next key in the sequence
+    const expectedKey = KONAMI_CODE[sequence.length];
     
-    // Get the key code from the event
-    const { code } = event;
-    
-    // Update the array of keys pressed
-    setKeysPressed(prevKeys => {
-      // Get the expected key at this position
-      const expectedKey = KONAMI_CODE[prevKeys.length];
+    if (key === expectedKey) {
+      // Key matches the next expected key in the sequence
+      const newSequence = [...sequence, key];
+      setSequence(newSequence);
       
-      // If the key matches what we expect next in the sequence
-      if (code === expectedKey) {
-        // Add this key to the array
-        const newKeys = [...prevKeys, code];
-        
-        // If the full Konami code has been entered
-        if (newKeys.length === KONAMI_CODE.length) {
-          // Activate the Konami code
-          setKonamiActivated(true);
-          
-          // Call the callback function
-          if (onKonami) onKonami();
-          
-          // Reset the keys if needed
-          return resetOnSuccess ? [] : newKeys;
-        }
-        
-        return newKeys;
+      // If the sequence is complete, check if it's the Konami Code
+      if (newSequence.length === KONAMI_CODE.length) {
+        checkKonamiCode();
       }
-      
-      // If this is the first key in the sequence and it's the first key of the Konami code
-      if (code === KONAMI_CODE[0]) {
-        return [code];
+    } else {
+      // Incorrect key, reset the sequence
+      // If the key is the first key of the Konami Code, start a new sequence
+      if (key === KONAMI_CODE[0]) {
+        setSequence([key]);
+      } else {
+        setSequence([]);
       }
-      
-      // Otherwise reset the sequence
-      return [];
-    });
-  }, [disabled, konamiActivated, resetOnSuccess, onKonami]);
+    }
+  }, [sequence, checkKonamiCode]);
   
-  // Set up the event listener
+  // Reset the Konami Code state
+  const reset = useCallback(() => {
+    setSequence([]);
+    setKonamiActivated(false);
+  }, []);
+  
+  // Set up the event listener when the component mounts
   useEffect(() => {
-    // If disabled, don't set up the listener
-    if (disabled) return;
+    document.addEventListener('keydown', handleKeyDown);
     
-    // Add the event listener
-    window.addEventListener('keydown', handleKeyDown);
-    
-    // Clean up the event listener
+    // Clean up the event listener when the component unmounts
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [disabled, handleKeyDown]);
+  }, [handleKeyDown]);
   
-  // Return the state of the Konami code
   return {
     konamiActivated,
-    progress: keysPressed.length / KONAMI_CODE.length,
-    reset: () => {
-      setKeysPressed([]);
-      setKonamiActivated(false);
-    }
+    sequence,
+    progress: sequence.length / KONAMI_CODE.length,
+    reset
   };
 }

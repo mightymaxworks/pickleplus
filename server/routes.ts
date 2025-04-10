@@ -13,6 +13,8 @@ import {
   registerValidationRoutes,
   autoValidateMatchForSubmitter 
 } from "./modules/match/validation";
+import { registerPrizeDrawingRoutes } from "./routes/prize-drawing-routes";
+import { registerTournamentDiscoveryRoutes } from "./routes/tournament-discovery-routes";
 
 // Import necessary schema
 import { 
@@ -45,6 +47,10 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Register Match Validation routes (PKL-278651-VALMAT-0001-FIX)
   registerValidationRoutes(app);
+  
+  // Register Tournament Discovery and Prize Drawing routes (PKL-278651-GAME-0002-TOURN)
+  registerTournamentDiscoveryRoutes(app);
+  registerPrizeDrawingRoutes(app);
   
   // API routes
   
