@@ -5,27 +5,51 @@
  * This script creates the necessary database tables for the prize drawing system.
  */
 
-import { db } from "../server/db";
-import { sql } from "drizzle-orm";
+import { db } from '../server/db';
+import { sql } from 'drizzle-orm';
+import { 
+  prizeDrawingPools, 
+  prizeDrawingEntries, 
+  poolStatusEnum, 
+  entryMethodEnum
+} from '../shared/prize-drawing.schema';
 
 /**
  * Main migration function
  */
 export async function migratePrizeDrawingTables(): Promise<void> {
-  console.log("Starting prize drawing tables migration...");
+  console.log('[Migration] Starting prize drawing tables migration...');
   
   try {
-    // Check if tables already exist
-    const poolTableExists = await checkTableExists("prize_drawing_pools");
-    const entriesTableExists = await checkTableExists("prize_drawing_entries");
+    // Check if the enums exist already
+    const poolStatusEnumExists = await checkEnumExists('prize_drawing_pool_status');
+    const entryMethodEnumExists = await checkEnumExists('prize_drawing_entry_method');
     
-    if (poolTableExists && entriesTableExists) {
-      console.log("Prize drawing tables already exist. Migration skipped.");
-      return;
+    // Create enums if they don't exist
+    if (!poolStatusEnumExists) {
+      console.log('[Migration] Creating prize_drawing_pool_status enum...');
+      await db.execute(sql`
+        CREATE TYPE prize_drawing_pool_status AS ENUM (
+          'draft', 'active', 'completed', 'cancelled'
+        );
+      `);
     }
     
-    // Create tables in the correct order
-    if (!poolTableExists) {
+    if (!entryMethodEnumExists) {
+      console.log('[Migration] Creating prize_drawing_entry_method enum...');
+      await db.execute(sql`
+        CREATE TYPE prize_drawing_entry_method AS ENUM (
+          'quest_completion', 'admin_addition', 'invitation', 'referral'
+        );
+      `);
+    }
+    
+    // Check if tables exist already
+    const poolsTableExists = await checkTableExists('prize_drawing_pools');
+    const entriesTableExists = await checkTableExists('prize_drawing_entries');
+    
+    // Create tables if they don't exist
+    if (!poolsTableExists) {
       await createPrizeDrawingPoolsTable();
     }
     
@@ -33,9 +57,9 @@ export async function migratePrizeDrawingTables(): Promise<void> {
       await createPrizeDrawingEntriesTable();
     }
     
-    console.log("Prize drawing tables migration completed successfully.");
+    console.log('[Migration] Prize drawing tables migration completed');
   } catch (error) {
-    console.error("Error during prize drawing tables migration:", error);
+    console.error('[Migration] Error during prize drawing tables migration:', error);
     throw error;
   }
 }
@@ -47,8 +71,22 @@ async function checkTableExists(tableName: string): Promise<boolean> {
   const result = await db.execute(sql`
     SELECT EXISTS (
       SELECT FROM information_schema.tables 
-      WHERE table_schema = 'public' 
+      WHERE table_schema = 'public'
       AND table_name = ${tableName}
+    );
+  `);
+  
+  return result.rows[0].exists;
+}
+
+/**
+ * Helper to check if an enum type exists
+ */
+async function checkEnumExists(enumName: string): Promise<boolean> {
+  const result = await db.execute(sql`
+    SELECT EXISTS (
+      SELECT FROM pg_type 
+      WHERE typname = ${enumName}
     );
   `);
   
@@ -59,59 +97,53 @@ async function checkTableExists(tableName: string): Promise<boolean> {
  * Create prize drawing pools table
  */
 async function createPrizeDrawingPoolsTable(): Promise<void> {
-  console.log("Creating prize_drawing_pools table...");
+  console.log('[Migration] Creating prize_drawing_pools table...');
   
   await db.execute(sql`
     CREATE TABLE prize_drawing_pools (
       id SERIAL PRIMARY KEY,
-      name TEXT NOT NULL,
+      name VARCHAR(100) NOT NULL,
       description TEXT,
-      campaign_id INTEGER NOT NULL,
-      start_date TIMESTAMP NOT NULL DEFAULT NOW(),
+      campaign_id VARCHAR(50) NOT NULL,
+      prize_description TEXT,
+      max_winners INTEGER DEFAULT 1,
+      start_date TIMESTAMP DEFAULT NOW(),
       end_date TIMESTAMP,
-      status TEXT NOT NULL DEFAULT 'active',
-      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-      
-      CONSTRAINT valid_status CHECK (status IN ('active', 'drawing', 'completed'))
+      drawing_date TIMESTAMP,
+      status prize_drawing_pool_status DEFAULT 'draft',
+      requires_verification BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
     );
-    
-    -- Add index for campaign lookups
-    CREATE INDEX idx_prize_pools_campaign ON prize_drawing_pools(campaign_id);
   `);
   
-  console.log("prize_drawing_pools table created successfully.");
+  console.log('[Migration] prize_drawing_pools table created');
 }
 
 /**
  * Create prize drawing entries table
  */
 async function createPrizeDrawingEntriesTable(): Promise<void> {
-  console.log("Creating prize_drawing_entries table...");
+  console.log('[Migration] Creating prize_drawing_entries table...');
   
   await db.execute(sql`
     CREATE TABLE prize_drawing_entries (
       id SERIAL PRIMARY KEY,
-      pool_id INTEGER NOT NULL,
-      user_id INTEGER NOT NULL,
-      entry_date TIMESTAMP NOT NULL DEFAULT NOW(),
-      is_winner BOOLEAN NOT NULL DEFAULT FALSE,
-      has_been_notified BOOLEAN NOT NULL DEFAULT FALSE,
+      pool_id INTEGER NOT NULL REFERENCES prize_drawing_pools(id),
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      entry_method prize_drawing_entry_method DEFAULT 'quest_completion',
+      entry_date TIMESTAMP DEFAULT NOW(),
+      is_winner BOOLEAN DEFAULT FALSE,
       drawing_date TIMESTAMP,
-      entry_method TEXT NOT NULL,
-      
-      CONSTRAINT valid_entry_method CHECK (entry_method IN ('quest_completion', 'admin', 'other')),
-      CONSTRAINT fk_pool_id FOREIGN KEY (pool_id) REFERENCES prize_drawing_pools(id) ON DELETE CASCADE,
-      CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-      CONSTRAINT unique_user_per_pool UNIQUE (pool_id, user_id)
+      has_been_notified BOOLEAN DEFAULT FALSE,
+      notification_date TIMESTAMP,
+      token_claimed BOOLEAN DEFAULT FALSE,
+      claim_date TIMESTAMP,
+      UNIQUE(pool_id, user_id)
     );
-    
-    -- Add indexes for efficient lookups
-    CREATE INDEX idx_prize_entries_pool ON prize_drawing_entries(pool_id);
-    CREATE INDEX idx_prize_entries_user ON prize_drawing_entries(user_id);
-    CREATE INDEX idx_prize_entries_winner ON prize_drawing_entries(is_winner);
   `);
   
-  console.log("prize_drawing_entries table created successfully.");
+  console.log('[Migration] prize_drawing_entries table created');
 }
 
 /**
@@ -119,9 +151,12 @@ async function createPrizeDrawingEntriesTable(): Promise<void> {
  */
 if (require.main === module) {
   migratePrizeDrawingTables()
-    .then(() => process.exit(0))
-    .catch(error => {
-      console.error("Migration failed:", error);
+    .then(() => {
+      console.log('Migration completed successfully');
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error('Migration failed:', error);
       process.exit(1);
     });
 }
