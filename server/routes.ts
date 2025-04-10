@@ -281,6 +281,158 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     }
   });
   
+  /**
+   * PKL-278651-HIST-0001-BL: Match history endpoint with filtering and pagination
+   */
+  app.get("/api/match/history", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const userId = req.query.userId ? parseInt(req.query.userId as string) : req.user.id;
+      const matchType = req.query.matchType as string;
+      const formatType = req.query.formatType as string;
+      const validationStatus = req.query.validationStatus as string;
+      const location = req.query.location as string;
+      const sortBy = req.query.sortBy as string || 'date';
+      const sortDirection = req.query.sortDirection as string || 'desc';
+      const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
+      const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
+      
+      console.log("[Match API] Match history request:", {
+        page, limit, userId, matchType, formatType, validationStatus, location, sortBy, sortDirection, startDate, endDate
+      });
+      
+      // Use storage interface to get recent matches (will filter and paginate afterward)
+      const matches = await storage.getRecentMatches(userId, limit * page * 2); // Get more matches to allow for filtering
+      
+      // If no matches, return empty result
+      if (!matches || matches.length === 0) {
+        return res.json({
+          matches: [],
+          pagination: {
+            total: 0,
+            page,
+            limit,
+            totalPages: 0
+          }
+        });
+      }
+      
+      // Collect all user IDs from matches to fetch user data
+      const playerIds = new Set<number>();
+      
+      for (const match of matches) {
+        if (match.playerOneId) playerIds.add(match.playerOneId);
+        if (match.playerTwoId) playerIds.add(match.playerTwoId);
+        if (match.playerOnePartnerId) playerIds.add(match.playerOnePartnerId);
+        if (match.playerTwoPartnerId) playerIds.add(match.playerTwoPartnerId);
+      }
+      
+      // Fetch user data for all players
+      const playerData: Record<number, { 
+        displayName: string; 
+        username: string; 
+        avatarUrl?: string; 
+        avatarInitials?: string;
+      }> = {};
+      
+      // Fetch user data for each player ID
+      for (const playerId of playerIds) {
+        try {
+          const player = await storage.getUser(playerId);
+          if (player) {
+            playerData[playerId] = {
+              displayName: player.displayName || `Player ${playerId}`,
+              username: player.username || `player${playerId}`,
+              avatarUrl: player.avatarUrl,
+              avatarInitials: player.avatarInitials || `P${playerId}`
+            };
+          }
+        } catch (error) {
+          console.error(`Error fetching user data for player ${playerId}:`, error);
+          // Add default data if player fetch fails
+          playerData[playerId] = {
+            displayName: `Player ${playerId}`,
+            username: `player${playerId}`,
+            avatarInitials: `P${playerId}`
+          };
+        }
+      }
+      
+      // Apply filters
+      let filteredMatches = matches;
+      
+      if (matchType) {
+        filteredMatches = filteredMatches.filter(match => match.matchType === matchType);
+      }
+      
+      if (formatType) {
+        filteredMatches = filteredMatches.filter(match => match.formatType === formatType);
+      }
+      
+      if (validationStatus) {
+        filteredMatches = filteredMatches.filter(match => match.validationStatus === validationStatus);
+      }
+      
+      if (location) {
+        filteredMatches = filteredMatches.filter(match => match.location === location);
+      }
+      
+      if (startDate) {
+        filteredMatches = filteredMatches.filter(match => {
+          const matchDate = new Date(match.matchDate || match.createdAt);
+          return matchDate >= startDate;
+        });
+      }
+      
+      if (endDate) {
+        filteredMatches = filteredMatches.filter(match => {
+          const matchDate = new Date(match.matchDate || match.createdAt);
+          return matchDate <= endDate;
+        });
+      }
+      
+      // Sort matches
+      filteredMatches.sort((a, b) => {
+        if (sortBy === 'date') {
+          const dateA = new Date(a.matchDate || a.createdAt);
+          const dateB = new Date(b.matchDate || b.createdAt);
+          return sortDirection === 'desc' ? dateB.getTime() - dateA.getTime() : dateA.getTime() - dateB.getTime();
+        }
+        return 0;
+      });
+      
+      // Paginate the results
+      const offset = (page - 1) * limit;
+      const paginatedMatches = filteredMatches.slice(offset, offset + limit);
+      
+      // Enhance matches with player data
+      const enhancedMatches = paginatedMatches.map(match => ({
+        ...match,
+        playerNames: playerData
+      }));
+      
+      const result = {
+        matches: enhancedMatches,
+        pagination: {
+          total: filteredMatches.length,
+          page,
+          limit,
+          totalPages: Math.ceil(filteredMatches.length / limit)
+        }
+      };
+      
+      res.json(result);
+    } catch (error) {
+      console.error("[API] Error getting match history:", error);
+      res.status(500).json({ error: "Server error getting match history" });
+    }
+  });
+  
   // Multi-dimensional rankings leaderboard
   app.get("/api/multi-rankings/leaderboard", async (req: Request, res: Response) => {
     try {

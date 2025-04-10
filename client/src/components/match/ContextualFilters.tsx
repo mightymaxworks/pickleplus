@@ -246,7 +246,7 @@ export function ContextualFilters({
                             mode="single"
                             selected={tempFilters.dateRange[0] || undefined}
                             onSelect={(date) => 
-                              handleFilterChange('dateRange', [date, tempFilters.dateRange[1]])
+                              handleFilterChange('dateRange', [date as Date | null, tempFilters.dateRange[1]])
                             }
                             initialFocus
                           />
@@ -277,7 +277,7 @@ export function ContextualFilters({
                             mode="single"
                             selected={tempFilters.dateRange[1] || undefined}
                             onSelect={(date) => 
-                              handleFilterChange('dateRange', [tempFilters.dateRange[0], date])
+                              handleFilterChange('dateRange', [tempFilters.dateRange[0], date as Date | null])
                             }
                             initialFocus
                           />
