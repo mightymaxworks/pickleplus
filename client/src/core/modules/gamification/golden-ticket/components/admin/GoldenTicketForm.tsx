@@ -506,11 +506,97 @@ const GoldenTicketForm: React.FC = () => {
             <FormItem>
               <FormLabel>Pages to Appear On</FormLabel>
               <FormControl>
-                <PageSelectField
-                  value={field.value || []}
-                  onChange={field.onChange}
-                  availablePages={AVAILABLE_PAGES}
-                />
+                <div className="relative">
+                  <Select
+                    onValueChange={(value) => {
+                      // Don't remove existing values, just add new one if not already present
+                      if (!field.value?.includes(value)) {
+                        const newValues = [...(field.value || []), value];
+                        field.onChange(newValues);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={
+                        field.value?.length 
+                          ? `${field.value.length} page${field.value.length !== 1 ? 's' : ''} selected` 
+                          : "Select pages..."
+                      } />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Dashboard</SelectLabel>
+                        {AVAILABLE_PAGES.filter(p => p.group === 'dashboard').map(page => (
+                          <SelectItem key={page.id} value={page.path}>{page.name}</SelectItem>
+                        ))}
+                      </SelectGroup>
+                      <SelectGroup>
+                        <SelectLabel>Profile</SelectLabel>
+                        {AVAILABLE_PAGES.filter(p => p.group === 'profile').map(page => (
+                          <SelectItem key={page.id} value={page.path}>{page.name}</SelectItem>
+                        ))}
+                      </SelectGroup>
+                      <SelectGroup>
+                        <SelectLabel>Matches</SelectLabel>
+                        {AVAILABLE_PAGES.filter(p => p.group === 'matches').map(page => (
+                          <SelectItem key={page.id} value={page.path}>{page.name}</SelectItem>
+                        ))}
+                      </SelectGroup>
+                      <SelectGroup>
+                        <SelectLabel>Tournaments</SelectLabel>
+                        {AVAILABLE_PAGES.filter(p => p.group === 'tournaments').map(page => (
+                          <SelectItem key={page.id} value={page.path}>{page.name}</SelectItem>
+                        ))}
+                      </SelectGroup>
+                      <SelectGroup>
+                        <SelectLabel>Community</SelectLabel>
+                        {AVAILABLE_PAGES.filter(p => p.group === 'community').map(page => (
+                          <SelectItem key={page.id} value={page.path}>{page.name}</SelectItem>
+                        ))}
+                      </SelectGroup>
+                      <SelectGroup>
+                        <SelectLabel>Rewards</SelectLabel>
+                        {AVAILABLE_PAGES.filter(p => p.group === 'rewards').map(page => (
+                          <SelectItem key={page.id} value={page.path}>{page.name}</SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* Show selected pages as badges */}
+                {field.value?.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {field.value.map((pagePath: string) => {
+                      const page = AVAILABLE_PAGES.find(p => p.path === pagePath);
+                      return (
+                        <Badge 
+                          key={pagePath} 
+                          variant="secondary"
+                          className="flex items-center gap-1"
+                        >
+                          {page?.name || pagePath}
+                          <X
+                            className="h-3 w-3 cursor-pointer"
+                            onClick={() => {
+                              const newValues = field.value.filter((p: string) => p !== pagePath);
+                              field.onChange(newValues);
+                            }}
+                          />
+                        </Badge>
+                      );
+                    })}
+                    {field.value.length > 1 && (
+                      <Badge 
+                        variant="outline"
+                        className="cursor-pointer"
+                        onClick={() => field.onChange([])}
+                      >
+                        Clear all
+                      </Badge>
+                    )}
+                  </div>
+                )}
               </FormControl>
               <FormDescription className="text-xs">
                 Select pages where this ticket can appear
