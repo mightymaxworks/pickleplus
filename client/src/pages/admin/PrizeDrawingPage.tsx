@@ -2,509 +2,1080 @@
  * PKL-278651-GAME-0002-TOURN
  * Prize Drawing Admin Page
  * 
- * This page allows administrators to manage prize drawings
- * and select winners from eligible entries.
+ * This page allows administrators to manage prize drawing pools and select winners
  */
 
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
-import { 
-  Gift, 
-  Trophy, 
-  Users, 
-  Calendar, 
-  Check, 
-  X, 
-  Loader2,
-  Mail
-} from 'lucide-react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle
-} from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { formatDate } from '@/lib/utils';
-import { PrizeDrawingPool, DrawingWinner } from '../../core/modules/gamification/tournament/types';
+import { formatDate, formatDateOnly } from '@/lib/utils';
 
-const PrizeDrawingPage: React.FC = () => {
-  const [selectedPoolId, setSelectedPoolId] = useState<string>('');
-  const [drawingInProgress, setDrawingInProgress] = useState(false);
-  const [winner, setWinner] = useState<DrawingWinner | null>(null);
-  const [showWinnerDialog, setShowWinnerDialog] = useState(false);
-  const [drawingPhase, setDrawingPhase] = useState<'idle' | 'entries' | 'shuffling' | 'winner'>('idle');
-  
+// UI Components
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Progress } from '@/components/ui/progress';
+
+// Icons
+import { Loader2, AlertCircle, Trophy, Check, Gift, Users, Calendar, Hash, Plus, Trash, Zap, Award } from 'lucide-react';
+
+// Types for the prize drawing data
+interface PrizeDrawingPool {
+  id: number;
+  name: string;
+  description: string | null;
+  campaignId: string;
+  prizeDescription: string | null;
+  maxWinners: number;
+  startDate: string;
+  endDate: string | null;
+  drawingDate: string | null;
+  status: 'draft' | 'active' | 'completed' | 'cancelled';
+  requiresVerification: boolean;
+  createdAt: string;
+  updatedAt: string;
+  entryCount?: number;
+  winnerCount?: number;
+}
+
+interface PrizeDrawingEntry {
+  id: number;
+  poolId: number;
+  userId: number;
+  entryMethod: 'quest_completion' | 'admin_addition' | 'invitation' | 'referral';
+  entryDate: string;
+  isWinner: boolean;
+  drawingDate: string | null;
+  hasBeenNotified: boolean;
+  notificationDate: string | null;
+  tokenClaimed: boolean;
+  claimDate: string | null;
+  user: {
+    id: number;
+    username: string;
+    email: string;
+    displayName: string | null;
+    avatarUrl: string | null;
+  };
+}
+
+interface DrawWinnersResponse {
+  message: string;
+  winners: {
+    id: number;
+    user: {
+      id: number;
+      username: string;
+      email: string;
+    };
+    entryDate: string;
+    drawingDate: string;
+    hasBeenNotified: boolean;
+  }[];
+}
+
+/**
+ * Pool Management component to display and edit prize drawing pools
+ */
+const PoolManagement: React.FC = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
-  // Fetch prize pools
-  const { 
-    data: pools, 
-    isLoading: isLoadingPools 
-  } = useQuery({ 
-    queryKey: ['/api/admin/prize-drawings/pools'],
-    refetchOnWindowFocus: false
+  const [activePool, setActivePool] = useState<number | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    campaignId: 'tournament-discovery',
+    prizeDescription: '',
+    maxWinners: 1,
+    status: 'draft' as const,
+    requiresVerification: false
   });
-  
-  // Get selected pool details
-  const selectedPool = pools?.find(pool => pool.id.toString() === selectedPoolId);
-  
-  // Fetch entries for selected pool
-  const { 
-    data: entries, 
-    isLoading: isLoadingEntries 
-  } = useQuery({
-    queryKey: ['/api/admin/prize-drawings/pools', selectedPoolId, 'entries'],
-    enabled: !!selectedPoolId,
-    refetchOnWindowFocus: false
+
+  // Fetch pools data
+  const { data: pools, isLoading: isLoadingPools, error: poolsError } = useQuery({
+    queryKey: ['/api/prize-drawings/pools-summary'],
+    retry: 1
   });
-  
-  // Perform drawing mutation
-  const drawMutation = useMutation({
-    mutationFn: async (poolId: number) => {
-      const response = await fetch('/api/admin/prize-drawings/draw', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ poolId })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to perform drawing');
-      }
-      
-      return response.json();
-    },
-    onSuccess: (data) => {
-      if (data.success) {
-        setWinner(data.winner);
-        setDrawingPhase('winner');
-        setShowWinnerDialog(true);
-        
-        // Invalidate queries to refresh data
-        queryClient.invalidateQueries({ queryKey: ['/api/admin/prize-drawings/pools'] });
-        queryClient.invalidateQueries({ 
-          queryKey: ['/api/admin/prize-drawings/pools', selectedPoolId, 'entries'] 
-        });
-        
-        toast({
-          title: 'Winner Selected!',
-          description: `${data.winner.user.username} has been selected as the winner.`,
-          variant: 'default'
-        });
-      }
-    },
-    onError: (error) => {
-      toast({
-        title: 'Error Performing Drawing',
-        description: (error as Error).message,
-        variant: 'destructive'
-      });
-    }
-  });
-  
-  // Notify winner mutation
-  const notifyMutation = useMutation({
-    mutationFn: async (entryId: number) => {
-      const response = await fetch(`/api/admin/prize-drawings/notify/${entryId}`, {
-        method: 'POST'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to mark as notified');
-      }
-      
-      return response.json();
-    },
+
+  // Create a new pool
+  const createPoolMutation = useMutation({
+    mutationFn: (data: typeof formData) => 
+      apiRequest('/api/prize-drawings/pools', 'POST', data),
     onSuccess: () => {
-      // Update winner state
-      if (winner) {
-        setWinner({
-          ...winner,
-          hasBeenNotified: true
-        });
-      }
-      
-      // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ 
-        queryKey: ['/api/admin/prize-drawings/pools', selectedPoolId, 'entries'] 
-      });
-      
+      queryClient.invalidateQueries({ queryKey: ['/api/prize-drawings/pools-summary'] });
+      setIsCreateDialogOpen(false);
+      resetForm();
       toast({
-        title: 'Winner Notified',
-        description: 'The winner has been marked as notified.',
-        variant: 'default'
+        title: 'Success',
+        description: 'Prize drawing pool created successfully',
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
-        title: 'Error Notifying Winner',
-        description: (error as Error).message,
-        variant: 'destructive'
+        title: 'Error',
+        description: `Failed to create pool: ${error.message || 'Unknown error'}`,
+        variant: 'destructive',
       });
     }
   });
-  
-  // Handle pool selection
-  const handlePoolSelect = (value: string) => {
-    setSelectedPoolId(value);
-    setWinner(null);
-    setDrawingPhase('idle');
+
+  // Update an existing pool
+  const updatePoolMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number, data: typeof formData }) => 
+      apiRequest(`/api/prize-drawings/pools/${id}`, 'PUT', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/prize-drawings/pools-summary'] });
+      setIsEditDialogOpen(false);
+      resetForm();
+      toast({
+        title: 'Success',
+        description: 'Prize drawing pool updated successfully',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: `Failed to update pool: ${error.message || 'Unknown error'}`,
+        variant: 'destructive',
+      });
+    }
+  });
+
+  const handleCreatePool = (e: React.FormEvent) => {
+    e.preventDefault();
+    createPoolMutation.mutate(formData);
   };
-  
-  // Handle drawing button click
-  const handleDrawWinner = async () => {
-    if (!selectedPool || drawingInProgress) return;
-    
-    setDrawingInProgress(true);
-    setDrawingPhase('entries');
-    
-    // Animation sequence timeouts
-    setTimeout(() => {
-      setDrawingPhase('shuffling');
-      
-      setTimeout(() => {
-        if (selectedPool) {
-          drawMutation.mutate(selectedPool.id);
-        }
-      }, 2000);
-    }, 1500);
-  };
-  
-  // Handle notify winner
-  const handleNotifyWinner = () => {
-    if (winner) {
-      notifyMutation.mutate(winner.id);
+
+  const handleUpdatePool = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (activePool) {
+      updatePoolMutation.mutate({ id: activePool, data: formData });
     }
   };
-  
-  // Reset drawing state when done
-  useEffect(() => {
-    if (drawingPhase === 'winner') {
-      setDrawingInProgress(false);
-    }
-  }, [drawingPhase]);
-  
-  return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="flex items-center mb-8">
-        <Trophy className="text-yellow-500 mr-3" size={28} />
-        <h1 className="text-2xl font-bold">Prize Drawing Administration</h1>
+
+  const handleEditPool = (pool: PrizeDrawingPool) => {
+    setActivePool(pool.id);
+    setFormData({
+      name: pool.name,
+      description: pool.description || '',
+      campaignId: pool.campaignId,
+      prizeDescription: pool.prizeDescription || '',
+      maxWinners: pool.maxWinners,
+      status: pool.status,
+      requiresVerification: pool.requiresVerification
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      description: '',
+      campaignId: 'tournament-discovery',
+      prizeDescription: '',
+      maxWinners: 1,
+      status: 'draft',
+      requiresVerification: false
+    });
+    setActivePool(null);
+  };
+
+  if (isLoadingPools) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-64 w-full" />
       </div>
-      
-      {/* Pool selection card */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Gift className="mr-2 text-blue-500" size={20} />
-            Select Drawing Pool
-          </CardTitle>
-          <CardDescription>
-            Choose a prize drawing pool to manage and select winners
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoadingPools ? (
-            <div className="flex items-center justify-center py-4">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              <span>Loading prize pools...</span>
-            </div>
-          ) : (
-            pools && pools.length > 0 ? (
-              <Select 
-                value={selectedPoolId} 
-                onValueChange={handlePoolSelect}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a drawing pool" />
-                </SelectTrigger>
-                <SelectContent>
-                  {pools.map((pool: PrizeDrawingPool) => (
-                    <SelectItem key={pool.id} value={pool.id.toString()}>
-                      {pool.name} ({pool.entryCount} entries)
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : (
-              <div className="text-center py-4 text-gray-500">
-                No drawing pools available
-              </div>
-            )
-          )}
-        </CardContent>
-      </Card>
-      
-      {/* Drawing interface */}
-      {selectedPool && (
+    );
+  }
+
+  if (poolsError) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>Failed to load prize drawing pools.</AlertDescription>
+      </Alert>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Prize Drawing Pools</h2>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" /> Create New Pool
+        </Button>
+      </div>
+
+      {pools && pools.length === 0 ? (
         <Card>
-          <CardHeader>
-            <CardTitle>{selectedPool.name}</CardTitle>
-            <CardDescription>
-              {selectedPool.description || 'Prize drawing pool'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-6">
-              {/* Pool stats */}
-              <div className="stats grid grid-cols-3 gap-4 text-center">
-                <div className="stat bg-gray-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold">{selectedPool.entryCount}</div>
-                  <div className="text-sm text-gray-500">Total Entries</div>
-                </div>
-                <div className="stat bg-gray-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold">
-                    {formatDate(new Date(selectedPool.startDate))}
-                  </div>
-                  <div className="text-sm text-gray-500">Start Date</div>
-                </div>
-                <div className="stat bg-gray-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold capitalize">{selectedPool.status}</div>
-                  <div className="text-sm text-gray-500">Status</div>
-                </div>
-              </div>
-              
-              {/* Drawing animation area */}
-              {drawingPhase !== 'idle' && (
-                <div className="drawing-animation bg-gray-50 rounded-lg p-6 text-center min-h-[200px] flex flex-col items-center justify-center">
-                  {drawingPhase === 'entries' && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="flex flex-col items-center"
-                    >
-                      <Users className="text-blue-500 mb-3" size={40} />
-                      <h3 className="text-lg font-medium">Gathering Entries</h3>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {selectedPool.entryCount} eligible participants
-                      </p>
-                    </motion.div>
-                  )}
-                  
-                  {drawingPhase === 'shuffling' && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="flex flex-col items-center"
-                    >
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ 
-                          duration: 2, 
-                          repeat: Infinity, 
-                          ease: "linear" 
-                        }}
-                      >
-                        <Gift className="text-indigo-500" size={40} />
-                      </motion.div>
-                      <h3 className="text-lg font-medium mt-3">Selecting Winner</h3>
-                      <p className="text-sm text-gray-500 mt-1">
-                        Randomizing selection...
-                      </p>
-                    </motion.div>
-                  )}
-                  
-                  {drawingPhase === 'winner' && winner && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="flex flex-col items-center"
-                    >
-                      <motion.div
-                        initial={{ y: -10 }}
-                        animate={{ y: [0, -10, 0] }}
-                        transition={{ duration: 1.5, repeat: 2 }}
-                      >
-                        <Trophy className="text-yellow-500" size={40} />
-                      </motion.div>
-                      <h3 className="text-lg font-medium mt-3">Winner Selected!</h3>
-                      <div className="winner-info mt-3 p-3 bg-white rounded-lg border border-gray-200">
-                        <p className="font-medium">{winner.user.username}</p>
-                        <p className="text-sm text-gray-500">{winner.user.email}</p>
-                      </div>
-                    </motion.div>
-                  )}
-                </div>
-              )}
-              
-              {/* Entries table */}
-              <div className="entries-list mt-4">
-                <h3 className="text-lg font-medium mb-3">Recent Entries</h3>
-                {isLoadingEntries ? (
-                  <div className="flex items-center justify-center py-6">
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    <span>Loading entries...</span>
-                  </div>
-                ) : (
-                  entries && entries.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full border-collapse">
-                        <thead>
-                          <tr className="bg-gray-50 text-left">
-                            <th className="py-2 px-3 text-sm font-medium">User</th>
-                            <th className="py-2 px-3 text-sm font-medium">Entry Date</th>
-                            <th className="py-2 px-3 text-sm font-medium">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {entries.slice(0, 5).map((entry: any) => (
-                            <tr key={entry.id} className="border-t border-gray-200">
-                              <td className="py-3 px-3">{entry.username}</td>
-                              <td className="py-3 px-3 text-sm">
-                                {formatDate(new Date(entry.entryDate))}
-                              </td>
-                              <td className="py-3 px-3">
-                                {entry.isWinner ? (
-                                  <span className="inline-flex items-center bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                                    <Trophy size={12} className="mr-1" />
-                                    Winner
-                                  </span>
-                                ) : (
-                                  <span className="text-gray-500 text-sm">Entered</span>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                      {entries.length > 5 && (
-                        <div className="text-center mt-2 text-sm text-gray-500">
-                          Showing 5 of {entries.length} entries
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-center py-6 text-gray-500 bg-gray-50 rounded-lg">
-                      No entries found for this pool
-                    </div>
-                  )
-                )}
-              </div>
+          <CardContent className="pt-6">
+            <div className="text-center py-6">
+              <Trophy className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-lg font-medium">No prize drawing pools yet</p>
+              <p className="text-sm text-muted-foreground mb-4">
+                Create your first prize drawing pool to get started
+              </p>
+              <Button onClick={() => setIsCreateDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" /> Create Pool
+              </Button>
             </div>
           </CardContent>
-          <CardFooter className="flex justify-center pt-2">
-            <Button 
-              size="lg" 
-              className="w-full max-w-md"
-              disabled={drawingInProgress || selectedPool.status !== 'active'}
-              onClick={handleDrawWinner}
-            >
-              {drawingInProgress ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Drawing in Progress...
-                </>
-              ) : (
-                <>
-                  <Gift className="mr-2 h-5 w-5" />
-                  Draw Random Winner
-                </>
-              )}
-            </Button>
-          </CardFooter>
         </Card>
-      )}
-      
-      {/* Winner dialog */}
-      <Dialog open={showWinnerDialog} onOpenChange={setShowWinnerDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center justify-center text-center">
-              <Trophy className="text-yellow-500 mr-2" size={20} />
-              Prize Drawing Winner
-            </DialogTitle>
-            <DialogDescription className="text-center">
-              The following user has been selected as the winner
-            </DialogDescription>
-          </DialogHeader>
-          
-          {winner && (
-            <div className="py-6">
-              <div className="winner-card bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200 text-center">
-                <h3 className="text-xl font-bold mb-1">{winner.user.username}</h3>
-                <p className="text-gray-600">{winner.user.email}</p>
-                
-                <div className="mt-4 text-sm text-gray-500">
-                  <div className="flex items-center justify-center">
-                    <Calendar size={14} className="mr-1" />
-                    Entry date: {formatDate(new Date(winner.entryDate))}
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {pools && pools.map((pool: PrizeDrawingPool) => (
+            <Card key={pool.id} className="overflow-hidden">
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-xl">{pool.name}</CardTitle>
+                    <CardDescription className="mt-1 text-sm text-muted-foreground">
+                      Campaign: {pool.campaignId}
+                    </CardDescription>
                   </div>
-                  <div className="flex items-center justify-center mt-1">
-                    <Trophy size={14} className="mr-1" />
-                    Drawing date: {formatDate(new Date(winner.drawingDate))}
+                  <Badge 
+                    variant={
+                      pool.status === 'active' ? 'default' :
+                      pool.status === 'completed' ? 'success' :
+                      pool.status === 'cancelled' ? 'destructive' : 'outline'
+                    }
+                  >
+                    {pool.status.charAt(0).toUpperCase() + pool.status.slice(1)}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="pb-2">
+                {pool.description && (
+                  <p className="text-sm text-muted-foreground mb-4">{pool.description}</p>
+                )}
+                
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <div className="flex items-center text-sm">
+                      <Users className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <span>Entries: {pool.entryCount || 0}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center text-sm">
+                      <Trophy className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <span>Winners: {pool.winnerCount || 0} / {pool.maxWinners}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center text-sm">
+                      <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <span>Created: {formatDateOnly(new Date(pool.createdAt))}</span>
+                    </div>
+                  </div>
+                  <div>
+                    {pool.drawingDate ? (
+                      <div className="flex items-center text-sm">
+                        <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                        <span>Drawn: {formatDateOnly(new Date(pool.drawingDate))}</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center text-sm">
+                        <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                        <span>No drawing yet</span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 
-                <div className="mt-4 p-3 bg-white rounded-md border border-gray-200">
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 rounded-full mr-2 bg-green-500"></div>
-                    <span className="text-sm font-medium">
-                      Notification Status:
-                    </span>
-                    <span className="ml-1 text-sm">
-                      {winner.hasBeenNotified ? (
-                        <span className="text-green-600 flex items-center">
-                          <Check size={14} className="mr-1" />
-                          Notified
-                        </span>
-                      ) : (
-                        <span className="text-amber-600 flex items-center">
-                          <X size={14} className="mr-1" />
-                          Not notified
-                        </span>
-                      )}
-                    </span>
-                  </div>
+                {pool.prizeDescription && (
+                  <Alert className="mt-2">
+                    <Gift className="h-4 w-4" />
+                    <AlertTitle>Prize</AlertTitle>
+                    <AlertDescription className="text-xs">
+                      {pool.prizeDescription}
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </CardContent>
+              <CardFooter className="flex justify-between pt-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleEditPool(pool)}
+                >
+                  Edit Details
+                </Button>
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  asChild
+                >
+                  <a href={`#entries-${pool.id}`}>View Entries</a>
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Create Pool Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <form onSubmit={handleCreatePool}>
+            <DialogHeader>
+              <DialogTitle>Create New Prize Drawing Pool</DialogTitle>
+              <DialogDescription>
+                Create a new pool for prize drawings. Users will be entered into this pool when completing specific actions.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="name">Pool Name</Label>
+                <Input 
+                  id="name" 
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea 
+                  id="description" 
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="campaignId">Campaign ID</Label>
+                <Input 
+                  id="campaignId" 
+                  value={formData.campaignId}
+                  onChange={(e) => setFormData({...formData, campaignId: e.target.value})}
+                  required
+                />
+                <p className="text-xs text-muted-foreground">Unique identifier for the campaign this pool belongs to</p>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="prizeDescription">Prize Description</Label>
+                <Textarea 
+                  id="prizeDescription" 
+                  value={formData.prizeDescription}
+                  onChange={(e) => setFormData({...formData, prizeDescription: e.target.value})}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="maxWinners">Maximum Winners</Label>
+                  <Input 
+                    id="maxWinners" 
+                    type="number"
+                    min="1"
+                    value={formData.maxWinners}
+                    onChange={(e) => setFormData({...formData, maxWinners: parseInt(e.target.value)})}
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select 
+                    value={formData.status}
+                    onValueChange={(value) => setFormData({
+                      ...formData, 
+                      status: value as 'draft' | 'active' | 'completed' | 'cancelled'
+                    })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch 
+                  id="requiresVerification" 
+                  checked={formData.requiresVerification}
+                  onCheckedChange={(checked) => setFormData({...formData, requiresVerification: checked})}
+                />
+                <Label htmlFor="requiresVerification">Requires Verification</Label>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  resetForm();
+                  setIsCreateDialogOpen(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit"
+                disabled={createPoolMutation.isPending}
+              >
+                {createPoolMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Create Pool
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Pool Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <form onSubmit={handleUpdatePool}>
+            <DialogHeader>
+              <DialogTitle>Edit Prize Drawing Pool</DialogTitle>
+              <DialogDescription>
+                Update the details of this prize drawing pool.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-name">Pool Name</Label>
+                <Input 
+                  id="edit-name" 
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea 
+                  id="edit-description" 
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-campaignId">Campaign ID</Label>
+                <Input 
+                  id="edit-campaignId" 
+                  value={formData.campaignId}
+                  onChange={(e) => setFormData({...formData, campaignId: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-prizeDescription">Prize Description</Label>
+                <Textarea 
+                  id="edit-prizeDescription" 
+                  value={formData.prizeDescription}
+                  onChange={(e) => setFormData({...formData, prizeDescription: e.target.value})}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-maxWinners">Maximum Winners</Label>
+                  <Input 
+                    id="edit-maxWinners" 
+                    type="number"
+                    min="1"
+                    value={formData.maxWinners}
+                    onChange={(e) => setFormData({...formData, maxWinners: parseInt(e.target.value)})}
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-status">Status</Label>
+                  <Select 
+                    value={formData.status}
+                    onValueChange={(value) => setFormData({
+                      ...formData, 
+                      status: value as 'draft' | 'active' | 'completed' | 'cancelled'
+                    })}
+                  >
+                    <SelectTrigger id="edit-status">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch 
+                  id="edit-requiresVerification" 
+                  checked={formData.requiresVerification}
+                  onCheckedChange={(checked) => setFormData({...formData, requiresVerification: checked})}
+                />
+                <Label htmlFor="edit-requiresVerification">Requires Verification</Label>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  resetForm();
+                  setIsEditDialogOpen(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit"
+                disabled={updatePoolMutation.isPending}
+              >
+                {updatePoolMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Update Pool
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+/**
+ * Entries Management component to display and manage entries for a prize drawing pool
+ */
+const EntriesManagement: React.FC = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [selectedPoolId, setSelectedPoolId] = useState<number | null>(null);
+  const [numWinnersToDraw, setNumWinnersToDraw] = useState(1);
+  const [showDrawingDialog, setShowDrawingDialog] = useState(false);
+  const [drawingWinners, setDrawingWinners] = useState<any[]>([]);
+  const [showWinnerAnimation, setShowWinnerAnimation] = useState(false);
+  const [winnerIndex, setWinnerIndex] = useState(0);
+  const [isDrawingInProgress, setIsDrawingInProgress] = useState(false);
+
+  // Fetch pools data
+  const { data: pools, isLoading: isLoadingPools } = useQuery({
+    queryKey: ['/api/prize-drawings/pools-summary'],
+    retry: 1
+  });
+
+  // Fetch entries for the selected pool
+  const { data: entries, isLoading: isLoadingEntries } = useQuery({
+    queryKey: ['/api/prize-drawings/pools', selectedPoolId, 'entries'],
+    enabled: !!selectedPoolId,
+    retry: 1
+  });
+
+  // Draw winners mutation
+  const drawWinnersMutation = useMutation({
+    mutationFn: ({ poolId, numWinners }: { poolId: number, numWinners: number }) => 
+      apiRequest(`/api/prize-drawings/pools/${poolId}/draw`, 'POST', { numWinners }),
+    onSuccess: (data: DrawWinnersResponse) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/prize-drawings/pools-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/prize-drawings/pools', selectedPoolId, 'entries'] });
+      
+      // Start animation sequence
+      setDrawingWinners(data.winners);
+      setWinnerIndex(0);
+      setShowWinnerAnimation(true);
+      setIsDrawingInProgress(true);
+      
+      toast({
+        title: 'Success',
+        description: data.message,
+      });
+    },
+    onError: (error: any) => {
+      setShowDrawingDialog(false);
+      toast({
+        title: 'Error',
+        description: `Failed to draw winners: ${error.message || 'Unknown error'}`,
+        variant: 'destructive',
+      });
+    }
+  });
+
+  // Mark as notified mutation
+  const notifyWinnerMutation = useMutation({
+    mutationFn: (entryId: number) => 
+      apiRequest(`/api/prize-drawings/entries/${entryId}/notify`, 'POST', {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/prize-drawings/pools', selectedPoolId, 'entries'] });
+      toast({
+        title: 'Success',
+        description: 'Winner has been marked as notified',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: `Failed to mark winner as notified: ${error.message || 'Unknown error'}`,
+        variant: 'destructive',
+      });
+    }
+  });
+
+  // Mark token as claimed mutation
+  const claimTokenMutation = useMutation({
+    mutationFn: (entryId: number) => 
+      apiRequest(`/api/prize-drawings/entries/${entryId}/claim`, 'POST', {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/prize-drawings/pools', selectedPoolId, 'entries'] });
+      toast({
+        title: 'Success',
+        description: 'Token has been marked as claimed',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: `Failed to mark token as claimed: ${error.message || 'Unknown error'}`,
+        variant: 'destructive',
+      });
+    }
+  });
+
+  // Handle drawing winners
+  const handleDrawWinners = () => {
+    if (!selectedPoolId) return;
+    
+    drawWinnersMutation.mutate({ 
+      poolId: selectedPoolId, 
+      numWinners: numWinnersToDraw 
+    });
+    setShowDrawingDialog(false);
+  };
+
+  // Handle marking winner as notified
+  const handleMarkAsNotified = (entryId: number) => {
+    notifyWinnerMutation.mutate(entryId);
+  };
+
+  // Handle marking token as claimed
+  const handleMarkAsClaimed = (entryId: number) => {
+    claimTokenMutation.mutate(entryId);
+  };
+
+  // Animation effect for revealing winners
+  useEffect(() => {
+    if (showWinnerAnimation && drawingWinners.length > 0) {
+      if (winnerIndex < drawingWinners.length) {
+        const timer = setTimeout(() => {
+          setWinnerIndex(winnerIndex + 1);
+        }, 2000); // Reveal each winner after 2 seconds
+        return () => clearTimeout(timer);
+      } else {
+        // Animation complete
+        const timer = setTimeout(() => {
+          setShowWinnerAnimation(false);
+          setIsDrawingInProgress(false);
+        }, 3000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [showWinnerAnimation, winnerIndex, drawingWinners.length]);
+
+  if (isLoadingPools) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
+
+  // Calculate winners, entries, and available entries for drawing
+  const getPoolStats = (poolId: number) => {
+    if (!pools) return { totalEntries: 0, winnerCount: 0, availableForDrawing: 0 };
+    
+    const pool = pools.find((p: any) => p.id === poolId);
+    if (!pool) return { totalEntries: 0, winnerCount: 0, availableForDrawing: 0 };
+    
+    const totalEntries = pool.entryCount || 0;
+    const winnerCount = pool.winnerCount || 0;
+    
+    // If we have entries data, calculate more precisely
+    if (entries) {
+      const availableForDrawing = entries.filter((e: PrizeDrawingEntry) => !e.isWinner).length;
+      return { totalEntries, winnerCount, availableForDrawing };
+    }
+    
+    // Otherwise estimate
+    const availableForDrawing = totalEntries - winnerCount;
+    return { totalEntries, winnerCount, availableForDrawing };
+  };
+
+  const stats = selectedPoolId ? getPoolStats(selectedPoolId) : { totalEntries: 0, winnerCount: 0, availableForDrawing: 0 };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4">
+        <div>
+          <Label htmlFor="pool-select">Select Prize Drawing Pool</Label>
+          <Select 
+            value={selectedPoolId?.toString() || ''}
+            onValueChange={(value) => setSelectedPoolId(parseInt(value))}
+          >
+            <SelectTrigger id="pool-select" className="w-[300px]">
+              <SelectValue placeholder="Select a pool" />
+            </SelectTrigger>
+            <SelectContent>
+              {pools && pools.length === 0 ? (
+                <div className="p-2 text-center text-sm text-muted-foreground">
+                  No pools available
+                </div>
+              ) : (
+                pools && pools.map((pool: PrizeDrawingPool) => (
+                  <SelectItem key={pool.id} value={pool.id.toString()}>
+                    {pool.name} ({pool.status})
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {selectedPoolId && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center justify-center">
+                  <Users className="h-8 w-8 text-primary mb-2" />
+                  <p className="text-sm text-muted-foreground">Total Entries</p>
+                  <p className="text-3xl font-bold">{stats.totalEntries}</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center justify-center">
+                  <Trophy className="h-8 w-8 text-amber-500 mb-2" />
+                  <p className="text-sm text-muted-foreground">Winners Selected</p>
+                  <p className="text-3xl font-bold">{stats.winnerCount}</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center justify-center">
+                  <Users className="h-8 w-8 text-green-500 mb-2" />
+                  <p className="text-sm text-muted-foreground">Available for Drawing</p>
+                  <p className="text-3xl font-bold">{stats.availableForDrawing}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {selectedPoolId && stats.availableForDrawing > 0 && (
+          <div className="flex justify-center">
+            <Button 
+              onClick={() => setShowDrawingDialog(true)}
+              disabled={isDrawingInProgress}
+              className="mt-4"
+            >
+              <Trophy className="mr-2 h-4 w-4" />
+              Draw Winners
+            </Button>
+          </div>
+        )}
+
+        {/* Draw Winners Dialog */}
+        <Dialog open={showDrawingDialog} onOpenChange={setShowDrawingDialog}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Draw Winners</DialogTitle>
+              <DialogDescription>
+                Select how many winners to draw from the prize pool.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <div className="grid gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="numWinners">Number of Winners to Draw</Label>
+                  <Input 
+                    id="numWinners" 
+                    type="number"
+                    min="1"
+                    max={stats.availableForDrawing}
+                    value={numWinnersToDraw}
+                    onChange={(e) => setNumWinnersToDraw(parseInt(e.target.value))}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Maximum {stats.availableForDrawing} winners can be drawn
+                  </p>
                 </div>
               </div>
             </div>
-          )}
-          
-          <DialogFooter className="flex flex-col sm:flex-row gap-2">
-            {winner && !winner.hasBeenNotified && (
+            <DialogFooter>
               <Button 
+                type="button" 
                 variant="outline" 
-                className="flex-1"
-                onClick={handleNotifyWinner}
-                disabled={notifyMutation.isPending}
+                onClick={() => setShowDrawingDialog(false)}
               >
-                {notifyMutation.isPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Mail className="mr-2 h-4 w-4" />
-                )}
-                Mark as Notified
+                Cancel
               </Button>
+              <Button 
+                onClick={handleDrawWinners}
+                disabled={drawWinnersMutation.isPending}
+              >
+                {drawWinnersMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Draw Winners
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Winner Animation Dialog */}
+        <Dialog open={showWinnerAnimation} onOpenChange={setShowWinnerAnimation}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle className="text-center">
+                <Trophy className="h-10 w-10 text-amber-500 mx-auto mb-2" />
+                Drawing Winners!
+              </DialogTitle>
+            </DialogHeader>
+            <div className="py-8">
+              {winnerIndex === 0 ? (
+                <div className="text-center">
+                  <Loader2 className="h-16 w-16 animate-spin mx-auto mb-4 text-primary" />
+                  <p className="text-lg font-medium">Selecting winners...</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <p className="text-center mb-4">
+                    {winnerIndex === drawingWinners.length ? 
+                      `All ${drawingWinners.length} winners have been selected!` : 
+                      `Winner ${winnerIndex} of ${drawingWinners.length}`}
+                  </p>
+                  
+                  <div className="space-y-4">
+                    {drawingWinners.slice(0, winnerIndex).map((winner, index) => (
+                      <div 
+                        key={winner.id} 
+                        className="flex items-center p-4 border rounded-lg bg-muted/50 animate-fadeIn"
+                      >
+                        <div className="flex-1 flex items-center">
+                          <Avatar className="h-10 w-10 mr-4">
+                            <AvatarFallback>
+                              {winner.user.username.substring(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">{winner.user.displayName || winner.user.username}</p>
+                            <p className="text-sm text-muted-foreground">{winner.user.email}</p>
+                          </div>
+                        </div>
+                        <Check className="h-5 w-5 text-green-500" />
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {winnerIndex < drawingWinners.length && (
+                    <div className="flex justify-center">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button 
+                onClick={() => {
+                  setShowWinnerAnimation(false);
+                  setIsDrawingInProgress(false);
+                }}
+                disabled={winnerIndex < drawingWinners.length}
+              >
+                {winnerIndex < drawingWinners.length ? 'Drawing...' : 'Close'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Entries Table */}
+      {selectedPoolId && (
+        <div id={`entries-${selectedPoolId}`} className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xl font-bold">Entries</h3>
+            {entries && entries.length > 0 && (
+              <p className="text-sm text-muted-foreground">
+                Showing {entries.length} entries
+              </p>
             )}
-            <Button 
-              type="button" 
-              className="flex-1"
-              onClick={() => setShowWinnerDialog(false)}
-            >
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+
+          {isLoadingEntries ? (
+            <Skeleton className="h-64 w-full" />
+          ) : entries && entries.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center py-6">
+                  <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-lg font-medium">No entries yet</p>
+                  <p className="text-sm text-muted-foreground">
+                    Entries will appear here when users complete the requirements
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[60px]">ID</TableHead>
+                    <TableHead>User</TableHead>
+                    <TableHead>Entry Method</TableHead>
+                    <TableHead>Entry Date</TableHead>
+                    <TableHead className="text-center">Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {entries && entries.slice(0, 50).map((entry: PrizeDrawingEntry) => (
+                    <TableRow key={entry.id} className={entry.isWinner ? 'bg-yellow-100 dark:bg-yellow-900/20' : ''}>
+                      <TableCell>{entry.id}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-8 w-8">
+                            {entry.user.avatarUrl ? (
+                              <AvatarImage src={entry.user.avatarUrl} alt={entry.user.username} />
+                            ) : null}
+                            <AvatarFallback>
+                              {entry.user.username.substring(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="text-sm font-medium">{entry.user.displayName || entry.user.username}</p>
+                            <p className="text-xs text-muted-foreground">{entry.user.email}</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {entry.entryMethod.split('_').map(word => 
+                            word.charAt(0).toUpperCase() + word.slice(1)
+                          ).join(' ')}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {formatDate(new Date(entry.entryDate))}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {entry.isWinner ? (
+                          <div className="flex flex-col items-center">
+                            <Badge variant="default" className="mb-1">
+                              <Trophy className="h-3 w-3 mr-1" /> Winner
+                            </Badge>
+                            {entry.hasBeenNotified && (
+                              <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300">
+                                <Check className="h-3 w-3 mr-1" /> Notified
+                              </Badge>
+                            )}
+                            {entry.tokenClaimed && (
+                              <Badge variant="outline" className="mt-1 bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300">
+                                <Gift className="h-3 w-3 mr-1" /> Claimed
+                              </Badge>
+                            )}
+                          </div>
+                        ) : (
+                          <Badge variant="outline">Entered</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {entry.isWinner && !entry.hasBeenNotified && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="mr-2"
+                            onClick={() => handleMarkAsNotified(entry.id)}
+                            disabled={notifyWinnerMutation.isPending}
+                          >
+                            {notifyWinnerMutation.isPending ? (
+                              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                            ) : (
+                              <Check className="h-3 w-3 mr-1" />
+                            )}
+                            Mark Notified
+                          </Button>
+                        )}
+                        {entry.isWinner && entry.hasBeenNotified && !entry.tokenClaimed && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleMarkAsClaimed(entry.id)}
+                            disabled={claimTokenMutation.isPending}
+                          >
+                            {claimTokenMutation.isPending ? (
+                              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                            ) : (
+                              <Award className="h-3 w-3 mr-1" />
+                            )}
+                            Mark Claimed
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+                {entries && entries.length > 50 && (
+                  <TableCaption>
+                    Showing first 50 entries of {entries.length} total entries
+                  </TableCaption>
+                )}
+              </Table>
+            </Card>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/**
+ * Main Prize Drawing Admin Page
+ */
+const PrizeDrawingPage: React.FC = () => {
+  return (
+    <div className="container py-6 space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold mb-2">Prize Drawing Administration</h1>
+        <p className="text-muted-foreground">
+          Manage prize drawing pools and select winners for the Tournament Discovery Quest
+        </p>
+      </div>
+
+      <Tabs defaultValue="pools" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="pools">Pools</TabsTrigger>
+          <TabsTrigger value="entries">Entries</TabsTrigger>
+        </TabsList>
+        <TabsContent value="pools" className="space-y-4">
+          <PoolManagement />
+        </TabsContent>
+        <TabsContent value="entries" className="space-y-4">
+          <EntriesManagement />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

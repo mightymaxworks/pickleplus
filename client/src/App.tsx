@@ -21,6 +21,7 @@ import StreamlinedProfilePage from './pages/StreamlinedProfilePage'
 import { LeaderboardPage } from './pages/LeaderboardPage'
 import LandingPageTest from './pages/LandingPageTest'
 import MasteryPathsPage from './pages/MasteryPathsPage'
+import PrizeDrawingPage from './pages/admin/PrizeDrawingPage'
 import NotFound from './pages/not-found'
 
 import { useAuth } from './hooks/useAuth'
@@ -111,6 +112,9 @@ export default function App() {
             </Route>
             <Route path="/admin">
               {(params) => <ProtectedRoute component={Dashboard} path="/admin" />}
+            </Route>
+            <Route path="/admin/prize-drawing">
+              {(params) => <ProtectedRoute component={PrizeDrawingPage} path="/admin/prize-drawing" />}
             </Route>
             
             {/* Leaderboard Route */}
