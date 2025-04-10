@@ -298,10 +298,11 @@ interface PaginationProps {
   currentPage: number;
   totalPages: number;
   totalCount: number;
+  matches?: any[]; // Add matches
   onPageChange: (page: number) => void;
 }
 
-function Pagination({ currentPage, totalPages, totalCount, onPageChange }: PaginationProps) {
+function Pagination({ currentPage, totalPages, totalCount, matches, onPageChange }: PaginationProps) {
   const handlePrevious = () => {
     if (currentPage > 1) {
       onPageChange(currentPage - 1);
@@ -314,10 +315,17 @@ function Pagination({ currentPage, totalPages, totalCount, onPageChange }: Pagin
     }
   };
   
+  const displayTotalCount = totalCount || (matches?.length || 0);
+  const displayCurrentPage = displayTotalCount > 0 ? currentPage : 0;
+  
+  // Calculate actual values based on visible matches when API totalCount might be wrong
+  const startItem = displayTotalCount > 0 ? (displayCurrentPage - 1) * 10 + 1 : 0;
+  const endItem = Math.min(displayCurrentPage * 10, displayTotalCount);
+  
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mt-4 pb-8">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mt-4 pb-10 mb-3">
       <div className="text-xs sm:text-sm text-muted-foreground">
-        Showing <span className="font-medium">{totalCount > 0 ? (currentPage - 1) * 10 + 1 : 0}</span> to <span className="font-medium">{Math.min(currentPage * 10, totalCount)}</span> of <span className="font-medium">{totalCount}</span> matches
+        Showing <span className="font-medium">{startItem}</span> to <span className="font-medium">{endItem}</span> of <span className="font-medium">{displayTotalCount}</span> matches
       </div>
       <div className="flex gap-1 w-full sm:w-auto justify-end">
         <Button 
@@ -438,6 +446,7 @@ export default function MatchHistoryTab() {
         currentPage={filters.page}
         totalPages={data?.totalPages || 0}
         totalCount={data?.totalCount || 0}
+        matches={data?.matches || []}
         onPageChange={(page) => handleFilterChange('page', page)}
       />
     </div>
