@@ -5,7 +5,7 @@
  * A simplified version of the GoldenTicketCard for previewing in the admin panel.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -48,6 +48,20 @@ const GoldenTicketPreview: React.FC<GoldenTicketPreviewProps> = ({ ticketData, t
   // Determine image URL to use
   const imageUrl = ticketData.promotionalImageUrl || 
     (ticketData.promotionalImagePath ? `/${ticketData.promotionalImagePath}` : null);
+    
+  // Debug logging for sponsor logo info
+  useEffect(() => {
+    if (ticketData.sponsor) {
+      console.log('GoldenTicketPreview - Sponsor logo info:', {
+        name: ticketData.sponsor.name,
+        logoPath: ticketData.sponsor.logoPath,
+        formattedLogoPath: ticketData.sponsor.logoPath ? 
+          (ticketData.sponsor.logoPath.startsWith('/') ? 
+            ticketData.sponsor.logoPath : 
+            `/${ticketData.sponsor.logoPath}`) : null
+      });
+    }
+  }, [ticketData.sponsor]);
   
   const previewCard = (
     <Card className="overflow-hidden border-4 border-yellow-400 shadow-xl bg-gradient-to-r from-amber-50 to-yellow-50 max-w-sm mx-auto">
@@ -87,9 +101,16 @@ const GoldenTicketPreview: React.FC<GoldenTicketPreviewProps> = ({ ticketData, t
             <div className="flex items-center">
               {ticketData.sponsor.logoPath && (
                 <img 
-                  src={`/${ticketData.sponsor.logoPath}`} 
+                  src={ticketData.sponsor.logoPath.startsWith('/') ? 
+                      ticketData.sponsor.logoPath : 
+                      `/${ticketData.sponsor.logoPath}`} 
                   alt={ticketData.sponsor.name} 
                   className="h-8 object-contain mr-2"
+                  onError={(e) => {
+                    console.error('Error loading sponsor logo:', e);
+                    console.log('Logo path was:', ticketData.sponsor?.logoPath);
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
               )}
               <span className="text-sm font-medium">{ticketData.sponsor.name}</span>
