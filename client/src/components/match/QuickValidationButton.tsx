@@ -54,7 +54,8 @@ export function QuickValidationButton({
     
     try {
       setIsValidating(true);
-      await matchSDK.validateMatch(match.id, 'confirmed', '');
+      // Updated to use the new validateMatch signature with boolean parameter
+      await matchSDK.validateMatch(match.id, true, '');
       
       toast({
         title: "Match Confirmed",
@@ -63,6 +64,7 @@ export function QuickValidationButton({
       
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['/api/match/recent'] });
+      queryClient.invalidateQueries({ queryKey: ['matchHistory'] });
       queryClient.invalidateQueries({ queryKey: [`/api/match/${match.id}/validations`] });
       
       if (onValidationComplete) {

@@ -602,12 +602,24 @@ export async function getMatchStats(
  * @param notes Optional notes, especially important for disputes
  * @returns The validation result
  */
+/**
+ * PKL-278651-MATCH-0004-UIX: Enhanced Match Validation
+ * This function allows a user to validate or dispute a match
+ * 
+ * @param matchId The ID of the match to validate
+ * @param isConfirmed Boolean indicating whether the match is confirmed (true) or disputed (false)
+ * @param notes Optional notes, especially important for disputes
+ * @returns The validation result
+ */
 export async function validateMatch(
   matchId: number,
-  status: "confirmed" | "disputed",
+  isConfirmed: boolean,
   notes?: string
 ): Promise<{ id: number; status: string }> {
   try {
+    const status = isConfirmed ? "confirmed" : "disputed";
+    console.log(`matchSDK: Validating match ${matchId} with status: ${status}`);
+    
     const response = await apiRequest("POST", `/api/match/validate/${matchId}`, {
       status,
       notes
@@ -618,7 +630,9 @@ export async function validateMatch(
       throw new Error(errorData.error || `Server returned ${response.status}`);
     }
     
-    return await response.json();
+    const result = await response.json();
+    console.log(`matchSDK: Match validation successful:`, result);
+    return result;
   } catch (error) {
     console.error("matchSDK: Error validating match:", error);
     throw error;

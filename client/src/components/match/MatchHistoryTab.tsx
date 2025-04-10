@@ -17,8 +17,10 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { getMatchHistory, RecordedMatch } from '@/lib/sdk/matchSDK';
-import { ChevronDown, Calendar as CalendarIcon, Trophy, CheckCircle, Clock, Filter, SlidersHorizontal, ArrowDown, ArrowUp, AlertTriangle } from 'lucide-react';
+import { ChevronDown, Calendar as CalendarIcon, Trophy, CheckCircle, Clock, Filter, SlidersHorizontal, ArrowDown, ArrowUp, AlertTriangle, History, Plus } from 'lucide-react';
 import { QuickValidationButton } from '@/components/match/QuickValidationButton';
+import { EnhancedMatchCard } from '@/components/match/EnhancedMatchCard';
+import { Link } from 'wouter';
 
 /**
  * PKL-278651-HIST-0001-UI-01: FilterBar component
@@ -276,166 +278,13 @@ function MatchList({ matches, isLoading }: MatchListProps) {
     <div className="space-y-4 pb-4">
       <ScrollArea className="max-h-[550px]">
         {matches.map((match) => (
-          <div key={match.id} className="mb-4 p-4 sm:p-6 hover:bg-muted/50 transition-colors rounded-md bg-background shadow-sm border">
-            <div className="flex-1">
-              {/* Match header with match type badges and date */}
-              <div className="flex flex-wrap gap-2 mb-3">
-                <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 text-xs py-0 h-5">
-                  {match.matchType === 'tournament' ? 'Tournament' : 'Casual'}
-                </Badge>
-                <Badge variant="outline" className="text-xs py-0 h-5">
-                  {match.formatType === 'singles' ? 'Singles' : 'Doubles'}
-                </Badge>
-                {match.eventTier && (
-                  <Badge variant="outline" className="bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 text-xs py-0 h-5">
-                    {match.eventTier}
-                  </Badge>
-                )}
-              </div>
-              <div className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1 mb-4">
-                <Clock className="h-3 w-3" />
-                {match.date ? format(parseISO(match.date), 'MMM d, yyyy') : 'Unknown date'}
-              </div>
-              
-              {/* Players section with avatars */}
-              <div className="flex mb-4 sm:mb-6 gap-2 justify-between">
-                {/* Your side */}
-                <div className="flex flex-col items-center">
-                  <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-primary/10 mb-2 flex items-center justify-center text-primary font-bold text-base sm:text-lg">
-                    {user?.id && match.playerNames && match.playerNames[user.id] 
-                      ? match.playerNames[user.id].avatarInitials || user.displayName?.charAt(0) || "YP"
-                      : "YP"}
-                  </div>
-                  <div className="text-center">
-                    <div className="font-medium text-sm sm:text-base">
-                      {user?.displayName || 'You'}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      @{user?.username || 'you'}
-                    </div>
-                  </div>
-                </div>
-                
-                {/* VS indicator */}
-                <div className="flex items-center">
-                  <span className="text-sm sm:text-base text-muted-foreground font-medium">VS</span>
-                </div>
-                
-                {/* Opponent side */}
-                <div className="flex flex-col items-center">
-                  <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-muted mb-2 flex items-center justify-center font-bold text-base sm:text-lg">
-                    {match.playerNames && 
-                      Object.values(match.playerNames)
-                        .filter(p => p.username !== user?.username)
-                        .map(p => p.avatarInitials || p.displayName?.charAt(0) || "JP")[0] || "JP"}
-                  </div>
-                  <div className="text-center">
-                    <div className="font-medium text-sm sm:text-base">
-                      {match.playerNames && 
-                        Object.values(match.playerNames)
-                          .filter(p => p.username !== user?.username)
-                          .map(p => p.displayName || p.username)[0] || 'Johnny Pickleball'}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      @{match.playerNames && 
-                        Object.values(match.playerNames)
-                          .filter(p => p.username !== user?.username)
-                          .map(p => p.username)[0] || 'johnny_pickle'}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Score display with Win badge */}
-              <div className="flex flex-col items-center mb-3 sm:mb-4">
-                <div className="w-32 sm:w-44 flex mb-2">
-                  <div className="flex-1 bg-primary/10 rounded-l-md py-2 sm:py-3 flex justify-center">
-                    <span className="text-xl sm:text-3xl font-bold text-primary">
-                      {match.players?.find(p => p.userId === user?.id)?.score || match.scorePlayerOne || '11'}
-                    </span>
-                  </div>
-                  <div className="flex-1 bg-muted rounded-r-md py-2 sm:py-3 flex justify-center">
-                    <span className="text-xl sm:text-3xl font-bold">
-                      {match.players?.find(p => p.userId !== user?.id)?.score || match.scorePlayerTwo || '4'}
-                    </span>
-                  </div>
-                </div>
-                
-                {/* Win/Loss indicator */}
-                {(match.players?.find(p => p.userId === user?.id)?.isWinner || (user?.id === match.winnerId)) ? (
-                  <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800 px-3 text-xs h-5">
-                    Win
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="bg-gray-100 dark:bg-gray-800/40 px-3 text-xs h-5">
-                    Loss
-                  </Badge>
-                )}
-              </div>
-              
-              {/* PKL-278651-HIST-0002-UI-01: Match Rewards Display */}
-              <div className="flex flex-col gap-2 mt-1">
-                {/* Match details */}
-                <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground justify-center">
-                  <div className="flex items-center gap-1">
-                    <Trophy className="h-3 w-3" />
-                    <span>{match.formatType === 'singles' ? 'Singles' : 'Doubles'} Match</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {match.validationStatus === 'pending' ? (
-                      <Clock className="h-3 w-3 text-yellow-600" />
-                    ) : match.validationStatus === 'disputed' ? (
-                      <AlertTriangle className="h-3 w-3 text-red-600" />
-                    ) : (
-                      <CheckCircle className="h-3 w-3 text-green-600" />
-                    )}
-                    <span className="capitalize">{match.validationStatus}</span>
-                    
-                    {/* PKL-278651-VALMAT-0002-UI: Add quick validation button */}
-                    {match.validationStatus === 'pending' && (
-                      <div className="ml-2">
-                        <QuickValidationButton 
-                          match={match} 
-                          size="sm"
-                          variant="outline"
-                          className="py-0 px-2 h-5 text-xs"
-                          onValidationComplete={() => {
-                            // This will be handled by the query invalidation in the component
-                          }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                {/* PKL-278651-HIST-0002-UI-01-A: XP and Ranking Rewards Section */}
-                {(match.xpAwarded || match.pointsAwarded || (match.rewards && user?.id && match.rewards[user.id])) && (
-                  <div className="border-t border-dashed border-muted pt-2 mt-1">
-                    <div className="flex gap-x-4 justify-center text-xs">
-                      {/* XP rewards */}
-                      {(match.xpAwarded || (match.rewards && user?.id && match.rewards[user.id]?.xp)) && (
-                        <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
-                          <span className="font-medium">+{match.rewards?.[user?.id || 0]?.xp?.amount || match.xpAwarded || 0} XP</span>
-                        </div>
-                      )}
-                      
-                      {/* Ranking rewards */}
-                      {(match.pointsAwarded || (match.rewards && user?.id && match.rewards[user.id]?.ranking)) && (
-                        <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
-                          <span className="font-medium">+{match.rewards?.[user?.id || 0]?.ranking?.points || match.pointsAwarded || 0} CP</span>
-                          {match.rewards?.[user?.id || 0]?.ranking?.tierChanged && (
-                            <Badge variant="outline" className="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300 h-4 px-1 text-[10px]">
-                              Tier Up!
-                            </Badge>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          <EnhancedMatchCard 
+            key={match.id} 
+            match={match} 
+            onValidationComplete={() => {
+              // This will refresh the data through query invalidation
+            }}
+          />
         ))}
       </ScrollArea>
     </div>
