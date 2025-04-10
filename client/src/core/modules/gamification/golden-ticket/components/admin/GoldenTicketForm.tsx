@@ -161,7 +161,23 @@ const GoldenTicketForm: React.FC = () => {
     try {
       // If a file was selected, upload it first
       if (data.promotionalImageFile) {
-        await uploadImageMutation.mutateAsync(data.promotionalImageFile);
+        console.log('Uploading promotional image file:', {
+          fileSize: data.promotionalImageFile.size,
+          fileType: data.promotionalImageFile.type,
+          fileName: data.promotionalImageFile.name
+        });
+        
+        const uploadResult = await uploadImageMutation.mutateAsync(data.promotionalImageFile);
+        console.log('Image upload result:', uploadResult);
+        
+        // Ensure paths are set even if they're coming back from the uploadImageMutation handlers
+        if (!data.promotionalImagePath && uploadResult.filePath) {
+          data.promotionalImagePath = uploadResult.filePath;
+        }
+        
+        if (!data.promotionalImageUrl && uploadResult.url) {
+          data.promotionalImageUrl = uploadResult.url;
+        }
       }
       
       // Use the structured page selection from the form
@@ -177,13 +193,21 @@ const GoldenTicketForm: React.FC = () => {
         // Handle sponsorId null/undefined issue
         sponsorId: submitData.sponsorId || null,
         pagesToAppearOn: pagesToAppearOn,
-        // Ensure promotional image fields are included
+        // Ensure promotional image fields are included with proper path handling
         promotionalImageUrl: submitData.promotionalImageUrl || null,
         promotionalImagePath: submitData.promotionalImagePath || null,
         // Ensure discount fields are properly handled
         discountCode: submitData.discountCode || null,
         discountValue: submitData.discountValue || null
       };
+      
+      console.log('Submitting golden ticket with data:', {
+        hasPromotionalImageUrl: !!formattedData.promotionalImageUrl,
+        promotionalImageUrl: formattedData.promotionalImageUrl,
+        hasPromotionalImagePath: !!formattedData.promotionalImagePath,
+        promotionalImagePath: formattedData.promotionalImagePath,
+        sponsor: formattedData.sponsorId
+      });
       
       // Then create the golden ticket with the updated data
       mutation.mutate(formattedData);

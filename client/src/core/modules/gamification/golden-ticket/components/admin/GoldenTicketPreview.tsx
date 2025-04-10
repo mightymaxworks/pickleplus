@@ -37,6 +37,12 @@ const GoldenTicketPreview: React.FC<GoldenTicketPreviewProps> = ({ ticketData, t
   
   const handleRevealSponsor = () => {
     console.log('Revealing sponsor:', ticketData.sponsor);
+    console.log('Logo path was:', ticketData.sponsor?.logoPath);
+    console.log('Promotional image info:', {
+      promotionalImageUrl,
+      promotionalImagePath: ticketData.promotionalImagePath,
+      hasPromotionalImage: !!promotionalImageUrl
+    });
     setIsRevealed(true);
   };
   
@@ -45,29 +51,42 @@ const GoldenTicketPreview: React.FC<GoldenTicketPreviewProps> = ({ ticketData, t
     setIsRevealed(false);
   };
   
-  // Determine image URLs to use
-  const promotionalImageUrl = ticketData.promotionalImageUrl || 
-    (ticketData.promotionalImagePath ? `/${ticketData.promotionalImagePath}` : null);
+  // Determine image URLs to use with proper path formatting
+  const promotionalImageUrl = ticketData.promotionalImageUrl ? 
+    ticketData.promotionalImageUrl : 
+    (ticketData.promotionalImagePath ? 
+      (ticketData.promotionalImagePath.startsWith('/') ? 
+        ticketData.promotionalImagePath : 
+        `/${ticketData.promotionalImagePath}`) : 
+      null);
     
   // Debug logging for image paths and sponsor info
   useEffect(() => {
-    console.log('GoldenTicketPreview - Promotional Image Info:', {
-      promotionalImageUrl: ticketData.promotionalImageUrl,
-      promotionalImagePath: ticketData.promotionalImagePath,
-      formattedImageUrl: promotionalImageUrl
+    console.log('GoldenTicketPreview - DEBUG FULL TICKET DATA:', ticketData);
+    console.log('GoldenTicketPreview - Promotional Image Details:', {
+      originalUrl: ticketData.promotionalImageUrl,
+      originalPath: ticketData.promotionalImagePath,
+      formattedImageUrl: promotionalImageUrl,
+      hasUrl: !!ticketData.promotionalImageUrl,
+      hasPath: !!ticketData.promotionalImagePath,
+      finalResult: promotionalImageUrl
     });
     
     if (ticketData.sponsor) {
+      const formattedLogoPath = ticketData.sponsor.logoPath ? 
+        (ticketData.sponsor.logoPath.startsWith('/') ? 
+          ticketData.sponsor.logoPath : 
+          `/${ticketData.sponsor.logoPath}`) : 
+        null;
+      
       console.log('GoldenTicketPreview - Sponsor logo info:', {
         name: ticketData.sponsor.name,
-        logoPath: ticketData.sponsor.logoPath,
-        formattedLogoPath: ticketData.sponsor.logoPath ? 
-          (ticketData.sponsor.logoPath.startsWith('/') ? 
-            ticketData.sponsor.logoPath : 
-            `/${ticketData.sponsor.logoPath}`) : null
+        originalLogoPath: ticketData.sponsor.logoPath,
+        formattedLogoPath: formattedLogoPath,
+        hasLogoPath: !!ticketData.sponsor.logoPath
       });
     }
-  }, [ticketData.sponsor, ticketData.promotionalImageUrl, ticketData.promotionalImagePath, promotionalImageUrl]);
+  }, [ticketData]);
   
   const previewCard = (
     <Card className="overflow-hidden border-4 border-yellow-400 shadow-xl bg-gradient-to-r from-amber-50 to-yellow-50 max-w-sm mx-auto">
