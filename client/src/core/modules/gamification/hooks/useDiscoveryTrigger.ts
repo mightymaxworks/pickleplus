@@ -2,163 +2,131 @@
  * PKL-278651-GAME-0001-MOD
  * useDiscoveryTrigger Hook
  * 
- * A hook that provides functionality to trigger discoveries based on user actions.
+ * This hook allows triggering discovery events based on user interactions.
  */
 
-import { useState, useCallback, useEffect } from 'react';
-import { useGamification } from '../context/GamificationContext';
-import { TriggerConfig } from '../api/types';
+import { useState, useEffect, useCallback } from 'react';
 
-interface UseDiscoveryTriggerProps {
+// Types for the hook
+export interface DiscoveryTriggerOptions {
   code: string;
-  config: TriggerConfig;
-  context?: Record<string, any>;
-  onTrigger?: (success: boolean) => void;
-  disabled?: boolean;
+  triggerAction?: 'click' | 'hover' | 'keyboard' | 'timer' | 'custom';
+  targetSelector?: string;
+  onDiscover?: (code: string) => void;
+  customCondition?: () => boolean;
+  delay?: number;
+  enabled?: boolean;
 }
 
 /**
- * A hook that provides functionality to trigger discoveries based on user actions.
+ * useDiscoveryTrigger Hook
  * 
- * @param {UseDiscoveryTriggerProps} props - The hook properties
- * @param {string} props.code - The discovery code to trigger
- * @param {TriggerConfig} props.config - Configuration for how the discovery is triggered
- * @param {Record<string, any>} [props.context] - Additional context to pass to the discovery
- * @param {Function} [props.onTrigger] - Callback function to trigger when the discovery is triggered
- * @param {boolean} [props.disabled] - Whether the discovery trigger is disabled
- * @returns {boolean} - Whether the discovery was triggered
+ * Sets up event listeners to trigger discoveries based on user interactions.
+ * Supports multiple trigger types: click, hover, keyboard, timer, or custom.
+ * 
+ * @param {DiscoveryTriggerOptions} options - Configuration options for the discovery trigger
+ * @returns {object} - Methods to manually trigger and reset discovery state
  */
 export default function useDiscoveryTrigger({
   code,
-  config,
-  context,
-  onTrigger,
-  disabled = false
-}: UseDiscoveryTriggerProps): boolean {
-  // Get gamification context
-  const { triggerDiscovery, checkDiscovery } = useGamification();
+  triggerAction = 'click',
+  targetSelector,
+  onDiscover,
+  customCondition,
+  delay = 0,
+  enabled = true
+}: DiscoveryTriggerOptions) {
+  // State to track discovery
+  const [discovered, setDiscovered] = useState(false);
   
-  // State to track whether the discovery was triggered
-  const [triggered, setTriggered] = useState(false);
-  
-  // Check if the discovery has already been found
-  const alreadyDiscovered = checkDiscovery(code);
-  
-  // Function to handle discovery trigger
-  const handleTrigger = useCallback(async () => {
-    if (disabled || triggered || alreadyDiscovered) return;
+  // Function to handle discovery
+  const handleDiscovery = useCallback(() => {
+    if (!enabled || discovered) return;
     
-    try {
-      // Trigger the discovery
-      const success = await triggerDiscovery(code, context);
-      
-      // Update state
-      setTriggered(success);
-      
-      // Call callback if provided
-      if (onTrigger) {
-        onTrigger(success);
-      }
-    } catch (error) {
-      console.error(`Error triggering discovery (${code}):`, error);
-      
-      // Call callback with failure
-      if (onTrigger) {
-        onTrigger(false);
-      }
+    // If there's a delay, wait before triggering
+    if (delay > 0) {
+      setTimeout(() => {
+        setDiscovered(true);
+        if (onDiscover) onDiscover(code);
+      }, delay);
+    } else {
+      setDiscovered(true);
+      if (onDiscover) onDiscover(code);
     }
-  }, [code, context, disabled, triggered, alreadyDiscovered, triggerDiscovery, onTrigger]);
+  }, [code, delay, discovered, enabled, onDiscover]);
   
-  // Set up triggers based on config
+  // Setup event listeners based on triggerAction
   useEffect(() => {
-    if (disabled || triggered || alreadyDiscovered) return;
+    if (!enabled || discovered) return;
     
-    // Initialize based on trigger type
-    switch (config.type) {
-      case 'click': {
-        // Set up click trigger
-        const selector = config.params?.selector;
-        if (!selector) return;
-        
-        const elements = document.querySelectorAll(selector);
-        
-        const clickHandler = () => {
-          handleTrigger();
-        };
-        
-        // Add click event listeners
-        elements.forEach(element => {
-          element.addEventListener('click', clickHandler);
-        });
-        
-        // Clean up
-        return () => {
-          elements.forEach(element => {
-            element.removeEventListener('click', clickHandler);
-          });
-        };
-      }
-      
-      case 'hover': {
-        // Set up hover trigger
-        const selector = config.params?.selector;
-        if (!selector) return;
-        
-        const elements = document.querySelectorAll(selector);
-        
-        const hoverHandler = () => {
-          handleTrigger();
-        };
-        
-        // Add hover event listeners
-        elements.forEach(element => {
-          element.addEventListener('mouseenter', hoverHandler);
-        });
-        
-        // Clean up
-        return () => {
-          elements.forEach(element => {
-            element.removeEventListener('mouseenter', hoverHandler);
-          });
-        };
-      }
-      
-      case 'timer': {
-        // Set up timer trigger
-        const delay = config.params?.delay || 5000;
-        
-        const timerId = setTimeout(() => {
-          handleTrigger();
-        }, delay);
-        
-        // Clean up
-        return () => {
-          clearTimeout(timerId);
-        };
-      }
-      
-      case 'location': {
-        // Trigger based on URL location
-        const path = config.params?.path;
-        if (!path) return;
-        
-        // Check if current path matches
-        if (window.location.pathname === path || 
-            window.location.pathname.startsWith(path)) {
-          handleTrigger();
-        }
-        
-        // No cleanup needed
+    let targetElement: HTMLElement | null = null;
+    let timerId: NodeJS.Timeout | null = null;
+    
+    // Find target element if selector is provided
+    if (targetSelector) {
+      targetElement = document.querySelector(targetSelector);
+      if (!targetElement) {
+        console.warn(`Discovery trigger target not found: ${targetSelector}`);
         return;
       }
-      
-      // Other trigger types could be implemented here
-      
-      default:
-        // No trigger set up
-        return;
     }
-  }, [config, disabled, triggered, alreadyDiscovered, handleTrigger]);
+    
+    // Setup event listeners based on trigger type
+    switch (triggerAction) {
+      case 'click':
+        if (targetElement) {
+          const clickHandler = () => handleDiscovery();
+          targetElement.addEventListener('click', clickHandler);
+          return () => targetElement?.removeEventListener('click', clickHandler);
+        }
+        break;
+        
+      case 'hover':
+        if (targetElement) {
+          const hoverHandler = () => handleDiscovery();
+          targetElement.addEventListener('mouseenter', hoverHandler);
+          return () => targetElement?.removeEventListener('mouseenter', hoverHandler);
+        }
+        break;
+        
+      case 'keyboard':
+        const keyHandler = (e: KeyboardEvent) => {
+          if (e.code === 'KeyD' && e.ctrlKey && e.shiftKey) {
+            handleDiscovery();
+          }
+        };
+        document.addEventListener('keydown', keyHandler);
+        return () => document.removeEventListener('keydown', keyHandler);
+        
+      case 'timer':
+        timerId = setTimeout(() => {
+          handleDiscovery();
+        }, delay || 3000);
+        return () => {
+          if (timerId) clearTimeout(timerId);
+        };
+        
+      case 'custom':
+        if (customCondition && customCondition()) {
+          handleDiscovery();
+        }
+        break;
+    }
+  }, [triggerAction, targetSelector, handleDiscovery, discovered, enabled, customCondition, delay]);
   
-  return triggered;
+  // Method to manually trigger discovery
+  const trigger = useCallback(() => {
+    handleDiscovery();
+  }, [handleDiscovery]);
+  
+  // Method to reset discovery state
+  const reset = useCallback(() => {
+    setDiscovered(false);
+  }, []);
+  
+  return {
+    discovered,
+    trigger,
+    reset
+  };
 }

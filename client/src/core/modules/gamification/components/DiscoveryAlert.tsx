@@ -2,221 +2,183 @@
  * PKL-278651-GAME-0001-MOD
  * DiscoveryAlert Component
  * 
- * A component that displays an alert when a discovery is made.
+ * This component displays an alert when a user discovers a hidden feature or achievement.
+ * It includes animations, reward information, and can automatically hide after a delay.
  */
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Award, Trophy, Star, X, ArrowRight } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import RewardDisplay from './RewardDisplay';
-import { Reward } from '../api/types';
+import { Award, X, Gift, Star, Info, AlertTriangle } from 'lucide-react';
 
-interface DiscoveryAlertProps {
+// Types for the component props
+export interface Reward {
+  id: number;
+  name: string;
+  description: string;
+  type: 'xp' | 'badge' | 'item' | 'currency';
+  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+  value: {
+    xpAmount?: number;
+    badgeId?: string;
+    itemId?: string;
+    currencyAmount?: number;
+  };
+}
+
+export interface DiscoveryAlertProps {
   title: string;
   message: string;
-  imageUrl?: string;
-  open: boolean;
-  level?: 'info' | 'success' | 'special';
-  reward?: Reward;
-  onClose: () => void;
-  onClaim?: () => void;
-  hasBeenClaimed?: boolean;
+  level?: 'info' | 'success' | 'warning' | 'special';
+  open?: boolean;
   autoHide?: boolean;
-  hideDelay?: number; // in milliseconds
+  hideDelay?: number;
+  reward?: Reward;
+  onClose?: () => void;
 }
 
 /**
- * A component that displays an alert when a discovery is made.
+ * DiscoveryAlert Component
+ * 
+ * Displays an animated alert when a discovery is made in the gamification system.
  */
-export default function DiscoveryAlert({
+const DiscoveryAlert: React.FC<DiscoveryAlertProps> = ({
   title,
   message,
-  imageUrl,
-  open,
   level = 'info',
-  reward,
-  onClose,
-  onClaim,
-  hasBeenClaimed = false,
+  open = true,
   autoHide = false,
-  hideDelay = 7000 // 7 seconds default
-}: DiscoveryAlertProps) {
-  // State to track whether to show the alert
-  const [show, setShow] = useState(open);
+  hideDelay = 5000,
+  reward,
+  onClose
+}) => {
+  // State for controlling the visibility
+  const [isVisible, setIsVisible] = useState(open);
   
-  // State to track whether to show the reward
-  const [showReward, setShowReward] = useState(false);
-  
-  // Handle auto-hide
+  // Auto hide logic
   useEffect(() => {
-    setShow(open);
+    setIsVisible(open);
     
-    // If autoHide is enabled, hide after the specified delay
     if (open && autoHide) {
-      const timeoutId = setTimeout(() => {
-        setShow(false);
-        setTimeout(onClose, 500); // Call onClose after exit animation
+      const timer = setTimeout(() => {
+        setIsVisible(false);
+        if (onClose) onClose();
       }, hideDelay);
       
-      return () => clearTimeout(timeoutId);
+      return () => clearTimeout(timer);
     }
   }, [open, autoHide, hideDelay, onClose]);
   
-  // Get appropriate icon based on level
-  const getIcon = () => {
-    switch (level) {
-      case 'success':
-        return <Trophy className="h-8 w-8 text-green-500" />;
-      case 'special':
-        return <Star className="h-8 w-8 text-yellow-500" />;
-      default:
-        return <Award className="h-8 w-8 text-blue-500" />;
-    }
-  };
-  
-  // Get background color based on level
-  const getBgColor = () => {
-    switch (level) {
-      case 'success':
-        return 'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/30';
-      case 'special':
-        return 'bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/30';
-      default:
-        return 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/30';
-    }
-  };
-  
-  // Get border color based on level
-  const getBorderColor = () => {
-    switch (level) {
-      case 'success':
-        return 'border-green-200 dark:border-green-800';
-      case 'special':
-        return 'border-amber-200 dark:border-amber-800';
-      default:
-        return 'border-blue-200 dark:border-blue-800';
-    }
-  };
-  
   // Handle close button click
   const handleClose = () => {
-    setShow(false);
-    setTimeout(onClose, 300); // Call onClose after exit animation
+    setIsVisible(false);
+    if (onClose) onClose();
   };
   
-  // Handle view reward button click
-  const handleViewReward = () => {
-    setShowReward(true);
-  };
-  
-  // Handle claim reward button click
-  const handleClaimReward = () => {
-    if (onClaim) {
-      onClaim();
+  // Get the appropriate icon based on the level
+  const getLevelIcon = () => {
+    switch (level) {
+      case 'success':
+        return <Award className="text-green-500" size={24} />;
+      case 'warning':
+        return <AlertTriangle className="text-amber-500" size={24} />;
+      case 'special':
+        return <Star className="text-purple-500" size={24} />;
+      case 'info':
+      default:
+        return <Info className="text-blue-500" size={24} />;
     }
   };
   
-  // If not showing, don't render anything
-  if (!open) return null;
+  // Get the appropriate colors based on the level
+  const getLevelColors = () => {
+    switch (level) {
+      case 'success':
+        return 'bg-green-50 border-green-200';
+      case 'warning':
+        return 'bg-amber-50 border-amber-200';
+      case 'special':
+        return 'bg-purple-50 border-purple-200';
+      case 'info':
+      default:
+        return 'bg-blue-50 border-blue-200';
+    }
+  };
+  
+  // Get the reward rarity color
+  const getRarityColor = (rarity: string) => {
+    switch (rarity) {
+      case 'common':
+        return 'text-gray-600';
+      case 'uncommon':
+        return 'text-green-600';
+      case 'rare':
+        return 'text-blue-600';
+      case 'epic':
+        return 'text-purple-600';
+      case 'legendary':
+        return 'text-orange-500';
+      default:
+        return 'text-gray-600';
+    }
+  };
   
   return (
     <AnimatePresence>
-      {show && (
+      {isVisible && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: -20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: -20 }}
-          transition={{ duration: 0.3 }}
-          className="fixed top-6 right-6 z-50 max-w-sm"
+          initial={{ opacity: 0, y: 50, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 20, scale: 0.95 }}
+          transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+          className="fixed bottom-4 right-4 z-50 max-w-sm"
         >
-          <Card 
-            className={cn(
-              "border-2 shadow-lg",
-              getBgColor(),
-              getBorderColor()
-            )}
-          >
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  {getIcon()}
-                  <CardTitle className="text-xl">{title}</CardTitle>
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={handleClose}
-                  className="h-8 w-8"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+          <div className={`rounded-lg shadow-lg border p-4 ${getLevelColors()}`}>
+            <div className="flex justify-between items-start mb-2">
+              <div className="flex items-center">
+                {getLevelIcon()}
+                <h3 className="ml-2 font-bold text-gray-900">{title}</h3>
               </div>
-            </CardHeader>
-            
-            <CardContent className="space-y-3">
-              <Badge 
-                variant="outline" 
-                className={cn(
-                  "font-semibold",
-                  level === 'success' ? "text-green-600 dark:text-green-400" : 
-                  level === 'special' ? "text-amber-600 dark:text-amber-400" : 
-                  "text-blue-600 dark:text-blue-400"
-                )}
+              <button 
+                onClick={handleClose}
+                className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                aria-label="Close"
               >
-                Discovery
-              </Badge>
-              
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                {message}
-              </p>
-              
-              {imageUrl && (
-                <div className="relative h-40 w-full overflow-hidden rounded-md">
-                  <img 
-                    src={imageUrl} 
-                    alt={title} 
-                    className="absolute inset-0 h-full w-full object-cover"
-                  />
-                </div>
-              )}
-              
-              {reward && showReward && (
-                <RewardDisplay
-                  reward={reward}
-                  onClaim={handleClaimReward}
-                  claimed={hasBeenClaimed}
-                />
-              )}
-            </CardContent>
+                <X size={18} />
+              </button>
+            </div>
             
-            <CardFooter className="pt-0">
-              {reward && !showReward ? (
-                <Button 
-                  variant="outline" 
-                  className="w-full" 
-                  onClick={handleViewReward}
-                >
-                  <Trophy className="mr-2 h-4 w-4" />
-                  View Reward
-                </Button>
-              ) : (
-                <Button 
-                  variant="outline" 
-                  className="w-full" 
-                  onClick={handleClose}
-                >
-                  <ArrowRight className="mr-2 h-4 w-4" />
-                  Continue
-                </Button>
-              )}
-            </CardFooter>
-          </Card>
+            <p className="text-sm text-gray-600 mb-3">{message}</p>
+            
+            {reward && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                transition={{ delay: 0.2 }}
+                className="mt-2 p-3 bg-white rounded-md border border-gray-100"
+              >
+                <div className="flex items-center">
+                  <Gift className="text-[#FF5722]" size={18} />
+                  <span className="ml-2 font-medium">Reward Earned</span>
+                </div>
+                <div className="mt-2">
+                  <h4 className={`font-bold ${getRarityColor(reward.rarity)}`}>
+                    {reward.name}
+                  </h4>
+                  <p className="text-xs text-gray-500">{reward.description}</p>
+                  
+                  {reward.type === 'xp' && reward.value.xpAmount && (
+                    <div className="mt-1 text-xs font-medium text-[#4CAF50]">
+                      +{reward.value.xpAmount} XP
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
   );
-}
+};
+
+export default DiscoveryAlert;

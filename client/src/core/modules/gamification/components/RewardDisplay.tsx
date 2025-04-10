@@ -2,181 +2,164 @@
  * PKL-278651-GAME-0001-MOD
  * RewardDisplay Component
  * 
- * A component that displays a reward and allows the user to claim it.
+ * This component displays reward information with animations and styling based on rarity.
  */
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Gift, Star, Zap, Award, Check } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
-import { Reward } from '../api/types';
+import { Gift, Award, Shield, Coins } from 'lucide-react';
+import { Reward } from './DiscoveryAlert';
 
-interface RewardDisplayProps {
+export interface RewardDisplayProps {
   reward: Reward;
-  onClaim?: () => void;
-  claimed?: boolean;
-  compact?: boolean;
-  className?: string;
+  animate?: boolean;
+  size?: 'sm' | 'md' | 'lg';
 }
 
 /**
- * A component that displays a reward and allows the user to claim it.
+ * RewardDisplay Component
+ * 
+ * Displays a reward with appropriate styling based on its rarity
  */
-export default function RewardDisplay({
+const RewardDisplay: React.FC<RewardDisplayProps> = ({
   reward,
-  onClaim,
-  claimed = false,
-  compact = false,
-  className
-}: RewardDisplayProps) {
+  animate = true,
+  size = 'md'
+}) => {
   // Get icon based on reward type
-  const getIcon = () => {
-    const size = compact ? 'h-5 w-5' : 'h-6 w-6';
-    
+  const getRewardIcon = () => {
     switch (reward.type) {
       case 'badge':
-        return <Award className={cn(size, 'text-blue-500')} />;
+        return <Award />;
+      case 'item':
+        return <Shield />;
+      case 'currency':
+        return <Coins />;
       case 'xp':
-        return <Zap className={cn(size, 'text-yellow-500')} />;
-      case 'physical':
-        return <Gift className={cn(size, 'text-purple-500')} />;
       default:
-        return <Trophy className={cn(size, 'text-orange-500')} />;
+        return <Gift />;
     }
   };
   
-  // Get color for rarity
-  const getRarityColor = () => {
-    switch (reward.rarity) {
+  // Get the reward rarity color
+  const getRarityColor = (rarity: string) => {
+    switch (rarity) {
       case 'common':
-        return 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800';
+        return 'from-gray-200 to-gray-300 text-gray-700 border-gray-300';
       case 'uncommon':
-        return 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30';
+        return 'from-green-200 to-green-300 text-green-700 border-green-300';
       case 'rare':
-        return 'text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30';
+        return 'from-blue-200 to-blue-300 text-blue-700 border-blue-300';
       case 'epic':
-        return 'text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30';
+        return 'from-purple-200 to-purple-300 text-purple-700 border-purple-300';
       case 'legendary':
-        return 'text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30';
+        return 'from-orange-200 to-orange-300 text-orange-700 border-orange-300';
       default:
-        return 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800';
+        return 'from-gray-200 to-gray-300 text-gray-700 border-gray-300';
     }
   };
   
-  // Format the reward value
-  const getRewardValue = () => {
-    if (!reward.value) return null;
-    
-    switch (reward.type) {
-      case 'xp':
-        return reward.value.xpAmount ? `+${reward.value.xpAmount} XP` : null;
-      case 'badge':
-        return 'New Badge';
-      case 'physical':
-        return reward.value.physicalItem?.name || 'Physical Reward';
+  // Get size classes
+  const getSizeClasses = () => {
+    switch (size) {
+      case 'sm':
+        return 'p-2 text-xs';
+      case 'lg':
+        return 'p-5 text-base';
+      case 'md':
       default:
-        return null;
+        return 'p-3 text-sm';
     }
   };
   
-  if (compact) {
-    // Compact version - for lists
-    return (
-      <div className={cn("flex items-center gap-3 p-2 rounded-md", className)}>
-        <div className={cn(
-          "flex items-center justify-center w-8 h-8 rounded-full", 
-          getRarityColor()
-        )}>
-          {getIcon()}
-        </div>
-        <div className="flex-1 min-w-0">
-          <h4 className="font-medium text-sm truncate">{reward.name}</h4>
-          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-            {reward.description}
-          </p>
-        </div>
-        {claimed ? (
-          <Badge variant="outline" className="text-green-600 dark:text-green-400">
-            <Check className="h-3 w-3 mr-1" />
-            Claimed
-          </Badge>
-        ) : (
-          <Badge variant="outline" className={getRarityColor().split(' ')[0]}>
-            {reward.rarity.charAt(0).toUpperCase() + reward.rarity.slice(1)}
-          </Badge>
-        )}
-      </div>
-    );
-  }
+  // Get icon size
+  const getIconSize = () => {
+    switch (size) {
+      case 'sm':
+        return 16;
+      case 'lg':
+        return 24;
+      case 'md':
+      default:
+        return 20;
+    }
+  };
   
-  // Full version - for detail view
+  // Animation variants
+  const cardVariants = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: { 
+      opacity: 1, 
+      scale: 1,
+      transition: { duration: 0.4, ease: 'easeOut' }
+    }
+  };
+  
+  const iconVariants = {
+    hidden: { opacity: 0, rotate: -20, scale: 0.8 },
+    visible: { 
+      opacity: 1, 
+      rotate: 0,
+      scale: 1,
+      transition: { duration: 0.4, delay: 0.2, ease: 'easeOut' }
+    }
+  };
+  
+  const textVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.4, delay: 0.3, ease: 'easeOut' }
+    }
+  };
+  
+  // Wrapper component - either motion.div or regular div based on animate prop
+  const Wrapper = animate ? motion.div : 'div';
+  const IconWrapper = animate ? motion.div : 'div';
+  const TextWrapper = animate ? motion.div : 'div';
+  
   return (
-    <Card className={cn("overflow-hidden", className)}>
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {getIcon()}
-            <CardTitle className="text-base font-semibold">{reward.name}</CardTitle>
-          </div>
-          <Badge variant="outline" className={getRarityColor()}>
-            {reward.rarity.charAt(0).toUpperCase() + reward.rarity.slice(1)}
-          </Badge>
+    <Wrapper
+      className={`rounded-lg border ${getSizeClasses()} bg-gradient-to-br ${getRarityColor(reward.rarity)} relative overflow-hidden`}
+      initial={animate ? 'hidden' : undefined}
+      animate={animate ? 'visible' : undefined}
+      variants={cardVariants}
+    >
+      <div className="flex items-start">
+        <IconWrapper
+          className="mr-3 flex-shrink-0"
+          initial={animate ? 'hidden' : undefined}
+          animate={animate ? 'visible' : undefined}
+          variants={iconVariants}
+        >
+          {React.cloneElement(getRewardIcon() as React.ReactElement, { size: getIconSize() })}
+        </IconWrapper>
+        
+        <TextWrapper
+          className="flex-1"
+          initial={animate ? 'hidden' : undefined}
+          animate={animate ? 'visible' : undefined}
+          variants={textVariants}
+        >
+          <h4 className="font-bold">{reward.name}</h4>
+          <p className="opacity-80 text-xs">{reward.description}</p>
+          
+          {reward.type === 'xp' && reward.value.xpAmount && (
+            <div className="mt-1 font-medium text-xs">
+              +{reward.value.xpAmount} XP
+            </div>
+          )}
+        </TextWrapper>
+      </div>
+      
+      {reward.rarity === 'legendary' && (
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
+          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white to-transparent animate-pulse"></div>
         </div>
-      </CardHeader>
-      
-      <CardContent className="space-y-2">
-        <p className="text-sm text-gray-600 dark:text-gray-300">{reward.description}</p>
-        
-        {getRewardValue() && (
-          <div className="flex items-center">
-            <Badge variant="secondary">
-              {getRewardValue()}
-            </Badge>
-          </div>
-        )}
-        
-        {reward.imageUrl && (
-          <div className="rounded-md overflow-hidden mt-2">
-            <motion.img 
-              src={reward.imageUrl}
-              alt={reward.name}
-              className="w-full h-auto object-cover"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            />
-          </div>
-        )}
-      </CardContent>
-      
-      {onClaim && !claimed && (
-        <CardFooter className="pt-0">
-          <Button 
-            variant="default" 
-            className="w-full" 
-            onClick={onClaim}
-          >
-            <Gift className="mr-2 h-4 w-4" />
-            Claim Reward
-          </Button>
-        </CardFooter>
       )}
-      
-      {claimed && (
-        <CardFooter className="pt-0">
-          <Button 
-            variant="outline" 
-            className="w-full" 
-            disabled 
-          >
-            <Check className="mr-2 h-4 w-4 text-green-500" />
-            Claimed
-          </Button>
-        </CardFooter>
-      )}
-    </Card>
+    </Wrapper>
   );
-}
+};
+
+export default RewardDisplay;
