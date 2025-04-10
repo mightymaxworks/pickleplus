@@ -183,7 +183,12 @@ const TournamentDiscoveryPage: React.FC = () => {
     
     // Record discovery position opened in API, but don't award XP yet
     setSelectedFeatureId(position.code);
-    setCurrentReward(position.reward);
+    
+    // Safely set current reward if it exists
+    if (position.reward) {
+      setCurrentReward(position.reward);
+    }
+    
     setCurrentDiscovery(position.description);
     
     // Show feature dialog immediately - XP will be awarded after reading
@@ -270,14 +275,20 @@ const TournamentDiscoveryPage: React.FC = () => {
             onClick={() => {
               // Always show the feature details first, regardless of discovery status
               setSelectedFeatureId(point.id);
-              setCurrentReward(position => discovered ? null : {
-                id: point.id,
-                name: `${point.tier.charAt(0).toUpperCase() + point.tier.slice(1)} Discovery`,
-                description: `You've discovered ${point.name}!`,
-                type: 'xp',
-                rarity: point.tier === 'pioneer' ? 'legendary' : (point.tier === 'strategist' ? 'rare' : 'common'),
-                value: { xpAmount: point.points }
-              });
+              
+              if (!discovered) {
+                // Prepare reward data but don't show it yet - ensure proper typing
+                const pointIdNumber = typeof point.id === 'string' ? parseInt(point.id, 10) : point.id;
+                setCurrentReward({
+                  id: pointIdNumber,
+                  name: `${point.tier.charAt(0).toUpperCase() + point.tier.slice(1)} Discovery`,
+                  description: `You've discovered ${point.name}!`,
+                  type: 'xp',
+                  rarity: point.tier === 'pioneer' ? 'legendary' : (point.tier === 'strategist' ? 'rare' : 'common'),
+                  value: { xpAmount: point.points }
+                });
+              }
+              
               setShowFeatureDetail(true);
             }}
           >
@@ -669,7 +680,7 @@ const TournamentDiscoveryPage: React.FC = () => {
         <TournamentRoadmap className="max-w-3xl mx-auto" />
       </div>
       
-      {/* Feature detail dialog */}
+      {/* Feature detail dialog with engagement-based XP rewards */}
       <TournamentFeatureDialog
         feature={selectedFeatureId ? getTournamentFeatureDetail(selectedFeatureId) : null}
         isOpen={showFeatureDetail}
@@ -679,6 +690,17 @@ const TournamentDiscoveryPage: React.FC = () => {
             setSelectedFeatureId('');
           }
         }}
+        isDiscovered={selectedFeatureId ? isDiscovered(selectedFeatureId) : false}
+        onClaimReward={(featureId) => {
+          // Only record discovery after user has engaged with content
+          discoverPoint(featureId);
+          
+          // Show reward alert
+          if (currentReward) {
+            setShowAlert(true);
+          }
+        }}
+        xpAmount={currentReward?.value?.xpAmount || 50}
       />
     </div>
   );
