@@ -39,7 +39,7 @@ const TournamentFeatureDetailComponent: React.FC<TournamentFeatureDetailProps> =
   onClose,
   isDiscovered,
   onClaimReward,
-  xpAmount = 50
+  xpAmount = 15
 }) => {
   const [secondsSpent, setSecondsSpent] = useState(0);
   const [hasClaimedReward, setHasClaimedReward] = useState(isDiscovered);

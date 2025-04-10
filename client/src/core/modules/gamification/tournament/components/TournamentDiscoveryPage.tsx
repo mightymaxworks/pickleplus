@@ -668,7 +668,7 @@ const TournamentDiscoveryPage: React.FC = () => {
             setShowAlert(true);
           }
         }}
-        xpAmount={currentReward?.value?.xpAmount || 50}
+        xpAmount={currentReward?.value?.xpAmount || 15}
       />
     </div>
   );
