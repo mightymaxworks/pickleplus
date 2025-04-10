@@ -14,27 +14,38 @@ const API_BASE = '/api/golden-ticket';
 async function debugApiRequest<T>(method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE", url: string, data?: any): Promise<T> {
   try {
     console.log(`Making API ${method} request to ${url}`, data ? { data } : '');
-    const response = await apiRequest(method, url, data);
-    console.log(`API response from ${url}:`, response);
+    const rawResponse = await apiRequest(method, url, data);
+    
+    // Process the response to get JSON
+    const text = await rawResponse.text();
+    console.log(`Raw API text response from ${url}:`, text);
+    
+    let jsonResponse;
+    try {
+      jsonResponse = JSON.parse(text);
+      console.log(`Parsed API response from ${url}:`, jsonResponse);
+    } catch (parseError) {
+      console.error(`Failed to parse JSON from ${url}:`, parseError);
+      throw new Error(`Invalid JSON response from ${url}`);
+    }
     
     // Enhanced debugging for sponsor list
     if (url.includes('/sponsors')) {
-      console.log('SPONSORS DEBUG - Response type:', typeof response);
-      if (response && typeof response === 'object') {
-        console.log('SPONSORS DEBUG - Response keys:', Object.keys(response));
+      console.log('SPONSORS DEBUG - Response type:', typeof jsonResponse);
+      if (jsonResponse && typeof jsonResponse === 'object') {
+        console.log('SPONSORS DEBUG - Response keys:', Object.keys(jsonResponse));
         
         // Safely check and log sponsors array
-        const sponsorData = response as any;
-        if ('sponsors' in sponsorData && Array.isArray(sponsorData.sponsors)) {
-          console.log('SPONSORS DEBUG - Number of sponsors:', sponsorData.sponsors.length);
-          if (sponsorData.sponsors.length > 0) {
-            console.log('SPONSORS DEBUG - First sponsor:', sponsorData.sponsors[0]);
+        if ('sponsors' in jsonResponse && Array.isArray(jsonResponse.sponsors)) {
+          console.log('SPONSORS DEBUG - Number of sponsors:', jsonResponse.sponsors.length);
+          if (jsonResponse.sponsors.length > 0) {
+            console.log('SPONSORS DEBUG - First sponsor:', jsonResponse.sponsors[0]);
           }
         }
       }
     }
     
-    return response as T;
+    return jsonResponse as T;
   } catch (error) {
     console.error(`API error from ${url}:`, error);
     throw error;
