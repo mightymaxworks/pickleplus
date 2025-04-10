@@ -71,13 +71,7 @@ export default function App() {
         <AuthProvider>
           <Switch>
             {/* Public Routes */}
-            <Route path="/">
-              {(params) => (
-                <Layout>
-                  <EnhancedLandingPage />
-                </Layout>
-              )}
-            </Route>
+            <Route path="/" component={EnhancedLandingPage} />
             <Route path="/login" component={EnhancedAuthPage} />
             <Route path="/register" component={EnhancedAuthPage} />
             <Route path="/auth" component={EnhancedAuthPage} />

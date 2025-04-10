@@ -37,7 +37,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (usernameOrEmail: string, password: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   error: string | null;
@@ -69,13 +69,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const isAuthenticated = !!user;
   
   // Login function
-  const login = async (email: string, password: string) => {
+  const login = async (usernameOrEmail: string, password: string) => {
     try {
       setError(null);
-      const response = await apiRequest('POST', '/api/auth/login', { email, password });
+      // The server expects 'username' field for login
+      const response = await apiRequest('POST', '/api/auth/login', { username: usernameOrEmail, password });
+      
+      console.log('Making POST request to /api/auth/login with credentials included');
       
       if (!response.ok) {
         const errorData = await response.json();
+        console.log('POST /api/auth/login response status:', response.status);
+        console.log('Response cookies present:', response.headers.get('set-cookie') ? 'Yes' : 'No');
         throw new Error(errorData.message || 'Login failed');
       }
       
