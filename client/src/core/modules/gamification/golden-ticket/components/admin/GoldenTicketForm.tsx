@@ -744,27 +744,37 @@ const GoldenTicketForm: React.FC = () => {
           </Button>
           
           {/* Preview Button */}
-          <GoldenTicketPreview
-            ticketData={{
-              title: form.watch('title') || 'Golden Ticket Title',
-              description: form.watch('description') || 'Example golden ticket description text.',
-              rewardDescription: form.watch('rewardDescription') || 'Example reward description.',
-              promotionalImageUrl: form.watch('promotionalImageUrl'),
-              promotionalImagePath: form.watch('promotionalImagePath'),
-              sponsor: form.watch('sponsorId') ? 
-                sponsors.find(s => s.id === form.watch('sponsorId')) || null : null
-            }}
-            trigger={
-              <Button 
-                type="button"
-                variant="outline"
-                className="flex items-center gap-1"
-              >
-                <Eye className="h-4 w-4" />
-                Preview
-              </Button>
-            }
-          />
+          {(() => {
+            // Debug the selected sponsor
+            const sponsorId = form.watch('sponsorId');
+            const selectedSponsor = sponsorId ? sponsors.find(s => s.id === sponsorId) : null;
+            console.log('DEBUG Preview - Selected Sponsor ID:', sponsorId);
+            console.log('DEBUG Preview - All Available Sponsors:', sponsors);
+            console.log('DEBUG Preview - Found Sponsor:', selectedSponsor);
+            
+            return (
+              <GoldenTicketPreview
+                ticketData={{
+                  title: form.watch('title') || 'Golden Ticket Title',
+                  description: form.watch('description') || 'Example golden ticket description text.',
+                  rewardDescription: form.watch('rewardDescription') || 'Example reward description.',
+                  promotionalImageUrl: form.watch('promotionalImageUrl'),
+                  promotionalImagePath: form.watch('promotionalImagePath'),
+                  sponsor: selectedSponsor
+                }}
+                trigger={
+                  <Button 
+                    type="button"
+                    variant="outline"
+                    className="flex items-center gap-1"
+                  >
+                    <Eye className="h-4 w-4" />
+                    Preview
+                  </Button>
+                }
+              />
+            );
+          })()}
         </div>
       </form>
     </Form>

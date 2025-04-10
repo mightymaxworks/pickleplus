@@ -36,6 +36,7 @@ const GoldenTicketPreview: React.FC<GoldenTicketPreviewProps> = ({ ticketData, t
   };
   
   const handleRevealSponsor = () => {
+    console.log('Revealing sponsor:', ticketData.sponsor);
     setIsRevealed(true);
   };
   
