@@ -20,11 +20,11 @@ import { useToast } from '@/hooks/use-toast';
 // Form schema for creating sponsors (must match server schema)
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
-  description: z.string().optional().or(z.literal('')),
-  logoUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
-  website: z.string().url('Must be a valid URL').optional().or(z.literal('')), // Matches server field name
-  contactName: z.string().optional().or(z.literal('')), // Added to match server schema
-  contactEmail: z.string().email('Must be a valid email').optional().or(z.literal('')),
+  description: z.string().optional().or(z.literal('')).nullable(),
+  logoUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')).nullable(),
+  website: z.string().url('Must be a valid URL').optional().or(z.literal('')).nullable(), // Matches server field name
+  contactName: z.string().optional().or(z.literal('')).nullable(), // Added to match server schema
+  contactEmail: z.string().email('Must be a valid email').optional().or(z.literal('')).nullable(),
   active: z.boolean().default(true) // Added to match server schema
 });
 

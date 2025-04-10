@@ -121,6 +121,8 @@ const GoldenTicketForm: React.FC = () => {
       ...data,
       // Setting default values for required fields
       currentAppearances: 0,
+      // Handle sponsorId null/undefined issue
+      sponsorId: data.sponsorId || null,
       pagesToAppearOn: data.pagesToAppearOn ? data.pagesToAppearOn.split(',').map(page => page.trim()) : undefined
     };
     

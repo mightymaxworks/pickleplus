@@ -126,7 +126,15 @@ export async function getAllSponsors(): Promise<Sponsor[]> {
  * @param sponsor The sponsor data
  * @returns The created sponsor
  */
-export async function createSponsor(sponsor: Omit<Sponsor, 'id' | 'createdAt' | 'updatedAt'>): Promise<Sponsor> {
+export async function createSponsor(sponsor: {
+  name: string;
+  description?: string | null;
+  logoUrl?: string | null;
+  website?: string | null;
+  contactName?: string | null;
+  contactEmail?: string | null;
+  active: boolean;
+}): Promise<Sponsor> {
   return debugApiRequest<Sponsor>("POST", `${API_BASE}/admin/sponsors`, sponsor);
 }
 
