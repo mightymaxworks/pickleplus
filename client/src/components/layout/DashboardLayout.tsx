@@ -1,6 +1,6 @@
 import React, { ReactNode, useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/use-auth';
 import { MobileNavigation } from './MobileNavigation';
 import { User } from '@shared/schema';
 import { motion, AnimatePresence } from 'framer-motion';

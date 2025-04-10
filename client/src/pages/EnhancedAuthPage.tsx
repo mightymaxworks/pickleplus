@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { PicklePlusNewLogo } from "../components/icons/PicklePlusNewLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
