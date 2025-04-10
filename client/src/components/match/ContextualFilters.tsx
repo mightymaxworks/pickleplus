@@ -90,7 +90,7 @@ export function ContextualFilters({
       if (match.location) locations.add(match.location);
       
       // Opponents (all unique players except current user)
-      match.players.forEach(player => {
+      match.players?.forEach(player => {
         if (player.displayName && !opponents.has(player.userId)) {
           opponents.set(player.userId, player.displayName);
         }
