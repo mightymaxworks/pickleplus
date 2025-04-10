@@ -67,10 +67,12 @@ const fadeIn = {
 };
 
 export default function EnhancedAuthPage() {
-  const { loginMutation, registerMutation, user } = useAuth();
+  const { login, user } = useAuth();
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<string>("login");
   const [showFounderSection, setShowFounderSection] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
 
   // Redirect if user is already logged in - with debug logging
   useEffect(() => {
@@ -120,13 +122,13 @@ export default function EnhancedAuthPage() {
 
   const handleLogin = async (data: LoginFormData) => {
     try {
-      await loginMutation.mutateAsync({
-        username: data.username,
-        password: data.password
-      });
+      setIsLoggingIn(true);
+      await login(data.username, data.password);
       navigate("/dashboard");
     } catch (error) {
       console.error("Login error:", error);
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
