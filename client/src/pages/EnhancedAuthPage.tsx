@@ -122,11 +122,20 @@ export default function EnhancedAuthPage() {
 
   const handleLogin = async (data: LoginFormData) => {
     try {
+      console.log("Starting login process for username:", data.username);
       setIsLoggingIn(true);
       await login(data.username, data.password);
-      navigate("/dashboard");
-    } catch (error) {
+      
+      // Don't immediately navigate; let the AuthProvider's effect hook do it
+      // after it detects that user is authenticated
+      console.log("Login API call completed successfully");
+    } catch (error: any) {
       console.error("Login error:", error);
+      // Set form error for better UX
+      loginForm.setError("root", { 
+        type: "manual", 
+        message: error.message || "Login failed. Please check your credentials and try again." 
+      });
     } finally {
       setIsLoggingIn(false);
     }
@@ -134,7 +143,9 @@ export default function EnhancedAuthPage() {
 
   const handleRegister = async (formData: RegisterFormData) => {
     try {
+      console.log("Starting registration process for username:", formData.username);
       setIsRegistering(true);
+      
       // Create a properly formatted registration object
       const registrationData = {
         username: formData.username,
@@ -149,10 +160,39 @@ export default function EnhancedAuthPage() {
         // We don't directly set isFoundingMember here
       };
       
+      // If a founder code was provided, log it (but we'll handle it in the backend)
+      if (formData.founderCode) {
+        console.log("Founder code provided:", formData.founderCode);
+      }
+      
       await register(registrationData);
-      navigate("/dashboard");
-    } catch (error) {
+      console.log("Registration API call completed successfully");
+      
+      // Don't immediately navigate; let the AuthProvider's effect hook handle it
+      // after it confirms user is authenticated
+    } catch (error: any) {
       console.error("Registration error:", error);
+      
+      // Set form error for better UX
+      registerForm.setError("root", { 
+        type: "manual", 
+        message: error.message || "Registration failed. Please check your information and try again." 
+      });
+      
+      // Check for common registration errors and provide specific guidance
+      if (error.message?.includes("username") && error.message?.includes("taken")) {
+        registerForm.setError("username", { 
+          type: "manual", 
+          message: "This username is already taken. Please choose a different one." 
+        });
+      }
+      
+      if (error.message?.includes("email") && error.message?.includes("use")) {
+        registerForm.setError("email", { 
+          type: "manual", 
+          message: "This email is already in use. Please use a different email or try logging in." 
+        });
+      }
     } finally {
       setIsRegistering(false);
     }
@@ -227,6 +267,13 @@ export default function EnhancedAuthPage() {
                     <Form {...loginForm}>
                       <form onSubmit={loginForm.handleSubmit(handleLogin)}>
                         <CardContent className="space-y-4">
+                          {/* Display any root form errors */}
+                          {loginForm.formState.errors.root && (
+                            <div className="rounded-md bg-red-50 p-3 text-sm text-red-800">
+                              {loginForm.formState.errors.root.message}
+                            </div>
+                          )}
+                          
                           <FormField
                             control={loginForm.control}
                             name="username"
@@ -342,6 +389,13 @@ export default function EnhancedAuthPage() {
                     <Form {...registerForm}>
                       <form onSubmit={registerForm.handleSubmit(handleRegister)}>
                         <CardContent className="space-y-4">
+                          {/* Display any root form errors */}
+                          {registerForm.formState.errors.root && (
+                            <div className="rounded-md bg-red-50 p-3 text-sm text-red-800">
+                              {registerForm.formState.errors.root.message}
+                            </div>
+                          )}
+                          
                           <div className="grid grid-cols-2 gap-4">
                             <FormField
                               control={registerForm.control}
