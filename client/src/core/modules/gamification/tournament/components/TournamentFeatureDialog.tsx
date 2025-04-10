@@ -1,8 +1,9 @@
 /**
- * PKL-278651-GAME-0003-DISC
+ * PKL-278651-GAME-0003-ENGGT
  * Tournament Feature Dialog
  * 
- * This component provides a dialog for displaying detailed tournament feature information.
+ * This component provides a dialog for displaying detailed tournament feature information
+ * with engagement-based XP rewards.
  */
 
 import React from 'react';
@@ -18,15 +19,22 @@ interface TournamentFeatureDialogProps {
   feature: TournamentFeatureDetailType | null;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  isDiscovered?: boolean;
+  onClaimReward?: (featureId: string) => void;
+  xpAmount?: number;
 }
 
 /**
  * Dialog component for displaying tournament feature details
+ * with engagement-based XP rewards
  */
 const TournamentFeatureDialog: React.FC<TournamentFeatureDialogProps> = ({ 
   feature, 
   isOpen, 
-  onOpenChange 
+  onOpenChange,
+  isDiscovered = false,
+  onClaimReward,
+  xpAmount
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -34,7 +42,10 @@ const TournamentFeatureDialog: React.FC<TournamentFeatureDialogProps> = ({
         {feature && (
           <TournamentFeatureDetail 
             feature={feature} 
-            onClose={() => onOpenChange(false)} 
+            onClose={() => onOpenChange(false)}
+            isDiscovered={isDiscovered}
+            onClaimReward={onClaimReward}
+            xpAmount={xpAmount}
           />
         )}
       </DialogContent>

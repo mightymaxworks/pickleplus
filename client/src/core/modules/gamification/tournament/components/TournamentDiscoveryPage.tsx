@@ -178,24 +178,17 @@ const TournamentDiscoveryPage: React.FC = () => {
       return;
     }
     
-    // Show reward alert
-    if (position.reward) {
-      setCurrentReward(position.reward);
-      setCurrentDiscovery(position.description);
-      setShowAlert(true);
-    }
+    // Only mark as discovered without showing alert or awarding XP yet
+    // XP will be awarded after reading through the feature dialog
     
-    // Record discovery in API
-    discoverPoint(position.code);
-    
-    // After discovering, prepare to show detailed information
+    // Record discovery position opened in API, but don't award XP yet
     setSelectedFeatureId(position.code);
+    setCurrentReward(position.reward);
+    setCurrentDiscovery(position.description);
     
-    // Short delay before showing the detailed view to allow the discovery animation to complete
-    setTimeout(() => {
-      setShowFeatureDetail(true);
-    }, 1200);
-  }, [discoverPoint]);
+    // Show feature dialog immediately - XP will be awarded after reading
+    setShowFeatureDetail(true);
+  }, []);
   
   // Calculate progress percentages for each tier
   const tierProgress = React.useMemo(() => {
@@ -275,18 +268,17 @@ const TournamentDiscoveryPage: React.FC = () => {
             variant={discovered ? "outline" : "default"}
             disabled={isRecording}
             onClick={() => {
-              if (!discovered) {
-                discoverPoint(point.id);
-                // Show feature information after a short delay
-                setTimeout(() => {
-                  setSelectedFeatureId(point.id);
-                  setShowFeatureDetail(true);
-                }, 1200);
-              } else {
-                // Show detailed feature information for discovered points
-                setSelectedFeatureId(point.id);
-                setShowFeatureDetail(true);
-              }
+              // Always show the feature details first, regardless of discovery status
+              setSelectedFeatureId(point.id);
+              setCurrentReward(position => discovered ? null : {
+                id: point.id,
+                name: `${point.tier.charAt(0).toUpperCase() + point.tier.slice(1)} Discovery`,
+                description: `You've discovered ${point.name}!`,
+                type: 'xp',
+                rarity: point.tier === 'pioneer' ? 'legendary' : (point.tier === 'strategist' ? 'rare' : 'common'),
+                value: { xpAmount: point.points }
+              });
+              setShowFeatureDetail(true);
             }}
           >
             {isRecording ? (
