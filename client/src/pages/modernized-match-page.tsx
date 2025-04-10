@@ -131,13 +131,15 @@ export default function ModernizedMatchPage() {
   };
 
   return (
-    <div className="container max-w-6xl py-6 md:py-10 space-y-10">
-      {/* MATCH-UI-278653[ENHANCE] - Improved header styling and alignment */}
-      <div className="flex flex-col justify-center items-center text-center mb-4 md:mb-6">
-        <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">Match Center</h1>
-        <p className="text-muted-foreground max-w-xl mx-auto">Track your performance, analyze your stats, and review your match history</p>
-        <div className="w-24 h-1 bg-primary/60 rounded-full mt-5 mb-2"></div>
-      </div>
+    <DashboardLayout>
+      {/* PKL-278651-UIFIX-0001-NAV - Adding DashboardLayout for consistent navigation */}
+      <div className="container max-w-6xl py-6 md:py-10 space-y-10">
+        {/* MATCH-UI-278653[ENHANCE] - Improved header styling and alignment */}
+        <div className="flex flex-col justify-center items-center text-center mb-4 md:mb-6">
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">Match Center</h1>
+          <p className="text-muted-foreground max-w-xl mx-auto">Track your performance, analyze your stats, and review your match history</p>
+          <div className="w-24 h-1 bg-primary/60 rounded-full mt-5 mb-2"></div>
+        </div>
       
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="grid grid-cols-3 w-full md:w-auto mx-auto">
@@ -764,5 +766,6 @@ export default function ModernizedMatchPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </DashboardLayout>
   );
 }
