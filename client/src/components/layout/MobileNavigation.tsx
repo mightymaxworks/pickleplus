@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation } from 'wouter';
-import { Pencil, LogOut } from 'lucide-react';
+import { Pencil, LogOut, Shield } from 'lucide-react';
 import { User } from '@shared/schema';
 import { motion } from 'framer-motion';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
@@ -26,6 +26,22 @@ export function MobileNavigation({ user }: MobileNavigationProps) {
       animate={{ y: 0 }}
       transition={{ type: 'spring', damping: 20, stiffness: 200, delay: 0.5 }}
     >
+      {/* Admin button - positioned at the bottom right for admins */}
+      {user.isAdmin && (
+        <motion.button
+          onClick={() => navigate('/admin/golden-ticket')}
+          className="absolute -top-14 right-16 w-12 h-12 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center shadow-md border border-gray-200 dark:border-gray-700"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          title="Admin Panel"
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.8 }}
+        >
+          <Shield size={20} className="text-purple-600 dark:text-purple-400" />
+        </motion.button>
+      )}
+      
       {/* Logout button - positioned at the bottom right */}
       <motion.button
         onClick={handleLogout}
