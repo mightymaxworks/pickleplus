@@ -18,7 +18,11 @@ import {
   Medal, 
   Award, 
   AlertTriangle,
-  Loader2 
+  Loader2,
+  Clock,
+  CheckCircle2,
+  Users,
+  Zap
 } from 'lucide-react';
 import TournamentBracket from './TournamentBracket';
 import { BracketPosition, TournamentReward } from '../types';
@@ -64,11 +68,40 @@ const TournamentDiscoveryPage: React.FC = () => {
     hasCompletedTier
   } = useTournamentDiscovery();
   
-  // State for discovery alerts
+  // State for discovery alerts and countdown
   const [showAlert, setShowAlert] = useState(false);
   const [currentReward, setCurrentReward] = useState<TournamentReward | null>(null);
   const [currentDiscovery, setCurrentDiscovery] = useState<string>('');
   const [activeTab, setActiveTab] = useState<string>("bracket");
+  const [countdown, setCountdown] = useState<{days: number, hours: number, minutes: number, seconds: number}>({
+    days: 0, hours: 0, minutes: 0, seconds: 0
+  });
+  
+  // Countdown timer to tournament launch
+  useEffect(() => {
+    const launchDate = new Date('April 30, 2025 00:00:00').getTime();
+    
+    const updateCountdown = () => {
+      const now = new Date().getTime();
+      const distance = launchDate - now;
+      
+      setCountdown({
+        days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((distance % (1000 * 60)) / 1000)
+      });
+    };
+    
+    // Update countdown immediately
+    updateCountdown();
+    
+    // Set interval to update countdown
+    const interval = setInterval(updateCountdown, 1000);
+    
+    // Clean up on unmount
+    return () => clearInterval(interval);
+  }, []);
   
   // Map API discovery points to bracket positions
   const tournamentPositions = React.useMemo<BracketPosition[]>(() => {
@@ -261,10 +294,39 @@ const TournamentDiscoveryPage: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Tournament System Preview
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-4">
             Explore our upcoming tournament system! Discover all features to qualify for 
             exclusive early access through our prize drawing.
           </p>
+          
+          {/* Countdown to launch */}
+          <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg p-4 border border-orange-100 max-w-lg mx-auto">
+            <div className="flex items-center justify-center mb-2">
+              <Clock className="text-orange-500 mr-2" size={20} />
+              <h3 className="font-medium text-orange-800">Tournament Launch Countdown</h3>
+            </div>
+            <div className="grid grid-cols-4 gap-2 mb-2">
+              <div className="bg-white rounded p-2 text-center shadow-sm">
+                <div className="text-2xl font-bold text-orange-600">{countdown.days}</div>
+                <div className="text-xs text-gray-500">Days</div>
+              </div>
+              <div className="bg-white rounded p-2 text-center shadow-sm">
+                <div className="text-2xl font-bold text-orange-600">{countdown.hours}</div>
+                <div className="text-xs text-gray-500">Hours</div>
+              </div>
+              <div className="bg-white rounded p-2 text-center shadow-sm">
+                <div className="text-2xl font-bold text-orange-600">{countdown.minutes}</div>
+                <div className="text-xs text-gray-500">Minutes</div>
+              </div>
+              <div className="bg-white rounded p-2 text-center shadow-sm">
+                <div className="text-2xl font-bold text-orange-600">{countdown.seconds}</div>
+                <div className="text-xs text-gray-500">Seconds</div>
+              </div>
+            </div>
+            <p className="text-sm text-center text-gray-600">
+              Complete all discoveries to gain <span className="font-medium text-orange-700">Priority Access</span>
+            </p>
+          </div>
         </motion.div>
       </div>
       
