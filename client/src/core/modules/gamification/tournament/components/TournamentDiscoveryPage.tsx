@@ -530,7 +530,7 @@ const TournamentDiscoveryPage: React.FC = () => {
           )}
         </div>
         
-        {/* Main area - Tournament bracket and discovery list */}
+        {/* Main area - Tournament discovery list */}
         <div className="lg:col-span-2">
           {isLoading ? (
             <div className="py-20 flex justify-center items-center">
@@ -611,7 +611,7 @@ const TournamentDiscoveryPage: React.FC = () => {
                   </div>
                 </div>
               </motion.div>
-              </div>
+            </div>
           )}
         </div>
       </div>
