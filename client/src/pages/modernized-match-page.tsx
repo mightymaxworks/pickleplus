@@ -130,9 +130,13 @@ export default function ModernizedMatchPage() {
     return match.playerNames[opponent.userId]?.displayName || match.playerNames[opponent.userId]?.username || "Opponent";
   };
 
+  /* 
+  * PKL-278651-UIFIX-0001-NAV 
+  * Implementation aligned with Framework 4.0 modular architecture 
+  * Consistent navigation through DashboardLayout component
+  */
   return (
     <DashboardLayout>
-      {/* PKL-278651-UIFIX-0001-NAV - Adding DashboardLayout for consistent navigation */}
       <div className="container max-w-6xl py-6 md:py-10 space-y-10">
         {/* MATCH-UI-278653[ENHANCE] - Improved header styling and alignment */}
         <div className="flex flex-col justify-center items-center text-center mb-4 md:mb-6">
@@ -765,7 +769,7 @@ export default function ModernizedMatchPage() {
           <QuickMatchRecorder onSuccess={handleMatchRecorded} />
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
     </DashboardLayout>
   );
 }
