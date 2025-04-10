@@ -5,7 +5,7 @@
 
 export const environments = {
   local: {
-    baseUrl: "http://localhost:3000",
+    baseUrl: "https://7c53293f-df0f-44d1-aa13-74da41f82777-00-5jeol01lwwzz.worf.replit.dev",
     apiTimeout: 30000, // 30 seconds
     testUsers: {
       standard: {
