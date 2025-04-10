@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, ChevronDown, Trophy, LayoutDashboard } from "lucide-react";
 import { PicklePlusLogo } from "@/components/icons/PicklePlusLogo";
 import { ParticleBackground } from "./animations/ParticleBackground";
-import { useAuth } from "../hooks/use-auth";
+import { useAuth } from "@/hooks/useAuth";
 
 export function EnhancedHeroSection() {
   const [, navigate] = useLocation();

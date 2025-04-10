@@ -4,7 +4,7 @@ import { Pencil, LogOut, Shield } from 'lucide-react';
 import { User } from '@shared/schema';
 import { motion } from 'framer-motion';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/useAuth';
 
 interface MobileNavigationProps {
   user: User;
@@ -13,15 +13,10 @@ interface MobileNavigationProps {
 export function MobileNavigation({ user }: MobileNavigationProps) {
   const [location, navigate] = useLocation();
   const isExtraSmallScreen = useMediaQuery('(max-width: 480px)');
-  const { logout } = useAuth();
+  const { logoutMutation } = useAuth();
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/login');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
+  const handleLogout = () => {
+    logoutMutation.mutate();
   };
 
   return (

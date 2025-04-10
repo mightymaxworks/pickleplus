@@ -3,15 +3,17 @@ import { Route, Switch, useLocation } from 'wouter'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from './lib/queryClient'
 import { Toaster } from '@/components/ui/toaster'
-import { AuthProvider, useAuth } from '@/hooks/use-auth'
-import { Layout } from '@/components/layout/Layout'
+import { AuthProvider } from '@/hooks/useAuth'
 import EnhancedLandingPage from './pages/EnhancedLandingPage'
 import EnhancedAuthPage from './pages/EnhancedAuthPage'
+import TestAuthPage from './pages/TestAuthPage'
 import TestRoutingPage from './pages/TestRoutingPage'
 import Dashboard from './pages/Dashboard'
 import RecordMatchPage from './pages/record-match-page'
+import MatchesPage from './pages/matches-page'
 import ModernizedMatchPage from './pages/modernized-match-page'
 import MatchRewardDemo from './pages/match-reward-demo'
+import EnhancedProfile from './pages/EnhancedProfile'
 import EnhancedProfilePage from './pages/EnhancedProfilePage'
 import ContextualEnhancedProfile from './pages/ContextualEnhancedProfile'
 import ProfileEdit from './pages/ProfileEdit'
@@ -23,6 +25,29 @@ import TournamentDiscoveryPage from './pages/TournamentDiscoveryPage'
 import PrizeDrawingPage from './pages/admin/PrizeDrawingPage'
 import GoldenTicketAdmin from './pages/admin/GoldenTicketAdmin'
 import NotFound from './pages/not-found'
+
+import { useAuth } from './hooks/useAuth'
+
+// Protected route component
+function ProtectedRoute({ 
+  component: Component,
+  ...rest
+}: { 
+  component: React.ComponentType<any>;
+  path: string;
+}) {
+  const { user, isLoading } = useAuth();
+  const [, navigate] = useLocation();
+  
+  if (isLoading) return null;
+
+  if (!user) {
+    navigate("/auth");
+    return null;
+  }
+  
+  return <Component {...rest} />;
+}
 
 export default function App() {
   // Add location hook to debug routing
@@ -39,128 +64,83 @@ export default function App() {
     <Fragment>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <AppRoutes />
+          <Switch>
+            {/* Public Routes */}
+            <Route path="/" component={EnhancedLandingPage} />
+            <Route path="/login" component={EnhancedAuthPage} />
+            <Route path="/register" component={EnhancedAuthPage} />
+            <Route path="/auth" component={EnhancedAuthPage} />
+            <Route path="/test-routing" component={TestRoutingPage} />
+            <Route path="/landing-test" component={LandingPageTest} />
+            
+            {/* Protected Routes */}
+            <Route path="/dashboard">
+              {(params) => <ProtectedRoute component={Dashboard} path="/dashboard" />}
+            </Route>
+            <Route path="/matches">
+              {(params) => <ProtectedRoute component={ModernizedMatchPage} path="/matches" />}
+            </Route>
+            <Route path="/tournaments">
+              {(params) => <ProtectedRoute component={TournamentDiscoveryPage} path="/tournaments" />}
+            </Route>
+            <Route path="/training">
+              {(params) => <ProtectedRoute component={Dashboard} path="/training" />}
+            </Route>
+            <Route path="/community">
+              {(params) => <ProtectedRoute component={Dashboard} path="/community" />}
+            </Route>
+            <Route path="/passport">
+              {(params) => <ProtectedRoute component={Dashboard} path="/passport" />}
+            </Route>
+            {/* Main profile route now points to StreamlinedProfilePage */}
+            <Route path="/profile">
+              {(params) => <ProtectedRoute component={StreamlinedProfilePage} path="/profile" />}
+            </Route>
+            {/* Legacy profile routes kept for backward compatibility */}
+            <Route path="/profile/enhanced">
+              {(params) => <ProtectedRoute component={EnhancedProfilePage} path="/profile/enhanced" />}
+            </Route>
+            <Route path="/profile/contextual">
+              {(params) => <ProtectedRoute component={ContextualEnhancedProfile} path="/profile/contextual" />}
+            </Route>
+            <Route path="/profile/edit">
+              {(params) => <ProtectedRoute component={ProfileEdit} path="/profile/edit" />}
+            </Route>
+            <Route path="/profile/streamlined">
+              {(params) => <ProtectedRoute component={StreamlinedProfilePage} path="/profile/streamlined" />}
+            </Route>
+            <Route path="/record-match">
+              {(params) => <ProtectedRoute component={RecordMatchPage} path="/record-match" />}
+            </Route>
+            <Route path="/admin">
+              {(params) => <ProtectedRoute component={Dashboard} path="/admin" />}
+            </Route>
+            <Route path="/admin/prize-drawing">
+              {(params) => <ProtectedRoute component={PrizeDrawingPage} path="/admin/prize-drawing" />}
+            </Route>
+            <Route path="/admin/golden-ticket">
+              {(params) => <ProtectedRoute component={GoldenTicketAdmin} path="/admin/golden-ticket" />}
+            </Route>
+            
+            {/* Leaderboard Route */}
+            <Route path="/leaderboard">
+              {(params) => <ProtectedRoute component={LeaderboardPage} path="/leaderboard" />}
+            </Route>
+            
+            {/* Mastery Paths Route */}
+            <Route path="/mastery-paths">
+              {(params) => <ProtectedRoute component={MasteryPathsPage} path="/mastery-paths" />}
+            </Route>
+            
+            {/* For now we'll keep the Match Reward Demo accessible */}
+            <Route path="/demo/match-reward" component={MatchRewardDemo} />
+            
+            {/* 404 Route */}
+            <Route component={NotFound} />
+          </Switch>
         </AuthProvider>
       </QueryClientProvider>
       <Toaster />
     </Fragment>
   )
-}
-
-// Component with all routes - This ensures it's inside the AuthProvider context
-function AppRoutes() {
-  return (
-    <Switch>
-      {/* Public Routes */}
-      <Route path="/" component={EnhancedLandingPage} />
-      <Route path="/login" component={EnhancedAuthPage} />
-      <Route path="/register" component={EnhancedAuthPage} />
-      <Route path="/auth" component={EnhancedAuthPage} />
-      <Route path="/test-routing" component={TestRoutingPage} />
-      <Route path="/landing-test">
-        {() => (
-          <Layout>
-            <LandingPageTest />
-          </Layout>
-        )}
-      </Route>
-      
-      {/* Protected Routes */}
-      <Route path="/dashboard">
-        {() => <ProtectedComponent component={Dashboard} />}
-      </Route>
-      <Route path="/matches">
-        {() => <ProtectedComponent component={ModernizedMatchPage} />}
-      </Route>
-      <Route path="/tournaments">
-        {() => <ProtectedComponent component={TournamentDiscoveryPage} />}
-      </Route>
-      <Route path="/training">
-        {() => <ProtectedComponent component={Dashboard} />}
-      </Route>
-      <Route path="/community">
-        {() => <ProtectedComponent component={Dashboard} />}
-      </Route>
-      <Route path="/passport">
-        {() => <ProtectedComponent component={Dashboard} />}
-      </Route>
-      <Route path="/profile">
-        {() => <ProtectedComponent component={StreamlinedProfilePage} />}
-      </Route>
-      <Route path="/profile/enhanced">
-        {() => <ProtectedComponent component={EnhancedProfilePage} />}
-      </Route>
-      <Route path="/profile/contextual">
-        {() => <ProtectedComponent component={ContextualEnhancedProfile} />}
-      </Route>
-      <Route path="/profile/edit">
-        {() => <ProtectedComponent component={ProfileEdit} />}
-      </Route>
-      <Route path="/profile/streamlined">
-        {() => <ProtectedComponent component={StreamlinedProfilePage} />}
-      </Route>
-      <Route path="/record-match">
-        {() => <ProtectedComponent component={RecordMatchPage} />}
-      </Route>
-      <Route path="/admin">
-        {() => <ProtectedComponent component={Dashboard} />}
-      </Route>
-      <Route path="/admin/prize-drawing">
-        {() => <ProtectedComponent component={PrizeDrawingPage} />}
-      </Route>
-      <Route path="/admin/golden-ticket">
-        {() => <ProtectedComponent component={GoldenTicketAdmin} />}
-      </Route>
-      <Route path="/leaderboard">
-        {() => <ProtectedComponent component={LeaderboardPage} />}
-      </Route>
-      <Route path="/mastery-paths">
-        {() => <ProtectedComponent component={MasteryPathsPage} />}
-      </Route>
-      
-      {/* For now we'll keep the Match Reward Demo accessible */}
-      <Route path="/demo/match-reward">
-        {() => (
-          <Layout>
-            <MatchRewardDemo />
-          </Layout>
-        )}
-      </Route>
-      
-      {/* 404 Route */}
-      <Route>
-        {() => (
-          <Layout>
-            <NotFound />
-          </Layout>
-        )}
-      </Route>
-    </Switch>
-  );
-}
-
-// Protected component wrapper
-function ProtectedComponent({ component: Component }: { component: React.ComponentType<any> }) {
-  const { user, isLoading } = useAuth();
-  const [, navigate] = useLocation();
-  
-  // Always define hooks at the top level, not inside conditionals
-  useEffect(() => {
-    if (!isLoading && !user) {
-      navigate("/auth");
-    }
-  }, [isLoading, user, navigate]);
-  
-  // Show loading indicator while authentication state is loading
-  if (isLoading) return <div>Loading...</div>;
-  
-  // If no user is logged in, don't render the component
-  if (!user) return null;
-  
-  // User is authenticated, render the protected component
-  return (
-    <Layout>
-      <Component />
-    </Layout>
-  );
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/useAuth';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PlayerPassport } from '@/components/dashboard/PlayerPassport';
 import { PCPRankings } from '@/components/dashboard/PCPRankings';

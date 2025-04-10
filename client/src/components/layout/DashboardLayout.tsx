@@ -1,6 +1,6 @@
 import React, { ReactNode, useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/useAuth';
 import { MobileNavigation } from './MobileNavigation';
 import { User } from '@shared/schema';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,7 +14,7 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { user, isLoading, logout } = useAuth();
+  const { user, isLoading, logoutMutation } = useAuth();
   const [location, navigate] = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -23,14 +23,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const isSmallScreen = useMediaQuery('(max-width: 640px)');
   
   // Handle logout
-  const handleLogout = async () => {
-    try {
-      await logout();
-      setMobileMenuOpen(false);
-      navigate('/login');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
+  const handleLogout = () => {
+    logoutMutation.mutate();
+    setMobileMenuOpen(false);
   };
   
   // Handle scroll detection for header styling
