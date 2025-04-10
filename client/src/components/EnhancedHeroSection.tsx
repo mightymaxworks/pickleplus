@@ -1,12 +1,14 @@
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ChevronDown, Trophy } from "lucide-react";
+import { ArrowRight, ChevronDown, Trophy, LayoutDashboard } from "lucide-react";
 import { PicklePlusLogo } from "@/components/icons/PicklePlusLogo";
 import { ParticleBackground } from "./animations/ParticleBackground";
+import { useAuth } from "@/hooks/useAuth";
 
 export function EnhancedHeroSection() {
   const [, navigate] = useLocation();
+  const { user, isLoading } = useAuth();
 
   return (
     <section className="relative bg-gradient-to-br from-[#FF5722] to-[#FF7043] text-white overflow-hidden">
@@ -47,13 +49,28 @@ export function EnhancedHeroSection() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 justify-center md:justify-start">
-              <Button 
-                size="lg"
-                className="text-[#FF5722] bg-white hover:bg-white/90 shadow-lg text-base sm:text-lg px-4 sm:px-8 py-4 sm:py-6 h-auto font-medium w-full sm:w-auto"
-                onClick={() => navigate("/auth")}
-              >
-                Create Free Account
-              </Button>
+              {user ? (
+                // Already logged in - show dashboard button
+                <Button 
+                  size="lg"
+                  className="text-[#FF5722] bg-white hover:bg-white/90 shadow-lg text-base sm:text-lg px-4 sm:px-8 py-4 sm:py-6 h-auto font-medium w-full sm:w-auto flex items-center justify-center"
+                  onClick={() => navigate("/dashboard")}
+                >
+                  <LayoutDashboard className="h-5 w-5 mr-2" />
+                  <span>Go to Dashboard</span>
+                </Button>
+              ) : (
+                // Not logged in - show account creation button
+                <Button 
+                  size="lg"
+                  className="text-[#FF5722] bg-white hover:bg-white/90 shadow-lg text-base sm:text-lg px-4 sm:px-8 py-4 sm:py-6 h-auto font-medium w-full sm:w-auto"
+                  onClick={() => navigate("/auth")}
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Loading..." : "Create Free Account"}
+                </Button>
+              )}
+              
               <Button 
                 size="lg" 
                 variant="outline"
@@ -123,17 +140,17 @@ export function EnhancedHeroSection() {
                   <div className="flex flex-col sm:flex-row sm:items-center mt-3">
                     <div className="h-16 w-16 rounded-full bg-white p-0.5 mx-auto sm:mx-0 sm:mr-3 shadow-lg mb-2 sm:mb-0">
                       <div className="h-full w-full rounded-full bg-gradient-to-r from-[#2196F3] to-[#03A9F4] flex items-center justify-center text-white font-bold text-2xl">
-                        JS
+                        {user ? user.displayName?.substring(0, 2).toUpperCase() : "JS"}
                       </div>
                     </div>
                     <div className="text-center sm:text-left">
-                      <div className="font-bold text-2xl">John Smith</div>
+                      <div className="font-bold text-2xl">{user ? user.displayName : "John Smith"}</div>
                       <div className="flex flex-col sm:flex-row items-center text-sm text-white/80 mt-1">
                         <div className="font-medium bg-white/20 rounded-full px-2 py-0.5 flex items-center mb-1 sm:mb-0">
                           <span className="w-1.5 h-1.5 bg-white rounded-full mr-1"></span>
-                          3.5 Intermediate+
+                          {user?.skillLevel || "3.5 Intermediate+"}
                         </div>
-                        <div className="sm:ml-2 text-xs">Passport: XP39R45</div>
+                        <div className="sm:ml-2 text-xs">Passport: {user?.passportId || "XP39R45"}</div>
                       </div>
                     </div>
                   </div>
