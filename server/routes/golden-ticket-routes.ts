@@ -632,74 +632,9 @@ router.delete('/admin/tickets/:id', isAdmin, async (req: Request, res: Response)
   }
 });
 
-/**
- * Create sponsor (admin)
- */
-router.post('/admin/sponsors', isAdmin, async (req: Request, res: Response) => {
-  try {
-    // Validate request body
-    const parsedData = insertSponsorSchema.safeParse(req.body);
-    
-    if (!parsedData.success) {
-      return res.status(400).json({ 
-        error: 'Invalid data', 
-        details: parsedData.error.errors 
-      });
-    }
+/* First implementation of sponsor creation is removed to fix duplication */
 
-    // Create sponsor
-    const sponsor = await db.insert(sponsors)
-      .values(parsedData.data)
-      .returning();
-
-    return res.status(201).json(sponsor[0]);
-  } catch (error) {
-    console.error('Error creating sponsor:', error);
-    return res.status(500).json({ error: 'Server error' });
-  }
-});
-
-/**
- * Update sponsor (admin)
- */
-router.patch('/admin/sponsors/:id', isAdmin, async (req: Request, res: Response) => {
-  try {
-    const sponsorId = parseInt(req.params.id);
-    
-    if (isNaN(sponsorId)) {
-      return res.status(400).json({ error: 'Invalid sponsor ID' });
-    }
-
-    // Validate request body against a partial schema
-    const updateSchema = insertSponsorSchema.partial();
-    const parsedData = updateSchema.safeParse(req.body);
-    
-    if (!parsedData.success) {
-      return res.status(400).json({ 
-        error: 'Invalid data', 
-        details: parsedData.error.errors 
-      });
-    }
-
-    // Update sponsor
-    const updated = await db.update(sponsors)
-      .set({
-        ...parsedData.data,
-        updatedAt: new Date()
-      })
-      .where(eq(sponsors.id, sponsorId))
-      .returning();
-
-    if (!updated.length) {
-      return res.status(404).json({ error: 'Sponsor not found' });
-    }
-
-    return res.json(updated[0]);
-  } catch (error) {
-    console.error('Error updating sponsor:', error);
-    return res.status(500).json({ error: 'Server error' });
-  }
-});
+/* First implementation of sponsor update is removed to fix duplication */
 
 /**
  * Delete sponsor (admin)
