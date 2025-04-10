@@ -1,151 +1,146 @@
 /**
  * PKL-278651-GAME-0005-GOLD
- * Golden Ticket Promotional System Schema
+ * Golden Ticket Schema Definitions
  * 
- * Database schema for the Golden Ticket promotional feature.
+ * This file defines the database schema for the golden ticket system.
  */
 
-import { pgTable, serial, text, integer, boolean, timestamp, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, integer, timestamp, boolean, pgEnum } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import { users } from './schema';
 
-/**
- * Golden Ticket campaign status enum
- */
-export const goldenTicketStatusEnum = pgEnum('golden_ticket_status', [
+// Enums for database
+export const ticketStatusEnum = pgEnum('ticket_status', [
   'draft',
-  'active',
+  'active', 
   'paused',
   'completed',
   'cancelled'
 ]);
 
-/**
- * Golden Ticket claim status enum
- */
-export const goldenTicketClaimStatusEnum = pgEnum('golden_ticket_claim_status', [
-  'claimed',
-  'entered_drawing',
-  'selected',
-  'redeemed',
+export const claimStatusEnum = pgEnum('claim_status', [
+  'pending',
+  'approved',
+  'fulfilled',
+  'rejected',
   'expired'
 ]);
 
-/**
- * Sponsors table for tracking promotional partners
- */
+// Sponsors table (companies sponsoring golden tickets)
 export const sponsors = pgTable('sponsors', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
   description: text('description'),
   logoUrl: text('logo_url'),
-  websiteUrl: text('website_url'),
+  website: text('website'),
+  contactName: text('contact_name'),
   contactEmail: text('contact_email'),
   active: boolean('active').default(true).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull()
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-/**
- * Golden Tickets table for promotional campaigns
- */
+// Golden Tickets table (promotional offers that appear randomly)
 export const goldenTickets = pgTable('golden_tickets', {
   id: serial('id').primaryKey(),
-  campaignId: text('campaign_id').notNull(),
-  sponsorId: integer('sponsor_id').references(() => sponsors.id),
   title: text('title').notNull(),
   description: text('description').notNull(),
-  imageUrl: text('image_url'),
-  prizeDescription: text('prize_description').notNull(),
-  discountCode: text('discount_code'),
-  discountValue: text('discount_value'),
-  status: goldenTicketStatusEnum('status').default('draft').notNull(),
-  appearanceRate: integer('appearance_rate').default(5).notNull(), // Percentage: 1-100
-  maxClaims: integer('max_claims').notNull(),
-  currentClaims: integer('current_claims').default(0).notNull(),
+  campaignId: text('campaign_id').notNull(),
+  sponsorId: integer('sponsor_id').references(() => sponsors.id),
+  appearanceRate: integer('appearance_rate').default(5).notNull(), // percentage chance of appearing
+  maxAppearances: integer('max_appearances').default(100).notNull(), // limit total appearances
+  currentAppearances: integer('current_appearances').default(0).notNull(), // track how many times shown
+  maxClaims: integer('max_claims').default(10).notNull(), // maximum number of claims allowed
+  currentClaims: integer('current_claims').default(0).notNull(), // current number of claims
   startDate: timestamp('start_date').notNull(),
   endDate: timestamp('end_date').notNull(),
+  rewardDescription: text('reward_description').notNull(),
+  rewardType: text('reward_type').default('physical'),
+  discountCode: text('discount_code'),
+  discountValue: text('discount_value'),
+  pagesToAppearOn: text('pages_to_appear_on').array(), // array of page paths where ticket can appear
+  status: ticketStatusEnum('status').default('draft').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull()
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-/**
- * Golden Ticket claims by users
- */
+// Golden Ticket Claims table (tracks user claims of tickets)
 export const goldenTicketClaims = pgTable('golden_ticket_claims', {
   id: serial('id').primaryKey(),
   ticketId: integer('ticket_id').references(() => goldenTickets.id).notNull(),
   userId: integer('user_id').references(() => users.id).notNull(),
-  status: goldenTicketClaimStatusEnum('status').default('claimed').notNull(),
   claimedAt: timestamp('claimed_at').defaultNow().notNull(),
-  redemptionCode: text('redemption_code'),
-  redemptionDate: timestamp('redemption_date'),
-  updatedAt: timestamp('updated_at').defaultNow().notNull()
+  status: claimStatusEnum('status').default('pending').notNull(),
+  fulfillmentDetails: text('fulfillment_details'),
+  shippingAddress: text('shipping_address'),
+  shippingTrackingCode: text('shipping_tracking_code'),
+  adminNotes: text('admin_notes'),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-/**
- * Relations configuration
- */
+// Define relations
 export const sponsorsRelations = relations(sponsors, ({ many }) => ({
-  goldenTickets: many(goldenTickets)
+  goldenTickets: many(goldenTickets),
 }));
 
 export const goldenTicketsRelations = relations(goldenTickets, ({ one, many }) => ({
   sponsor: one(sponsors, {
     fields: [goldenTickets.sponsorId],
-    references: [sponsors.id]
+    references: [sponsors.id],
   }),
-  claims: many(goldenTicketClaims)
+  claims: many(goldenTicketClaims),
 }));
 
 export const goldenTicketClaimsRelations = relations(goldenTicketClaims, ({ one }) => ({
   ticket: one(goldenTickets, {
     fields: [goldenTicketClaims.ticketId],
-    references: [goldenTickets.id]
+    references: [goldenTickets.id],
   }),
   user: one(users, {
     fields: [goldenTicketClaims.userId],
-    references: [users.id]
-  })
+    references: [users.id],
+  }),
 }));
 
-/**
- * Zod schemas for validation
- */
+// Zod schemas for validation
 export const insertSponsorSchema = createInsertSchema(sponsors, {
-  name: z.string().min(2).max(100),
-  description: z.string().max(500).optional(),
+  name: z.string().min(2),
+  description: z.string().optional(),
   logoUrl: z.string().url().optional(),
-  websiteUrl: z.string().url().optional(),
-  contactEmail: z.string().email().optional()
-});
+  website: z.string().url().optional(),
+  contactName: z.string().optional(),
+  contactEmail: z.string().email().optional(),
+  active: z.boolean().default(true),
+}).omit({ id: true, createdAt: true, updatedAt: true });
 
 export const insertGoldenTicketSchema = createInsertSchema(goldenTickets, {
-  campaignId: z.string().min(3).max(50),
-  sponsorId: z.number().int().positive().optional(),
-  title: z.string().min(3).max(100),
-  description: z.string().min(10).max(500),
-  imageUrl: z.string().url().optional(),
-  prizeDescription: z.string().min(10).max(500),
-  discountCode: z.string().max(50).optional(),
-  discountValue: z.string().max(50).optional(),
-  status: z.enum(['draft', 'active', 'paused', 'completed', 'cancelled']).default('draft'),
-  appearanceRate: z.number().int().min(1).max(100).default(5),
-  maxClaims: z.number().int().positive(),
+  title: z.string().min(3),
+  description: z.string().min(5),
+  campaignId: z.string().min(2),
+  sponsorId: z.number().optional(),
+  appearanceRate: z.number().min(1).max(100),
+  maxAppearances: z.number().int().min(1),
+  maxClaims: z.number().int().min(1),
   startDate: z.date(),
-  endDate: z.date()
-}).omit({ id: true, currentClaims: true, createdAt: true, updatedAt: true });
+  endDate: z.date(),
+  rewardDescription: z.string().min(5),
+  rewardType: z.string().default('physical'),
+  discountCode: z.string().optional(),
+  discountValue: z.string().optional(),
+  pagesToAppearOn: z.array(z.string()).optional(),
+  status: z.enum(['draft', 'active', 'paused', 'completed', 'cancelled']).default('draft'),
+}).omit({ id: true, createdAt: true, updatedAt: true, currentAppearances: true, currentClaims: true });
 
 export const insertGoldenTicketClaimSchema = createInsertSchema(goldenTicketClaims, {
-  ticketId: z.number().int().positive(),
-  userId: z.number().int().positive(),
-  status: z.enum(['claimed', 'entered_drawing', 'selected', 'redeemed', 'expired']).default('claimed'),
-  redemptionCode: z.string().max(20).optional()
-}).omit({ id: true, claimedAt: true, redemptionDate: true, updatedAt: true });
+  ticketId: z.number(),
+  userId: z.number(),
+  shippingAddress: z.string().optional(),
+  status: z.enum(['pending', 'approved', 'fulfilled', 'rejected', 'expired']).default('pending'),
+}).omit({ id: true, claimedAt: true, updatedAt: true, fulfillmentDetails: true, shippingTrackingCode: true, adminNotes: true });
 
-// Infer types from schemas
+// TypeScript types
 export type Sponsor = typeof sponsors.$inferSelect;
 export type InsertSponsor = z.infer<typeof insertSponsorSchema>;
 

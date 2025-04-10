@@ -1,352 +1,679 @@
 /**
  * PKL-278651-GAME-0005-GOLD
- * Golden Ticket Promotional System Routes
+ * Golden Ticket Routes
  * 
- * API routes for the golden ticket promotional feature.
+ * API routes for the golden ticket promotional system.
  */
 
-import express, { Request, Response } from 'express';
+import express, { Request, Response, Router } from 'express';
+import { z } from 'zod';
 import { db } from '../db';
-import { sql, and, eq, gt, gte, lte } from 'drizzle-orm';
 import { isAdmin, isAuthenticated } from '../auth';
+import { asc, desc, eq, and, sql, gt, lt, ilike, inArray } from 'drizzle-orm';
 import { 
-  goldenTickets, 
-  goldenTicketClaims, 
   sponsors, 
+  goldenTickets, 
+  goldenTicketClaims,
+  insertSponsorSchema,
   insertGoldenTicketSchema,
-  insertSponsorSchema
+  insertGoldenTicketClaimSchema
 } from '../../shared/golden-ticket.schema';
-import { nanoid } from 'nanoid';
+import { extractFilterParams } from '../utils/query-helpers';
+
+const router = Router();
+
+// CLAIM ROUTES (USER)
 
 /**
- * Register golden ticket routes
+ * Get all claims for the current user
  */
-export function registerGoldenTicketRoutes(app: express.Express) {
-  console.log('[Routes] Registering golden ticket routes');
+router.get('/claims', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
 
-  // Check for a golden ticket to appear
-  app.get('/api/golden-ticket/check', isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      if (!req.user) {
-        return res.status(401).json({ error: 'Not authenticated' });
-      }
-      
-      const userId = req.user.id;
-      
-      // Check if user has any active claims in the last 24 hours
-      const recentClaims = await db.query.goldenTicketClaims.findMany({
-        where: and(
-          eq(goldenTicketClaims.userId, userId),
-          gte(goldenTicketClaims.claimedAt, new Date(Date.now() - 24 * 60 * 60 * 1000))
-        )
-      });
-      
-      if (recentClaims.length > 0) {
-        return res.json({ result: 'no-ticket' });
-      }
-      
-      // Find active tickets
-      const activeTickets = await db.query.goldenTickets.findMany({
-        where: and(
-          eq(goldenTickets.status, 'active'),
-          lte(goldenTickets.startDate, new Date()),
-          gte(goldenTickets.endDate, new Date()),
-          sql`${goldenTickets.currentClaims} < ${goldenTickets.maxClaims}`
-        )
-      });
-      
-      if (activeTickets.length === 0) {
-        return res.json({ result: 'no-ticket' });
-      }
-      
-      // Random chance based on appearance rate (1-100%)
-      const randomTicket = activeTickets[Math.floor(Math.random() * activeTickets.length)];
-      const randomNum = Math.random() * 100;
-      
-      if (randomNum <= randomTicket.appearanceRate) {
-        return res.json({ result: 'show-ticket', ticketId: randomTicket.id });
-      } else {
-        return res.json({ result: 'no-ticket' });
-      }
-    } catch (error) {
-      console.error('Error checking for golden ticket:', error);
-      res.status(500).json({ error: 'Failed to check for golden ticket' });
-    }
-  });
-  
-  // Get a specific golden ticket
-  app.get('/api/golden-ticket/:id', isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const ticketId = parseInt(req.params.id, 10);
-      
-      // Get the ticket with sponsor info
-      const ticket = await db.query.goldenTickets.findFirst({
-        where: eq(goldenTickets.id, ticketId),
-        with: {
-          sponsor: true
-        }
-      });
-      
-      if (!ticket) {
-        return res.status(404).json({ error: 'Golden ticket not found' });
-      }
-      
-      // Format response
-      const response = {
-        ...ticket,
-        sponsorName: ticket.sponsor?.name,
-        sponsorLogoUrl: ticket.sponsor?.logoUrl,
-        sponsorWebsite: ticket.sponsor?.websiteUrl
-      };
-      
-      res.json(response);
-    } catch (error) {
-      console.error('Error getting golden ticket:', error);
-      res.status(500).json({ error: 'Failed to retrieve golden ticket' });
-    }
-  });
-  
-  // Claim a golden ticket
-  app.post('/api/golden-ticket/claim', isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      if (!req.user) {
-        return res.status(401).json({ error: 'Not authenticated' });
-      }
-      
-      const userId = req.user.id;
-      const ticketId = req.body.ticketId;
-      
-      if (!ticketId) {
-        return res.status(400).json({ error: 'Missing ticket ID' });
-      }
-      
-      // Check if ticket exists and is active
-      const ticket = await db.query.goldenTickets.findFirst({
-        where: and(
-          eq(goldenTickets.id, ticketId),
-          eq(goldenTickets.status, 'active'),
-          lte(goldenTickets.startDate, new Date()),
-          gte(goldenTickets.endDate, new Date())
-        )
-      });
-      
-      if (!ticket) {
-        return res.status(404).json({ error: 'Golden ticket not found or inactive' });
-      }
-      
-      // Check if user already claimed this ticket
-      const existingClaim = await db.query.goldenTicketClaims.findFirst({
-        where: and(
-          eq(goldenTicketClaims.ticketId, ticketId),
-          eq(goldenTicketClaims.userId, userId)
-        )
-      });
-      
-      if (existingClaim) {
-        return res.status(400).json({ error: 'You have already claimed this ticket' });
-      }
-      
-      // Check if max claims reached
-      if (ticket.currentClaims >= ticket.maxClaims) {
-        return res.status(400).json({ error: 'Maximum claims reached for this ticket' });
-      }
-      
-      // Create claim and update claim count
-      const [claim] = await db.transaction(async (tx) => {
-        // Insert new claim
-        const newClaims = await tx.insert(goldenTicketClaims)
-          .values({
-            ticketId,
-            userId,
-            redemptionCode: nanoid(10).toUpperCase()
-          })
-          .returning();
-        
-        // Update current claims count
-        await tx.update(goldenTickets)
-          .set({ 
-            currentClaims: ticket.currentClaims + 1,
-            // If max claims reached, set to completed
-            status: ticket.currentClaims + 1 >= ticket.maxClaims ? 'completed' : 'active' 
-          })
-          .where(eq(goldenTickets.id, ticketId));
-          
-        return newClaims;
-      });
-      
-      res.json({
-        success: true,
-        claim
-      });
-    } catch (error) {
-      console.error('Error claiming golden ticket:', error);
-      res.status(500).json({ error: 'Failed to claim golden ticket' });
-    }
-  });
+    const claims = await db.query.goldenTicketClaims.findMany({
+      where: eq(goldenTicketClaims.userId, userId),
+      with: {
+        ticket: true
+      },
+      orderBy: [desc(goldenTicketClaims.claimedAt)]
+    });
 
-  // Get user's claimed tickets
-  app.get('/api/golden-ticket/my-tickets', isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      if (!req.user) {
-        return res.status(401).json({ error: 'Not authenticated' });
-      }
-      
-      const userId = req.user.id;
-      
-      const claims = await db.query.goldenTicketClaims.findMany({
-        where: eq(goldenTicketClaims.userId, userId),
-        with: {
-          ticket: {
-            with: {
-              sponsor: true
-            }
-          }
-        },
-        orderBy: (fields, { desc }) => [desc(fields.claimedAt)]
-      });
-      
-      res.json(claims);
-    } catch (error) {
-      console.error('Error getting user tickets:', error);
-      res.status(500).json({ error: 'Failed to retrieve user tickets' });
-    }
-  });
+    return res.json(claims);
+  } catch (error) {
+    console.error('Error fetching claims:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
 
-  /**
-   * Admin routes
-   */
+/**
+ * Get available tickets (not claimed by current user)
+ */
+router.get('/tickets', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const now = new Date();
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
 
-  // Get all golden tickets (admin only)
-  app.get('/api/admin/golden-tickets', isAdmin, async (req: Request, res: Response) => {
-    try {
-      const tickets = await db.query.goldenTickets.findMany({
-        with: {
-          sponsor: true
-        },
-        orderBy: (fields, { desc }) => [desc(fields.createdAt)]
-      });
-      
-      res.json(tickets);
-    } catch (error) {
-      console.error('Error getting all golden tickets:', error);
-      res.status(500).json({ error: 'Failed to retrieve golden tickets' });
-    }
-  });
-  
-  // Create golden ticket (admin only)
-  app.post('/api/admin/golden-tickets', isAdmin, async (req: Request, res: Response) => {
-    try {
-      // Validate input
-      const validatedData = insertGoldenTicketSchema.parse(req.body);
-      
-      // Create ticket
-      const newTickets = await db.insert(goldenTickets)
-        .values(validatedData)
-        .returning();
-      
-      res.json(newTickets[0]);
-    } catch (error) {
-      console.error('Error creating golden ticket:', error);
-      res.status(500).json({ error: 'Failed to create golden ticket' });
-    }
-  });
-  
-  // Update golden ticket (admin only)
-  app.put('/api/admin/golden-tickets/:id', isAdmin, async (req: Request, res: Response) => {
-    try {
-      const ticketId = parseInt(req.params.id, 10);
-      
-      const updateResult = await db.update(goldenTickets)
-        .set(req.body)
-        .where(eq(goldenTickets.id, ticketId))
-        .returning();
-      
-      if (updateResult.length === 0) {
-        return res.status(404).json({ error: 'Golden ticket not found' });
+    // Get IDs of tickets already claimed by this user
+    const claimedTicketsQuery = await db.query.goldenTicketClaims.findMany({
+      where: eq(goldenTicketClaims.userId, userId),
+      columns: {
+        ticketId: true
       }
-      
-      res.json(updateResult[0]);
-    } catch (error) {
-      console.error('Error updating golden ticket:', error);
-      res.status(500).json({ error: 'Failed to update golden ticket' });
-    }
-  });
-  
-  // Get all sponsors (admin only)
-  app.get('/api/admin/sponsors', isAdmin, async (req: Request, res: Response) => {
-    try {
-      const allSponsors = await db.query.sponsors.findMany({
-        orderBy: (fields, { asc }) => [asc(fields.name)]
-      });
-      res.json(allSponsors);
-    } catch (error) {
-      console.error('Error getting all sponsors:', error);
-      res.status(500).json({ error: 'Failed to retrieve sponsors' });
-    }
-  });
-  
-  // Create sponsor (admin only)
-  app.post('/api/admin/sponsors', isAdmin, async (req: Request, res: Response) => {
-    try {
-      // Validate input
-      const validatedData = insertSponsorSchema.parse(req.body);
-      
-      const newSponsors = await db.insert(sponsors)
-        .values(validatedData)
-        .returning();
-      
-      res.json(newSponsors[0]);
-    } catch (error) {
-      console.error('Error creating sponsor:', error);
-      res.status(500).json({ error: 'Failed to create sponsor' });
-    }
-  });
-  
-  // Get all ticket claims (admin only)
-  app.get('/api/admin/ticket-claims', isAdmin, async (req: Request, res: Response) => {
-    try {
-      const claims = await db.query.goldenTicketClaims.findMany({
-        with: {
-          ticket: true,
-          user: true
-        },
-        orderBy: (fields, { desc }) => [desc(fields.claimedAt)]
-      });
-      
-      res.json(claims);
-    } catch (error) {
-      console.error('Error getting ticket claims:', error);
-      res.status(500).json({ error: 'Failed to retrieve ticket claims' });
-    }
-  });
+    });
+    
+    const claimedTicketIds = claimedTicketsQuery.map(claim => claim.ticketId);
 
-  // Update claim status (admin only)
-  app.put('/api/admin/ticket-claims/:id', isAdmin, async (req: Request, res: Response) => {
-    try {
-      const claimId = parseInt(req.params.id, 10);
-      const { status } = req.body;
-      
-      if (!status) {
-        return res.status(400).json({ error: 'Status is required' });
+    // Get active tickets not claimed by this user
+    const tickets = await db.query.goldenTickets.findMany({
+      where: and(
+        eq(goldenTickets.status, 'active'),
+        gt(goldenTickets.endDate, now),
+        lt(goldenTickets.startDate, now),
+        // Only include tickets where currentClaims < maxClaims
+        sql`${goldenTickets.currentClaims} < ${goldenTickets.maxClaims}`,
+        // Exclude tickets already claimed by this user
+        claimedTicketIds.length > 0 
+          ? sql`${goldenTickets.id} NOT IN (${claimedTicketIds.join(',')})` 
+          : undefined
+      ),
+      with: {
+        sponsor: true
       }
+    });
+
+    return res.json(tickets);
+  } catch (error) {
+    console.error('Error fetching available tickets:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+/**
+ * Claim a ticket
+ */
+router.post('/tickets/:id/claim', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const ticketId = parseInt(req.params.id);
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    if (isNaN(ticketId)) {
+      return res.status(400).json({ error: 'Invalid ticket ID' });
+    }
+
+    // Validate that ticket exists, is active, and can be claimed
+    const ticket = await db.query.goldenTickets.findFirst({
+      where: and(
+        eq(goldenTickets.id, ticketId),
+        eq(goldenTickets.status, 'active'),
+        gt(goldenTickets.endDate, new Date()),
+        lt(goldenTickets.startDate, new Date())
+      )
+    });
+
+    if (!ticket) {
+      return res.status(404).json({ error: 'Ticket not available or does not exist' });
+    }
+
+    if (ticket.currentClaims >= ticket.maxClaims) {
+      return res.status(400).json({ error: 'Maximum claims reached for this ticket' });
+    }
+
+    // Check if user already claimed this ticket
+    const existingClaim = await db.query.goldenTicketClaims.findFirst({
+      where: and(
+        eq(goldenTicketClaims.ticketId, ticketId),
+        eq(goldenTicketClaims.userId, userId)
+      )
+    });
+
+    if (existingClaim) {
+      return res.status(400).json({ error: 'You have already claimed this ticket' });
+    }
+
+    // Create claim in a transaction
+    await db.transaction(async (tx) => {
+      // Increment current claims
+      await tx.update(goldenTickets)
+        .set({ currentClaims: sql`${goldenTickets.currentClaims} + 1` })
+        .where(eq(goldenTickets.id, ticketId));
       
-      const updateResult = await db.update(goldenTicketClaims)
-        .set({ 
-          status,
-          redemptionDate: status === 'redeemed' ? new Date() : undefined,
-          updatedAt: new Date()
+      // Insert claim
+      const claim = await tx.insert(goldenTicketClaims)
+        .values({
+          ticketId,
+          userId,
+          status: 'pending'
         })
-        .where(eq(goldenTicketClaims.id, claimId))
         .returning();
-      
-      if (updateResult.length === 0) {
-        return res.status(404).json({ error: 'Claim not found' });
+
+      return claim[0];
+    });
+
+    // Get the newly created claim with ticket information
+    const newClaim = await db.query.goldenTicketClaims.findFirst({
+      where: and(
+        eq(goldenTicketClaims.ticketId, ticketId),
+        eq(goldenTicketClaims.userId, userId)
+      ),
+      with: {
+        ticket: true
       }
-      
-      res.json(updateResult[0]);
-    } catch (error) {
-      console.error('Error updating claim status:', error);
-      res.status(500).json({ error: 'Failed to update claim status' });
+    });
+
+    return res.status(201).json(newClaim);
+  } catch (error) {
+    console.error('Error claiming ticket:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+/**
+ * Update claim details (shipping address, etc.)
+ */
+router.patch('/claims/:id', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const claimId = parseInt(req.params.id);
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
     }
-  });
+
+    if (isNaN(claimId)) {
+      return res.status(400).json({ error: 'Invalid claim ID' });
+    }
+
+    // Verify claim belongs to user
+    const existingClaim = await db.query.goldenTicketClaims.findFirst({
+      where: and(
+        eq(goldenTicketClaims.id, claimId),
+        eq(goldenTicketClaims.userId, userId)
+      )
+    });
+
+    if (!existingClaim) {
+      return res.status(404).json({ error: 'Claim not found' });
+    }
+
+    // Validate request body
+    const schema = z.object({
+      shippingAddress: z.string().optional(),
+    });
+
+    const parsedData = schema.safeParse(req.body);
+    
+    if (!parsedData.success) {
+      return res.status(400).json({ 
+        error: 'Invalid data', 
+        details: parsedData.error.errors 
+      });
+    }
+
+    // Update claim
+    const updated = await db.update(goldenTicketClaims)
+      .set({
+        ...parsedData.data,
+        updatedAt: new Date()
+      })
+      .where(eq(goldenTicketClaims.id, claimId))
+      .returning();
+
+    return res.json(updated[0]);
+  } catch (error) {
+    console.error('Error updating claim:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ADMIN ROUTES
+
+/**
+ * Get all claims (admin)
+ */
+router.get('/admin/claims', isAdmin, async (req: Request, res: Response) => {
+  try {
+    const { sort, order, status, page = 1, limit = 50 } = req.query;
+    const offset = (Number(page) - 1) * Number(limit);
+    
+    // Filter parameters
+    const filters = [];
+    
+    if (status) {
+      filters.push(eq(goldenTicketClaims.status, String(status)));
+    }
+
+    // Query with filters
+    const claims = await db.query.goldenTicketClaims.findMany({
+      where: filters.length > 0 ? and(...filters) : undefined,
+      with: {
+        ticket: true,
+        user: true
+      },
+      orderBy: sort && order 
+        ? order === 'desc' 
+          ? [desc(goldenTicketClaims[sort as keyof typeof goldenTicketClaims])] 
+          : [asc(goldenTicketClaims[sort as keyof typeof goldenTicketClaims])]
+        : [desc(goldenTicketClaims.claimedAt)],
+      limit: Number(limit),
+      offset
+    });
+
+    // Get total count for pagination
+    const countResult = await db.select({ count: sql`count(*)` })
+      .from(goldenTicketClaims)
+      .where(filters.length > 0 ? and(...filters) : undefined);
+    
+    const total = Number(countResult[0]?.count || '0');
+
+    return res.json({
+      claims,
+      pagination: {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        pages: Math.ceil(total / Number(limit))
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching claims:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+/**
+ * Get all tickets (admin)
+ */
+router.get('/admin/tickets', isAdmin, async (req: Request, res: Response) => {
+  try {
+    const { sort, order, status, search, page = 1, limit = 50 } = req.query;
+    const offset = (Number(page) - 1) * Number(limit);
+    
+    // Filter parameters
+    const filters = [];
+    
+    if (status) {
+      filters.push(eq(goldenTickets.status, String(status)));
+    }
+    
+    if (search) {
+      filters.push(
+        or(
+          ilike(goldenTickets.title, `%${search}%`),
+          ilike(goldenTickets.campaignId, `%${search}%`),
+          ilike(goldenTickets.description, `%${search}%`)
+        )
+      );
+    }
+
+    // Query with filters
+    const tickets = await db.query.goldenTickets.findMany({
+      where: filters.length > 0 ? and(...filters) : undefined,
+      with: {
+        sponsor: true
+      },
+      orderBy: sort && order 
+        ? order === 'desc' 
+          ? [desc(goldenTickets[sort as keyof typeof goldenTickets])] 
+          : [asc(goldenTickets[sort as keyof typeof goldenTickets])]
+        : [desc(goldenTickets.createdAt)],
+      limit: Number(limit),
+      offset
+    });
+
+    // Get total count for pagination
+    const countResult = await db.select({ count: sql`count(*)` })
+      .from(goldenTickets)
+      .where(filters.length > 0 ? and(...filters) : undefined);
+    
+    const total = Number(countResult[0]?.count || '0');
+
+    return res.json({
+      tickets,
+      pagination: {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        pages: Math.ceil(total / Number(limit))
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching tickets:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+/**
+ * Get all sponsors (admin)
+ */
+router.get('/admin/sponsors', isAdmin, async (req: Request, res: Response) => {
+  try {
+    const { sort, order, active, search, page = 1, limit = 50 } = req.query;
+    const offset = (Number(page) - 1) * Number(limit);
+    
+    // Filter parameters
+    const filters = [];
+    
+    if (active !== undefined) {
+      filters.push(eq(sponsors.active, active === 'true'));
+    }
+    
+    if (search) {
+      filters.push(
+        or(
+          ilike(sponsors.name, `%${search}%`),
+          ilike(sponsors.description, `%${search}%`)
+        )
+      );
+    }
+
+    // Query with filters
+    const sponsorsList = await db.query.sponsors.findMany({
+      where: filters.length > 0 ? and(...filters) : undefined,
+      orderBy: sort && order 
+        ? order === 'asc' 
+          ? [asc(sponsors[sort as keyof typeof sponsors])] 
+          : [desc(sponsors[sort as keyof typeof sponsors])]
+        : [asc(sponsors.name)],
+      limit: Number(limit),
+      offset
+    });
+
+    // Get total count for pagination
+    const countResult = await db.select({ count: sql`count(*)` })
+      .from(sponsors)
+      .where(filters.length > 0 ? and(...filters) : undefined);
+    
+    const total = Number(countResult[0]?.count || '0');
+
+    return res.json({
+      sponsors: sponsorsList,
+      pagination: {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        pages: Math.ceil(total / Number(limit))
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching sponsors:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+/**
+ * Update claim status (admin)
+ */
+router.patch('/admin/claims/:id', isAdmin, async (req: Request, res: Response) => {
+  try {
+    const claimId = parseInt(req.params.id);
+    
+    if (isNaN(claimId)) {
+      return res.status(400).json({ error: 'Invalid claim ID' });
+    }
+
+    // Validate request body
+    const schema = z.object({
+      status: z.enum(['pending', 'approved', 'fulfilled', 'rejected', 'expired']),
+      fulfillmentDetails: z.string().optional(),
+      shippingTrackingCode: z.string().optional(),
+      adminNotes: z.string().optional()
+    });
+
+    const parsedData = schema.safeParse(req.body);
+    
+    if (!parsedData.success) {
+      return res.status(400).json({ 
+        error: 'Invalid data', 
+        details: parsedData.error.errors 
+      });
+    }
+
+    // Update claim
+    const updated = await db.update(goldenTicketClaims)
+      .set({
+        ...parsedData.data,
+        updatedAt: new Date()
+      })
+      .where(eq(goldenTicketClaims.id, claimId))
+      .returning();
+
+    if (!updated.length) {
+      return res.status(404).json({ error: 'Claim not found' });
+    }
+
+    return res.json(updated[0]);
+  } catch (error) {
+    console.error('Error updating claim:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+/**
+ * Create ticket (admin)
+ */
+router.post('/admin/tickets', isAdmin, async (req: Request, res: Response) => {
+  try {
+    // Validate request body
+    const parsedData = insertGoldenTicketSchema.safeParse(req.body);
+    
+    if (!parsedData.success) {
+      return res.status(400).json({ 
+        error: 'Invalid data', 
+        details: parsedData.error.errors 
+      });
+    }
+
+    // Create ticket
+    const ticket = await db.insert(goldenTickets)
+      .values({
+        ...parsedData.data,
+        currentAppearances: 0,
+        currentClaims: 0
+      })
+      .returning();
+
+    return res.status(201).json(ticket[0]);
+  } catch (error) {
+    console.error('Error creating ticket:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+/**
+ * Update ticket (admin)
+ */
+router.patch('/admin/tickets/:id', isAdmin, async (req: Request, res: Response) => {
+  try {
+    const ticketId = parseInt(req.params.id);
+    
+    if (isNaN(ticketId)) {
+      return res.status(400).json({ error: 'Invalid ticket ID' });
+    }
+
+    // Validate request body against a partial schema
+    const updateSchema = insertGoldenTicketSchema.partial();
+    const parsedData = updateSchema.safeParse(req.body);
+    
+    if (!parsedData.success) {
+      return res.status(400).json({ 
+        error: 'Invalid data', 
+        details: parsedData.error.errors 
+      });
+    }
+
+    // Update ticket
+    const updated = await db.update(goldenTickets)
+      .set({
+        ...parsedData.data,
+        updatedAt: new Date()
+      })
+      .where(eq(goldenTickets.id, ticketId))
+      .returning();
+
+    if (!updated.length) {
+      return res.status(404).json({ error: 'Ticket not found' });
+    }
+
+    return res.json(updated[0]);
+  } catch (error) {
+    console.error('Error updating ticket:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+/**
+ * Delete ticket (admin)
+ */
+router.delete('/admin/tickets/:id', isAdmin, async (req: Request, res: Response) => {
+  try {
+    const ticketId = parseInt(req.params.id);
+    
+    if (isNaN(ticketId)) {
+      return res.status(400).json({ error: 'Invalid ticket ID' });
+    }
+
+    // Check if claims exist
+    const claimsCount = await db.select({ count: sql`count(*)` })
+      .from(goldenTicketClaims)
+      .where(eq(goldenTicketClaims.ticketId, ticketId));
+    
+    if (Number(claimsCount[0]?.count || '0') > 0) {
+      return res.status(400).json({ 
+        error: 'Cannot delete ticket with existing claims',
+        suggestion: 'Set status to cancelled instead'
+      });
+    }
+
+    // Delete ticket
+    await db.delete(goldenTickets)
+      .where(eq(goldenTickets.id, ticketId));
+
+    return res.status(204).end();
+  } catch (error) {
+    console.error('Error deleting ticket:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+/**
+ * Create sponsor (admin)
+ */
+router.post('/admin/sponsors', isAdmin, async (req: Request, res: Response) => {
+  try {
+    // Validate request body
+    const parsedData = insertSponsorSchema.safeParse(req.body);
+    
+    if (!parsedData.success) {
+      return res.status(400).json({ 
+        error: 'Invalid data', 
+        details: parsedData.error.errors 
+      });
+    }
+
+    // Create sponsor
+    const sponsor = await db.insert(sponsors)
+      .values(parsedData.data)
+      .returning();
+
+    return res.status(201).json(sponsor[0]);
+  } catch (error) {
+    console.error('Error creating sponsor:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+/**
+ * Update sponsor (admin)
+ */
+router.patch('/admin/sponsors/:id', isAdmin, async (req: Request, res: Response) => {
+  try {
+    const sponsorId = parseInt(req.params.id);
+    
+    if (isNaN(sponsorId)) {
+      return res.status(400).json({ error: 'Invalid sponsor ID' });
+    }
+
+    // Validate request body against a partial schema
+    const updateSchema = insertSponsorSchema.partial();
+    const parsedData = updateSchema.safeParse(req.body);
+    
+    if (!parsedData.success) {
+      return res.status(400).json({ 
+        error: 'Invalid data', 
+        details: parsedData.error.errors 
+      });
+    }
+
+    // Update sponsor
+    const updated = await db.update(sponsors)
+      .set({
+        ...parsedData.data,
+        updatedAt: new Date()
+      })
+      .where(eq(sponsors.id, sponsorId))
+      .returning();
+
+    if (!updated.length) {
+      return res.status(404).json({ error: 'Sponsor not found' });
+    }
+
+    return res.json(updated[0]);
+  } catch (error) {
+    console.error('Error updating sponsor:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+/**
+ * Delete sponsor (admin)
+ */
+router.delete('/admin/sponsors/:id', isAdmin, async (req: Request, res: Response) => {
+  try {
+    const sponsorId = parseInt(req.params.id);
+    
+    if (isNaN(sponsorId)) {
+      return res.status(400).json({ error: 'Invalid sponsor ID' });
+    }
+
+    // Check if tickets with this sponsor exist
+    const ticketCount = await db.select({ count: sql`count(*)` })
+      .from(goldenTickets)
+      .where(eq(goldenTickets.sponsorId, sponsorId));
+    
+    if (Number(ticketCount[0]?.count || '0') > 0) {
+      return res.status(400).json({ 
+        error: 'Cannot delete sponsor with existing tickets',
+        suggestion: 'Set active to false instead'
+      });
+    }
+
+    // Delete sponsor
+    await db.delete(sponsors)
+      .where(eq(sponsors.id, sponsorId));
+
+    return res.status(204).end();
+  } catch (error) {
+    console.error('Error deleting sponsor:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+export function registerGoldenTicketRoutes(app: Express) {
+  app.use('/api/golden-ticket', router);
+  console.log('[API] Golden Ticket routes registered');
 }
+
+export default router;
