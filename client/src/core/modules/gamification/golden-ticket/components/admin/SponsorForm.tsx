@@ -23,12 +23,23 @@ import { uploadSponsorLogo } from '../../services/fileUploadService';
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   description: z.string().optional().or(z.literal('')).nullable(),
-  logoUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')).nullable(),
+  // Remove the strict URL validation for logoUrl since we don't show it in the form anymore
+  // and it might be a relative path from file upload
   logoPath: z.string().optional().nullable(),
   logoFile: z.any().optional().nullable(), // For file upload
-  website: z.string().url('Must be a valid URL').optional().or(z.literal('')).nullable(),
+  website: z.string()
+    .refine(val => {
+      if (!val) return true; // Allow empty strings
+      return val.startsWith('http'); // Only accept full URLs
+    }, { message: 'Must be a valid URL starting with http:// or https://' })
+    .optional().or(z.literal('')).nullable(),
   contactName: z.string().optional().or(z.literal('')).nullable(),
-  contactEmail: z.string().email('Must be a valid email').optional().or(z.literal('')).nullable(),
+  contactEmail: z.string()
+    .refine(val => {
+      if (!val) return true; // Allow empty strings
+      return val.includes('@'); // Simple email validation
+    }, { message: 'Must be a valid email address' })
+    .optional().or(z.literal('')).nullable(),
   active: z.boolean().default(true)
 });
 
@@ -42,11 +53,11 @@ const SponsorForm: React.FC = () => {
   const defaultValues: Partial<FormValues> = {
     name: '',
     description: '',
-    logoUrl: '',
-    website: '', // Updated to match schema
-    contactName: '', // Added
+    // Removed logoUrl as it's handled by file upload
+    website: '',
+    contactName: '',
     contactEmail: '',
-    active: true // Added
+    active: true
   };
   
   const form = useForm<FormValues>({
@@ -80,9 +91,9 @@ const SponsorForm: React.FC = () => {
   const uploadLogoMutation = useMutation({
     mutationFn: uploadSponsorLogo,
     onSuccess: (response) => {
-      // Set the logoPath and logoUrl from the response
+      // Set only the logoPath from the response
       form.setValue('logoPath', response.filePath, { shouldValidate: true });
-      form.setValue('logoUrl', response.url, { shouldValidate: true });
+      // We no longer use logoUrl field
       
       toast({
         title: 'Success',
@@ -111,7 +122,7 @@ const SponsorForm: React.FC = () => {
         
         // Update the submitData with the uploaded file info
         submitData.logoPath = uploadResult.filePath;
-        submitData.logoUrl = uploadResult.url;
+        // No need to set logoUrl, as we're using logoPath exclusively now
         
         console.log('File uploaded successfully, updated submit data:', submitData);
       }
@@ -191,30 +202,7 @@ const SponsorForm: React.FC = () => {
           )}
         />
         
-        {/* Keep URL option as backup */}
-        <FormField
-          control={form.control}
-          name="logoUrl"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Logo URL (optional)</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="https://example.com/logo.png" 
-                  value={field.value || ''}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  name={field.name}
-                  ref={field.ref}
-                />
-              </FormControl>
-              <FormDescription>
-                Only needed if not uploading a file directly
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {/* Removed logoUrl field as it's confusing and unnecessary */}
         
         <FormField
           control={form.control}

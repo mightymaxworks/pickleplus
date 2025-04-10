@@ -111,11 +111,31 @@ export const goldenTicketClaimsRelations = relations(goldenTicketClaims, ({ one 
 export const insertSponsorSchema = createInsertSchema(sponsors, {
   name: z.string().min(2),
   description: z.string().optional(),
-  logoUrl: z.string().url().optional().nullable(),
+  // Accept either a URL or a path starting with '/'
+  logoUrl: z.string()
+    .refine(val => {
+      if (!val) return true; // Allow empty strings
+      return val.startsWith('/') || val.startsWith('http'); // Accept relative paths or URLs
+    }, { message: 'Must be a valid URL or path' })
+    .optional()
+    .nullable(),
   logoPath: z.string().optional().nullable(),
-  website: z.string().url().optional().nullable(),
+  // Also modify website to potentially accept internal paths
+  website: z.string()
+    .refine(val => {
+      if (!val) return true; // Allow empty strings
+      return val.startsWith('http') || val.startsWith('/'); // Accept only full URLs or relative paths
+    }, { message: 'Must be a valid URL' })
+    .optional()
+    .nullable(),
   contactName: z.string().optional().nullable(),
-  contactEmail: z.string().email().optional().nullable(),
+  contactEmail: z.string()
+    .refine(val => {
+      if (!val) return true; // Allow empty strings
+      return val.includes('@'); // Simple email validation
+    }, { message: 'Must be a valid email' })
+    .optional()
+    .nullable(),
   active: z.boolean().default(true),
 }).omit({ id: true, createdAt: true, updatedAt: true });
 
@@ -133,7 +153,13 @@ export const insertGoldenTicketSchema = createInsertSchema(goldenTickets, {
   rewardType: z.string().default('physical'),
   discountCode: z.string().optional().nullable(),
   discountValue: z.string().optional().nullable(),
-  promotionalImageUrl: z.string().url().optional().nullable(),
+  promotionalImageUrl: z.string()
+    .refine(val => {
+      if (!val) return true; // Allow empty strings
+      return val.startsWith('/') || val.startsWith('http'); // Accept relative paths or URLs
+    }, { message: 'Must be a valid URL or path' })
+    .optional()
+    .nullable(),
   promotionalImagePath: z.string().optional().nullable(),
   pagesToAppearOn: z.array(z.string()).optional(),
   status: z.enum(['draft', 'active', 'paused', 'completed', 'cancelled']).default('draft'),
