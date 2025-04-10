@@ -20,12 +20,25 @@ export interface User {
   createdAt?: string;
 }
 
+// Registration data interface
+export interface RegisterData {
+  username: string;
+  email: string;
+  password: string;
+  displayName?: string;
+  yearOfBirth?: number | null;
+  location?: string | null;
+  playingSince?: string | null;
+  skillLevel?: string | null;
+}
+
 // Define auth context type
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   error: string | null;
 }
@@ -74,6 +87,25 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
   
+  // Register function
+  const register = async (data: RegisterData) => {
+    try {
+      setError(null);
+      const response = await apiRequest('POST', '/api/auth/register', data);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Registration failed');
+      }
+      
+      // Refetch user data
+      await refetch();
+    } catch (err: any) {
+      setError(err.message || 'Registration failed');
+      throw err;
+    }
+  };
+  
   // Logout function
   const logout = async () => {
     try {
@@ -103,6 +135,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         isLoading,
         isAuthenticated,
         login,
+        register,
         logout,
         error,
       }}

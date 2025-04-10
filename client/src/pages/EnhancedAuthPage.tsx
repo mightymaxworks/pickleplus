@@ -67,7 +67,7 @@ const fadeIn = {
 };
 
 export default function EnhancedAuthPage() {
-  const { login, user } = useAuth();
+  const { login, register, user } = useAuth();
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<string>("login");
   const [showFounderSection, setShowFounderSection] = useState(false);
@@ -134,6 +134,7 @@ export default function EnhancedAuthPage() {
 
   const handleRegister = async (formData: RegisterFormData) => {
     try {
+      setIsRegistering(true);
       // Create a properly formatted registration object
       const registrationData = {
         username: formData.username,
@@ -148,10 +149,12 @@ export default function EnhancedAuthPage() {
         // We don't directly set isFoundingMember here
       };
       
-      await registerMutation.mutateAsync(registrationData);
+      await register(registrationData);
       navigate("/dashboard");
     } catch (error) {
       console.error("Registration error:", error);
+    } finally {
+      setIsRegistering(false);
     }
   };
 
@@ -295,9 +298,9 @@ export default function EnhancedAuthPage() {
                           <Button 
                             type="submit" 
                             className="w-full bg-[#FF5722] hover:bg-[#E64A19]"
-                            disabled={loginMutation.isPending}
+                            disabled={isLoggingIn}
                           >
-                            {loginMutation.isPending ? "Logging in..." : "Login"}
+                            {isLoggingIn ? "Logging in..." : "Login"}
                           </Button>
                           <p className="mt-4 text-sm text-center text-gray-500">
                             Don't have an account?{" "}
@@ -593,9 +596,9 @@ export default function EnhancedAuthPage() {
                           <Button 
                             type="submit" 
                             className="w-full bg-[#FF5722] hover:bg-[#E64A19]"
-                            disabled={registerMutation.isPending}
+                            disabled={isRegistering}
                           >
-                            {registerMutation.isPending ? "Creating account..." : "Create Account"}
+                            {isRegistering ? "Creating account..." : "Create Account"}
                           </Button>
                           <p className="mt-4 text-sm text-center text-gray-500">
                             Already have an account?{" "}
