@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { MobileNavigation } from './MobileNavigation';
 import { User } from '@shared/schema';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, User as UserIcon, Menu, X, Search, Settings, Home, Calendar, Award, Users } from 'lucide-react';
+import { Bell, User as UserIcon, Menu, X, Search, Settings, Home, Calendar, Award, Users, LogOut } from 'lucide-react';
 import { PicklePlusNewLogo } from '../icons/PicklePlusNewLogo';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 
@@ -14,13 +14,19 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, logoutMutation } = useAuth();
   const [location, navigate] = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3);
   const isExtraSmallScreen = useMediaQuery('(max-width: 480px)');
   const isSmallScreen = useMediaQuery('(max-width: 640px)');
+  
+  // Handle logout
+  const handleLogout = () => {
+    logoutMutation.mutate();
+    setMobileMenuOpen(false);
+  };
   
   // Handle scroll detection for header styling
   useEffect(() => {
@@ -211,6 +217,23 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     </motion.button>
                   );
                 })}
+                
+                {/* Logout Button */}
+                <motion.button 
+                  className="flex items-center w-full py-3 px-4 mt-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 shadow-sm"
+                  onClick={handleLogout}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5 }}
+                  whileHover={{ x: 5 }}
+                >
+                  <span className="mr-3 text-red-500 dark:text-red-400">
+                    <LogOut size={18} />
+                  </span>
+                  <span className="font-medium text-red-600 dark:text-red-400">
+                    Logout
+                  </span>
+                </motion.button>
                 
                 {/* Search Box */}
                 <div className="mt-4 flex items-center bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden px-4 py-3 border border-gray-200 dark:border-gray-700 shadow-sm">

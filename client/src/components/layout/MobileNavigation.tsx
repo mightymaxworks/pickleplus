@@ -1,9 +1,10 @@
 import React from 'react';
 import { useLocation } from 'wouter';
-import { Pencil } from 'lucide-react';
+import { Pencil, LogOut } from 'lucide-react';
 import { User } from '@shared/schema';
 import { motion } from 'framer-motion';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
+import { useAuth } from '@/hooks/useAuth';
 
 interface MobileNavigationProps {
   user: User;
@@ -12,6 +13,11 @@ interface MobileNavigationProps {
 export function MobileNavigation({ user }: MobileNavigationProps) {
   const [location, navigate] = useLocation();
   const isExtraSmallScreen = useMediaQuery('(max-width: 480px)');
+  const { logoutMutation } = useAuth();
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
 
   return (
     <motion.div
@@ -20,6 +26,20 @@ export function MobileNavigation({ user }: MobileNavigationProps) {
       animate={{ y: 0 }}
       transition={{ type: 'spring', damping: 20, stiffness: 200, delay: 0.5 }}
     >
+      {/* Logout button - positioned at the bottom right */}
+      <motion.button
+        onClick={handleLogout}
+        className="absolute -top-14 right-4 w-12 h-12 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center shadow-md border border-gray-200 dark:border-gray-700"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        title="Logout"
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.8 }}
+      >
+        <LogOut size={20} className="text-gray-600 dark:text-gray-300" />
+      </motion.button>
+
       {/* Full-width Record Match Button for all screen sizes */}
       <motion.button
         onClick={() => navigate('/record-match')}
