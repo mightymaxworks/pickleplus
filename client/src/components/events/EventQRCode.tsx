@@ -1,5 +1,5 @@
 /**
- * PKL-278651-CONN-0003-EVENT - Event Check-in QR Code System
+ * PKL-278651-CONN-0003-EVENT - PicklePass™ System
  * Component for displaying an event QR code that can be scanned for check-in
  */
 
@@ -62,7 +62,7 @@ export function EventQRCode({
         {includeDetails && (
           <div className="mt-2 text-center">
             <p className="text-sm text-muted-foreground">
-              Scan this code to check in to the event
+              Use PicklePass™ to check in to this event
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               {event.location || 'Location not specified'}

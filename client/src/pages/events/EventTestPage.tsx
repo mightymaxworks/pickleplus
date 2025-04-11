@@ -63,7 +63,7 @@ export default function EventTestPage() {
             <TabsContent value="attended" className="mt-0">
               <h2 className="text-xl font-semibold mb-3">Attended Events</h2>
               <div className="text-sm text-muted-foreground p-4 bg-muted/50 rounded-md">
-                My attended events will be shown here based on check-ins.
+                Events you've attended with PicklePass™ will appear here.
               </div>
             </TabsContent>
           </Tabs>
@@ -108,11 +108,11 @@ export default function EventTestPage() {
                   <div className="flex flex-wrap gap-3">
                     <Dialog open={showQRDialog} onOpenChange={setShowQRDialog}>
                       <DialogTrigger asChild>
-                        <Button variant="default">View Event QR Code</Button>
+                        <Button variant="default">View PicklePass™ QR Code</Button>
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
-                          <DialogTitle>Event QR Code</DialogTitle>
+                          <DialogTitle>PicklePass™ Event QR</DialogTitle>
                           <DialogDescription>
                             Scan this QR code to check in to the event.
                           </DialogDescription>
@@ -125,13 +125,13 @@ export default function EventTestPage() {
                     
                     <Dialog open={showScannerDialog} onOpenChange={setShowScannerDialog}>
                       <DialogTrigger asChild>
-                        <Button variant="secondary">Scan QR Code</Button>
+                        <Button variant="secondary">Scan PicklePass™</Button>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-md">
                         <DialogHeader>
-                          <DialogTitle>Scan to Check In</DialogTitle>
+                          <DialogTitle>PicklePass™ Scanner</DialogTitle>
                           <DialogDescription>
-                            Scan a user's QR code to check them into the event.
+                            Scan a user's QR code to register their attendance.
                           </DialogDescription>
                         </DialogHeader>
                         <div className="mt-4">
@@ -151,7 +151,7 @@ export default function EventTestPage() {
               <div className="text-center p-8">
                 <h2 className="text-xl font-semibold mb-2">No Event Selected</h2>
                 <p className="text-muted-foreground mb-4">
-                  Select an event from the list to view details and check-in options.
+                  Select an event from the list to view details and PicklePass™ options.
                 </p>
               </div>
             </div>
