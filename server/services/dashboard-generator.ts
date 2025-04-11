@@ -40,12 +40,19 @@ export class DashboardGenerator {
   /**
    * Get time-based comparison data for metrics
    * @param timePeriod - The time period to consider
+   * @param customStartDate - Start date for custom range (optional)
+   * @param customEndDate - End date for custom range (optional)
    */
-  private async getTimeComparison(timePeriod: DashboardTimePeriod): Promise<{
+  private async getTimeComparison(
+    timePeriod: DashboardTimePeriod,
+    customStartDate?: string,
+    customEndDate?: string
+  ): Promise<{
     currentStartDate: Date;
     previousStartDate: Date;
     currentLabel: string;
     previousLabel: string;
+    currentEndDate?: Date;
   }> {
     const now = new Date();
     let currentStartDate: Date;
@@ -885,15 +892,19 @@ export class DashboardGenerator {
    * Get dashboard widgets
    * @param timePeriod - The time period to consider
    */
-  private async getDashboardWidgets(timePeriod: DashboardTimePeriod): Promise<DashboardWidget[]> {
+  private async getDashboardWidgets(
+    timePeriod: DashboardTimePeriod,
+    startDate?: string,
+    endDate?: string
+  ): Promise<DashboardWidget[]> {
     const widgets: DashboardWidget[] = [];
     
     try {
       // Get all metrics
-      const userMetrics = await this.getUserMetrics(timePeriod);
-      const matchMetrics = await this.getMatchMetrics(timePeriod);
-      const eventMetrics = await this.getEventMetrics(timePeriod);
-      const engagementMetrics = await this.getEngagementMetrics(timePeriod);
+      const userMetrics = await this.getUserMetrics(timePeriod, startDate, endDate);
+      const matchMetrics = await this.getMatchMetrics(timePeriod, startDate, endDate);
+      const eventMetrics = await this.getEventMetrics(timePeriod, startDate, endDate);
+      const engagementMetrics = await this.getEngagementMetrics(timePeriod, startDate, endDate);
       const systemMetrics = await this.getSystemMetrics();
       
       // Create metric card widgets
@@ -1025,10 +1036,16 @@ export class DashboardGenerator {
   /**
    * Get the unified admin dashboard data
    * @param timePeriod - The time period to consider
+   * @param startDate - Start date for custom range (optional)
+   * @param endDate - End date for custom range (optional)
    */
-  public async getDashboard(timePeriod: DashboardTimePeriod = DashboardTimePeriod.MONTH): Promise<DashboardLayout> {
+  public async getDashboard(
+    timePeriod: DashboardTimePeriod = DashboardTimePeriod.MONTH,
+    startDate?: string,
+    endDate?: string
+  ): Promise<DashboardLayout> {
     try {
-      const widgets = await this.getDashboardWidgets(timePeriod);
+      const widgets = await this.getDashboardWidgets(timePeriod, startDate, endDate);
       
       // Get summary counts for reference
       const totalUsers = await this.storage.getUserCount();
