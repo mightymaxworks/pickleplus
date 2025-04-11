@@ -116,7 +116,7 @@ featureFlags.registerFeatures([
   },
   {
     name: 'event-check-in',
-    enabled: false, // Coming post-April 13 launch
+    enabled: true, // Set to true for testing purposes, will be phased rollout after April 13 launch
     description: 'Check in to events by scanning QR codes',
   },
 ]);

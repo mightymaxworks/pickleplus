@@ -1394,13 +1394,17 @@ export class DatabaseStorage implements IStorage {
         .from(events)
         .where(
           and(
-            eq(events.status, "upcoming"),
+            or(
+              eq(events.status, "upcoming"),
+              sql`${events.endDateTime} >= ${now}`
+            ),
             eq(events.isPrivate, false)
           )
         )
         .orderBy(asc(events.startDateTime))
         .limit(limit);
       
+      console.log(`[Storage] getUpcomingEvents found ${upcomingEvents.length} events`);
       return upcomingEvents;
     } catch (error) {
       console.error('[Storage] getUpcomingEvents error:', error);
