@@ -1,26 +1,42 @@
+/**
+ * PKL-278651-ADMIN-0009-MOBILE
+ * useMediaQuery Hook
+ * 
+ * Custom React hook for detecting if a media query matches.
+ * This is used by the device detection utility to determine the current device type.
+ */
+
 import { useState, useEffect } from 'react';
 
 export function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(false);
+  // Initialize with the match state if window is available (client-side)
+  // Otherwise, default to false (server-side rendering)
+  const getMatches = (): boolean => {
+    // Check if window is available (client-side)
+    if (typeof window !== 'undefined') {
+      return window.matchMedia(query).matches;
+    }
+    return false;
+  };
+
+  const [matches, setMatches] = useState<boolean>(getMatches());
 
   useEffect(() => {
+    // Exit early if window is not available (server-side rendering)
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
     const mediaQuery = window.matchMedia(query);
     
-    // Set initial value
-    setMatches(mediaQuery.matches);
-
-    // Create event listener function that updates state
-    const handleChange = (event: MediaQueryListEvent) => {
-      setMatches(event.matches);
-    };
-
-    // Add event listener for changes
-    mediaQuery.addEventListener('change', handleChange);
+    // Update the state with the current value
+    const handler = (): void => setMatches(mediaQuery.matches);
     
-    // Clean up function to remove event listener
-    return () => {
-      mediaQuery.removeEventListener('change', handleChange);
-    };
+    // Add event listener for subsequent changes
+    mediaQuery.addEventListener('change', handler);
+    
+    // Clean up function
+    return () => mediaQuery.removeEventListener('change', handler);
   }, [query]);
 
   return matches;
