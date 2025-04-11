@@ -5,6 +5,11 @@ import {
   matches, type Match, type InsertMatch
 } from "@shared/schema";
 
+// PKL-278651-ADMIN-0013-SEC - Admin Security Enhancements
+import {
+  auditLogs, type AuditLog, type InsertAuditLog
+} from "@shared/schema/audit";
+
 // PKL-278651-MATCH-0002-XR - Enhanced Match Recording System
 import {
   matchStatistics, type InsertMatchStatistics,
