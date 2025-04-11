@@ -101,6 +101,17 @@ export interface IStorage {
   getEventAttendees(eventId: number, limit?: number, offset?: number): Promise<User[]>;
   isUserCheckedIntoEvent(eventId: number, userId: number): Promise<boolean>;
   getEventCheckInCounts(eventId: number): Promise<number>;
+
+  // PKL-278651-CONN-0004-PASS-REG - Event Registration operations
+  getEventRegistration(id: number): Promise<EventRegistration | undefined>;
+  getEventRegistrations(eventId: number, limit?: number, offset?: number): Promise<EventRegistration[]>;
+  getUserEventRegistrations(userId: number, limit?: number, offset?: number): Promise<EventRegistration[]>;
+  registerUserForEvent(registrationData: InsertEventRegistration): Promise<EventRegistration>;
+  updateEventRegistration(id: number, updates: Partial<InsertEventRegistration>): Promise<EventRegistration | undefined>;
+  cancelEventRegistration(id: number): Promise<boolean>;
+  isUserRegisteredForEvent(eventId: number, userId: number): Promise<boolean>;
+  getEventRegistrationCount(eventId: number): Promise<number>;
+  getRegisteredEvents(userId: number, limit?: number, offset?: number): Promise<Event[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1753,6 +1764,269 @@ export class DatabaseStorage implements IStorage {
       console.log(`[Storage] Updated event ${numericEventId} attendance count to ${count}`);
     } catch (error) {
       console.error('[Storage] updateEventAttendanceCount error:', error);
+    }
+  }
+
+  // PKL-278651-CONN-0004-PASS-REG - Event Registration operations
+  async getEventRegistration(id: number): Promise<EventRegistration | undefined> {
+    try {
+      const numericId = Number(id);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] getEventRegistration called with invalid ID: ${id}`);
+        return undefined;
+      }
+      
+      console.log(`[Storage] getEventRegistration called with ID: ${numericId}`);
+      
+      const [registration] = await db.select()
+        .from(eventRegistrations)
+        .where(eq(eventRegistrations.id, numericId));
+      
+      return registration;
+    } catch (error) {
+      console.error('[Storage] getEventRegistration error:', error);
+      return undefined;
+    }
+  }
+  
+  async getEventRegistrations(eventId: number, limit: number = 100, offset: number = 0): Promise<EventRegistration[]> {
+    try {
+      const numericEventId = Number(eventId);
+      
+      if (isNaN(numericEventId) || !Number.isFinite(numericEventId) || numericEventId < 1) {
+        console.log(`[Storage] getEventRegistrations called with invalid eventId: ${eventId}`);
+        return [];
+      }
+      
+      console.log(`[Storage] getEventRegistrations called for event ID: ${numericEventId}`);
+      
+      const registrations = await db.select()
+        .from(eventRegistrations)
+        .where(eq(eventRegistrations.eventId, numericEventId))
+        .orderBy(desc(eventRegistrations.registrationTime))
+        .limit(limit)
+        .offset(offset);
+      
+      return registrations;
+    } catch (error) {
+      console.error('[Storage] getEventRegistrations error:', error);
+      return [];
+    }
+  }
+  
+  async getUserEventRegistrations(userId: number, limit: number = 100, offset: number = 0): Promise<EventRegistration[]> {
+    try {
+      const numericUserId = Number(userId);
+      
+      if (isNaN(numericUserId) || !Number.isFinite(numericUserId) || numericUserId < 1) {
+        console.log(`[Storage] getUserEventRegistrations called with invalid userId: ${userId}`);
+        return [];
+      }
+      
+      console.log(`[Storage] getUserEventRegistrations called for user ID: ${numericUserId}`);
+      
+      const registrations = await db.select()
+        .from(eventRegistrations)
+        .where(eq(eventRegistrations.userId, numericUserId))
+        .orderBy(desc(eventRegistrations.registrationTime))
+        .limit(limit)
+        .offset(offset);
+      
+      return registrations;
+    } catch (error) {
+      console.error('[Storage] getUserEventRegistrations error:', error);
+      return [];
+    }
+  }
+  
+  async registerUserForEvent(registrationData: InsertEventRegistration): Promise<EventRegistration> {
+    try {
+      console.log(`[Storage] registerUserForEvent called for event ID: ${registrationData.eventId} and user ID: ${registrationData.userId}`);
+      
+      // Check if the user is already registered for this event
+      const isRegistered = await this.isUserRegisteredForEvent(registrationData.eventId, registrationData.userId);
+      
+      if (isRegistered) {
+        console.log(`[Storage] User ${registrationData.userId} is already registered for event ${registrationData.eventId}`);
+        
+        // Find and return the existing registration
+        const [existingRegistration] = await db.select()
+          .from(eventRegistrations)
+          .where(
+            and(
+              eq(eventRegistrations.eventId, registrationData.eventId),
+              eq(eventRegistrations.userId, registrationData.userId)
+            )
+          );
+          
+        if (existingRegistration) {
+          return existingRegistration;
+        }
+      }
+      
+      // Add new registration
+      const [registration] = await db.insert(eventRegistrations)
+        .values(registrationData)
+        .returning();
+        
+      console.log(`[Storage] User ${registrationData.userId} successfully registered for event ${registrationData.eventId}`);
+      
+      return registration;
+    } catch (error) {
+      console.error('[Storage] registerUserForEvent error:', error);
+      throw new Error(`Failed to register user for event: ${error.message}`);
+    }
+  }
+  
+  async updateEventRegistration(id: number, updates: Partial<InsertEventRegistration>): Promise<EventRegistration | undefined> {
+    try {
+      const numericId = Number(id);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] updateEventRegistration called with invalid ID: ${id}`);
+        return undefined;
+      }
+      
+      console.log(`[Storage] updateEventRegistration called for registration ID: ${numericId}`);
+      
+      const [updatedRegistration] = await db.update(eventRegistrations)
+        .set(updates)
+        .where(eq(eventRegistrations.id, numericId))
+        .returning();
+        
+      console.log(`[Storage] Registration ${numericId} updated successfully`);
+      
+      return updatedRegistration;
+    } catch (error) {
+      console.error('[Storage] updateEventRegistration error:', error);
+      return undefined;
+    }
+  }
+  
+  async cancelEventRegistration(id: number): Promise<boolean> {
+    try {
+      const numericId = Number(id);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] cancelEventRegistration called with invalid ID: ${id}`);
+        return false;
+      }
+      
+      console.log(`[Storage] cancelEventRegistration called for registration ID: ${numericId}`);
+      
+      // Update the registration status to 'cancelled' instead of deleting it
+      const [cancelledRegistration] = await db.update(eventRegistrations)
+        .set({ status: 'cancelled' })
+        .where(eq(eventRegistrations.id, numericId))
+        .returning();
+        
+      const success = !!cancelledRegistration;
+      console.log(`[Storage] Registration ${numericId} cancelled: ${success}`);
+      
+      return success;
+    } catch (error) {
+      console.error('[Storage] cancelEventRegistration error:', error);
+      return false;
+    }
+  }
+  
+  async isUserRegisteredForEvent(eventId: number, userId: number): Promise<boolean> {
+    try {
+      const numericEventId = Number(eventId);
+      const numericUserId = Number(userId);
+      
+      if (isNaN(numericEventId) || !Number.isFinite(numericEventId) || numericEventId < 1 ||
+          isNaN(numericUserId) || !Number.isFinite(numericUserId) || numericUserId < 1) {
+        console.log(`[Storage] isUserRegisteredForEvent called with invalid IDs: eventId=${eventId}, userId=${userId}`);
+        return false;
+      }
+      
+      console.log(`[Storage] isUserRegisteredForEvent checking if user ${numericUserId} is registered for event ${numericEventId}`);
+      
+      const [registration] = await db.select()
+        .from(eventRegistrations)
+        .where(
+          and(
+            eq(eventRegistrations.eventId, numericEventId),
+            eq(eventRegistrations.userId, numericUserId),
+            eq(eventRegistrations.status, 'confirmed') // Only count confirmed registrations
+          )
+        );
+        
+      const isRegistered = !!registration;
+      console.log(`[Storage] User ${numericUserId} is registered for event ${numericEventId}: ${isRegistered}`);
+      
+      return isRegistered;
+    } catch (error) {
+      console.error('[Storage] isUserRegisteredForEvent error:', error);
+      return false;
+    }
+  }
+  
+  async getEventRegistrationCount(eventId: number): Promise<number> {
+    try {
+      const numericEventId = Number(eventId);
+      
+      if (isNaN(numericEventId) || !Number.isFinite(numericEventId) || numericEventId < 1) {
+        console.log(`[Storage] getEventRegistrationCount called with invalid eventId: ${eventId}`);
+        return 0;
+      }
+      
+      console.log(`[Storage] getEventRegistrationCount called for event ID: ${numericEventId}`);
+      
+      const result = await db.select({ count: sql<number>`count(*)` })
+        .from(eventRegistrations)
+        .where(
+          and(
+            eq(eventRegistrations.eventId, numericEventId),
+            eq(eventRegistrations.status, 'confirmed') // Only count confirmed registrations
+          )
+        );
+      
+      return result[0]?.count || 0;
+    } catch (error) {
+      console.error('[Storage] getEventRegistrationCount error:', error);
+      return 0;
+    }
+  }
+  
+  async getRegisteredEvents(userId: number, limit: number = 100, offset: number = 0): Promise<Event[]> {
+    try {
+      const numericUserId = Number(userId);
+      
+      if (isNaN(numericUserId) || !Number.isFinite(numericUserId) || numericUserId < 1) {
+        console.log(`[Storage] getRegisteredEvents called with invalid userId: ${userId}`);
+        return [];
+      }
+      
+      console.log(`[Storage] getRegisteredEvents called for user ID: ${numericUserId}`);
+      
+      // Get all events the user is registered for with confirmed status
+      const result = await db
+        .select({
+          event: events,
+        })
+        .from(eventRegistrations)
+        .innerJoin(events, eq(eventRegistrations.eventId, events.id))
+        .where(
+          and(
+            eq(eventRegistrations.userId, numericUserId),
+            eq(eventRegistrations.status, 'confirmed')
+          )
+        )
+        .orderBy(asc(events.startDateTime))
+        .limit(limit)
+        .offset(offset);
+      
+      // Extract event objects from the joined result
+      const registeredEvents = result.map(r => r.event);
+      console.log(`[Storage] Found ${registeredEvents.length} registered events for user ${numericUserId}`);
+      
+      return registeredEvents;
+    } catch (error) {
+      console.error('[Storage] getRegisteredEvents error:', error);
+      return [];
     }
   }
 }
