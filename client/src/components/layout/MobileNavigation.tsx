@@ -43,7 +43,7 @@ export function MobileNavigation({ user }: MobileNavigationProps) {
       {/* Admin button - positioned at the bottom right for admins */}
       {user.isAdmin && (
         <motion.button
-          onClick={() => navigate('/admin/golden-ticket')}
+          onClick={() => navigate('/admin')}
           className="absolute -top-14 right-16 w-12 h-12 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center shadow-md border border-gray-200 dark:border-gray-700"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}

@@ -147,7 +147,7 @@ export function AppHeader() {
                 Settings
               </DropdownMenuItem>
               {user.isAdmin && (
-                <DropdownMenuItem onClick={() => navigate("/admin/dashboard")}>
+                <DropdownMenuItem onClick={() => navigate("/admin")}>
                   <Shield className="mr-2 h-4 w-4" />
                   Admin Panel
                 </DropdownMenuItem>

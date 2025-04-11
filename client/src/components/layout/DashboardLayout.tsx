@@ -182,7 +182,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   { label: 'PicklePass™', icon: <Ticket size={18} />, path: '/events/test' },
                   { label: 'Profile', icon: <UserIcon size={18} />, path: '/profile' },
                   { label: 'Settings', icon: <Settings size={18} />, path: '/settings' },
-                  ...(user.isAdmin ? [{ label: 'Admin Panel', icon: <Shield size={18} />, path: '/admin/golden-ticket' }] : [])
+                  ...(user.isAdmin ? [{ label: 'Admin Panel', icon: <Shield size={18} />, path: '/admin' }] : [])
                 ].map((item, i) => {
                   const isActive = location === item.path;
                   
