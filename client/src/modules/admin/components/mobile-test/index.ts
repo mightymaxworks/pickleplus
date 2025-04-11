@@ -5,8 +5,4 @@
  * This file exports the mobile test components for the admin module.
  */
 
-import AdminMobileTestNavItem from './AdminMobileTestNavItem';
-
-export {
-  AdminMobileTestNavItem
-};
+export { AdminMobileTestNavItem } from './AdminMobileTestNavItem';

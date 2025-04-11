@@ -31,8 +31,10 @@ export function MatchReports({ timePeriod, onError }: MatchReportsProps) {
     async function fetchMatchReports() {
       setLoading(true);
       try {
-        const response = await apiRequest(`/api/admin/reports/match?timePeriod=${timePeriod}`);
-        setMatchData(response.data);
+        const response = await apiRequest<CategoryData[]>(`/api/admin/reports/match?timePeriod=${timePeriod}`, {
+          method: 'GET',
+        });
+        setMatchData(response);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching match reports:", error);

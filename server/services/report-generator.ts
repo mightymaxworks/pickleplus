@@ -167,15 +167,13 @@ function createComparisonData(
   const percentChange = (change / previous) * 100;
   
   // If lower is better (like load times), invert the sign
-  const adjustedChange = lowerIsBetter ? -change : change;
   const adjustedPercentChange = lowerIsBetter ? -percentChange : percentChange;
   
   return {
     name,
     current,
     previous,
-    change: adjustedChange,
-    percentChange: adjustedPercentChange
+    percentChange: Number(adjustedPercentChange.toFixed(1))
   };
 }
 

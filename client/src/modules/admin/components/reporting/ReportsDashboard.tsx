@@ -30,7 +30,7 @@ export function ReportsDashboard() {
   const deviceType = getDeviceType();
   
   // Use responsive component for mobile
-  if (deviceType === DeviceType.MOBILE) {
+  if (deviceType === DeviceType.Mobile) {
     return <ResponsiveReportsDashboard />;
   }
 

@@ -31,8 +31,10 @@ export function UserReports({ timePeriod, onError }: UserReportsProps) {
     async function fetchUserReports() {
       setLoading(true);
       try {
-        const response = await apiRequest(`/api/admin/reports/user?timePeriod=${timePeriod}`);
-        setUserData(response.data);
+        const response = await apiRequest<TimeSeriesData[]>(`/api/admin/reports/user?timePeriod=${timePeriod}`, {
+          method: 'GET',
+        });
+        setUserData(response);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching user reports:", error);

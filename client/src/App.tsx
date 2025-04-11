@@ -30,6 +30,7 @@ import PrizeDrawingPage from './pages/admin/PrizeDrawingPage'
 import GoldenTicketAdmin from './pages/admin/GoldenTicketAdmin'
 import PassportVerificationPage from './pages/admin/PassportVerificationPage'
 import MobileTestPage from './pages/admin/MobileTestPage'
+import ReportsPage from './pages/admin/ReportsPage'
 import AdminDashboardPage from './pages/AdminDashboardPage'
 import QRTestPage from './pages/dev/QRTestPage'
 import EventTestPage from './pages/events/EventTestPage'
@@ -157,6 +158,24 @@ export default function App() {
               {(params) => (
                 <AdminProtectedRoute>
                   <MobileTestPage />
+                </AdminProtectedRoute>
+              )}
+            </Route>
+            
+            {/* Reports Dashboard (PKL-278651-ADMIN-0010-REPORT) */}
+            <Route path="/admin/reports">
+              {(params) => (
+                <AdminProtectedRoute>
+                  <ReportsPage />
+                </AdminProtectedRoute>
+              )}
+            </Route>
+            
+            {/* Reports Dashboard (alternate route for nav consistency) */}
+            <Route path="/admin/reporting">
+              {(params) => (
+                <AdminProtectedRoute>
+                  <ReportsPage />
                 </AdminProtectedRoute>
               )}
             </Route>

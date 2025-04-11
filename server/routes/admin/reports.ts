@@ -7,8 +7,51 @@
 
 import { Router } from 'express';
 import { storage } from '../../storage';
-import { reportFilterSchema, reportConfigSchema, insertReportConfigSchema, REPORT_TYPES, ReportTimePeriod, ReportCategory, ReportChartType } from '../../../shared/schema/admin/reports';
+import { ReportTimePeriod, ReportCategory, ReportChartType, ReportFilter } from '../../../shared/schema/admin/reports';
 import { generateDemoTimeSeriesData, generateDemoCategoryData, generateDemoComparisonData } from '../../services/report-generator';
+import { z } from 'zod';
+
+// Define schemas for report filtering and configuration
+const reportFilterSchema = z.object({
+  timePeriod: z.nativeEnum(ReportTimePeriod).default(ReportTimePeriod.MONTH),
+  category: z.nativeEnum(ReportCategory).optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  chartType: z.nativeEnum(ReportChartType).optional(),
+  page: z.number().default(1),
+  limit: z.number().default(50)
+});
+
+const reportConfigSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  category: z.nativeEnum(ReportCategory),
+  chartType: z.nativeEnum(ReportChartType),
+  filters: reportFilterSchema,
+  createdBy: z.number(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime().optional()
+});
+
+const insertReportConfigSchema = reportConfigSchema.omit({
+  id: true, 
+  createdAt: true, 
+  updatedAt: true
+});
+
+// Define report types
+const REPORT_TYPES = {
+  USER_GROWTH: 'user_growth',
+  MATCH_ACTIVITY: 'match_activity',
+  ENGAGEMENT_METRICS: 'engagement_metrics',
+  SYSTEM_PERFORMANCE: 'system_performance',
+  RATING_DISTRIBUTION: 'rating_distribution',
+  SKILL_PROGRESSION: 'skill_progression',
+  TOURNAMENT_PARTICIPATION: 'tournament_participation',
+  EVENT_ATTENDANCE: 'event_attendance',
+  PICKLEBALL_USAGE: 'pickleball_usage'
+} as const;
 
 const router = Router();
 
@@ -239,11 +282,11 @@ function getReportCategory(reportType: string): ReportCategory {
       return ReportCategory.SYSTEM;
     case REPORT_TYPES.RATING_DISTRIBUTION:
     case REPORT_TYPES.SKILL_PROGRESSION:
-      return ReportCategory.PERFORMANCE;
+      return ReportCategory.USER;
     case REPORT_TYPES.TOURNAMENT_PARTICIPATION:
     case REPORT_TYPES.EVENT_ATTENDANCE:
     case REPORT_TYPES.PICKLEBALL_USAGE:
-      return ReportCategory.ACTIVITY;
+      return ReportCategory.MATCH;
     default:
       return ReportCategory.USER;
   }

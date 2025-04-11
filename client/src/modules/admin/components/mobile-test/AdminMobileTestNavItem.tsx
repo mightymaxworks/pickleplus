@@ -5,17 +5,12 @@
  * This component registers the mobile test page in the admin navigation.
  */
 
-import React from 'react';
 import { Smartphone } from 'lucide-react';
-import { Link } from 'wouter';
+import { AdminNavItem } from '../../types';
 
-export default function AdminMobileTestNavItem() {
-  return (
-    <Link to="/admin/mobile-test">
-      <div className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-secondary">
-        <Smartphone size={18} />
-        <span>Mobile Test</span>
-      </div>
-    </Link>
-  );
-}
+export const AdminMobileTestNavItem: AdminNavItem = {
+  label: "Mobile Test",
+  path: "/admin/mobile-test",
+  icon: <Smartphone className="h-5 w-5" />,
+  order: 80
+};

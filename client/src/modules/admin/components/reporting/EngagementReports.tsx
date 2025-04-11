@@ -41,8 +41,10 @@ export function EngagementReports({ timePeriod, onError }: EngagementReportsProp
     async function fetchEngagementReports() {
       setLoading(true);
       try {
-        const response = await apiRequest(`/api/admin/reports/engagement?timePeriod=${timePeriod}`);
-        setEngagementData(response.data);
+        const response = await apiRequest<ComparisonData[]>(`/api/admin/reports/engagement?timePeriod=${timePeriod}`, {
+          method: 'GET',
+        });
+        setEngagementData(response);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching engagement reports:", error);
