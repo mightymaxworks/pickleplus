@@ -1388,28 +1388,18 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log(`[Storage] getUpcomingEvents called with limit: ${limit}`);
       
-      const nowISOString = new Date().toISOString();
-      
-      // Using debugging to trace the issue
-      console.log(`[Storage] Current date for filtering: ${nowISOString}`);
-      
-      const upcomingEvents = await db.select()
-        .from(events)
-        .where(
-          and(
-            or(
-              eq(events.status, "upcoming"),
-              // Use ISO string for date comparison
-              sql`${events.endDateTime}::timestamp >= ${nowISOString}::timestamp`
-            ),
-            eq(events.isPrivate, false)
-          )
-        )
-        .orderBy(asc(events.startDateTime))
-        .limit(limit);
+      // Use SQL template literal for safe query construction
+      const now = new Date();
+      const upcomingEvents = await db.execute(sql`
+        SELECT * FROM events 
+        WHERE (status = 'upcoming' OR end_date_time >= ${now}) 
+        AND is_private = false 
+        ORDER BY start_date_time ASC 
+        LIMIT ${limit};
+      `);
       
       console.log(`[Storage] getUpcomingEvents found ${upcomingEvents.length} events`);
-      return upcomingEvents;
+      return upcomingEvents as unknown as Event[];
     } catch (error) {
       console.error('[Storage] getUpcomingEvents error:', error);
       return [];
