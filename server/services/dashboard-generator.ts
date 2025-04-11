@@ -314,10 +314,7 @@ export class DashboardGenerator {
       const eventsPreviousPeriod = await db.select({ count: count() })
         .from(events)
         .where(
-          and(
-            gte(events.startDateTime, previousStartDate.toISOString()),
-            sql`${events.startDateTime} < ${currentStartDate.toISOString()}`
-          )
+          sql`${events.startDateTime} >= ${previousStartDate} AND ${events.startDateTime} < ${currentStartDate}`
         )
         .execute()
         .then(result => result[0]?.count || 0);
@@ -326,7 +323,7 @@ export class DashboardGenerator {
       const checkInsCurrentPeriod = await db.select({ count: count() })
         .from(eventCheckIns)
         .innerJoin(events, eq(eventCheckIns.eventId, events.id))
-        .where(gte(events.startDateTime, currentStartDate.toISOString()))
+        .where(sql`${events.startDateTime} >= ${currentStartDate}`)
         .execute()
         .then(result => result[0]?.count || 0);
       
@@ -455,7 +452,7 @@ export class DashboardGenerator {
       const activeUserIdsFromMatches = await db
         .selectDistinct({ userId: matches.playerOneId })
         .from(matches)
-        .where(gte(matches.matchDate, startDate.toISOString()))
+        .where(sql`${matches.matchDate} >= ${startDate}`)
         .execute()
         .then(results => results.map(r => r.userId));
       
@@ -464,7 +461,7 @@ export class DashboardGenerator {
         .selectDistinct({ userId: eventCheckIns.userId })
         .from(eventCheckIns)
         .innerJoin(events, eq(eventCheckIns.eventId, events.id))
-        .where(gte(events.startDateTime, startDate.toISOString()))
+        .where(sql`${events.startDateTime} >= ${startDate}`)
         .execute()
         .then(results => results.map(r => r.userId));
       
@@ -485,26 +482,89 @@ export class DashboardGenerator {
     const metrics: DashboardMetric[] = [];
 
     try {
-      // System uptime - this is a placeholder
+      // Database table counts
+      const userTableSize = await db.select({ count: count() })
+        .from(users)
+        .execute()
+        .then(result => result[0]?.count || 0);
+      
+      const matchTableSize = await db.select({ count: count() })
+        .from(matches)
+        .execute()
+        .then(result => result[0]?.count || 0);
+      
+      const eventTableSize = await db.select({ count: count() })
+        .from(events)
+        .execute()
+        .then(result => result[0]?.count || 0);
+      
+      const totalRecords = Number(userTableSize) + Number(matchTableSize) + Number(eventTableSize);
+      
+      // Query database for its status
+      const dbStatus = await db.execute(sql`SELECT pg_is_in_recovery() as is_in_recovery, pg_postmaster_start_time() as start_time`)
+        .then(result => result[0] || { is_in_recovery: false, start_time: new Date() });
+      
+      // Calculate database uptime
+      const dbStartTime = new Date(dbStatus.start_time);
+      const currentTime = new Date();
+      const uptimeMs = currentTime.getTime() - dbStartTime.getTime();
+      const uptimeDays = Math.floor(uptimeMs / (1000 * 60 * 60 * 24));
+      
+      // Get most recent API response time statistics
+      // For now we use a reasonable placeholder as we don't have a log of API response times
+      const apiResponseTime = 245; // ms
+      
+      // Get database size information
+      const dbSizeInfo = await db.execute(sql`
+        SELECT 
+          pg_database_size(current_database()) as db_size,
+          pg_size_pretty(pg_database_size(current_database())) as pretty_size
+      `).then(result => result[0] || { db_size: 0, pretty_size: '0 MB' });
+      
+      // Add database uptime metric
       metrics.push({
-        id: "system-uptime",
-        title: "System Uptime",
-        value: "99.9%",
-        valueType: DashboardMetricValueType.PERCENTAGE,
+        id: "database-uptime",
+        title: "Database Uptime",
+        value: uptimeDays.toString(),
+        valueType: DashboardMetricValueType.NUMBER,
         trend: DashboardMetricTrend.NEUTRAL,
-        sentiment: DashboardMetricSentiment.POSITIVE,
+        sentiment: uptimeDays > 30 ? DashboardMetricSentiment.POSITIVE : DashboardMetricSentiment.NEUTRAL,
         category: DashboardMetricCategory.SYSTEM,
-        description: "System uptime percentage"
+        description: "Days since database server started"
+      });
+      
+      // Add database size metric
+      metrics.push({
+        id: "database-size",
+        title: "Database Size",
+        value: dbSizeInfo.pretty_size,
+        valueType: DashboardMetricValueType.TEXT,
+        trend: DashboardMetricTrend.NEUTRAL,
+        sentiment: DashboardMetricSentiment.NEUTRAL,
+        category: DashboardMetricCategory.SYSTEM,
+        description: "Total size of the PostgreSQL database"
       });
 
-      // API response time - this is a placeholder
+      // Add total records metric
       metrics.push({
-        id: "api-response-time",
-        title: "API Response Time",
-        value: "245",
+        id: "total-records",
+        title: "Total Records",
+        value: totalRecords.toString(),
         valueType: DashboardMetricValueType.NUMBER,
         trend: DashboardMetricTrend.NEUTRAL,
         sentiment: DashboardMetricSentiment.NEUTRAL,
+        category: DashboardMetricCategory.SYSTEM,
+        description: "Total records across main tables"
+      });
+
+      // API response time
+      metrics.push({
+        id: "api-response-time",
+        title: "API Response Time",
+        value: apiResponseTime.toString(),
+        valueType: DashboardMetricValueType.NUMBER,
+        trend: DashboardMetricTrend.NEUTRAL,
+        sentiment: apiResponseTime < 300 ? DashboardMetricSentiment.POSITIVE : DashboardMetricSentiment.NEGATIVE,
         category: DashboardMetricCategory.SYSTEM,
         description: "Average API response time in ms"
       });
@@ -523,22 +583,92 @@ export class DashboardGenerator {
   private async getUserGrowthChartData(timePeriod: DashboardTimePeriod): Promise<ChartData> {
     try {
       const { currentStartDate, previousStartDate, currentLabel, previousLabel } = await this.getTimeComparison(timePeriod);
+      
+      // Configure time intervals based on the selected period
+      let intervalFormat: string;
+      let intervals: number;
+      let intervalUnit: "day" | "week" | "month";
+      
+      switch (timePeriod) {
+        case DashboardTimePeriod.WEEK:
+          intervalFormat = "EEE"; // Mon, Tue, etc.
+          intervals = 7;
+          intervalUnit = "day";
+          break;
+        case DashboardTimePeriod.MONTH:
+          intervalFormat = "'Week' w"; // Week 1, Week 2, etc.
+          intervals = 4;
+          intervalUnit = "week";
+          break;
+        case DashboardTimePeriod.QUARTER:
+          intervalFormat = "MMM"; // Jan, Feb, Mar, etc.
+          intervals = 3;
+          intervalUnit = "month";
+          break;
+        case DashboardTimePeriod.YEAR:
+          intervalFormat = "MMM"; // Jan, Feb, Mar, etc.
+          intervals = 12;
+          intervalUnit = "month";
+          break;
+        default:
+          intervalFormat = "'Week' w";
+          intervals = 4;
+          intervalUnit = "week";
+      }
 
-      // For simplicity, we're using placeholder data here
-      // In a real implementation, this would query the database for time-series data
-      const currentPeriodData = [
-        { label: "Week 1", value: 42 },
-        { label: "Week 2", value: 55 },
-        { label: "Week 3", value: 72 },
-        { label: "Week 4", value: 90 }
-      ];
-
-      const previousPeriodData = [
-        { label: "Week 1", value: 35 },
-        { label: "Week 2", value: 48 },
-        { label: "Week 3", value: 60 },
-        { label: "Week 4", value: 75 }
-      ];
+      // Get actual user signups from database
+      const currentPeriodData: Array<{ label: string; value: number }> = [];
+      const previousPeriodData: Array<{ label: string; value: number }> = [];
+      
+      // Generate time intervals for current period
+      const currentPeriodIntervals = this.generateTimeIntervals(currentStartDate, intervals, intervalUnit);
+      
+      // Generate time intervals for previous period
+      const previousPeriodIntervals = this.generateTimeIntervals(previousStartDate, intervals, intervalUnit);
+      
+      // For each interval in current period, count users who signed up during that interval
+      for (let i = 0; i < currentPeriodIntervals.length - 1; i++) {
+        const intervalStartDate = currentPeriodIntervals[i];
+        const intervalEndDate = currentPeriodIntervals[i + 1];
+        
+        const count = await db.select({ count: count() })
+          .from(users)
+          .where(
+            sql`${users.createdAt} >= ${intervalStartDate} AND ${users.createdAt} < ${intervalEndDate}`
+          )
+          .execute()
+          .then(result => result[0]?.count || 0);
+        
+        // Format the interval label
+        const label = new Date(intervalStartDate).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric'
+        });
+        
+        currentPeriodData.push({ label, value: Number(count) });
+      }
+      
+      // For each interval in previous period, count users who signed up during that interval
+      for (let i = 0; i < previousPeriodIntervals.length - 1; i++) {
+        const intervalStartDate = previousPeriodIntervals[i];
+        const intervalEndDate = previousPeriodIntervals[i + 1];
+        
+        const count = await db.select({ count: count() })
+          .from(users)
+          .where(
+            sql`${users.createdAt} >= ${intervalStartDate} AND ${users.createdAt} < ${intervalEndDate}`
+          )
+          .execute()
+          .then(result => result[0]?.count || 0);
+        
+        // Format the interval label
+        const label = new Date(intervalStartDate).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric'
+        });
+        
+        previousPeriodData.push({ label, value: Number(count) });
+      }
 
       return {
         title: "User Growth",
@@ -553,7 +683,7 @@ export class DashboardGenerator {
           }
         ],
         xAxisLabel: "Time",
-        yAxisLabel: "Users"
+        yAxisLabel: "New Users"
       };
     } catch (error) {
       console.error("Error getting user growth chart data:", error);
@@ -561,9 +691,39 @@ export class DashboardGenerator {
         title: "User Growth",
         series: [],
         xAxisLabel: "Time",
-        yAxisLabel: "Users"
+        yAxisLabel: "New Users"
       };
     }
+  }
+  
+  /**
+   * Generate an array of dates representing the boundaries of time intervals
+   * @param startDate - The start date
+   * @param count - The number of intervals
+   * @param unit - The unit of time for each interval
+   */
+  private generateTimeIntervals(startDate: Date, count: number, unit: "day" | "week" | "month"): Date[] {
+    const intervals: Date[] = [new Date(startDate)];
+    
+    for (let i = 1; i <= count; i++) {
+      const date = new Date(startDate);
+      
+      switch (unit) {
+        case "day":
+          date.setDate(date.getDate() + i);
+          break;
+        case "week":
+          date.setDate(date.getDate() + (i * 7));
+          break;
+        case "month":
+          date.setMonth(date.getMonth() + i);
+          break;
+      }
+      
+      intervals.push(date);
+    }
+    
+    return intervals;
   }
 
   /**
@@ -571,17 +731,102 @@ export class DashboardGenerator {
    */
   private async getMatchDistributionChartData(): Promise<ChartData> {
     try {
-      // For simplicity, we're using placeholder data here
-      // In a real implementation, this would query the database for match types
+      // Get match counts by format type from the database
+      const singlesCount = await db.select({ count: count() })
+        .from(matches)
+        .where(eq(matches.formatType, "singles"))
+        .execute()
+        .then(result => result[0]?.count || 0);
+      
+      const doublesCount = await db.select({ count: count() })
+        .from(matches)
+        .where(eq(matches.formatType, "doubles"))
+        .execute()
+        .then(result => result[0]?.count || 0);
+      
+      // Get match counts by match type from the database
+      const casualCount = await db.select({ count: count() })
+        .from(matches)
+        .where(eq(matches.matchType, "casual"))
+        .execute()
+        .then(result => result[0]?.count || 0);
+      
+      const leagueCount = await db.select({ count: count() })
+        .from(matches)
+        .where(eq(matches.matchType, "league"))
+        .execute()
+        .then(result => result[0]?.count || 0);
+      
+      const tournamentCount = await db.select({ count: count() })
+        .from(matches)
+        .where(eq(matches.matchType, "tournament"))
+        .execute()
+        .then(result => result[0]?.count || 0);
+      
+      // Get match counts by division
+      const openCount = await db.select({ count: count() })
+        .from(matches)
+        .where(eq(matches.division, "open"))
+        .execute()
+        .then(result => result[0]?.count || 0);
+      
+      const age19Count = await db.select({ count: count() })
+        .from(matches)
+        .where(eq(matches.division, "19+"))
+        .execute()
+        .then(result => result[0]?.count || 0);
+      
+      const age35Count = await db.select({ count: count() })
+        .from(matches)
+        .where(eq(matches.division, "35+"))
+        .execute()
+        .then(result => result[0]?.count || 0);
+      
+      const age50Count = await db.select({ count: count() })
+        .from(matches)
+        .where(eq(matches.division, "50+"))
+        .execute()
+        .then(result => result[0]?.count || 0);
+      
+      const age60Count = await db.select({ count: count() })
+        .from(matches)
+        .where(eq(matches.division, "60+"))
+        .execute()
+        .then(result => result[0]?.count || 0);
+      
+      const age70Count = await db.select({ count: count() })
+        .from(matches)
+        .where(eq(matches.division, "70+"))
+        .execute()
+        .then(result => result[0]?.count || 0);
+      
       return {
         title: "Match Distribution",
         series: [
           {
+            name: "Format Types",
+            data: [
+              { label: "Singles", value: Number(singlesCount) },
+              { label: "Doubles", value: Number(doublesCount) }
+            ]
+          },
+          {
             name: "Match Types",
             data: [
-              { label: "Singles", value: 35 },
-              { label: "Doubles", value: 55 },
-              { label: "Mixed", value: 10 }
+              { label: "Casual", value: Number(casualCount) },
+              { label: "League", value: Number(leagueCount) },
+              { label: "Tournament", value: Number(tournamentCount) }
+            ]
+          },
+          {
+            name: "Age Divisions",
+            data: [
+              { label: "Open", value: Number(openCount) },
+              { label: "19+", value: Number(age19Count) },
+              { label: "35+", value: Number(age35Count) },
+              { label: "50+", value: Number(age50Count) },
+              { label: "60+", value: Number(age60Count) },
+              { label: "70+", value: Number(age70Count) }
             ]
           }
         ]
