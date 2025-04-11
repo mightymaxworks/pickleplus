@@ -1,10 +1,11 @@
 /**
  * PKL-278651-CONN-0003-EVENT - PicklePass™ System
+ * PKL-278651-CONN-0004-PASS-REG - Enhanced PicklePass™ with Registration
  * SDK for interacting with the Event API
  */
 
 import { apiRequest } from '@/lib/queryClient';
-import type { Event } from '@shared/schema/events';
+import type { Event, EventRegistration } from '@shared/schema/events';
 
 /**
  * Get all upcoming events
@@ -275,6 +276,135 @@ export async function getEventAttendees(eventId: number, limit?: number, offset?
   }
 }
 
+/**
+ * PKL-278651-CONN-0004-PASS-REG - Enhanced PicklePass™ with Registration
+ * Get all events the current user is registered for
+ * @param limit Optional limit on the number of events to return
+ * @param offset Optional offset for pagination
+ * @returns Promise with array of events
+ */
+export async function getMyRegisteredEvents(limit?: number, offset?: number): Promise<Event[]> {
+  let url = '/api/events/my/registered';
+  
+  const params = new URLSearchParams();
+  if (limit) params.append('limit', limit.toString());
+  if (offset) params.append('offset', offset.toString());
+  
+  const queryString = params.toString();
+  if (queryString) url += `?${queryString}`;
+  
+  const response = await apiRequest('GET', url);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch registered events: ${response.status}`);
+  }
+  
+  const text = await response.text();
+  if (!text) return [];
+  
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    console.error('Error parsing registered events response:', error);
+    return [];
+  }
+}
+
+/**
+ * Get user's registration status for an event
+ * @param eventId The ID of the event
+ * @returns Promise with boolean indicating if user is registered
+ */
+export async function getEventRegistrationStatus(eventId: number): Promise<boolean> {
+  const response = await apiRequest('GET', `/api/events/${eventId}/registration-status`);
+  
+  if (!response.ok) {
+    return false;
+  }
+  
+  const text = await response.text();
+  if (!text) return false;
+  
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    console.error('Error parsing registration status response:', error);
+    return false;
+  }
+}
+
+/**
+ * Register for an event
+ * @param eventId The ID of the event to register for
+ * @param notes Optional notes for the registration (special requests, etc.)
+ * @returns Promise with the registration details
+ */
+export async function registerForEvent(eventId: number, notes?: string): Promise<EventRegistration> {
+  const payload = notes ? { notes } : {};
+  
+  const response = await apiRequest('POST', `/api/events/${eventId}/register`, payload);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to register for event: ${response.status}`);
+  }
+  
+  const text = await response.text();
+  if (!text) return {} as EventRegistration;
+  
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    console.error('Error parsing registration response:', error);
+    return {} as EventRegistration;
+  }
+}
+
+/**
+ * Cancel registration for an event
+ * @param eventId The ID of the event to cancel registration for
+ * @returns Promise with success status
+ */
+export async function cancelEventRegistration(eventId: number): Promise<{ success: boolean }> {
+  const response = await apiRequest('POST', `/api/events/${eventId}/cancel-registration`);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to cancel registration: ${response.status}`);
+  }
+  
+  const text = await response.text();
+  if (!text) return { success: true };
+  
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    console.error('Error parsing cancel registration response:', error);
+    return { success: response.ok };
+  }
+}
+
+/**
+ * Get registration count for an event
+ * @param eventId The ID of the event
+ * @returns Promise with the number of registrations
+ */
+export async function getEventRegistrationCount(eventId: number): Promise<number> {
+  const response = await apiRequest('GET', `/api/events/${eventId}/registration-count`);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch registration count: ${response.status}`);
+  }
+  
+  const text = await response.text();
+  if (!text) return 0;
+  
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    console.error('Error parsing registration count response:', error);
+    return 0;
+  }
+}
+
 export default {
   getUpcomingEvents,
   getEvent,
@@ -286,5 +416,11 @@ export default {
   updateEvent,
   deleteEvent,
   checkInToEvent,
-  getEventAttendees
+  getEventAttendees,
+  // PKL-278651-CONN-0004-PASS-REG - New registration functions
+  getMyRegisteredEvents,
+  getEventRegistrationStatus,
+  registerForEvent,
+  cancelEventRegistration,
+  getEventRegistrationCount
 };
