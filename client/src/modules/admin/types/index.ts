@@ -6,6 +6,23 @@
  */
 
 import { ReactNode } from 'react';
+import { User, RedemptionCode, CoachingProfile } from '@shared/schema';
+
+/**
+ * Admin Module API
+ * Core interface for the admin module
+ */
+export interface AdminModuleAPI {
+  getUsers(): Promise<User[]>;
+  updateUserRole(userId: number, isAdmin: boolean): Promise<User>;
+  verifyCoach(coachId: number): Promise<CoachingProfile>;
+  getRedemptionCodes(): Promise<RedemptionCode[]>;
+  createRedemptionCode(codeData: any): Promise<RedemptionCode>;
+  updateRedemptionCode(codeId: number, codeData: any): Promise<RedemptionCode>;
+  getFeatureFlags(): Promise<Record<string, boolean>>;
+  updateFeatureFlag(flagName: string, enabled: boolean): Promise<void>;
+  getDashboardStats(): Promise<any>;
+}
 
 /**
  * Admin Component Types

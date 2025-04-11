@@ -1,24 +1,49 @@
 /**
+ * PKL-278651-ADMIN-0001-CORE
  * Admin Module
  * 
  * This module handles administrative functionality across the platform
+ * and provides a component registration system for admin features
  */
 
 import { Module } from '@/core/modules/moduleRegistry';
 import { eventBus, Events } from '@/core/events/eventBus';
 import { User, RedemptionCode, CoachingProfile } from '@shared/schema';
-import { AdminModuleAPI } from '../types';
 import { apiRequest } from '@/lib/queryClient';
+import { AdminModuleAPI } from './types';
 import { 
   enableFeature, 
   disableFeature, 
   resetFeature 
 } from '@/lib/featureFlags';
 
+// Import admin module specific types and services
+import { 
+  AdminNavItem, 
+  AdminDashboardCard, 
+  AdminViewComponent, 
+  AdminQuickAction 
+} from './types';
+import { adminComponentRegistry } from './services/adminComponentRegistry';
+
+/**
+ * Extended Admin Module API for component registration
+ */
+interface ExtendedAdminModuleAPI extends AdminModuleAPI {
+  registerNavItem(item: AdminNavItem): void;
+  registerDashboardCard(card: AdminDashboardCard): void;
+  registerAdminView(view: AdminViewComponent): void;
+  registerQuickAction(action: AdminQuickAction): void;
+  getNavItems(): AdminNavItem[];
+  getDashboardCards(): AdminDashboardCard[];
+  getAdminViews(): AdminViewComponent[];
+  getQuickActions(): AdminQuickAction[];
+}
+
 /**
  * Core implementation of the Admin Module API
  */
-class AdminModule implements AdminModuleAPI {
+class AdminModule implements ExtendedAdminModuleAPI {
   async getUsers(): Promise<User[]> {
     try {
       const response = await apiRequest('GET', '/api/admin/users');
@@ -129,6 +154,74 @@ class AdminModule implements AdminModuleAPI {
       console.error('Get dashboard stats error:', error);
       throw error;
     }
+  }
+
+  /**
+   * Register a navigation item with the admin module
+   * @param item Navigation item to register
+   */
+  registerNavItem(item: AdminNavItem): void {
+    adminComponentRegistry.registerNavItem('admin', item);
+    console.log(`[Admin] Registered nav item: ${item.label}`);
+  }
+
+  /**
+   * Register a dashboard card with the admin module
+   * @param card Dashboard card to register
+   */
+  registerDashboardCard(card: AdminDashboardCard): void {
+    adminComponentRegistry.registerDashboardCard('admin', card);
+    console.log(`[Admin] Registered dashboard card: ${card.id}`);
+  }
+
+  /**
+   * Register an admin view with the admin module
+   * @param view Admin view to register
+   */
+  registerAdminView(view: AdminViewComponent): void {
+    adminComponentRegistry.registerAdminView('admin', view);
+    console.log(`[Admin] Registered admin view: ${view.id} for path ${view.path}`);
+  }
+
+  /**
+   * Register a quick action with the admin module
+   * @param action Quick action to register
+   */
+  registerQuickAction(action: AdminQuickAction): void {
+    adminComponentRegistry.registerQuickAction('admin', action);
+    console.log(`[Admin] Registered quick action: ${action.label}`);
+  }
+
+  /**
+   * Get all registered navigation items
+   * @returns Array of navigation items
+   */
+  getNavItems(): AdminNavItem[] {
+    return adminComponentRegistry.getNavItems();
+  }
+
+  /**
+   * Get all registered dashboard cards
+   * @returns Array of dashboard cards
+   */
+  getDashboardCards(): AdminDashboardCard[] {
+    return adminComponentRegistry.getDashboardCards();
+  }
+
+  /**
+   * Get all registered admin views
+   * @returns Array of admin views
+   */
+  getAdminViews(): AdminViewComponent[] {
+    return adminComponentRegistry.getAdminViews();
+  }
+
+  /**
+   * Get all registered quick actions
+   * @returns Array of quick actions
+   */
+  getQuickActions(): AdminQuickAction[] {
+    return adminComponentRegistry.getQuickActions();
   }
 }
 
