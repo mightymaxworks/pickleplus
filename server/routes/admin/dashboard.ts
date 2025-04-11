@@ -10,8 +10,8 @@ import express from "express";
 import { z } from "zod";
 import { createDashboardGenerator } from "../../services/dashboard-generator";
 import { DashboardTimePeriod } from "@shared/schema/admin/dashboard";
-import { ensureAdmin } from "../../middleware/auth";
-import { StorageInterface } from "../../storage";
+import { isAdmin } from "../../auth";
+import { IStorage } from "../../storage";
 import { db } from "../../db";
 import { events } from "@shared/schema/events";
 import { sql } from "drizzle-orm";
@@ -23,7 +23,7 @@ import { sql } from "drizzle-orm";
  */
 export function registerAdminDashboardRoutes(
   router: express.Router,
-  storage: StorageInterface
+  storage: IStorage
 ): void {
   const dashboardGenerator = createDashboardGenerator(storage);
 
@@ -33,7 +33,7 @@ export function registerAdminDashboardRoutes(
    */
   router.get(
     "/dashboard",
-    ensureAdmin,
+    isAdmin,
     async (req, res) => {
       try {
         // Parse and validate time period from query parameter

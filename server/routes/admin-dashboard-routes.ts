@@ -23,7 +23,7 @@ registerAdminDashboardRoutes(dashboardRouter, storage);
  * Register admin dashboard routes with the Express app
  * @param app - Express application
  */
-export function registerAdminDashboardRoutes(app: express.Express) {
+export function setupAdminDashboardRoutes(app: express.Express) {
   console.log("[API] Registering Admin Dashboard routes (PKL-278651-ADMIN-0011-DASH)");
   // Register admin dashboard routes with authentication middleware
   app.use("/api/admin", isAuthenticated, isAdmin, dashboardRouter);
