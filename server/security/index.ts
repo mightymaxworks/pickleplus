@@ -107,13 +107,49 @@ export function createAuditLogMiddleware(
     // Get resource ID if function is provided
     const resourceId = resourceIdFn ? resourceIdFn(req) : null;
     
-    if (userId) {
-      // Store original send method
-      const originalSend = res.send;
-      
-      // Override send method to capture status code before response is sent
-      res.send = function(this: Response, body: any): Response {
+    // Detect if this is a suspicious request - multiple auth failures, unusual patterns
+    const isSuspicious = detectSuspiciousActivity(req);
+    
+    // Store original send method
+    const originalSend = res.send;
+    
+    // Override send method to capture status code before response is sent
+    res.send = function(this: Response, body: any): Response {
+      // Always log security events, even if not authenticated
+      if (isSuspicious || 
+          action.startsWith('ADMIN_') || 
+          action.includes('_LOGIN') || 
+          action.includes('_LOGOUT') ||
+          res.statusCode === 401 ||
+          res.statusCode === 403) {
+        
         // Create audit log
+        const entry: AuditLogEntry = {
+          timestamp: new Date(),
+          userId: userId || 0, // Use 0 for anonymous users
+          action: isSuspicious ? AuditAction.SECURITY_SUSPICIOUS_ACTIVITY : action,
+          resource,
+          resourceId,
+          ipAddress: req.ip || '',
+          userAgent: req.headers['user-agent'],
+          statusCode: res.statusCode,
+          additionalData: {
+            method: req.method,
+            path: req.path,
+            suspicious: isSuspicious,
+            headers: {
+              referrer: req.headers.referer || req.headers.referrer,
+              origin: req.headers.origin
+            }
+          }
+        };
+        
+        // Log audit without awaiting to avoid blocking response
+        createAuditLog(entry).catch(err => 
+          console.error('Failed to create audit log:', err)
+        );
+      } else if (userId) {
+        // For regular authenticated requests that aren't security-related
         const entry: AuditLogEntry = {
           timestamp: new Date(),
           userId,
@@ -133,14 +169,56 @@ export function createAuditLogMiddleware(
         createAuditLog(entry).catch(err => 
           console.error('Failed to create audit log:', err)
         );
-        
-        // Call original send
-        return originalSend.call(this, body);
-      };
-    }
+      }
+      
+      // Call original send
+      return originalSend.call(this, body);
+    };
     
     next();
   };
+}
+
+/**
+ * Detect suspicious activity in requests
+ * This helps identify potential security issues
+ */
+function detectSuspiciousActivity(req: Request): boolean {
+  // Check for unusual user agent
+  const userAgent = req.headers['user-agent'] || '';
+  if (userAgent.toLowerCase().includes('sqlmap') || 
+      userAgent.toLowerCase().includes('nikto') ||
+      userAgent.toLowerCase().includes('nmap') ||
+      userAgent.toLowerCase().includes('scanner')) {
+    return true;
+  }
+  
+  // Check for suspicious parameters or paths
+  const path = req.path.toLowerCase();
+  if (path.includes('admin') && !req.isAuthenticated()) {
+    return true;
+  }
+  
+  if (path.includes('wp-') || 
+      path.includes('wp-admin') || 
+      path.includes('wp-login') ||
+      path.includes('.php')) {
+    return true;
+  }
+  
+  // Check request body for suspicious SQL patterns
+  if (req.body) {
+    const bodyStr = JSON.stringify(req.body).toLowerCase();
+    if (bodyStr.includes('select ') && 
+        (bodyStr.includes('from ') || 
+         bodyStr.includes('union ') || 
+         bodyStr.includes('insert ') || 
+         bodyStr.includes('drop '))) {
+      return true;
+    }
+  }
+  
+  return false;
 }
 
 /**
@@ -238,8 +316,39 @@ export function setupSecurity(app: Express): void {
     next();
   });
   
-  // Apply rate limiting to login/admin endpoints
+  // Apply rate limiting to auth endpoints
   app.use('/api/auth/login', rateLimiter(rateLimitConfigs.auth));
+  app.use('/api/auth/register', rateLimiter(rateLimitConfigs.auth));
+  
+  // Apply rate limiting to admin endpoints with specialized configs
+  app.use('/api/admin/dashboard', rateLimiter({
+    ...rateLimitConfigs.admin,
+    max: 150 // More generous for dashboard which is frequently accessed
+  }));
+  
+  // Stricter rate limiting for security-sensitive admin endpoints
+  app.use('/api/admin/user', rateLimiter({
+    ...rateLimitConfigs.admin,
+    max: 50,
+    message: {
+      status: 429,
+      message: 'Rate limit exceeded for user management operations.'
+    }
+  }));
+  
+  // Even stricter rate limiting for security admin functions
+  app.use('/api/admin/security', rateLimiter({
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    max: 20, // Only 20 security operations per 5 minutes
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      status: 429,
+      message: 'Rate limit exceeded for security operations. Please try again later.'
+    }
+  }));
+  
+  // Default rate limiting for all other admin routes
   app.use('/api/admin/*', rateLimiter(rateLimitConfigs.admin));
   
   // Apply CSRF protection to all routes
@@ -249,6 +358,121 @@ export function setupSecurity(app: Express): void {
   app.get('/api/security/csrf-token', (req: Request, res: Response) => {
     const token = generateCSRFToken(req);
     res.json({ csrfToken: token });
+  });
+  
+  // Apply enhanced admin authentication to sensitive operations
+  app.use('/api/admin/user', isAdminWithRecentLogin(2)); // Require login within last 2 hours
+  app.use('/api/admin/security', isAdminWithRecentLogin(1)); // Require login within last 1 hour
+  app.use('/api/admin/settings', isAdminWithRecentLogin(4)); // Require login within last 4 hours
+  
+  // Add audit log viewing endpoints for admins
+  app.get('/api/admin/security/audit-logs', isAdminWithRecentLogin(1), createAuditLogMiddleware(AuditAction.ADMIN_VIEW_LOGS, AuditResource.AUDIT_LOG), async (req: Request, res: Response) => {
+    try {
+      // Parse query parameters
+      const limit = parseInt(req.query.limit as string) || 100;
+      const offset = parseInt(req.query.offset as string) || 0;
+      const action = req.query.action as string || undefined;
+      const resource = req.query.resource as string || undefined;
+      const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
+      const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
+      const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
+      const suspicious = req.query.suspicious === 'true';
+      
+      // Get logs with filtering
+      const logs = await storage.getAuditLogs({
+        limit,
+        offset,
+        action,
+        resource,
+        userId,
+        startDate,
+        endDate,
+        suspicious
+      });
+      
+      // Return logs to client
+      res.json({
+        logs,
+        meta: {
+          limit,
+          offset,
+          filters: {
+            action,
+            resource,
+            userId,
+            startDate,
+            endDate,
+            suspicious
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error retrieving audit logs:', error);
+      res.status(500).json({ message: 'Failed to retrieve audit logs' });
+    }
+  });
+  
+  // Add security summary endpoint for admins
+  app.get('/api/admin/security/summary', isAdminWithRecentLogin(1), createAuditLogMiddleware(AuditAction.ADMIN_VIEW_SECURITY, AuditResource.SECURITY), async (req: Request, res: Response) => {
+    try {
+      // Get last 24 hours suspicious activity
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      
+      const suspiciousLogs = await storage.getAuditLogs({
+        startDate: yesterday,
+        suspicious: true,
+        limit: 1000
+      });
+      
+      // Get recent login attempts
+      const loginLogs = await storage.getAuditLogs({
+        startDate: yesterday,
+        action: AuditAction.USER_LOGIN,
+        limit: 1000
+      });
+      
+      // Get admin activity
+      const adminLogs = await storage.getAuditLogs({
+        startDate: yesterday,
+        action: 'ADMIN_',
+        limit: 1000
+      });
+      
+      // Count failed vs successful logins
+      const failedLogins = loginLogs.filter(log => log.statusCode === 401).length;
+      const successfulLogins = loginLogs.filter(log => log.statusCode === 200).length;
+      
+      // Analyze suspicious IPs
+      const suspiciousIps = new Set<string>();
+      suspiciousLogs.forEach(log => {
+        if (log.ipAddress) {
+          suspiciousIps.add(log.ipAddress);
+        }
+      });
+      
+      // Return summary information
+      res.json({
+        summary: {
+          suspiciousActivityCount: suspiciousLogs.length,
+          uniqueSuspiciousIps: Array.from(suspiciousIps),
+          loginAttempts: {
+            total: loginLogs.length,
+            successful: successfulLogins,
+            failed: failedLogins,
+            successRate: loginLogs.length > 0 ? (successfulLogins / loginLogs.length) * 100 : 0
+          },
+          adminActivityCount: adminLogs.length,
+          timeframe: {
+            start: yesterday.toISOString(),
+            end: new Date().toISOString()
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error generating security summary:', error);
+      res.status(500).json({ message: 'Failed to generate security summary' });
+    }
   });
   
   console.log('[SECURITY] Enhanced security features initialized');
