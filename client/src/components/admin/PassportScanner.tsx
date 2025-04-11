@@ -35,12 +35,9 @@ const PassportScanner: React.FC<PassportScannerProps> = ({ eventId, onSuccessful
   // Verify passport mutation
   const verifyPassportMutation = useMutation({
     mutationFn: async (passportCode: string) => {
-      const response = await apiRequest('/api/passport/verify', {
-        method: 'POST',
-        body: JSON.stringify({
-          passportCode,
-          eventId
-        })
+      const response = await apiRequest('POST', '/api/passport/verify', {
+        passportCode,
+        eventId
       });
       return await response.json() as VerificationResult;
     },
