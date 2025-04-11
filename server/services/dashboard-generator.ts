@@ -1,15 +1,16 @@
 /**
- * PKL-278651-ADMIN-0011-DASH
+ * PKL-278651-ADMIN-0012-PERF
  * Admin Dashboard Generator Service
  * 
  * This service generates dashboard data for the admin unified dashboard.
  * It follows PKL-278651 Framework 5.0 and modular architecture principles.
+ * Performance optimizations added in PKL-278651-ADMIN-0012-PERF sprint.
  */
 
 import { db } from "../db";
 import { users, matches } from "@shared/schema";
 import { events, eventCheckIns } from "@shared/schema/events";
-import { and, count, desc, eq, gte, sql } from "drizzle-orm";
+import { and, count, desc, eq, gte, sql, inArray } from "drizzle-orm";
 import {
   DashboardMetricCategory,
   DashboardMetricSentiment,
@@ -26,15 +27,98 @@ import {
   DashboardWidget
 } from "@shared/schema/admin/dashboard";
 import { IStorage } from "../storage";
+import NodeCache from "node-cache";
+
+// Cache TTL in seconds
+const CACHE_TTL = {
+  DASHBOARD: 60, // 1 minute
+  METRICS: 300,  // 5 minutes
+  SYSTEM: 120,   // 2 minutes
+};
 
 /**
- * Service class that generates dashboard data
+ * Interface for cache key components
+ */
+interface CacheKeyParams {
+  timePeriod: DashboardTimePeriod;
+  category?: DashboardMetricCategory;
+  startDate?: string;
+  endDate?: string;
+  metric?: string;
+}
+
+/**
+ * Service class that generates dashboard data with performance optimizations
  */
 export class DashboardGenerator {
   private storage: IStorage;
+  private cache: NodeCache;
+  private isInitialized: boolean = false;
+  private initPromise: Promise<void> | null = null;
 
   constructor(storage: IStorage) {
     this.storage = storage;
+    this.cache = new NodeCache({
+      stdTTL: CACHE_TTL.DASHBOARD,
+      checkperiod: 60
+    });
+    
+    // Pre-warm cache for common queries
+    this.initCache();
+  }
+  
+  /**
+   * Initialize cache with common queries
+   */
+  private initCache(): void {
+    if (this.isInitialized || this.initPromise) return;
+    
+    this.initPromise = this.preWarmCache().then(() => {
+      this.isInitialized = true;
+      this.initPromise = null;
+      console.log("[PERF] Dashboard cache initialized");
+    }).catch(error => {
+      console.error("[PERF] Error initializing dashboard cache:", error);
+      this.initPromise = null;
+    });
+  }
+  
+  /**
+   * Pre-warm cache with common dashboard views
+   */
+  private async preWarmCache(): Promise<void> {
+    // Don't block, but start fetching common queries in the background
+    setTimeout(async () => {
+      try {
+        // Warm cache for monthly view (most common)
+        await this.getDashboard(DashboardTimePeriod.MONTH);
+        
+        // Warm cache for common widgets
+        await this.getDashboardWidgets(DashboardTimePeriod.MONTH);
+        
+        // Warm cache for system metrics
+        await this.getSystemMetrics(DashboardTimePeriod.MONTH);
+      } catch (error) {
+        console.error("[PERF] Error pre-warming dashboard cache:", error);
+      }
+    }, 100);
+  }
+  
+  /**
+   * Generate cache key from parameters
+   */
+  private getCacheKey(prefix: string, params: CacheKeyParams): string {
+    const { timePeriod, category, startDate, endDate, metric } = params;
+    let key = `${prefix}:${timePeriod}`;
+    
+    if (category) key += `:${category}`;
+    if (metric) key += `:${metric}`;
+    if (timePeriod === DashboardTimePeriod.CUSTOM) {
+      if (startDate) key += `:${startDate}`;
+      if (endDate) key += `:${endDate}`;
+    }
+    
+    return key;
   }
 
   /**
@@ -1173,31 +1257,59 @@ export class DashboardGenerator {
    * @param startDate - Start date for custom range (optional)
    * @param endDate - End date for custom range (optional)
    */
+  /**
+   * Get the unified admin dashboard data with caching
+   * @param timePeriod - The time period to consider
+   * @param startDate - Start date for custom range (optional)
+   * @param endDate - End date for custom range (optional)
+   */
   public async getDashboard(
     timePeriod: DashboardTimePeriod = DashboardTimePeriod.MONTH,
     startDate?: string,
     endDate?: string
   ): Promise<DashboardLayout> {
     try {
+      // Create cache key
+      const cacheKey = this.getCacheKey('dashboard', { timePeriod, startDate, endDate });
+      
+      // Check cache first
+      const cachedDashboard = this.cache.get<DashboardLayout>(cacheKey);
+      if (cachedDashboard) {
+        console.log(`[PERF] Dashboard cache hit for ${cacheKey}`);
+        return cachedDashboard;
+      }
+      
+      console.log(`[PERF] Dashboard cache miss for ${cacheKey}`);
+      const startTime = Date.now();
+      
+      // Get dashboard widgets (may also use cache)
       const widgets = await this.getDashboardWidgets(timePeriod, startDate, endDate);
       
-      // Get summary counts for reference
-      const totalUsers = await this.storage.getUserCount();
-      const totalMatches = await db.select({ count: count() })
-        .from(matches)
-        .execute()
-        .then(result => result[0]?.count || 0);
-      const totalEvents = await db.select({ count: count() })
-        .from(events)
-        .execute()
-        .then(result => result[0]?.count || 0);
+      // Get summary counts for reference - use Promise.all for parallel execution
+      const [totalUsers, totalMatchesResult, totalEventsResult] = await Promise.all([
+        this.storage.getUserCount(),
+        db.select({ count: count() }).from(matches).execute(),
+        db.select({ count: count() }).from(events).execute()
+      ]);
       
-      return {
+      const totalMatches = Number(totalMatchesResult[0]?.count) || 0;
+      const totalEvents = Number(totalEventsResult[0]?.count) || 0;
+      
+      // Create dashboard data
+      const dashboard: DashboardLayout = {
         id: "admin-dashboard",
         title: "Admin Dashboard",
         widgets,
         timePeriod
       };
+      
+      // Store in cache
+      this.cache.set(cacheKey, dashboard, CACHE_TTL.DASHBOARD);
+      
+      const duration = Date.now() - startTime;
+      console.log(`[PERF] Dashboard generated in ${duration}ms`);
+      
+      return dashboard;
     } catch (error) {
       console.error("Error getting dashboard:", error);
       return {
