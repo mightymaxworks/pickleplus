@@ -12,15 +12,14 @@ import { useLocation } from "wouter";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ShieldAlert } from "lucide-react";
-import PassportVerificationDashboard from "@/components/admin/PassportVerificationDashboard";
 import { AdminLayout } from "@/modules/admin/components/AdminLayout";
-import { useDeviceType } from "@/modules/admin/utils/deviceDetection";
-import PassportVerificationMobile from "@/modules/admin/components/mobile/PassportVerificationMobile";
+import { useIsMobile } from "@/modules/admin/utils/deviceDetection";
+import { ResponsivePassportVerification } from "@/modules/admin/components/responsive";
 
 const PassportVerificationPage: React.FC = () => {
   const { user, isLoading } = useAuth();
   const [, navigate] = useLocation();
-  const deviceType = useDeviceType();
+  const isMobile = useIsMobile();
   
   // Check if user is authenticated and is an admin
   const isAdmin = user?.isAdmin === true;
@@ -75,18 +74,10 @@ const PassportVerificationPage: React.FC = () => {
     );
   }
   
-  // Render mobile or desktop version based on device detection
-  if (deviceType === 'mobile') {
-    return (
-      <AdminLayout title="Passport Verification">
-        <PassportVerificationMobile />
-      </AdminLayout>
-    );
-  }
-  
+  // Use our responsive component which will render based on device type
   return (
     <AdminLayout title="Passport Verification">
-      <PassportVerificationDashboard />
+      <ResponsivePassportVerification />
     </AdminLayout>
   );
 };

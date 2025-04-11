@@ -19,7 +19,7 @@ export default function AdminDashboardPage() {
   const quickActions = useAdminQuickActions();
   
   // Use the responsive component which will render either mobile or desktop version
-  return <ResponsiveAdminDashboard title="Admin Dashboard" />;
+  return <ResponsiveAdminDashboard />;
 }
 
 interface DashboardStatCardProps {

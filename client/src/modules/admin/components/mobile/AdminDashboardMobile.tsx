@@ -1,265 +1,162 @@
 /**
  * PKL-278651-ADMIN-0009-MOBILE
- * Mobile-Optimized Admin Dashboard
+ * Admin Dashboard Mobile View
  * 
- * This component provides a streamlined administrative dashboard optimized for mobile devices.
- * It focuses on essential administrative functions and task-oriented grouping.
+ * This component provides a mobile-optimized version of the admin dashboard.
  */
 
 import React from 'react';
-import { useLocation } from 'wouter';
-import { useAdminDashboardCards, useAdminQuickActions } from '@/modules/admin/hooks/useAdminComponents';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  LayoutDashboard,
-  Users,
-  Calendar,
-  Trophy,
-  Settings,
-  Clock,
-  Activity,
-  BarChart2,
-  Shield
+import { 
+  Activity, 
+  Users, 
+  Calendar, 
+  Award, 
+  Settings, 
+  ArrowUpRight
 } from 'lucide-react';
 
+/**
+ * Mobile-optimized admin dashboard component
+ */
 export default function AdminDashboardMobile() {
-  const dashboardCards = useAdminDashboardCards();
-  const quickActions = useAdminQuickActions();
-  const [, navigate] = useLocation();
-  
   return (
-    <div className="space-y-4 pb-20">
-      {/* Admin Header with shield icon */}
-      <div className="flex items-center mb-4">
-        <Shield className="text-[#FF5722] mr-2 h-5 w-5" />
-        <h1 className="text-lg font-bold">Admin Dashboard</h1>
+    <div className="container mx-auto px-3 py-4">
+      <div className="flex flex-col gap-2 mb-6">
+        <h1 className="text-xl font-bold tracking-tight">Admin Dashboard</h1>
+        <p className="text-sm text-muted-foreground">
+          Mobile-optimized view for administration
+        </p>
       </div>
       
-      {/* Quick Action Tabs - Mobile-optimized with icons */}
-      <Tabs defaultValue="actions" className="w-full">
-        <TabsList className="grid grid-cols-3 mb-4">
-          <TabsTrigger value="actions" className="flex flex-col items-center py-2">
-            <LayoutDashboard className="h-4 w-4 mb-1" />
-            <span className="text-xs">Actions</span>
-          </TabsTrigger>
-          <TabsTrigger value="stats" className="flex flex-col items-center py-2">
-            <BarChart2 className="h-4 w-4 mb-1" />
-            <span className="text-xs">Stats</span>
-          </TabsTrigger>
-          <TabsTrigger value="activity" className="flex flex-col items-center py-2">
-            <Activity className="h-4 w-4 mb-1" />
-            <span className="text-xs">Activity</span>
-          </TabsTrigger>
-        </TabsList>
-        
-        {/* Quick Actions Tab */}
-        <TabsContent value="actions" className="mt-0">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Quick Actions</CardTitle>
-              <CardDescription className="text-xs">
-                Common administrative tasks
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-2">
-                {quickActions.length > 0 ? (
-                  quickActions.map((action) => (
-                    <Button
-                      key={action.id}
-                      variant="outline"
-                      size="sm"
-                      onClick={action.onClick}
-                      className="flex flex-col items-center justify-center h-20 text-center"
-                    >
-                      <span className="mb-2">{action.icon}</span>
-                      <span className="text-xs">{action.label}</span>
-                    </Button>
-                  ))
-                ) : (
-                  <>
-                    <ActionButton 
-                      icon={<Users className="h-4 w-4 text-blue-500" />} 
-                      label="Users" 
-                      onClick={() => navigate('/admin/users')} 
-                    />
-                    <ActionButton 
-                      icon={<Calendar className="h-4 w-4 text-green-500" />} 
-                      label="Events" 
-                      onClick={() => navigate('/admin/events')} 
-                    />
-                    <ActionButton 
-                      icon={<Trophy className="h-4 w-4 text-amber-500" />} 
-                      label="Tournaments" 
-                      onClick={() => navigate('/admin/tournaments')} 
-                    />
-                    <ActionButton 
-                      icon={<Settings className="h-4 w-4 text-gray-500" />} 
-                      label="Settings" 
-                      onClick={() => navigate('/admin/settings')} 
-                    />
-                  </>
-                )}
+      {/* Quick Action Cards - Single column layout for mobile */}
+      <div className="grid grid-cols-1 gap-3 mb-4">
+        <Card className="bg-primary/5 hover:bg-primary/10 transition-colors">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                <span className="font-medium">Users</span>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        {/* Stats Tab */}
-        <TabsContent value="stats" className="mt-0">
-          <ScrollArea className="h-[60vh]">
-            <div className="grid grid-cols-1 gap-3 pr-3">
-              {dashboardCards.length === 0 ? (
-                // Default stats if no custom dashboard cards are registered
-                <>
-                  <MobileStatCard 
-                    title="Active Users" 
-                    value="2,849" 
-                    change="+12%" 
-                    description="Total active users" 
-                    icon={<Users className="text-blue-500" />} 
-                  />
-                  
-                  <MobileStatCard 
-                    title="Matches Recorded" 
-                    value="8,392" 
-                    change="+5%" 
-                    description="Total matches recorded" 
-                    icon={<Trophy className="text-amber-500" />} 
-                  />
-                  
-                  <MobileStatCard 
-                    title="Events This Month" 
-                    value="48" 
-                    change="+22%" 
-                    description="Scheduled events" 
-                    icon={<Calendar className="text-green-500" />} 
-                  />
-                  
-                  <MobileStatCard 
-                    title="Active Tournaments" 
-                    value="12" 
-                    change="+3" 
-                    description="Currently running tournaments" 
-                    icon={<Trophy className="text-purple-500" />} 
-                  />
-                  
-                  <MobileStatCard 
-                    title="Average Session" 
-                    value="24m 32s" 
-                    change="+2m" 
-                    description="Time spent in app" 
-                    icon={<Clock className="text-indigo-500" />} 
-                  />
-                  
-                  <MobileStatCard 
-                    title="System Health" 
-                    value="99.8%" 
-                    change="+0.2%" 
-                    description="Overall system availability" 
-                    icon={<Activity className="text-emerald-500" />} 
-                  />
-                </>
-              ) : (
-                // Render registered dashboard cards
-                dashboardCards.map((card) => (
-                  <Card key={card.id} className="h-auto">
-                    <CardContent className="p-0 h-full">
-                      <card.component />
-                    </CardContent>
-                  </Card>
-                ))
-              )}
+              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                <ArrowUpRight className="h-4 w-4" />
+              </Button>
             </div>
-          </ScrollArea>
-        </TabsContent>
+          </CardContent>
+        </Card>
         
-        {/* Activity Tab */}
-        <TabsContent value="activity" className="mt-0">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center">
-                <Activity className="mr-2 h-4 w-4 text-[#FF5722]" />
-                Recent Admin Activity
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Latest administrative actions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {/* This would be populated from an API call */}
-                <p className="text-gray-500 dark:text-gray-400 text-xs">
-                  No recent activity to display. Activity will appear here when administrators make changes.
-                </p>
+        <Card className="bg-primary/5 hover:bg-primary/10 transition-colors">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Activity className="h-5 w-5 text-primary" />
+                <span className="font-medium">Metrics</span>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                <ArrowUpRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-primary/5 hover:bg-primary/10 transition-colors">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-primary" />
+                <span className="font-medium">Events</span>
+              </div>
+              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                <ArrowUpRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-primary/5 hover:bg-primary/10 transition-colors">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Award className="h-5 w-5 text-primary" />
+                <span className="font-medium">Achievements</span>
+              </div>
+              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                <ArrowUpRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-primary/5 hover:bg-primary/10 transition-colors">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Settings className="h-5 w-5 text-primary" />
+                <span className="font-medium">Settings</span>
+              </div>
+              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                <ArrowUpRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Recent Activity - Simplified for mobile */}
+      <Card className="mb-4">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">Recent Activity</CardTitle>
+          <CardDescription>Latest system events</CardDescription>
+        </CardHeader>
+        <CardContent className="p-3">
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center gap-2 pb-2 border-b last:border-0">
+                <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Activity className="h-4 w-4 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">User profile updated</p>
+                  <p className="text-xs text-muted-foreground">2 hours ago</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <Button className="w-full mt-3" variant="outline" size="sm">
+            View All Activity
+          </Button>
+        </CardContent>
+      </Card>
+      
+      {/* System Status - Simplified for mobile */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">System Status</CardTitle>
+          <CardDescription>Current system health</CardDescription>
+        </CardHeader>
+        <CardContent className="p-3">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Server Status</span>
+              <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">Healthy</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Database</span>
+              <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">Connected</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">API Services</span>
+              <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">Operational</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Cache</span>
+              <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full">Partial</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
-  );
-}
-
-// Helper component for Quick Action buttons
-interface ActionButtonProps {
-  icon: React.ReactNode;
-  label: string;
-  onClick: () => void;
-}
-
-function ActionButton({ icon, label, onClick }: ActionButtonProps) {
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={onClick}
-      className="flex flex-col items-center justify-center h-20 text-center"
-    >
-      <span className="mb-2">{icon}</span>
-      <span className="text-xs">{label}</span>
-    </Button>
-  );
-}
-
-// Helper component for mobile-optimized stat cards
-interface MobileStatCardProps {
-  title: string;
-  value: string;
-  change: string;
-  description: string;
-  icon: React.ReactNode;
-}
-
-function MobileStatCard({ title, value, change, description, icon }: MobileStatCardProps) {
-  const isPositive = change.startsWith('+');
-  
-  return (
-    <Card className="h-auto">
-      <CardHeader className="flex flex-row items-center justify-between pb-1">
-        <CardTitle className="text-xs font-medium text-gray-500 dark:text-gray-400">
-          {title}
-        </CardTitle>
-        <div className="h-7 w-7 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-          {icon}
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="text-xl font-bold text-gray-900 dark:text-gray-100">
-          {value}
-        </div>
-        <p className="text-xs flex flex-wrap items-center mt-1">
-          <span className={`${isPositive ? 'text-green-500' : 'text-red-500'} font-medium mr-1`}>
-            {change}
-          </span>
-          <span className="text-gray-500 dark:text-gray-400 text-[10px]">
-            {description}
-          </span>
-        </p>
-      </CardContent>
-    </Card>
   );
 }

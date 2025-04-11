@@ -2,106 +2,126 @@
  * PKL-278651-ADMIN-0009-MOBILE
  * Device Detection Utility
  * 
- * This utility provides functions to detect device types and screen sizes,
- * enabling conditional rendering of mobile-optimized components.
+ * This utility provides functions for detecting device types and
+ * adjusting UI components based on screen size.
  */
 
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 
-// Breakpoint definitions for responsive design
+/**
+ * Device types supported by the system
+ */
+export enum DeviceType {
+  Mobile = 0,
+  Tablet = 1,
+  Laptop = 2,
+  Desktop = 3
+}
+
+/**
+ * Breakpoints for different device types in pixels
+ */
 export const BREAKPOINTS = {
-  mobile: 640, // Max width for mobile devices (smartphones)
-  tablet: 768, // Max width for tablet devices
-  desktop: 1024, // Min width for desktop devices
+  mobile: 640,   // max-width for mobile devices
+  tablet: 1024,  // max-width for tablet devices
+  laptop: 1440,  // max-width for laptop devices
+  // anything larger is considered a desktop
 };
 
 /**
- * Custom hook to detect if the current device is a mobile device
- * @returns {boolean} True if the device is a mobile device
+ * Get the current device type based on window width
+ * This function should be called inside components, not outside the React rendering lifecycle
  */
-export function useMobileDetection(): boolean {
+export function getDeviceType(): DeviceType {
+  // Only run in browser environment
+  if (typeof window === 'undefined') {
+    return DeviceType.Desktop; // Default to desktop for SSR
+  }
+  
+  const width = window.innerWidth;
+  
+  if (width <= BREAKPOINTS.mobile) {
+    return DeviceType.Mobile;
+  } else if (width <= BREAKPOINTS.tablet) {
+    return DeviceType.Tablet;
+  } else if (width <= BREAKPOINTS.laptop) {
+    return DeviceType.Laptop;
+  } else {
+    return DeviceType.Desktop;
+  }
+}
+
+/**
+ * Hook to determine if the current device is mobile
+ */
+export function useIsMobile(): boolean {
   return useMediaQuery(`(max-width: ${BREAKPOINTS.mobile}px)`);
 }
 
 /**
- * Custom hook to detect if the current device is a tablet
- * @returns {boolean} True if the device is a tablet
+ * Hook to determine if the current device is a tablet
  */
-export function useTabletDetection(): boolean {
+export function useIsTablet(): boolean {
   return useMediaQuery(`(min-width: ${BREAKPOINTS.mobile + 1}px) and (max-width: ${BREAKPOINTS.tablet}px)`);
 }
 
 /**
- * Custom hook to determine the current device type
- * @returns {'mobile' | 'tablet' | 'desktop'} The current device type
+ * Hook to determine if the current device is mobile or tablet (small screens)
  */
-export function useDeviceType(): 'mobile' | 'tablet' | 'desktop' {
-  const isMobile = useMobileDetection();
-  const isTablet = useTabletDetection();
-  
-  if (isMobile) return 'mobile';
-  if (isTablet) return 'tablet';
-  return 'desktop';
+export function useIsSmallScreen(): boolean {
+  return useMediaQuery(`(max-width: ${BREAKPOINTS.tablet}px)`);
 }
 
 /**
- * Helper function to generate class names based on device type
- * @param {Object} classNames Object containing class names for different device types
- * @param {string} defaultClassName Default class name to use if no specific class is provided
- * @param {'mobile' | 'tablet' | 'desktop'} deviceType The current device type
- * @returns {string} The appropriate class name for the current device type
+ * Get appropriate padding based on device type
  */
-export function getResponsiveClassName(
-  classNames: { 
-    mobile?: string; 
-    tablet?: string; 
-    desktop?: string; 
-  }, 
-  defaultClassName: string = '',
-  deviceType: 'mobile' | 'tablet' | 'desktop'
-): string {
-  if (deviceType === 'mobile' && classNames.mobile) {
-    return classNames.mobile;
+export function getResponsivePadding(deviceType: DeviceType): string {
+  switch (deviceType) {
+    case DeviceType.Mobile:
+      return 'px-2 py-2';
+    case DeviceType.Tablet:
+      return 'px-4 py-3';
+    default:
+      return 'px-6 py-4';
   }
-  
-  if (deviceType === 'tablet' && classNames.tablet) {
-    return classNames.tablet;
-  }
-  
-  if (deviceType === 'desktop' && classNames.desktop) {
-    return classNames.desktop;
-  }
-  
-  return defaultClassName;
 }
 
 /**
- * Component helper to conditionally render based on device type
- * @param {Object} components Object containing components for different device types
- * @param {React.ReactNode} defaultComponent Default component to render if no specific component is provided
- * @param {'mobile' | 'tablet' | 'desktop'} deviceType The current device type
- * @returns {React.ReactNode} The appropriate component for the current device type
+ * Get appropriate font size based on device type
  */
-export function getResponsiveComponent(
-  components: { 
-    mobile?: React.ReactNode; 
-    tablet?: React.ReactNode; 
-    desktop?: React.ReactNode; 
-  }, 
-  defaultComponent: React.ReactNode = null,
-  deviceType: 'mobile' | 'tablet' | 'desktop'
-): React.ReactNode {
-  if (deviceType === 'mobile' && components.mobile) {
-    return components.mobile;
+export function getResponsiveFontSize(deviceType: DeviceType, size: 'heading' | 'subheading' | 'body' | 'small'): string {
+  if (deviceType === DeviceType.Mobile) {
+    switch (size) {
+      case 'heading':
+        return 'text-xl';
+      case 'subheading':
+        return 'text-lg';
+      case 'body':
+        return 'text-sm';
+      case 'small':
+        return 'text-xs';
+    }
+  } else if (deviceType === DeviceType.Tablet) {
+    switch (size) {
+      case 'heading':
+        return 'text-2xl';
+      case 'subheading':
+        return 'text-xl';
+      case 'body':
+        return 'text-base';
+      case 'small':
+        return 'text-sm';
+    }
+  } else {
+    switch (size) {
+      case 'heading':
+        return 'text-3xl';
+      case 'subheading':
+        return 'text-2xl';
+      case 'body':
+        return 'text-base';
+      case 'small':
+        return 'text-sm';
+    }
   }
-  
-  if (deviceType === 'tablet' && components.tablet) {
-    return components.tablet;
-  }
-  
-  if (deviceType === 'desktop' && components.desktop) {
-    return components.desktop;
-  }
-  
-  return defaultComponent;
 }
