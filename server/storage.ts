@@ -2222,6 +2222,7 @@ export class DatabaseStorage implements IStorage {
       return { valid: false, message: "Server error verifying passport" };
     }
   }
+  
   // PKL-278651-ADMIN-0013-SEC - Admin Security Enhancements
   // Audit logging operations
   async createAuditLog(logEntry: InsertAuditLog): Promise<AuditLog> {
@@ -2238,9 +2239,13 @@ export class DatabaseStorage implements IStorage {
         id: 'error',
         timestamp: new Date(),
         userId: logEntry.userId,
-        action: logEntry.action,
-        resource: logEntry.resource,
+        action: logEntry.action as any,
+        resource: logEntry.resource as any,
         ipAddress: logEntry.ipAddress,
+        resourceId: null,
+        userAgent: null,
+        statusCode: null,
+        additionalData: null
       } as AuditLog;
     }
   }
@@ -2260,11 +2265,7 @@ export class DatabaseStorage implements IStorage {
       console.log(`[Storage] Getting audit logs with filters: ${JSON.stringify(filters)}`);
       
       // Start building the query
-      let query = db.select()
-        .from(auditLogs)
-        .orderBy(desc(auditLogs.timestamp))
-        .limit(limit)
-        .offset(offset);
+      let query = db.select().from(auditLogs);
       
       // Apply filters if provided
       if (filters) {
@@ -2275,11 +2276,11 @@ export class DatabaseStorage implements IStorage {
         }
         
         if (filters.action) {
-          conditions.push(eq(auditLogs.action, filters.action));
+          conditions.push(eq(auditLogs.action, filters.action as any));
         }
         
         if (filters.resource) {
-          conditions.push(eq(auditLogs.resource, filters.resource));
+          conditions.push(eq(auditLogs.resource, filters.resource as any));
         }
         
         if (filters.startDate) {
@@ -2296,9 +2297,20 @@ export class DatabaseStorage implements IStorage {
         }
       }
       
+      // Add order, limit and offset
+      const finalQuery = query.orderBy(desc(auditLogs.timestamp))
+                  .limit(limit)
+                  .offset(offset);
+      
       // Execute the query
-      const logs = await query;
-      return logs;
+      const logs = await finalQuery;
+      
+      // Type cast to handle enum types
+      return logs.map(log => ({
+        ...log,
+        action: log.action as any,
+        resource: log.resource as any
+      })) as AuditLog[];
     } catch (error) {
       console.error('[Storage] Error getting audit logs:', error);
       return [];

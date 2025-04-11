@@ -89,13 +89,25 @@ export interface AuditLogEntry {
  */
 export async function createAuditLog(entry: AuditLogEntry): Promise<void> {
   try {
-    // Log to console (will be replaced with DB logging)
+    // Log to console
     console.log('[AUDIT]', JSON.stringify(entry));
     
-    // In a real implementation, we would store this in the database
-    if (storage.createAuditLog) {
-      await storage.createAuditLog(entry);
-    }
+    // Convert the audit log entry to the format expected by the database
+    const dbAuditLog = {
+      id: undefined, // The database will generate this automatically
+      timestamp: entry.timestamp,
+      userId: entry.userId,
+      action: entry.action as AuditAction,
+      resource: entry.resource as AuditResource,
+      resourceId: entry.resourceId?.toString() || null,
+      ipAddress: entry.ipAddress,
+      userAgent: entry.userAgent || null,
+      statusCode: entry.statusCode || null,
+      additionalData: entry.additionalData || null
+    };
+    
+    // Store in the database
+    await storage.createAuditLog(dbAuditLog);
   } catch (error) {
     console.error('Error creating audit log:', error);
   }
@@ -106,7 +118,7 @@ export async function createAuditLog(entry: AuditLogEntry): Promise<void> {
  * @param action The action being performed
  * @param resource The resource being acted upon
  */
-export function auditLog(action: string, resource: string) {
+export function auditLog(action: AuditAction, resource: AuditResource) {
   return async (req: Request, res: Response, next: NextFunction) => {
     // Store the original end method
     const originalEnd = res.end;
