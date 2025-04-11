@@ -61,11 +61,11 @@ export default function AboutUs() {
   return (
     <div className="about-us-page min-h-screen bg-white">
       {/* Back button */}
-      <div className="absolute top-6 left-4 z-50">
+      <div className="fixed top-6 left-6 z-50">
         <Button 
-          variant="ghost" 
+          variant="secondary" 
           size="icon" 
-          className="text-white hover:bg-white/20 h-10 w-10 rounded-full"
+          className="bg-white/80 hover:bg-white text-[#FF5722] h-10 w-10 rounded-full shadow-md"
           onClick={() => navigate("/")}
         >
           <ArrowLeft className="h-5 w-5" />
