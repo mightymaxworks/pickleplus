@@ -116,13 +116,13 @@ export function useAdminQuickActions(): AdminQuickAction[] {
  */
 export function useAdminComponentsByType(type: AdminComponentType) {
   switch (type) {
-    case 'navItem':
+    case AdminComponentType.NAV_ITEM:
       return useAdminNavItems();
-    case 'dashboardCard':
+    case AdminComponentType.DASHBOARD_CARD:
       return useAdminDashboardCards();
-    case 'adminView':
+    case AdminComponentType.ADMIN_VIEW:
       return useAdminViews();
-    case 'quickAction':
+    case AdminComponentType.ADMIN_ACTION:
       return useAdminQuickActions();
     default:
       return [];
