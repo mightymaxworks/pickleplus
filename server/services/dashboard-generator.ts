@@ -281,7 +281,11 @@ export class DashboardGenerator {
       // Matches in current period
       const matchesCurrentPeriod = await db.select({ count: count() })
         .from(matches)
-        .where(sql`${matches.matchDate} >= ${currentStartDate}`)
+        .where(
+          currentEndDate 
+            ? sql`${matches.matchDate} >= ${currentStartDate} AND ${matches.matchDate} <= ${currentEndDate}`
+            : sql`${matches.matchDate} >= ${currentStartDate}`
+        )
         .execute()
         .then(result => result[0]?.count || 0);
       
@@ -368,7 +372,11 @@ export class DashboardGenerator {
       // Events in current period
       const eventsCurrentPeriod = await db.select({ count: count() })
         .from(events)
-        .where(sql`${events.startDateTime} >= ${currentStartDate}`)
+        .where(
+          currentEndDate 
+            ? sql`${events.startDateTime} >= ${currentStartDate} AND ${events.startDateTime} <= ${currentEndDate}`
+            : sql`${events.startDateTime} >= ${currentStartDate}`
+        )
         .execute()
         .then(result => result[0]?.count || 0);
       
@@ -385,7 +393,11 @@ export class DashboardGenerator {
       const checkInsCurrentPeriod = await db.select({ count: count() })
         .from(eventCheckIns)
         .innerJoin(events, eq(eventCheckIns.eventId, events.id))
-        .where(sql`${events.startDateTime} >= ${currentStartDate}`)
+        .where(
+          currentEndDate 
+            ? sql`${events.startDateTime} >= ${currentStartDate} AND ${events.startDateTime} <= ${currentEndDate}`
+            : sql`${events.startDateTime} >= ${currentStartDate}`
+        )
         .execute()
         .then(result => result[0]?.count || 0);
       
@@ -489,7 +501,7 @@ export class DashboardGenerator {
 
       // Calculate platform engagement (ratio of active to total users)
       // A user is considered active if they've participated in a match or event recently
-      const activeUserCount = await this.getActiveUserCount(currentStartDate);
+      const activeUserCount = await this.getActiveUserCount(currentStartDate, currentEndDate);
       const activeUserPercent = totalUsers === 0 ? 0 : Math.round((activeUserCount / totalUsers) * 100);
       
       metrics.push({
@@ -513,14 +525,19 @@ export class DashboardGenerator {
   /**
    * Get active user count for a given time period
    * @param startDate - The start date to consider for activity
+   * @param endDate - Optional end date to limit the time period
    */
-  private async getActiveUserCount(startDate: Date): Promise<number> {
+  private async getActiveUserCount(startDate: Date, endDate?: Date): Promise<number> {
     try {
       // Get user IDs from recent matches
       const activeUserIdsFromMatches = await db
         .selectDistinct({ userId: matches.playerOneId })
         .from(matches)
-        .where(sql`${matches.matchDate} >= ${startDate}`)
+        .where(
+          endDate 
+            ? sql`${matches.matchDate} >= ${startDate} AND ${matches.matchDate} <= ${endDate}`
+            : sql`${matches.matchDate} >= ${startDate}`
+        )
         .execute()
         .then(results => results.map(r => r.userId));
       
@@ -529,7 +546,11 @@ export class DashboardGenerator {
         .selectDistinct({ userId: eventCheckIns.userId })
         .from(eventCheckIns)
         .innerJoin(events, eq(eventCheckIns.eventId, events.id))
-        .where(sql`${events.startDateTime} >= ${startDate}`)
+        .where(
+          endDate 
+            ? sql`${events.startDateTime} >= ${startDate} AND ${events.startDateTime} <= ${endDate}`
+            : sql`${events.startDateTime} >= ${startDate}`
+        )
         .execute()
         .then(results => results.map(r => r.userId));
       
@@ -647,10 +668,17 @@ export class DashboardGenerator {
   /**
    * Get chart data for the dashboard
    * @param timePeriod - The time period to consider
+   * @param startDate - Start date for custom range (optional)
+   * @param endDate - End date for custom range (optional)
    */
-  private async getUserGrowthChartData(timePeriod: DashboardTimePeriod): Promise<ChartData> {
+  private async getUserGrowthChartData(
+    timePeriod: DashboardTimePeriod,
+    startDate?: string,
+    endDate?: string
+  ): Promise<ChartData> {
     try {
-      const { currentStartDate, previousStartDate, currentLabel, previousLabel } = await this.getTimeComparison(timePeriod);
+      const { currentStartDate, previousStartDate, currentLabel, previousLabel, currentEndDate } = 
+        await this.getTimeComparison(timePeriod, startDate, endDate);
       
       // Configure time intervals based on the selected period
       let intervalFormat: string;
@@ -983,7 +1011,7 @@ export class DashboardGenerator {
       });
       
       // Add chart widgets
-      const userGrowthChartData = await this.getUserGrowthChartData(timePeriod);
+      const userGrowthChartData = await this.getUserGrowthChartData(timePeriod, startDate, endDate);
       widgets.push({
         id: "user-growth-chart",
         title: "User Growth",
