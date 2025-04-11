@@ -11,7 +11,13 @@ import { useQuery } from "@tanstack/react-query";
 import { 
   DashboardTimePeriod, 
   DashboardMetricCategory,
-  DashboardWidget 
+  DashboardWidget,
+  DashboardWidgetType,
+  MetricCardWidget,
+  ChartWidget,
+  TableWidget,
+  AlertWidget,
+  ActionCardWidget
 } from "@shared/schema/admin/dashboard";
 import { apiRequest } from "@/lib/queryClient";
 import { RefreshCw, ChevronDown, Users, Activity, Calendar, BarChart2 } from "lucide-react";
@@ -36,11 +42,22 @@ export default function ResponsiveAdminDashboard() {
   const isMobile = useIsMobile();
   const padding = getResponsivePadding(isMobile ? 0 : 1);
   
+  // Define dashboard data interface
+  interface DashboardData {
+    layout: {
+      widgets: DashboardWidget[];
+    };
+    totalUsers: number;
+    totalMatches: number;
+    totalEvents: number;
+    lastUpdated: string;
+  }
+  
   // Fetch dashboard data with proper type
-  const { data, isLoading, isError, error, refetch } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery<DashboardData>({
     queryKey: ['/api/admin/dashboard', timePeriod],
     queryFn: async ({ queryKey }) => {
-      const [_path, period] = queryKey;
+      const [_path, period] = queryKey as [string, DashboardTimePeriod];
       const response = await apiRequest(`/api/admin/dashboard?timePeriod=${period}`);
       return response.json();
     },
@@ -208,19 +225,25 @@ export default function ResponsiveAdminDashboard() {
         <div className="space-y-4 mt-2">
           {/* First display metric cards */}
           {getFilteredWidgets()
-            .filter((widget: DashboardWidget) => widget.widgetType === 'metric_card')
-            .map((widget: DashboardWidget) => (
-              <div key={widget.id}>
-                <MetricCard metric={widget.metric} />
-              </div>
-            ))}
+            .filter((widget: DashboardWidget) => widget.widgetType === DashboardWidgetType.METRIC_CARD)
+            .map((widget: DashboardWidget) => {
+              // Use proper type narrowing for TypeScript
+              if (widget.widgetType === DashboardWidgetType.METRIC_CARD) {
+                return (
+                  <div key={widget.id}>
+                    <MetricCard metric={widget.metric} />
+                  </div>
+                );
+              }
+              return null;
+            })}
             
           {/* Then display other widgets in an accordion */}
           {selectedCategory === 'all' && (
             <Accordion type="single" collapsible className="w-full">
               {Object.values(DashboardMetricCategory).map(category => {
                 const categoryWidgets = data?.layout.widgets.filter(
-                  (w: DashboardWidget) => w.category === category && w.widgetType !== 'metric_card'
+                  (w: DashboardWidget) => w.category === category && w.widgetType !== DashboardWidgetType.METRIC_CARD
                 );
                 
                 if (!categoryWidgets || categoryWidgets.length === 0) return null;
@@ -239,9 +262,9 @@ export default function ResponsiveAdminDashboard() {
                           <div key={widget.id} className="border rounded-md shadow-sm bg-card p-3">
                             <h3 className="font-medium mb-2 text-sm">{widget.title}</h3>
                             <p className="text-xs text-muted-foreground">
-                              {widget.widgetType === 'chart' && "Chart data available on desktop view"}
-                              {widget.widgetType === 'table' && "Table data available on desktop view"}
-                              {widget.widgetType === 'action_card' && "Quick actions available on desktop view"}
+                              {widget.widgetType === DashboardWidgetType.CHART && "Chart data available on desktop view"}
+                              {widget.widgetType === DashboardWidgetType.TABLE && "Table data available on desktop view"}
+                              {widget.widgetType === DashboardWidgetType.ACTION_CARD && "Quick actions available on desktop view"}
                             </p>
                           </div>
                         ))}
