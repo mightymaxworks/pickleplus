@@ -17,6 +17,19 @@ import { getEvent } from '@/lib/sdk/eventSDK';
 import { formatDateTime } from '@/lib/utils';
 import type { Event } from '@shared/schema/events';
 
+// Helper function to safely format date and time
+const safeFormatDateTime = (dateString: any) => {
+  try {
+    if (!dateString) return 'Date and Time TBD';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Date and Time TBD';
+    return formatDateTime(date);
+  } catch (error) {
+    console.error('Error formatting date and time:', error);
+    return 'Date and Time TBD';
+  }
+};
+
 export default function EventTestPage() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [activeTab, setActiveTab] = useState<string>('upcoming');
@@ -76,7 +89,7 @@ export default function EventTestPage() {
               <CardHeader>
                 <CardTitle>{selectedEvent.name}</CardTitle>
                 <CardDescription>
-                  {formatDateTime(new Date(selectedEvent.startDateTime))}
+                  {safeFormatDateTime(selectedEvent.startDateTime)}
                 </CardDescription>
               </CardHeader>
               <CardContent>

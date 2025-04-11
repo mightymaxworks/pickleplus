@@ -15,6 +15,32 @@ import { getUpcomingEvents } from '@/lib/sdk/eventSDK';
 import type { Event } from '@shared/schema/events';
 import { cn } from '@/lib/utils';
 
+// Helper function to safely format dates
+const safeFormatDate = (dateString: any, options: any = {}) => {
+  try {
+    if (!dateString) return 'Date TBD';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Date TBD';
+    return formatDate(date, options);
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Date TBD';
+  }
+};
+
+// Helper function to safely format times
+const safeFormatTime = (dateString: any) => {
+  try {
+    if (!dateString) return 'Time TBD';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Time TBD';
+    return formatTime(date);
+  } catch (error) {
+    console.error('Error formatting time:', error);
+    return 'Time TBD';
+  }
+};
+
 interface EventListProps {
   limit?: number;
   showViewButton?: boolean;
@@ -42,8 +68,18 @@ export function EventList({
   // Function to get event status badge
   const getEventStatusBadge = (event: Event) => {
     const now = new Date();
-    const startDate = new Date(event.startDateTime);
-    const endDate = new Date(event.endDateTime);
+    // Ensure we have valid date strings before creating Date objects
+    const startDateTime = event.startDateTime || Date.now();
+    const endDateTime = event.endDateTime || Date.now();
+    
+    // Create valid date objects with fallbacks
+    const startDate = new Date(startDateTime);
+    const endDate = new Date(endDateTime);
+
+    // Check if dates are valid
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      return <Badge variant="secondary">Upcoming</Badge>;
+    }
 
     if (now > endDate) {
       return <Badge variant="outline" className="text-muted-foreground">Completed</Badge>;
@@ -136,7 +172,7 @@ export function EventList({
               <div className="flex items-center mt-1">
                 <CalendarIcon className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
                 <span>
-                  {formatDate(new Date(event.startDateTime), { month: 'short', day: 'numeric' })} at {formatTime(new Date(event.startDateTime))}
+                  {safeFormatDate(event.startDateTime, { month: 'short', day: 'numeric' })} at {safeFormatTime(event.startDateTime)}
                 </span>
               </div>
             </CardDescription>
