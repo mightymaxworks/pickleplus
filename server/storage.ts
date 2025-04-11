@@ -112,6 +112,27 @@ export interface IStorage {
   isUserRegisteredForEvent(eventId: number, userId: number): Promise<boolean>;
   getEventRegistrationCount(eventId: number): Promise<number>;
   getRegisteredEvents(userId: number, limit?: number, offset?: number): Promise<Event[]>;
+  
+  // PKL-278651-CONN-0004-PASS-ADMIN - Passport Verification System
+  logPassportVerification(verificationData: InsertPassportVerification): Promise<PassportVerification>;
+  getPassportVerificationLogs(
+    limit?: number, 
+    offset?: number, 
+    filters?: {
+      passportCode?: string;
+      userId?: number;
+      eventId?: number;
+      status?: string;
+      verifiedBy?: number;
+    }
+  ): Promise<PassportVerification[]>;
+  verifyPassportForEvent(passportCode: string, eventId?: number): Promise<{
+    valid: boolean;
+    userId?: number;
+    username?: string;
+    events?: Event[];
+    message?: string;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {

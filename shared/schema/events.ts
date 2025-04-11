@@ -143,6 +143,11 @@ export const insertEventRegistrationSchema = createInsertSchema(eventRegistratio
   updatedAt: true,
 });
 
+export const insertPassportVerificationSchema = createInsertSchema(passportVerifications).omit({
+  id: true,
+  timestamp: true,
+});
+
 // Types for insertion and selection
 export type InsertEvent = z.infer<typeof insertEventSchema>;
 export type Event = typeof events.$inferSelect;
@@ -150,15 +155,20 @@ export type EventCheckIn = typeof eventCheckIns.$inferSelect;
 export type InsertEventCheckIn = z.infer<typeof insertEventCheckInSchema>;
 export type EventRegistration = typeof eventRegistrations.$inferSelect;
 export type InsertEventRegistration = z.infer<typeof insertEventRegistrationSchema>;
+export type PassportVerification = typeof passportVerifications.$inferSelect;
+export type InsertPassportVerification = z.infer<typeof insertPassportVerificationSchema>;
 
 export default {
   events,
   eventCheckIns,
   eventRegistrations,
+  passportVerifications,
   eventsRelations,
   eventCheckInsRelations,
   eventRegistrationsRelations,
+  passportVerificationsRelations,
   insertEventSchema,
   insertEventCheckInSchema,
-  insertEventRegistrationSchema
+  insertEventRegistrationSchema,
+  insertPassportVerificationSchema
 };
