@@ -40,6 +40,37 @@ const CACHEABLE_ENDPOINTS = [
   '/api/event/upcoming'
 ];
 
+// Store CSRF token
+let csrfToken: string | null = null;
+
+/**
+ * PKL-278651-ADMIN-0013-SEC
+ * CSRF token management for security
+ */
+export async function fetchCSRFToken(): Promise<string> {
+  if (csrfToken) {
+    return csrfToken;
+  }
+  
+  try {
+    const response = await fetch('/api/security/csrf-token', {
+      method: 'GET',
+      credentials: 'include',
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch CSRF token');
+    }
+    
+    const data = await response.json();
+    csrfToken = data.csrfToken;
+    return csrfToken;
+  } catch (error) {
+    console.error('Error fetching CSRF token:', error);
+    throw error;
+  }
+}
+
 export async function apiRequest(
   method: RequestMethod,
   url: string,
@@ -83,9 +114,29 @@ export async function apiRequest(
     };
     options.cache = "no-store";
   }
+  
+  // For non-GET requests, add CSRF token
+  if (method !== "GET") {
+    try {
+      const token = await fetchCSRFToken();
+      options.headers = {
+        ...options.headers,
+        "X-CSRF-Token": token,
+      };
+      
+      console.log(`[SEC] Adding CSRF token to ${method} request`);
+    } catch (error) {
+      console.error("Failed to add CSRF token to request:", error);
+    }
+  }
 
   if (data) {
     options.body = JSON.stringify(data);
+    
+    // Also include the CSRF token in the request body for form submissions
+    if (method !== "GET" && typeof data === "object" && csrfToken) {
+      data._csrf = csrfToken;
+    }
   }
 
   console.log(`Making ${method} request to ${url} with credentials included`);

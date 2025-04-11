@@ -3,6 +3,8 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import cors from 'cors';
 import * as http from 'http';
+import { setupAuth } from './auth';
+import { setupSecurity } from './security';
 
 const app = express();
 app.use(express.json());
@@ -63,12 +65,16 @@ app.use((req, res, next) => {
   // Create HTTP server
   const serverHttp = http.createServer(app);
   
-  // This section is now handled later in the code block
-
   // Add a health check route before any Vite middleware
   app.get("/api/health", (req: Request, res: Response) => {
     res.json({ status: "ok", time: new Date().toISOString() });
   });
+  
+  // Set up authentication
+  setupAuth(app);
+  
+  // Set up security features (after auth but before routes)
+  setupSecurity(app);
 
   // Server API Routes
   await registerRoutes(app);

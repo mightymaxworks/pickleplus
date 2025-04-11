@@ -189,7 +189,8 @@ export function setupAuth(app: Express) {
       const user = await storage.createUser({
         ...validatedData,
         password: hashedPassword,
-        passportId: passportCode,
+        // Use the correct field name from the schema
+        passportCode: passportCode,
         avatarInitials,
         displayName,
       });
@@ -282,6 +283,30 @@ export function setupAuth(app: Express) {
     // Ensure CORS headers for credentials
     res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
     res.header('Access-Control-Allow-Credentials', 'true');
+    
+    // Get user info before logging out to use in audit log
+    const userId = req.isAuthenticated() ? (req.user as any).id : null;
+    const isAdmin = req.isAuthenticated() ? (req.user as any).isAdmin : false;
+    const username = req.isAuthenticated() ? (req.user as any).username : null;
+    
+    // Create audit log for logout if user is authenticated
+    if (req.isAuthenticated()) {
+      const auditAction = isAdmin ? AuditAction.ADMIN_LOGOUT : AuditAction.USER_LOGOUT;
+      storage.createAuditLog({
+        timestamp: new Date(),
+        userId,
+        action: auditAction,
+        resource: AuditResource.USER,
+        resourceId: userId.toString(),
+        ipAddress: req.ip || 'unknown',
+        userAgent: req.headers['user-agent'] || null,
+        statusCode: 200,
+        additionalData: {
+          username,
+          sessionId: req.sessionID
+        }
+      }).catch(err => console.error('Failed to log logout:', err));
+    }
     
     req.logout((err) => {
       if (err) return next(err);
