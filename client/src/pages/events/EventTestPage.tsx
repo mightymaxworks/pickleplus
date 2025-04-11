@@ -15,7 +15,7 @@ import EventCheckInScanner from '@/components/events/EventCheckInScanner';
 import EventList from '@/components/events/EventList';
 import { getEvent } from '@/lib/sdk/eventSDK';
 import { formatDateTime } from '@/lib/utils';
-import { Event } from '../../../shared/schema/events';
+import type { Event } from '@shared/schema/events';
 
 export default function EventTestPage() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
