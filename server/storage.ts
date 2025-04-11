@@ -1461,11 +1461,33 @@ export class DatabaseStorage implements IStorage {
       
       console.log(`[Storage] updateEvent called for event ID: ${numericId}`);
       
-      // Update the updatedAt timestamp
-      updates.updatedAt = new Date();
+      // Process data for update - convert string dates to Date objects
+      const processedUpdates: any = { ...updates };
+      
+      // Handle date fields
+      if (updates.startDateTime) {
+        processedUpdates.startDateTime = new Date(updates.startDateTime);
+      }
+      
+      if (updates.endDateTime) {
+        processedUpdates.endDateTime = new Date(updates.endDateTime);
+      }
+      
+      if (updates.registrationStartDate) {
+        processedUpdates.registrationStartDate = new Date(updates.registrationStartDate);
+      }
+      
+      if (updates.registrationEndDate) {
+        processedUpdates.registrationEndDate = new Date(updates.registrationEndDate);
+      }
+      
+      // Set updated timestamp
+      processedUpdates.updatedAt = new Date();
+      
+      console.log(`[Storage] Updating event with processed data:`, processedUpdates);
       
       const [updatedEvent] = await db.update(events)
-        .set(updates)
+        .set(processedUpdates)
         .where(eq(events.id, numericId))
         .returning();
       

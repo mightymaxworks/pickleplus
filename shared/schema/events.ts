@@ -5,42 +5,42 @@
  * including the events and event check-ins tables.
  */
 
-import { pgTable, serial, integer, varchar, text, boolean, timestamp, date, json, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, varchar, text, boolean, timestamp, date, json, jsonb, numeric, decimal } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { users } from "../schema";
 
 // Events table - Stores information about all types of events
+// This schema definition matches the actual database structure created in run-event-system-migration.ts
 export const events = pgTable("events", {
   id: serial("id").primaryKey(),
+  eventType: varchar("event_type", { length: 255 }).notNull().default("tournament"),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
-  location: varchar("location", { length: 255 }),
-  venue: varchar("venue", { length: 255 }),
-  address: text("address"),
-  city: varchar("city", { length: 100 }),
-  state: varchar("state", { length: 100 }),
-  postalCode: varchar("postal_code", { length: 20 }),
-  country: varchar("country", { length: 100 }),
+  location: text("location"),
   startDateTime: timestamp("start_date_time").notNull(),
   endDateTime: timestamp("end_date_time").notNull(),
-  eventType: varchar("event_type", { length: 50 }).notNull().default("social"), // social, tournament, clinic, league, etc.
+  organizerId: integer("organizer_id"),
   maxAttendees: integer("max_attendees"),
   currentAttendees: integer("current_attendees").default(0),
-  isPrivate: boolean("is_private").default(false),
-  requiresCheckIn: boolean("requires_check_in").default(true),
-  checkInCode: varchar("check_in_code", { length: 50 }), // Optional custom code
-  organizerId: integer("organizer_id").references(() => users.id),
-  registrationRequired: boolean("registration_required").default(false),
+  registrationFee: numeric("registration_fee", { precision: 10, scale: 2 }),
   registrationStartDate: timestamp("registration_start_date"),
   registrationEndDate: timestamp("registration_end_date"),
-  cost: integer("cost"), // In cents, null if free
-  costCurrency: varchar("cost_currency", { length: 3 }).default("USD"),
   imageUrl: text("image_url"),
-  qrCodeEnabled: boolean("qr_code_enabled").default(true),
-  status: varchar("status", { length: 20 }).notNull().default("upcoming"), // upcoming, active, completed, cancelled
-  additionalInfo: jsonb("additional_info"),
+  websiteUrl: text("website_url"),
+  isPrivate: boolean("is_private").default(false),
+  requiresCheckIn: boolean("requires_check_in").default(true),
+  checkInCode: varchar("check_in_code", { length: 20 }),
+  status: varchar("status", { length: 50 }).default("upcoming"),
+  contactEmail: varchar("contact_email", { length: 255 }),
+  contactPhone: varchar("contact_phone", { length: 50 }),
+  venueDetails: json("venue_details"),
+  prizeDetails: json("prize_details"),
+  sponsorshipDetails: json("sponsorship_details"),
+  rulesUrl: text("rules_url"),
+  cancellationPolicy: text("cancellation_policy"),
+  additionalInfo: json("additional_info"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
