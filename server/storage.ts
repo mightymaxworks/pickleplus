@@ -12,6 +12,12 @@ import {
   matchHighlights, type InsertMatchHighlight
 } from "@shared/match-statistics-schema";
 
+// PKL-278651-CONN-0003-EVENT - Event Check-in QR Code System
+import {
+  events, type Event, type InsertEvent,
+  eventCheckIns, type EventCheckIn, type InsertEventCheckIn
+} from "@shared/schema/events";
+
 // Define types for database results
 type MatchStatistics = typeof matchStatistics.$inferSelect;
 type PerformanceImpact = typeof performanceImpacts.$inferSelect;
@@ -74,6 +80,25 @@ export interface IStorage {
   // Match Highlights
   getMatchHighlights(matchId: number, userId?: number): Promise<MatchHighlight[]>;
   createMatchHighlight(highlight: InsertMatchHighlight): Promise<MatchHighlight>;
+  
+  // PKL-278651-CONN-0003-EVENT - Event Check-in QR Code System
+  // Event operations
+  getEvent(id: number): Promise<Event | undefined>;
+  getEvents(limit?: number, offset?: number, filters?: Partial<Event>): Promise<Event[]>;
+  getEventsByOrganizer(organizerId: number, limit?: number, offset?: number): Promise<Event[]>;
+  getUpcomingEvents(limit?: number): Promise<Event[]>;
+  createEvent(eventData: InsertEvent): Promise<Event>;
+  updateEvent(id: number, updates: Partial<InsertEvent>): Promise<Event | undefined>;
+  deleteEvent(id: number): Promise<boolean>;
+  
+  // Event Check-in operations
+  getEventCheckIn(id: number): Promise<EventCheckIn | undefined>;
+  getEventCheckIns(eventId: number, limit?: number, offset?: number): Promise<EventCheckIn[]>;
+  getUserEventCheckIns(userId: number, limit?: number, offset?: number): Promise<EventCheckIn[]>;
+  checkUserIntoEvent(checkInData: InsertEventCheckIn): Promise<EventCheckIn>;
+  getEventAttendees(eventId: number, limit?: number, offset?: number): Promise<User[]>;
+  isUserCheckedIntoEvent(eventId: number, userId: number): Promise<boolean>;
+  getEventCheckInCounts(eventId: number): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1262,6 +1287,429 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('[Storage] createMatchHighlight error:', error);
       throw error;
+    }
+  }
+
+  // PKL-278651-CONN-0003-EVENT - Event Check-in QR Code System
+  // Event operations
+  async getEvent(id: number): Promise<Event | undefined> {
+    try {
+      const numericId = Number(id);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] getEvent called with invalid ID: ${id}`);
+        return undefined;
+      }
+      
+      console.log(`[Storage] getEvent called with ID: ${numericId}`);
+      
+      const [event] = await db.select()
+        .from(events)
+        .where(eq(events.id, numericId));
+      
+      return event;
+    } catch (error) {
+      console.error('[Storage] getEvent error:', error);
+      return undefined;
+    }
+  }
+  
+  async getEvents(limit: number = 100, offset: number = 0, filters?: Partial<Event>): Promise<Event[]> {
+    try {
+      console.log(`[Storage] getEvents called with limit: ${limit}, offset: ${offset}`);
+      
+      let query = db.select().from(events);
+      
+      // Apply filters if provided
+      if (filters) {
+        const conditions = [];
+        
+        if (filters.eventType) {
+          conditions.push(eq(events.eventType, filters.eventType));
+        }
+        
+        if (filters.status) {
+          conditions.push(eq(events.status, filters.status));
+        }
+        
+        if (filters.isPrivate !== undefined) {
+          conditions.push(eq(events.isPrivate, filters.isPrivate));
+        }
+        
+        if (filters.requiresCheckIn !== undefined) {
+          conditions.push(eq(events.requiresCheckIn, filters.requiresCheckIn));
+        }
+        
+        if (conditions.length > 0) {
+          query = query.where(and(...conditions));
+        }
+      }
+      
+      // Apply pagination
+      query = query.limit(limit).offset(offset);
+      
+      // Sort by start date (most recent first)
+      query = query.orderBy(desc(events.startDateTime));
+      
+      const eventList = await query;
+      return eventList;
+    } catch (error) {
+      console.error('[Storage] getEvents error:', error);
+      return [];
+    }
+  }
+  
+  async getEventsByOrganizer(organizerId: number, limit: number = 100, offset: number = 0): Promise<Event[]> {
+    try {
+      const numericOrganizerId = Number(organizerId);
+      
+      if (isNaN(numericOrganizerId) || !Number.isFinite(numericOrganizerId) || numericOrganizerId < 1) {
+        console.log(`[Storage] getEventsByOrganizer called with invalid organizerId: ${organizerId}`);
+        return [];
+      }
+      
+      console.log(`[Storage] getEventsByOrganizer called with organizerId: ${numericOrganizerId}`);
+      
+      const eventList = await db.select()
+        .from(events)
+        .where(eq(events.organizerId, numericOrganizerId))
+        .orderBy(desc(events.startDateTime))
+        .limit(limit)
+        .offset(offset);
+      
+      return eventList;
+    } catch (error) {
+      console.error('[Storage] getEventsByOrganizer error:', error);
+      return [];
+    }
+  }
+  
+  async getUpcomingEvents(limit: number = 10): Promise<Event[]> {
+    try {
+      console.log(`[Storage] getUpcomingEvents called with limit: ${limit}`);
+      
+      const now = new Date();
+      
+      const upcomingEvents = await db.select()
+        .from(events)
+        .where(
+          and(
+            eq(events.status, "upcoming"),
+            eq(events.isPrivate, false)
+          )
+        )
+        .orderBy(asc(events.startDateTime))
+        .limit(limit);
+      
+      return upcomingEvents;
+    } catch (error) {
+      console.error('[Storage] getUpcomingEvents error:', error);
+      return [];
+    }
+  }
+  
+  async createEvent(eventData: InsertEvent): Promise<Event> {
+    try {
+      console.log(`[Storage] createEvent called with data:`, JSON.stringify(eventData));
+      
+      if (!eventData.name || !eventData.startDateTime || !eventData.endDateTime) {
+        console.log(`[Storage] createEvent called with invalid event: missing required fields`);
+        throw new Error("Invalid event: missing required fields");
+      }
+      
+      const [result] = await db.insert(events)
+        .values(eventData)
+        .returning();
+      
+      if (!result) {
+        throw new Error("Failed to create event in database");
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('[Storage] createEvent error:', error);
+      throw error;
+    }
+  }
+  
+  async updateEvent(id: number, updates: Partial<InsertEvent>): Promise<Event | undefined> {
+    try {
+      const numericId = Number(id);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] updateEvent called with invalid ID: ${id}`);
+        return undefined;
+      }
+      
+      console.log(`[Storage] updateEvent called for event ID: ${numericId}`);
+      
+      // Update the updatedAt timestamp
+      updates.updatedAt = new Date();
+      
+      const [updatedEvent] = await db.update(events)
+        .set(updates)
+        .where(eq(events.id, numericId))
+        .returning();
+      
+      return updatedEvent;
+    } catch (error) {
+      console.error('[Storage] updateEvent error:', error);
+      return undefined;
+    }
+  }
+  
+  async deleteEvent(id: number): Promise<boolean> {
+    try {
+      const numericId = Number(id);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] deleteEvent called with invalid ID: ${id}`);
+        return false;
+      }
+      
+      console.log(`[Storage] deleteEvent called for event ID: ${numericId}`);
+      
+      // First delete all check-ins for this event
+      await db.delete(eventCheckIns)
+        .where(eq(eventCheckIns.eventId, numericId));
+      
+      // Then delete the event
+      const result = await db.delete(events)
+        .where(eq(events.id, numericId));
+      
+      return true;
+    } catch (error) {
+      console.error('[Storage] deleteEvent error:', error);
+      return false;
+    }
+  }
+  
+  // Event Check-in operations
+  async getEventCheckIn(id: number): Promise<EventCheckIn | undefined> {
+    try {
+      const numericId = Number(id);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] getEventCheckIn called with invalid ID: ${id}`);
+        return undefined;
+      }
+      
+      console.log(`[Storage] getEventCheckIn called with ID: ${numericId}`);
+      
+      const [checkIn] = await db.select()
+        .from(eventCheckIns)
+        .where(eq(eventCheckIns.id, numericId));
+      
+      return checkIn;
+    } catch (error) {
+      console.error('[Storage] getEventCheckIn error:', error);
+      return undefined;
+    }
+  }
+  
+  async getEventCheckIns(eventId: number, limit: number = 100, offset: number = 0): Promise<EventCheckIn[]> {
+    try {
+      const numericEventId = Number(eventId);
+      
+      if (isNaN(numericEventId) || !Number.isFinite(numericEventId) || numericEventId < 1) {
+        console.log(`[Storage] getEventCheckIns called with invalid eventId: ${eventId}`);
+        return [];
+      }
+      
+      console.log(`[Storage] getEventCheckIns called for event ID: ${numericEventId}`);
+      
+      const checkIns = await db.select()
+        .from(eventCheckIns)
+        .where(eq(eventCheckIns.eventId, numericEventId))
+        .orderBy(desc(eventCheckIns.checkInTime))
+        .limit(limit)
+        .offset(offset);
+      
+      return checkIns;
+    } catch (error) {
+      console.error('[Storage] getEventCheckIns error:', error);
+      return [];
+    }
+  }
+  
+  async getUserEventCheckIns(userId: number, limit: number = 100, offset: number = 0): Promise<EventCheckIn[]> {
+    try {
+      const numericUserId = Number(userId);
+      
+      if (isNaN(numericUserId) || !Number.isFinite(numericUserId) || numericUserId < 1) {
+        console.log(`[Storage] getUserEventCheckIns called with invalid userId: ${userId}`);
+        return [];
+      }
+      
+      console.log(`[Storage] getUserEventCheckIns called for user ID: ${numericUserId}`);
+      
+      const checkIns = await db.select()
+        .from(eventCheckIns)
+        .where(eq(eventCheckIns.userId, numericUserId))
+        .orderBy(desc(eventCheckIns.checkInTime))
+        .limit(limit)
+        .offset(offset);
+      
+      return checkIns;
+    } catch (error) {
+      console.error('[Storage] getUserEventCheckIns error:', error);
+      return [];
+    }
+  }
+  
+  async checkUserIntoEvent(checkInData: InsertEventCheckIn): Promise<EventCheckIn> {
+    try {
+      console.log(`[Storage] checkUserIntoEvent called with data:`, JSON.stringify(checkInData));
+      
+      if (!checkInData.eventId || !checkInData.userId) {
+        console.log(`[Storage] checkUserIntoEvent called with invalid checkIn: missing required fields`);
+        throw new Error("Invalid check-in: missing required fields");
+      }
+      
+      // Check if user is already checked in
+      const existingCheckIns = await db.select()
+        .from(eventCheckIns)
+        .where(
+          and(
+            eq(eventCheckIns.eventId, checkInData.eventId),
+            eq(eventCheckIns.userId, checkInData.userId)
+          )
+        );
+      
+      if (existingCheckIns.length > 0) {
+        console.log(`[Storage] User ${checkInData.userId} is already checked in to event ${checkInData.eventId}`);
+        return existingCheckIns[0];
+      }
+      
+      // Insert the check-in record
+      const [result] = await db.insert(eventCheckIns)
+        .values(checkInData)
+        .returning();
+      
+      if (!result) {
+        throw new Error("Failed to create event check-in in database");
+      }
+      
+      // Update event attendance count
+      await this.updateEventAttendanceCount(checkInData.eventId);
+      
+      return result;
+    } catch (error) {
+      console.error('[Storage] checkUserIntoEvent error:', error);
+      throw error;
+    }
+  }
+  
+  async getEventAttendees(eventId: number, limit: number = 100, offset: number = 0): Promise<User[]> {
+    try {
+      const numericEventId = Number(eventId);
+      
+      if (isNaN(numericEventId) || !Number.isFinite(numericEventId) || numericEventId < 1) {
+        console.log(`[Storage] getEventAttendees called with invalid eventId: ${eventId}`);
+        return [];
+      }
+      
+      console.log(`[Storage] getEventAttendees called for event ID: ${numericEventId}`);
+      
+      // Join event check-ins with users to get attendee details
+      const attendees = await db.select({
+        id: users.id,
+        username: users.username,
+        displayName: users.displayName,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        passportId: users.passportId,
+        avatarUrl: users.avatarUrl,
+        avatarInitials: users.avatarInitials,
+        checkInTime: eventCheckIns.checkInTime,
+        checkInMethod: eventCheckIns.checkInMethod
+      })
+      .from(eventCheckIns)
+      .innerJoin(users, eq(eventCheckIns.userId, users.id))
+      .where(eq(eventCheckIns.eventId, numericEventId))
+      .orderBy(desc(eventCheckIns.checkInTime))
+      .limit(limit)
+      .offset(offset);
+      
+      return attendees;
+    } catch (error) {
+      console.error('[Storage] getEventAttendees error:', error);
+      return [];
+    }
+  }
+  
+  async isUserCheckedIntoEvent(eventId: number, userId: number): Promise<boolean> {
+    try {
+      const numericEventId = Number(eventId);
+      const numericUserId = Number(userId);
+      
+      if (isNaN(numericEventId) || !Number.isFinite(numericEventId) || numericEventId < 1 ||
+          isNaN(numericUserId) || !Number.isFinite(numericUserId) || numericUserId < 1) {
+        console.log(`[Storage] isUserCheckedIntoEvent called with invalid parameters: eventId=${eventId}, userId=${userId}`);
+        return false;
+      }
+      
+      console.log(`[Storage] isUserCheckedIntoEvent called for event ID: ${numericEventId} and user ID: ${numericUserId}`);
+      
+      const checkIns = await db.select()
+        .from(eventCheckIns)
+        .where(
+          and(
+            eq(eventCheckIns.eventId, numericEventId),
+            eq(eventCheckIns.userId, numericUserId)
+          )
+        );
+      
+      return checkIns.length > 0;
+    } catch (error) {
+      console.error('[Storage] isUserCheckedIntoEvent error:', error);
+      return false;
+    }
+  }
+  
+  async getEventCheckInCounts(eventId: number): Promise<number> {
+    try {
+      const numericEventId = Number(eventId);
+      
+      if (isNaN(numericEventId) || !Number.isFinite(numericEventId) || numericEventId < 1) {
+        console.log(`[Storage] getEventCheckInCounts called with invalid eventId: ${eventId}`);
+        return 0;
+      }
+      
+      console.log(`[Storage] getEventCheckInCounts called for event ID: ${numericEventId}`);
+      
+      const result = await db.select({ count: sql<number>`count(*)` })
+        .from(eventCheckIns)
+        .where(eq(eventCheckIns.eventId, numericEventId));
+      
+      return result[0]?.count || 0;
+    } catch (error) {
+      console.error('[Storage] getEventCheckInCounts error:', error);
+      return 0;
+    }
+  }
+
+  // Helper method to update event attendance count
+  private async updateEventAttendanceCount(eventId: number): Promise<void> {
+    try {
+      const numericEventId = Number(eventId);
+      
+      if (isNaN(numericEventId) || !Number.isFinite(numericEventId) || numericEventId < 1) {
+        console.log(`[Storage] updateEventAttendanceCount called with invalid eventId: ${eventId}`);
+        return;
+      }
+      
+      // Get current check-in count
+      const count = await this.getEventCheckInCounts(numericEventId);
+      
+      // Update the event record
+      await db.update(events)
+        .set({ currentAttendees: count })
+        .where(eq(events.id, numericEventId));
+        
+      console.log(`[Storage] Updated event ${numericEventId} attendance count to ${count}`);
+    } catch (error) {
+      console.error('[Storage] updateEventAttendanceCount error:', error);
     }
   }
 }
