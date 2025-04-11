@@ -13,9 +13,11 @@ import {
 } from "@shared/match-statistics-schema";
 
 // PKL-278651-CONN-0003-EVENT - Event Check-in QR Code System
+// PKL-278651-CONN-0004-PASS-REG - Enhanced PicklePass™ with Registration
 import {
   events, type Event, type InsertEvent,
-  eventCheckIns, type EventCheckIn, type InsertEventCheckIn
+  eventCheckIns, type EventCheckIn, type InsertEventCheckIn,
+  eventRegistrations, type EventRegistration, type InsertEventRegistration
 } from "@shared/schema/events";
 
 // Define types for database results

@@ -33,6 +33,21 @@ export const events = pgTable('events', {
 });
 
 /**
+ * PKL-278651-CONN-0004-PASS-REG: Event Registrations table schema
+ * Tracks user registrations for events
+ */
+export const eventRegistrations = pgTable('event_registrations', {
+  id: serial('id').primaryKey(),
+  eventId: integer('event_id').notNull().references(() => events.id),
+  userId: integer('user_id').notNull().references(() => users.id),
+  registrationTime: timestamp('registration_time').defaultNow().notNull(),
+  status: text('status').default('confirmed').notNull(), // 'pending', 'confirmed', 'cancelled', 'waitlisted'
+  notes: text('notes'), // For any special requests or information
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/**
  * PicklePass™ Event Check-ins table schema
  */
 export const eventCheckIns = pgTable('event_check_ins', {
@@ -50,6 +65,7 @@ export const eventsRelations = relations(events, ({ one, many }) => ({
     references: [users.id],
   }),
   checkIns: many(eventCheckIns),
+  registrations: many(eventRegistrations),
 }));
 
 export const eventCheckInsRelations = relations(eventCheckIns, ({ one }) => ({
@@ -59,6 +75,17 @@ export const eventCheckInsRelations = relations(eventCheckIns, ({ one }) => ({
   }),
   user: one(users, {
     fields: [eventCheckIns.userId],
+    references: [users.id],
+  }),
+}));
+
+export const eventRegistrationsRelations = relations(eventRegistrations, ({ one }) => ({
+  event: one(events, {
+    fields: [eventRegistrations.eventId],
+    references: [events.id],
+  }),
+  user: one(users, {
+    fields: [eventRegistrations.userId],
     references: [users.id],
   }),
 }));
@@ -76,17 +103,29 @@ export const insertEventCheckInSchema = createInsertSchema(eventCheckIns).omit({
   checkInTime: true,
 });
 
+export const insertEventRegistrationSchema = createInsertSchema(eventRegistrations).omit({
+  id: true,
+  registrationTime: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types for insertion and selection
 export type InsertEvent = z.infer<typeof insertEventSchema>;
 export type Event = typeof events.$inferSelect;
 export type EventCheckIn = typeof eventCheckIns.$inferSelect;
 export type InsertEventCheckIn = z.infer<typeof insertEventCheckInSchema>;
+export type EventRegistration = typeof eventRegistrations.$inferSelect;
+export type InsertEventRegistration = z.infer<typeof insertEventRegistrationSchema>;
 
 export default {
   events,
   eventCheckIns,
+  eventRegistrations,
   eventsRelations,
   eventCheckInsRelations,
+  eventRegistrationsRelations,
   insertEventSchema,
-  insertEventCheckInSchema
+  insertEventCheckInSchema,
+  insertEventRegistrationSchema
 };
