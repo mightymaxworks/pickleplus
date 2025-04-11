@@ -25,6 +25,8 @@ export const events = pgTable('events', {
   isPrivate: boolean('is_private').default(false),
   requiresCheckIn: boolean('requires_check_in').default(true),
   checkInCode: text('check_in_code'),
+  eventType: text('event_type').default('regular'), // 'regular', 'tournament', 'workshop', etc.
+  status: text('status').default('upcoming'), // 'upcoming', 'ongoing', 'completed', 'cancelled'
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

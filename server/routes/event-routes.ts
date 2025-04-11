@@ -257,14 +257,12 @@ router.post("/:id/check-in", isAuthenticated, async (req: Request, res: Response
     }
     
     // Create the check-in record
+    // Only include the fields that are in the schema
     const checkIn = await storage.checkUserIntoEvent({
       eventId,
       userId,
-      checkInMethod,
-      verifiedById,
-      deviceInfo,
-      checkInLocation,
-      notes: req.body.notes || null
+      checkInMethod
+      // Removed fields not in schema: verifiedById, deviceInfo, checkInLocation, notes
     });
     
     res.status(201).json(checkIn);
