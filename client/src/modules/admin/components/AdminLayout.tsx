@@ -100,7 +100,13 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
                 </SheetTrigger>
                 <SheetContent side="left" className="w-[260px] sm:w-[300px] p-0">
                   <div className="px-4 py-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center">
+                    <div 
+                      className="flex items-center cursor-pointer" 
+                      onClick={() => {
+                        navigate('/admin');
+                        setSidebarOpen(false);
+                      }}
+                    >
                       <Shield size={20} className="text-[#FF5722] mr-2" />
                       <h2 className="font-semibold">Admin Panel</h2>
                     </div>
@@ -146,7 +152,10 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
               <>
                 <Separator orientation="vertical" className="h-6" />
                 
-                <div className="flex items-center">
+                <div 
+                  className="flex items-center cursor-pointer" 
+                  onClick={() => navigate('/admin')}
+                >
                   <Shield size={20} className="text-[#FF5722] mr-2" />
                   <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                     {title}
@@ -177,7 +186,10 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
         {/* Mobile Title Bar - Only on small screens */}
         {isSmallScreen && (
           <div className="container mx-auto px-4 py-2 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex items-center">
+            <div 
+              className="flex items-center cursor-pointer" 
+              onClick={() => navigate('/admin')}
+            >
               <Shield size={18} className="text-[#FF5722] mr-2" />
               <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
                 {title}
