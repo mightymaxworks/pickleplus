@@ -54,13 +54,23 @@ export default function ResponsiveAdminDashboard() {
   }
   
   // Fetch dashboard data with proper type
-  const { data, isLoading, isError, error, refetch } = useQuery<DashboardData>({
+  const { data, isLoading, isError, error, refetch } = useQuery<DashboardData, Error>({
     queryKey: ['/api/admin/dashboard', timePeriod],
     queryFn: async ({ queryKey }) => {
       const [_path, period] = queryKey as [string, DashboardTimePeriod];
-      const response = await apiRequest(`/api/admin/dashboard?timePeriod=${period}`);
+      const response = await fetch(`/api/admin/dashboard?timePeriod=${period}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      if (!response.ok) {
+        throw new Error(`Dashboard data fetch failed: ${response.statusText}`);
+      }
       return response.json();
     },
+    refetchOnWindowFocus: false,
   });
   
   // Handle time period change

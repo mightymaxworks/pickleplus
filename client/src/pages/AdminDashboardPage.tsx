@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import { ResponsiveAdminDashboard } from '@/modules/admin/components/responsive';
+import ResponsiveAdminDashboard from '@/modules/admin/components/responsive/ResponsiveAdminDashboard';
 import { useAdminDashboardCards, useAdminQuickActions } from '@/modules/admin/hooks/useAdminComponents';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
