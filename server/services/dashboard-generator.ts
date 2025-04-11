@@ -97,7 +97,7 @@ export class DashboardGenerator {
         await this.getDashboardWidgets(DashboardTimePeriod.MONTH);
         
         // Warm cache for system metrics
-        await this.getSystemMetrics(DashboardTimePeriod.MONTH);
+        await this.getSystemMetrics();
       } catch (error) {
         console.error("[PERF] Error pre-warming dashboard cache:", error);
       }
@@ -684,30 +684,36 @@ export class DashboardGenerator {
    * Get system metrics for the dashboard
    */
   private async getSystemMetrics(): Promise<DashboardMetric[]> {
+    // Create cache key for system metrics - these don't depend on time period
+    const cacheKey = 'system:metrics';
+    
+    // Check cache first
+    const cachedMetrics = this.cache.get<DashboardMetric[]>(cacheKey);
+    if (cachedMetrics) {
+      console.log(`[PERF] System metrics cache hit for ${cacheKey}`);
+      return cachedMetrics;
+    }
+    
+    console.log(`[PERF] System metrics cache miss for ${cacheKey}`);
+    const startTime = Date.now();
     const metrics: DashboardMetric[] = [];
 
     try {
-      // Database table counts
-      const userTableSize = await db.select({ count: count() })
-        .from(users)
-        .execute()
-        .then(result => result[0]?.count || 0);
+      // Database table counts - use Promise.all for parallel execution
+      const [userTableSizeResult, matchTableSizeResult, eventTableSizeResult, dbStatusResult] = await Promise.all([
+        db.select({ count: count() }).from(users).execute(),
+        db.select({ count: count() }).from(matches).execute(),
+        db.select({ count: count() }).from(events).execute(),
+        db.execute(sql`SELECT pg_is_in_recovery() as is_in_recovery, pg_postmaster_start_time() as start_time`)
+      ]);
       
-      const matchTableSize = await db.select({ count: count() })
-        .from(matches)
-        .execute()
-        .then(result => result[0]?.count || 0);
+      const userTableSize = Number(userTableSizeResult[0]?.count) || 0;
+      const matchTableSize = Number(matchTableSizeResult[0]?.count) || 0;
+      const eventTableSize = Number(eventTableSizeResult[0]?.count) || 0;
+      const totalRecords = userTableSize + matchTableSize + eventTableSize;
       
-      const eventTableSize = await db.select({ count: count() })
-        .from(events)
-        .execute()
-        .then(result => result[0]?.count || 0);
-      
-      const totalRecords = Number(userTableSize) + Number(matchTableSize) + Number(eventTableSize);
-      
-      // Query database for its status
-      const dbStatus = await db.execute(sql`SELECT pg_is_in_recovery() as is_in_recovery, pg_postmaster_start_time() as start_time`)
-        .then(result => result[0] || { is_in_recovery: false, start_time: new Date() });
+      // Get database status from query result
+      const dbStatus = dbStatusResult[0] || { is_in_recovery: false, start_time: new Date() };
       
       // Calculate database uptime
       const dbStartTime = new Date(String(dbStatus.start_time));
@@ -774,6 +780,11 @@ export class DashboardGenerator {
         description: "Average API response time in ms"
       });
 
+      // Cache the metrics for future requests
+      const duration = Date.now() - startTime;
+      this.cache.set(cacheKey, metrics, CACHE_TTL.SYSTEM);
+      console.log(`[PERF] System metrics generated in ${duration}ms`);
+      
       return metrics;
     } catch (error) {
       console.error("Error getting system metrics:", error);
@@ -1107,14 +1118,28 @@ export class DashboardGenerator {
   }
 
   /**
-   * Get dashboard widgets
+   * Get dashboard widgets with caching
    * @param timePeriod - The time period to consider
+   * @param startDate - Start date for custom range (optional)
+   * @param endDate - End date for custom range (optional)
    */
   private async getDashboardWidgets(
     timePeriod: DashboardTimePeriod,
     startDate?: string,
     endDate?: string
   ): Promise<DashboardWidget[]> {
+    // Create cache key
+    const cacheKey = this.getCacheKey('widgets', { timePeriod, startDate, endDate });
+    
+    // Check cache first
+    const cachedWidgets = this.cache.get<DashboardWidget[]>(cacheKey);
+    if (cachedWidgets) {
+      console.log(`[PERF] Dashboard widgets cache hit for ${cacheKey}`);
+      return cachedWidgets;
+    }
+    
+    console.log(`[PERF] Dashboard widgets cache miss for ${cacheKey}`);
+    const startTime = Date.now();
     const widgets: DashboardWidget[] = [];
     
     try {
@@ -1235,6 +1260,11 @@ export class DashboardGenerator {
           }
         ]
       });
+      
+      // Cache the widgets for future requests
+      const duration = Date.now() - startTime;
+      this.cache.set(cacheKey, widgets, CACHE_TTL.DASHBOARD);
+      console.log(`[PERF] Dashboard widgets generated in ${duration}ms`);
       
       return widgets;
     } catch (error) {
