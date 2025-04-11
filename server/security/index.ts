@@ -10,6 +10,7 @@ import { Express, Request, Response, NextFunction } from 'express';
 import NodeCache from 'node-cache';
 import crypto from 'crypto';
 import { storage } from '../storage';
+import { AuditAction, AuditResource } from '../../shared/schema/audit';
 
 // Cache for rate limiting and security purposes
 const securityCache = new NodeCache({ stdTTL: 60, checkperiod: 30 });
@@ -69,18 +70,18 @@ export function rateLimiter(config: RateLimitConfig = rateLimitConfigs.default) 
 }
 
 /**
- * Audit log entry interface
+ * Audit log entry interface for internal use
  */
 export interface AuditLogEntry {
   timestamp: Date;
   userId: number;
-  action: string;
-  resource: string;
-  resourceId?: string | number;
+  action: AuditAction;
+  resource: AuditResource;
+  resourceId?: string;
   ipAddress: string;
   userAgent?: string;
   statusCode?: number;
-  additionalData?: any;
+  additionalData?: Record<string, any>;
 }
 
 /**
@@ -94,16 +95,15 @@ export async function createAuditLog(entry: AuditLogEntry): Promise<void> {
     
     // Convert the audit log entry to the format expected by the database
     const dbAuditLog = {
-      id: undefined, // The database will generate this automatically
       timestamp: entry.timestamp,
       userId: entry.userId,
-      action: entry.action as AuditAction,
-      resource: entry.resource as AuditResource,
-      resourceId: entry.resourceId?.toString() || null,
+      action: entry.action,
+      resource: entry.resource,
+      resourceId: entry.resourceId,
       ipAddress: entry.ipAddress,
-      userAgent: entry.userAgent || null,
-      statusCode: entry.statusCode || null,
-      additionalData: entry.additionalData || null
+      userAgent: entry.userAgent || undefined,
+      statusCode: entry.statusCode,
+      additionalData: entry.additionalData
     };
     
     // Store in the database
@@ -119,23 +119,26 @@ export async function createAuditLog(entry: AuditLogEntry): Promise<void> {
  * @param resource The resource being acted upon
  */
 export function auditLog(action: AuditAction, resource: AuditResource) {
-  return async (req: Request, res: Response, next: NextFunction) => {
-    // Store the original end method
-    const originalEnd = res.end;
+  return (req: Request, res: Response, next: NextFunction) => {
+    // Capture information before response is sent
+    const userId = req.user ? (req.user as any).id : null;
+    const resourceId = req.params.id;
     
-    // Override the end method to capture the status code
-    res.end = function(this: Response, ...args: any[]) {
-      // Create audit log entry
-      const userId = req.user ? (req.user as any).id : null;
+    // Only proceed if we have a user ID
+    if (userId) {
+      // Store original send method
+      const originalSend = res.send;
       
-      if (userId) {
+      // Override send method to capture status code before response is sent
+      res.send = function(this: Response, body: any): Response {
+        // Create audit log
         const entry: AuditLogEntry = {
           timestamp: new Date(),
           userId,
           action,
           resource,
-          resourceId: req.params.id || undefined,
-          ipAddress: req.ip,
+          resourceId,
+          ipAddress: req.ip || '',
           userAgent: req.headers['user-agent'],
           statusCode: res.statusCode,
           additionalData: {
@@ -143,14 +146,16 @@ export function auditLog(action: AuditAction, resource: AuditResource) {
             path: req.path
           }
         };
-
-        // Don't await to avoid blocking the response
-        createAuditLog(entry).catch(err => console.error('Failed to create audit log:', err));
-      }
-      
-      // Call the original end method
-      return originalEnd.apply(this, args);
-    };
+        
+        // Log audit without awaiting to avoid blocking response
+        createAuditLog(entry).catch(err => 
+          console.error('Failed to create audit log:', err)
+        );
+        
+        // Call original send
+        return originalSend.call(this, body);
+      };
+    }
     
     next();
   };
