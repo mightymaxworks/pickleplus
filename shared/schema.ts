@@ -23,6 +23,9 @@ import {
 // Import match statistics schema (PKL-278651-MATCH-0002-XR - Enhanced Match Recording System)
 import './match-statistics-schema';
 
+// Import event schema (PKL-278651-CONN-0003-EVENT - Event Check-in QR Code System)
+import './schema/events';
+
 // User table
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
