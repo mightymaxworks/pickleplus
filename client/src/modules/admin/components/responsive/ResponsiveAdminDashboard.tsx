@@ -20,13 +20,20 @@ import {
   ActionCardWidget
 } from "@shared/schema/admin/dashboard";
 import { apiRequest } from "@/lib/queryClient";
-import { RefreshCw, ChevronDown, Users, Activity, Calendar, BarChart2 } from "lucide-react";
+import { RefreshCw, ChevronDown, Users, Activity, Calendar as CalendarIcon, BarChart2, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MetricCard } from "../dashboard/MetricCard";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { 
   Accordion,
   AccordionContent,
@@ -38,6 +45,9 @@ import { getResponsivePadding, useIsMobile } from "../../utils/deviceDetection";
 export default function ResponsiveAdminDashboard() {
   const [timePeriod, setTimePeriod] = useState<DashboardTimePeriod>(DashboardTimePeriod.MONTH);
   const [selectedCategory, setSelectedCategory] = useState<DashboardMetricCategory | 'all'>('all');
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [showDatePickers, setShowDatePickers] = useState(false);
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const padding = getResponsivePadding(isMobile ? 0 : 1);
@@ -53,29 +63,71 @@ export default function ResponsiveAdminDashboard() {
     lastUpdated: string;
   }
   
+  // Format date for API in YYYY-MM-DD format
+  const formatDateForAPI = (date: Date | undefined): string | undefined => {
+    if (!date) return undefined;
+    return format(date, 'yyyy-MM-dd');
+  };
+  
   // Fetch dashboard data with proper type
   const { data, isLoading, isError, error, refetch } = useQuery<DashboardData, Error>({
-    queryKey: ['/api/admin/dashboard', timePeriod],
+    queryKey: ['/api/admin/dashboard', timePeriod, startDate, endDate],
     queryFn: async ({ queryKey }) => {
-      const [_path, period] = queryKey as [string, DashboardTimePeriod];
-      const response = await fetch(`/api/admin/dashboard?timePeriod=${period}`, {
+      const [_path, period, startDate, endDate] = queryKey as [string, DashboardTimePeriod, Date | undefined, Date | undefined];
+      
+      let url = `/api/admin/dashboard?timePeriod=${period}`;
+      
+      // Add start and end dates for custom period
+      if (period === DashboardTimePeriod.CUSTOM) {
+        const formattedStartDate = formatDateForAPI(startDate as Date);
+        const formattedEndDate = formatDateForAPI(endDate as Date);
+        
+        if (!formattedStartDate || !formattedEndDate) {
+          throw new Error('Start and end dates are required for custom time period');
+        }
+        
+        url += `&startDate=${formattedStartDate}&endDate=${formattedEndDate}`;
+      }
+      
+      const response = await fetch(url, {
         method: 'GET',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         }
       });
+      
       if (!response.ok) {
-        throw new Error(`Dashboard data fetch failed: ${response.statusText}`);
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Dashboard data fetch failed: ${response.statusText}`);
       }
+      
       return response.json();
     },
     refetchOnWindowFocus: false,
+    enabled: !(timePeriod === DashboardTimePeriod.CUSTOM && (!startDate || !endDate)), // Only enable when appropriate dates are set
   });
   
   // Handle time period change
   const handleTimePeriodChange = (value: DashboardTimePeriod) => {
     setTimePeriod(value);
+    
+    // Handle custom date range selection
+    if (value === DashboardTimePeriod.CUSTOM) {
+      setShowDatePickers(true);
+      // Set default date range (last 30 days) if no dates are selected
+      if (!startDate) {
+        const end = new Date();
+        const start = new Date();
+        start.setDate(start.getDate() - 30);
+        setStartDate(start);
+        setEndDate(end);
+      }
+    } else {
+      setShowDatePickers(false);
+      setStartDate(undefined);
+      setEndDate(undefined);
+    }
   };
   
   // Handle category change
@@ -190,6 +242,7 @@ export default function ResponsiveAdminDashboard() {
               <SelectItem value={DashboardTimePeriod.MONTH}>Month</SelectItem>
               <SelectItem value={DashboardTimePeriod.QUARTER}>Quarter</SelectItem>
               <SelectItem value={DashboardTimePeriod.YEAR}>Year</SelectItem>
+              <SelectItem value={DashboardTimePeriod.CUSTOM}>Custom Range</SelectItem>
             </SelectContent>
           </Select>
           
@@ -198,6 +251,92 @@ export default function ResponsiveAdminDashboard() {
           </Button>
         </div>
       </div>
+      
+      {/* Custom date range pickers */}
+      {showDatePickers && (
+        <div className="flex flex-col space-y-2 mt-3 border rounded-md p-3 bg-card">
+          <h3 className="text-sm font-medium mb-2">Custom Date Range</h3>
+          <div className="flex flex-col space-y-2 sm:flex-row sm:space-x-2 sm:space-y-0">
+            <div className="flex flex-col space-y-1">
+              <span className="text-xs text-muted-foreground">Start Date</span>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="justify-start text-left font-normal w-full"
+                  >
+                    <CalendarDays className="mr-2 h-4 w-4" />
+                    {startDate ? format(startDate, "PPP") : "Select date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={setStartDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            
+            <div className="flex flex-col space-y-1">
+              <span className="text-xs text-muted-foreground">End Date</span>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="justify-start text-left font-normal w-full"
+                  >
+                    <CalendarDays className="mr-2 h-4 w-4" />
+                    {endDate ? format(endDate, "PPP") : "Select date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={setEndDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+          
+          <Button 
+            size="sm" 
+            className="mt-2" 
+            onClick={() => {
+              if (startDate && endDate) {
+                // Make sure we refetch with the updated dates
+                const urlParams = new URLSearchParams();
+                urlParams.set('timePeriod', DashboardTimePeriod.CUSTOM);
+                urlParams.set('startDate', format(startDate, 'yyyy-MM-dd'));
+                urlParams.set('endDate', format(endDate, 'yyyy-MM-dd'));
+                
+                // Force a refetch with updated query parameters
+                refetch();
+                
+                toast({
+                  title: "Custom Range Applied",
+                  description: `Data updated for period ${format(startDate, "MMM d, yyyy")} to ${format(endDate, "MMM d, yyyy")}`,
+                });
+              } else {
+                toast({
+                  variant: "destructive",
+                  title: "Missing Dates",
+                  description: "Please select both start and end dates.",
+                });
+              }
+            }}
+          >
+            Apply Date Range
+          </Button>
+        </div>
+      )}
       
       {/* Summary cards at the top */}
       {data && (
