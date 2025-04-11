@@ -1,5 +1,5 @@
 /**
- * PKL-278651-CONN-0003-EVENT - Event Check-in QR Code System
+ * PKL-278651-CONN-0003-EVENT - PicklePass™ System
  * Migration script to create Event and EventCheckIn tables
  */
 
@@ -7,8 +7,8 @@ import { db } from "./server/db";
 import { events, eventCheckIns } from "./shared/schema/events";
 import { sql } from "drizzle-orm";
 
-async function migrateEventCheckInSystem() {
-  console.log("Starting Event Check-in System migration...");
+async function migratePicklePassSystem() {
+  console.log("Starting PicklePass™ System migration...");
 
   try {
     // Check if events table exists

@@ -1,5 +1,5 @@
 /**
- * PKL-278651-CONN-0003-EVENT - Event Check-in QR Code System
+ * PKL-278651-CONN-0003-EVENT - PicklePass™ System
  * Event and EventCheckIn schema definitions
  */
 
@@ -32,7 +32,7 @@ export const events = pgTable('events', {
 });
 
 /**
- * Event Check-ins table schema
+ * PicklePass™ Event Check-ins table schema
  */
 export const eventCheckIns = pgTable('event_check_ins', {
   id: serial('id').primaryKey(),

@@ -1,5 +1,5 @@
 /**
- * PKL-278651-CONN-0003-EVENT - Event Check-in QR Code System
+ * PKL-278651-CONN-0003-EVENT - PicklePass™ System
  * Event Routes for Admin and Check-in Operations
  */
 
@@ -347,6 +347,6 @@ router.get("/my/attended", isAuthenticated, async (req: Request, res: Response) 
 });
 
 export function registerEventRoutes(app: express.Express) {
-  console.log("[API] Registering Event Check-in routes (PKL-278651-CONN-0003-EVENT)");
+  console.log("[API] Registering PicklePass™ routes (PKL-278651-CONN-0003-EVENT)");
   app.use("/api/events", router);
 }
