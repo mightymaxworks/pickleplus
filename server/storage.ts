@@ -14,10 +14,12 @@ import {
 
 // PKL-278651-CONN-0003-EVENT - Event Check-in QR Code System
 // PKL-278651-CONN-0004-PASS-REG - Enhanced PicklePass™ with Registration
+// PKL-278651-CONN-0004-PASS-ADMIN - Passport Verification System
 import {
   events, type Event, type InsertEvent,
   eventCheckIns, type EventCheckIn, type InsertEventCheckIn,
-  eventRegistrations, type EventRegistration, type InsertEventRegistration
+  eventRegistrations, type EventRegistration, type InsertEventRegistration,
+  passportVerifications, type PassportVerification, type InsertPassportVerification
 } from "@shared/schema/events";
 
 // Define types for database results
@@ -25,7 +27,7 @@ type MatchStatistics = typeof matchStatistics.$inferSelect;
 type PerformanceImpact = typeof performanceImpacts.$inferSelect;
 type MatchHighlight = typeof matchHighlights.$inferSelect;
 import { db } from "./db";
-import { eq, ne, and, or, desc, asc, sql } from "drizzle-orm";
+import { eq, ne, and, or, desc, asc, sql, inArray } from "drizzle-orm";
 import session from "express-session";
 import { Store } from "express-session";
 import connectPg from "connect-pg-simple";
@@ -2048,6 +2050,160 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('[Storage] getRegisteredEvents error:', error);
       return [];
+    }
+  }
+
+  // PKL-278651-CONN-0004-PASS-ADMIN - Passport Verification System
+  async logPassportVerification(verificationData: InsertPassportVerification): Promise<PassportVerification> {
+    try {
+      console.log(`[Storage] logPassportVerification called with data:`, JSON.stringify(verificationData));
+      
+      if (!verificationData.passportCode || !verificationData.status) {
+        throw new Error("Invalid verification data: missing required fields");
+      }
+      
+      // Insert the verification record
+      const [result] = await db.insert(passportVerifications)
+        .values(verificationData)
+        .returning();
+      
+      if (!result) {
+        throw new Error("Failed to log passport verification in database");
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('[Storage] logPassportVerification error:', error);
+      throw error;
+    }
+  }
+  
+  async getPassportVerificationLogs(
+    limit: number = 100, 
+    offset: number = 0, 
+    filters?: {
+      passportCode?: string;
+      userId?: number;
+      eventId?: number;
+      status?: string;
+      verifiedBy?: number;
+    }
+  ): Promise<PassportVerification[]> {
+    try {
+      console.log(`[Storage] getPassportVerificationLogs called with limit: ${limit}, offset: ${offset}`);
+      
+      let query = db.select()
+        .from(passportVerifications);
+      
+      // Apply filters if provided
+      if (filters) {
+        const conditions = [];
+        
+        if (filters.passportCode) {
+          conditions.push(eq(passportVerifications.passportCode, filters.passportCode));
+        }
+        
+        if (filters.userId) {
+          conditions.push(eq(passportVerifications.userId, filters.userId));
+        }
+        
+        if (filters.eventId) {
+          conditions.push(eq(passportVerifications.eventId, filters.eventId));
+        }
+        
+        if (filters.status) {
+          conditions.push(eq(passportVerifications.status, filters.status));
+        }
+        
+        if (filters.verifiedBy) {
+          conditions.push(eq(passportVerifications.verifiedBy, filters.verifiedBy));
+        }
+        
+        if (conditions.length > 0) {
+          query = query.where(and(...conditions));
+        }
+      }
+      
+      // Order by timestamp descending and apply pagination
+      const logs = await query
+        .orderBy(desc(passportVerifications.timestamp))
+        .limit(limit)
+        .offset(offset);
+      
+      return logs;
+    } catch (error) {
+      console.error('[Storage] getPassportVerificationLogs error:', error);
+      return [];
+    }
+  }
+  
+  async verifyPassportForEvent(passportCode: string, eventId?: number): Promise<{
+    valid: boolean;
+    userId?: number;
+    username?: string;
+    events?: Event[];
+    message?: string;
+  }> {
+    try {
+      if (!passportCode) {
+        return { valid: false, message: "Invalid passport code" };
+      }
+      
+      console.log(`[Storage] verifyPassportForEvent called for passport code: ${passportCode}, eventId: ${eventId || 'none'}`);
+      
+      // Find the user with this passport code
+      const user = await this.getUserByPassportCode(passportCode);
+      
+      if (!user) {
+        return { valid: false, message: "Invalid passport: User not found" };
+      }
+      
+      // If a specific event was provided, check if the user is registered for it
+      if (eventId) {
+        const isRegistered = await this.isUserRegisteredForEvent(eventId, user.id);
+        
+        if (!isRegistered) {
+          return { 
+            valid: false, 
+            userId: user.id,
+            username: user.username,
+            message: "User is not registered for this event" 
+          };
+        }
+        
+        const isCheckedIn = await this.isUserCheckedIntoEvent(eventId, user.id);
+        
+        if (isCheckedIn) {
+          return { 
+            valid: false, 
+            userId: user.id,
+            username: user.username,
+            message: "User is already checked in to this event" 
+          };
+        }
+        
+        // All checks passed, the passport is valid for this event
+        return { 
+          valid: true, 
+          userId: user.id,
+          username: user.username,
+          message: "Passport valid for check-in" 
+        };
+      }
+      
+      // If no specific event provided, get all events the user is registered for
+      const registeredEvents = await this.getRegisteredEvents(user.id);
+      
+      return { 
+        valid: true, 
+        userId: user.id,
+        username: user.username,
+        events: registeredEvents,
+        message: `User has ${registeredEvents.length} registered events` 
+      };
+    } catch (error) {
+      console.error('[Storage] verifyPassportForEvent error:', error);
+      return { valid: false, message: "Server error verifying passport" };
     }
   }
 }
