@@ -1,12 +1,14 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { Express, Request, Response } from "express";
+import { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
 import bcryptjs from "bcryptjs";
 import { storage } from "./storage";
 import { User, insertUserSchema } from "@shared/schema";
 import { z } from "zod";
 import { generateUniquePassportCode } from "./utils/passport-code";
+import { AuditAction, AuditResource } from "../shared/schema/audit";
+import { isAdminWithRecentLogin } from "./security";
 
 declare global {
   namespace Express {
@@ -61,12 +63,38 @@ export function isAuthenticated(req: Request, res: Response, next: any) {
   res.status(401).json({ message: "Unauthorized" });
 }
 
-// Middleware to check if a user is an admin
-export function isAdmin(req: Request, res: Response, next: any) {
+// Middleware to check if a user is an admin (basic version)
+export function isAdmin(req: Request, res: Response, next: NextFunction) {
   if (req.isAuthenticated() && (req.user as any).isAdmin) {
     return next();
   }
+  
+  // Log access denied attempt
+  if (req.isAuthenticated()) {
+    const userId = (req.user as any).id;
+    storage.createAuditLog({
+      timestamp: new Date(),
+      userId,
+      action: AuditAction.ACCESS_DENIED,
+      resource: AuditResource.ADMIN,
+      resourceId: null,
+      ipAddress: req.ip || 'unknown',
+      userAgent: req.headers['user-agent'] || null,
+      statusCode: 403,
+      additionalData: {
+        path: req.path,
+        method: req.method
+      }
+    }).catch(err => console.error('Failed to log access denied:', err));
+  }
+  
   res.status(403).json({ message: "Forbidden" });
+}
+
+// Enhanced secure version requiring recent login for critical admin operations
+export function isSecureAdmin(req: Request, res: Response, next: NextFunction) {
+  // Use the enhanced admin check with recent login requirement
+  return isAdminWithRecentLogin(4)(req, res, next);
 }
 
 // Setup authentication for the application
@@ -208,6 +236,28 @@ export function setupAuth(app: Express) {
           // Extra logging for debug
           console.log('Login successful for user:', user.username);
           console.log('Session ID:', req.sessionID);
+          
+          // Create audit log for successful login
+          const auditAction = user.isAdmin ? AuditAction.ADMIN_LOGIN : AuditAction.USER_LOGIN;
+          storage.createAuditLog({
+            timestamp: new Date(),
+            userId: user.id,
+            action: auditAction,
+            resource: AuditResource.USER,
+            resourceId: user.id.toString(),
+            ipAddress: req.ip || 'unknown',
+            userAgent: req.headers['user-agent'] || null,
+            statusCode: 200,
+            additionalData: {
+              username: user.username,
+              sessionId: req.sessionID
+            }
+          }).catch(err => console.error('Failed to log login:', err));
+          
+          // Update last login timestamp for secure admin access
+          if (user.isAdmin) {
+            (user as any).lastLoginAt = new Date();
+          }
           
           // Ensure proper headers for CORS with credentials
           res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
