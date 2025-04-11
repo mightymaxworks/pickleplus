@@ -1,5 +1,5 @@
 /**
- * PKL-278651-CONN-0003-EVENT - Event Check-in QR Code System
+ * PKL-278651-CONN-0003-EVENT - PicklePass™ System
  * SDK for interacting with the Event API
  */
 

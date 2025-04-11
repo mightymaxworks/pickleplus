@@ -1,5 +1,5 @@
 /**
- * PKL-278651-CONN-0003-EVENT - Event Check-in QR Code System
+ * PKL-278651-CONN-0003-EVENT - PicklePass™ System
  * Component for displaying a list of events
  */
 
@@ -88,11 +88,11 @@ export function EventList({
     return (
       <Card className={cn("bg-muted/50", className)}>
         <CardHeader>
-          <CardTitle>Error Loading Events</CardTitle>
+          <CardTitle>Error Loading PicklePass™ Events</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            Unable to load upcoming events. Please try again later.
+            Unable to load upcoming PicklePass™ events. Please try again later.
           </p>
         </CardContent>
       </Card>
@@ -104,11 +104,11 @@ export function EventList({
     return (
       <Card className={cn("bg-muted/50", className)}>
         <CardHeader>
-          <CardTitle>No Upcoming Events</CardTitle>
+          <CardTitle>No PicklePass™ Events</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            There are no upcoming events scheduled at this time.
+            There are no upcoming PicklePass™ events scheduled at this time.
           </p>
         </CardContent>
       </Card>
