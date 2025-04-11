@@ -1,7 +1,8 @@
 /**
  * PKL-278651-CONN-0003-EVENT - PicklePass™ System
  * PKL-278651-CONN-0004-PASS-REG - Enhanced PicklePass™ with Registration
- * Event, EventCheckIn, and EventRegistration schema definitions
+ * PKL-278651-CONN-0004-PASS-ADMIN - Enhanced Admin Dashboard with Passport Verification
+ * Event, EventCheckIn, EventRegistration, and PassportVerification schema definitions
  */
 
 import { relations } from 'drizzle-orm';
@@ -58,6 +59,23 @@ export const eventCheckIns = pgTable('event_check_ins', {
   checkInMethod: text('check_in_method').notNull(), // 'qr', 'code', 'manual', etc.
 });
 
+/**
+ * PKL-278651-CONN-0004-PASS-ADMIN: Passport Verification Logs
+ * Tracks all passport verification attempts for security and auditing
+ */
+export const passportVerifications = pgTable('passport_verifications', {
+  id: serial('id').primaryKey(),
+  passportCode: text('passport_code').notNull(),
+  userId: integer('user_id').references(() => users.id),
+  eventId: integer('event_id').references(() => events.id),
+  timestamp: timestamp('timestamp').defaultNow().notNull(),
+  status: text('status').notNull(), // 'success', 'invalid_passport', 'not_registered', 'already_checked_in', etc.
+  message: text('message'),
+  verifiedBy: integer('verified_by').references(() => users.id), // Admin who performed verification
+  deviceInfo: text('device_info'), // Browser/device info for security tracking
+  ipAddress: text('ip_address'), // IP address for security tracking
+});
+
 // Relations
 export const eventsRelations = relations(events, ({ one, many }) => ({
   organizer: one(users, {
@@ -86,6 +104,21 @@ export const eventRegistrationsRelations = relations(eventRegistrations, ({ one 
   }),
   user: one(users, {
     fields: [eventRegistrations.userId],
+    references: [users.id],
+  }),
+}));
+
+export const passportVerificationsRelations = relations(passportVerifications, ({ one }) => ({
+  event: one(events, {
+    fields: [passportVerifications.eventId],
+    references: [events.id],
+  }),
+  user: one(users, {
+    fields: [passportVerifications.userId],
+    references: [users.id],
+  }),
+  admin: one(users, {
+    fields: [passportVerifications.verifiedBy],
     references: [users.id],
   }),
 }));
