@@ -259,50 +259,46 @@ export default function ResponsiveAdminDashboard() {
           <div className="flex flex-col space-y-2 sm:flex-row sm:space-x-2 sm:space-y-0">
             <div className="flex flex-col space-y-1">
               <span className="text-xs text-muted-foreground">Start Date</span>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="justify-start text-left font-normal w-full"
-                  >
-                    <CalendarDays className="mr-2 h-4 w-4" />
-                    {startDate ? format(startDate, "PPP") : "Select date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={startDate}
-                    onSelect={setStartDate}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <div className="border p-3 rounded-md">
+                <Calendar
+                  mode="single"
+                  selected={startDate}
+                  onSelect={(date) => {
+                    if (date) {
+                      setStartDate(date);
+                      toast({
+                        title: "Start Date Selected",
+                        description: `Start date set to ${format(date, "MMM d, yyyy")}`,
+                      });
+                    }
+                  }}
+                  className="rounded-md border"
+                  initialFocus={false}
+                  disabled={(date) => date > new Date() || (endDate ? date > endDate : false)}
+                />
+              </div>
             </div>
             
-            <div className="flex flex-col space-y-1">
+            <div className="flex flex-col space-y-1 mt-4">
               <span className="text-xs text-muted-foreground">End Date</span>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="justify-start text-left font-normal w-full"
-                  >
-                    <CalendarDays className="mr-2 h-4 w-4" />
-                    {endDate ? format(endDate, "PPP") : "Select date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={endDate}
-                    onSelect={setEndDate}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <div className="border p-3 rounded-md">
+                <Calendar
+                  mode="single"
+                  selected={endDate}
+                  onSelect={(date) => {
+                    if (date) {
+                      setEndDate(date);
+                      toast({
+                        title: "End Date Selected",
+                        description: `End date set to ${format(date, "MMM d, yyyy")}`,
+                      });
+                    }
+                  }}
+                  className="rounded-md border"
+                  initialFocus={false}
+                  disabled={(date) => date > new Date() || (startDate ? date < startDate : false)}
+                />
+              </div>
             </div>
           </div>
           
