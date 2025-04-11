@@ -106,7 +106,7 @@ export function EventCheckInScanner({
       } catch (error) {
         console.error('Failed to load QR scanner:', error);
         toast({
-          title: "Scanner Error",
+          title: "PicklePass™ Scanner Error",
           description: "Failed to load QR scanner. Please check your device permissions.",
           variant: "destructive"
         });
@@ -127,8 +127,8 @@ export function EventCheckInScanner({
       // Parse the QR code payload
       const payload: QRCodePayload = JSON.parse(decodedText);
       
-      // Validate that this is an event check-in QR code
-      if (payload.type !== 'event-check-in' && payload.type !== 'user-profile') {
+      // Validate that this is a PicklePass™ QR code or user profile
+      if (payload.type !== 'pickle-pass' && payload.type !== 'event-check-in' && payload.type !== 'user-profile') {
         throw new Error("Invalid QR code type");
       }
       
@@ -136,9 +136,9 @@ export function EventCheckInScanner({
       setLatestScan(payload);
       
       // For event-specific QR codes, verify the event ID
-      if (payload.type === 'event-check-in' && payload.eventId !== eventId) {
+      if ((payload.type === 'event-check-in' || payload.type === 'pickle-pass') && payload.eventId !== eventId) {
         toast({
-          title: "Wrong Event",
+          title: "PicklePass™ Mismatch",
           description: "This QR code is for a different event.",
           variant: "destructive"
         });
@@ -163,7 +163,7 @@ export function EventCheckInScanner({
       console.error('Failed to process QR code:', error);
       toast({
         title: "Invalid QR Code",
-        description: "The scanned QR code is not valid for event check-in.",
+        description: "The scanned QR code is not valid for PicklePass™ check-in.",
         variant: "destructive"
       });
     }
@@ -245,7 +245,7 @@ export function EventCheckInScanner({
           <div className="space-y-4">
             <Alert variant="default" className="bg-muted">
               <CheckIcon className="h-4 w-4 text-green-500" />
-              <AlertTitle>QR Code Scanned</AlertTitle>
+              <AlertTitle>PicklePass™ QR Code Scanned</AlertTitle>
               <AlertDescription>
                 {latestScan.type === 'user-profile' && latestScan.username ? (
                   <p>Ready to check in user: <strong>{latestScan.username}</strong></p>

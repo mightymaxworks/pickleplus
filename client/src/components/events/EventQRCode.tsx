@@ -25,7 +25,7 @@ export function EventQRCode({
   // Generate a QR code payload with event ID and basic info
   const qrPayload = useMemo(() => {
     return JSON.stringify({
-      type: 'event-check-in',
+      type: 'pickle-pass',
       eventId: event.id,
       name: event.name,
       timestamp: new Date().toISOString()
