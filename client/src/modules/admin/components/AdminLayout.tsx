@@ -1,10 +1,10 @@
 /**
- * PKL-278651-ADMIN-0002-UI
+ * PKL-278651-ADMIN-0003-NAV
  * Admin Layout Component
  * 
  * This component provides the layout structure for the admin dashboard
  * and renders the registered navigation items.
- * Optimized for both mobile and desktop viewports.
+ * Optimized for both mobile and desktop viewports with consistent navigation patterns.
  */
 
 import React, { ReactNode, useState } from 'react';
