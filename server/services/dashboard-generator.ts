@@ -59,15 +59,47 @@ export class DashboardGenerator {
     let previousStartDate: Date;
     let currentLabel: string;
     let previousLabel: string;
+    let currentEndDate: Date | undefined;
 
     // Calculate date ranges based on time period
     switch (timePeriod) {
+      case DashboardTimePeriod.CUSTOM:
+        if (customStartDate && customEndDate) {
+          // Custom date range
+          currentStartDate = new Date(customStartDate);
+          currentEndDate = new Date(customEndDate);
+          
+          // Calculate the duration of the custom range in milliseconds
+          const rangeDuration = currentEndDate.getTime() - currentStartDate.getTime();
+          
+          // Create a previous period of the same duration
+          previousStartDate = new Date(currentStartDate.getTime() - rangeDuration);
+          
+          // Format dates for labels
+          const formatOptions: Intl.DateTimeFormatOptions = { 
+            month: 'short', 
+            day: 'numeric',
+            year: currentStartDate.getFullYear() !== currentEndDate.getFullYear() ? 'numeric' : undefined
+          };
+          
+          currentLabel = `${currentStartDate.toLocaleDateString('en-US', formatOptions)} - ${currentEndDate.toLocaleDateString('en-US', formatOptions)}`;
+          previousLabel = "Previous Period";
+        } else {
+          // Fallback to current month if custom dates are not provided
+          currentStartDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          previousStartDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+          currentLabel = "This Month";
+          previousLabel = "Last Month";
+        }
+        break;
+        
       case DashboardTimePeriod.DAY:
         currentStartDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         previousStartDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
         currentLabel = "Today";
         previousLabel = "Yesterday";
         break;
+        
       case DashboardTimePeriod.WEEK:
         const currentDay = now.getDay();
         const daysFromSunday = currentDay === 0 ? 0 : currentDay;
@@ -80,12 +112,14 @@ export class DashboardGenerator {
         currentLabel = "This Week";
         previousLabel = "Last Week";
         break;
+        
       case DashboardTimePeriod.MONTH:
         currentStartDate = new Date(now.getFullYear(), now.getMonth(), 1);
         previousStartDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         currentLabel = "This Month";
         previousLabel = "Last Month";
         break;
+        
       case DashboardTimePeriod.QUARTER:
         const currentQuarter = Math.floor(now.getMonth() / 3);
         currentStartDate = new Date(now.getFullYear(), currentQuarter * 3, 1);
@@ -97,12 +131,14 @@ export class DashboardGenerator {
         currentLabel = `Q${currentQuarter + 1}`;
         previousLabel = `Q${currentQuarter === 0 ? 4 : currentQuarter}`;
         break;
+        
       case DashboardTimePeriod.YEAR:
         currentStartDate = new Date(now.getFullYear(), 0, 1);
         previousStartDate = new Date(now.getFullYear() - 1, 0, 1);
         currentLabel = now.getFullYear().toString();
         previousLabel = (now.getFullYear() - 1).toString();
         break;
+        
       default:
         currentStartDate = new Date(now.getFullYear(), now.getMonth(), 1);
         previousStartDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -114,17 +150,24 @@ export class DashboardGenerator {
       currentStartDate,
       previousStartDate,
       currentLabel,
-      previousLabel
+      previousLabel,
+      currentEndDate
     };
   }
 
   /**
    * Get user metrics for the dashboard
    * @param timePeriod - The time period to consider
+   * @param startDate - Start date for custom range (optional)
+   * @param endDate - End date for custom range (optional)
    */
-  private async getUserMetrics(timePeriod: DashboardTimePeriod): Promise<DashboardMetric[]> {
+  private async getUserMetrics(
+    timePeriod: DashboardTimePeriod,
+    startDate?: string,
+    endDate?: string
+  ): Promise<DashboardMetric[]> {
     const metrics: DashboardMetric[] = [];
-    const { currentStartDate, previousStartDate } = await this.getTimeComparison(timePeriod);
+    const { currentStartDate, previousStartDate, currentEndDate } = await this.getTimeComparison(timePeriod, startDate, endDate);
 
     try {
       // Total users metric
@@ -217,10 +260,16 @@ export class DashboardGenerator {
   /**
    * Get match metrics for the dashboard
    * @param timePeriod - The time period to consider
+   * @param startDate - Start date for custom range (optional)
+   * @param endDate - End date for custom range (optional)
    */
-  private async getMatchMetrics(timePeriod: DashboardTimePeriod): Promise<DashboardMetric[]> {
+  private async getMatchMetrics(
+    timePeriod: DashboardTimePeriod,
+    startDate?: string,
+    endDate?: string
+  ): Promise<DashboardMetric[]> {
     const metrics: DashboardMetric[] = [];
-    const { currentStartDate, previousStartDate } = await this.getTimeComparison(timePeriod);
+    const { currentStartDate, previousStartDate, currentEndDate } = await this.getTimeComparison(timePeriod, startDate, endDate);
 
     try {
       // Total matches metric
@@ -298,10 +347,16 @@ export class DashboardGenerator {
   /**
    * Get event metrics for the dashboard
    * @param timePeriod - The time period to consider
+   * @param startDate - Start date for custom range (optional)
+   * @param endDate - End date for custom range (optional)
    */
-  private async getEventMetrics(timePeriod: DashboardTimePeriod): Promise<DashboardMetric[]> {
+  private async getEventMetrics(
+    timePeriod: DashboardTimePeriod, 
+    startDate?: string,
+    endDate?: string
+  ): Promise<DashboardMetric[]> {
     const metrics: DashboardMetric[] = [];
-    const { currentStartDate, previousStartDate } = await this.getTimeComparison(timePeriod);
+    const { currentStartDate, previousStartDate, currentEndDate } = await this.getTimeComparison(timePeriod, startDate, endDate);
 
     try {
       // Total events
@@ -399,10 +454,16 @@ export class DashboardGenerator {
   /**
    * Get engagement metrics for the dashboard
    * @param timePeriod - The time period to consider
+   * @param startDate - Start date for custom range (optional)
+   * @param endDate - End date for custom range (optional)
    */
-  private async getEngagementMetrics(timePeriod: DashboardTimePeriod): Promise<DashboardMetric[]> {
+  private async getEngagementMetrics(
+    timePeriod: DashboardTimePeriod,
+    startDate?: string,
+    endDate?: string
+  ): Promise<DashboardMetric[]> {
     const metrics: DashboardMetric[] = [];
-    const { currentStartDate, previousStartDate } = await this.getTimeComparison(timePeriod);
+    const { currentStartDate, previousStartDate, currentEndDate } = await this.getTimeComparison(timePeriod, startDate, endDate);
 
     try {
       // Calculate user-to-match ratio
