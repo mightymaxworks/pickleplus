@@ -26,6 +26,7 @@ import AboutUs from './pages/AboutUs'
 import PrizeDrawingPage from './pages/admin/PrizeDrawingPage'
 import GoldenTicketAdmin from './pages/admin/GoldenTicketAdmin'
 import PassportVerificationPage from './pages/admin/PassportVerificationPage'
+import AdminDashboardPage from './pages/AdminDashboardPage'
 import QRTestPage from './pages/dev/QRTestPage'
 import EventTestPage from './pages/events/EventTestPage'
 import NotFound from './pages/not-found'
@@ -118,7 +119,7 @@ export default function App() {
               {(params) => <ProtectedRoute component={RecordMatchPage} path="/record-match" />}
             </Route>
             <Route path="/admin">
-              {(params) => <ProtectedRoute component={Dashboard} path="/admin" />}
+              {(params) => <ProtectedRoute component={AdminDashboardPage} path="/admin" />}
             </Route>
             <Route path="/admin/prize-drawing">
               {(params) => <ProtectedRoute component={PrizeDrawingPage} path="/admin/prize-drawing" />}

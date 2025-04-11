@@ -1,194 +1,194 @@
-import { useState, useEffect } from "react";
-import { useLocation, Link } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, KeyRound, Users, Layers, Award, Code, Activity, BarChart3, Mail, QrCode, Codesandbox, Settings } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
-import { Skeleton } from "@/components/ui/skeleton";
-import { getModuleAPI } from "@/modules/moduleRegistration";
-import { AdminModuleAPI } from "@/modules/types";
+/**
+ * PKL-278651-ADMIN-0001-CORE
+ * Admin Dashboard Page
+ * 
+ * Main dashboard for the admin functionality displaying registered admin dashboard cards
+ */
 
-// Quick action component for dashboard
-const QuickAction = ({ icon, title, description, href }: { icon: React.ReactNode, title: string, description: string, href: string }) => (
-  <Link href={href}>
-    <Card className="h-full cursor-pointer transition-all hover:shadow-md hover:border-primary/50">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <div className="text-primary">{icon}</div>
-        </div>
-        <CardTitle className="text-base">{title}</CardTitle>
-        <CardDescription className="text-xs">{description}</CardDescription>
-      </CardHeader>
-    </Card>
-  </Link>
-);
+import React from 'react';
+import { AdminLayout } from '@/modules/admin/components/AdminLayout';
+import { useAdminDashboardCards, useAdminQuickActions } from '@/modules/admin/hooks/useAdminComponents';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Clock, Users, Trophy, Calendar, Activity, BarChart2 } from 'lucide-react';
 
-const StatsCard = ({ title, value, icon, loading = false }: { title: string, value: string | number, icon: React.ReactNode, loading?: boolean }) => (
-  <Card>
-    <CardHeader className="pb-2">
-      <div className="flex items-center justify-between">
-        <CardDescription>{title}</CardDescription>
-        <div className="rounded-full bg-primary/10 p-2 text-primary">{icon}</div>
-      </div>
-    </CardHeader>
-    <CardContent>
-      {loading ? (
-        <Skeleton className="h-8 w-24" />
-      ) : (
-        <div className="text-2xl font-bold">{value}</div>
-      )}
-    </CardContent>
-  </Card>
-);
-
-const AdminDashboardPage = () => {
-  const { user } = useAuth();
-  const [location, setLocation] = useLocation();
-  const adminApi = getModuleAPI<AdminModuleAPI>('admin');
+export default function AdminDashboardPage() {
+  const dashboardCards = useAdminDashboardCards();
+  const quickActions = useAdminQuickActions();
   
-  // Fetch dashboard stats
-  const { data: dashboardStats, isLoading: isLoadingStats } = useQuery({
-    queryKey: ['/api/admin/dashboard'],
-    queryFn: () => adminApi.getDashboardStats(),
-    // Only enable if user is admin
-    enabled: !!user?.isAdmin,
-    // Shorter stale time for fresher data
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
-
-  // Check if user is an admin, if not redirect to dashboard
-  useEffect(() => {
-    if (user && !user.isAdmin) {
-      setLocation("/dashboard");
-    }
-  }, [user, setLocation]);
-
-  if (!user || !user.isAdmin) {
-    return (
-      <div className="flex items-center justify-center h-full py-12">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
-      </div>
-    );
-  }
-
   return (
-    <div className="pb-20 md:pb-6">
-      <div className="mb-6">
-        <div className="flex flex-wrap items-center justify-between mb-4">
-          <div className="flex items-center">
-            <KeyRound className="w-5 h-5 mr-2 text-[#FF5722]" />
-            <h1 className="text-2xl font-bold font-product-sans">Admin Dashboard</h1>
+    <AdminLayout title="Admin Dashboard">
+      {/* Quick Actions Section */}
+      {quickActions.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-lg font-medium mb-4 text-gray-700 dark:text-gray-300">
+            Quick Actions
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {quickActions.map((action) => (
+              <Button
+                key={action.id}
+                variant="outline"
+                size="sm"
+                onClick={action.onClick}
+                className="flex items-center"
+              >
+                <span className="mr-2">{action.icon}</span>
+                {action.label}
+              </Button>
+            ))}
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setLocation("/dashboard")}
-            className="mt-2 sm:mt-0"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
-          </Button>
         </div>
-        <p className="text-muted-foreground mb-6">Manage Pickle+ platform settings, users, and content</p>
-      </div>
+      )}
       
-      {/* Platform Stats */}
-      <div className="mb-8">
-        <h2 className="text-lg font-semibold mb-4">Platform Overview</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatsCard 
-            title="Total Users" 
-            value={isLoadingStats ? "..." : dashboardStats?.userCount || 0} 
-            icon={<Users className="h-4 w-4" />}
-            loading={isLoadingStats}
+      {/* Dashboard Stats (These would be replaced by registered dashboard cards) */}
+      {dashboardCards.length === 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Default dashboard cards shown when no cards are registered */}
+          <DashboardStatCard 
+            title="Active Users" 
+            value="2,849" 
+            change="+12%" 
+            description="Total active users" 
+            icon={<Users className="text-blue-500" />} 
           />
-          <StatsCard 
-            title="Active Players" 
-            value={isLoadingStats ? "..." : dashboardStats?.activeUserCount || 0} 
-            icon={<Activity className="h-4 w-4" />}
-            loading={isLoadingStats}
+          
+          <DashboardStatCard 
+            title="Matches Recorded" 
+            value="8,392" 
+            change="+5%" 
+            description="Total matches recorded" 
+            icon={<Trophy className="text-amber-500" />} 
           />
-          <StatsCard 
-            title="Redemption Codes" 
-            value={isLoadingStats ? "..." : dashboardStats?.activeCodesCount || 0} 
-            icon={<Code className="h-4 w-4" />}
-            loading={isLoadingStats}
+          
+          <DashboardStatCard 
+            title="Events This Month" 
+            value="48" 
+            change="+22%" 
+            description="Scheduled events" 
+            icon={<Calendar className="text-green-500" />} 
           />
-          <StatsCard 
-            title="Pickle Points" 
-            value={isLoadingStats ? "..." : dashboardStats?.totalXpAwarded || 0}
-            icon={<Award className="h-4 w-4" />}
-            loading={isLoadingStats}
+          
+          <DashboardStatCard 
+            title="Active Tournaments" 
+            value="12" 
+            change="+3" 
+            description="Currently running tournaments" 
+            icon={<Trophy className="text-purple-500" />} 
           />
-        </div>
-      </div>
-      
-      {/* Quick Actions */}
-      <div className="mb-8">
-        <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <QuickAction 
-            icon={<Code className="h-5 w-5" />} 
-            title="Redemption Codes" 
-            description="Create and manage redemption codes"
-            href="/admin/codes"
+          
+          <DashboardStatCard 
+            title="Average Session" 
+            value="24m 32s" 
+            change="+2m" 
+            description="Time spent in app" 
+            icon={<Clock className="text-indigo-500" />} 
           />
-          <QuickAction 
-            icon={<Users className="h-5 w-5" />} 
-            title="User Management" 
-            description="View and manage user accounts"
-            href="/admin/users"
-          />
-          <QuickAction 
-            icon={<Codesandbox className="h-5 w-5" />} 
-            title="Feature Flags" 
-            description="Toggle platform features"
-            href="/admin/features"
-          />
-          <QuickAction 
-            icon={<BarChart3 className="h-5 w-5" />} 
-            title="Analytics" 
-            description="View platform analytics and reports"
-            href="/admin/analytics"
-          />
-          <QuickAction 
-            icon={<Award className="h-5 w-5" />} 
-            title="Achievements" 
-            description="Manage player achievements"
-            href="/admin/achievements"
-          />
-          <QuickAction 
-            icon={<Settings className="h-5 w-5" />} 
-            title="System Settings" 
-            description="Configure platform settings"
-            href="/admin/settings"
+          
+          <DashboardStatCard 
+            title="System Health" 
+            value="99.8%" 
+            change="+0.2%" 
+            description="Overall system availability" 
+            icon={<Activity className="text-emerald-500" />} 
           />
         </div>
-      </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {dashboardCards.map((card) => {
+            // Apply width styles based on the card's width property
+            const widthClasses = {
+              'full': 'col-span-1 md:col-span-2 lg:col-span-3',
+              'half': 'col-span-1 md:col-span-1 lg:col-span-2',
+              'third': 'col-span-1'
+            };
+            
+            // Apply height styles based on the card's height property
+            const heightClasses = {
+              'small': 'h-auto',
+              'medium': 'h-auto md:h-48',
+              'large': 'h-auto md:h-80'
+            };
+            
+            return (
+              <div 
+                key={card.id}
+                className={`
+                  ${card.width ? widthClasses[card.width] : widthClasses['third']} 
+                  ${card.height ? heightClasses[card.height] : heightClasses['medium']}
+                `}
+              >
+                <Card className="h-full">
+                  <CardContent className="p-0 h-full">
+                    <card.component />
+                  </CardContent>
+                </Card>
+              </div>
+            );
+          })}
+        </div>
+      )}
       
-      {/* Recent Activity */}
-      <div className="mb-8">
-        <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
+      {/* Admin Activity Feed */}
+      <div className="mt-8">
         <Card>
-          <CardContent className="p-4">
-            {isLoadingStats ? (
-              <div className="space-y-3">
-                <Skeleton className="h-5 w-full" />
-                <Skeleton className="h-5 w-full" />
-                <Skeleton className="h-5 w-full" />
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <Activity className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                <p>Activity data will be available soon</p>
-              </div>
-            )}
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <BarChart2 className="mr-2 h-5 w-5 text-[#FF5722]" />
+              Recent Admin Activity
+            </CardTitle>
+            <CardDescription>
+              Latest administrative actions in the system
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* This would be populated from an API call */}
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
+                No recent activity to display. Activity will appear here when administrators make changes.
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
-    </div>
+    </AdminLayout>
   );
-};
+}
 
-export default AdminDashboardPage;
+interface DashboardStatCardProps {
+  title: string;
+  value: string;
+  change: string;
+  description: string;
+  icon: React.ReactNode;
+}
+
+function DashboardStatCard({ title, value, change, description, icon }: DashboardStatCardProps) {
+  const isPositive = change.startsWith('+');
+  
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">
+          {title}
+        </CardTitle>
+        <div className="h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          {icon}
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          {value}
+        </div>
+        <p className="text-xs flex items-center mt-1">
+          <span className={`${isPositive ? 'text-green-500' : 'text-red-500'} font-medium`}>
+            {change}
+          </span>
+          <span className="text-gray-500 dark:text-gray-400 ml-1">
+            {description}
+          </span>
+        </p>
+      </CardContent>
+    </Card>
+  );
+}

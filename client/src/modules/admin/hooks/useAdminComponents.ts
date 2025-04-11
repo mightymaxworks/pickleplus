@@ -5,35 +5,30 @@
  * React hook for accessing registered admin components in the admin module.
  */
 
-import { useState, useEffect } from 'react';
-import { 
-  AdminNavItem, 
-  AdminDashboardCard, 
-  AdminViewComponent, 
-  AdminQuickAction,
-  AdminComponentType
-} from '../types';
-import { adminComponentRegistry } from '../services/adminComponentRegistry';
-import { eventBus, Events } from '@/core/events/eventBus';
-import { useAuth } from '@/lib/auth';
+import { useEffect, useState } from 'react';
+import { adminModule } from '../index';
+import { AdminNavItem, AdminDashboardCard, AdminViewComponent, AdminQuickAction, AdminComponentType } from '../types';
+import { eventBus } from '@/core/events/eventBus';
 
 /**
  * Hook for accessing registered navigation items
  * @returns Array of navigation items, sorted by order
  */
 export function useAdminNavItems(): AdminNavItem[] {
-  const { user } = useAuth();
-  const [navItems, setNavItems] = useState<AdminNavItem[]>(
-    adminComponentRegistry.getNavItems()
-  );
+  const [navItems, setNavItems] = useState<AdminNavItem[]>([]);
   
   useEffect(() => {
-    // Update items when nav is updated
-    const unsubscribe = eventBus.subscribe(Events.ADMIN_NAV_UPDATED, () => {
-      setNavItems(adminComponentRegistry.getNavItems());
+    // Get initial navigation items from the admin module
+    setNavItems(adminModule.getNavItems());
+    
+    // Subscribe to navigation item registration events
+    const unsubscribe = eventBus.subscribe('admin:navItemRegistered', () => {
+      setNavItems(adminModule.getNavItems());
     });
     
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+    };
   }, []);
   
   return navItems;
@@ -44,21 +39,23 @@ export function useAdminNavItems(): AdminNavItem[] {
  * @returns Array of dashboard cards, sorted by order
  */
 export function useAdminDashboardCards(): AdminDashboardCard[] {
-  const { user } = useAuth();
-  const [cards, setCards] = useState<AdminDashboardCard[]>(
-    adminComponentRegistry.getDashboardCards()
-  );
+  const [dashboardCards, setDashboardCards] = useState<AdminDashboardCard[]>([]);
   
   useEffect(() => {
-    // Update cards when dashboard is updated
-    const unsubscribe = eventBus.subscribe(Events.ADMIN_DASHBOARD_UPDATED, () => {
-      setCards(adminComponentRegistry.getDashboardCards());
+    // Get initial dashboard cards from the admin module
+    setDashboardCards(adminModule.getDashboardCards());
+    
+    // Subscribe to dashboard card registration events
+    const unsubscribe = eventBus.subscribe('admin:dashboardCardRegistered', () => {
+      setDashboardCards(adminModule.getDashboardCards());
     });
     
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+    };
   }, []);
   
-  return cards;
+  return dashboardCards;
 }
 
 /**
@@ -66,21 +63,23 @@ export function useAdminDashboardCards(): AdminDashboardCard[] {
  * @returns Array of admin views
  */
 export function useAdminViews(): AdminViewComponent[] {
-  const { user } = useAuth();
-  const [views, setViews] = useState<AdminViewComponent[]>(
-    adminComponentRegistry.getAdminViews()
-  );
+  const [adminViews, setAdminViews] = useState<AdminViewComponent[]>([]);
   
   useEffect(() => {
-    // Update views when admin views are updated
-    const unsubscribe = eventBus.subscribe(Events.ADMIN_VIEWS_UPDATED, () => {
-      setViews(adminComponentRegistry.getAdminViews());
+    // Get initial admin views from the admin module
+    setAdminViews(adminModule.getAdminViews());
+    
+    // Subscribe to admin view registration events
+    const unsubscribe = eventBus.subscribe('admin:viewRegistered', () => {
+      setAdminViews(adminModule.getAdminViews());
     });
     
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+    };
   }, []);
   
-  return views;
+  return adminViews;
 }
 
 /**
@@ -88,21 +87,23 @@ export function useAdminViews(): AdminViewComponent[] {
  * @returns Array of quick actions, sorted by order
  */
 export function useAdminQuickActions(): AdminQuickAction[] {
-  const { user } = useAuth();
-  const [actions, setActions] = useState<AdminQuickAction[]>(
-    adminComponentRegistry.getQuickActions()
-  );
+  const [quickActions, setQuickActions] = useState<AdminQuickAction[]>([]);
   
   useEffect(() => {
-    // Update actions when admin actions are updated
-    const unsubscribe = eventBus.subscribe(Events.ADMIN_ACTIONS_UPDATED, () => {
-      setActions(adminComponentRegistry.getQuickActions());
+    // Get initial quick actions from the admin module
+    setQuickActions(adminModule.getQuickActions());
+    
+    // Subscribe to quick action registration events
+    const unsubscribe = eventBus.subscribe('admin:quickActionRegistered', () => {
+      setQuickActions(adminModule.getQuickActions());
     });
     
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+    };
   }, []);
   
-  return actions;
+  return quickActions;
 }
 
 /**
@@ -112,13 +113,13 @@ export function useAdminQuickActions(): AdminQuickAction[] {
  */
 export function useAdminComponentsByType(type: AdminComponentType) {
   switch (type) {
-    case AdminComponentType.NAV_ITEM:
+    case 'navItem':
       return useAdminNavItems();
-    case AdminComponentType.DASHBOARD_CARD:
+    case 'dashboardCard':
       return useAdminDashboardCards();
-    case AdminComponentType.ADMIN_VIEW:
+    case 'adminView':
       return useAdminViews();
-    case AdminComponentType.ADMIN_ACTION:
+    case 'quickAction':
       return useAdminQuickActions();
     default:
       return [];
