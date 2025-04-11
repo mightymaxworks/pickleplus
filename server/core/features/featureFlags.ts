@@ -82,4 +82,20 @@ serverFeatureFlags.registerFeatures([
     enabled: true,
     description: 'Track and award achievements',
   },
+  // QR Code API Feature Flags (PKL-278651-CONN-0002-QR)
+  {
+    name: 'player-qr-scanning-api',
+    enabled: false, // Coming post-April 13 launch
+    description: 'API endpoints for player QR code scanning',
+  },
+  {
+    name: 'quick-match-recording-api',
+    enabled: false, // Coming post-April 13 launch
+    description: 'API endpoints for quick match recording via QR codes',
+  },
+  {
+    name: 'event-check-in-api',
+    enabled: false, // Coming post-April 13 launch
+    description: 'API endpoints for event check-in via QR codes',
+  },
 ]);

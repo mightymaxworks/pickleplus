@@ -103,4 +103,20 @@ featureFlags.registerFeatures([
     enabled: true,
     description: 'Connect with other players and view their profiles',
   },
+  // QR Code Feature Flags (PKL-278651-CONN-0002-QR)
+  {
+    name: 'player-qr-scanning',
+    enabled: false, // Coming post-April 13 launch
+    description: 'Scan other players\' QR codes for quick interactions',
+  },
+  {
+    name: 'quick-match-recording',
+    enabled: false, // Coming post-April 13 launch
+    description: 'Record matches quickly by scanning player QR codes',
+  },
+  {
+    name: 'event-check-in',
+    enabled: false, // Coming post-April 13 launch
+    description: 'Check in to events by scanning QR codes',
+  },
 ]);

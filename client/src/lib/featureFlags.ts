@@ -1,103 +1,131 @@
-// Feature flags system for Pickle+
+/**
+ * Feature Flag Helper Utilities
+ * 
+ * These functions help manage feature flags in development and testing environments.
+ */
+
 import { useEffect, useState } from 'react';
+import { featureFlags } from '@/core/features/featureFlags';
+import { useAuth } from '@/hooks/useAuth';
 
-// Locked features
-export const Features = {
-  TOURNAMENTS: 'tournaments',
-  ACHIEVEMENTS: 'achievements',
-  LEADERBOARD: 'leaderboard',
-  PASSPORT_QR: 'passport_qr',
-  QUICK_MATCH: 'quick_match',
-  SOCIAL_CONNECTIONS: 'social_connections',
-  GUIDANCE_MASCOT: 'guidance_mascot_enabled',
-  ENHANCED_PROFILE: 'enhanced_profile'
+/**
+ * Feature flag names that can be toggled
+ */
+export enum Features {
+  ENHANCED_PROFILE = 'enhanced_profile',
+  MATCH_RECORDING = 'match-recording',
+  PLAYER_QR_SCANNING = 'player-qr-scanning',
+  QUICK_MATCH_RECORDING = 'quick-match-recording',
+  EVENT_CHECK_IN = 'event-check-in',
+  TOURNAMENTS = 'tournament-registration',
+  ACHIEVEMENTS = 'achievements',
+  LEADERBOARD = 'leaderboard'
+}
+
+/**
+ * Enable a feature flag temporarily (for the current session)
+ * This is used by the development test pages to enable features for testing
+ * without affecting the main application's default settings.
+ * 
+ * @param featureName The name of the feature to enable
+ */
+export const enableFeature = (featureName: string): void => {
+  // We're creating a simplified version that just modifies the in-memory state
+  const existingFeatures = featureFlags.getAllFeatures();
+  
+  // Find the feature
+  const featureToEnable = existingFeatures.find(f => f.name === featureName);
+  
+  if (featureToEnable) {
+    // Force enable in memory - this won't persist across page refreshes
+    // but is useful for testing
+    featureToEnable.enabled = true;
+    
+    console.log(`Feature "${featureName}" temporarily enabled for this session.`);
+    
+    // Force a React re-render by dispatching a custom event
+    window.dispatchEvent(new CustomEvent('feature-flag-changed', { detail: featureName }));
+  } else {
+    console.warn(`Feature "${featureName}" not found and cannot be enabled.`);
+  }
 };
 
-// Singapore launch date: April 12th, 2025, 22:00 Singapore Time (GMT+8)
-const LAUNCH_DATE = new Date('2025-04-12T22:00:00+08:00');
-
-interface FeatureState {
-  [key: string]: boolean;
-}
-
-// Default state - passport QR is enabled, other features are locked
-const DEFAULT_STATE: FeatureState = {
-  [Features.TOURNAMENTS]: false,
-  [Features.ACHIEVEMENTS]: false,
-  [Features.LEADERBOARD]: false,
-  [Features.PASSPORT_QR]: true, // Passport QR is enabled immediately
-  [Features.QUICK_MATCH]: false,
-  [Features.SOCIAL_CONNECTIONS]: true, // Social connections enabled for testing
-  [Features.GUIDANCE_MASCOT]: true, // Guidance mascot enabled by default
-  [Features.ENHANCED_PROFILE]: true, // Enable enhanced profile features
+/**
+ * Disable a feature flag temporarily (for the current session)
+ * 
+ * @param featureName The name of the feature to disable
+ */
+export const disableFeature = (featureName: string): void => {
+  // Similar to enableFeature but sets to false
+  const existingFeatures = featureFlags.getAllFeatures();
+  const featureToDisable = existingFeatures.find(f => f.name === featureName);
+  
+  if (featureToDisable) {
+    featureToDisable.enabled = false;
+    console.log(`Feature "${featureName}" temporarily disabled for this session.`);
+    window.dispatchEvent(new CustomEvent('feature-flag-changed', { detail: featureName }));
+  } else {
+    console.warn(`Feature "${featureName}" not found and cannot be disabled.`);
+  }
 };
 
-// Check if we've passed the launch date
-function isAfterLaunchDate(): boolean {
-  const now = new Date();
-  return now >= LAUNCH_DATE;
-}
+/**
+ * Reset a feature flag to its default value
+ * This removes any local storage overrides and resets to the system default
+ * 
+ * @param featureName The name of the feature to reset
+ */
+export const resetFeature = (featureName: string): void => {
+  // In our simplified system, we'll just reload the page to reset to default values
+  localStorage.removeItem(`feature_${featureName}`);
+  console.log(`Feature "${featureName}" has been reset to default.`);
+  window.location.reload();
+};
 
-// Check local storage for manual override
-function checkLocalStorageOverride(feature: string): boolean | null {
-  const storedValue = localStorage.getItem(`feature_${feature}`);
-  if (storedValue === null) return null;
-  return storedValue === 'true';
-}
-
-// Hook to check if a feature is enabled
-export function useFeatureFlag(feature: string): boolean {
+/**
+ * React hook to check if a feature is enabled
+ * This hook automatically handles user-specific checks and re-renders
+ * when feature flags change
+ * 
+ * @param featureName The name of the feature to check
+ * @returns Whether the feature is enabled
+ */
+export function useFeatureFlag(featureName: string): boolean {
+  const { user } = useAuth();
+  const userId = user?.id;
   const [isEnabled, setIsEnabled] = useState<boolean>(false);
   
   useEffect(() => {
-    // Check if feature should be enabled
-    const checkFeatureStatus = () => {
-      // First check for manual override
-      const override = checkLocalStorageOverride(feature);
-      if (override !== null) {
-        setIsEnabled(override);
-        return;
-      }
-      
-      // Then check launch date
-      if (isAfterLaunchDate()) {
-        setIsEnabled(true);
-        return;
-      }
-      
-      // Default to locked state
-      setIsEnabled(DEFAULT_STATE[feature] || false);
+    // Check if the feature is enabled now
+    const checkFeature = () => {
+      const enabled = featureFlags.isEnabled(featureName, userId);
+      setIsEnabled(enabled);
     };
     
     // Check initially
-    checkFeatureStatus();
+    checkFeature();
     
-    // Set up interval to check periodically (every minute)
-    const interval = setInterval(checkFeatureStatus, 60000);
+    // Listen for feature flag changes
+    const handleFeatureChange = (event: CustomEvent) => {
+      if (event.detail === featureName) {
+        checkFeature();
+      }
+    };
     
-    return () => clearInterval(interval);
-  }, [feature]);
+    // Add event listener
+    window.addEventListener(
+      'feature-flag-changed', 
+      handleFeatureChange as EventListener
+    );
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener(
+        'feature-flag-changed', 
+        handleFeatureChange as EventListener
+      );
+    };
+  }, [featureName, userId]);
   
   return isEnabled;
-}
-
-// Admin function to manually enable a feature (for development/testing)
-export function enableFeature(feature: string): void {
-  localStorage.setItem(`feature_${feature}`, 'true');
-  // Force refresh to apply changes
-  window.location.reload();
-}
-
-// Admin function to manually disable a feature
-export function disableFeature(feature: string): void {
-  localStorage.setItem(`feature_${feature}`, 'false');
-  // Force refresh to apply changes
-  window.location.reload();
-}
-
-// Admin function to reset a feature to default behavior (based on launch date)
-export function resetFeature(feature: string): void {
-  localStorage.removeItem(`feature_${feature}`);
-  // Force refresh to apply changes
-  window.location.reload();
 }

@@ -25,6 +25,7 @@ import TournamentDiscoveryPage from './pages/TournamentDiscoveryPage'
 import AboutUs from './pages/AboutUs'
 import PrizeDrawingPage from './pages/admin/PrizeDrawingPage'
 import GoldenTicketAdmin from './pages/admin/GoldenTicketAdmin'
+import QRTestPage from './pages/dev/QRTestPage'
 import NotFound from './pages/not-found'
 
 import { useAuth } from './hooks/useAuth'
@@ -136,6 +137,9 @@ export default function App() {
             
             {/* For now we'll keep the Match Reward Demo accessible */}
             <Route path="/demo/match-reward" component={MatchRewardDemo} />
+            
+            {/* QR Code Development Test Page (PKL-278651-CONN-0002-QR) */}
+            <Route path="/dev/qr-test" component={QRTestPage} />
             
             {/* 404 Route */}
             <Route component={NotFound} />
