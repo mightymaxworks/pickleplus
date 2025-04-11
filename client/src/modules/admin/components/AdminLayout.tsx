@@ -13,7 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/lib/auth';
 import { Separator } from '@/components/ui/separator';
 import { Shield, Settings, LogOut, Home, ArrowLeft, Menu, X } from 'lucide-react';
-import { useAdminNavItems } from '../hooks/useAdminComponents';
+import { useAdminNavItems, useCategorizedNavItems, NavCategory } from '../hooks/useAdminComponents';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -27,6 +27,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
   const { user, logoutMutation } = useAuth();
   const [location, navigate] = useLocation();
   const adminNavItems = useAdminNavItems();
+  const categorizedNavItems = useCategorizedNavItems();
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
@@ -115,24 +116,113 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
                     </Button>
                   </div>
                   <div className="px-2 py-4">
-                    <nav className="space-y-1">
-                      {navItems.map((item) => (
-                        <NavItem key={item.path} item={item} isMobile={true} />
-                      ))}
+                    <nav className="space-y-4">
+                      {/* Categorized Mobile Navigation */}
+                      {categorizedNavItems[NavCategory.DASHBOARD].length > 0 && (
+                        <div>
+                          <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-1 px-2">
+                            Dashboard
+                          </h3>
+                          <div className="space-y-1">
+                            {categorizedNavItems[NavCategory.DASHBOARD].map((item) => (
+                              <NavItem key={item.path} item={item} isMobile={true} />
+                            ))}
+                          </div>
+                        </div>
+                      )}
                       
-                      <Separator className="my-2" />
+                      {categorizedNavItems[NavCategory.USER_MANAGEMENT].length > 0 && (
+                        <div>
+                          <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-1 px-2">
+                            User Management
+                          </h3>
+                          <div className="space-y-1">
+                            {categorizedNavItems[NavCategory.USER_MANAGEMENT].map((item) => (
+                              <NavItem key={item.path} item={item} isMobile={true} />
+                            ))}
+                          </div>
+                        </div>
+                      )}
                       
-                      <Button
-                        variant="ghost"
-                        className="justify-start w-full text-sm py-2 px-3 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                        onClick={() => {
-                          navigate('/admin/settings');
-                          setSidebarOpen(false);
-                        }}
-                      >
-                        <Settings size={16} className="mr-1" />
-                        <span>Settings</span>
-                      </Button>
+                      {categorizedNavItems[NavCategory.EVENTS].length > 0 && (
+                        <div>
+                          <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-1 px-2">
+                            Events
+                          </h3>
+                          <div className="space-y-1">
+                            {categorizedNavItems[NavCategory.EVENTS].map((item) => (
+                              <NavItem key={item.path} item={item} isMobile={true} />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {categorizedNavItems[NavCategory.GAME].length > 0 && (
+                        <div>
+                          <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-1 px-2">
+                            Game Management
+                          </h3>
+                          <div className="space-y-1">
+                            {categorizedNavItems[NavCategory.GAME].map((item) => (
+                              <NavItem key={item.path} item={item} isMobile={true} />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {categorizedNavItems[NavCategory.CONTENT].length > 0 && (
+                        <div>
+                          <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-1 px-2">
+                            Content
+                          </h3>
+                          <div className="space-y-1">
+                            {categorizedNavItems[NavCategory.CONTENT].map((item) => (
+                              <NavItem key={item.path} item={item} isMobile={true} />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {categorizedNavItems[NavCategory.OTHER].length > 0 && (
+                        <div>
+                          <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-1 px-2">
+                            Other
+                          </h3>
+                          <div className="space-y-1">
+                            {categorizedNavItems[NavCategory.OTHER].map((item) => (
+                              <NavItem key={item.path} item={item} isMobile={true} />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {categorizedNavItems[NavCategory.SYSTEM].length > 0 && (
+                        <div>
+                          <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-1 px-2">
+                            System
+                          </h3>
+                          <div className="space-y-1">
+                            {categorizedNavItems[NavCategory.SYSTEM].map((item) => (
+                              <NavItem key={item.path} item={item} isMobile={true} />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div>
+                        <Separator className="mb-2" />
+                        <Button
+                          variant="ghost"
+                          className="justify-start w-full text-sm py-2 px-3 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          onClick={() => {
+                            navigate('/admin/settings');
+                            setSidebarOpen(false);
+                          }}
+                        >
+                          <Settings size={16} className="mr-1" />
+                          <span>Settings</span>
+                        </Button>
+                      </div>
                     </nav>
                   </div>
                 </SheetContent>
@@ -205,11 +295,97 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
         {!isSmallScreen && (
           <div className="w-64 shrink-0 mr-6">
             <nav className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 sticky top-24">
-              <div className="space-y-1">
-                {navItems.map((item) => (
-                  <NavItem key={item.path} item={item} />
-                ))}
-              </div>
+              {/* Categorized Navigation */}
+              {categorizedNavItems[NavCategory.DASHBOARD].length > 0 && (
+                <div className="mb-4">
+                  <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-2 px-2">
+                    Dashboard
+                  </h3>
+                  <div className="space-y-1">
+                    {categorizedNavItems[NavCategory.DASHBOARD].map((item) => (
+                      <NavItem key={item.path} item={item} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {categorizedNavItems[NavCategory.USER_MANAGEMENT].length > 0 && (
+                <div className="mb-4">
+                  <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-2 px-2">
+                    User Management
+                  </h3>
+                  <div className="space-y-1">
+                    {categorizedNavItems[NavCategory.USER_MANAGEMENT].map((item) => (
+                      <NavItem key={item.path} item={item} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {categorizedNavItems[NavCategory.EVENTS].length > 0 && (
+                <div className="mb-4">
+                  <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-2 px-2">
+                    Events
+                  </h3>
+                  <div className="space-y-1">
+                    {categorizedNavItems[NavCategory.EVENTS].map((item) => (
+                      <NavItem key={item.path} item={item} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {categorizedNavItems[NavCategory.GAME].length > 0 && (
+                <div className="mb-4">
+                  <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-2 px-2">
+                    Game Management
+                  </h3>
+                  <div className="space-y-1">
+                    {categorizedNavItems[NavCategory.GAME].map((item) => (
+                      <NavItem key={item.path} item={item} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {categorizedNavItems[NavCategory.CONTENT].length > 0 && (
+                <div className="mb-4">
+                  <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-2 px-2">
+                    Content
+                  </h3>
+                  <div className="space-y-1">
+                    {categorizedNavItems[NavCategory.CONTENT].map((item) => (
+                      <NavItem key={item.path} item={item} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {categorizedNavItems[NavCategory.OTHER].length > 0 && (
+                <div className="mb-4">
+                  <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-2 px-2">
+                    Other
+                  </h3>
+                  <div className="space-y-1">
+                    {categorizedNavItems[NavCategory.OTHER].map((item) => (
+                      <NavItem key={item.path} item={item} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {categorizedNavItems[NavCategory.SYSTEM].length > 0 && (
+                <div className="mb-4">
+                  <h3 className="font-medium text-xs uppercase text-gray-500 dark:text-gray-400 mb-2 px-2">
+                    System
+                  </h3>
+                  <div className="space-y-1">
+                    {categorizedNavItems[NavCategory.SYSTEM].map((item) => (
+                      <NavItem key={item.path} item={item} />
+                    ))}
+                  </div>
+                </div>
+              )}
               
               <Separator className="my-4" />
               
@@ -230,7 +406,8 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
           <div className="w-full mb-3">
             <nav className="bg-white dark:bg-gray-800 p-1 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-x-auto">
               <div className="flex space-x-1 py-1">
-                {navItems.slice(0, 4).map((item) => {
+                {/* Show Dashboard items first */}
+                {categorizedNavItems[NavCategory.DASHBOARD].slice(0, 1).map((item) => {
                   const isActive = location === item.path;
                   
                   return (
@@ -252,17 +429,48 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
                   );
                 })}
                 
-                {navItems.length > 4 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="flex items-center whitespace-nowrap px-3 py-1.5 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-xs"
-                    onClick={() => setSidebarOpen(true)}
-                  >
-                    <span className="mr-1">•••</span>
-                    <span>More</span>
-                  </Button>
-                )}
+                {/* Show most important items from other categories */}
+                {(() => {
+                  // Create an array with one item from each important category
+                  const keyItems = [
+                    ...(categorizedNavItems[NavCategory.USER_MANAGEMENT].slice(0, 1) || []),
+                    ...(categorizedNavItems[NavCategory.EVENTS].slice(0, 1) || []),
+                    ...(categorizedNavItems[NavCategory.GAME].slice(0, 1) || [])
+                  ].slice(0, 3);
+                  
+                  return keyItems.map(item => {
+                    const isActive = location === item.path;
+                    
+                    return (
+                      <Button
+                        key={item.path}
+                        variant="ghost"
+                        size="sm"
+                        className={`
+                          flex items-center whitespace-nowrap px-3 py-1.5 rounded-md transition-colors text-xs
+                          ${isActive 
+                            ? 'bg-[#FF5722]/10 text-[#FF5722] font-medium' 
+                            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}
+                        `}
+                        onClick={() => navigate(item.path)}
+                      >
+                        <span className="mr-1">{item.icon}</span>
+                        <span>{item.label}</span>
+                      </Button>
+                    );
+                  });
+                })()}
+                
+                {/* More button to open the sidebar */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="flex items-center whitespace-nowrap px-3 py-1.5 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-xs"
+                  onClick={() => setSidebarOpen(true)}
+                >
+                  <span className="mr-1">•••</span>
+                  <span>More</span>
+                </Button>
               </div>
             </nav>
           </div>
