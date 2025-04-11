@@ -276,10 +276,14 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
               
               <div className="flex items-center space-x-4">
                 {!isSmallScreen && (
-                  <AccessibilityControls className="mr-2" />
+                  <div className="mr-2">
+                    <AccessibilityControls />
+                  </div>
                 )}
                 
-                <HelpButton className="mr-2" />
+                <div className="mr-2">
+                  <HelpButton />
+                </div>
                 
                 <div className={`text-sm text-gray-600 dark:text-gray-300 ${isSmallScreen ? 'hidden sm:block' : ''}`}>
                   <span className="font-medium">{user?.username}</span>

@@ -31,6 +31,7 @@ import GoldenTicketAdmin from './pages/admin/GoldenTicketAdmin'
 import PassportVerificationPage from './pages/admin/PassportVerificationPage'
 import MobileTestPage from './pages/admin/MobileTestPage'
 import ReportsPage from './pages/admin/ReportsPage'
+import SettingsPage from './pages/admin/SettingsPage'
 import AdminDashboardPage from './pages/AdminDashboardPage'
 import QRTestPage from './pages/dev/QRTestPage'
 import EventTestPage from './pages/events/EventTestPage'
@@ -176,6 +177,15 @@ export default function App() {
               {(params) => (
                 <AdminProtectedRoute>
                   <ReportsPage />
+                </AdminProtectedRoute>
+              )}
+            </Route>
+            
+            {/* Admin Settings Page (PKL-278651-ADMIN-0014-UX) */}
+            <Route path="/admin/settings">
+              {(params) => (
+                <AdminProtectedRoute>
+                  <SettingsPage />
                 </AdminProtectedRoute>
               )}
             </Route>

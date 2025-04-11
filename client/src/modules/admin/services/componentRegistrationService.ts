@@ -13,6 +13,8 @@ import {
 } from '../components/passport';
 import { AdminMobileTestNavItem } from '../components/mobile-test';
 import { registerReportingComponents } from './reportingComponentRegistration';
+// Import settings module to register its components
+import '../components/settings';
 
 /**
  * Register passport verification components

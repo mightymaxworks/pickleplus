@@ -12,3 +12,6 @@ export * from './FormFeedback';
 export * from './EnhancedForm';
 export * from './AccessibilityFeatures';
 export * from './ContextualHelp';
+// Explicitly export the new controls to avoid name collisions
+export { AccessibilityControls } from './AccessibilityControls';
+export { HelpButton } from './HelpButton';
