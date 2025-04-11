@@ -14,6 +14,7 @@ import { isAdmin } from "../../auth";
 import { IStorage } from "../../storage";
 import { db } from "../../db";
 import { events } from "@shared/schema/events";
+import { matches } from "@shared/schema";
 import { sql } from "drizzle-orm";
 
 /**
@@ -54,7 +55,11 @@ export function registerAdminDashboardRoutes(
 
         // Get counts for dashboard metrics
         const totalUsers = await storage.getUserCount();
-        const totalMatches = await storage.getMatchCount();
+        const totalMatches = await db.select({ count: sql`count(*)` })
+          .from(matches)
+          .execute()
+          .then(result => Number(result[0]?.count) || 0)
+          .catch(() => 0);
         const totalEvents = await db.select({ count: sql`count(*)` })
           .from(events)
           .execute()

@@ -217,7 +217,10 @@ export class DashboardGenerator {
 
     try {
       // Total matches metric
-      const totalMatches = await this.storage.getMatchCount();
+      const totalMatches = await db.select({ count: count() })
+        .from(matches)
+        .execute()
+        .then(result => result[0]?.count || 0);
       
       // Matches in current period
       const matchesCurrentPeriod = await db.select({ count: count() })
@@ -403,7 +406,10 @@ export class DashboardGenerator {
     try {
       // Calculate user-to-match ratio
       const totalUsers = await this.storage.getUserCount();
-      const totalMatches = await this.storage.getMatchCount();
+      const totalMatches = await db.select({ count: count() })
+        .from(matches)
+        .execute()
+        .then(result => result[0]?.count || 0);
       
       const matchesPerUser = totalUsers === 0 ? 0 : (totalMatches / totalUsers).toFixed(1);
       
@@ -450,7 +456,7 @@ export class DashboardGenerator {
     try {
       // Get user IDs from recent matches
       const activeUserIdsFromMatches = await db
-        .selectDistinct({ userId: matches.player1Id })
+        .selectDistinct({ userId: matches.playerOneId })
         .from(matches)
         .where(gte(matches.matchDate, startDate))
         .execute()
@@ -784,7 +790,10 @@ export class DashboardGenerator {
       
       // Get summary counts for reference
       const totalUsers = await this.storage.getUserCount();
-      const totalMatches = await this.storage.getMatchCount();
+      const totalMatches = await db.select({ count: count() })
+        .from(matches)
+        .execute()
+        .then(result => result[0]?.count || 0);
       const totalEvents = await db.select({ count: count() })
         .from(events)
         .execute()
@@ -812,6 +821,6 @@ export class DashboardGenerator {
  * Create a dashboard generator instance with the given storage interface
  * @param storage - Storage interface to use
  */
-export function createDashboardGenerator(storage: StorageInterface): DashboardGenerator {
+export function createDashboardGenerator(storage: IStorage): DashboardGenerator {
   return new DashboardGenerator(storage);
 }
