@@ -309,7 +309,7 @@ export class DashboardGenerator {
       // Events in current period
       const eventsCurrentPeriod = await db.select({ count: count() })
         .from(events)
-        .where(gte(events.startDateTime, currentStartDate))
+        .where(gte(events.startDateTime, currentStartDate.toISOString()))
         .execute()
         .then(result => result[0]?.count || 0);
       
@@ -318,8 +318,8 @@ export class DashboardGenerator {
         .from(events)
         .where(
           and(
-            gte(events.startDateTime, previousStartDate),
-            sql`${events.startDateTime} < ${currentStartDate}`
+            gte(events.startDateTime, previousStartDate.toISOString()),
+            sql`${events.startDateTime} < ${currentStartDate.toISOString()}`
           )
         )
         .execute()
@@ -329,7 +329,7 @@ export class DashboardGenerator {
       const checkInsCurrentPeriod = await db.select({ count: count() })
         .from(eventCheckIns)
         .innerJoin(events, eq(eventCheckIns.eventId, events.id))
-        .where(gte(events.startDateTime, currentStartDate))
+        .where(gte(events.startDateTime, currentStartDate.toISOString()))
         .execute()
         .then(result => result[0]?.count || 0);
       
@@ -458,7 +458,7 @@ export class DashboardGenerator {
       const activeUserIdsFromMatches = await db
         .selectDistinct({ userId: matches.playerOneId })
         .from(matches)
-        .where(gte(matches.matchDate, startDate))
+        .where(gte(matches.matchDate, startDate.toISOString()))
         .execute()
         .then(results => results.map(r => r.userId));
       
@@ -467,7 +467,7 @@ export class DashboardGenerator {
         .selectDistinct({ userId: eventCheckIns.userId })
         .from(eventCheckIns)
         .innerJoin(events, eq(eventCheckIns.eventId, events.id))
-        .where(gte(events.startDateTime, startDate))
+        .where(gte(events.startDateTime, startDate.toISOString()))
         .execute()
         .then(results => results.map(r => r.userId));
       
