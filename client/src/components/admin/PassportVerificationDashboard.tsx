@@ -124,7 +124,7 @@ const PassportVerificationDashboard: React.FC = () => {
       const queryString = queryParams.toString();
       const endpoint = `/api/passport/logs${queryString ? `?${queryString}` : ''}`;
       
-      const response = await apiRequest('GET', endpoint);
+      const response = await apiRequest('GET' as const, endpoint);
       return await response.json() as VerificationLog[];
     }
   });
@@ -133,7 +133,7 @@ const PassportVerificationDashboard: React.FC = () => {
   const { data: events } = useQuery({
     queryKey: ['/api/events'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/events');
+      const response = await apiRequest('GET' as const, '/api/events');
       return await response.json() as Event[];
     }
   });
@@ -149,7 +149,8 @@ const PassportVerificationDashboard: React.FC = () => {
   // Verify passport mutation
   const verifyPassportMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/passport/verify', {
+      // Fix the apiRequest call by using the correct parameter order
+      const response = await apiRequest('POST' as const, '/api/passport/verify', {
         passportCode,
         eventId: eventId ? parseInt(eventId) : undefined
       });
