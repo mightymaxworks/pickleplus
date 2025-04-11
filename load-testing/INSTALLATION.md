@@ -1,150 +1,141 @@
-# Pickle+ Load Testing Infrastructure Installation
-**PKL-278651-PERF-0001-LOAD**
+# Pickle+ Load Testing Installation Guide
 
-This document provides instructions for setting up and using the load testing infrastructure for the Pickle+ platform.
+This guide provides instructions for setting up and running load tests for the Pickle+ platform using the k6 load testing tool.
 
 ## Prerequisites
 
-To use this load testing framework, you will need to install:
-
-1. **k6** - The core load testing tool
-2. **Node.js** - For running helper scripts
-3. **Python 3** - For report generation
+- Linux, macOS, or Windows with WSL
+- Bash shell
+- Internet connection
+- Access to the Pickle+ platform deployment
 
 ## Installation Steps
 
-### 1. Install k6
+### 1. Download k6
 
-#### On macOS:
+Choose one of the following methods to download k6:
+
+#### Linux (64-bit)
+
 ```bash
+# Debian/Ubuntu
+curl -L https://github.com/grafana/k6/releases/download/v0.43.1/k6-v0.43.1-linux-amd64.tar.gz -o k6.tar.gz
+tar xzf k6.tar.gz
+cp k6-v0.43.1-linux-amd64/k6 ./k6
+chmod +x ./k6
+
+# Test installation
+./k6 version
+```
+
+#### macOS
+
+```bash
+# With Homebrew
 brew install k6
+
+# Manual installation
+curl -L https://github.com/grafana/k6/releases/download/v0.43.1/k6-v0.43.1-macos-amd64.zip -o k6.zip
+unzip k6.zip
+cp k6-v0.43.1-macos-amd64/k6 ./k6
+chmod +x ./k6
+
+# Test installation
+./k6 version
 ```
 
-#### On Linux:
-```bash
-sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
-echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
-sudo apt-get update
-sudo apt-get install k6
-```
-
-#### On Windows:
-```bash
-choco install k6
-```
-
-Or download the installer from the [k6 website](https://k6.io/docs/getting-started/installation/).
-
-### 2. Install Python Dependencies
+#### Windows (using WSL)
 
 ```bash
-pip install pandas matplotlib jinja2
+# Download for Linux as above, or use:
+curl -L https://github.com/grafana/k6/releases/download/v0.43.1/k6-v0.43.1-linux-amd64.tar.gz -o k6.tar.gz
+tar xzf k6.tar.gz
+cp k6-v0.43.1-linux-amd64/k6 ./k6
+chmod +x ./k6
 ```
 
-### 3. Verify Installation
+### 2. Set Up the Project Environment
 
-Verify that k6 is installed correctly:
+1. Ensure the load testing scripts are in the correct location:
+   - Authentication test: `./load-testing/authentication.js`
+   - Golden Ticket test: `./load-testing/golden-ticket.js`
+   - Configuration files in `./load-testing/config/`
+
+2. Make the test runner scripts executable:
+   ```bash
+   chmod +x run-simple-test.sh
+   chmod +x run-golden-ticket-test.sh
+   ```
+
+## Running Load Tests
+
+### Authentication Flow Test
+
+To run a minimal authentication flow test:
 
 ```bash
-k6 version
+./run-simple-test.sh
 ```
 
-## Configuration
+This will:
+1. Run the test with 2 virtual users
+2. Execute 5 iterations per user
+3. Save results to `./load-testing/results/`
 
-Before running the load tests, you may need to configure the environment settings:
+### Golden Ticket Feature Test
 
-1. Edit `config/environment.js` to update:
-   - Server URLs for different environments
-   - Test user credentials
-   - Test volume configurations
-
-2. Edit `config/thresholds.js` to adjust performance thresholds based on your requirements.
-
-## Running the Tests
-
-The load testing framework can be run in several ways:
-
-### 1. Running All Scenarios
-
-To run a comprehensive load test with all scenarios:
+To run a minimal Golden Ticket feature test:
 
 ```bash
-cd load-testing
-./run-load-tests.sh --env local --test-type all
+./run-golden-ticket-test.sh
 ```
 
-### 2. Running Specific Test Types
+### Custom Test Parameters
 
-To run a specific type of test across all scenarios:
+You can customize the test runs with environment variables:
 
 ```bash
-cd load-testing
-./run-load-tests.sh --env local --test-type baseline
+# Set custom parameters
+export TEST_USERS=10        # Number of virtual users
+export TEST_ITERATIONS=50   # Total iterations
+export TEST_DURATION="2m"   # Maximum test duration
+
+# Run with custom parameters
+./run-simple-test.sh
 ```
 
-Valid test types are:
-- `baseline` - Minimal load to establish a baseline
-- `load` - Normal expected load
-- `stress` - Heavy load to test system limits
-- `spike` - Sudden traffic spike
-- `endurance` - Sustained load over time
+## Test Results
 
-### 3. Running Individual Scenarios
+Test results are saved as JSON files in the `./load-testing/results/` directory. Each file is timestamped with the date and time of the test run.
 
-To run a specific scenario script directly:
-
-```bash
-cd load-testing
-k6 run scenarios/authentication.js
-```
-
-## Interpreting Results
-
-After running the tests, results will be available in the `results` directory:
-
-1. JSON files contain raw test data
-2. A summary HTML report will be generated at `results/summary_report.html`
-3. Individual test metrics are stored in CSV format for further analysis
-
-Key metrics to observe:
-- Response times (p95, p99, median)
-- Error rates
-- Resource utilization
-- Throughput (requests per second)
+For a quick summary of the results, check the output of the test script which includes:
+- Average response time
+- Success rate (requests/second)
+- Error rate
+- p95 response times for specific endpoints
 
 ## Troubleshooting
 
-Common issues and solutions:
+### Authentication Failures
 
-### 1. Connection Refused
+If the test reports authentication failures:
 
-If you see "connection refused" errors:
-- Verify that the Pickle+ application is running
-- Check that the environment URL in `config/environment.js` is correct
-- Ensure no firewalls are blocking the connection
+1. Verify the test user credentials in `load-testing/config/environment.js`
+2. Check if the user exists in the database
+3. Ensure the Pickle+ platform is running and accessible
 
-### 2. Authentication Failures
+### Script Execution Errors
 
-If many authentication tests are failing:
-- Verify that the test user credentials in `config/environment.js` are valid
-- Check that the authentication endpoints match the actual API paths
+If the test scripts fail to execute:
 
-### 3. High Error Rates
+1. Ensure k6 is correctly installed: `./k6 version`
+2. Check file permissions: `chmod +x run-simple-test.sh`
+3. Verify JSON syntax in the test files
 
-If you're seeing high error rates:
-- Check the application logs for server-side errors
-- Verify that the database can handle the connection load
-- Consider reducing the test volume in `config/environment.js`
+### Connection Issues
 
-## Extending the Framework
+If the tests can't connect to the platform:
 
-To add a new test scenario:
-
-1. Create a new script in the `scenarios` directory following the pattern of existing scenarios
-2. Update `main.js` to include your new scenario
-3. Add any necessary validation functions in `helpers/validators.js`
-4. Update the run script to include your new scenario
-
-## Support
-
-For questions or issues with the load testing framework, contact the Performance Testing team.
+1. Verify the `baseUrl` in `load-testing/config/environment.js`
+2. Ensure the platform is running and accessible
+3. Check for network restrictions or firewall issues
