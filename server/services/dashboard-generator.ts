@@ -505,7 +505,7 @@ export class DashboardGenerator {
         .then(result => result[0] || { is_in_recovery: false, start_time: new Date() });
       
       // Calculate database uptime
-      const dbStartTime = new Date(dbStatus.start_time);
+      const dbStartTime = new Date(String(dbStatus.start_time));
       const currentTime = new Date();
       const uptimeMs = currentTime.getTime() - dbStartTime.getTime();
       const uptimeDays = Math.floor(uptimeMs / (1000 * 60 * 60 * 24));
@@ -537,8 +537,8 @@ export class DashboardGenerator {
       metrics.push({
         id: "database-size",
         title: "Database Size",
-        value: dbSizeInfo.pretty_size,
-        valueType: DashboardMetricValueType.TEXT,
+        value: String(dbSizeInfo.pretty_size),
+        valueType: DashboardMetricValueType.NUMBER,
         trend: DashboardMetricTrend.NEUTRAL,
         sentiment: DashboardMetricSentiment.NEUTRAL,
         category: DashboardMetricCategory.SYSTEM,
@@ -631,13 +631,13 @@ export class DashboardGenerator {
         const intervalStartDate = currentPeriodIntervals[i];
         const intervalEndDate = currentPeriodIntervals[i + 1];
         
-        const count = await db.select({ count: count() })
+        const userCount = await db.select({ total: count() })
           .from(users)
           .where(
             sql`${users.createdAt} >= ${intervalStartDate} AND ${users.createdAt} < ${intervalEndDate}`
           )
           .execute()
-          .then(result => result[0]?.count || 0);
+          .then(result => result[0]?.total || 0);
         
         // Format the interval label
         const label = new Date(intervalStartDate).toLocaleDateString('en-US', {
@@ -645,7 +645,7 @@ export class DashboardGenerator {
           day: 'numeric'
         });
         
-        currentPeriodData.push({ label, value: Number(count) });
+        currentPeriodData.push({ label, value: Number(userCount) });
       }
       
       // For each interval in previous period, count users who signed up during that interval
@@ -653,13 +653,13 @@ export class DashboardGenerator {
         const intervalStartDate = previousPeriodIntervals[i];
         const intervalEndDate = previousPeriodIntervals[i + 1];
         
-        const count = await db.select({ count: count() })
+        const userCount = await db.select({ total: count() })
           .from(users)
           .where(
             sql`${users.createdAt} >= ${intervalStartDate} AND ${users.createdAt} < ${intervalEndDate}`
           )
           .execute()
-          .then(result => result[0]?.count || 0);
+          .then(result => result[0]?.total || 0);
         
         // Format the interval label
         const label = new Date(intervalStartDate).toLocaleDateString('en-US', {
@@ -667,7 +667,7 @@ export class DashboardGenerator {
           day: 'numeric'
         });
         
-        previousPeriodData.push({ label, value: Number(count) });
+        previousPeriodData.push({ label, value: Number(userCount) });
       }
 
       return {

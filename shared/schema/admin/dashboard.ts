@@ -28,7 +28,8 @@ export enum DashboardTimePeriod {
   WEEK = "week",
   MONTH = "month",
   QUARTER = "quarter",
-  YEAR = "year"
+  YEAR = "year",
+  CUSTOM = "custom"
 }
 
 /**
@@ -281,6 +282,8 @@ export type DashboardLayout = z.infer<typeof dashboardLayoutSchema>;
 export const dashboardFilterSchema = z.object({
   timePeriod: z.nativeEnum(DashboardTimePeriod),
   categories: z.array(z.nativeEnum(DashboardMetricCategory)).optional(),
+  startDate: z.string().optional(), // ISO string format for custom date range
+  endDate: z.string().optional(), // ISO string format for custom date range
 });
 
 export type DashboardFilter = z.infer<typeof dashboardFilterSchema>;
