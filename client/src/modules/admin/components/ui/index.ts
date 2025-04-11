@@ -9,5 +9,6 @@
 export * from './EnhancedTooltip';
 export * from './StatusMessage';
 export * from './FormFeedback';
+export * from './EnhancedForm';
 export * from './AccessibilityFeatures';
 export * from './ContextualHelp';
