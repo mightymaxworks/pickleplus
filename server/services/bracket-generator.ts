@@ -6,7 +6,7 @@
  */
 
 import { db } from "../db";
-import { eq, and, or, inArray as drizzleInArray, SQL, PgColumn } from "drizzle-orm";
+import { eq, and, or, inArray as drizzleInArray, SQL } from "drizzle-orm";
 import { 
   tournamentTeams, 
   tournamentBrackets, 
@@ -483,6 +483,6 @@ export async function getBracketWithMatches(bracketId: number) {
 }
 
 // Use drizzleInArray directly
-function inArray(column: Column, values: any[]) {
+function inArray(column: any, values: any[]) {
   return drizzleInArray(column, values);
 }

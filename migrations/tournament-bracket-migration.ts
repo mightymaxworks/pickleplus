@@ -209,15 +209,5 @@ async function addSelfReferencingConstraints(): Promise<void> {
   `);
 }
 
-// Run migration if this script is executed directly
-if (require.main === module) {
-  migrateTournamentBracketTables()
-    .then(() => {
-      console.log("Tournament Bracket migration completed successfully!");
-      process.exit(0);
-    })
-    .catch((error) => {
-      console.error("Tournament Bracket migration failed:", error);
-      process.exit(1);
-    });
-}
+// ES modules don't have direct access to 'require.main === module'
+// This code will only run when called from run-tournament-bracket-migration.ts
