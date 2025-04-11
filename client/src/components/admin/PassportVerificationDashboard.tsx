@@ -1,9 +1,17 @@
 /**
- * PKL-278651-CONN-0004-PASS-ADMIN - Passport Verification Admin Dashboard
+ * PKL-278651-ADMIN-0002-UI
+ * Passport Verification Admin Dashboard
+ * 
  * This component provides a comprehensive interface for administrators to:
  * 1. Verify passport codes
  * 2. View verification logs
  * 3. Search logs by user, event, passport code, etc.
+ * 
+ * Mobile optimization features:
+ * - Responsive table with horizontal scrolling for small screens
+ * - Simplified layout for verification form on small screens
+ * - Optimized QR scanner for mobile devices
+ * - Collapsible search filters for log viewing
  */
 
 import React, { useState } from "react";
@@ -210,43 +218,57 @@ const PassportVerificationDashboard: React.FC = () => {
       
       <Tabs defaultValue="verify" className="w-full">
         <TabsList className="grid grid-cols-3">
-          <TabsTrigger value="verify">
-            <ClipboardList className="w-4 h-4 mr-2" />
-            Manual Verification
+          <TabsTrigger value="verify" className="flex flex-col sm:flex-row items-center px-1 py-1.5 sm:py-2">
+            <ClipboardList className="w-4 h-4 mb-1 sm:mb-0 sm:mr-2" />
+            <span className="text-xs sm:text-sm">Manual</span>
           </TabsTrigger>
-          <TabsTrigger value="scanner">
-            <QrCode className="w-4 h-4 mr-2" />
-            QR Scanner
+          <TabsTrigger value="scanner" className="flex flex-col sm:flex-row items-center px-1 py-1.5 sm:py-2">
+            <QrCode className="w-4 h-4 mb-1 sm:mb-0 sm:mr-2" />
+            <span className="text-xs sm:text-sm">Scanner</span>
           </TabsTrigger>
-          <TabsTrigger value="logs">
-            <Search className="w-4 h-4 mr-2" />
-            Verification Logs
+          <TabsTrigger value="logs" className="flex flex-col sm:flex-row items-center px-1 py-1.5 sm:py-2">
+            <Search className="w-4 h-4 mb-1 sm:mb-0 sm:mr-2" />
+            <span className="text-xs sm:text-sm">Logs</span>
           </TabsTrigger>
         </TabsList>
         
         <TabsContent value="verify">
           <Card>
-            <CardHeader>
-              <CardTitle>Verify Passport</CardTitle>
-              <CardDescription>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg sm:text-xl">Verify Passport</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
                 Enter a passport code to verify its validity. Optionally select an event to check if the passport is registered for that event.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleVerify} className="space-y-4">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="passportCode">Passport Code</Label>
-                    <Input
-                      id="passportCode"
-                      placeholder="Enter passport code"
-                      value={passportCode}
-                      onChange={(e) => setPassportCode(e.target.value)}
-                    />
+                    <Label htmlFor="passportCode" className="text-sm font-medium">Passport Code</Label>
+                    <div className="flex">
+                      <Input
+                        id="passportCode"
+                        placeholder="Enter passport code"
+                        value={passportCode}
+                        onChange={(e) => setPassportCode(e.target.value)}
+                        className="rounded-r-none"
+                        autoComplete="off"
+                        autoCapitalize="characters"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="rounded-l-none border-l-0"
+                        onClick={() => navigator.clipboard.readText().then(text => setPassportCode(text.trim()))}
+                      >
+                        <ClipboardList className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="eventId">Event (Optional)</Label>
+                    <Label htmlFor="eventId" className="text-sm font-medium">Event (Optional)</Label>
                     <Select value={eventId} onValueChange={setEventId}>
                       <SelectTrigger id="eventId">
                         <SelectValue placeholder="Select an event" />
@@ -263,13 +285,26 @@ const PassportVerificationDashboard: React.FC = () => {
                   </div>
                 </div>
                 
-                <Button 
-                  type="submit" 
-                  disabled={verifyPassportMutation.isPending || !passportCode}
-                  className="w-full"
-                >
-                  {verifyPassportMutation.isPending ? "Verifying..." : "Verify Passport"}
-                </Button>
+                <div className="pt-2">
+                  <Button 
+                    type="submit" 
+                    disabled={verifyPassportMutation.isPending || !passportCode}
+                    className="w-full"
+                    size="lg"
+                  >
+                    {verifyPassportMutation.isPending ? (
+                      <>
+                        <span className="animate-pulse mr-2">•••</span>
+                        Verifying...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Verify Passport
+                      </>
+                    )}
+                  </Button>
+                </div>
               </form>
             </CardContent>
           </Card>
@@ -277,133 +312,203 @@ const PassportVerificationDashboard: React.FC = () => {
         
         <TabsContent value="scanner">
           <Card>
-            <CardHeader>
-              <CardTitle>QR Code Scanner</CardTitle>
-              <CardDescription>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg sm:text-xl">QR Code Scanner</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
                 Scan passport QR codes using your device's camera to verify attendees
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <PassportScanner
-                eventId={eventId ? parseInt(eventId) : undefined}
-                onSuccessfulScan={() => refetchLogs()}
-              />
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="scannerEventId" className="text-sm font-medium">Event (Optional)</Label>
+                  <Select value={eventId} onValueChange={setEventId}>
+                    <SelectTrigger id="scannerEventId">
+                      <SelectValue placeholder="Select an event" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Any Event</SelectItem>
+                      {events?.map((event) => (
+                        <SelectItem key={event.id} value={event.id.toString()}>
+                          {event.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="rounded border border-gray-200 dark:border-gray-700 overflow-hidden bg-black">
+                  <PassportScanner
+                    eventId={eventId ? parseInt(eventId) : undefined}
+                    onSuccessfulScan={() => refetchLogs()}
+                  />
+                </div>
+                
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 text-xs">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <AlertCircle className="h-4 w-4 text-amber-500" />
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="font-medium text-gray-900 dark:text-gray-100">Scanner Tips</h3>
+                      <div className="mt-1 text-gray-600 dark:text-gray-400 space-y-1">
+                        <p>• Make sure your camera is allowed in browser settings</p>
+                        <p>• Hold the QR code steady and ensure good lighting</p>
+                        <p>• Position the code within the scanning area</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
         
         <TabsContent value="logs">
           <Card>
-            <CardHeader>
-              <CardTitle>Verification Logs</CardTitle>
-              <CardDescription>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg sm:text-xl">Verification Logs</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
                 View and search through passport verification logs.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSearch} className="space-y-4 mb-6">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="searchPassportCode">Passport Code</Label>
-                    <Input
-                      id="searchPassportCode"
-                      placeholder="Search by code"
-                      value={searchFilter.passportCode || ''}
-                      onChange={(e) => setSearchFilter(prev => ({ ...prev, passportCode: e.target.value }))}
-                    />
+              {/* Collapsible Search Filters for Mobile */}
+              <div className="mb-6">
+                <details className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                  <summary className="cursor-pointer px-4 py-3 flex justify-between items-center bg-gray-50 dark:bg-gray-800">
+                    <div className="flex items-center space-x-2">
+                      <Search className="w-4 h-4" />
+                      <span className="font-medium">Search Filters</span>
+                    </div>
+                    <span className="text-xs text-gray-500">
+                      {Object.values(searchFilter).filter(Boolean).length} active filter(s)
+                    </span>
+                  </summary>
+                  <div className="p-4">
+                    <form onSubmit={handleSearch} className="space-y-4">
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="searchPassportCode">Passport Code</Label>
+                          <Input
+                            id="searchPassportCode"
+                            placeholder="Search by code"
+                            value={searchFilter.passportCode || ''}
+                            onChange={(e) => setSearchFilter(prev => ({ ...prev, passportCode: e.target.value }))}
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="searchUserId">User ID</Label>
+                          <Input
+                            id="searchUserId"
+                            placeholder="Search by user ID"
+                            value={searchFilter.userId || ''}
+                            onChange={(e) => setSearchFilter(prev => ({ ...prev, userId: e.target.value }))}
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="searchEventId">Event ID</Label>
+                          <Input
+                            id="searchEventId"
+                            placeholder="Search by event ID"
+                            value={searchFilter.eventId || ''}
+                            onChange={(e) => setSearchFilter(prev => ({ ...prev, eventId: e.target.value }))}
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="searchStatus">Status</Label>
+                          <Select 
+                            value={searchFilter.status || ''} 
+                            onValueChange={(value) => setSearchFilter(prev => ({ ...prev, status: value }))}
+                          >
+                            <SelectTrigger id="searchStatus">
+                              <SelectValue placeholder="Filter by status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="">All Statuses</SelectItem>
+                              <SelectItem value="valid">Valid</SelectItem>
+                              <SelectItem value="invalid">Invalid</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      <div className="flex space-x-2">
+                        <Button type="submit" variant="outline" className="flex-1">
+                          <Search className="w-4 h-4 mr-2" /> Search
+                        </Button>
+                        <Button 
+                          type="button"
+                          variant="outline"
+                          onClick={() => setSearchFilter({})}
+                          className="px-3"
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </form>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="searchUserId">User ID</Label>
-                    <Input
-                      id="searchUserId"
-                      placeholder="Search by user ID"
-                      value={searchFilter.userId || ''}
-                      onChange={(e) => setSearchFilter(prev => ({ ...prev, userId: e.target.value }))}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="searchEventId">Event ID</Label>
-                    <Input
-                      id="searchEventId"
-                      placeholder="Search by event ID"
-                      value={searchFilter.eventId || ''}
-                      onChange={(e) => setSearchFilter(prev => ({ ...prev, eventId: e.target.value }))}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="searchStatus">Status</Label>
-                    <Select 
-                      value={searchFilter.status || ''} 
-                      onValueChange={(value) => setSearchFilter(prev => ({ ...prev, status: value }))}
-                    >
-                      <SelectTrigger id="searchStatus">
-                        <SelectValue placeholder="Filter by status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">All Statuses</SelectItem>
-                        <SelectItem value="valid">Valid</SelectItem>
-                        <SelectItem value="invalid">Invalid</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                
-                <Button type="submit" variant="outline" className="w-full">
-                  <Search className="w-4 h-4 mr-2" /> Search Logs
-                </Button>
-              </form>
+                </details>
+              </div>
               
-              <div className="rounded-md border">
-                <Table>
-                  <TableCaption>Passport verification logs</TableCaption>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Passport Code</TableHead>
-                      <TableHead>User</TableHead>
-                      <TableHead>Event</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Message</TableHead>
-                      <TableHead>Verified By</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {logsLoading ? (
+              {/* Responsive Table with horizontal scrolling for mobile */}
+              <div className="rounded-md border overflow-hidden">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableCaption>Passport verification logs</TableCaption>
+                    <TableHeader>
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center">Loading logs...</TableCell>
+                        <TableHead className="whitespace-nowrap w-28">Date</TableHead>
+                        <TableHead className="whitespace-nowrap w-24">Passport</TableHead>
+                        <TableHead className="whitespace-nowrap w-28">User</TableHead>
+                        <TableHead className="whitespace-nowrap">Event</TableHead>
+                        <TableHead className="whitespace-nowrap w-20">Status</TableHead>
+                        <TableHead className="whitespace-nowrap">Message</TableHead>
+                        <TableHead className="whitespace-nowrap">Verified By</TableHead>
                       </TableRow>
-                    ) : logs && logs.length > 0 ? (
-                      logs.map((log) => (
-                        <TableRow key={log.id}>
-                          <TableCell>
-                            {log.timestamp ? format(new Date(log.timestamp), 'MMM d, yyyy h:mm a') : 'N/A'}
-                          </TableCell>
-                          <TableCell>{log.passportCode}</TableCell>
-                          <TableCell>
-                            {log.user ? `${log.user.displayName || log.user.username}` : log.userId || 'N/A'}
-                          </TableCell>
-                          <TableCell>
-                            {log.event ? log.event.name : log.eventId || 'N/A'}
-                          </TableCell>
-                          <TableCell>
-                            {getStatusBadge(log.status)}
-                          </TableCell>
-                          <TableCell>{log.message || '-'}</TableCell>
-                          <TableCell>
-                            {log.admin ? log.admin.username : log.verifiedBy}
-                          </TableCell>
+                    </TableHeader>
+                    <TableBody>
+                      {logsLoading ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center">Loading logs...</TableCell>
                         </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={7} className="text-center">No verification logs found</TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
+                      ) : logs && logs.length > 0 ? (
+                        logs.map((log) => (
+                          <TableRow key={log.id}>
+                            <TableCell className="whitespace-nowrap text-xs">
+                              {log.timestamp ? format(new Date(log.timestamp), 'MM/dd/yy h:mm a') : 'N/A'}
+                            </TableCell>
+                            <TableCell className="font-mono text-xs">
+                              {log.passportCode}
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap text-xs">
+                              {log.user ? `${log.user.displayName || log.user.username}` : log.userId || 'N/A'}
+                            </TableCell>
+                            <TableCell className="max-w-[150px] truncate text-xs">
+                              {log.event ? log.event.name : log.eventId || 'N/A'}
+                            </TableCell>
+                            <TableCell>
+                              {getStatusBadge(log.status)}
+                            </TableCell>
+                            <TableCell className="max-w-[150px] truncate text-xs">
+                              {log.message || '-'}
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap text-xs">
+                              {log.admin ? log.admin.username : log.verifiedBy}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center">No verification logs found</TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             </CardContent>
           </Card>

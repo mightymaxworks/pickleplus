@@ -1,19 +1,21 @@
 /**
- * PKL-278651-ADMIN-0001-CORE
+ * PKL-278651-ADMIN-0002-UI
  * Admin Layout Component
  * 
  * This component provides the layout structure for the admin dashboard
  * and renders the registered navigation items.
+ * Optimized for both mobile and desktop viewports.
  */
 
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useState } from 'react';
 import { useLocation, Link } from 'wouter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/lib/auth';
 import { Separator } from '@/components/ui/separator';
-import { Shield, Settings, LogOut, Home, ArrowLeft } from 'lucide-react';
+import { Shield, Settings, LogOut, Home, ArrowLeft, Menu, X } from 'lucide-react';
 import { useAdminNavItems } from '../hooks/useAdminComponents';
-import { PicklePlusNewLogo } from '@/components/icons/PicklePlusNewLogo';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 interface AdminLayoutProps {
@@ -26,6 +28,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
   const [location, navigate] = useLocation();
   const adminNavItems = useAdminNavItems();
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   
   // If not authorized, redirect to main page
   if (!user?.isAdmin) {
@@ -49,120 +52,205 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
     ...adminNavItems
   ].sort((a, b) => a.order - b.order);
 
+  // Create a navigation item component to avoid duplication
+  const NavItem = ({ item, isMobile = false }: { item: any, isMobile?: boolean }) => {
+    const isActive = location === item.path;
+    
+    return (
+      <Button
+        key={item.path}
+        variant="ghost"
+        className={`
+          justify-start w-full px-4 py-3 rounded-md transition-colors
+          ${isActive 
+            ? 'bg-[#FF5722]/10 text-[#FF5722] font-medium' 
+            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}
+          ${isMobile ? 'text-sm py-2 px-3' : ''}
+        `}
+        onClick={() => {
+          navigate(item.path);
+          if (isMobile) setSidebarOpen(false);
+        }}
+      >
+        <span className={`${isMobile ? 'mr-1' : 'mr-3'}`}>{item.icon}</span>
+        <span>{item.label}</span>
+        
+        {isActive && !isMobile && (
+          <motion.div 
+            className="ml-auto w-1 h-6 bg-[#FF5722] rounded-full"
+            layoutId="adminNavIndicator"
+          />
+        )}
+      </Button>
+    );
+  };
+
   return (
     <div className="bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col">
       {/* Admin Header */}
       <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Link href="/dashboard">
-              <a className="flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors">
-                <ArrowLeft size={16} className="mr-1" />
-                <span className="text-sm">Back to App</span>
-              </a>
-            </Link>
+            {isSmallScreen && (
+              <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="mr-2">
+                    <Menu size={20} />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[260px] sm:w-[300px] p-0">
+                  <div className="px-4 py-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center">
+                      <Shield size={20} className="text-[#FF5722] mr-2" />
+                      <h2 className="font-semibold">Admin Panel</h2>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)}>
+                      <X size={18} />
+                    </Button>
+                  </div>
+                  <div className="px-2 py-4">
+                    <nav className="space-y-1">
+                      {navItems.map((item) => (
+                        <NavItem key={item.path} item={item} isMobile={true} />
+                      ))}
+                      
+                      <Separator className="my-2" />
+                      
+                      <Button
+                        variant="ghost"
+                        className="justify-start w-full text-sm py-2 px-3 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        onClick={() => {
+                          navigate('/admin/settings');
+                          setSidebarOpen(false);
+                        }}
+                      >
+                        <Settings size={16} className="mr-1" />
+                        <span>Settings</span>
+                      </Button>
+                    </nav>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            )}
             
-            <Separator orientation="vertical" className="h-6" />
+            <Button
+              variant="ghost"
+              className="flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors p-1.5"
+              onClick={() => navigate('/dashboard')}
+            >
+              <ArrowLeft size={16} className="mr-1" />
+              <span className="text-sm">Back to App</span>
+            </Button>
             
-            <div className="flex items-center">
-              <Shield size={20} className="text-[#FF5722] mr-2" />
-              <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                {title}
-              </h1>
-            </div>
+            {!isSmallScreen && (
+              <>
+                <Separator orientation="vertical" className="h-6" />
+                
+                <div className="flex items-center">
+                  <Shield size={20} className="text-[#FF5722] mr-2" />
+                  <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                    {title}
+                  </h1>
+                </div>
+              </>
+            )}
           </div>
           
           <div className="flex items-center space-x-4">
-            <div className="text-sm text-gray-600 dark:text-gray-300">
+            <div className={`text-sm text-gray-600 dark:text-gray-300 ${isSmallScreen ? 'hidden sm:block' : ''}`}>
               <span className="font-medium">{user?.username}</span>
               <span className="mx-2">•</span>
               <span className="text-[#FF5722]">Admin</span>
             </div>
             
-            <button 
+            <Button 
+              variant="ghost"
+              size="icon"
               onClick={() => logoutMutation.mutate()}
               className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors"
             >
               <LogOut size={18} />
-            </button>
+            </Button>
           </div>
         </div>
+        
+        {/* Mobile Title Bar - Only on small screens */}
+        {isSmallScreen && (
+          <div className="container mx-auto px-4 py-2 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex items-center">
+              <Shield size={18} className="text-[#FF5722] mr-2" />
+              <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
+                {title}
+              </h1>
+            </div>
+          </div>
+        )}
       </header>
       
       {/* Main Content with Sidebar */}
-      <div className="flex flex-1 container mx-auto px-4 py-6">
+      <div className="flex flex-1 container mx-auto px-4 py-4">
         {/* Admin Sidebar - Hidden on mobile */}
         {!isSmallScreen && (
-          <div className="w-64 shrink-0 mr-8">
+          <div className="w-64 shrink-0 mr-6">
             <nav className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 sticky top-24">
               <div className="space-y-1">
-                {navItems.map((item) => {
-                  const isActive = location === item.path;
-                  
-                  return (
-                    <Link key={item.path} href={item.path}>
-                      <a className={`
-                        flex items-center px-4 py-3 rounded-md transition-colors
-                        ${isActive 
-                          ? 'bg-[#FF5722]/10 text-[#FF5722] font-medium' 
-                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}
-                      `}>
-                        <span className="mr-3">{item.icon}</span>
-                        <span>{item.label}</span>
-                        
-                        {isActive && (
-                          <motion.div 
-                            className="ml-auto w-1 h-6 bg-[#FF5722] rounded-full"
-                            layoutId="adminNavIndicator"
-                          />
-                        )}
-                      </a>
-                    </Link>
-                  );
-                })}
+                {navItems.map((item) => (
+                  <NavItem key={item.path} item={item} />
+                ))}
               </div>
               
               <Separator className="my-4" />
               
-              <Link href="/admin/settings">
-                <a className="flex items-center px-4 py-3 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                  <Settings size={18} className="mr-3" />
-                  <span>Admin Settings</span>
-                </a>
-              </Link>
+              <Button
+                variant="ghost"
+                className="justify-start w-full px-4 py-3 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={() => navigate('/admin/settings')}
+              >
+                <Settings size={18} className="mr-3" />
+                <span>Admin Settings</span>
+              </Button>
             </nav>
           </div>
         )}
         
-        {/* Mobile Navigation - Only visible on small screens */}
+        {/* Mobile Horizontal Navigation - Only visible on small screens */}
         {isSmallScreen && (
-          <div className="w-full mb-4">
-            <nav className="bg-white dark:bg-gray-800 p-2 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-x-auto">
-              <div className="flex space-x-1">
-                {navItems.map((item) => {
+          <div className="w-full mb-3">
+            <nav className="bg-white dark:bg-gray-800 p-1 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-x-auto">
+              <div className="flex space-x-1 py-1">
+                {navItems.slice(0, 4).map((item) => {
                   const isActive = location === item.path;
                   
                   return (
-                    <Link key={item.path} href={item.path}>
-                      <a className={`
-                        flex items-center whitespace-nowrap px-3 py-2 rounded-md transition-colors text-sm
+                    <Button
+                      key={item.path}
+                      variant="ghost"
+                      size="sm"
+                      className={`
+                        flex items-center whitespace-nowrap px-3 py-1.5 rounded-md transition-colors text-xs
                         ${isActive 
                           ? 'bg-[#FF5722]/10 text-[#FF5722] font-medium' 
                           : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}
-                      `}>
-                        <span className="mr-1">{item.icon}</span>
-                        <span>{item.label}</span>
-                      </a>
-                    </Link>
+                      `}
+                      onClick={() => navigate(item.path)}
+                    >
+                      <span className="mr-1">{item.icon}</span>
+                      <span>{item.label}</span>
+                    </Button>
                   );
                 })}
                 
-                <Link href="/admin/settings">
-                  <a className="flex items-center whitespace-nowrap px-3 py-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm">
-                    <Settings size={16} className="mr-1" />
-                    <span>Settings</span>
-                  </a>
-                </Link>
+                {navItems.length > 4 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex items-center whitespace-nowrap px-3 py-1.5 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-xs"
+                    onClick={() => setSidebarOpen(true)}
+                  >
+                    <span className="mr-1">•••</span>
+                    <span>More</span>
+                  </Button>
+                )}
               </div>
             </nav>
           </div>
@@ -170,7 +258,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
         
         {/* Main Content Area */}
         <div className={`${isSmallScreen ? 'w-full' : 'flex-1'}`}>
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
             <AnimatePresence mode="wait">
               <motion.div
                 key={location}
@@ -178,6 +266,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
+                className="w-full overflow-x-auto"
               >
                 {children}
               </motion.div>
