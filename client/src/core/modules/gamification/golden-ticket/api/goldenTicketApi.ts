@@ -203,3 +203,36 @@ export async function deleteSponsor(id: number): Promise<void> {
 export const getGoldenTickets = getAllGoldenTickets;
 export const getClaims = getAllClaims;
 export const getSponsors = getAllSponsors;
+
+/**
+ * Trigger a golden ticket appearance through the UI event system
+ * This function is called from interactive elements to potentially show a golden ticket
+ * 
+ * @param forceTrigger Optional parameter to force the ticket to appear (used for testing)
+ * @returns true if a ticket was triggered, false otherwise
+ */
+export function showGoldenTicket(forceTrigger = false): boolean {
+  // Check if the custom event is already defined in the window object
+  if (typeof window !== 'undefined') {
+    try {
+      // Create a custom event for the golden ticket appearance
+      const goldenTicketEvent = new CustomEvent('goldenTicketTrigger', {
+        detail: { 
+          forced: forceTrigger,
+          timestamp: Date.now(),
+          source: 'about-us-page'
+        }
+      });
+      
+      // Dispatch the event to the document
+      document.dispatchEvent(goldenTicketEvent);
+      
+      console.log('Golden ticket event dispatched', forceTrigger ? '(forced)' : '');
+      return true;
+    } catch (error) {
+      console.error('Failed to trigger golden ticket event:', error);
+      return false;
+    }
+  }
+  return false;
+}

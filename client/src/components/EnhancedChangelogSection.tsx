@@ -21,13 +21,13 @@ export function EnhancedChangelogSection() {
     {
       version: 'v5.1',
       date: 'March 18, 2025',
-      title: 'Tournament Management System 2.0',
-      description: 'A complete overhaul of our tournament system with better brackets and check-ins.',
+      title: 'Tournament Discovery Quest System',
+      description: 'An innovative system that rewards users for interactive exploration of tournament features.',
       highlights: [
-        'Digital check-in via QR code',
-        'Live bracket updates with real-time notifications',
-        'Tournament director dashboard with advanced tools',
-        'Improved player pairing algorithms',
+        'Tiered reward structure (Scout → Strategist → Pioneer)',
+        'Integration with Prize Drawing System',
+        'Tournament feature showcase with interactive elements',
+        'Enhanced CourtIQ™ integration showing rating progression',
       ],
       icon: 'trophy',
       badgeText: 'Major',
@@ -46,6 +46,21 @@ export function EnhancedChangelogSection() {
       ],
       icon: 'chart',
       badgeText: 'Flagship',
+      badgeVariant: 'secondary'
+    },
+    {
+      version: 'Launch',
+      date: 'February 1, 2025',
+      title: 'Pickle+ Platform Launch',
+      description: 'The official launch of the Pickle+ platform, designed to transform pickleball player development.',
+      highlights: [
+        'Unique 7-character alphanumeric passport codes for all players',
+        'Foundation for the CourtIQ™ Rating System',
+        'Mobile-first design with responsive interface',
+        'Core match recording and player profile systems',
+      ],
+      icon: 'star',
+      badgeText: 'Genesis',
       badgeVariant: 'secondary'
     },
     {

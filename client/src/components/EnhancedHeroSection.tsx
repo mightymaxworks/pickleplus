@@ -30,13 +30,13 @@ export function EnhancedHeroSection() {
           >
             <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6 border border-white/20">
               <span className="flex h-2 w-2 rounded-full bg-white mr-2"></span>
-              <span className="text-sm font-medium">New: Enhanced Match Recording System</span>
+              <span className="text-sm font-medium">New: Golden Tickets & Tournament Discovery</span>
             </div>
             
             <h1 className="text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 leading-tight tracking-tight">
-              Your Pickleball Journey, <br className="hidden sm:block" />
+              Your Game. Your Journey. <br className="hidden sm:block" />
               <span className="text-white relative">
-                Powered by Intelligence
+                Your Intelligence.
                 <svg className="absolute -bottom-1 left-0 w-full h-3 text-[#FFCCBC]" viewBox="0 0 100 15" preserveAspectRatio="none">
                   <path d="M0,7.5 C15,2.5 35,12.5 50,7.5 C65,2.5 85,12.5 100,7.5 L100,15 L0,15 Z" fill="currentColor"/>
                 </svg>
@@ -44,8 +44,9 @@ export function EnhancedHeroSection() {
             </h1>
             
             <p className="text-lg sm:text-xl md:text-2xl text-white/90 mb-8 sm:mb-10 font-light max-w-3xl">
-              Pickle+ Passport with CourtIQ™ analytics transforms how you track progress, 
-              connect with the community, and elevate your game.
+              Since February 2025, Pickle+ has transformed player development through 
+              CourtIQ™ analytics, achievement systems, and immersive tournament experiences.
+              <span className="hidden md:inline"> Keep your eyes peeled as you explore.</span>
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 justify-center md:justify-start">
