@@ -19,6 +19,7 @@ import { registerGoldenTicketRoutes } from "./routes/golden-ticket-routes";
 import { registerEventRoutes } from "./routes/event-routes";
 import { registerPassportVerificationRoutes } from "./routes/passport-verification-routes";
 import { registerAdminReportRoutes } from "./routes/admin-report-routes";
+import { registerAdminDashboardRoutes } from "./routes/admin-dashboard-routes";
 
 // Import necessary schema
 import { 
@@ -67,6 +68,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Register Admin Reporting routes (PKL-278651-ADMIN-0010-REPORT)
   registerAdminReportRoutes(app);
+  
+  // Register Admin Dashboard routes (PKL-278651-ADMIN-0011-DASH)
+  registerAdminDashboardRoutes(app);
   
   // API routes
   
