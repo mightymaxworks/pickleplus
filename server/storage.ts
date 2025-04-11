@@ -33,7 +33,7 @@ type MatchStatistics = typeof matchStatistics.$inferSelect;
 type PerformanceImpact = typeof performanceImpacts.$inferSelect;
 type MatchHighlight = typeof matchHighlights.$inferSelect;
 import { db } from "./db";
-import { eq, ne, and, or, desc, asc, sql, inArray } from "drizzle-orm";
+import { eq, ne, and, or, desc, asc, sql, inArray, SQL } from "drizzle-orm";
 import session from "express-session";
 import { Store } from "express-session";
 import connectPg from "connect-pg-simple";
@@ -145,12 +145,15 @@ export interface IStorage {
   // PKL-278651-ADMIN-0013-SEC - Admin Security Enhancements
   // Audit logging operations
   createAuditLog(logEntry: InsertAuditLog): Promise<AuditLog>;
-  getAuditLogs(limit?: number, offset?: number, filters?: {
+  getAuditLogs(filters?: {
+    limit?: number;
+    offset?: number;
     userId?: number;
     action?: string;
     resource?: string;
     startDate?: Date;
     endDate?: Date;
+    suspicious?: boolean;
   }): Promise<AuditLog[]>;
 }
 
@@ -2263,66 +2266,79 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getAuditLogs(
-    limit: number = 100, 
-    offset: number = 0,
-    filters?: {
+    filters: {
+      limit?: number;
+      offset?: number;
       userId?: number;
       action?: string;
       resource?: string;
       startDate?: Date;
       endDate?: Date;
-    }
+      suspicious?: boolean;
+    } = {}
   ): Promise<AuditLog[]> {
     try {
+      // Default values if not provided
+      const limit = filters.limit || 100;
+      const offset = filters.offset || 0;
+      
       console.log(`[Storage] Getting audit logs with filters: ${JSON.stringify(filters)}`);
       
       // Start building the query
       let query = db.select().from(auditLogs);
       
-      // Apply filters if provided
-      if (filters) {
-        const conditions = [];
-        
-        if (filters.userId) {
-          conditions.push(eq(auditLogs.userId, filters.userId));
-        }
-        
-        if (filters.action) {
+      // Apply filters
+      const conditions: SQL<unknown>[] = [];
+      
+      if (filters.userId) {
+        conditions.push(eq(auditLogs.userId, filters.userId));
+      }
+      
+      if (filters.action) {
+        // Support partial action matching (e.g., "ADMIN_" to match all admin actions)
+        if (filters.action.endsWith('_')) {
+          conditions.push(sql`${auditLogs.action} LIKE ${filters.action + '%'}`);
+        } else {
           conditions.push(eq(auditLogs.action, filters.action as any));
-        }
-        
-        if (filters.resource) {
-          conditions.push(eq(auditLogs.resource, filters.resource as any));
-        }
-        
-        if (filters.startDate) {
-          conditions.push(sql`${auditLogs.timestamp} >= ${filters.startDate}`);
-        }
-        
-        if (filters.endDate) {
-          conditions.push(sql`${auditLogs.timestamp} <= ${filters.endDate}`);
-        }
-        
-        // Apply all conditions
-        if (conditions.length > 0) {
-          query = query.where(and(...conditions));
         }
       }
       
+      if (filters.resource) {
+        conditions.push(eq(auditLogs.resource, filters.resource as any));
+      }
+      
+      // Add suspicious filter if true
+      if (filters.suspicious) {
+        conditions.push(sql`${auditLogs.additionalData}->>'suspicious' = 'true'`);
+      }
+      
+      if (filters.startDate) {
+        conditions.push(sql`${auditLogs.timestamp} >= ${filters.startDate}`);
+      }
+      
+      if (filters.endDate) {
+        conditions.push(sql`${auditLogs.timestamp} <= ${filters.endDate}`);
+      }
+      
+      // Apply all conditions
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+      
       // Add order, limit and offset
-      const finalQuery = query.orderBy(desc(auditLogs.timestamp))
-                  .limit(limit)
-                  .offset(offset);
+      query = query.orderBy(desc(auditLogs.timestamp))
+                 .limit(limit)
+                 .offset(offset);
       
       // Execute the query
-      const logs = await finalQuery;
+      const logs = await query;
       
       // Type cast to handle enum types
       return logs.map(log => ({
         ...log,
-        action: log.action as any,
-        resource: log.resource as any
-      })) as AuditLog[];
+        action: log.action as AuditAction,
+        resource: log.resource as AuditResource
+      }));
     } catch (error) {
       console.error('[Storage] Error getting audit logs:', error);
       return [];

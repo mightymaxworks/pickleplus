@@ -47,7 +47,7 @@ let csrfToken: string | null = null;
  * PKL-278651-ADMIN-0013-SEC
  * CSRF token management for security
  */
-export async function fetchCSRFToken(): Promise<string> {
+export async function fetchCSRFToken(): Promise<string | null> {
   if (csrfToken) {
     return csrfToken;
   }
@@ -63,11 +63,11 @@ export async function fetchCSRFToken(): Promise<string> {
     }
     
     const data = await response.json();
-    csrfToken = data.csrfToken;
+    csrfToken = data.csrfToken || null;
     return csrfToken;
   } catch (error) {
     console.error('Error fetching CSRF token:', error);
-    throw error;
+    return null;
   }
 }
 
@@ -119,12 +119,15 @@ export async function apiRequest(
   if (method !== "GET") {
     try {
       const token = await fetchCSRFToken();
-      options.headers = {
-        ...options.headers,
-        "X-CSRF-Token": token,
-      };
-      
-      console.log(`[SEC] Adding CSRF token to ${method} request`);
+      if (token) {
+        // Cast to string to satisfy TypeScript
+        const csrfHeaderValue: string = token;
+        options.headers = {
+          ...options.headers,
+          "X-CSRF-Token": csrfHeaderValue,
+        };
+        console.log(`[SEC] Adding CSRF token to ${method} request`);
+      }
     } catch (error) {
       console.error("Failed to add CSRF token to request:", error);
     }
