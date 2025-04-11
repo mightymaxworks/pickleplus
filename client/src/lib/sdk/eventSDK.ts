@@ -13,7 +13,21 @@ import type { Event } from '@shared/schema/events';
  */
 export async function getUpcomingEvents(limit: number = 10): Promise<Event[]> {
   const url = `/api/events/upcoming${limit ? `?limit=${limit}` : ''}`;
-  return apiRequest(url);
+  const response = await apiRequest('GET', url);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch upcoming events: ${response.status}`);
+  }
+  
+  const text = await response.text();
+  if (!text) return [];
+  
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    console.error('Error parsing upcoming events response:', error);
+    return [];
+  }
 }
 
 /**
@@ -22,7 +36,14 @@ export async function getUpcomingEvents(limit: number = 10): Promise<Event[]> {
  * @returns Promise with event details
  */
 export async function getEvent(eventId: number): Promise<Event> {
-  return apiRequest(`/api/events/${eventId}`);
+  const response = await apiRequest('GET', `/api/events/${eventId}`);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch event ${eventId}: ${response.status}`);
+  }
+  
+  const text = await response.text();
+  return JSON.parse(text);
 }
 
 /**
@@ -41,7 +62,21 @@ export async function getMyOrganizedEvents(limit?: number, offset?: number): Pro
   const queryString = params.toString();
   if (queryString) url += `?${queryString}`;
   
-  return apiRequest(url);
+  const response = await apiRequest('GET', url);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch organized events: ${response.status}`);
+  }
+  
+  const text = await response.text();
+  if (!text) return [];
+  
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    console.error('Error parsing organized events response:', error);
+    return [];
+  }
 }
 
 /**
@@ -60,7 +95,21 @@ export async function getMyAttendedEvents(limit?: number, offset?: number): Prom
   const queryString = params.toString();
   if (queryString) url += `?${queryString}`;
   
-  return apiRequest(url);
+  const response = await apiRequest('GET', url);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch attended events: ${response.status}`);
+  }
+  
+  const text = await response.text();
+  if (!text) return [];
+  
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    console.error('Error parsing attended events response:', error);
+    return [];
+  }
 }
 
 /**
@@ -69,7 +118,21 @@ export async function getMyAttendedEvents(limit?: number, offset?: number): Prom
  * @returns Promise with the number of attendees
  */
 export async function getEventCheckInCount(eventId: number): Promise<number> {
-  return apiRequest(`/api/events/${eventId}/check-in-count`);
+  const response = await apiRequest('GET', `/api/events/${eventId}/check-in-count`);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch check-in count: ${response.status}`);
+  }
+  
+  const text = await response.text();
+  if (!text) return 0;
+  
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    console.error('Error parsing check-in count response:', error);
+    return 0;
+  }
 }
 
 /**
@@ -78,7 +141,21 @@ export async function getEventCheckInCount(eventId: number): Promise<number> {
  * @returns Promise with boolean indicating if user is checked in
  */
 export async function getEventCheckInStatus(eventId: number): Promise<boolean> {
-  return apiRequest(`/api/events/${eventId}/check-in-status`);
+  const response = await apiRequest('GET', `/api/events/${eventId}/check-in-status`);
+  
+  if (!response.ok) {
+    return false;
+  }
+  
+  const text = await response.text();
+  if (!text) return false;
+  
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    console.error('Error parsing check-in status response:', error);
+    return false;
+  }
 }
 
 /**
@@ -87,10 +164,14 @@ export async function getEventCheckInStatus(eventId: number): Promise<boolean> {
  * @returns Promise with the created event
  */
 export async function createEvent(eventData: Omit<Event, 'id' | 'createdAt' | 'updatedAt' | 'currentAttendees'>): Promise<Event> {
-  return apiRequest('/api/events', {
-    method: 'POST',
-    body: JSON.stringify(eventData)
-  });
+  const response = await apiRequest('POST', '/api/events', eventData);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to create event: ${response.status}`);
+  }
+  
+  const text = await response.text();
+  return JSON.parse(text);
 }
 
 /**
@@ -100,10 +181,14 @@ export async function createEvent(eventData: Omit<Event, 'id' | 'createdAt' | 'u
  * @returns Promise with the updated event
  */
 export async function updateEvent(eventId: number, eventData: Partial<Event>): Promise<Event> {
-  return apiRequest(`/api/events/${eventId}`, {
-    method: 'PUT',
-    body: JSON.stringify(eventData)
-  });
+  const response = await apiRequest('PUT', `/api/events/${eventId}`, eventData);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to update event: ${response.status}`);
+  }
+  
+  const text = await response.text();
+  return JSON.parse(text);
 }
 
 /**
@@ -112,9 +197,21 @@ export async function updateEvent(eventId: number, eventData: Partial<Event>): P
  * @returns Promise with success status
  */
 export async function deleteEvent(eventId: number): Promise<{ success: boolean }> {
-  return apiRequest(`/api/events/${eventId}`, {
-    method: 'DELETE'
-  });
+  const response = await apiRequest('DELETE', `/api/events/${eventId}`);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to delete event: ${response.status}`);
+  }
+  
+  const text = await response.text();
+  if (!text) return { success: true };
+  
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    console.error('Error parsing delete event response:', error);
+    return { success: response.ok };
+  }
 }
 
 /**
@@ -127,10 +224,21 @@ export async function deleteEvent(eventId: number): Promise<{ success: boolean }
 export async function checkInToEvent(eventId: number, userId?: number, checkInMethod: string = 'qr') {
   const payload = userId ? { userId, checkInMethod } : { checkInMethod };
   
-  return apiRequest(`/api/events/${eventId}/check-in`, {
-    method: 'POST',
-    body: JSON.stringify(payload)
-  });
+  const response = await apiRequest('POST', `/api/events/${eventId}/check-in`, payload);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to check in to event: ${response.status}`);
+  }
+  
+  const text = await response.text();
+  if (!text) return {};
+  
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    console.error('Error parsing check-in response:', error);
+    return {};
+  }
 }
 
 /**
@@ -150,7 +258,21 @@ export async function getEventAttendees(eventId: number, limit?: number, offset?
   const queryString = params.toString();
   if (queryString) url += `?${queryString}`;
   
-  return apiRequest(url);
+  const response = await apiRequest('GET', url);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch event attendees: ${response.status}`);
+  }
+  
+  const text = await response.text();
+  if (!text) return [];
+  
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    console.error('Error parsing event attendees response:', error);
+    return [];
+  }
 }
 
 export default {

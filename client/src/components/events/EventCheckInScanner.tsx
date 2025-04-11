@@ -59,10 +59,7 @@ export function EventCheckInScanner({
   // Mutation for checking in users from QR code
   const checkInMutation = useMutation({
     mutationFn: async (payload: { eventId: number, userId: number, checkInMethod?: string }) => {
-      return apiRequest(`/api/events/${payload.eventId}/check-in`, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
+      return apiRequest('POST', `/api/events/${payload.eventId}/check-in`, payload);
     },
     onSuccess: () => {
       // Invalidate related queries
