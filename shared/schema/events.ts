@@ -1,6 +1,7 @@
 /**
  * PKL-278651-CONN-0003-EVENT - PicklePass™ System
- * Event and EventCheckIn schema definitions
+ * PKL-278651-CONN-0004-PASS-REG - Enhanced PicklePass™ with Registration
+ * Event, EventCheckIn, and EventRegistration schema definitions
  */
 
 import { relations } from 'drizzle-orm';
