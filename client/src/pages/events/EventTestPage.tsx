@@ -1,6 +1,6 @@
 /**
- * PKL-278651-CONN-0003-EVENT - Event Check-in QR Code System
- * Test page for the Event Check-in System
+ * PKL-278651-CONN-0003-EVENT - PicklePass™ System
+ * Test page for the PicklePass™ Event Management System
  */
 
 import React, { useState } from 'react';
@@ -37,9 +37,9 @@ export default function EventTestPage() {
   
   return (
     <div className="container py-10 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold mb-2">Event Check-in System</h1>
+      <h1 className="text-3xl font-bold mb-2">PicklePass™ System</h1>
       <p className="text-muted-foreground mb-6">
-        PKL-278651-CONN-0003-EVENT - Test page for the Event Check-in QR Code System
+        PKL-278651-CONN-0003-EVENT - Simplified event management for the Pickle+ platform
       </p>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -96,7 +96,7 @@ export default function EventTestPage() {
                   )}
                   
                   <div className="bg-muted/50 p-4 rounded-md">
-                    <h3 className="text-sm font-medium mb-2">Check-in Status</h3>
+                    <h3 className="text-sm font-medium mb-2">PicklePass™ Status</h3>
                     <div className="flex items-center space-x-2">
                       <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                       <span className="text-sm">Not checked in</span>

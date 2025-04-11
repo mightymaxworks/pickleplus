@@ -1,5 +1,5 @@
 /**
- * PKL-278651-CONN-0003-EVENT - Event Check-in QR Code System
+ * PKL-278651-CONN-0003-EVENT - PicklePass™ System
  * Component for scanning QR codes for event check-in
  */
 
@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { cn } from '@/lib/utils';
+import type { Event } from '@shared/schema/events';
 
 // Using dynamic import for HTML5QrcodeScanner to prevent SSR issues
 let QrScanner: any = null;
@@ -45,7 +46,7 @@ export function EventCheckInScanner({
   const [scannerId] = useState(`scanner-${Math.random().toString(36).substring(2, 9)}`);
   
   // Get event details to display during scanning
-  const { data: event } = useQuery({ 
+  const { data: event } = useQuery<Event>({ 
     queryKey: ['/api/events', eventId],
     enabled: !!eventId 
   });
@@ -232,7 +233,7 @@ export function EventCheckInScanner({
   return (
     <Card className={cn("w-full max-w-md mx-auto", className)}>
       <CardHeader className="pb-3">
-        <CardTitle className="text-xl">Event Check-in Scanner</CardTitle>
+        <CardTitle className="text-xl">PicklePass™ Scanner</CardTitle>
         {event && (
           <CardDescription>
             {event.name} - {checkInCount ? `${checkInCount} checked in` : 'No check-ins yet'}
@@ -304,7 +305,7 @@ export function EventCheckInScanner({
         )}
       </CardContent>
       <CardFooter className="bg-muted/50 flex flex-col items-start text-xs text-muted-foreground px-6 py-3">
-        <p>Point your camera at a user's Profile QR code to check them in.</p>
+        <p>Point your camera at a user's Profile QR code for PicklePass™ check-in.</p>
         <p className="mt-1">Make sure the entire QR code is visible in the scanner.</p>
       </CardFooter>
     </Card>
