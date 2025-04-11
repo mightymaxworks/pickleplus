@@ -69,7 +69,7 @@ export default function ResponsiveAdminDashboard() {
     return format(date, 'yyyy-MM-dd');
   };
   
-  // Fetch dashboard data with proper type
+  // Fetch dashboard data with proper type and performance optimizations
   const { data, isLoading, isError, error, refetch } = useQuery<DashboardData, Error>({
     queryKey: ['/api/admin/dashboard', timePeriod, startDate, endDate],
     queryFn: async ({ queryKey }) => {
@@ -89,12 +89,13 @@ export default function ResponsiveAdminDashboard() {
         url += `&startDate=${formattedStartDate}&endDate=${formattedEndDate}`;
       }
       
-      const response = await fetch(url, {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        }
+      console.log(`[PERF][Mobile] Fetching dashboard data for period: ${period}`);
+      const startTime = performance.now();
+      
+      // Use the enhanced apiRequest with caching support
+      const response = await apiRequest('GET', url, undefined, {
+        cacheDuration: 60, // Cache for 60 seconds
+        forceFresh: false  // Use cache if available
       });
       
       if (!response.ok) {
@@ -102,9 +103,18 @@ export default function ResponsiveAdminDashboard() {
         throw new Error(errorData.error || `Dashboard data fetch failed: ${response.statusText}`);
       }
       
-      return response.json();
+      const data = await response.json();
+      
+      const duration = performance.now() - startTime;
+      console.log(`[PERF][Mobile] Dashboard data fetched in ${duration.toFixed(2)}ms`);
+      
+      return data;
     },
+    // Performance optimized settings for mobile
+    staleTime: 3 * 60 * 1000, // Consider fresh for 3 minutes (longer for mobile to reduce battery usage)
+    gcTime: 15 * 60 * 1000,   // Keep in cache for 15 minutes
     refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
     enabled: !(timePeriod === DashboardTimePeriod.CUSTOM && (!startDate || !endDate)), // Only enable when appropriate dates are set
   });
   

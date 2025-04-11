@@ -36,20 +36,45 @@ export function AdminDashboard() {
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const { toast } = useToast();
   
-  // Fetch dashboard data with proper type
+  // Format date for API in ISO string format
+  const formatDateForAPI = (date: Date | undefined): string | undefined => {
+    if (!date) return undefined;
+    return date.toISOString();
+  };
+  
+  // Fetch dashboard data with performance optimizations
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['/api/admin/dashboard', timePeriod, startDate?.toISOString(), endDate?.toISOString()],
-    queryFn: async () => {
-      let url = `/api/admin/dashboard?timePeriod=${timePeriod}`;
+    queryFn: async ({ queryKey }) => {
+      const [_path, period, startDate, endDate] = queryKey;
+      
+      let url = `/api/admin/dashboard?timePeriod=${period}`;
       
       // Add custom date range if applicable
-      if (timePeriod === DashboardTimePeriod.CUSTOM && startDate && endDate) {
-        url += `&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`;
+      if (period === DashboardTimePeriod.CUSTOM && startDate && endDate) {
+        url += `&startDate=${startDate}&endDate=${endDate}`;
       }
       
-      const response = await apiRequest('GET', url);
-      return response.json();
+      console.log(`[PERF] Fetching dashboard data for period: ${period}`);
+      const startTime = performance.now();
+      
+      // Use the enhanced apiRequest with caching support
+      const response = await apiRequest('GET', url, undefined, { 
+        cacheDuration: 60, // Cache for 60 seconds
+        forceFresh: false  // Use cache if available
+      });
+      
+      const data = await response.json();
+      
+      const duration = performance.now() - startTime;
+      console.log(`[PERF] Dashboard data fetched in ${duration.toFixed(2)}ms`);
+      
+      return data;
     },
+    // Performance settings for the admin dashboard
+    staleTime: 2 * 60 * 1000, // Consider fresh for 2 minutes
+    gcTime: 10 * 60 * 1000,   // Keep in cache for 10 minutes 
+    refetchOnWindowFocus: false
   });
   
   // Handle time period change

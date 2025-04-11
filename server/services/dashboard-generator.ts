@@ -1282,12 +1282,6 @@ export class DashboardGenerator {
   }
 
   /**
-   * Get the unified admin dashboard data
-   * @param timePeriod - The time period to consider
-   * @param startDate - Start date for custom range (optional)
-   * @param endDate - End date for custom range (optional)
-   */
-  /**
    * Get the unified admin dashboard data with caching
    * @param timePeriod - The time period to consider
    * @param startDate - Start date for custom range (optional)

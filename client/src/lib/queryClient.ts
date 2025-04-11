@@ -1,34 +1,88 @@
 import { QueryClient } from "@tanstack/react-query";
 
-// Create a client
+/**
+ * PKL-278651-ADMIN-0012-PERF
+ * Optimized QueryClient configuration
+ * 
+ * This configuration enhances the caching behavior of TanStack Query
+ * with performance improvements for the admin dashboard.
+ */
+
+// Create a client with optimized caching settings
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
+      // Performance optimizations
+      staleTime: 60 * 1000, // Consider data fresh for 1 minute
+      gcTime: 10 * 60 * 1000, // Cache for 10 minutes (gcTime replaces cacheTime in v5)
+      refetchOnMount: true,
+      refetchOnReconnect: true,
     },
   },
 });
 
+/**
+ * PKL-278651-ADMIN-0012-PERF
+ * Enhanced API request function with optimized caching
+ */
+
 // Helper function to make API requests
 type RequestMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+
+// Dictionary of cache-friendly endpoints that can use browser caching
+const CACHEABLE_ENDPOINTS = [
+  '/api/admin/dashboard',
+  '/api/user/profile',
+  '/api/match/history',
+  '/api/tournament/list',
+  '/api/event/upcoming'
+];
 
 export async function apiRequest(
   method: RequestMethod,
   url: string,
-  data?: any
+  data?: any,
+  cacheOptions?: {
+    forceFresh?: boolean;
+    cacheDuration?: number; // in seconds
+  }
 ): Promise<Response> {
+  // Determine if we should use caching based on the URL and method
+  const isCacheable = 
+    method === "GET" && 
+    CACHEABLE_ENDPOINTS.some(endpoint => url.startsWith(endpoint)) &&
+    !(cacheOptions?.forceFresh);
+    
   const options: RequestInit = {
     method,
     headers: {
       "Content-Type": "application/json",
-      // Make sure cache control headers are consistent with server
-      "Cache-Control": "no-cache, no-store",
-      "Pragma": "no-cache",
     },
     credentials: "include", // Critical for cookie-based auth
-    cache: "no-store", // Prevent caching of authenticated requests
   };
+  
+  // Apply different cache settings based on the request type
+  if (isCacheable) {
+    // For GET requests to cacheable endpoints, allow browser caching
+    const maxAge = cacheOptions?.cacheDuration || 60; // 60 seconds default
+    options.headers = {
+      ...options.headers,
+      "Cache-Control": `max-age=${maxAge}`,
+    };
+    options.cache = "default";
+    
+    console.log(`[PERF] Using cacheable request for ${url} with max-age=${maxAge}`);
+  } else {
+    // For all other requests, use no-cache approach
+    options.headers = {
+      ...options.headers,
+      "Cache-Control": "no-cache, no-store",
+      "Pragma": "no-cache",
+    };
+    options.cache = "no-store";
+  }
 
   if (data) {
     options.body = JSON.stringify(data);
@@ -44,20 +98,36 @@ export async function apiRequest(
   return response;
 }
 
+/**
+ * PKL-278651-ADMIN-0012-PERF
+ * Enhanced query function with caching support
+ */
+
 // Default fetcher function for useQuery
 type GetQueryFnOptions = {
   on401?: "throwError" | "returnNull";
   handleHTMLResponse?: boolean;
+  cacheDuration?: number; // in seconds
+  forceFresh?: boolean; // force a fresh fetch bypassing cache
 };
 
 export function getQueryFn(options: GetQueryFnOptions = {}) {
-  const { on401 = "throwError", handleHTMLResponse = true } = options;
+  const { 
+    on401 = "throwError", 
+    handleHTMLResponse = true,
+    cacheDuration,
+    forceFresh = false
+  } = options;
   
   return async ({ queryKey }: { queryKey: string[] }) => {
     const [url] = queryKey;
     
     try {
-      const response = await apiRequest("GET", url);
+      // Use cache-aware apiRequest
+      const response = await apiRequest("GET", url, undefined, { 
+        cacheDuration, 
+        forceFresh 
+      });
       
       if (response.status === 401) {
         if (on401 === "returnNull") {
