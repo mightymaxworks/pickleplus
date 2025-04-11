@@ -200,3 +200,54 @@ export function getRelativeTime(timestamp: string | Date): string {
   
   return "just now";
 }
+
+/**
+ * PKL-278651-CONN-0004-PASS-REG-UI-PHASE2
+ * Safely formats a date with error handling
+ * @param dateInput Any date input (string, Date, or undefined)
+ * @param options Formatting options
+ * @returns Formatted date string or fallback message
+ */
+export function safeFormatDate(
+  dateInput: string | Date | number | undefined | null, 
+  options: {
+    month?: "short" | "long" | "numeric" | "2-digit";
+    day?: "numeric" | "2-digit";
+    year?: boolean;
+    weekday?: boolean;
+  } = {}
+): string {
+  try {
+    if (!dateInput) return "Date TBD";
+    
+    const date = new Date(dateInput);
+    if (isNaN(date.getTime())) return "Date TBD";
+    
+    return formatDate(date, options);
+  } catch (error) {
+    console.error("Error safely formatting date:", error);
+    return "Date TBD";
+  }
+}
+
+/**
+ * PKL-278651-CONN-0004-PASS-REG-UI-PHASE2
+ * Safely formats a time with error handling
+ * @param dateInput Any date input (string, Date, or undefined)
+ * @returns Formatted time string or fallback message
+ */
+export function safeFormatTime(
+  dateInput: string | Date | number | undefined | null
+): string {
+  try {
+    if (!dateInput) return "Time TBD";
+    
+    const date = new Date(dateInput);
+    if (isNaN(date.getTime())) return "Time TBD";
+    
+    return formatTime(date);
+  } catch (error) {
+    console.error("Error safely formatting time:", error);
+    return "Time TBD";
+  }
+}

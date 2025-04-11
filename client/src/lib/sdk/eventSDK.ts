@@ -405,6 +405,95 @@ export async function getEventRegistrationCount(eventId: number): Promise<number
   }
 }
 
+/**
+ * PKL-278651-CONN-0004-PASS-REG-UI-PHASE2 - Passport-centric functions
+ * Get the user's universal passport QR code
+ * @returns Promise with QR code data
+ */
+export async function getUserPassportQR(): Promise<string> {
+  const response = await apiRequest('GET', '/api/user/passport/qr');
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch passport QR: ${response.status}`);
+  }
+  
+  const text = await response.text();
+  if (!text) return '';
+  
+  try {
+    return JSON.parse(text).qrCode;
+  } catch (error) {
+    console.error('Error parsing passport QR response:', error);
+    return '';
+  }
+}
+
+/**
+ * PKL-278651-CONN-0004-PASS-REG-UI-PHASE2 - Passport-centric functions
+ * Get user's passport code (the 7-character code)
+ * @returns Promise with passport code
+ */
+export async function getUserPassportCode(): Promise<string> {
+  const response = await apiRequest('GET', '/api/user/passport/code');
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch passport code: ${response.status}`);
+  }
+  
+  const text = await response.text();
+  if (!text) return '';
+  
+  try {
+    return JSON.parse(text).code;
+  } catch (error) {
+    console.error('Error parsing passport code response:', error);
+    return '';
+  }
+}
+
+/**
+ * PKL-278651-CONN-0004-PASS-REG-UI-PHASE2 - Passport-centric functions
+ * Verify if a user has access to an event based on passport
+ * For admin use when scanning passports
+ * @param passportCode The user's passport code
+ * @param eventId Optional event ID to check for specific event access
+ * @returns Promise with verification result
+ */
+export async function verifyPassportAccess(passportCode: string, eventId?: number): Promise<{
+  valid: boolean;
+  userId?: number;
+  username?: string;
+  events?: Event[];
+  message?: string;
+}> {
+  let url = '/api/events/verify-passport';
+  
+  const params = new URLSearchParams();
+  params.append('code', passportCode);
+  if (eventId) params.append('eventId', eventId.toString());
+  
+  url += `?${params.toString()}`;
+  
+  const response = await apiRequest('GET', url);
+  
+  if (!response.ok) {
+    return { 
+      valid: false, 
+      message: `Invalid passport or insufficient access: ${response.status}` 
+    };
+  }
+  
+  const text = await response.text();
+  if (!text) return { valid: false, message: 'Empty response from server' };
+  
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    console.error('Error parsing passport verification response:', error);
+    return { valid: false, message: 'Error processing response' };
+  }
+}
+
 export default {
   getUpcomingEvents,
   getEvent,
@@ -417,10 +506,14 @@ export default {
   deleteEvent,
   checkInToEvent,
   getEventAttendees,
-  // PKL-278651-CONN-0004-PASS-REG - New registration functions
+  // PKL-278651-CONN-0004-PASS-REG - Registration functions
   getMyRegisteredEvents,
   getEventRegistrationStatus,
   registerForEvent,
   cancelEventRegistration,
-  getEventRegistrationCount
+  getEventRegistrationCount,
+  // PKL-278651-CONN-0004-PASS-REG-UI-PHASE2 - Passport-centric functions
+  getUserPassportQR,
+  getUserPassportCode,
+  verifyPassportAccess
 };

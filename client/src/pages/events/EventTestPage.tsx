@@ -1,5 +1,6 @@
 /**
  * PKL-278651-CONN-0003-EVENT - PicklePass™ System
+ * PKL-278651-CONN-0004-PASS-REG-UI-PHASE2 - Enhanced PicklePass™ with Universal Passport
  * Test page for the PicklePass™ Event Management System
  */
 
@@ -10,9 +11,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import EventQRCode from '@/components/events/EventQRCode';
+import { TicketIcon, ScanIcon, UserCircle2Icon } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+
+// Components
 import EventCheckInScanner from '@/components/events/EventCheckInScanner';
 import EventList from '@/components/events/EventList';
+import MyEventsTab from '@/components/events/MyEventsTab';
+import UniversalPassport from '@/components/events/UniversalPassport';
+
+// Data and types
 import { getEvent } from '@/lib/sdk/eventSDK';
 import { formatDateTime } from '@/lib/utils';
 import type { Event } from '@shared/schema/events';
@@ -31,9 +39,12 @@ const safeFormatDateTime = (dateString: any) => {
 };
 
 export default function EventTestPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.isAdmin || false;
+
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [activeTab, setActiveTab] = useState<string>('upcoming');
-  const [showQRDialog, setShowQRDialog] = useState<boolean>(false);
+  const [showPassportDialog, setShowPassportDialog] = useState<boolean>(false);
   const [showScannerDialog, setShowScannerDialog] = useState<boolean>(false);
   
   // Fetch the selected event details when an event is selected
@@ -47,20 +58,26 @@ export default function EventTestPage() {
   const handleEventClick = (event: Event) => {
     setSelectedEvent(event);
   };
+
+  // Handle "View My Passport" click from the My Events tab
+  const handleViewPassportClick = () => {
+    setShowPassportDialog(true);
+  };
   
   return (
     <div className="container py-10 max-w-6xl mx-auto">
       <h1 className="text-3xl font-bold mb-2">PicklePass™ System</h1>
       <p className="text-muted-foreground mb-6">
-        PKL-278651-CONN-0003-EVENT - Simplified event management for the Pickle+ platform
+        PKL-278651-CONN-0004-PASS-REG-UI-PHASE2 - Enhanced event management with universal passport
       </p>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Left column - Events list */}
         <div className="md:col-span-1">
           <Tabs defaultValue="upcoming" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsList className="grid w-full grid-cols-3 mb-4">
               <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+              <TabsTrigger value="registered">My Events</TabsTrigger>
               <TabsTrigger value="attended">Attended</TabsTrigger>
             </TabsList>
             
@@ -70,6 +87,13 @@ export default function EventTestPage() {
                 limit={5} 
                 showViewButton={true}
                 onEventClick={handleEventClick}
+              />
+            </TabsContent>
+            
+            <TabsContent value="registered" className="mt-0">
+              <MyEventsTab 
+                onEventClick={handleEventClick}
+                onPassportClick={handleViewPassportClick}
               />
             </TabsContent>
             
@@ -119,42 +143,57 @@ export default function EventTestPage() {
                   <Separator />
                   
                   <div className="flex flex-wrap gap-3">
-                    <Dialog open={showQRDialog} onOpenChange={setShowQRDialog}>
+                    {/* Universal Passport Dialog */}
+                    <Dialog open={showPassportDialog} onOpenChange={setShowPassportDialog}>
                       <DialogTrigger asChild>
-                        <Button variant="default">View PicklePass™ QR Code</Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>PicklePass™ Event QR</DialogTitle>
-                          <DialogDescription>
-                            Scan this QR code to check in to the event.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="flex justify-center p-4">
-                          <EventQRCode event={selectedEvent} size={250} />
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                    
-                    <Dialog open={showScannerDialog} onOpenChange={setShowScannerDialog}>
-                      <DialogTrigger asChild>
-                        <Button variant="secondary">Scan PicklePass™</Button>
+                        <Button variant="default">
+                          <TicketIcon className="mr-2 h-4 w-4" />
+                          Show My Passport
+                        </Button>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-md">
                         <DialogHeader>
-                          <DialogTitle>PicklePass™ Scanner</DialogTitle>
+                          <DialogTitle>PicklePass™ Universal Passport</DialogTitle>
                           <DialogDescription>
-                            Scan a user's QR code to register their attendance.
+                            Your universal passport works for all PicklePass™ events you're registered for.
                           </DialogDescription>
                         </DialogHeader>
-                        <div className="mt-4">
-                          <EventCheckInScanner 
-                            eventId={selectedEvent.id} 
-                            onSuccess={() => setShowScannerDialog(false)} 
+                        <div className="py-4">
+                          <UniversalPassport 
+                            onViewRegisteredEvents={() => {
+                              setShowPassportDialog(false);
+                              setActiveTab('registered');
+                            }} 
                           />
                         </div>
                       </DialogContent>
                     </Dialog>
+                    
+                    {/* Admin Scanner Dialog - Only visible to admins */}
+                    {isAdmin && (
+                      <Dialog open={showScannerDialog} onOpenChange={setShowScannerDialog}>
+                        <DialogTrigger asChild>
+                          <Button variant="secondary">
+                            <ScanIcon className="mr-2 h-4 w-4" />
+                            Scan Passport
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>PicklePass™ Scanner</DialogTitle>
+                            <DialogDescription>
+                              Scan a user's passport QR code to verify registration and check them in.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="mt-4">
+                            <EventCheckInScanner 
+                              eventId={selectedEvent.id} 
+                              onSuccess={() => setShowScannerDialog(false)} 
+                            />
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -166,6 +205,13 @@ export default function EventTestPage() {
                 <p className="text-muted-foreground mb-4">
                   Select an event from the list to view details and PicklePass™ options.
                 </p>
+                <Button 
+                  variant="outline"
+                  onClick={handleViewPassportClick}
+                >
+                  <UserCircle2Icon className="mr-2 h-4 w-4" />
+                  View My Universal Passport
+                </Button>
               </div>
             </div>
           )}
