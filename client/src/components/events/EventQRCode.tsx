@@ -9,6 +9,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import type { Event } from '@shared/schema/events';
 import { formatDate } from '@/lib/utils';
 
+// Helper function to safely format dates
+const safeFormatDate = (dateString: any, options: any = {}) => {
+  try {
+    if (!dateString) return 'Date TBD';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Date TBD';
+    return formatDate(date, options);
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Date TBD';
+  }
+};
+
 interface EventQRCodeProps {
   event: Event;
   size?: number;
@@ -40,7 +53,7 @@ export function EventQRCode({
         <CardTitle className="text-lg">{event.name}</CardTitle>
         {includeDetails && (
           <CardDescription>
-            {formatDate(new Date(event.startDateTime))}
+            {safeFormatDate(event.startDateTime)}
           </CardDescription>
         )}
       </CardHeader>
