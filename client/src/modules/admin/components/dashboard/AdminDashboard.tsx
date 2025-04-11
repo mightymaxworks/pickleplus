@@ -11,10 +11,17 @@ import { useQuery } from "@tanstack/react-query";
 import { DashboardGrid } from "./DashboardGrid";
 import { DashboardTimePeriod } from "@shared/schema/admin/dashboard";
 import { apiRequest } from "@/lib/queryClient";
-import { RefreshCw, DownloadIcon } from "lucide-react";
+import { RefreshCw, DownloadIcon, CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -25,14 +32,22 @@ import {
 
 export function AdminDashboard() {
   const [timePeriod, setTimePeriod] = useState<DashboardTimePeriod>(DashboardTimePeriod.MONTH);
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const { toast } = useToast();
   
   // Fetch dashboard data with proper type
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['/api/admin/dashboard', timePeriod],
-    queryFn: async ({ queryKey }) => {
-      const [_path, period] = queryKey;
-      const response = await apiRequest(`/api/admin/dashboard?timePeriod=${period}`);
+    queryKey: ['/api/admin/dashboard', timePeriod, startDate?.toISOString(), endDate?.toISOString()],
+    queryFn: async () => {
+      let url = `/api/admin/dashboard?timePeriod=${timePeriod}`;
+      
+      // Add custom date range if applicable
+      if (timePeriod === DashboardTimePeriod.CUSTOM && startDate && endDate) {
+        url += `&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`;
+      }
+      
+      const response = await apiRequest('GET', url);
       return response.json();
     },
   });
@@ -40,6 +55,19 @@ export function AdminDashboard() {
   // Handle time period change
   const handleTimePeriodChange = (value: DashboardTimePeriod) => {
     setTimePeriod(value);
+    
+    // Clear custom dates when switching to predefined periods
+    if (value !== DashboardTimePeriod.CUSTOM) {
+      setStartDate(undefined);
+      setEndDate(undefined);
+    } else if (!startDate) {
+      // Set default date range (last 30 days) when switching to custom period
+      const end = new Date();
+      const start = new Date();
+      start.setDate(start.getDate() - 30);
+      setStartDate(start);
+      setEndDate(end);
+    }
   };
   
   // Handle refresh
@@ -115,8 +143,58 @@ export function AdminDashboard() {
               <SelectItem value={DashboardTimePeriod.MONTH}>This Month</SelectItem>
               <SelectItem value={DashboardTimePeriod.QUARTER}>This Quarter</SelectItem>
               <SelectItem value={DashboardTimePeriod.YEAR}>This Year</SelectItem>
+              <SelectItem value={DashboardTimePeriod.CUSTOM}>Custom Range</SelectItem>
             </SelectContent>
           </Select>
+          
+          {/* Custom date range pickers */}
+          {timePeriod === DashboardTimePeriod.CUSTOM && (
+            <div className="flex items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-[140px] justify-start text-left text-xs"
+                    size="sm"
+                  >
+                    <CalendarIcon className="mr-2 h-3 w-3" />
+                    {startDate ? format(startDate, "MMM d, yyyy") : "Start date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={(date) => date && setStartDate(date)}
+                    initialFocus
+                    disabled={(date) => endDate ? date > endDate : false}
+                  />
+                </PopoverContent>
+              </Popover>
+              
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-[140px] justify-start text-left text-xs"
+                    size="sm"
+                  >
+                    <CalendarIcon className="mr-2 h-3 w-3" />
+                    {endDate ? format(endDate, "MMM d, yyyy") : "End date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={(date) => date && setEndDate(date)}
+                    initialFocus
+                    disabled={(date) => startDate ? date < startDate : false}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
           
           <Button variant="outline" size="icon" onClick={handleRefresh}>
             <RefreshCw className="h-4 w-4" />

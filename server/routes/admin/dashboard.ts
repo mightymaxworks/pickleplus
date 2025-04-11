@@ -43,15 +43,41 @@ export function registerAdminDashboardRoutes(
           DashboardTimePeriod.WEEK,
           DashboardTimePeriod.MONTH,
           DashboardTimePeriod.QUARTER,
-          DashboardTimePeriod.YEAR
+          DashboardTimePeriod.YEAR,
+          DashboardTimePeriod.CUSTOM
         ]);
 
         const timePeriod = timePeriodSchema.parse(
           req.query.timePeriod || DashboardTimePeriod.MONTH
         );
+        
+        // Get custom date range if applicable
+        let startDate: string | undefined;
+        let endDate: string | undefined;
+        
+        if (timePeriod === DashboardTimePeriod.CUSTOM) {
+          startDate = req.query.startDate as string;
+          endDate = req.query.endDate as string;
+          
+          if (!startDate || !endDate) {
+            return res.status(400).json({
+              error: "Start date and end date are required for custom time period"
+            });
+          }
+          
+          // Validate dates
+          try {
+            new Date(startDate);
+            new Date(endDate);
+          } catch (e) {
+            return res.status(400).json({
+              error: "Invalid date format"
+            });
+          }
+        }
 
         // Get dashboard data
-        const dashboard = await dashboardGenerator.getDashboard(timePeriod);
+        const dashboard = await dashboardGenerator.getDashboard(timePeriod, startDate, endDate);
 
         // Get counts for dashboard metrics
         const totalUsers = await storage.getUserCount();
