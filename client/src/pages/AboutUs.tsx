@@ -8,7 +8,8 @@ import {
   Users, 
   Zap, 
   BarChart3,
-  Sparkles
+  Sparkles,
+  ArrowLeft
 } from "lucide-react";
 import { useState } from "react";
 import { useLocation } from "wouter";
@@ -59,6 +60,18 @@ export default function AboutUs() {
   
   return (
     <div className="about-us-page min-h-screen bg-white">
+      {/* Back button */}
+      <div className="absolute top-6 left-4 z-50">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="text-white hover:bg-white/20 h-10 w-10 rounded-full"
+          onClick={() => navigate("/")}
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+      </div>
+      
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-[#FF5722] to-[#FF9800] text-white py-16 sm:py-24 overflow-hidden">
         <div className="absolute inset-0 opacity-10">
