@@ -140,6 +140,17 @@ export interface IStorage {
     events?: Event[];
     message?: string;
   }>;
+  
+  // PKL-278651-ADMIN-0013-SEC - Admin Security Enhancements
+  // Audit logging operations
+  createAuditLog(logEntry: InsertAuditLog): Promise<AuditLog>;
+  getAuditLogs(limit?: number, offset?: number, filters?: {
+    userId?: number;
+    action?: string;
+    resource?: string;
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<AuditLog[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2209,6 +2220,88 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('[Storage] verifyPassportForEvent error:', error);
       return { valid: false, message: "Server error verifying passport" };
+    }
+  }
+  // PKL-278651-ADMIN-0013-SEC - Admin Security Enhancements
+  // Audit logging operations
+  async createAuditLog(logEntry: InsertAuditLog): Promise<AuditLog> {
+    try {
+      console.log(`[Storage] Creating audit log entry: ${JSON.stringify(logEntry)}`);
+      
+      // Insert the audit log entry
+      const [entry] = await db.insert(auditLogs).values(logEntry).returning();
+      return entry;
+    } catch (error) {
+      console.error('[Storage] Error creating audit log:', error);
+      // In case of error, return a minimum valid entry to avoid breaking the application flow
+      return {
+        id: 'error',
+        timestamp: new Date(),
+        userId: logEntry.userId,
+        action: logEntry.action,
+        resource: logEntry.resource,
+        ipAddress: logEntry.ipAddress,
+      } as AuditLog;
+    }
+  }
+  
+  async getAuditLogs(
+    limit: number = 100, 
+    offset: number = 0,
+    filters?: {
+      userId?: number;
+      action?: string;
+      resource?: string;
+      startDate?: Date;
+      endDate?: Date;
+    }
+  ): Promise<AuditLog[]> {
+    try {
+      console.log(`[Storage] Getting audit logs with filters: ${JSON.stringify(filters)}`);
+      
+      // Start building the query
+      let query = db.select()
+        .from(auditLogs)
+        .orderBy(desc(auditLogs.timestamp))
+        .limit(limit)
+        .offset(offset);
+      
+      // Apply filters if provided
+      if (filters) {
+        const conditions = [];
+        
+        if (filters.userId) {
+          conditions.push(eq(auditLogs.userId, filters.userId));
+        }
+        
+        if (filters.action) {
+          conditions.push(eq(auditLogs.action, filters.action));
+        }
+        
+        if (filters.resource) {
+          conditions.push(eq(auditLogs.resource, filters.resource));
+        }
+        
+        if (filters.startDate) {
+          conditions.push(sql`${auditLogs.timestamp} >= ${filters.startDate}`);
+        }
+        
+        if (filters.endDate) {
+          conditions.push(sql`${auditLogs.timestamp} <= ${filters.endDate}`);
+        }
+        
+        // Apply all conditions
+        if (conditions.length > 0) {
+          query = query.where(and(...conditions));
+        }
+      }
+      
+      // Execute the query
+      const logs = await query;
+      return logs;
+    } catch (error) {
+      console.error('[Storage] Error getting audit logs:', error);
+      return [];
     }
   }
 }
