@@ -17,6 +17,7 @@ import { registerPrizeDrawingRoutes } from "./routes/prize-drawing-routes";
 import { registerTournamentDiscoveryRoutes } from "./routes/tournament-discovery-routes";
 import { registerGoldenTicketRoutes } from "./routes/golden-ticket-routes";
 import { registerEventRoutes } from "./routes/event-routes";
+import { registerPassportVerificationRoutes } from "./routes/passport-verification-routes";
 
 // Import necessary schema
 import { 
@@ -59,6 +60,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Register Event Check-in routes (PKL-278651-CONN-0003-EVENT)
   registerEventRoutes(app);
+  
+  // Register Passport Verification routes (PKL-278651-CONN-0004-PASS-ADMIN)
+  registerPassportVerificationRoutes(app);
   
   // API routes
   
