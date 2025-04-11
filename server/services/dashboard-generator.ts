@@ -225,7 +225,7 @@ export class DashboardGenerator {
       // Matches in current period
       const matchesCurrentPeriod = await db.select({ count: count() })
         .from(matches)
-        .where(gte(matches.matchDate, currentStartDate))
+        .where(sql`${matches.matchDate} >= ${currentStartDate}`)
         .execute()
         .then(result => result[0]?.count || 0);
       
@@ -233,10 +233,7 @@ export class DashboardGenerator {
       const matchesPreviousPeriod = await db.select({ count: count() })
         .from(matches)
         .where(
-          and(
-            gte(matches.matchDate, previousStartDate),
-            sql`${matches.matchDate} < ${currentStartDate}`
-          )
+          sql`${matches.matchDate} >= ${previousStartDate} AND ${matches.matchDate} < ${currentStartDate}`
         )
         .execute()
         .then(result => result[0]?.count || 0);
@@ -309,7 +306,7 @@ export class DashboardGenerator {
       // Events in current period
       const eventsCurrentPeriod = await db.select({ count: count() })
         .from(events)
-        .where(gte(events.startDateTime, currentStartDate.toISOString()))
+        .where(sql`${events.startDateTime} >= ${currentStartDate}`)
         .execute()
         .then(result => result[0]?.count || 0);
       
