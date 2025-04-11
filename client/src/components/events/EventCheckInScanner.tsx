@@ -209,7 +209,7 @@ export function EventCheckInScanner({
   const handleConfirmCheckIn = () => {
     if (!latestScan || !latestScan.userId) {
       toast({
-        title: "Check-in Error",
+        title: "PicklePass™ Error",
         description: "No valid user data found from QR scan.",
         variant: "destructive"
       });
@@ -250,7 +250,7 @@ export function EventCheckInScanner({
                 {latestScan.type === 'user-profile' && latestScan.username ? (
                   <p>Ready to check in user: <strong>{latestScan.username}</strong></p>
                 ) : (
-                  <p>Ready to process event check-in</p>
+                  <p>Ready to process PicklePass™ check-in</p>
                 )}
               </AlertDescription>
             </Alert>

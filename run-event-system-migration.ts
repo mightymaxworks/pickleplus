@@ -103,20 +103,20 @@ async function migratePicklePassSystem() {
       console.log("'event_check_ins' table already exists.");
     }
 
-    console.log("Event Check-in System migration completed successfully.");
+    console.log("PicklePass™ System migration completed successfully.");
   } catch (error) {
-    console.error("Error during Event Check-in System migration:", error);
+    console.error("Error during PicklePass™ System migration:", error);
     throw error;
   }
 }
 
 // Execute the migration
-migrateEventCheckInSystem()
+migratePicklePassSystem()
   .then(() => {
-    console.log("Event Check-in System migration script completed.");
+    console.log("PicklePass™ System migration script completed.");
     process.exit(0);
   })
   .catch((error) => {
-    console.error("Error in Event Check-in System migration script:", error);
+    console.error("Error in PicklePass™ System migration script:", error);
     process.exit(1);
   });
