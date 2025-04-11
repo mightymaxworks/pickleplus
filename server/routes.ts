@@ -16,6 +16,7 @@ import {
 import { registerPrizeDrawingRoutes } from "./routes/prize-drawing-routes";
 import { registerTournamentDiscoveryRoutes } from "./routes/tournament-discovery-routes";
 import { registerGoldenTicketRoutes } from "./routes/golden-ticket-routes";
+import { registerEventRoutes } from "./routes/event-routes";
 
 // Import necessary schema
 import { 
@@ -55,6 +56,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Register Golden Ticket routes (PKL-278651-GAME-0005-GOLD)
   registerGoldenTicketRoutes(app);
+  
+  // Register Event Check-in routes (PKL-278651-CONN-0003-EVENT)
+  registerEventRoutes(app);
   
   // API routes
   

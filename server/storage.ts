@@ -1417,8 +1417,26 @@ export class DatabaseStorage implements IStorage {
         throw new Error("Invalid event: missing required fields");
       }
       
+      // Ensure dates are properly parsed
+      const processedData = {
+        ...eventData,
+        startDateTime: new Date(eventData.startDateTime),
+        endDateTime: new Date(eventData.endDateTime)
+      };
+      
+      // Process optional dates if they exist
+      if (eventData.registrationStartDate) {
+        processedData.registrationStartDate = new Date(eventData.registrationStartDate);
+      }
+      
+      if (eventData.registrationEndDate) {
+        processedData.registrationEndDate = new Date(eventData.registrationEndDate);
+      }
+      
+      console.log(`[Storage] Inserting event with processed data:`, processedData);
+      
       const [result] = await db.insert(events)
-        .values(eventData)
+        .values(processedData)
         .returning();
       
       if (!result) {
