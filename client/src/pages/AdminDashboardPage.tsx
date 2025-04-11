@@ -1,16 +1,17 @@
 /**
- * PKL-278651-ADMIN-0009-MOBILE
- * Admin Dashboard Page
+ * PKL-278651-ADMIN-0012-PERF
+ * Admin Dashboard Page with Performance Optimizations
  * 
  * Main dashboard for the admin functionality displaying registered admin dashboard cards.
  * This page implements the responsive approach to render different layouts based on device type.
+ * Includes performance optimizations as part of PKL-278651-ADMIN-0012-PERF sprint.
  */
 
 import React from 'react';
 import ResponsiveAdminDashboard from '@/modules/admin/components/responsive/ResponsiveAdminDashboard';
 import { useAdminDashboardCards, useAdminQuickActions } from '@/modules/admin/hooks/useAdminComponents';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import CacheWarmer from '@/modules/admin/components/performance/CacheWarmer';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Clock, Users, Trophy, Calendar, Activity, BarChart2 } from 'lucide-react';
 
 export default function AdminDashboardPage() {
@@ -18,8 +19,15 @@ export default function AdminDashboardPage() {
   const dashboardCards = useAdminDashboardCards();
   const quickActions = useAdminQuickActions();
   
-  // Use the responsive component which will render either mobile or desktop version
-  return <ResponsiveAdminDashboard />;
+  return (
+    <>
+      {/* The CacheWarmer component proactively warms the cache for dashboard data */}
+      <CacheWarmer />
+      
+      {/* Use the responsive component which will render either mobile or desktop version */}
+      <ResponsiveAdminDashboard />
+    </>
+  );
 }
 
 interface DashboardStatCardProps {
