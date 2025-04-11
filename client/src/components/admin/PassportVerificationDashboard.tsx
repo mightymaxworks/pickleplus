@@ -125,7 +125,7 @@ const PassportVerificationDashboard: React.FC = () => {
       const endpoint = `/api/passport/logs${queryString ? `?${queryString}` : ''}`;
       
       const response = await apiRequest(endpoint);
-      return response as VerificationLog[];
+      return await response.json() as VerificationLog[];
     }
   });
 
@@ -134,7 +134,7 @@ const PassportVerificationDashboard: React.FC = () => {
     queryKey: ['/api/events'],
     queryFn: async () => {
       const response = await apiRequest('/api/events');
-      return response as Event[];
+      return await response.json() as Event[];
     }
   });
 
@@ -156,7 +156,7 @@ const PassportVerificationDashboard: React.FC = () => {
           eventId: eventId ? parseInt(eventId) : undefined
         })
       });
-      return response as VerificationResult;
+      return await response.json() as VerificationResult;
     },
     onSuccess: (data) => {
       if (data.valid) {

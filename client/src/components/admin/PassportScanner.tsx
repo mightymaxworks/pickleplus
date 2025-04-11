@@ -42,7 +42,7 @@ const PassportScanner: React.FC<PassportScannerProps> = ({ eventId, onSuccessful
           eventId
         })
       });
-      return response as VerificationResult;
+      return await response.json() as VerificationResult;
     },
     onSuccess: (data) => {
       setLastResult(data);
@@ -81,13 +81,11 @@ const PassportScanner: React.FC<PassportScannerProps> = ({ eventId, onSuccessful
         {
           fps: 10,
           qrbox: {
-            width: 250,
-            height: 250,
+            width: window.innerWidth < 480 ? 200 : 250,
+            height: window.innerWidth < 480 ? 200 : 250,
           },
           rememberLastUsedCamera: true,
-          supportedScanTypes: [
-            { format: 'qr_code', formatsToSupport: ['QR_CODE'] }
-          ],
+          aspectRatio: window.innerWidth < 480 ? 1.0 : 1.33,
         },
         /* verbose= */ false
       );
@@ -140,26 +138,27 @@ const PassportScanner: React.FC<PassportScannerProps> = ({ eventId, onSuccessful
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <Card>
-        <CardHeader>
-          <CardTitle>Passport Scanner</CardTitle>
-          <CardDescription>
+        <CardHeader className="pb-2 sm:pb-3">
+          <CardTitle className="text-lg sm:text-xl">Passport Scanner</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">
             Scan passport QR codes to verify attendees
             {eventId ? ' for this event' : ''}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-3">
             <Button 
               onClick={toggleScanner} 
               className="w-full"
+              size="lg"
               variant={scannerStarted ? "destructive" : "default"}
             >
               {scannerStarted ? "Stop Scanner" : "Start Scanner"}
             </Button>
             
-            <div id={scannerContainerId} className={`${scannerStarted ? 'block' : 'hidden'}`}>
+            <div id={scannerContainerId} className={`${scannerStarted ? 'block' : 'hidden'} mx-auto max-w-full`}>
               {/* Scanner will be rendered here */}
             </div>
           </div>
@@ -167,34 +166,34 @@ const PassportScanner: React.FC<PassportScannerProps> = ({ eventId, onSuccessful
       </Card>
       
       {lastResult && (
-        <Card className={lastResult.valid ? "border-green-500" : "border-red-500"}>
-          <CardHeader className={lastResult.valid ? "bg-green-100 text-green-900" : "bg-red-100 text-red-900"}>
-            <CardTitle className="flex items-center">
+        <Card className={`${lastResult.valid ? "border-green-500" : "border-red-500"} shadow-md`}>
+          <CardHeader className={`${lastResult.valid ? "bg-green-100 text-green-900" : "bg-red-100 text-red-900"} py-2 sm:py-3`}>
+            <CardTitle className="flex items-center text-base sm:text-lg">
               {lastResult.valid ? (
-                <><CheckCircle className="mr-2" /> Valid Passport</>
+                <><CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> Valid Passport</>
               ) : (
-                <><XCircle className="mr-2" /> Invalid Passport</>
+                <><XCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> Invalid Passport</>
               )}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 pt-4">
+          <CardContent className="space-y-3 pt-3 text-sm sm:text-base">
             {lastResult.valid ? (
               <>
                 <div className="flex items-center">
-                  <User className="w-5 h-5 mr-2" />
+                  <User className="w-4 h-4 sm:w-5 sm:h-5 mr-2 flex-shrink-0" />
                   <span className="font-medium">User:</span>
-                  <span className="ml-2">{lastResult.username || 'Unknown'}</span>
+                  <span className="ml-2 truncate">{lastResult.username || 'Unknown'}</span>
                 </div>
                 
                 {lastResult.events && lastResult.events.length > 0 && (
                   <div>
-                    <div className="flex items-center mb-2">
-                      <Calendar className="w-5 h-5 mr-2" />
+                    <div className="flex items-center mb-1">
+                      <Calendar className="w-4 h-4 sm:w-5 sm:h-5 mr-2 flex-shrink-0" />
                       <span className="font-medium">Registered Events:</span>
                     </div>
-                    <ul className="list-disc pl-10">
+                    <ul className="list-disc pl-8 space-y-1 text-xs sm:text-sm">
                       {lastResult.events.map((event: any) => (
-                        <li key={event.id}>{event.name}</li>
+                        <li key={event.id} className="truncate">{event.name}</li>
                       ))}
                     </ul>
                   </div>
@@ -202,8 +201,8 @@ const PassportScanner: React.FC<PassportScannerProps> = ({ eventId, onSuccessful
               </>
             ) : (
               <div className="flex items-center">
-                <AlertCircle className="w-5 h-5 mr-2 text-red-500" />
-                <span>{lastResult.message || 'Unknown error occurred'}</span>
+                <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-red-500 flex-shrink-0" />
+                <span className="text-sm">{lastResult.message || 'Unknown error occurred'}</span>
               </div>
             )}
           </CardContent>
