@@ -26,6 +26,7 @@ import AboutUs from './pages/AboutUs'
 import PrizeDrawingPage from './pages/admin/PrizeDrawingPage'
 import GoldenTicketAdmin from './pages/admin/GoldenTicketAdmin'
 import QRTestPage from './pages/dev/QRTestPage'
+import EventTestPage from './pages/events/EventTestPage'
 import NotFound from './pages/not-found'
 
 import { useAuth } from './hooks/useAuth'
@@ -140,6 +141,11 @@ export default function App() {
             
             {/* QR Code Development Test Page (PKL-278651-CONN-0002-QR) */}
             <Route path="/dev/qr-test" component={QRTestPage} />
+            
+            {/* Event Check-in System Test Page (PKL-278651-CONN-0003-EVENT) */}
+            <Route path="/events/test">
+              {(params) => <ProtectedRoute component={EventTestPage} path="/events/test" />}
+            </Route>
             
             {/* 404 Route */}
             <Route component={NotFound} />
