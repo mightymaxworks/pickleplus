@@ -31,7 +31,7 @@ router.post("/verify", isAuthenticated, isAdmin, async (req: Request, res: Respo
       verifiedBy: req.user!.id,
       status: result.valid ? 'valid' : 'invalid',
       message: result.message || null,
-      timestamp: new Date(),
+      deviceInfo: req.headers['user-agent'] || null,
       ipAddress: req.ip || null
     });
     

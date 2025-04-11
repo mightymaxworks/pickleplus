@@ -25,6 +25,7 @@ import TournamentDiscoveryPage from './pages/TournamentDiscoveryPage'
 import AboutUs from './pages/AboutUs'
 import PrizeDrawingPage from './pages/admin/PrizeDrawingPage'
 import GoldenTicketAdmin from './pages/admin/GoldenTicketAdmin'
+import PassportVerificationPage from './pages/admin/PassportVerificationPage'
 import QRTestPage from './pages/dev/QRTestPage'
 import EventTestPage from './pages/events/EventTestPage'
 import NotFound from './pages/not-found'
@@ -124,6 +125,9 @@ export default function App() {
             </Route>
             <Route path="/admin/golden-ticket">
               {(params) => <ProtectedRoute component={GoldenTicketAdmin} path="/admin/golden-ticket" />}
+            </Route>
+            <Route path="/admin/passport-verification">
+              {(params) => <ProtectedRoute component={PassportVerificationPage} path="/admin/passport-verification" />}
             </Route>
             
             {/* Leaderboard Route */}
