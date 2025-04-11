@@ -1,130 +1,112 @@
 /**
  * PKL-278651-ADMIN-0013-SEC
- * Admin Security Module
+ * Server Security Module
  * 
- * This module provides enhanced security features for the admin interface.
- * It follows PKL-278651 Framework 5.0 and modular architecture principles.
+ * This module provides security enhancements for the Pickle+ application
+ * including audit logging, rate limiting, CSRF protection, and security headers.
  */
 
-import { Express, Request, Response, NextFunction } from 'express';
-import NodeCache from 'node-cache';
-import crypto from 'crypto';
+import { Request, Response, NextFunction, Express } from 'express';
 import { storage } from '../storage';
+import crypto from 'crypto';
+import rateLimit from 'express-rate-limit';
 import { AuditAction, AuditResource } from '../../shared/schema/audit';
 
-// Cache for rate limiting and security purposes
-const securityCache = new NodeCache({ stdTTL: 60, checkperiod: 30 });
-
-/**
- * Rate limiting configuration
- */
-interface RateLimitConfig {
-  windowMs: number; // Time window in milliseconds
-  maxRequests: number; // Maximum number of requests allowed in the window
-  message: string; // Error message to return when rate limit is exceeded
-}
-
-// Different rate limit configurations based on endpoint sensitivity
-const rateLimitConfigs = {
-  default: { windowMs: 60 * 1000, maxRequests: 100, message: 'Too many requests, please try again later' },
-  auth: { windowMs: 15 * 60 * 1000, maxRequests: 5, message: 'Too many authentication attempts, please try again later' },
-  admin: { windowMs: 60 * 1000, maxRequests: 30, message: 'Rate limit exceeded for admin operations' },
-};
-
-/**
- * Simple in-memory rate limiter middleware
- * @param config Rate limit configuration
- */
-export function rateLimiter(config: RateLimitConfig = rateLimitConfigs.default) {
-  return (req: Request, res: Response, next: NextFunction) => {
-    const key = `ratelimit:${req.ip}:${req.path}`;
-    
-    // Get current requests for this IP and path
-    const current = securityCache.get<{ count: number, resetTime: number }>(key);
-    
-    if (!current) {
-      // First request, initialize counter
-      securityCache.set(key, { 
-        count: 1, 
-        resetTime: Date.now() + config.windowMs 
-      }, Math.ceil(config.windowMs / 1000));
-      return next();
-    }
-    
-    if (current.count >= config.maxRequests) {
-      // Rate limit exceeded
-      return res.status(429).json({ 
-        error: config.message,
-        retryAfter: Math.ceil((current.resetTime - Date.now()) / 1000)
-      });
-    }
-    
-    // Increment the counter
-    securityCache.set(key, {
-      count: current.count + 1,
-      resetTime: current.resetTime
-    }, Math.ceil((current.resetTime - Date.now()) / 1000));
-    
-    next();
-  };
-}
-
-/**
- * Audit log entry interface for internal use
- */
+// Type definitions
 export interface AuditLogEntry {
   timestamp: Date;
   userId: number;
   action: AuditAction;
   resource: AuditResource;
-  resourceId?: string;
+  resourceId?: string | null;
   ipAddress: string;
-  userAgent?: string;
-  statusCode?: number;
-  additionalData?: Record<string, any>;
+  userAgent?: string | null;
+  statusCode?: number | null;
+  additionalData?: any;
 }
+
+// Rate limit configurations
+export const rateLimitConfigs = {
+  // Authentication rate limits
+  auth: {
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10, // 10 requests per windowMs
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      status: 429,
+      message: 'Too many authentication attempts, please try again later.'
+    }
+  },
+  
+  // Admin endpoints rate limits
+  admin: {
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    max: 100, // 100 requests per windowMs
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      status: 429,
+      message: 'Rate limit exceeded for admin operations.'
+    }
+  },
+  
+  // API rate limits
+  api: {
+    windowMs: 60 * 1000, // 1 minute
+    max: 120, // 120 requests per minute
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      status: 429,
+      message: 'Too many requests, please try again later.'
+    }
+  }
+};
 
 /**
  * Create an audit log entry
- * @param entry Audit log entry data
  */
 export async function createAuditLog(entry: AuditLogEntry): Promise<void> {
   try {
-    // Log to console
-    console.log('[AUDIT]', JSON.stringify(entry));
-    
-    // Convert the audit log entry to the format expected by the database
-    const dbAuditLog = {
+    await storage.createAuditLog({
       timestamp: entry.timestamp,
       userId: entry.userId,
       action: entry.action,
       resource: entry.resource,
-      resourceId: entry.resourceId,
+      resourceId: entry.resourceId || null,
       ipAddress: entry.ipAddress,
-      userAgent: entry.userAgent || undefined,
-      statusCode: entry.statusCode,
-      additionalData: entry.additionalData
-    };
-    
-    // Store in the database
-    await storage.createAuditLog(dbAuditLog);
+      userAgent: entry.userAgent || null,
+      statusCode: entry.statusCode || null,
+      additionalData: entry.additionalData || null
+    });
   } catch (error) {
-    console.error('Error creating audit log:', error);
+    console.error('Failed to create audit log:', error);
   }
 }
 
 /**
- * Audit logging middleware for admin actions
- * @param action The action being performed
- * @param resource The resource being acted upon
+ * Create middleware for rate limiting
  */
-export function auditLog(action: AuditAction, resource: AuditResource) {
+export function rateLimiter(options: any) {
+  return rateLimit(options);
+}
+
+/**
+ * Create middleware for audit logging
+ */
+export function createAuditLogMiddleware(
+  action: AuditAction, 
+  resource: AuditResource,
+  resourceIdFn?: (req: Request) => string | null
+) {
   return (req: Request, res: Response, next: NextFunction) => {
-    // Capture information before response is sent
+    // Extract user ID from authenticated session
     const userId = req.user ? (req.user as any).id : null;
-    const resourceId = req.params.id;
     
-    // Only proceed if we have a user ID
+    // Get resource ID if function is provided
+    const resourceId = resourceIdFn ? resourceIdFn(req) : null;
+    
     if (userId) {
       // Store original send method
       const originalSend = res.send;

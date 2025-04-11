@@ -7,7 +7,8 @@ import {
 
 // PKL-278651-ADMIN-0013-SEC - Admin Security Enhancements
 import {
-  auditLogs, type AuditLog, type InsertAuditLog
+  auditLogs, type AuditLog, type InsertAuditLog,
+  AuditAction, AuditResource
 } from "@shared/schema/audit";
 
 // PKL-278651-MATCH-0002-XR - Enhanced Match Recording System
@@ -2230,8 +2231,19 @@ export class DatabaseStorage implements IStorage {
       console.log(`[Storage] Creating audit log entry: ${JSON.stringify(logEntry)}`);
       
       // Insert the audit log entry
-      const [entry] = await db.insert(auditLogs).values(logEntry).returning();
-      return entry;
+      const [entry] = await db.insert(auditLogs).values({
+        ...logEntry,
+        // Ensure correct types for enums
+        action: logEntry.action.toString(), 
+        resource: logEntry.resource.toString()
+      }).returning();
+      
+      return {
+        ...entry,
+        // Convert string values back to enum types
+        action: entry.action as AuditAction,
+        resource: entry.resource as AuditResource
+      };
     } catch (error) {
       console.error('[Storage] Error creating audit log:', error);
       // In case of error, return a minimum valid entry to avoid breaking the application flow
@@ -2239,13 +2251,13 @@ export class DatabaseStorage implements IStorage {
         id: 'error',
         timestamp: new Date(),
         userId: logEntry.userId,
-        action: logEntry.action as any,
-        resource: logEntry.resource as any,
+        action: logEntry.action,
+        resource: logEntry.resource,
         ipAddress: logEntry.ipAddress,
-        resourceId: null,
-        userAgent: null,
-        statusCode: null,
-        additionalData: null
+        resourceId: logEntry.resourceId || null,
+        userAgent: logEntry.userAgent || null,
+        statusCode: logEntry.statusCode || null,
+        additionalData: logEntry.additionalData || null
       } as AuditLog;
     }
   }
