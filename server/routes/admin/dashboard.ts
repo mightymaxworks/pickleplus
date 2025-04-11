@@ -12,6 +12,9 @@ import { createDashboardGenerator } from "../../services/dashboard-generator";
 import { DashboardTimePeriod } from "@shared/schema/admin/dashboard";
 import { ensureAdmin } from "../../middleware/auth";
 import { StorageInterface } from "../../storage";
+import { db } from "../../db";
+import { events } from "@shared/schema/events";
+import { sql } from "drizzle-orm";
 
 /**
  * Register admin dashboard routes
@@ -49,11 +52,21 @@ export function registerAdminDashboardRoutes(
         // Get dashboard data
         const dashboard = await dashboardGenerator.getDashboard(timePeriod);
 
+        // Get counts for dashboard metrics
+        const totalUsers = await storage.getUserCount();
+        const totalMatches = await storage.getMatchCount();
+        const totalEvents = await db.select({ count: sql`count(*)` })
+          .from(events)
+          .execute()
+          .then(result => Number(result[0]?.count) || 0)
+          .catch(() => 0);
+          
         // Return dashboard data
         return res.status(200).json({
           layout: dashboard,
-          totalUsers: await storage.getUserCount(),
-          totalMatches: await storage.getMatchCount(),
+          totalUsers,
+          totalMatches,
+          totalEvents,
           lastUpdated: new Date().toISOString()
         });
       } catch (error) {
