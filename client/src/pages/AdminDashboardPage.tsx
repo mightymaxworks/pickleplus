@@ -20,21 +20,21 @@ export default function AdminDashboardPage() {
     <AdminLayout title="Admin Dashboard">
       {/* Quick Actions Section */}
       {quickActions.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-lg font-medium mb-4 text-gray-700 dark:text-gray-300">
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-base sm:text-lg font-medium mb-3 sm:mb-4 text-gray-700 dark:text-gray-300">
             Quick Actions
           </h2>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
             {quickActions.map((action) => (
               <Button
                 key={action.id}
                 variant="outline"
                 size="sm"
                 onClick={action.onClick}
-                className="flex items-center"
+                className="flex items-center justify-center sm:justify-start w-full sm:w-auto h-14 sm:h-auto"
               >
-                <span className="mr-2">{action.icon}</span>
-                {action.label}
+                <span className="mr-2 flex-shrink-0">{action.icon}</span>
+                <span className="text-xs sm:text-sm">{action.label}</span>
               </Button>
             ))}
           </div>
@@ -43,14 +43,14 @@ export default function AdminDashboardPage() {
       
       {/* Dashboard Stats (These would be replaced by registered dashboard cards) */}
       {dashboardCards.length === 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {/* Default dashboard cards shown when no cards are registered */}
           <DashboardStatCard 
             title="Active Users" 
             value="2,849" 
             change="+12%" 
             description="Total active users" 
-            icon={<Users className="text-blue-500" />} 
+            icon={<Users className="text-blue-500 h-4 w-4 sm:h-5 sm:w-5" />} 
           />
           
           <DashboardStatCard 
@@ -58,7 +58,7 @@ export default function AdminDashboardPage() {
             value="8,392" 
             change="+5%" 
             description="Total matches recorded" 
-            icon={<Trophy className="text-amber-500" />} 
+            icon={<Trophy className="text-amber-500 h-4 w-4 sm:h-5 sm:w-5" />} 
           />
           
           <DashboardStatCard 
@@ -66,7 +66,7 @@ export default function AdminDashboardPage() {
             value="48" 
             change="+22%" 
             description="Scheduled events" 
-            icon={<Calendar className="text-green-500" />} 
+            icon={<Calendar className="text-green-500 h-4 w-4 sm:h-5 sm:w-5" />} 
           />
           
           <DashboardStatCard 
@@ -74,7 +74,7 @@ export default function AdminDashboardPage() {
             value="12" 
             change="+3" 
             description="Currently running tournaments" 
-            icon={<Trophy className="text-purple-500" />} 
+            icon={<Trophy className="text-purple-500 h-4 w-4 sm:h-5 sm:w-5" />} 
           />
           
           <DashboardStatCard 
@@ -82,7 +82,7 @@ export default function AdminDashboardPage() {
             value="24m 32s" 
             change="+2m" 
             description="Time spent in app" 
-            icon={<Clock className="text-indigo-500" />} 
+            icon={<Clock className="text-indigo-500 h-4 w-4 sm:h-5 sm:w-5" />} 
           />
           
           <DashboardStatCard 
@@ -90,24 +90,24 @@ export default function AdminDashboardPage() {
             value="99.8%" 
             change="+0.2%" 
             description="Overall system availability" 
-            icon={<Activity className="text-emerald-500" />} 
+            icon={<Activity className="text-emerald-500 h-4 w-4 sm:h-5 sm:w-5" />} 
           />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {dashboardCards.map((card) => {
             // Apply width styles based on the card's width property
             const widthClasses = {
-              'full': 'col-span-1 md:col-span-2 lg:col-span-3',
-              'half': 'col-span-1 md:col-span-1 lg:col-span-2',
+              'full': 'col-span-1 sm:col-span-2 lg:col-span-3',
+              'half': 'col-span-1 sm:col-span-2 lg:col-span-2',
               'third': 'col-span-1'
             };
             
             // Apply height styles based on the card's height property
             const heightClasses = {
               'small': 'h-auto',
-              'medium': 'h-auto md:h-48',
-              'large': 'h-auto md:h-80'
+              'medium': 'h-auto sm:h-40 md:h-48',
+              'large': 'h-auto sm:h-60 md:h-80'
             };
             
             return (
@@ -130,21 +130,21 @@ export default function AdminDashboardPage() {
       )}
       
       {/* Admin Activity Feed */}
-      <div className="mt-8">
+      <div className="mt-6 sm:mt-8">
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <BarChart2 className="mr-2 h-5 w-5 text-[#FF5722]" />
+          <CardHeader className="pb-2 sm:pb-3">
+            <CardTitle className="flex items-center text-base sm:text-lg">
+              <BarChart2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 text-[#FF5722]" />
               Recent Admin Activity
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs sm:text-sm">
               Latest administrative actions in the system
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {/* This would be populated from an API call */}
-              <p className="text-gray-500 dark:text-gray-400 text-sm">
+              <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
                 No recent activity to display. Activity will appear here when administrators make changes.
               </p>
             </div>
@@ -167,24 +167,24 @@ function DashboardStatCard({ title, value, change, description, icon }: Dashboar
   const isPositive = change.startsWith('+');
   
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">
+    <Card className="h-full">
+      <CardHeader className="flex flex-row items-center justify-between pb-1 sm:pb-2">
+        <CardTitle className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
           {title}
         </CardTitle>
-        <div className="h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+        <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
           {icon}
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
           {value}
         </div>
-        <p className="text-xs flex items-center mt-1">
-          <span className={`${isPositive ? 'text-green-500' : 'text-red-500'} font-medium`}>
+        <p className="text-xs flex flex-wrap sm:flex-nowrap items-center mt-1">
+          <span className={`${isPositive ? 'text-green-500' : 'text-red-500'} font-medium mr-1`}>
             {change}
           </span>
-          <span className="text-gray-500 dark:text-gray-400 ml-1">
+          <span className="text-gray-500 dark:text-gray-400 text-[10px] sm:text-xs">
             {description}
           </span>
         </p>
