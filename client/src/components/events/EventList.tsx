@@ -84,23 +84,41 @@ export function EventList({
     queryFn: () => getUpcomingEvents(limit)
   });
   
-  // Get registration status for each event
-  const eventRegistrationQueries = events?.map(event => {
-    return useQuery({
-      queryKey: ['/api/events/registration-status', event.id],
-      queryFn: () => getEventRegistrationStatus(event.id),
-      // Don't refetch on window focus or periodically
-      refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000 // 5 minutes
-    });
-  }) || [];
+  // Use a single query for all events registration status
+  const { data: registrationStatusData, isLoading: isLoadingRegistrationStatus } = useQuery({
+    queryKey: ['/api/events/registration-status', events?.map(e => e.id).join(',')],
+    queryFn: async () => {
+      if (!events || events.length === 0) return {};
+      
+      // Create an object to store registration status for each event
+      const statuses: Record<number, boolean> = {};
+      
+      // Fetch registration status for each event
+      await Promise.all(
+        events.map(async (event) => {
+          try {
+            const status = await getEventRegistrationStatus(event.id);
+            statuses[event.id] = status;
+          } catch (error) {
+            console.error(`Failed to fetch registration status for event ${event.id}:`, error);
+            statuses[event.id] = false;
+          }
+        })
+      );
+      
+      return statuses;
+    },
+    enabled: !!events && events.length > 0,
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000 // 5 minutes
+  });
   
   // Map events to their registration status
-  const eventsWithRegistrationStatus = events?.map((event, index) => {
+  const eventsWithRegistrationStatus = events?.map(event => {
     return {
       ...event,
-      isRegistered: eventRegistrationQueries[index]?.data || false,
-      isLoadingStatus: eventRegistrationQueries[index]?.isLoading || false
+      isRegistered: registrationStatusData?.[event.id] || false,
+      isLoadingStatus: isLoadingRegistrationStatus
     };
   }) || [];
 
@@ -124,7 +142,7 @@ export function EventList({
       await registerForEvent(selectedEvent.id, registrationNotes);
       
       // Invalidate registration status query to refresh the UI
-      queryClient.invalidateQueries({ queryKey: ['/api/events/registration-status', selectedEvent.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/events/registration-status'] });
       
       // Show success toast
       toast({
@@ -153,7 +171,7 @@ export function EventList({
       await cancelEventRegistration(event.id);
       
       // Invalidate registration status query to refresh the UI
-      queryClient.invalidateQueries({ queryKey: ['/api/events/registration-status', event.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/events/registration-status'] });
       
       // Show success toast
       toast({
