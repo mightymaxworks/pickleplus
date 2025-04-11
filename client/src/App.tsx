@@ -152,6 +152,15 @@ export default function App() {
               )}
             </Route>
             
+            {/* Mobile Optimization Test Page (PKL-278651-ADMIN-0009-MOBILE) */}
+            <Route path="/admin/mobile-test">
+              {(params) => (
+                <AdminProtectedRoute>
+                  <MobileTestPage />
+                </AdminProtectedRoute>
+              )}
+            </Route>
+            
             {/* Leaderboard Route */}
             <Route path="/leaderboard">
               {(params) => <ProtectedRoute component={LeaderboardPage} path="/leaderboard" />}

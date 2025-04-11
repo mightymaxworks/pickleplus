@@ -11,6 +11,7 @@ import {
   passportVerificationCard, 
   passportVerificationView
 } from '../components/passport';
+import { AdminMobileTestNavItem } from '../components/mobile-test';
 
 /**
  * Register passport verification components
@@ -27,6 +28,14 @@ export function registerPassportVerificationComponents() {
 }
 
 /**
+ * Register mobile test components
+ */
+export function registerMobileTestComponents() {
+  // Register mobile test nav item
+  adminComponentRegistry.registerNavItem('admin', AdminMobileTestNavItem);
+}
+
+/**
  * Register all admin components
  */
 export function registerAllAdminComponents() {
@@ -34,6 +43,7 @@ export function registerAllAdminComponents() {
   
   // Register module-specific components
   registerPassportVerificationComponents();
+  registerMobileTestComponents();
   
   console.log('[Admin] Admin components registered');
 }
