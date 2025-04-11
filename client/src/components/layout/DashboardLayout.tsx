@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { MobileNavigation } from './MobileNavigation';
 import { User } from '@shared/schema';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, User as UserIcon, Menu, X, Search, Settings, Home, Calendar, Award, Users, LogOut, Shield } from 'lucide-react';
+import { Bell, User as UserIcon, Menu, X, Search, Settings, Home, Calendar, Award, Users, LogOut, Shield, Ticket } from 'lucide-react';
 import { PicklePlusNewLogo } from '../icons/PicklePlusNewLogo';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 
