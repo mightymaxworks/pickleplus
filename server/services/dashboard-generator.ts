@@ -60,6 +60,11 @@ export class DashboardGenerator {
     let currentLabel: string;
     let previousLabel: string;
     let currentEndDate: Date | undefined;
+    
+    // Helper function to create ISO string for SQL without time component
+    const formatDateForSql = (date: Date): string => {
+      return date.toISOString().split('T')[0];
+    };
 
     // Calculate date ranges based on time period
     switch (timePeriod) {
@@ -146,6 +151,8 @@ export class DashboardGenerator {
         previousLabel = "Last Month";
     }
 
+    // For SQL queries, we'll use formatted date strings - this prevents Date object
+    // issues with PostgreSQL when using prepared statements
     return {
       currentStartDate,
       previousStartDate,
@@ -168,6 +175,11 @@ export class DashboardGenerator {
   ): Promise<DashboardMetric[]> {
     const metrics: DashboardMetric[] = [];
     const { currentStartDate, previousStartDate, currentEndDate } = await this.getTimeComparison(timePeriod, startDate, endDate);
+    
+    // Format dates for SQL queries
+    const currentStartSql = currentStartDate.toISOString();
+    const previousStartSql = previousStartDate.toISOString();
+    const currentEndSql = currentEndDate?.toISOString();
 
     try {
       // Total users metric
