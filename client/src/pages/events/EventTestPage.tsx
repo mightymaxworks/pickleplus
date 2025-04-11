@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { TicketIcon, ScanIcon, UserCircle2Icon } from 'lucide-react';
+import { TicketIcon, UserCircle2Icon } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 
 // Components
@@ -40,12 +40,10 @@ const safeFormatDateTime = (dateString: any) => {
 
 export default function EventTestPage() {
   const { user } = useAuth();
-  const isAdmin = user?.isAdmin || false;
-
+  
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [activeTab, setActiveTab] = useState<string>('upcoming');
   const [showPassportDialog, setShowPassportDialog] = useState<boolean>(false);
-  const [showScannerDialog, setShowScannerDialog] = useState<boolean>(false);
   
   // Fetch the selected event details when an event is selected
   const { data: eventDetails } = useQuery({
@@ -169,31 +167,7 @@ export default function EventTestPage() {
                       </DialogContent>
                     </Dialog>
                     
-                    {/* Admin Scanner Dialog - Only visible to admins */}
-                    {isAdmin && (
-                      <Dialog open={showScannerDialog} onOpenChange={setShowScannerDialog}>
-                        <DialogTrigger asChild>
-                          <Button variant="secondary">
-                            <ScanIcon className="mr-2 h-4 w-4" />
-                            Scan Passport
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-md">
-                          <DialogHeader>
-                            <DialogTitle>PicklePass™ Scanner</DialogTitle>
-                            <DialogDescription>
-                              Scan a user's passport QR code to verify registration and check them in.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="mt-4">
-                            <EventCheckInScanner 
-                              eventId={selectedEvent.id} 
-                              onSuccess={() => setShowScannerDialog(false)} 
-                            />
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    )}
+                    {/* Admin functionality moved to admin dashboard */}
                   </div>
                 </div>
               </CardContent>

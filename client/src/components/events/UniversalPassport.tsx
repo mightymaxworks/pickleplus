@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
+import { QRCodeSVG } from 'qrcode.react';
 import { TicketIcon, ScanIcon, InfoIcon, CalendarDaysIcon, Copy } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -115,11 +116,11 @@ export function UniversalPassport({ className, onViewRegisteredEvents }: Univers
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center justify-center pt-4 pb-8">
-        {/* QR Code Display - Simplified version without QRCode library */}
+        {/* QR Code Display */}
         <motion.div
           className={cn(
-            "p-4 rounded-xl border-2 border-dashed bg-muted flex flex-col items-center justify-center",
-            highlightCode && "border-primary bg-primary/5"
+            "p-4 rounded-xl border-2 border-transparent bg-white",
+            highlightCode && "border-primary"
           )}
           animate={{
             boxShadow: highlightCode 
@@ -128,16 +129,21 @@ export function UniversalPassport({ className, onViewRegisteredEvents }: Univers
           }}
           transition={{ duration: 1 }}
           whileHover={{ scale: 1.02 }}
-          style={{ width: '220px', height: '220px' }}
         >
-          <div className="bg-white p-3 rounded-lg mb-4">
-            <TicketIcon className="h-12 w-12 text-primary" />
-          </div>
-          <p className="text-center text-sm mb-2">Passport Code:</p>
-          <p className="text-center text-xl font-bold">{passportCode}</p>
-          <p className="text-center text-xs text-muted-foreground mt-4">
-            Show this code at check-in
-          </p>
+          {passportCode && (
+            <QRCodeSVG
+              value={`PICKLEPLUSKP-${passportCode}`}
+              size={220}
+              level="H"
+              includeMargin={true}
+              imageSettings={{
+                src: "/src/assets/pickle-plus-logo.png",
+                height: 36,
+                width: 36,
+                excavate: true,
+              }}
+            />
+          )}
         </motion.div>
         
         {/* Passport code display */}
