@@ -4,7 +4,7 @@
  */
 
 import { apiRequest } from '@/lib/queryClient';
-import { Event } from '../../../shared/schema/events';
+import type { Event } from '@shared/schema/events';
 
 /**
  * Get all upcoming events

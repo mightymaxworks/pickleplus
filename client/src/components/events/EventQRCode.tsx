@@ -6,7 +6,7 @@
 import React, { useMemo } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import type { Event } from '../../../shared/schema/events';
+import type { Event } from '@shared/schema/events';
 import { formatDate } from '@/lib/utils';
 
 interface EventQRCodeProps {

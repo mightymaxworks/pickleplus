@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDate, formatTime } from '@/lib/utils';
 import { getUpcomingEvents } from '@/lib/sdk/eventSDK';
-import { Event } from '../../../shared/schema/events';
+import type { Event } from '@shared/schema/events';
 import { cn } from '@/lib/utils';
 
 interface EventListProps {
