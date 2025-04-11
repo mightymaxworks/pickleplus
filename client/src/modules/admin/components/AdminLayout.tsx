@@ -290,7 +290,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
       </header>
       
       {/* Main Content with Sidebar */}
-      <div className="flex flex-1 container mx-auto px-4 py-4">
+      <div className="flex flex-1 container mx-auto px-2 sm:px-4 py-3 sm:py-4">
         {/* Admin Sidebar - Hidden on mobile */}
         {!isSmallScreen && (
           <div className="w-64 shrink-0 mr-6">
