@@ -8,7 +8,10 @@
 import { useEffect, useState } from 'react';
 import { adminModule } from '../index';
 import { AdminNavItem, AdminDashboardCard, AdminViewComponent, AdminQuickAction, AdminComponentType } from '../types';
-import { eventBus } from '@/core/events/eventBus';
+import { eventBus, Events } from '@/core/events/eventBus';
+
+// Access the exported admin module implementation
+const adminAPI = adminModule.exports as any;
 
 /**
  * Hook for accessing registered navigation items
@@ -19,11 +22,11 @@ export function useAdminNavItems(): AdminNavItem[] {
   
   useEffect(() => {
     // Get initial navigation items from the admin module
-    setNavItems(adminModule.getNavItems());
+    setNavItems(adminAPI.getNavItems());
     
     // Subscribe to navigation item registration events
-    const unsubscribe = eventBus.subscribe('admin:navItemRegistered', () => {
-      setNavItems(adminModule.getNavItems());
+    const unsubscribe = eventBus.subscribe(Events.ADMIN_NAV_UPDATED, () => {
+      setNavItems(adminAPI.getNavItems());
     });
     
     return () => {
@@ -43,11 +46,11 @@ export function useAdminDashboardCards(): AdminDashboardCard[] {
   
   useEffect(() => {
     // Get initial dashboard cards from the admin module
-    setDashboardCards(adminModule.getDashboardCards());
+    setDashboardCards(adminAPI.getDashboardCards());
     
     // Subscribe to dashboard card registration events
-    const unsubscribe = eventBus.subscribe('admin:dashboardCardRegistered', () => {
-      setDashboardCards(adminModule.getDashboardCards());
+    const unsubscribe = eventBus.subscribe(Events.ADMIN_DASHBOARD_UPDATED, () => {
+      setDashboardCards(adminAPI.getDashboardCards());
     });
     
     return () => {
@@ -67,11 +70,11 @@ export function useAdminViews(): AdminViewComponent[] {
   
   useEffect(() => {
     // Get initial admin views from the admin module
-    setAdminViews(adminModule.getAdminViews());
+    setAdminViews(adminAPI.getAdminViews());
     
     // Subscribe to admin view registration events
-    const unsubscribe = eventBus.subscribe('admin:viewRegistered', () => {
-      setAdminViews(adminModule.getAdminViews());
+    const unsubscribe = eventBus.subscribe(Events.ADMIN_VIEWS_UPDATED, () => {
+      setAdminViews(adminAPI.getAdminViews());
     });
     
     return () => {
@@ -91,11 +94,11 @@ export function useAdminQuickActions(): AdminQuickAction[] {
   
   useEffect(() => {
     // Get initial quick actions from the admin module
-    setQuickActions(adminModule.getQuickActions());
+    setQuickActions(adminAPI.getQuickActions());
     
     // Subscribe to quick action registration events
-    const unsubscribe = eventBus.subscribe('admin:quickActionRegistered', () => {
-      setQuickActions(adminModule.getQuickActions());
+    const unsubscribe = eventBus.subscribe(Events.ADMIN_ACTIONS_UPDATED, () => {
+      setQuickActions(adminAPI.getQuickActions());
     });
     
     return () => {
