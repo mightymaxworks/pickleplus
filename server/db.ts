@@ -6,6 +6,7 @@ import * as courtiqSchema from '../shared/courtiq-schema';
 import * as multiRankingSchema from '../shared/multi-dimensional-rankings';
 import * as prizeDrawingSchema from '../shared/prize-drawing.schema';
 import * as goldenTicketSchema from '../shared/golden-ticket.schema';
+import * as tournamentBracketSchema from '../shared/schema/tournament-brackets';
 
 // Create postgres connection
 const connectionString = process.env.DATABASE_URL!;
@@ -21,6 +22,7 @@ export const db = drizzle(client, {
     ...courtiqSchema,
     ...multiRankingSchema,
     ...prizeDrawingSchema,
-    ...goldenTicketSchema
+    ...goldenTicketSchema,
+    ...tournamentBracketSchema
   } 
 });

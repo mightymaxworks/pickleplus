@@ -26,6 +26,30 @@ import './match-statistics-schema';
 // Import event schema (PKL-278651-CONN-0003-EVENT - Event Check-in QR Code System)
 import { events, eventCheckIns, eventRegistrations, passportVerifications } from './schema/events';
 
+// Import tournament bracket schema (PKL-278651-TOURN-0001-BRCKT - Tournament Bracket System)
+import {
+  tournamentTeams,
+  tournamentBrackets,
+  tournamentRounds,
+  tournamentBracketMatches,
+  tournamentTeamsRelations,
+  tournamentBracketsRelations,
+  tournamentRoundsRelations,
+  tournamentBracketMatchesRelations,
+  insertTournamentTeamSchema,
+  insertTournamentBracketSchema,
+  insertTournamentRoundSchema,
+  insertTournamentBracketMatchSchema,
+  type TournamentTeam,
+  type InsertTournamentTeam,
+  type TournamentBracket,
+  type InsertTournamentBracket,
+  type TournamentRound,
+  type InsertTournamentRound,
+  type TournamentBracketMatch,
+  type InsertTournamentBracketMatch
+} from './schema/tournament-brackets';
+
 // User table
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
