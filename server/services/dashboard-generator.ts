@@ -300,9 +300,9 @@ export class DashboardGenerator {
       const matchesCurrentPeriod = await db.select({ count: count() })
         .from(matches)
         .where(
-          currentEndDate 
-            ? sql`${matches.matchDate} >= ${currentStartDate} AND ${matches.matchDate} <= ${currentEndDate}`
-            : sql`${matches.matchDate} >= ${currentStartDate}`
+          currentEndSql 
+            ? sql`${matches.matchDate} >= ${currentStartSql} AND ${matches.matchDate} <= ${currentEndSql}`
+            : sql`${matches.matchDate} >= ${currentStartSql}`
         )
         .execute()
         .then(result => result[0]?.count || 0);
@@ -311,7 +311,7 @@ export class DashboardGenerator {
       const matchesPreviousPeriod = await db.select({ count: count() })
         .from(matches)
         .where(
-          sql`${matches.matchDate} >= ${previousStartDate} AND ${matches.matchDate} < ${currentStartDate}`
+          sql`${matches.matchDate} >= ${previousStartSql} AND ${matches.matchDate} < ${currentStartSql}`
         )
         .execute()
         .then(result => result[0]?.count || 0);
@@ -379,6 +379,11 @@ export class DashboardGenerator {
   ): Promise<DashboardMetric[]> {
     const metrics: DashboardMetric[] = [];
     const { currentStartDate, previousStartDate, currentEndDate } = await this.getTimeComparison(timePeriod, startDate, endDate);
+    
+    // Format dates for SQL queries
+    const currentStartSql = currentStartDate.toISOString();
+    const previousStartSql = previousStartDate.toISOString();
+    const currentEndSql = currentEndDate?.toISOString();
 
     try {
       // Total events
@@ -391,9 +396,9 @@ export class DashboardGenerator {
       const eventsCurrentPeriod = await db.select({ count: count() })
         .from(events)
         .where(
-          currentEndDate 
-            ? sql`${events.startDateTime} >= ${currentStartDate} AND ${events.startDateTime} <= ${currentEndDate}`
-            : sql`${events.startDateTime} >= ${currentStartDate}`
+          currentEndSql 
+            ? sql`${events.startDateTime} >= ${currentStartSql} AND ${events.startDateTime} <= ${currentEndSql}`
+            : sql`${events.startDateTime} >= ${currentStartSql}`
         )
         .execute()
         .then(result => result[0]?.count || 0);
@@ -402,7 +407,7 @@ export class DashboardGenerator {
       const eventsPreviousPeriod = await db.select({ count: count() })
         .from(events)
         .where(
-          sql`${events.startDateTime} >= ${previousStartDate} AND ${events.startDateTime} < ${currentStartDate}`
+          sql`${events.startDateTime} >= ${previousStartSql} AND ${events.startDateTime} < ${currentStartSql}`
         )
         .execute()
         .then(result => result[0]?.count || 0);
@@ -412,9 +417,9 @@ export class DashboardGenerator {
         .from(eventCheckIns)
         .innerJoin(events, eq(eventCheckIns.eventId, events.id))
         .where(
-          currentEndDate 
-            ? sql`${events.startDateTime} >= ${currentStartDate} AND ${events.startDateTime} <= ${currentEndDate}`
-            : sql`${events.startDateTime} >= ${currentStartDate}`
+          currentEndSql 
+            ? sql`${events.startDateTime} >= ${currentStartSql} AND ${events.startDateTime} <= ${currentEndSql}`
+            : sql`${events.startDateTime} >= ${currentStartSql}`
         )
         .execute()
         .then(result => result[0]?.count || 0);
@@ -494,6 +499,11 @@ export class DashboardGenerator {
   ): Promise<DashboardMetric[]> {
     const metrics: DashboardMetric[] = [];
     const { currentStartDate, previousStartDate, currentEndDate } = await this.getTimeComparison(timePeriod, startDate, endDate);
+    
+    // Format dates for SQL queries
+    const currentStartSql = currentStartDate.toISOString();
+    const previousStartSql = previousStartDate.toISOString();
+    const currentEndSql = currentEndDate?.toISOString();
 
     try {
       // Calculate user-to-match ratio
@@ -547,14 +557,18 @@ export class DashboardGenerator {
    */
   private async getActiveUserCount(startDate: Date, endDate?: Date): Promise<number> {
     try {
+      // Format dates for SQL queries
+      const startDateSql = startDate.toISOString();
+      const endDateSql = endDate?.toISOString();
+      
       // Get user IDs from recent matches
       const activeUserIdsFromMatches = await db
         .selectDistinct({ userId: matches.playerOneId })
         .from(matches)
         .where(
-          endDate 
-            ? sql`${matches.matchDate} >= ${startDate} AND ${matches.matchDate} <= ${endDate}`
-            : sql`${matches.matchDate} >= ${startDate}`
+          endDateSql
+            ? sql`${matches.matchDate} >= ${startDateSql} AND ${matches.matchDate} <= ${endDateSql}`
+            : sql`${matches.matchDate} >= ${startDateSql}`
         )
         .execute()
         .then(results => results.map(r => r.userId));
@@ -565,9 +579,9 @@ export class DashboardGenerator {
         .from(eventCheckIns)
         .innerJoin(events, eq(eventCheckIns.eventId, events.id))
         .where(
-          endDate 
-            ? sql`${events.startDateTime} >= ${startDate} AND ${events.startDateTime} <= ${endDate}`
-            : sql`${events.startDateTime} >= ${startDate}`
+          endDateSql
+            ? sql`${events.startDateTime} >= ${startDateSql} AND ${events.startDateTime} <= ${endDateSql}`
+            : sql`${events.startDateTime} >= ${startDateSql}`
         )
         .execute()
         .then(results => results.map(r => r.userId));
@@ -697,6 +711,11 @@ export class DashboardGenerator {
     try {
       const { currentStartDate, previousStartDate, currentLabel, previousLabel, currentEndDate } = 
         await this.getTimeComparison(timePeriod, startDate, endDate);
+        
+      // Format dates for SQL queries
+      const currentStartSql = currentStartDate.toISOString();
+      const previousStartSql = previousStartDate.toISOString();
+      const currentEndSql = currentEndDate?.toISOString();
       
       // Configure time intervals based on the selected period
       let intervalFormat: string;
@@ -745,10 +764,14 @@ export class DashboardGenerator {
         const intervalStartDate = currentPeriodIntervals[i];
         const intervalEndDate = currentPeriodIntervals[i + 1];
         
+        // Format dates for SQL query
+        const intervalStartSql = intervalStartDate.toISOString();
+        const intervalEndSql = intervalEndDate.toISOString();
+        
         const userCount = await db.select({ total: count() })
           .from(users)
           .where(
-            sql`${users.createdAt} >= ${intervalStartDate} AND ${users.createdAt} < ${intervalEndDate}`
+            sql`${users.createdAt} >= ${intervalStartSql} AND ${users.createdAt} < ${intervalEndSql}`
           )
           .execute()
           .then(result => result[0]?.total || 0);
@@ -767,10 +790,14 @@ export class DashboardGenerator {
         const intervalStartDate = previousPeriodIntervals[i];
         const intervalEndDate = previousPeriodIntervals[i + 1];
         
+        // Format dates for SQL query
+        const intervalStartSql = intervalStartDate.toISOString();
+        const intervalEndSql = intervalEndDate.toISOString();
+        
         const userCount = await db.select({ total: count() })
           .from(users)
           .where(
-            sql`${users.createdAt} >= ${intervalStartDate} AND ${users.createdAt} < ${intervalEndDate}`
+            sql`${users.createdAt} >= ${intervalStartSql} AND ${users.createdAt} < ${intervalEndSql}`
           )
           .execute()
           .then(result => result[0]?.total || 0);
