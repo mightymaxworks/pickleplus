@@ -132,7 +132,7 @@ export type ReportConfig = z.infer<typeof reportConfigSchema>;
 export type ReportResponse = z.infer<typeof reportResponseSchema>;
 
 // Insert types (for creating new report configurations)
-export const insertReportConfigSchema = createInsertSchema(reportConfigSchema).omit({ 
+export const insertReportConfigSchema = reportConfigSchema.omit({ 
   id: true,
   createdAt: true,
   updatedAt: true
