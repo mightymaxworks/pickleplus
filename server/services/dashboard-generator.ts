@@ -683,7 +683,7 @@ export class DashboardGenerator {
   /**
    * Get system metrics for the dashboard
    */
-  private async getSystemMetrics(): Promise<DashboardMetric[]> {
+  public async getSystemMetrics(): Promise<DashboardMetric[]> {
     // Create cache key for system metrics - these don't depend on time period
     const cacheKey = 'system:metrics';
     
@@ -1123,7 +1123,7 @@ export class DashboardGenerator {
    * @param startDate - Start date for custom range (optional)
    * @param endDate - End date for custom range (optional)
    */
-  private async getDashboardWidgets(
+  public async getDashboardWidgets(
     timePeriod: DashboardTimePeriod,
     startDate?: string,
     endDate?: string
