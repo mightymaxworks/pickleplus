@@ -4,6 +4,9 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from './lib/queryClient'
 import { Toaster } from '@/components/ui/toaster'
 import { AuthProvider } from '@/hooks/useAuth'
+
+// Import admin module initialization
+import '@/modules/admin/init'
 import EnhancedLandingPage from './pages/EnhancedLandingPage'
 import EnhancedAuthPage from './pages/EnhancedAuthPage'
 import TestAuthPage from './pages/TestAuthPage'
@@ -32,6 +35,7 @@ import EventTestPage from './pages/events/EventTestPage'
 import NotFound from './pages/not-found'
 
 import { useAuth } from './hooks/useAuth'
+import AdminProtectedRoute from './components/admin/AdminProtectedRoute'
 
 // Protected route component
 function ProtectedRoute({ 
@@ -119,16 +123,32 @@ export default function App() {
               {(params) => <ProtectedRoute component={RecordMatchPage} path="/record-match" />}
             </Route>
             <Route path="/admin">
-              {(params) => <ProtectedRoute component={AdminDashboardPage} path="/admin" />}
+              {(params) => (
+                <AdminProtectedRoute>
+                  <AdminDashboardPage />
+                </AdminProtectedRoute>
+              )}
             </Route>
             <Route path="/admin/prize-drawing">
-              {(params) => <ProtectedRoute component={PrizeDrawingPage} path="/admin/prize-drawing" />}
+              {(params) => (
+                <AdminProtectedRoute>
+                  <PrizeDrawingPage />
+                </AdminProtectedRoute>
+              )}
             </Route>
             <Route path="/admin/golden-ticket">
-              {(params) => <ProtectedRoute component={GoldenTicketAdmin} path="/admin/golden-ticket" />}
+              {(params) => (
+                <AdminProtectedRoute>
+                  <GoldenTicketAdmin />
+                </AdminProtectedRoute>
+              )}
             </Route>
             <Route path="/admin/passport-verification">
-              {(params) => <ProtectedRoute component={PassportVerificationPage} path="/admin/passport-verification" />}
+              {(params) => (
+                <AdminProtectedRoute>
+                  <PassportVerificationPage />
+                </AdminProtectedRoute>
+              )}
             </Route>
             
             {/* Leaderboard Route */}

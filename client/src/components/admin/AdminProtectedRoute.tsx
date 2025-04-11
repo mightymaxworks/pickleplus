@@ -21,7 +21,7 @@ const AdminProtectedRoute: React.FC<AdminProtectedRouteProps> = ({ children }) =
   const [, navigate] = useLocation();
   
   // Check if user is authenticated and is an admin
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.isAdmin === true;
   
   if (isLoading) {
     return (
