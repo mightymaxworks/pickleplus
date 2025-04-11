@@ -37,6 +37,11 @@ import QRTestPage from './pages/dev/QRTestPage'
 import EventTestPage from './pages/events/EventTestPage'
 import NotFound from './pages/not-found'
 
+// Import tournament bracket pages
+import { TournamentManagementPage } from './core/modules/tournament/pages/TournamentManagementPage'
+import { TournamentDetailsPage } from './core/modules/tournament/pages/TournamentDetailsPage'
+import { BracketDetailsPage } from './core/modules/tournament/pages/BracketDetailsPage'
+
 import { useAuth } from './hooks/useAuth'
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute'
 
@@ -93,8 +98,18 @@ export default function App() {
             <Route path="/matches">
               {(params) => <ProtectedRoute component={ModernizedMatchPage} path="/matches" />}
             </Route>
-            <Route path="/tournaments">
+            {/* Tournament routes */}
+            <Route path="/tournaments" exact>
               {(params) => <ProtectedRoute component={TournamentDiscoveryPage} path="/tournaments" />}
+            </Route>
+            <Route path="/tournaments/manage">
+              {(params) => <ProtectedRoute component={TournamentManagementPage} path="/tournaments/manage" />}
+            </Route>
+            <Route path="/tournaments/:id">
+              {(params) => <ProtectedRoute component={TournamentDetailsPage} path={`/tournaments/${params.id}`} />}
+            </Route>
+            <Route path="/brackets/:id">
+              {(params) => <ProtectedRoute component={BracketDetailsPage} path={`/brackets/${params.id}`} />}
             </Route>
             <Route path="/training">
               {(params) => <ProtectedRoute component={Dashboard} path="/training" />}
