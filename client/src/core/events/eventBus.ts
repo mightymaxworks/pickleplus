@@ -85,4 +85,11 @@ export const Events = {
   REDEMPTION_CODE_CREATED: 'admin:redemption_code_created',
   REDEMPTION_CODE_UPDATED: 'admin:redemption_code_updated',
   FEATURE_FLAG_UPDATED: 'admin:feature_flag_updated',
+  
+  // PKL-278651-ADMIN-0001-CORE: Admin component registration events
+  ADMIN_NAV_UPDATED: 'admin:nav_updated',
+  ADMIN_DASHBOARD_UPDATED: 'admin:dashboard_updated',
+  ADMIN_VIEWS_UPDATED: 'admin:views_updated',
+  ADMIN_ACTIONS_UPDATED: 'admin:actions_updated',
+  ADMIN_COMPONENTS_UNREGISTERED: 'admin:components_unregistered',
 };
