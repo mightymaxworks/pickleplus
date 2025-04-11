@@ -151,9 +151,9 @@ export default function AboutUs() {
                   <div className="relative pl-8 space-y-8 before:absolute before:left-2.5 before:top-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-[#FF5722] before:via-[#2196F3] before:to-[#4CAF50]">
                     <TimelineItem 
                       icon={<Calendar size={16} />} 
-                      date="February 2025" 
-                      title="Founding & Launch" 
-                      description="Pickle+ platform officially launched with passport system and core match recording"
+                      date="July 2024 - February 2025" 
+                      title="Founding & Development" 
+                      description="Core architecture development begins, establishing foundation for the Pickle+ platform"
                       iconBg="#FF5722" 
                     />
                     <TimelineItem 
@@ -178,11 +178,18 @@ export default function AboutUs() {
                       iconBg="#4CAF50"
                     />
                     <TimelineItem 
+                      icon={<Zap size={16} />} 
+                      date="April 2025" 
+                      title="Official Launch" 
+                      description="Pickle+ platform officially launched with passport system and core match recording"
+                      iconBg="#FF9800"
+                    />
+                    <TimelineItem 
                       icon={<TrendingUp size={16} />} 
                       date="Coming Soon" 
                       title="What's Next..." 
                       description="New features and enhancements based on community feedback"
-                      iconBg="#FF9800"
+                      iconBg="#9C27B0"
                       isLast={true}
                     />
                   </div>
@@ -233,67 +240,6 @@ export default function AboutUs() {
               description="We're committed to constant evolution, regularly introducing new features based on player feedback and emerging technologies."
               color="#4CAF50"
             />
-          </div>
-        </div>
-      </section>
-      
-      {/* Team Section */}
-      <section className="py-16 sm:py-24">
-        <div className="container mx-auto px-4 sm:px-6">
-          <motion.div 
-            className="text-center mb-12 sm:mb-16"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="inline-flex items-center bg-[#4CAF50]/10 rounded-full px-4 py-1.5 mb-4">
-              <span className="flex h-2 w-2 rounded-full bg-[#4CAF50] mr-2"></span>
-              <span className="text-sm font-medium text-[#4CAF50]">Meet The Team</span>
-            </div>
-            
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">The People Behind Pickle+</h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Our diverse team combines expertise in data science, software development, 
-              and a deep passion for pickleball.
-            </p>
-          </motion.div>
-          
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
-            <TeamMember 
-              name="Alex Morgan" 
-              role="Co-Founder & CEO" 
-              bio="Former pro player turned tech entrepreneur with a vision to transform player development."
-              initial="AM"
-              bgColor="#FF5722"
-            />
-            <TeamMember 
-              name="Jordan Chen" 
-              role="CTO" 
-              bio="AI and data science expert who architected the CourtIQ™ Intelligence System."
-              initial="JC"
-              bgColor="#2196F3"
-            />
-            <TeamMember 
-              name="Taylor Rodriguez" 
-              role="Head of Product" 
-              bio="UX specialist focused on creating intuitive interfaces for players of all levels."
-              initial="TR"
-              bgColor="#673AB7"
-            />
-            <TeamMember 
-              name="Casey Wilson" 
-              role="Community Director" 
-              bio="Tournament director and community builder who ensures Pickle+ meets real player needs."
-              initial="CW"
-              bgColor="#4CAF50"
-            />
-          </div>
-          
-          <div className="mt-12 text-center">
-            <Button variant="outline" className="text-[#673AB7] border-[#673AB7] hover:bg-[#673AB7]/10">
-              Join Our Team <ChevronRight className="ml-1 h-4 w-4" />
-            </Button>
           </div>
         </div>
       </section>
