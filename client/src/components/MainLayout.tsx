@@ -52,7 +52,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         ...baseNavigationItems,
         { 
           name: 'Admin Dashboard', 
-          path: '/admin/dashboard', 
+          path: '/admin', 
           icon: <Shield className="h-5 w-5 text-rose-500" /> 
         },
       ] 
