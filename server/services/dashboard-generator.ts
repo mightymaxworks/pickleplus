@@ -188,7 +188,11 @@ export class DashboardGenerator {
       // New users in current period
       const newUsersCurrentPeriod = await db.select({ count: count() })
         .from(users)
-        .where(gte(users.createdAt, currentStartDate))
+        .where(
+          currentEndSql
+            ? sql`${users.createdAt} >= ${currentStartSql} AND ${users.createdAt} <= ${currentEndSql}`
+            : sql`${users.createdAt} >= ${currentStartSql}`
+        )
         .execute()
         .then(result => result[0]?.count || 0);
       
@@ -196,10 +200,7 @@ export class DashboardGenerator {
       const newUsersPreviousPeriod = await db.select({ count: count() })
         .from(users)
         .where(
-          and(
-            gte(users.createdAt, previousStartDate),
-            sql`${users.createdAt} < ${currentStartDate}`
-          )
+          sql`${users.createdAt} >= ${previousStartSql} AND ${users.createdAt} < ${currentStartSql}`
         )
         .execute()
         .then(result => result[0]?.count || 0);
@@ -282,6 +283,11 @@ export class DashboardGenerator {
   ): Promise<DashboardMetric[]> {
     const metrics: DashboardMetric[] = [];
     const { currentStartDate, previousStartDate, currentEndDate } = await this.getTimeComparison(timePeriod, startDate, endDate);
+    
+    // Format dates for SQL queries
+    const currentStartSql = currentStartDate.toISOString();
+    const previousStartSql = previousStartDate.toISOString();
+    const currentEndSql = currentEndDate?.toISOString();
 
     try {
       // Total matches metric
