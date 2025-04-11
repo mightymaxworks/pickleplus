@@ -211,8 +211,8 @@ const PassportVerificationDashboard: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Passport Verification Dashboard</h1>
+    <div className="container mx-auto px-2 sm:px-4 py-4">
+      <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Passport Verification Dashboard</h1>
       
       <Tabs defaultValue="verify" className="w-full">
         <TabsList className="grid grid-cols-3">
@@ -454,58 +454,60 @@ const PassportVerificationDashboard: React.FC = () => {
               
               {/* Responsive Table with horizontal scrolling for mobile */}
               <div className="rounded-md border overflow-hidden">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableCaption>Passport verification logs</TableCaption>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="whitespace-nowrap w-28">Date</TableHead>
-                        <TableHead className="whitespace-nowrap w-24">Passport</TableHead>
-                        <TableHead className="whitespace-nowrap w-28">User</TableHead>
-                        <TableHead className="whitespace-nowrap">Event</TableHead>
-                        <TableHead className="whitespace-nowrap w-20">Status</TableHead>
-                        <TableHead className="whitespace-nowrap">Message</TableHead>
-                        <TableHead className="whitespace-nowrap">Verified By</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {logsLoading ? (
+                <div className="overflow-x-auto -mx-4 sm:mx-0">
+                  <div className="min-w-[800px] px-4 sm:px-0">
+                    <Table>
+                      <TableCaption>Passport verification logs</TableCaption>
+                      <TableHeader>
                         <TableRow>
-                          <TableCell colSpan={7} className="text-center">Loading logs...</TableCell>
+                          <TableHead className="whitespace-nowrap w-24 sm:w-28">Date</TableHead>
+                          <TableHead className="whitespace-nowrap w-20 sm:w-24">Passport</TableHead>
+                          <TableHead className="whitespace-nowrap w-24 sm:w-28">User</TableHead>
+                          <TableHead className="whitespace-nowrap">Event</TableHead>
+                          <TableHead className="whitespace-nowrap w-16 sm:w-20">Status</TableHead>
+                          <TableHead className="whitespace-nowrap">Message</TableHead>
+                          <TableHead className="whitespace-nowrap">Verified By</TableHead>
                         </TableRow>
-                      ) : logs && logs.length > 0 ? (
-                        logs.map((log) => (
-                          <TableRow key={log.id}>
-                            <TableCell className="whitespace-nowrap text-xs">
-                              {log.timestamp ? format(new Date(log.timestamp), 'MM/dd/yy h:mm a') : 'N/A'}
-                            </TableCell>
-                            <TableCell className="font-mono text-xs">
-                              {log.passportCode}
-                            </TableCell>
-                            <TableCell className="whitespace-nowrap text-xs">
-                              {log.user ? `${log.user.displayName || log.user.username}` : log.userId || 'N/A'}
-                            </TableCell>
-                            <TableCell className="max-w-[150px] truncate text-xs">
-                              {log.event ? log.event.name : log.eventId || 'N/A'}
-                            </TableCell>
-                            <TableCell>
-                              {getStatusBadge(log.status)}
-                            </TableCell>
-                            <TableCell className="max-w-[150px] truncate text-xs">
-                              {log.message || '-'}
-                            </TableCell>
-                            <TableCell className="whitespace-nowrap text-xs">
-                              {log.admin ? log.admin.username : log.verifiedBy}
-                            </TableCell>
+                      </TableHeader>
+                      <TableBody>
+                        {logsLoading ? (
+                          <TableRow>
+                            <TableCell colSpan={7} className="text-center">Loading logs...</TableCell>
                           </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={7} className="text-center">No verification logs found</TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
+                        ) : logs && logs.length > 0 ? (
+                          logs.map((log) => (
+                            <TableRow key={log.id}>
+                              <TableCell className="whitespace-nowrap text-xs">
+                                {log.timestamp ? format(new Date(log.timestamp), 'MM/dd/yy h:mm a') : 'N/A'}
+                              </TableCell>
+                              <TableCell className="font-mono text-xs">
+                                {log.passportCode}
+                              </TableCell>
+                              <TableCell className="whitespace-nowrap text-xs">
+                                {log.user ? `${log.user.displayName || log.user.username}` : log.userId || 'N/A'}
+                              </TableCell>
+                              <TableCell className="max-w-[150px] truncate text-xs">
+                                {log.event ? log.event.name : log.eventId || 'N/A'}
+                              </TableCell>
+                              <TableCell>
+                                {getStatusBadge(log.status)}
+                              </TableCell>
+                              <TableCell className="max-w-[150px] truncate text-xs">
+                                {log.message || '-'}
+                              </TableCell>
+                              <TableCell className="whitespace-nowrap text-xs">
+                                {log.admin ? log.admin.username : log.verifiedBy}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={7} className="text-center">No verification logs found</TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </div>
               </div>
             </CardContent>
