@@ -13,12 +13,11 @@ import { ReportFilter } from "./ReportFilter";
 import { UserReports } from "./UserReports";
 import { MatchReports } from "./MatchReports";
 import { EngagementReports } from "./EngagementReports";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useToast } from "@/hooks/use-toast";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ResponsiveReportsDashboard } from "../responsive/ResponsiveReportsDashboard";
-import { DeviceType, getDeviceType } from "../../utils/deviceDetection";
+import { useIsSmallScreen } from "../../utils/deviceDetection";
 
 export function ReportsDashboard() {
   const [activeCategory, setActiveCategory] = useState<string>(ReportCategory.USER);
@@ -26,11 +25,11 @@ export function ReportsDashboard() {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   
-  const isMobile = useMediaQuery("(max-width: 768px)");
-  const deviceType = getDeviceType();
+  // Use the standardized device detection utility from our framework
+  const isSmallScreen = useIsSmallScreen();
   
-  // Use responsive component for mobile
-  if (deviceType === DeviceType.Mobile) {
+  // Use responsive component for mobile and tablet views
+  if (isSmallScreen) {
     return <ResponsiveReportsDashboard />;
   }
 

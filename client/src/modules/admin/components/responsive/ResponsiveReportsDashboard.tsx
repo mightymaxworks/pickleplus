@@ -3,6 +3,7 @@
  * Responsive Reports Dashboard
  * 
  * This component provides a mobile-optimized version of the reports dashboard
+ * following PKL-278651 Framework 5.0 and modular architecture principles
  */
 
 import { useState } from "react";
@@ -10,20 +11,30 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
-import { Download, ChevronDown, RefreshCw, Filter, Users, Activity, BarChart } from "lucide-react";
+import { Download, RefreshCw, Users, Activity, BarChart } from "lucide-react";
 import { ReportCategory, ReportTimePeriod } from "@shared/schema/admin/reports";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { UserReports } from "../reporting/UserReports";
 import { MatchReports } from "../reporting/MatchReports";
 import { EngagementReports } from "../reporting/EngagementReports";
+import { DeviceType, getResponsivePadding, getResponsiveFontSize, useIsMobile, useIsTablet } from "../../utils/deviceDetection";
 
 export function ResponsiveReportsDashboard() {
   const [activeCategory, setActiveCategory] = useState<string>(ReportCategory.USER);
   const [timePeriod, setTimePeriod] = useState<ReportTimePeriod>(ReportTimePeriod.MONTH);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  
+  // Use our framework's device detection utils
+  const isMobile = useIsMobile();
+  const isTablet = useIsTablet();
+  
+  // Determine device type for responsive styling
+  const deviceType = isMobile ? DeviceType.Mobile : isTablet ? DeviceType.Tablet : DeviceType.Desktop;
+  
+  // Get responsive styling based on device type
+  const padding = getResponsivePadding(deviceType);
   
   const handleTimePeriodChange = (value: string) => {
     setTimePeriod(value as ReportTimePeriod);
@@ -59,11 +70,15 @@ export function ResponsiveReportsDashboard() {
     }
   };
 
+  // Get heading font size based on device type
+  const headingFontSize = getResponsiveFontSize(deviceType, 'heading');
+  const bodyFontSize = getResponsiveFontSize(deviceType, 'body');
+  
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 ${padding}`}>
       <div className="flex flex-col gap-2">
-        <h2 className="text-2xl font-bold tracking-tight">Reports & Analytics</h2>
-        <p className="text-sm text-muted-foreground">Mobile-optimized view</p>
+        <h2 className={`${headingFontSize} font-bold tracking-tight`}>Reports & Analytics</h2>
+        <p className={`${bodyFontSize} text-muted-foreground`}>Mobile-optimized view</p>
       </div>
       
       {error && (
