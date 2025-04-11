@@ -253,7 +253,7 @@ router.post("/:id/check-in", isAuthenticated, async (req: Request, res: Response
     const isCheckedIn = await storage.isUserCheckedIntoEvent(eventId, userId);
     
     if (isCheckedIn) {
-      return res.status(400).json({ error: "User is already checked in to this event" });
+      return res.status(400).json({ error: "User already has a PicklePass™ for this event" });
     }
     
     // Create the check-in record
@@ -268,7 +268,7 @@ router.post("/:id/check-in", isAuthenticated, async (req: Request, res: Response
     res.status(201).json(checkIn);
   } catch (error) {
     console.error(`[API] Error checking in to event ${req.params.id}:`, error);
-    res.status(500).json({ error: "Server error checking in to event" });
+    res.status(500).json({ error: "Server error processing PicklePass™ check-in" });
   }
 });
 
@@ -285,7 +285,7 @@ router.get("/:id/check-in-status", isAuthenticated, async (req: Request, res: Re
     
     // If asking about another user, must be admin
     if (userId !== req.user!.id && !req.user!.isAdmin) {
-      return res.status(403).json({ error: "Not authorized to view other users' check-in status" });
+      return res.status(403).json({ error: "Not authorized to view other users' PicklePass™ status" });
     }
     
     // Check if the event exists
@@ -300,7 +300,7 @@ router.get("/:id/check-in-status", isAuthenticated, async (req: Request, res: Re
     res.json({ isCheckedIn });
   } catch (error) {
     console.error(`[API] Error checking check-in status for event ${req.params.id}:`, error);
-    res.status(500).json({ error: "Server error checking check-in status" });
+    res.status(500).json({ error: "Server error checking PicklePass™ status" });
   }
 });
 
@@ -342,7 +342,7 @@ router.get("/my/attended", isAuthenticated, async (req: Request, res: Response) 
     res.json(events);
   } catch (error) {
     console.error("[API] Error getting attended events:", error);
-    res.status(500).json({ error: "Server error getting attended events" });
+    res.status(500).json({ error: "Server error retrieving your PicklePass™ event history" });
   }
 });
 
