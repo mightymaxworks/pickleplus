@@ -22,6 +22,7 @@ import { LeaderboardPage } from './pages/LeaderboardPage'
 import LandingPageTest from './pages/LandingPageTest'
 import MasteryPathsPage from './pages/MasteryPathsPage'
 import TournamentDiscoveryPage from './pages/TournamentDiscoveryPage'
+import AboutUs from './pages/AboutUs'
 import PrizeDrawingPage from './pages/admin/PrizeDrawingPage'
 import GoldenTicketAdmin from './pages/admin/GoldenTicketAdmin'
 import NotFound from './pages/not-found'
@@ -70,6 +71,7 @@ export default function App() {
             <Route path="/login" component={EnhancedAuthPage} />
             <Route path="/register" component={EnhancedAuthPage} />
             <Route path="/auth" component={EnhancedAuthPage} />
+            <Route path="/about" component={AboutUs} />
             <Route path="/test-routing" component={TestRoutingPage} />
             <Route path="/landing-test" component={LandingPageTest} />
             

@@ -10,7 +10,7 @@ import {
   BarChart3,
   Sparkles
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { showGoldenTicket } from "@/core/modules/gamification/golden-ticket/api/goldenTicketApi";
 
@@ -61,7 +61,15 @@ export default function AboutUs() {
     <div className="about-us-page min-h-screen bg-white">
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-[#FF5722] to-[#FF9800] text-white py-16 sm:py-24 overflow-hidden">
-        <div className="absolute inset-0 bg-pattern opacity-10"></div>
+        <div className="absolute inset-0 opacity-10">
+          {/* Pattern background created with CSS */}
+          <div className="w-full h-full opacity-20" 
+            style={{ 
+              backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)', 
+              backgroundSize: '25px 25px' 
+            }}>
+          </div>
+        </div>
         <div className="container mx-auto px-4 sm:px-6 relative z-10">
           <motion.div 
             className="max-w-3xl mx-auto text-center"

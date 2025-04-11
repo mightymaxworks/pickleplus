@@ -121,6 +121,7 @@ export default function EnhancedLandingPage() {
               <a href="#features" className="text-white hover:text-white/90 font-medium text-xs sm:text-sm">Features</a>
               <a href="#technology" className="text-white hover:text-white/90 font-medium text-xs sm:text-sm">Technology</a>
               <a href="#founding" className="text-white hover:text-white/90 font-medium text-xs sm:text-sm">Founding Members</a>
+              <Link href="/about" className="text-white hover:text-white/90 font-medium text-xs sm:text-sm">About Us</Link>
             </nav>
           </div>
         </div>
@@ -266,7 +267,7 @@ export default function EnhancedLandingPage() {
             <div>
               <h4 className="font-bold text-lg mb-4">Company</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">About</a></li>
+                <li><Link href="/about" className="text-gray-400 hover:text-white transition-colors">About Us</Link></li>
                 <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Careers</a></li>
                 <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Privacy</a></li>
                 <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Terms</a></li>
