@@ -1388,11 +1388,14 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log(`[Storage] getUpcomingEvents called with limit: ${limit}`);
       
-      // Use SQL template literal for safe query construction
+      // Use SQL template literal for safe query construction with proper date formatting
       const now = new Date();
+      const formattedDate = now.toISOString();
+      
+      // Use SQL with formatted date string
       const upcomingEvents = await db.execute(sql`
         SELECT * FROM events 
-        WHERE (status = 'upcoming' OR end_date_time >= ${now}) 
+        WHERE (status = 'upcoming' OR end_date_time >= ${formattedDate}) 
         AND is_private = false 
         ORDER BY start_date_time ASC 
         LIMIT ${limit};
