@@ -601,7 +601,7 @@ router.post('/brackets/:id/seed', async (req, res) => {
       teams, 
       bracketSize, 
       seedOrder, 
-      method
+      method as 'manual' | 'rating_based' | 'random'
     );
     
     // Return success response

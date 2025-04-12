@@ -108,11 +108,19 @@ export function SeedTeamsDialog({
     enabled: !!tournamentId,
   });
   
-  // Seed teams mutation with Framework 5.0 comprehensive state synchronization
+  // PKL-278651-TOURN-0016-SEED: Enhanced seeding with proper API endpoint
   const { mutate, isPending, isError, error } = useMutation({
     mutationFn: async (data: {assignments: {[key: number]: number | null}, method: string}) => {
-      console.log(`[PKL-278651-TOURN-0015-SYNC] Saving team seeds for bracket ${bracketId}`);
-      const response = await apiRequest('POST', `/api/brackets/${bracketId}/seed`, data);
+      console.log(`[PKL-278651-TOURN-0016-SEED] Saving team seeds for bracket ${bracketId}`);
+      // Get CSRF token
+      const csrfResponse = await apiRequest('GET', `/api/security/csrf-token`);
+      const { csrfToken } = await csrfResponse.json();
+      
+      // Add CSRF token to request headers
+      const response = await apiRequest('POST', `/api/brackets/${bracketId}/seed`, {
+        ...data,
+        _csrf: csrfToken
+      });
       return response.json();
     },
     onSuccess: (response) => {
