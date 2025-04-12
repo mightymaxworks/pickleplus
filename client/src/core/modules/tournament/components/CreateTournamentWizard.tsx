@@ -16,6 +16,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
+import { useTournamentChanges } from '../context/TournamentChangeContext';
 import { 
   Dialog, 
   DialogContent, 
