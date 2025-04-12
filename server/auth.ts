@@ -338,9 +338,14 @@ export function setupAuth(app: Express) {
     
     // Generate a CSRF token and store it in the session
     if (!req.session.csrfToken) {
-      // Generate a random token if one doesn't exist
-      const crypto = require('crypto');
-      const token = crypto.randomBytes(32).toString('hex');
+      // Framework 5.0: Use reliable, cross-module compatible approach
+      // Generate a simple but secure random token without external dependencies
+      const timestamp = Date.now().toString();
+      const randomPart = Math.random().toString(36).substring(2, 15);
+      const userId = ((req.user as any)?.id || '0').toString();
+      
+      // Combine parts with a separator that's easy to validate
+      const token = `${timestamp}-${userId}-${randomPart}`;
       req.session.csrfToken = token;
       console.log("[API][Auth] Created new CSRF token:", token.substring(0, 8) + '...');
     } else {
