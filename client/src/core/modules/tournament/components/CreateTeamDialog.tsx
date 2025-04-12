@@ -82,35 +82,65 @@ export function CreateTeamDialog({ open, onOpenChange, tournamentId }: CreateTea
     defaultValues,
   });
   
+  // Framework 5.0: Enhanced player search with proper error handling
+  const playerSearchFetcher = async ({ queryKey }: { queryKey: string[] }) => {
+    const searchTerm = queryKey[1];
+    
+    if (!searchTerm || searchTerm.length < 2) {
+      console.log('[TeamDialog][Debug] Search term too short:', searchTerm);
+      return [];
+    }
+    
+    console.log(`[TeamDialog][Debug] Searching for players with query: "${searchTerm}"`);
+    
+    try {
+      // Framework 5.0: Use fetch directly with credentials for better debugging
+      const response = await fetch(`/api/users/search?q=${encodeURIComponent(searchTerm)}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Cache-Control': 'no-cache',
+        }
+      });
+      
+      console.log(`[TeamDialog][Debug] Search response status: ${response.status}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[TeamDialog][Debug] Search API error:`, errorText);
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
+      }
+      
+      const data = await response.json();
+      console.log(`[TeamDialog][Debug] Found ${data.length || 0} players matching "${searchTerm}"`);
+      
+      return data.map((user: any) => ({
+        id: user.id,
+        displayName: user.displayName || user.username,
+        username: user.username,
+        avatarUrl: user.avatarUrl,
+        avatarInitials: user.avatarInitials || user.displayName?.charAt(0) || user.username?.charAt(0) || '?',
+        rating: user.rating
+      }));
+    } catch (error) {
+      console.error('[TeamDialog][Debug] Player search error:', error);
+      throw error;
+    }
+  };
+  
   // Search for players
   const { 
-    data: searchResults, 
+    data: searchResults = [], 
     isLoading: isSearching,
-    isError: isSearchError
-  } = useQuery({
+    isError: isSearchError,
+    error: searchError
+  } = useQuery<User[]>({
     queryKey: ['/api/users/search', debouncedSearch],
+    queryFn: playerSearchFetcher,
     enabled: debouncedSearch.length >= 2 && open,
     retry: 1,
-    // Mock data for now - in a real implementation, this would call the API
-    queryFn: async () => {
-      // This is a placeholder for actual API call
-      // In a real implementation, this would be:
-      // return apiRequest(`/api/users/search?q=${debouncedSearch}`);
-      
-      // For this example, we'll return mock data after a delay to simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // This is mock data - in a real implementation, this would come from the API
-      return [
-        { id: 1, displayName: 'John Smith', username: 'johnsmith', avatarInitials: 'JS', rating: 4.5 },
-        { id: 2, displayName: 'Sarah Johnson', username: 'sarahj', avatarInitials: 'SJ', rating: 3.8 },
-        { id: 3, displayName: 'Mike Williams', username: 'mikew', avatarInitials: 'MW', rating: 5.2 },
-        { id: 4, displayName: 'Emily Davis', username: 'emilyd', avatarInitials: 'ED', rating: 4.0 },
-      ].filter(user => 
-        user.displayName.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        user.username.toLowerCase().includes(debouncedSearch.toLowerCase())
-      );
-    }
+    gcTime: 60 * 1000, // 1 minute
+    staleTime: 30 * 1000 // 30 seconds
   });
   
   const { mutate, isPending, isError, error } = useMutation({

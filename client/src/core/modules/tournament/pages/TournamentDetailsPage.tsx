@@ -289,19 +289,52 @@ export function TournamentDetailsPage() {
     );
   }
   
-  // Format tournament dates
-  const startDate = new Date(tournament.startDate);
-  const endDate = new Date(tournament.endDate);
+  // Format tournament dates - Framework 5.0: Safe date handling
+  const formatDateSafely = (dateInput: any) => {
+    try {
+      // First check if the date is valid
+      if (!dateInput) return null;
+      
+      const date = new Date(dateInput);
+      
+      // Check if the date is valid
+      if (isNaN(date.getTime())) {
+        console.error('[TournamentDetails][Debug] Invalid date:', dateInput);
+        return null;
+      }
+      
+      return date;
+    } catch (error) {
+      console.error('[TournamentDetails][Debug] Error parsing date:', error);
+      return null;
+    }
+  };
   
-  const formattedDateRange = startDate.toLocaleDateString() === endDate.toLocaleDateString()
-    ? format(startDate, 'MMMM d, yyyy')
-    : `${format(startDate, 'MMMM d')} - ${format(endDate, 'MMMM d, yyyy')}`;
+  const startDate = formatDateSafely(tournament?.startDate);
+  const endDate = formatDateSafely(tournament?.endDate);
+  
+  // Framework 5.0: Safe date formatting with fallbacks
+  let formattedDateRange = 'Date not specified';
+  
+  if (startDate && endDate) {
+    try {
+      const sameDay = startDate.toLocaleDateString() === endDate.toLocaleDateString();
+      formattedDateRange = sameDay 
+        ? format(startDate, 'MMMM d, yyyy')
+        : `${format(startDate, 'MMMM d')} - ${format(endDate, 'MMMM d, yyyy')}`;
+    } catch (error) {
+      console.error('[TournamentDetails][Debug] Error formatting date range:', error);
+      formattedDateRange = 'Invalid date format';
+    }
+  }
   
   const getTournamentStatusBadge = () => {
     const now = new Date();
-    const isUpcoming = startDate > now;
-    const isInProgress = startDate <= now && endDate >= now;
-    const isPast = endDate < now;
+    
+    // Framework 5.0: Safe comparison with null checks
+    const isUpcoming = startDate && startDate > now;
+    const isInProgress = startDate && endDate && startDate <= now && endDate >= now;
+    const isPast = endDate && endDate < now;
     
     if (isUpcoming) {
       return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Upcoming</Badge>;
