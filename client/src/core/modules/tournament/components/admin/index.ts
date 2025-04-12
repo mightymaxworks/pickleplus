@@ -6,15 +6,10 @@
  */
 
 import { AdminTournamentNavItem } from './AdminTournamentNavItem';
+import { adminModule } from '@/modules/admin';
 import { adminComponentRegistry } from '@/modules/admin/services/adminComponentRegistry';
 
-// Register admin components
 export function registerTournamentAdminComponents() {
-  // Register navigation item in the admin component registry
+  // Register the tournament navigation item in the admin sidebar
   adminComponentRegistry.registerNavItem('tournament', AdminTournamentNavItem);
-  
-  console.log("[Admin] Tournament management components registered");
 }
-
-// Auto-execute registration
-registerTournamentAdminComponents();

@@ -9,10 +9,8 @@ import { Trophy } from 'lucide-react';
 import { AdminNavItem } from '@/modules/admin/types';
 
 export const AdminTournamentNavItem: AdminNavItem = {
-  label: "Tournament Management",
-  path: "/admin/tournaments",
-  icon: <Trophy className="h-5 w-5" />,
-  order: 45, // Between reporting (30) and other items
+  label: 'Tournaments',
+  path: '/admin/tournaments',
+  icon: <Trophy size={18} />,
+  order: 50 // Position in the sidebar navigation
 };
-
-export default AdminTournamentNavItem;

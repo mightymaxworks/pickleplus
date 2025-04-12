@@ -33,9 +33,13 @@ import { TeamsList } from '../components/TeamsList';
 import { CreateTeamDialog } from '../components/CreateTeamDialog';
 import { AdminLayout } from '@/modules/admin/components/AdminLayout';
 import { Tournament } from '@shared/schema';
+import { 
+  type TournamentTeam as Team,
+  type TournamentBracket as Bracket 
+} from '@shared/schema/tournament-brackets';
 
 export function TournamentDetailsPage() {
-  const [, params] = useRoute('/tournaments/:id');
+  const [, params] = useRoute('/admin/tournaments/:id');
   const tournamentId = params?.id ? parseInt(params.id) : null;
   
   const [activeTab, setActiveTab] = useState('overview');
@@ -44,10 +48,10 @@ export function TournamentDetailsPage() {
   
   // Fetch tournament details
   const { 
-    data: tournament, 
+    data: tournament = {} as Tournament, 
     isLoading: isLoadingTournament, 
     isError: isErrorTournament 
-  } = useQuery({
+  } = useQuery<Tournament>({
     queryKey: [`/api/tournaments/${tournamentId}`],
     enabled: !!tournamentId,
     retry: 1,
@@ -55,10 +59,10 @@ export function TournamentDetailsPage() {
   
   // Fetch tournament brackets
   const { 
-    data: brackets, 
+    data: brackets = [] as Bracket[], 
     isLoading: isLoadingBrackets, 
     isError: isErrorBrackets 
-  } = useQuery({
+  } = useQuery<Bracket[]>({
     queryKey: [`/api/tournaments/${tournamentId}/brackets`],
     enabled: !!tournamentId,
     retry: 1,
@@ -66,10 +70,10 @@ export function TournamentDetailsPage() {
   
   // Fetch tournament teams
   const { 
-    data: teams, 
+    data: teams = [] as Team[], 
     isLoading: isLoadingTeams, 
     isError: isErrorTeams 
-  } = useQuery({
+  } = useQuery<Team[]>({
     queryKey: [`/api/tournaments/${tournamentId}/teams`],
     enabled: !!tournamentId,
     retry: 1,
@@ -78,31 +82,35 @@ export function TournamentDetailsPage() {
   // Loading state
   if (isLoadingTournament) {
     return (
-      <LayoutContainer className="max-w-6xl">
-        <div className="space-y-6">
-          <LoadingState />
-        </div>
-      </LayoutContainer>
+      <AdminLayout title="Tournament Details">
+        <LayoutContainer className="max-w-6xl">
+          <div className="space-y-6">
+            <LoadingState />
+          </div>
+        </LayoutContainer>
+      </AdminLayout>
     );
   }
   
   // Error state
   if (isErrorTournament || !tournament) {
     return (
-      <LayoutContainer className="max-w-6xl">
-        <div className="space-y-6">
-          <div className="flex items-center mb-6">
-            <Link to="/tournaments">
-              <Button variant="ghost" className="gap-1">
-                <ChevronLeft size={16} />
-                <span>Back to tournaments</span>
-              </Button>
-            </Link>
+      <AdminLayout title="Tournament Details">
+        <LayoutContainer className="max-w-6xl">
+          <div className="space-y-6">
+            <div className="flex items-center mb-6">
+              <Link to="/admin/tournaments">
+                <Button variant="ghost" className="gap-1">
+                  <ChevronLeft size={16} />
+                  <span>Back to tournaments</span>
+                </Button>
+              </Link>
+            </div>
+            
+            <ErrorState message="Failed to load tournament details" />
           </div>
-          
-          <ErrorState message="Failed to load tournament details" />
-        </div>
-      </LayoutContainer>
+        </LayoutContainer>
+      </AdminLayout>
     );
   }
   
@@ -132,184 +140,186 @@ export function TournamentDetailsPage() {
   };
   
   return (
-    <LayoutContainer className="max-w-6xl">
-      <div className="space-y-6">
-        <div className="flex items-center mb-6">
-          <Link to="/tournaments">
-            <Button variant="ghost" className="gap-1">
-              <ChevronLeft size={16} />
-              <span>Back to tournaments</span>
-            </Button>
-          </Link>
-        </div>
+    <AdminLayout title={tournament.name || "Tournament Details"}>
+      <LayoutContainer className="max-w-6xl">
+        <div className="space-y-6">
+          <div className="flex items-center mb-6">
+            <Link to="/admin/tournaments">
+              <Button variant="ghost" className="gap-1">
+                <ChevronLeft size={16} />
+                <span>Back to tournaments</span>
+              </Button>
+            </Link>
+          </div>
         
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight">{tournament.name}</h1>
-              {getTournamentStatusBadge()}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-bold tracking-tight">{tournament.name}</h1>
+                {getTournamentStatusBadge()}
+              </div>
+              <p className="text-muted-foreground mt-1">
+                {tournament.description}
+              </p>
             </div>
-            <p className="text-muted-foreground mt-1">
-              {tournament.description}
-            </p>
           </div>
-        </div>
         
-        <div className="flex flex-wrap gap-6 text-sm">
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <Calendar size={16} />
-            <span>{formattedDateRange}</span>
-          </div>
-          
-          {tournament.location && (
+          <div className="flex flex-wrap gap-6 text-sm">
             <div className="flex items-center gap-1 text-muted-foreground">
-              <MapPin size={16} />
-              <span>{tournament.location}</span>
+              <Calendar size={16} />
+              <span>{formattedDateRange}</span>
             </div>
-          )}
-          
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <Users size={16} />
-            <span>{teams?.length || 0} teams</span>
+            
+            {tournament.location && (
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <MapPin size={16} />
+                <span>{tournament.location}</span>
+              </div>
+            )}
+            
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <Users size={16} />
+              <span>{teams.length} teams</span>
+            </div>
+            
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <Trophy size={16} />
+              <span>{brackets.length} brackets</span>
+            </div>
           </div>
-          
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <Trophy size={16} />
-            <span>{brackets?.length || 0} brackets</span>
-          </div>
+        
+          <Tabs defaultValue="overview" onValueChange={setActiveTab} value={activeTab}>
+            <TabsList className="grid grid-cols-3 w-[400px]">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="brackets">Brackets</TabsTrigger>
+              <TabsTrigger value="teams">Teams</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="overview" className="mt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Trophy className="h-5 w-5 text-primary" />
+                      <span>Brackets</span>
+                    </CardTitle>
+                    <CardDescription>
+                      Create and manage tournament brackets
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground text-sm">
+                      {brackets.length} brackets created
+                    </p>
+                  </CardContent>
+                  <CardFooter>
+                    <Button onClick={() => setIsCreateBracketDialogOpen(true)}>
+                      Create Bracket
+                    </Button>
+                  </CardFooter>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5 text-primary" />
+                      <span>Teams</span>
+                    </CardTitle>
+                    <CardDescription>
+                      Register teams for the tournament
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground text-sm">
+                      {teams.length} teams registered
+                    </p>
+                  </CardContent>
+                  <CardFooter>
+                    <Button onClick={() => setIsCreateTeamDialogOpen(true)}>
+                      Add Team
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="brackets" className="mt-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold">Tournament Brackets</h2>
+                <Button onClick={() => setIsCreateBracketDialogOpen(true)}>
+                  Create Bracket
+                </Button>
+              </div>
+              
+              {isLoadingBrackets ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-20 w-full" />
+                </div>
+              ) : isErrorBrackets ? (
+                <ErrorState message="Failed to load brackets" />
+              ) : brackets.length ? (
+                <BracketsList brackets={brackets} tournamentId={tournamentId!} />
+              ) : (
+                <EmptyState 
+                  title="No brackets yet"
+                  description="Create your first bracket to organize matches"
+                  actionLabel="Create Bracket"
+                  onAction={() => setIsCreateBracketDialogOpen(true)}
+                  icon={<Trophy className="h-12 w-12 text-muted-foreground" />}
+                />
+              )}
+            </TabsContent>
+            
+            <TabsContent value="teams" className="mt-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold">Registered Teams</h2>
+                <Button onClick={() => setIsCreateTeamDialogOpen(true)}>
+                  Add Team
+                </Button>
+              </div>
+              
+              {isLoadingTeams ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-20 w-full" />
+                </div>
+              ) : isErrorTeams ? (
+                <ErrorState message="Failed to load teams" />
+              ) : teams.length ? (
+                <TeamsList teams={teams} tournamentId={tournamentId!} />
+              ) : (
+                <EmptyState 
+                  title="No teams registered"
+                  description="Add teams to participate in the tournament"
+                  actionLabel="Add Team"
+                  onAction={() => setIsCreateTeamDialogOpen(true)}
+                  icon={<Users className="h-12 w-12 text-muted-foreground" />}
+                />
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
         
-        <Tabs defaultValue="overview" onValueChange={setActiveTab} value={activeTab}>
-          <TabsList className="grid grid-cols-3 w-[400px]">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="brackets">Brackets</TabsTrigger>
-            <TabsTrigger value="teams">Teams</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="overview" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Trophy className="h-5 w-5 text-primary" />
-                    <span>Brackets</span>
-                  </CardTitle>
-                  <CardDescription>
-                    Create and manage tournament brackets
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground text-sm">
-                    {brackets?.length || 0} brackets created
-                  </p>
-                </CardContent>
-                <CardFooter>
-                  <Button onClick={() => setIsCreateBracketDialogOpen(true)}>
-                    Create Bracket
-                  </Button>
-                </CardFooter>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5 text-primary" />
-                    <span>Teams</span>
-                  </CardTitle>
-                  <CardDescription>
-                    Register teams for the tournament
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground text-sm">
-                    {teams?.length || 0} teams registered
-                  </p>
-                </CardContent>
-                <CardFooter>
-                  <Button onClick={() => setIsCreateTeamDialogOpen(true)}>
-                    Add Team
-                  </Button>
-                </CardFooter>
-              </Card>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="brackets" className="mt-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold">Tournament Brackets</h2>
-              <Button onClick={() => setIsCreateBracketDialogOpen(true)}>
-                Create Bracket
-              </Button>
-            </div>
+        {/* Dialogs */}
+        {tournamentId && (
+          <>
+            <CreateBracketDialog
+              open={isCreateBracketDialogOpen}
+              onOpenChange={setIsCreateBracketDialogOpen}
+              tournamentId={tournamentId}
+              teams={teams}
+            />
             
-            {isLoadingBrackets ? (
-              <div className="space-y-4">
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
-              </div>
-            ) : isErrorBrackets ? (
-              <ErrorState message="Failed to load brackets" />
-            ) : brackets?.length ? (
-              <BracketsList brackets={brackets} tournamentId={tournamentId} />
-            ) : (
-              <EmptyState 
-                title="No brackets yet"
-                description="Create your first bracket to organize matches"
-                actionLabel="Create Bracket"
-                onAction={() => setIsCreateBracketDialogOpen(true)}
-                icon={<Trophy className="h-12 w-12 text-muted-foreground" />}
-              />
-            )}
-          </TabsContent>
-          
-          <TabsContent value="teams" className="mt-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold">Registered Teams</h2>
-              <Button onClick={() => setIsCreateTeamDialogOpen(true)}>
-                Add Team
-              </Button>
-            </div>
-            
-            {isLoadingTeams ? (
-              <div className="space-y-4">
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
-              </div>
-            ) : isErrorTeams ? (
-              <ErrorState message="Failed to load teams" />
-            ) : teams?.length ? (
-              <TeamsList teams={teams} tournamentId={tournamentId} />
-            ) : (
-              <EmptyState 
-                title="No teams registered"
-                description="Add teams to participate in the tournament"
-                actionLabel="Add Team"
-                onAction={() => setIsCreateTeamDialogOpen(true)}
-                icon={<Users className="h-12 w-12 text-muted-foreground" />}
-              />
-            )}
-          </TabsContent>
-        </Tabs>
-      </div>
-      
-      {/* Dialogs */}
-      {tournamentId && (
-        <>
-          <CreateBracketDialog
-            open={isCreateBracketDialogOpen}
-            onOpenChange={setIsCreateBracketDialogOpen}
-            tournamentId={tournamentId}
-            teams={teams || []}
-          />
-          
-          <CreateTeamDialog
-            open={isCreateTeamDialogOpen}
-            onOpenChange={setIsCreateTeamDialogOpen}
-            tournamentId={tournamentId}
-          />
-        </>
-      )}
-    </LayoutContainer>
+            <CreateTeamDialog
+              open={isCreateTeamDialogOpen}
+              onOpenChange={setIsCreateTeamDialogOpen}
+              tournamentId={tournamentId}
+            />
+          </>
+        )}
+      </LayoutContainer>
+    </AdminLayout>
   );
 }
 
