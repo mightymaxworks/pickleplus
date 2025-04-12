@@ -74,7 +74,11 @@ export function RecordMatchResultDialog({
 }: RecordMatchResultDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [scoreData, setScoreData] = useState({ team1Score: 0, team2Score: 0, scoreFormat: "0-0" });
+  const [scoreData, setScoreData] = useState<{ team1Score: number; team2Score: number; scoreFormat?: string }>({ 
+    team1Score: 0, 
+    team2Score: 0, 
+    scoreFormat: "0-0" 
+  });
   const [selectedWinnerId, setSelectedWinnerId] = useState<number | null>(null);
   const queryClient = useQueryClient();
   const tournamentChanges = useTournamentChanges();
@@ -83,10 +87,28 @@ export function RecordMatchResultDialog({
   const form = useForm<MatchResultFormValues>({
     resolver: zodResolver(matchResultSchema),
     defaultValues: {
-      score: "",
+      score: "0-0",
       notes: "",
     },
   });
+  
+  // Handle winner selection from score component
+  const handleWinnerSelection = (winnerId: number) => {
+    setSelectedWinnerId(winnerId);
+    form.setValue("winnerId", winnerId);
+  };
+  
+  // Handle score data changes from visual component
+  const handleScoreChange = (newScoreData: { team1Score: number; team2Score: number; scoreFormat?: string }) => {
+    setScoreData(newScoreData);
+    
+    // Update the form's score field with formatted score
+    if (newScoreData.scoreFormat) {
+      form.setValue("score", newScoreData.scoreFormat);
+    } else {
+      form.setValue("score", `${newScoreData.team1Score}-${newScoreData.team2Score}`);
+    }
+  };
 
   // Record match result mutation using our enhanced API client
   const recordResultMutation = useMutation({
@@ -255,6 +277,31 @@ export function RecordMatchResultDialog({
       return;
     }
 
+    // Validate winner is selected
+    if (!data.winnerId) {
+      // Check if a winner can be determined from the score
+      const team1Score = scoreData.team1Score;
+      const team2Score = scoreData.team2Score;
+      
+      if (team1Score > team2Score && team1Score >= 21 && (team1Score - team2Score) >= 2) {
+        // Team 1 has won based on score
+        form.setValue("winnerId", team1.id);
+        data.winnerId = team1.id;
+      } else if (team2Score > team1Score && team2Score >= 21 && (team2Score - team1Score) >= 2) {
+        // Team 2 has won based on score
+        form.setValue("winnerId", team2.id);
+        data.winnerId = team2.id;
+      } else {
+        setError("Please select a winner or enter a valid winning score");
+        toast({
+          title: "Error",
+          description: "Please select a winner or enter a valid winning score",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     recordResultMutation.mutate(data);
   };
@@ -298,11 +345,12 @@ export function RecordMatchResultDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
           <DialogTitle>Record Match Result</DialogTitle>
           <DialogDescription>
             Enter the match result between {team1.teamName} and {team2.teamName}.
+            <span className="block mt-1 text-xs text-primary">Use visual score input to easily record the final score</span>
           </DialogDescription>
         </DialogHeader>
 
@@ -316,50 +364,47 @@ export function RecordMatchResultDialog({
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="winnerId"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel>Winner</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={(value) => field.onChange(parseInt(value))}
-                      defaultValue={field.value?.toString()}
-                      className="flex flex-col space-y-2"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value={team1.id.toString()} id="team1" />
-                        <label htmlFor="team1" className="font-medium">
-                          {team1.teamName}
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value={team2.id.toString()} id="team2" />
-                        <label htmlFor="team2" className="font-medium">
-                          {team2.teamName}
-                        </label>
-                      </div>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="score"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Score (e.g., "21-15, 18-21, 21-19")</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter match score" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Visual Score Input */}
+            <div className="mb-4">
+              <FormLabel className="mb-2 block">Match Score</FormLabel>
+              <TournamentMatchScoreInput
+                value={scoreData}
+                onChange={handleScoreChange}
+                team1Name={team1.teamName}
+                team2Name={team2.teamName}
+                team1Id={team1.id}
+                team2Id={team2.id}
+                onWinnerSelected={handleWinnerSelection}
+                pointsToWin={21}
+              />
+            </div>
+            
+            {/* Hidden form fields to hold the data */}
+            <div className="hidden">
+              <FormField
+                control={form.control}
+                name="winnerId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input {...field} type="hidden" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+  
+              <FormField
+                control={form.control}
+                name="score"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input {...field} type="hidden" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}
