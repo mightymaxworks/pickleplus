@@ -1,13 +1,14 @@
 /**
- * PKL-278651-TOURN-0003-MATCH / PKL-278651-TOURN-0003.1-API
- * Record Match Result Dialog Component
+ * PKL-278651-TOURN-0015-SYNC
+ * Record Match Result Dialog Component with Enhanced State Synchronization
  * 
- * Dialog for recording tournament match results, allowing score entry
- * and winner selection for a bracket match.
- * Updated to use enhanced API client with proper error handling.
+ * Dialog for recording tournament match results with comprehensive state synchronization
+ * mechanisms to ensure bracket visualization updates consistently across the system.
+ * Implements Framework 5.0 redundant update mechanisms with optimized cache invalidation.
  */
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { useTournamentChanges } from "../context/TournamentChangeContext";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -71,6 +72,7 @@ export function RecordMatchResultDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const tournamentChanges = useTournamentChanges();
 
   // Form setup with validation
   const form = useForm<MatchResultFormValues>({
@@ -103,30 +105,87 @@ export function RecordMatchResultDialog({
       // Use our enhanced API client function
       return recordMatchResult(matchId, resultData);
     },
-    onSuccess: () => {
-      // Framework 5.0: Use predicate-based cache invalidation
-      console.log('[RecordMatchResultDialog][PKL-278651-TOURN-0003.1-API] Match result recorded successfully');
+    onSuccess: (response) => {
+      // Framework 5.0 synchronized refresh mechanisms
+      console.log('[RecordMatchResultDialog][PKL-278651-TOURN-0015-SYNC] Match result recorded successfully');
       
-      // Invalidate all bracket-related queries
+      // Extract match data and bracket ID from response when available
+      const bracketId = typeof response === 'object' && response ? 
+        (response.bracketId || response.match?.bracketId) : null;
+      
+      // First independent refresh mechanism: Granular cache invalidation
+      // Invalidate all bracket-related queries with specific patterns
       queryClient.invalidateQueries({
         predicate: (query) => {
           const queryKey = query.queryKey;
-          return (
-            // Match specific bracket data
-            (Array.isArray(queryKey) && queryKey[0].toString().startsWith('bracket-')) ||
-            // Tournament brackets list
-            (Array.isArray(queryKey) && queryKey[0].toString().includes('/brackets')) ||
-            // For backward compatibility
-            queryKey.toString().includes('/brackets')
-          );
+          if (!queryKey) return false;
+          
+          // Deep inspection of query keys to ensure all cached data is properly refreshed
+          if (Array.isArray(queryKey)) {
+            // Check for bracket-specific formats
+            if (queryKey[0] && queryKey[0].toString().startsWith('bracket-')) {
+              return true;
+            }
+            
+            // Check for API endpoint formats
+            if (queryKey[0] && 
+                (queryKey[0].toString().includes('/brackets') || 
+                 queryKey[0].toString().includes('/tournaments'))) {
+              return true;
+            }
+            
+            // Check if this is specifically about our match
+            if (queryKey[0] && queryKey[0].toString().includes('/matches') && 
+                queryKey[1] && queryKey[1].toString() === matchId.toString()) {
+              return true;
+            }
+          } else {
+            // Legacy string-based query keys
+            return queryKey.toString().includes('/brackets') || 
+                   queryKey.toString().includes(`match-${matchId}`);
+          }
+          
+          return false;
         }
       });
       
+      // Second independent refresh mechanism: Direct bracket cache invalidation
+      if (bracketId) {
+        console.log(`[PKL-278651-TOURN-0015-SYNC] Directly invalidating cache for bracket ${bracketId}`);
+        queryClient.invalidateQueries({ queryKey: [`bracket-${bracketId}`] });
+        queryClient.invalidateQueries({ queryKey: ['/api/brackets', bracketId] });
+      }
+      
+      // Third independent refresh mechanism: Event-based notification
+      // Notify all components listening for match result changes
+      const eventData = {
+        matchId,
+        timestamp: Date.now(),
+        team1Id: team1?.id,
+        team2Id: team2?.id,
+        bracketId
+      };
+      
+      // Send notification through tournament change context
+      tournamentChanges.notifySpecificChange('match_result_recorded', bracketId, eventData);
+      
+      // Fourth mechanism: UI feedback
       toast({
         title: "Match result recorded",
         description: "The match result has been recorded successfully",
       });
       
+      // Fifth mechanism: Delayed secondary notification to handle race conditions
+      setTimeout(() => {
+        console.log(`[PKL-278651-TOURN-0015-SYNC] Sending delayed secondary notification for match ${matchId}`);
+        tournamentChanges.notifySpecificChange('match_result_recorded', bracketId, {
+          ...eventData,
+          timestamp: Date.now(),
+          isDelayedNotification: true
+        });
+      }, 300);
+      
+      // Clean up and notify parent
       form.reset();
       onOpenChange(false);
       onSuccess?.();
