@@ -10,6 +10,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import { TournamentMatch, TournamentRound, TournamentTeam, BracketData } from '../types';
 import { 
   Dialog, 
   DialogContent, 
@@ -182,14 +183,14 @@ export function SeedTeamsDialog({
   // Initialize team assignments based on existing bracket data
   useEffect(() => {
     if (bracketData?.matches) {
-      const initialAssignments: {[key: number]: number | null} = {};
+      const initialAssignments: {[key: string]: number | null} = {};
       
-      bracketData.matches.forEach(match => {
+      bracketData.matches.forEach((match: TournamentMatch) => {
         if (match.team1Id) {
-          initialAssignments[match.id + '-1'] = match.team1Id;
+          initialAssignments[`${match.id}-1`] = match.team1Id;
         }
         if (match.team2Id) {
-          initialAssignments[match.id + '-2'] = match.team2Id;
+          initialAssignments[`${match.id}-2`] = match.team2Id;
         }
       });
       
@@ -198,8 +199,8 @@ export function SeedTeamsDialog({
   }, [bracketData]);
   
   // Filter for first round matches only (for seeding)
-  const firstRoundMatches = bracketData?.matches?.filter(match => {
-    return bracketData.rounds.find(r => r.id === match.roundId)?.roundNumber === 1;
+  const firstRoundMatches = bracketData?.matches?.filter((match: TournamentMatch) => {
+    return bracketData.rounds.find((r: TournamentRound) => r.id === match.roundId)?.roundNumber === 1;
   }) || [];
   
   // Auto-generate seeds based on method
@@ -207,11 +208,16 @@ export function SeedTeamsDialog({
     setIsProcessing(true);
     
     // Create a copy of available teams
-    const availableTeams = [...(teamsData || [])];
+    const availableTeams = [...(teamsData || [])] as TournamentTeam[];
     
     if (seedMethod === 'rating') {
       // Sort by team rating (assuming teams have ratings)
-      availableTeams.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      // We need to use a safe type assertion for ratings since it's not in the base type
+      availableTeams.sort((a, b) => {
+        const ratingA = (a as any).rating || 0;
+        const ratingB = (b as any).rating || 0;
+        return ratingB - ratingA;
+      });
     } else if (seedMethod === 'random') {
       // Shuffle array
       for (let i = availableTeams.length - 1; i > 0; i--) {
@@ -220,19 +226,19 @@ export function SeedTeamsDialog({
       }
     }
     
-    // Create new assignments
-    const newAssignments: {[key: number]: number | null} = {};
+    // Create new assignments with string keys
+    const newAssignments: {[key: string]: number | null} = {};
     
     // Assign teams to first round matches
     let teamIndex = 0;
-    firstRoundMatches.forEach(match => {
+    firstRoundMatches.forEach((match: TournamentMatch) => {
       if (teamIndex < availableTeams.length) {
-        newAssignments[match.id + '-1'] = availableTeams[teamIndex].id;
+        newAssignments[`${match.id}-1`] = availableTeams[teamIndex].id;
         teamIndex++;
       }
       
       if (teamIndex < availableTeams.length) {
-        newAssignments[match.id + '-2'] = availableTeams[teamIndex].id;
+        newAssignments[`${match.id}-2`] = availableTeams[teamIndex].id;
         teamIndex++;
       }
     });
@@ -317,7 +323,7 @@ export function SeedTeamsDialog({
   }
   
   // Build team options list
-  const teamOptions: TeamOption[] = (teamsData || []).map(team => ({
+  const teamOptions: TeamOption[] = (teamsData || []).map((team: any) => ({
     id: team.id,
     teamName: team.teamName,
     players: `${team.playerOne?.displayName || 'TBD'} & ${team.playerTwo?.displayName || 'TBD'}`
@@ -410,7 +416,7 @@ export function SeedTeamsDialog({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {firstRoundMatches.map(match => (
+                {firstRoundMatches.map((match: TournamentMatch) => (
                   <TableRow key={match.id}>
                     <TableCell>Match {match.matchNumber}</TableCell>
                     <TableCell>
