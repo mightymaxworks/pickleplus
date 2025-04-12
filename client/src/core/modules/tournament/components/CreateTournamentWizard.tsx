@@ -275,29 +275,29 @@ const TournamentSchedulingStep = ({ form }: { form: ReturnType<typeof useForm<To
   return (
     <div className="space-y-4">
       <div className="space-y-2 mb-4">
-        <h3 className="text-lg font-medium">Schedule</h3>
-        <p className="text-sm text-muted-foreground">
+        <h3 className="text-base md:text-lg font-medium">Schedule</h3>
+        <p className="text-xs md:text-sm text-muted-foreground">
           Set the start and end dates for your tournament.
         </p>
       </div>
       
       {isEndDateBeforeStartDate && (
-        <Alert variant="destructive" className="mb-4">
+        <Alert variant="destructive" className="mb-4 text-xs md:text-sm">
           <CalendarIcon className="h-4 w-4" />
-          <AlertTitle>Invalid date range</AlertTitle>
-          <AlertDescription>
+          <AlertTitle className="text-sm">Invalid date range</AlertTitle>
+          <AlertDescription className="text-xs">
             End date cannot be before start date.
           </AlertDescription>
         </Alert>
       )}
       
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <FormField
           control={form.control}
           name="startDate"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Start Date*</FormLabel>
+              <FormLabel className="text-sm font-medium">Start Date*</FormLabel>
               <FormControl>
                 <Input
                   type="date"
@@ -316,13 +316,13 @@ const TournamentSchedulingStep = ({ form }: { form: ReturnType<typeof useForm<To
                     }
                   }}
                   min={new Date().toISOString().split('T')[0]}
-                  className="w-full"
+                  className="w-full h-10"
                 />
               </FormControl>
-              <FormDescription>
+              <FormDescription className="text-xs">
                 When the tournament begins
               </FormDescription>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
@@ -332,7 +332,7 @@ const TournamentSchedulingStep = ({ form }: { form: ReturnType<typeof useForm<To
           name="endDate"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>End Date*</FormLabel>
+              <FormLabel className="text-sm font-medium">End Date*</FormLabel>
               <FormControl>
                 <Input 
                   type="date"
@@ -347,29 +347,29 @@ const TournamentSchedulingStep = ({ form }: { form: ReturnType<typeof useForm<To
                   min={form.getValues("startDate") instanceof Date
                     ? form.getValues("startDate").toISOString().split('T')[0]
                     : new Date().toISOString().split('T')[0]}
-                  className="w-full"
+                  className="w-full h-10"
                 />
               </FormControl>
-              <FormDescription>
+              <FormDescription className="text-xs">
                 When the tournament concludes
               </FormDescription>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
       </div>
       
-      <div className="border rounded-md p-4 mt-4">
+      <div className="border rounded-md p-3 mt-4">
         <FormField
           control={form.control}
           name="registrationOpen"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-2 md:p-3">
               <div className="space-y-0.5">
-                <FormLabel className="text-base">
+                <FormLabel className="text-sm md:text-base font-medium">
                   Registration Status
                 </FormLabel>
-                <FormDescription>
+                <FormDescription className="text-xs">
                   Allow players to register for this tournament
                 </FormDescription>
               </div>
@@ -384,11 +384,11 @@ const TournamentSchedulingStep = ({ form }: { form: ReturnType<typeof useForm<To
         />
       </div>
       
-      <div className="mt-4 text-sm text-muted-foreground">
+      <div className="mt-4 text-xs md:text-sm text-muted-foreground">
         <p className="mb-2">
           <span className="font-semibold">Note:</span> After creating the tournament, you'll be able to:
         </p>
-        <ul className="list-disc list-inside space-y-1">
+        <ul className="list-disc list-inside space-y-1 text-xs md:text-sm">
           <li>Add participating teams</li>
           <li>Generate the tournament bracket</li>
           <li>Manage match schedules</li>
