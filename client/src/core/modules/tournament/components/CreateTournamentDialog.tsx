@@ -20,11 +20,18 @@ import {
   DialogTitle 
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Calendar as CalendarIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { toast } from '@/hooks/use-toast';
-import { DatePicker } from '@/components/ui/date-picker';
+import { format } from 'date-fns';
+import { 
+  Popover, 
+  PopoverContent, 
+  PopoverTrigger 
+} from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Tournament form schema
@@ -174,24 +181,42 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Start Date</FormLabel>
-                    <FormControl>
-                      <DatePicker
-                        date={field.value}
-                        setDate={(date) => {
-                          if (date) {
-                            field.onChange(date);
-                            
-                            // If end date is before the new start date, update end date
-                            const endDate = form.getValues("endDate");
-                            if (endDate && endDate < date) {
-                              form.setValue("endDate", date);
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            className="w-full pl-3 text-left font-normal"
+                            type="button"
+                          >
+                            {field.value ? (
+                              format(field.value, "MMM d, yyyy")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={(date) => {
+                            if (date) {
+                              field.onChange(date);
+                              
+                              // If end date is before the new start date, update end date
+                              const endDate = form.getValues("endDate");
+                              if (endDate && endDate < date) {
+                                form.setValue("endDate", date);
+                              }
                             }
-                          }
-                        }}
-                        label="Select start date"
-                        disableDatesBefore={new Date("1900-01-01")}
-                      />
-                    </FormControl>
+                          }}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -203,18 +228,40 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>End Date</FormLabel>
-                    <FormControl>
-                      <DatePicker
-                        date={field.value}
-                        setDate={(date) => {
-                          if (date) {
-                            field.onChange(date);
-                          }
-                        }}
-                        label="Select end date"
-                        disableDatesBefore={form.getValues("startDate") || new Date("1900-01-01")}
-                      />
-                    </FormControl>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            className="w-full pl-3 text-left font-normal"
+                            type="button"
+                          >
+                            {field.value ? (
+                              format(field.value, "MMM d, yyyy")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={(date) => {
+                            if (date) {
+                              field.onChange(date);
+                            }
+                          }}
+                          initialFocus
+                          disabled={(date) => {
+                            const startDate = form.getValues("startDate");
+                            return startDate ? date < startDate : false;
+                          }}
+                        />
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
