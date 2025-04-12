@@ -10,7 +10,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { toast } from '@/hooks/use-toast';
 import { 
   Dialog, 
   DialogContent, 
@@ -20,18 +20,9 @@ import {
   DialogTitle 
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Calendar as CalendarIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { toast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
-import { 
-  Popover, 
-  PopoverContent, 
-  PopoverTrigger 
-} from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Tournament form schema
@@ -74,7 +65,20 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (values: TournamentFormValues) => {
-      return apiRequest('POST', '/api/tournaments', values);
+      const response = await fetch('/api/tournaments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create tournament');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       // Reset form and close dialog
