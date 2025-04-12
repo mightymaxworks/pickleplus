@@ -2387,6 +2387,295 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
   }
+
+  // PKL-278651-TOURN-0001-BRCKT - Tournament Bracket System
+  // Tournament Bracket operations
+  async getBracketById(id: number): Promise<TournamentBracket | undefined> {
+    try {
+      const numericId = Number(id);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] getBracketById called with invalid ID: ${id}`);
+        return undefined;
+      }
+      
+      console.log(`[Storage] getBracketById called with ID: ${numericId}`);
+      
+      const [bracket] = await db.select()
+        .from(tournamentBrackets)
+        .where(eq(tournamentBrackets.id, numericId));
+      
+      return bracket;
+    } catch (error) {
+      console.error('[Storage] getBracketById error:', error);
+      return undefined;
+    }
+  }
+  
+  async getBracketsByTournament(tournamentId: number): Promise<TournamentBracket[]> {
+    try {
+      const numericId = Number(tournamentId);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] getBracketsByTournament called with invalid tournamentId: ${tournamentId}`);
+        return [];
+      }
+      
+      console.log(`[Storage] getBracketsByTournament called with tournamentId: ${numericId}`);
+      
+      const brackets = await db.select()
+        .from(tournamentBrackets)
+        .where(eq(tournamentBrackets.tournamentId, numericId))
+        .orderBy(asc(tournamentBrackets.id));
+      
+      return brackets;
+    } catch (error) {
+      console.error('[Storage] getBracketsByTournament error:', error);
+      return [];
+    }
+  }
+  
+  async createBracket(bracketData: InsertTournamentBracket): Promise<TournamentBracket> {
+    try {
+      console.log(`[Storage] createBracket called with data:`, JSON.stringify(bracketData, null, 2));
+      
+      const [bracket] = await db.insert(tournamentBrackets)
+        .values(bracketData)
+        .returning();
+        
+      return bracket;
+    } catch (error) {
+      console.error('[Storage] createBracket error:', error);
+      throw new Error(`Failed to create bracket: ${error.message}`);
+    }
+  }
+  
+  async updateBracket(id: number, updates: Partial<InsertTournamentBracket>): Promise<TournamentBracket | undefined> {
+    try {
+      const numericId = Number(id);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] updateBracket called with invalid ID: ${id}`);
+        return undefined;
+      }
+      
+      console.log(`[Storage] updateBracket called with ID: ${numericId} and updates:`, JSON.stringify(updates, null, 2));
+      
+      const [updatedBracket] = await db.update(tournamentBrackets)
+        .set(updates)
+        .where(eq(tournamentBrackets.id, numericId))
+        .returning();
+        
+      return updatedBracket;
+    } catch (error) {
+      console.error('[Storage] updateBracket error:', error);
+      return undefined;
+    }
+  }
+  
+  async deleteBracket(id: number): Promise<boolean> {
+    try {
+      const numericId = Number(id);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] deleteBracket called with invalid ID: ${id}`);
+        return false;
+      }
+      
+      console.log(`[Storage] deleteBracket called with ID: ${numericId}`);
+      
+      // Delete all associated matches first
+      await db.delete(tournamentBracketMatches)
+        .where(eq(tournamentBracketMatches.bracketId, numericId));
+        
+      // Delete all associated rounds
+      await db.delete(tournamentRounds)
+        .where(eq(tournamentRounds.bracketId, numericId));
+        
+      // Delete the bracket
+      const result = await db.delete(tournamentBrackets)
+        .where(eq(tournamentBrackets.id, numericId));
+        
+      console.log(`[Storage] deleteBracket result:`, result);
+      
+      return true;
+    } catch (error) {
+      console.error('[Storage] deleteBracket error:', error);
+      return false;
+    }
+  }
+  
+  // Tournament Bracket Match operations
+  async getBracketMatch(id: number): Promise<TournamentBracketMatch | undefined> {
+    try {
+      const numericId = Number(id);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] getBracketMatch called with invalid ID: ${id}`);
+        return undefined;
+      }
+      
+      console.log(`[Storage] getBracketMatch called with ID: ${numericId}`);
+      
+      const [match] = await db.select()
+        .from(tournamentBracketMatches)
+        .where(eq(tournamentBracketMatches.id, numericId));
+      
+      return match;
+    } catch (error) {
+      console.error('[Storage] getBracketMatch error:', error);
+      return undefined;
+    }
+  }
+  
+  async getMatchesByBracket(bracketId: number): Promise<TournamentBracketMatch[]> {
+    try {
+      const numericId = Number(bracketId);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] getMatchesByBracket called with invalid bracketId: ${bracketId}`);
+        return [];
+      }
+      
+      console.log(`[Storage] getMatchesByBracket called with bracketId: ${numericId}`);
+      
+      const matches = await db.select()
+        .from(tournamentBracketMatches)
+        .where(eq(tournamentBracketMatches.bracketId, numericId))
+        .orderBy(asc(tournamentBracketMatches.roundId), asc(tournamentBracketMatches.matchNumber));
+      
+      return matches;
+    } catch (error) {
+      console.error('[Storage] getMatchesByBracket error:', error);
+      return [];
+    }
+  }
+  
+  async getMatchesByRound(roundId: number): Promise<TournamentBracketMatch[]> {
+    try {
+      const numericId = Number(roundId);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] getMatchesByRound called with invalid roundId: ${roundId}`);
+        return [];
+      }
+      
+      console.log(`[Storage] getMatchesByRound called with roundId: ${numericId}`);
+      
+      const matches = await db.select()
+        .from(tournamentBracketMatches)
+        .where(eq(tournamentBracketMatches.roundId, numericId))
+        .orderBy(asc(tournamentBracketMatches.matchNumber));
+      
+      return matches;
+    } catch (error) {
+      console.error('[Storage] getMatchesByRound error:', error);
+      return [];
+    }
+  }
+  
+  async createBracketMatch(matchData: InsertTournamentBracketMatch): Promise<TournamentBracketMatch> {
+    try {
+      console.log(`[Storage] createBracketMatch called with data:`, JSON.stringify(matchData, null, 2));
+      
+      const [match] = await db.insert(tournamentBracketMatches)
+        .values(matchData)
+        .returning();
+        
+      return match;
+    } catch (error) {
+      console.error('[Storage] createBracketMatch error:', error);
+      throw new Error(`Failed to create bracket match: ${error.message}`);
+    }
+  }
+  
+  async updateBracketMatch(id: number, updates: Partial<InsertTournamentBracketMatch>): Promise<TournamentBracketMatch | undefined> {
+    try {
+      const numericId = Number(id);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] updateBracketMatch called with invalid ID: ${id}`);
+        return undefined;
+      }
+      
+      console.log(`[Storage] updateBracketMatch called with ID: ${numericId} and updates:`, JSON.stringify(updates, null, 2));
+      
+      const [updatedMatch] = await db.update(tournamentBracketMatches)
+        .set(updates)
+        .where(eq(tournamentBracketMatches.id, numericId))
+        .returning();
+        
+      return updatedMatch;
+    } catch (error) {
+      console.error('[Storage] updateBracketMatch error:', error);
+      return undefined;
+    }
+  }
+  
+  async recordMatchResult(matchId: number, resultData: {
+    winnerId: number;
+    loserId: number;
+    score: string;
+    scoreDetails?: any;
+  }): Promise<TournamentBracketMatch | undefined> {
+    try {
+      const numericId = Number(matchId);
+      
+      if (isNaN(numericId) || !Number.isFinite(numericId) || numericId < 1) {
+        console.log(`[Storage] recordMatchResult called with invalid matchId: ${matchId}`);
+        return undefined;
+      }
+      
+      console.log(`[Storage] recordMatchResult called with matchId: ${numericId} and data:`, JSON.stringify(resultData, null, 2));
+      
+      // Get current match to verify it exists and to check next match
+      const match = await this.getBracketMatch(numericId);
+      if (!match) {
+        console.error(`[Storage] recordMatchResult - Match with ID ${numericId} not found`);
+        return undefined;
+      }
+      
+      // Update the match with result data
+      const updates: Partial<InsertTournamentBracketMatch> = {
+        winnerId: resultData.winnerId,
+        loserId: resultData.loserId,
+        score: resultData.score,
+        scoreDetails: resultData.scoreDetails ? JSON.stringify(resultData.scoreDetails) : null,
+        status: 'completed',
+        updatedAt: new Date().toISOString()
+      };
+      
+      const updatedMatch = await this.updateBracketMatch(numericId, updates);
+      
+      // If this match feeds into another match, update the next match with the winner
+      if (match.nextMatchId) {
+        const nextMatch = await this.getBracketMatch(match.nextMatchId);
+        if (nextMatch) {
+          // Determine if the winner goes into team1 or team2 slot based on match number
+          const isEvenMatch = match.matchNumber % 2 === 0;
+          const nextMatchUpdate: Partial<InsertTournamentBracketMatch> = isEvenMatch 
+            ? { team1Id: resultData.winnerId } 
+            : { team2Id: resultData.winnerId };
+            
+          await this.updateBracketMatch(match.nextMatchId, nextMatchUpdate);
+        }
+      } else {
+        // This was the final match, update the bracket status
+        if (match.bracketId) {
+          await this.updateBracket(match.bracketId, {
+            status: 'completed',
+            endDate: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          });
+        }
+      }
+      
+      return updatedMatch;
+    } catch (error) {
+      console.error('[Storage] recordMatchResult error:', error);
+      return undefined;
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();

@@ -22,7 +22,7 @@ import { registerAdminReportRoutes } from "./routes/admin-report-routes";
 import { setupAdminDashboardRoutes } from "./routes/admin-dashboard-routes";
 import { registerTournamentBracketRoutes } from "./routes/register-tournament-bracket-routes";
 import { registerUserSearchRoutes } from "./routes/user-search-routes";
-import { default as registerTournamentSeedTeamsRoutes } from "./routes/register-tournament-seed-teams-routes";
+import { default as registerTournamentSeedTeamsRoutes } from "./routes/tournament-seed-teams-routes";
 
 // Import necessary schema
 import { 
