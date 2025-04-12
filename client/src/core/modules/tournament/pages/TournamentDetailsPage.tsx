@@ -49,7 +49,52 @@ export function TournamentDetailsPage() {
   const [isCreateBracketDialogOpen, setIsCreateBracketDialogOpen] = useState(false);
   const [isCreateTeamDialogOpen, setIsCreateTeamDialogOpen] = useState(false);
   
-  // Fetch tournament details with improved error handling
+  // Framework 5.0: Use proper TypeScript types and defaults
+  // Enhanced query function with debug logging
+  const tournamentFetcher = async () => {
+    console.log('[TournamentDetails][Debug] Preparing to fetch tournament data');
+    
+    if (!tournamentId) {
+      console.error('[TournamentDetails][Debug] Missing tournamentId parameter');
+      throw new Error('Missing tournament ID');
+    }
+    
+    console.log(`[TournamentDetails][Debug] Fetching data for tournament ID: ${tournamentId}`);
+    
+    // Direct fetch with credentials to ensure cookies are sent
+    const response = await fetch(`/api/tournaments/${tournamentId}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    });
+    
+    console.log(`[TournamentDetails][Debug] Response status: ${response.status}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[TournamentDetails][Debug] Error response: ${errorText}`);
+      
+      if (response.status === 401) {
+        throw new Error('Authentication required to view tournament details');
+      } else {
+        throw new Error(`API Error: ${response.status} - ${errorText || 'Unknown error'}`);
+      }
+    }
+    
+    try {
+      const data = await response.json();
+      console.log('[TournamentDetails][Debug] Successfully parsed tournament data:', data?.name || 'Unnamed tournament');
+      return data as Tournament;
+    } catch (e) {
+      console.error('[TournamentDetails][Debug] Failed to parse JSON response:', e);
+      throw new Error('Invalid response format from tournament API');
+    }
+  };
+  
+  // Framework 5.0: Enhanced query with proper debugging and error handling
   const { 
     data: tournament = {} as Tournament, 
     isLoading: isLoadingTournament, 
@@ -57,33 +102,87 @@ export function TournamentDetailsPage() {
     error: tournamentError
   } = useQuery<Tournament>({
     queryKey: [`/api/tournaments/${tournamentId}`],
+    queryFn: tournamentFetcher, // Framework 5.0: Explicit query function
     enabled: !!tournamentId,
-    retry: 3, // Framework 5.0: Increased retries for critical data
-    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
-    staleTime: 30 * 1000,  // Consider fresh for 30 seconds
-    refetchOnWindowFocus: false,
-    // Framework 5.0: Use onSettled instead of onError/onSuccess for better error handling
-    onSettled: (data, error) => {
-      if (error) {
-        console.error('[TournamentDetails] Error fetching tournament details:', error);
-        
-        // Framework 5.0: Enhanced error reporting with status codes and details
-        if (error instanceof Error) {
-          const errorMessage = error.message;
-          console.error('[TournamentDetails] Error message:', errorMessage);
-          
-          // Check for authentication errors
-          if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
-            console.error('[TournamentDetails] Authentication error detected. User may not be logged in or session expired.');
-          }
-        }
-      } else if (data) {
-        console.log('[TournamentDetails] Successfully fetched tournament details:', data?.name);
-      }
-    }
+    retry: 2,
+    gcTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: false
   });
   
-  // Fetch tournament brackets with improved error handling
+  // Framework 5.0: Brackets fetcher with proper error handling
+  const bracketsFetcher = async () => {
+    if (!tournamentId || isErrorTournament) {
+      console.error('[TournamentDetails][Debug] Cannot fetch brackets: invalid tournament ID or tournament error');
+      return [] as Bracket[];
+    }
+    
+    console.log(`[TournamentDetails][Debug] Fetching brackets for tournament ID: ${tournamentId}`);
+    
+    const response = await fetch(`/api/tournaments/${tournamentId}/brackets`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    });
+    
+    console.log(`[TournamentDetails][Debug] Brackets response status: ${response.status}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[TournamentDetails][Debug] Error fetching brackets: ${errorText}`);
+      throw new Error(`Brackets API Error: ${response.status} - ${errorText || 'Unknown error'}`);
+    }
+    
+    try {
+      const data = await response.json();
+      console.log(`[TournamentDetails][Debug] Successfully loaded ${data?.length || 0} brackets`);
+      return data as Bracket[];
+    } catch (e) {
+      console.error('[TournamentDetails][Debug] Failed to parse brackets JSON:', e);
+      throw new Error('Invalid response format from brackets API');
+    }
+  };
+  
+  // Framework 5.0: Teams fetcher with proper error handling
+  const teamsFetcher = async () => {
+    if (!tournamentId || isErrorTournament) {
+      console.error('[TournamentDetails][Debug] Cannot fetch teams: invalid tournament ID or tournament error');
+      return [] as Team[];
+    }
+    
+    console.log(`[TournamentDetails][Debug] Fetching teams for tournament ID: ${tournamentId}`);
+    
+    const response = await fetch(`/api/tournaments/${tournamentId}/teams`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    });
+    
+    console.log(`[TournamentDetails][Debug] Teams response status: ${response.status}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[TournamentDetails][Debug] Error fetching teams: ${errorText}`);
+      throw new Error(`Teams API Error: ${response.status} - ${errorText || 'Unknown error'}`);
+    }
+    
+    try {
+      const data = await response.json();
+      console.log(`[TournamentDetails][Debug] Successfully loaded ${data?.length || 0} teams`);
+      return data as Team[];
+    } catch (e) {
+      console.error('[TournamentDetails][Debug] Failed to parse teams JSON:', e);
+      throw new Error('Invalid response format from teams API');
+    }
+  };
+  
+  // Framework 5.0: Enhanced brackets query with proper queryFn
   const { 
     data: brackets = [] as Bracket[], 
     isLoading: isLoadingBrackets, 
@@ -91,22 +190,15 @@ export function TournamentDetailsPage() {
     error: bracketsError
   } = useQuery<Bracket[]>({
     queryKey: [`/api/tournaments/${tournamentId}/brackets`],
-    enabled: !!tournamentId && !isErrorTournament, // Only fetch if tournament loaded successfully
-    retry: 3, // Framework 5.0: Increased retries for critical data
+    queryFn: bracketsFetcher,
+    enabled: !!tournamentId && !isErrorTournament,
+    retry: 2,
     gcTime: 5 * 60 * 1000,
     staleTime: 30 * 1000,
-    refetchOnWindowFocus: false,
-    // Framework 5.0: Use onSettled instead of onError/onSuccess for better error handling
-    onSettled: (data, error) => {
-      if (error) {
-        console.error('[TournamentDetails] Error fetching tournament brackets:', error);
-      } else if (data) {
-        console.log('[TournamentDetails] Successfully fetched tournament brackets:', data?.length);
-      }
-    }
+    refetchOnWindowFocus: false
   });
   
-  // Fetch tournament teams with improved error handling
+  // Framework 5.0: Enhanced teams query with proper queryFn
   const { 
     data: teams = [] as Team[], 
     isLoading: isLoadingTeams, 
@@ -114,19 +206,12 @@ export function TournamentDetailsPage() {
     error: teamsError
   } = useQuery<Team[]>({
     queryKey: [`/api/tournaments/${tournamentId}/teams`],
-    enabled: !!tournamentId && !isErrorTournament, // Only fetch if tournament loaded successfully
-    retry: 3, // Framework 5.0: Increased retries for critical data
+    queryFn: teamsFetcher,
+    enabled: !!tournamentId && !isErrorTournament,
+    retry: 2,
     gcTime: 5 * 60 * 1000,
     staleTime: 30 * 1000,
-    refetchOnWindowFocus: false,
-    // Framework 5.0: Use onSettled instead of onError/onSuccess for better error handling
-    onSettled: (data, error) => {
-      if (error) {
-        console.error('[TournamentDetails] Error fetching tournament teams:', error);
-      } else if (data) {
-        console.log('[TournamentDetails] Successfully fetched tournament teams:', data?.length);
-      }
-    }
+    refetchOnWindowFocus: false
   });
   
   // Loading state
