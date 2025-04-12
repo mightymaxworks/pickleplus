@@ -54,25 +54,21 @@ import {
 // Basic Info Step Component
 const TournamentBasicInfoStep = ({ form }: { form: ReturnType<typeof useForm<TournamentFormValues>> }) => {
   return (
-    <div className="space-y-4">
-      <div className="space-y-2 mb-4">
-        <h3 className="text-base md:text-lg font-medium">Basic Information</h3>
-        <p className="text-xs md:text-sm text-muted-foreground">
-          Enter the primary details about your tournament.
-        </p>
-      </div>
+    <div className="space-y-3">
+      {/* Reduced spacing and simplified header */}
+      <h3 className="text-base font-medium mb-2">Basic Information</h3>
       
       <FormField
         control={form.control}
         name="name"
         render={({ field }) => (
-          <FormItem>
+          <FormItem className="mb-2">
             <FormLabel className="text-sm font-medium">Tournament Name*</FormLabel>
             <FormControl>
               <Input 
                 placeholder="Spring Championship 2025" 
                 {...field} 
-                className="h-10 text-base"
+                className="h-9 text-sm"
               />
             </FormControl>
             <FormMessage className="text-xs" />
@@ -84,12 +80,12 @@ const TournamentBasicInfoStep = ({ form }: { form: ReturnType<typeof useForm<Tou
         control={form.control}
         name="description"
         render={({ field }) => (
-          <FormItem>
+          <FormItem className="mb-2">
             <FormLabel className="text-sm font-medium">Description</FormLabel>
             <FormControl>
               <Textarea
                 placeholder="A brief description of the tournament"
-                className="resize-none min-h-[80px] md:min-h-[100px] text-base"
+                className="resize-none min-h-[60px] text-sm"
                 {...field}
                 value={field.value || ''}
               />
@@ -103,14 +99,14 @@ const TournamentBasicInfoStep = ({ form }: { form: ReturnType<typeof useForm<Tou
         control={form.control}
         name="location"
         render={({ field }) => (
-          <FormItem>
+          <FormItem className="mb-2">
             <FormLabel className="text-sm font-medium">Location</FormLabel>
             <FormControl>
               <Input 
                 placeholder="City, State or Online" 
                 {...field} 
                 value={field.value || ''} 
-                className="h-10 text-base"
+                className="h-9 text-sm"
               />
             </FormControl>
             <FormMessage className="text-xs" />
@@ -122,14 +118,14 @@ const TournamentBasicInfoStep = ({ form }: { form: ReturnType<typeof useForm<Tou
         control={form.control}
         name="status"
         render={({ field }) => (
-          <FormItem>
+          <FormItem className="mb-2">
             <FormLabel className="text-sm font-medium">Status*</FormLabel>
             <Select 
               onValueChange={field.onChange} 
               defaultValue={field.value}
             >
               <FormControl>
-                <SelectTrigger className="h-10">
+                <SelectTrigger className="h-9">
                   <SelectValue placeholder="Select a status" />
                 </SelectTrigger>
               </FormControl>
@@ -146,56 +142,49 @@ const TournamentBasicInfoStep = ({ form }: { form: ReturnType<typeof useForm<Tou
   );
 };
 
-// Structure Step Component
+// Structure Step Component 
 const TournamentStructureStep = ({ form }: { form: ReturnType<typeof useForm<TournamentFormValues>> }) => {
   return (
-    <div className="space-y-4">
-      <div className="space-y-2 mb-4">
-        <h3 className="text-base md:text-lg font-medium">Tournament Structure</h3>
-        <p className="text-xs md:text-sm text-muted-foreground">
-          Define the format, division, and skill level for your tournament.
-        </p>
-      </div>
+    <div className="space-y-3">
+      {/* Simplified header */}
+      <h3 className="text-base font-medium mb-2">Tournament Structure</h3>
       
       <FormField
         control={form.control}
         name="format"
         render={({ field }) => (
-          <FormItem className="space-y-2">
+          <FormItem className="space-y-1 mb-2">
             <FormLabel className="text-sm font-medium">Tournament Format*</FormLabel>
-            <FormDescription className="text-xs">
-              Select the playing format for the tournament
-            </FormDescription>
-            <div className="grid grid-cols-3 gap-2 md:gap-4">
+            <div className="grid grid-cols-3 gap-1">
               <div
-                className={`border-2 rounded-md p-2 md:p-4 cursor-pointer hover:border-primary/50 transition-colors ${
+                className={`border rounded-md p-2 cursor-pointer hover:border-primary/50 transition-colors ${
                   field.value === 'singles' ? 'border-primary' : ''
                 }`}
                 onClick={() => field.onChange('singles')}
               >
-                <User className="h-4 w-4 md:h-6 md:w-6 mb-1 md:mb-2" />
-                <h4 className="text-xs md:text-sm font-medium">Singles</h4>
-                <p className="text-[10px] md:text-xs text-muted-foreground">1v1 matches</p>
+                <User className="h-4 w-4 mb-1" />
+                <h4 className="text-xs font-medium">Singles</h4>
+                <p className="text-[10px] text-muted-foreground">1v1 matches</p>
               </div>
               <div
-                className={`border-2 rounded-md p-2 md:p-4 cursor-pointer hover:border-primary/50 transition-colors ${
+                className={`border rounded-md p-2 cursor-pointer hover:border-primary/50 transition-colors ${
                   field.value === 'doubles' ? 'border-primary' : ''
                 }`}
                 onClick={() => field.onChange('doubles')}
               >
-                <Users className="h-4 w-4 md:h-6 md:w-6 mb-1 md:mb-2" />
-                <h4 className="text-xs md:text-sm font-medium">Doubles</h4>
-                <p className="text-[10px] md:text-xs text-muted-foreground">2v2 matches</p>
+                <Users className="h-4 w-4 mb-1" />
+                <h4 className="text-xs font-medium">Doubles</h4>
+                <p className="text-[10px] text-muted-foreground">2v2 matches</p>
               </div>
               <div
-                className={`border-2 rounded-md p-2 md:p-4 cursor-pointer hover:border-primary/50 transition-colors ${
+                className={`border rounded-md p-2 cursor-pointer hover:border-primary/50 transition-colors ${
                   field.value === 'mixed' ? 'border-primary' : ''
                 }`}
                 onClick={() => field.onChange('mixed')}
               >
-                <Users className="h-4 w-4 md:h-6 md:w-6 mb-1 md:mb-2" />
-                <h4 className="text-xs md:text-sm font-medium">Mixed</h4>
-                <p className="text-[10px] md:text-xs text-muted-foreground">Mixed doubles</p>
+                <Users className="h-4 w-4 mb-1" />
+                <h4 className="text-xs font-medium">Mixed</h4>
+                <p className="text-[10px] text-muted-foreground">Mixed doubles</p>
               </div>
             </div>
             <FormMessage className="text-xs" />
@@ -203,16 +192,16 @@ const TournamentStructureStep = ({ form }: { form: ReturnType<typeof useForm<Tou
         )}
       />
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
         <FormField
           control={form.control}
           name="division"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="mb-2">
               <FormLabel className="text-sm font-medium">Division*</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger className="h-10">
+                  <SelectTrigger className="h-9">
                     <SelectValue placeholder="Select division" />
                   </SelectTrigger>
                 </FormControl>
@@ -232,11 +221,11 @@ const TournamentStructureStep = ({ form }: { form: ReturnType<typeof useForm<Tou
           control={form.control}
           name="level"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="mb-2">
               <FormLabel className="text-sm font-medium">Skill Level*</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger className="h-10">
+                  <SelectTrigger className="h-9">
                     <SelectValue placeholder="Select level" />
                   </SelectTrigger>
                 </FormControl>
@@ -273,30 +262,25 @@ const TournamentSchedulingStep = ({ form }: { form: ReturnType<typeof useForm<To
   const isEndDateBeforeStartDate = areValidDates && endDate < startDate;
   
   return (
-    <div className="space-y-4">
-      <div className="space-y-2 mb-4">
-        <h3 className="text-base md:text-lg font-medium">Schedule</h3>
-        <p className="text-xs md:text-sm text-muted-foreground">
-          Set the start and end dates for your tournament.
-        </p>
-      </div>
+    <div className="space-y-3">
+      {/* Simplified header */}
+      <h3 className="text-base font-medium mb-2">Schedule</h3>
       
       {isEndDateBeforeStartDate && (
-        <Alert variant="destructive" className="mb-4 text-xs md:text-sm">
+        <Alert variant="destructive" className="mb-2 py-2 text-xs">
           <CalendarIcon className="h-4 w-4" />
-          <AlertTitle className="text-sm">Invalid date range</AlertTitle>
           <AlertDescription className="text-xs">
             End date cannot be before start date.
           </AlertDescription>
         </Alert>
       )}
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <FormField
           control={form.control}
           name="startDate"
           render={({ field }) => (
-            <FormItem className="flex flex-col">
+            <FormItem className="mb-2">
               <FormLabel className="text-sm font-medium">Start Date*</FormLabel>
               <FormControl>
                 <Input
@@ -316,12 +300,9 @@ const TournamentSchedulingStep = ({ form }: { form: ReturnType<typeof useForm<To
                     }
                   }}
                   min={new Date().toISOString().split('T')[0]}
-                  className="w-full h-10"
+                  className="w-full h-9"
                 />
               </FormControl>
-              <FormDescription className="text-xs">
-                When the tournament begins
-              </FormDescription>
               <FormMessage className="text-xs" />
             </FormItem>
           )}
@@ -331,7 +312,7 @@ const TournamentSchedulingStep = ({ form }: { form: ReturnType<typeof useForm<To
           control={form.control}
           name="endDate"
           render={({ field }) => (
-            <FormItem className="flex flex-col">
+            <FormItem className="mb-2">
               <FormLabel className="text-sm font-medium">End Date*</FormLabel>
               <FormControl>
                 <Input 
@@ -347,30 +328,27 @@ const TournamentSchedulingStep = ({ form }: { form: ReturnType<typeof useForm<To
                   min={form.getValues("startDate") instanceof Date
                     ? form.getValues("startDate").toISOString().split('T')[0]
                     : new Date().toISOString().split('T')[0]}
-                  className="w-full h-10"
+                  className="w-full h-9"
                 />
               </FormControl>
-              <FormDescription className="text-xs">
-                When the tournament concludes
-              </FormDescription>
               <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
       </div>
       
-      <div className="border rounded-md p-3 mt-4">
+      <div className="border rounded-md p-2 mt-2">
         <FormField
           control={form.control}
           name="registrationOpen"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-2 md:p-3">
-              <div className="space-y-0.5">
-                <FormLabel className="text-sm md:text-base font-medium">
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-2">
+              <div>
+                <FormLabel className="text-sm font-medium">
                   Registration Status
                 </FormLabel>
                 <FormDescription className="text-xs">
-                  Allow players to register for this tournament
+                  Allow registrations
                 </FormDescription>
               </div>
               <FormControl>
@@ -384,15 +362,14 @@ const TournamentSchedulingStep = ({ form }: { form: ReturnType<typeof useForm<To
         />
       </div>
       
-      <div className="mt-4 text-xs md:text-sm text-muted-foreground">
-        <p className="mb-2">
-          <span className="font-semibold">Note:</span> After creating the tournament, you'll be able to:
+      <div className="mt-3 border-t pt-2">
+        <p className="text-xs mb-1">
+          <span className="font-semibold">Next steps:</span>
         </p>
-        <ul className="list-disc list-inside space-y-1 text-xs md:text-sm">
+        <ul className="list-disc list-inside space-y-0 text-xs text-muted-foreground pl-1">
           <li>Add participating teams</li>
-          <li>Generate the tournament bracket</li>
+          <li>Generate tournament bracket</li>
           <li>Manage match schedules</li>
-          <li>Publish tournament details</li>
         </ul>
       </div>
     </div>
@@ -620,7 +597,7 @@ export function CreateTournamentWizard({ open, onOpenChange }: CreateTournamentW
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="w-[95%] max-w-[600px] p-4 md:p-6"
+        className="w-[95%] max-w-[600px] p-4 md:p-6 max-h-[90vh] overflow-y-auto"
         aria-describedby="tournament-wizard-description"
       >
         <DialogHeader>
@@ -633,15 +610,15 @@ export function CreateTournamentWizard({ open, onOpenChange }: CreateTournamentW
         {/* Progress bar */}
         <Progress value={progress} className="h-2 mb-4" />
         
-        {/* Step indicators - Mobile optimized */}
-        <div className="flex justify-between mb-6">
+        {/* Simplified step indicators */}
+        <div className="flex justify-between mb-4">
           {steps.map((s, i) => (
             <div 
               key={i} 
-              className={`flex flex-col items-center ${i === step ? 'text-primary' : 'text-muted-foreground'}`}
+              className={`flex items-center ${i === step ? 'text-primary' : 'text-muted-foreground'}`}
             >
               <div 
-                className={`w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center mb-1 ${
+                className={`w-6 h-6 rounded-full flex items-center justify-center mr-1 ${
                   i === step 
                     ? 'bg-primary text-primary-foreground' 
                     : i < step 
@@ -649,9 +626,9 @@ export function CreateTournamentWizard({ open, onOpenChange }: CreateTournamentW
                       : 'bg-muted text-muted-foreground'
                 }`}
               >
-                {i < step ? <Check className="h-3 w-3 md:h-4 md:w-4" /> : <s.icon className="h-3 w-3 md:h-4 md:w-4" />}
+                {i < step ? <Check className="h-3 w-3" /> : <s.icon className="h-3 w-3" />}
               </div>
-              <span className="text-[10px] md:text-xs font-medium">{s.label}</span>
+              <span className="text-xs font-medium">{s.label}</span>
             </div>
           ))}
         </div>
@@ -661,26 +638,31 @@ export function CreateTournamentWizard({ open, onOpenChange }: CreateTournamentW
           <div className="space-y-4">
             {renderCurrentStep()}
             
-            {/* Mobile optimized footer - better button spacing and touch targets */}
-            <DialogFooter className="flex flex-col sm:flex-row justify-between pt-4 border-t space-y-3 sm:space-y-0">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={goBack}
-                disabled={step === 0 || isPending}
-                className={`${step === 0 ? 'opacity-0' : ''} h-10 px-4`}
-                size="sm"
-              >
-                <ChevronLeft className="mr-1 h-4 w-4" /> Back
-              </Button>
+            {/* Simplified footer with better touch targets */}
+            <div className="flex justify-between pt-3 border-t mt-3">
+              {step > 0 ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={goBack}
+                  disabled={isPending}
+                  className="h-9"
+                  size="sm"
+                >
+                  <ChevronLeft className="mr-1 h-4 w-4" /> Back
+                </Button>
+              ) : (
+                // Empty div to maintain flex spacing
+                <div></div>
+              )}
               
-              <div className="flex gap-2 w-full sm:w-auto justify-end">
+              <div className="flex gap-2">
                 <Button 
                   type="button" 
                   variant="outline" 
                   onClick={() => onOpenChange(false)}
                   disabled={isPending}
-                  className="h-10 px-4"
+                  className="h-9"
                   size="sm"
                 >
                   Cancel
@@ -690,18 +672,18 @@ export function CreateTournamentWizard({ open, onOpenChange }: CreateTournamentW
                   type="button" 
                   onClick={nextStep}
                   disabled={isPending}
-                  className="h-10 px-4"
+                  className="h-9"
                   size="sm"
                 >
                   {isPending 
                     ? 'Creating...' 
                     : step === totalSteps - 1 
                       ? 'Create' 
-                      : <>Next <ChevronRight className="ml-1 h-4 w-4" /></>
+                      : 'Next'
                   }
                 </Button>
               </div>
-            </DialogFooter>
+            </div>
           </div>
         </Form>
       </DialogContent>
