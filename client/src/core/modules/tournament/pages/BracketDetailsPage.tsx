@@ -40,8 +40,11 @@ import { MatchesList } from '../components/MatchesList';
 import { RecordMatchResultDialog } from '../components/RecordMatchResultDialog';
 
 export function BracketDetailsPage() {
-  const [, params] = useRoute('/brackets/:id');
+  // PKL-278651-TOURN-0011-ROUT: Update route path to align with App.tsx route definition
+  const [, params] = useRoute('/admin/brackets/:id');
+  console.log('[BracketDetailsPage][PKL-278651-TOURN-0011-ROUT] Route params:', params);
   const bracketId = params?.id ? parseInt(params.id) : null;
+  console.log('[BracketDetailsPage][PKL-278651-TOURN-0011-ROUT] Bracket ID:', bracketId);
   
   const [activeTab, setActiveTab] = useState('bracket');
   const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
@@ -124,7 +127,21 @@ export function BracketDetailsPage() {
     <LayoutContainer className="max-w-6xl">
       <div className="space-y-6">
         <div className="flex items-center mb-6">
-          <Button onClick={() => window.history.back()} variant="ghost" className="gap-1">
+          <Button 
+            onClick={() => {
+              // PKL-278651-TOURN-0011-ROUT: Improved navigation back to tournament details
+              if (bracket && bracket.tournamentId) {
+                // Navigate to the tournament details page with the correct tournament ID
+                console.log(`[BracketDetailsPage][PKL-278651-TOURN-0011-ROUT] Navigating back to tournament ${bracket.tournamentId}`);
+                window.location.href = `/admin/tournaments/${bracket.tournamentId}`;
+              } else {
+                // Fallback to history back if tournament ID is not available
+                window.history.back();
+              }
+            }} 
+            variant="ghost" 
+            className="gap-1"
+          >
             <ChevronLeft size={16} />
             <span>Back to tournament</span>
           </Button>
