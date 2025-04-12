@@ -152,3 +152,6 @@ function TournamentStructureStep({ form, className }: TournamentStructureStepPro
     </div>
   );
 }
+
+// Default export for lazy loading
+export default TournamentStructureStep;

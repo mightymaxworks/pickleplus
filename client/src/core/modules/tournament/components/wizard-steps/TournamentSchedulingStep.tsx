@@ -31,7 +31,7 @@ interface TournamentSchedulingStepProps {
 export type TournamentSchedulingStepType = 
   (props: TournamentSchedulingStepProps) => JSX.Element;
 
-export function TournamentSchedulingStep({ form, className }: TournamentSchedulingStepProps) {
+function TournamentSchedulingStep({ form, className }: TournamentSchedulingStepProps) {
   // Check for date validation errors
   const startDateError = form.formState.errors.startDate;
   const endDateError = form.formState.errors.endDate;
@@ -171,3 +171,6 @@ export function TournamentSchedulingStep({ form, className }: TournamentScheduli
     </div>
   );
 }
+
+// Default export for lazy loading
+export default TournamentSchedulingStep;
