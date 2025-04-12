@@ -114,26 +114,32 @@ router.post('/tournaments', async (req, res) => {
       // Only include fields that we verified exist in the database through direct SQL inspection
       // This approach ensures maximum compatibility and eliminates schema mismatch errors
       
-      // Framework 5.0 principle: Pragmatic solutions - Only use fields that ACTUALLY exist in the database
-      // These are the ONLY fields that exist in the database based on SQL inspection
-      const tournamentData = {
-        name: parsedData.data.name,
-        description: parsedData.data.description || null,
-        location: parsedData.data.location || null,
-        startDate: parsedData.data.startDate, 
-        endDate: parsedData.data.endDate,
-        level: parsedData.data.level || 'club',
-        // Removed fields that don't exist in the actual database (format, division)
-        // Also note: status is validated but not used in insert as it doesn't exist in the database
-      };
+      // Framework 5.0 principle: Pragmatic solutions - Direct SQL for maximum control
+      // This is the most reliable approach when facing schema mismatch problems
       
-      console.log('[API][Tournament] Final tournament data:', tournamentData);
+      // Convert data to be inserted
+      const name = parsedData.data.name;
+      const description = parsedData.data.description || null;
+      const location = parsedData.data.location || null;
+      const startDate = parsedData.data.startDate;
+      const endDate = parsedData.data.endDate;
+      const level = parsedData.data.level || 'club';
       
-      // Framework 5.0 principles: proper error handling and precise typing
-      // Explicitly wrap in an array as Drizzle expects an array of values
-      const insertResult = await db.insert(tournaments)
-        .values([tournamentData])
-        .returning();
+      console.log('[API][Tournament] Using direct SQL to insert only existing columns');
+      
+      // Execute raw SQL that only uses the columns that actually exist in the database
+      // This bypasses Drizzle's automatic mapping which is causing the error
+      const { db: sql } = await import('../db');
+      const result = await sql.unsafe(`
+        INSERT INTO tournaments (name, description, location, start_date, end_date, level) 
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id, name, description, start_date, end_date, level;
+      `, [name, description, location, startDate, endDate, level]);
+      
+      console.log('[API][Tournament] SQL insert result:', result);
+      
+      // Get the first row of the result
+      const insertResult = result.length > 0 ? [result[0]] : [];
       
       newTournament = insertResult[0];
       
