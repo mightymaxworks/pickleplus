@@ -121,11 +121,14 @@ router.post('/tournaments', async (req, res) => {
       const name = parsedData.data.name;
       const description = parsedData.data.description || null;
       const location = parsedData.data.location || null;
-      const startDate = parsedData.data.startDate;
-      const endDate = parsedData.data.endDate;
+      // Convert dates to ISO strings for PostgreSQL compatibility
+      const startDate = parsedData.data.startDate instanceof Date ? parsedData.data.startDate.toISOString() : parsedData.data.startDate;
+      const endDate = parsedData.data.endDate instanceof Date ? parsedData.data.endDate.toISOString() : parsedData.data.endDate;
       const level = parsedData.data.level || 'club';
       
-      console.log('[API][Tournament] Using direct SQL to insert only existing columns');
+      console.log('[API][Tournament] Using direct SQL to insert only existing columns with formatted dates');
+      console.log('[API][Tournament] Date format check - Start date:', startDate, typeof startDate);
+      console.log('[API][Tournament] Date format check - End date:', endDate, typeof endDate);
       
       // Execute raw SQL that only uses the columns that actually exist in the database
       // This bypasses Drizzle's automatic mapping which is causing the error
