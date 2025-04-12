@@ -102,17 +102,56 @@ export function CreateBracketDialog({
   
   const { mutate, isPending, isError, error } = useMutation({
     mutationFn: async (values: BracketFormValues) => {
+      // PKL-278651-TOURN-0010-BRCKT: Enhanced API communication and error handling
       console.log('[BracketDialog][API] Calling API with values:', values);
-      return apiRequest("POST", `/api/tournaments/${tournamentId}/brackets`, values);
+      
+      try {
+        // Make sure tournamentId is included in the request URL
+        if (!tournamentId) {
+          console.error('[BracketDialog][API] Tournament ID missing');
+          throw new Error('Tournament ID is required');
+        }
+        
+        // Log the exact request that's being made
+        console.log(`[BracketDialog][API] Making POST request to: /api/tournaments/${tournamentId}/brackets`);
+        console.log('[BracketDialog][API] Request body:', JSON.stringify(values));
+        
+        // Make the API request with proper error handling
+        const response = await fetch(`/api/tournaments/${tournamentId}/brackets`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify(values)
+        });
+        
+        console.log(`[BracketDialog][API] Response status: ${response.status}`);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`[BracketDialog][API] Error response: ${errorText}`);
+          throw new Error(`API Error: ${response.status} - ${errorText}`);
+        }
+        
+        const data = await response.json();
+        console.log('[BracketDialog][API] Success response:', data);
+        return data;
+      } catch (error) {
+        console.error('[BracketDialog][API] Exception caught:', error);
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       // Reset form and close dialog
+      console.log('[BracketDialog][Success] Bracket created successfully:', data);
       form.reset();
       onOpenChange(false);
       setStep(1);
       setSelectedTeams({});
       
       // Invalidate brackets query to trigger a refetch
+      console.log(`[BracketDialog][Success] Invalidating cache for /api/tournaments/${tournamentId}/brackets`);
       queryClient.invalidateQueries({ queryKey: [`/api/tournaments/${tournamentId}/brackets`] });
       
       // Show success toast
@@ -122,48 +161,73 @@ export function CreateBracketDialog({
       });
     },
     onError: (error: any) => {
-      console.error('Error creating bracket:', error);
+      console.error('[BracketDialog][Error] Error creating bracket:', error);
+      
+      let errorMessage = 'An unexpected error occurred.';
+      
+      // Try to extract a more specific error message
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.errors) {
+        errorMessage = 'Validation failed. Please check your inputs.';
+        console.error('[BracketDialog][Error] Validation errors:', error.response.data.errors);
+      }
+      
       toast({
         title: 'Failed to create bracket',
-        description: error.message || 'An unexpected error occurred.',
+        description: errorMessage,
         variant: 'destructive',
       });
     },
   });
   
   function onSubmit(values: BracketFormValues) {
-    // PKL-278651-TOURN-0010-BRCKT-DEBUG: Enhanced bracket creation debugging
+    // PKL-278651-TOURN-0010-BRCKT: Enhanced bracket creation debugging
     console.log('[BracketDialog][Submit] Starting form submission process');
     
-    // Set the selected team IDs from our checkbox state
-    const teamIds = Object.entries(selectedTeams)
-      .filter(([_, isSelected]) => isSelected)
-      .map(([id]) => parseInt(id, 10));
-    
-    console.log('[BracketDialog][Submit] Selected team IDs:', teamIds);
-    console.log('[BracketDialog][Submit] Selected teams count:', teamIds.length);
-    
-    // Update form values with selected team IDs
-    values.teamIds = teamIds;
-    
-    // Validate minimum teams
-    if (teamIds.length < 2) {
-      console.log('[BracketDialog][Submit] Error: Not enough teams selected');
-      form.setError('teamIds', {
-        type: 'manual',
-        message: 'Select at least 2 teams',
-      });
-      return;
-    }
-    
-    console.log('[BracketDialog][Submit] Form values to be submitted:', values);
-    console.log('[BracketDialog][Submit] Sending to endpoint:', `/api/tournaments/${tournamentId}/brackets`);
-    
     try {
-      mutate(values);
+      // Set the selected team IDs from our checkbox state
+      const teamIds = Object.entries(selectedTeams)
+        .filter(([_, isSelected]) => isSelected)
+        .map(([id]) => parseInt(id, 10));
+      
+      console.log('[BracketDialog][Submit] Selected team IDs:', teamIds);
+      console.log('[BracketDialog][Submit] Selected teams count:', teamIds.length);
+      
+      // Create a new object to avoid mutating the original values
+      const bracketData = {
+        ...values,
+        teamIds: teamIds,
+        tournamentId: tournamentId // Explicitly add the tournamentId
+      };
+      
+      // Validate minimum teams
+      if (teamIds.length < 2) {
+        console.log('[BracketDialog][Submit] Error: Not enough teams selected');
+        form.setError('teamIds', {
+          type: 'manual',
+          message: 'Select at least 2 teams',
+        });
+        return;
+      }
+      
+      console.log('[BracketDialog][Submit] Form data to be submitted:', bracketData);
+      console.log('[BracketDialog][Submit] Sending to endpoint:', `/api/tournaments/${tournamentId}/brackets`);
+      
+      // Call the mutation with the prepared data
+      mutate(bracketData);
       console.log('[BracketDialog][Submit] Mutation triggered successfully');
     } catch (error) {
-      console.error('[BracketDialog][Submit] Error triggering mutation:', error);
+      console.error('[BracketDialog][Submit] Error in form submission process:', error);
+      
+      // Display error to user
+      toast({
+        title: 'Form Submission Error',
+        description: error instanceof Error ? error.message : 'An unexpected error occurred during form submission',
+        variant: 'destructive',
+      });
     }
   }
   
