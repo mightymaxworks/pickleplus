@@ -32,7 +32,8 @@ interface TournamentBasicInfoStepProps {
   className?: string;
 }
 
-function TournamentBasicInfoStep({ form, className }: TournamentBasicInfoStepProps) {
+// Export the component content directly for use in the main wizard
+export function TournamentBasicInfoStepContent({ form, className }: TournamentBasicInfoStepProps) {
   return (
     <div className={cn("space-y-4", className)}>
       <div className="space-y-2 mb-4">
@@ -118,4 +119,4 @@ function TournamentBasicInfoStep({ form, className }: TournamentBasicInfoStepPro
 }
 
 // Default export for lazy loading
-export default TournamentBasicInfoStep;
+export default TournamentBasicInfoStepContent;

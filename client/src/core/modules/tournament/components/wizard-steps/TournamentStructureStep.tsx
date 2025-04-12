@@ -43,7 +43,8 @@ interface TournamentStructureStepProps {
 export type TournamentStructureStepType = 
   (props: TournamentStructureStepProps) => JSX.Element;
 
-function TournamentStructureStep({ form, className }: TournamentStructureStepProps) {
+// Export the component content directly for use in the main wizard
+export function TournamentStructureStepContent({ form, className }: TournamentStructureStepProps) {
   return (
     <div className={cn("space-y-4", className)}>
       <div className="space-y-2 mb-4">
@@ -154,4 +155,4 @@ function TournamentStructureStep({ form, className }: TournamentStructureStepPro
 }
 
 // Default export for lazy loading
-export default TournamentStructureStep;
+export default TournamentStructureStepContent;

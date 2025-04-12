@@ -31,7 +31,8 @@ interface TournamentSchedulingStepProps {
 export type TournamentSchedulingStepType = 
   (props: TournamentSchedulingStepProps) => JSX.Element;
 
-function TournamentSchedulingStep({ form, className }: TournamentSchedulingStepProps) {
+// Export the component content directly for use in the main wizard
+export function TournamentSchedulingStepContent({ form, className }: TournamentSchedulingStepProps) {
   // Check for date validation errors
   const startDateError = form.formState.errors.startDate;
   const endDateError = form.formState.errors.endDate;

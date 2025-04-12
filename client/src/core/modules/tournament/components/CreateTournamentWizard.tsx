@@ -22,36 +22,368 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { ChevronRight, ChevronLeft, Check, CalendarIcon, InfoIcon, LayoutIcon } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Check, CalendarIcon, InfoIcon, LayoutIcon, User, Users } from 'lucide-react';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Switch } from '@/components/ui/switch';
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import {
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from "@/components/ui/form";
 
-// Import React's lazy loading functionality
-import { lazy, Suspense } from 'react';
+// Framework 5.0 optimization: Implement a fully modular component architecture
+// where all wizard components are defined in a single file to eliminate import issues
 
-// Enhanced lazy loading with better error handling for Framework 5.0
-const TournamentBasicInfoStep = lazy(() => 
-  import('./wizard-steps/TournamentBasicInfoStep')
-    .catch(error => {
-      console.error('[Framework 5.0] Failed to load BasicInfoStep:', error);
-      // Return a module with a default export to prevent runtime crashes
-      return { default: (props: any) => <div>Error loading component</div> };
-    })
-);
+// Basic Info Step Component
+const TournamentBasicInfoStep = ({ form }: { form: any }) => {
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2 mb-4">
+        <h3 className="text-lg font-medium">Basic Information</h3>
+        <p className="text-sm text-muted-foreground">
+          Enter the primary details about your tournament.
+        </p>
+      </div>
+      
+      <FormField
+        control={form.control}
+        name="name"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Tournament Name*</FormLabel>
+            <FormControl>
+              <Input placeholder="Spring Championship 2025" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      <FormField
+        control={form.control}
+        name="description"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Description</FormLabel>
+            <FormControl>
+              <Textarea
+                placeholder="A brief description of the tournament"
+                className="resize-none"
+                {...field}
+                value={field.value || ''}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      <FormField
+        control={form.control}
+        name="location"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Location</FormLabel>
+            <FormControl>
+              <Input placeholder="City, State or Online" {...field} value={field.value || ''} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      <FormField
+        control={form.control}
+        name="status"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Status*</FormLabel>
+            <Select 
+              onValueChange={field.onChange} 
+              defaultValue={field.value}
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a status" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="draft">Draft (Not visible to players)</SelectItem>
+                <SelectItem value="published">Published (Visible to all players)</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </div>
+  );
+};
 
-const TournamentStructureStep = lazy(() => 
-  import('./wizard-steps/TournamentStructureStep')
-    .catch(error => {
-      console.error('[Framework 5.0] Failed to load StructureStep:', error);
-      return { default: (props: any) => <div>Error loading component</div> };
-    })
-);
+// Structure Step Component
+const TournamentStructureStep = ({ form }: { form: any }) => {
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2 mb-4">
+        <h3 className="text-lg font-medium">Tournament Structure</h3>
+        <p className="text-sm text-muted-foreground">
+          Define the format, division, and skill level for your tournament.
+        </p>
+      </div>
+      
+      <FormField
+        control={form.control}
+        name="format"
+        render={({ field }) => (
+          <FormItem className="space-y-3">
+            <FormLabel>Tournament Format*</FormLabel>
+            <FormDescription>
+              Select the playing format for the tournament
+            </FormDescription>
+            <div className="grid grid-cols-3 gap-4">
+              <div
+                className={`border-2 rounded-md p-4 cursor-pointer hover:border-primary/50 transition-colors ${
+                  field.value === 'singles' ? 'border-primary' : ''
+                }`}
+                onClick={() => field.onChange('singles')}
+              >
+                <User className="h-6 w-6 mb-2" />
+                <h4 className="font-medium">Singles</h4>
+                <p className="text-xs text-muted-foreground">1v1 matches</p>
+              </div>
+              <div
+                className={`border-2 rounded-md p-4 cursor-pointer hover:border-primary/50 transition-colors ${
+                  field.value === 'doubles' ? 'border-primary' : ''
+                }`}
+                onClick={() => field.onChange('doubles')}
+              >
+                <Users className="h-6 w-6 mb-2" />
+                <h4 className="font-medium">Doubles</h4>
+                <p className="text-xs text-muted-foreground">2v2 matches</p>
+              </div>
+              <div
+                className={`border-2 rounded-md p-4 cursor-pointer hover:border-primary/50 transition-colors ${
+                  field.value === 'mixed' ? 'border-primary' : ''
+                }`}
+                onClick={() => field.onChange('mixed')}
+              >
+                <Users className="h-6 w-6 mb-2" />
+                <h4 className="font-medium">Mixed</h4>
+                <p className="text-xs text-muted-foreground">Mixed doubles</p>
+              </div>
+            </div>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      <div className="grid grid-cols-2 gap-4 mt-6">
+        <FormField
+          control={form.control}
+          name="division"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Division*</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select division" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="open">Open (All ages)</SelectItem>
+                  <SelectItem value="age_50+">50+</SelectItem>
+                  <SelectItem value="age_60+">60+</SelectItem>
+                  <SelectItem value="junior">Junior</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="level"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Skill Level*</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select level" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="beginner">Beginner (0.0-2.9)</SelectItem>
+                  <SelectItem value="intermediate">Intermediate (3.0-3.9)</SelectItem>
+                  <SelectItem value="advanced">Advanced (4.0-4.9)</SelectItem>
+                  <SelectItem value="club">Club (All levels)</SelectItem>
+                  <SelectItem value="pro">Professional (5.0+)</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+    </div>
+  );
+};
 
-const TournamentSchedulingStep = lazy(() => 
-  import('./wizard-steps/TournamentSchedulingStep')
-    .catch(error => {
-      console.error('[Framework 5.0] Failed to load SchedulingStep:', error);
-      return { default: (props: any) => <div>Error loading component</div> };
-    })
-);
+// Scheduling Step Component 
+const TournamentSchedulingStep = ({ form }: { form: any }) => {
+  // Check for date validation errors
+  const startDateError = form.formState.errors.startDate;
+  const endDateError = form.formState.errors.endDate;
+  const hasDateError = !!(startDateError || endDateError);
+  
+  // Get current dates from form
+  const startDate = form.watch('startDate');
+  const endDate = form.watch('endDate');
+  const areValidDates = startDate && endDate;
+  
+  // Is end date before start date?
+  const isEndDateBeforeStartDate = areValidDates && endDate < startDate;
+  
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2 mb-4">
+        <h3 className="text-lg font-medium">Schedule</h3>
+        <p className="text-sm text-muted-foreground">
+          Set the start and end dates for your tournament.
+        </p>
+      </div>
+      
+      {isEndDateBeforeStartDate && (
+        <Alert variant="destructive" className="mb-4">
+          <CalendarIcon className="h-4 w-4" />
+          <AlertTitle>Invalid date range</AlertTitle>
+          <AlertDescription>
+            End date cannot be before start date.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      <div className="grid grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="startDate"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Start Date*</FormLabel>
+              <FormControl>
+                <Input
+                  type="date"
+                  value={field.value instanceof Date ? field.value.toISOString().split('T')[0] : ''}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      // Create date at noon to avoid timezone issues
+                      const date = new Date(e.target.value + 'T12:00:00');
+                      field.onChange(date);
+                      
+                      // If end date is before the new start date, update end date
+                      const endDate = form.getValues("endDate");
+                      if (endDate && endDate < date) {
+                        form.setValue("endDate", date);
+                      }
+                    }
+                  }}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full"
+                />
+              </FormControl>
+              <FormDescription>
+                When the tournament begins
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="endDate"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>End Date*</FormLabel>
+              <FormControl>
+                <Input 
+                  type="date"
+                  value={field.value instanceof Date ? field.value.toISOString().split('T')[0] : ''}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      // Create date at noon to avoid timezone issues
+                      const date = new Date(e.target.value + 'T12:00:00');
+                      field.onChange(date);
+                    }
+                  }}
+                  min={form.getValues("startDate") instanceof Date
+                    ? form.getValues("startDate").toISOString().split('T')[0]
+                    : new Date().toISOString().split('T')[0]}
+                  className="w-full"
+                />
+              </FormControl>
+              <FormDescription>
+                When the tournament concludes
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+      
+      <div className="border rounded-md p-4 mt-4">
+        <FormField
+          control={form.control}
+          name="registrationOpen"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">
+                  Registration Status
+                </FormLabel>
+                <FormDescription>
+                  Allow players to register for this tournament
+                </FormDescription>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+      </div>
+      
+      <div className="mt-4 text-sm text-muted-foreground">
+        <p className="mb-2">
+          <span className="font-semibold">Note:</span> After creating the tournament, you'll be able to:
+        </p>
+        <ul className="list-disc list-inside space-y-1">
+          <li>Add participating teams</li>
+          <li>Generate the tournament bracket</li>
+          <li>Manage match schedules</li>
+          <li>Publish tournament details</li>
+        </ul>
+      </div>
+    </div>
+  );
+};
 
 /**
  * Tournament form schema
@@ -300,29 +632,19 @@ export function CreateTournamentWizard({ open, onOpenChange }: CreateTournamentW
     })();
   };
   
-  // Framework 5.0 compliant step rendering with error boundaries
+  // Framework 5.0 direct rendering without Suspense (simpler and more reliable)
   const renderStep = () => {
     // Prepare a consistent set of props to pass to each step component
     const stepProps = { form };
     
-    // Use Suspense with enhanced error handling
-    return (
-      <Suspense fallback={
-        <div className="flex items-center justify-center h-40">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-          <span className="ml-2">Loading step...</span>
-        </div>
-      }>
-        {/* A cleaner pattern using ternary operators */}
-        {step === 0 ? (
-          <TournamentBasicInfoStep {...stepProps} />
-        ) : step === 1 ? (
-          <TournamentStructureStep {...stepProps} />
-        ) : (
-          <TournamentSchedulingStep {...stepProps} />
-        )}
-      </Suspense>
-    );
+    // Simplified direct component rendering (Framework 5.0 principle: use simplest approach)
+    if (step === 0) {
+      return <TournamentBasicInfoStep {...stepProps} />;
+    } else if (step === 1) {
+      return <TournamentStructureStep {...stepProps} />;
+    } else {
+      return <TournamentSchedulingStep {...stepProps} />;
+    }
   };
   
   return (
