@@ -42,6 +42,9 @@ export function TournamentDetailsPage() {
   const [, params] = useRoute('/admin/tournaments/:id');
   const tournamentId = params?.id ? parseInt(params.id) : null;
   
+  // Framework 5.0: Comprehensive Console Logging
+  console.log('[TournamentDetails] Initializing with tournamentId:', tournamentId);
+  
   const [activeTab, setActiveTab] = useState('overview');
   const [isCreateBracketDialogOpen, setIsCreateBracketDialogOpen] = useState(false);
   const [isCreateTeamDialogOpen, setIsCreateTeamDialogOpen] = useState(false);
@@ -50,33 +53,54 @@ export function TournamentDetailsPage() {
   const { 
     data: tournament = {} as Tournament, 
     isLoading: isLoadingTournament, 
-    isError: isErrorTournament 
+    isError: isErrorTournament,
+    error: tournamentError
   } = useQuery<Tournament>({
     queryKey: [`/api/tournaments/${tournamentId}`],
     enabled: !!tournamentId,
-    retry: 1,
+    retry: 3, // Framework 5.0: Increased retries for critical data
+    onError: (error) => {
+      console.error('[TournamentDetails] Error fetching tournament details:', error);
+    },
+    onSuccess: (data) => {
+      console.log('[TournamentDetails] Successfully fetched tournament details:', data?.name);
+    }
   });
   
   // Fetch tournament brackets
   const { 
     data: brackets = [] as Bracket[], 
     isLoading: isLoadingBrackets, 
-    isError: isErrorBrackets 
+    isError: isErrorBrackets,
+    error: bracketsError
   } = useQuery<Bracket[]>({
     queryKey: [`/api/tournaments/${tournamentId}/brackets`],
     enabled: !!tournamentId,
-    retry: 1,
+    retry: 3, // Framework 5.0: Increased retries for critical data
+    onError: (error) => {
+      console.error('[TournamentDetails] Error fetching tournament brackets:', error);
+    },
+    onSuccess: (data) => {
+      console.log('[TournamentDetails] Successfully fetched tournament brackets:', data?.length);
+    }
   });
   
   // Fetch tournament teams
   const { 
     data: teams = [] as Team[], 
     isLoading: isLoadingTeams, 
-    isError: isErrorTeams 
+    isError: isErrorTeams,
+    error: teamsError
   } = useQuery<Team[]>({
     queryKey: [`/api/tournaments/${tournamentId}/teams`],
     enabled: !!tournamentId,
-    retry: 1,
+    retry: 3, // Framework 5.0: Increased retries for critical data
+    onError: (error) => {
+      console.error('[TournamentDetails] Error fetching tournament teams:', error);
+    },
+    onSuccess: (data) => {
+      console.log('[TournamentDetails] Successfully fetched tournament teams:', data?.length);
+    }
   });
   
   // Loading state
@@ -90,8 +114,10 @@ export function TournamentDetailsPage() {
     );
   }
   
-  // Error state
+  // Error state - Framework 5.0: Enhanced error handling with detailed information
   if (isErrorTournament || !tournament) {
+    console.error('[TournamentDetails] Error details:', tournamentError);
+    
     return (
       <LayoutContainer className="max-w-6xl">
         <div className="space-y-6">
@@ -104,7 +130,22 @@ export function TournamentDetailsPage() {
             </Link>
           </div>
           
-          <ErrorState message="Failed to load tournament details" />
+          <ErrorState 
+            message="Failed to load tournament details" 
+            details={tournamentError instanceof Error ? tournamentError.message : 'Unknown error'} 
+          />
+          
+          {/* Framework 5.0: Manual Refresh Option for Recovery */}
+          <div className="mt-4">
+            <Button 
+              onClick={() => {
+                console.log('[TournamentDetails] Manual refresh requested');
+                window.location.reload();
+              }}
+            >
+              Refresh Page
+            </Button>
+          </div>
         </div>
       </LayoutContainer>
     );
@@ -342,13 +383,24 @@ function EmptyState({
   );
 }
 
-function ErrorState({ message = "An error occurred" }: { message?: string }) {
+function ErrorState({ 
+  message = "An error occurred", 
+  details = ""
+}: { 
+  message?: string; 
+  details?: string 
+}) {
   return (
     <Alert variant="destructive">
       <AlertCircle className="h-4 w-4" />
       <AlertTitle>Error</AlertTitle>
       <AlertDescription>
         {message}. Please try again later.
+        {details && (
+          <div className="mt-2 text-xs border border-red-300 bg-red-50 p-2 rounded">
+            <strong>Details:</strong> {details}
+          </div>
+        )}
       </AlertDescription>
     </Alert>
   );
