@@ -835,6 +835,7 @@ export class DatabaseStorage implements IStorage {
         
         // Execute the search query
         // IMPORTANT: We're avoiding chaining multiple where clauses as that seems to be causing issues
+        // Framework 5.0: Fix - Remove non-existent fields (rating) to avoid "Cannot convert undefined or null to object" error
         let results = await db.select({
           id: users.id,
           username: users.username,
@@ -843,8 +844,7 @@ export class DatabaseStorage implements IStorage {
           passportCode: users.passportId,
           avatarInitials: users.avatarInitials,
           location: users.location,
-          rating: users.rating, // Added rating field for tournament team creation
-          duprRating: users.duprRating // Also include DUPR rating if available
+          duprRating: users.duprRating // Use DUPR rating from database
         })
         .from(users)
         .where(whereClause)
@@ -866,7 +866,7 @@ export class DatabaseStorage implements IStorage {
           passportCode: user.passportCode || null, 
           avatarUrl: null, // Safe default
           avatarInitials: user.avatarInitials || (user.username ? user.username.substring(0, 2).toUpperCase() : "??"),
-          rating: user.rating || (user.duprRating ? parseFloat(user.duprRating) : null) // Use rating or DUPR rating as fallback
+          rating: user.duprRating ? parseFloat(user.duprRating) : null // Use DUPR rating as fallback
         }));
         
         // Show what we're returning
@@ -879,11 +879,11 @@ export class DatabaseStorage implements IStorage {
         // Try a fallback approach - get all users and filter in memory
         console.log("Trying fallback approach - get all users and filter in JS");
         try {
+          // Framework 5.0: Fix - Remove non-existent fields (rating) to avoid errors
           const allUsers = await db.select({
             id: users.id,
             username: users.username,
             displayName: users.displayName,
-            rating: users.rating,
             duprRating: users.duprRating
           }).from(users).limit(100);
           
@@ -905,6 +905,7 @@ export class DatabaseStorage implements IStorage {
           console.log(`Fallback filtering found ${filteredUsers.length} matches`);
           
           // Map to simplified user objects with only what we need for the player select
+          // Framework 5.0: Fix - Remove non-existent fields (rating) and use duprRating instead
           return filteredUsers.map(user => ({
             id: user.id,
             username: user.username,
@@ -912,7 +913,7 @@ export class DatabaseStorage implements IStorage {
             passportCode: null,
             avatarUrl: null,
             avatarInitials: user.username?.substring(0, 2).toUpperCase() || "??",
-            rating: user.rating || (user.duprRating ? parseFloat(user.duprRating) : null) // Use rating or DUPR rating as fallback
+            rating: user.duprRating ? parseFloat(user.duprRating) : null // Use DUPR rating directly
           }));
         } catch (fallbackError) {
           console.error("Fallback search approach also failed:", fallbackError);
