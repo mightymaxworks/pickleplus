@@ -128,14 +128,15 @@ export function SeedTeamsDialog({
       queryClient.invalidateQueries({ queryKey: ['/api/brackets', bracketId] });
       queryClient.invalidateQueries({ queryKey: ['/api/tournament/brackets', bracketId, 'matches'] });
       
-      // 2. Second independent refresh mechanism: context notification with detailed metadata
-      // This allows components to selectively refresh based on the type and scope of change
-      tournamentChanges.notifySpecificChange('teams_seeded', bracketId, {
-        timestamp: Date.now(),
-        method: data.method,
-        teamCount: Object.keys(data.assignments).length,
-        changedMatches: Object.keys(data.assignments).map(key => key.split('-')[0])
-      });
+      // DISABLED: Second independent refresh mechanism 
+      // This was causing infinite recursion in the TournamentChangeContext
+      // tournamentChanges.notifySpecificChange('teams_seeded', bracketId, {
+      //   timestamp: Date.now(),
+      //   method: data.method,
+      //   teamCount: Object.keys(data.assignments).length,
+      //   changedMatches: Object.keys(data.assignments).map(key => key.split('-')[0])
+      // });
+      console.log(`[PKL-278651-TOURN-0015-SYNC] Teams seeded notification disabled to prevent recursion`);
       
       // 3. Third independent refresh mechanism: global tournament data refresh
       // This ensures any components displaying tournament lists or summaries are updated
@@ -149,14 +150,16 @@ export function SeedTeamsDialog({
         variant: "default",
       });
       
-      // 5. Fifth refresh mechanism: Delayed secondary notification to handle race conditions
-      setTimeout(() => {
-        console.log(`[PKL-278651-TOURN-0015-SYNC] Sending delayed secondary notification for bracket ${bracketId}`);
-        tournamentChanges.notifySpecificChange('teams_seeded', bracketId, {
-          timestamp: Date.now(),
-          isDelayedNotification: true
-        });
-      }, 300);
+      // DISABLED: Fifth refresh mechanism: Delayed secondary notification
+      // This was also causing infinite recursion issues
+      // setTimeout(() => {
+      //   console.log(`[PKL-278651-TOURN-0015-SYNC] Sending delayed secondary notification for bracket ${bracketId}`);
+      //   tournamentChanges.notifySpecificChange('teams_seeded', bracketId, {
+      //     timestamp: Date.now(),
+      //     isDelayedNotification: true
+      //   });
+      // }, 300);
+      console.log(`[PKL-278651-TOURN-0015-SYNC] Delayed seeding notification disabled to prevent recursion`);
     },
     onError: (err) => {
       console.error("[PKL-278651-TOURN-0015-SYNC] Error seeding teams:", err);
