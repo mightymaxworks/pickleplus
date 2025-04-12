@@ -11,6 +11,7 @@
 
 import { registerTournamentAdminComponents } from './components/admin';
 import { eventBus, Events } from '@/core/events/eventBus';
+import { adminModule } from '@/modules/admin';
 
 /**
  * Initialize the tournament module and register its admin components
@@ -32,11 +33,11 @@ export function initializeTournamentModule() {
       }
     });
     
-    // Notify system that tournament module is ready
-    eventBus.publish(Events.ADMIN_NAV_UPDATED, { 
-      module: 'tournament',
-      status: 'ready'
-    });
+    // Get current nav items for debugging
+    const adminAPI = adminModule.exports as any;
+    const navItems = adminAPI.getNavItems();
+    console.log('[Tournament] Current admin nav items:', 
+      navItems.map((item: any) => ({label: item.label, path: item.path})));
   } catch (error) {
     console.error('[Tournament] Error initializing tournament module:', error);
     eventBus.publish(Events.ADMIN_COMPONENTS_UNREGISTERED, { 
