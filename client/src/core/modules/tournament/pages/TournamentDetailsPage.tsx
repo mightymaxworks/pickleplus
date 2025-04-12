@@ -49,7 +49,7 @@ export function TournamentDetailsPage() {
   const [isCreateBracketDialogOpen, setIsCreateBracketDialogOpen] = useState(false);
   const [isCreateTeamDialogOpen, setIsCreateTeamDialogOpen] = useState(false);
   
-  // Fetch tournament details
+  // Fetch tournament details with improved error handling
   const { 
     data: tournament = {} as Tournament, 
     isLoading: isLoadingTournament, 
@@ -59,15 +59,31 @@ export function TournamentDetailsPage() {
     queryKey: [`/api/tournaments/${tournamentId}`],
     enabled: !!tournamentId,
     retry: 3, // Framework 5.0: Increased retries for critical data
-    onError: (error) => {
-      console.error('[TournamentDetails] Error fetching tournament details:', error);
-    },
-    onSuccess: (data) => {
-      console.log('[TournamentDetails] Successfully fetched tournament details:', data?.name);
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    staleTime: 30 * 1000,  // Consider fresh for 30 seconds
+    refetchOnWindowFocus: false,
+    // Framework 5.0: Use onSettled instead of onError/onSuccess for better error handling
+    onSettled: (data, error) => {
+      if (error) {
+        console.error('[TournamentDetails] Error fetching tournament details:', error);
+        
+        // Framework 5.0: Enhanced error reporting with status codes and details
+        if (error instanceof Error) {
+          const errorMessage = error.message;
+          console.error('[TournamentDetails] Error message:', errorMessage);
+          
+          // Check for authentication errors
+          if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
+            console.error('[TournamentDetails] Authentication error detected. User may not be logged in or session expired.');
+          }
+        }
+      } else if (data) {
+        console.log('[TournamentDetails] Successfully fetched tournament details:', data?.name);
+      }
     }
   });
   
-  // Fetch tournament brackets
+  // Fetch tournament brackets with improved error handling
   const { 
     data: brackets = [] as Bracket[], 
     isLoading: isLoadingBrackets, 
@@ -75,17 +91,22 @@ export function TournamentDetailsPage() {
     error: bracketsError
   } = useQuery<Bracket[]>({
     queryKey: [`/api/tournaments/${tournamentId}/brackets`],
-    enabled: !!tournamentId,
+    enabled: !!tournamentId && !isErrorTournament, // Only fetch if tournament loaded successfully
     retry: 3, // Framework 5.0: Increased retries for critical data
-    onError: (error) => {
-      console.error('[TournamentDetails] Error fetching tournament brackets:', error);
-    },
-    onSuccess: (data) => {
-      console.log('[TournamentDetails] Successfully fetched tournament brackets:', data?.length);
+    gcTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: false,
+    // Framework 5.0: Use onSettled instead of onError/onSuccess for better error handling
+    onSettled: (data, error) => {
+      if (error) {
+        console.error('[TournamentDetails] Error fetching tournament brackets:', error);
+      } else if (data) {
+        console.log('[TournamentDetails] Successfully fetched tournament brackets:', data?.length);
+      }
     }
   });
   
-  // Fetch tournament teams
+  // Fetch tournament teams with improved error handling
   const { 
     data: teams = [] as Team[], 
     isLoading: isLoadingTeams, 
@@ -93,13 +114,18 @@ export function TournamentDetailsPage() {
     error: teamsError
   } = useQuery<Team[]>({
     queryKey: [`/api/tournaments/${tournamentId}/teams`],
-    enabled: !!tournamentId,
+    enabled: !!tournamentId && !isErrorTournament, // Only fetch if tournament loaded successfully
     retry: 3, // Framework 5.0: Increased retries for critical data
-    onError: (error) => {
-      console.error('[TournamentDetails] Error fetching tournament teams:', error);
-    },
-    onSuccess: (data) => {
-      console.log('[TournamentDetails] Successfully fetched tournament teams:', data?.length);
+    gcTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: false,
+    // Framework 5.0: Use onSettled instead of onError/onSuccess for better error handling
+    onSettled: (data, error) => {
+      if (error) {
+        console.error('[TournamentDetails] Error fetching tournament teams:', error);
+      } else if (data) {
+        console.log('[TournamentDetails] Successfully fetched tournament teams:', data?.length);
+      }
     }
   });
   
@@ -118,6 +144,19 @@ export function TournamentDetailsPage() {
   if (isErrorTournament || !tournament) {
     console.error('[TournamentDetails] Error details:', tournamentError);
     
+    // Check for authentication error
+    const isAuthError = tournamentError instanceof Error && 
+      (tournamentError.message.includes('401') || 
+       tournamentError.message.includes('Unauthorized'));
+    
+    const errorMessage = isAuthError
+      ? "Authentication required"
+      : "Failed to load tournament details";
+      
+    const errorDetails = isAuthError
+      ? "Please log in with an admin account to access this tournament's details."
+      : (tournamentError instanceof Error ? tournamentError.message : 'Unknown error');
+    
     return (
       <LayoutContainer className="max-w-6xl">
         <div className="space-y-6">
@@ -131,20 +170,34 @@ export function TournamentDetailsPage() {
           </div>
           
           <ErrorState 
-            message="Failed to load tournament details" 
-            details={tournamentError instanceof Error ? tournamentError.message : 'Unknown error'} 
+            message={errorMessage} 
+            details={errorDetails} 
           />
           
-          {/* Framework 5.0: Manual Refresh Option for Recovery */}
-          <div className="mt-4">
-            <Button 
-              onClick={() => {
-                console.log('[TournamentDetails] Manual refresh requested');
-                window.location.reload();
-              }}
-            >
-              Refresh Page
-            </Button>
+          {/* Framework 5.0: Different actions based on error type */}
+          <div className="mt-4 flex gap-4">
+            {isAuthError ? (
+              <Link to="/login?redirect=/admin/tournaments">
+                <Button>
+                  Log In
+                </Button>
+              </Link>
+            ) : (
+              <Button 
+                onClick={() => {
+                  console.log('[TournamentDetails] Manual refresh requested');
+                  window.location.reload();
+                }}
+              >
+                Refresh Page
+              </Button>
+            )}
+            
+            <Link to="/admin/tournaments">
+              <Button variant="outline">
+                Return to Tournaments
+              </Button>
+            </Link>
           </div>
         </div>
       </LayoutContainer>
