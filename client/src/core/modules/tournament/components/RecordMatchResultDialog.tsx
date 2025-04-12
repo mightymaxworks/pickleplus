@@ -1,12 +1,16 @@
 /**
- * PKL-278651-TOURN-0017-SCORE
- * Enhanced Record Match Result Dialog with Visual Score Input
+ * PKL-278651-TOURN-0017-UI
+ * Enhanced Record Match Result Dialog with Improved Visual UI
  * 
  * Dialog for recording tournament match results with comprehensive state synchronization
  * mechanisms to ensure bracket visualization updates consistently across the system.
  * Implements Framework 5.0 redundant update mechanisms with optimized cache invalidation.
  * 
- * Enhanced with visual score input for a more intuitive user experience.
+ * Enhanced with:
+ * - Visual score input with multi-game support
+ * - Enhanced mobile responsiveness
+ * - Clear visual indicators for match progress and winners
+ * - Prominent submission controls for better usability
  */
 
 import { useState, useCallback } from "react";
@@ -432,7 +436,7 @@ export function RecordMatchResultDialog({
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Visual Score Input */}
+            {/* Visual Score Input with enhanced mobile UI */}
             <div className="mb-4">
               <FormLabel className="mb-2 block">Match Score</FormLabel>
               <TournamentMatchScoreInput
@@ -445,6 +449,25 @@ export function RecordMatchResultDialog({
                 onWinnerSelected={handleWinnerSelection}
                 pointsToWin={21}
               />
+              
+              {/* Mobile-optimized submit button */}
+              <div className="mt-4 flex justify-center">
+                <Button 
+                  type="submit" 
+                  className="w-full md:w-auto text-lg py-6 touch-manipulation" 
+                  size="lg"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <LoaderCircle className="mr-2 h-5 w-5 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>Submit Score</>
+                  )}
+                </Button>
+              </div>
             </div>
             
             {/* Hidden form fields to hold the data */}
