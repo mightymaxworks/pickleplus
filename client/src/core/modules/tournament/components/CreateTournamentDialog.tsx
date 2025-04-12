@@ -74,10 +74,11 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (values: TournamentFormValues) => {
-      return apiRequest('/api/tournaments', {
+      return apiRequest({
+        url: '/api/tournaments',
         method: 'POST',
         data: values,
-      } as any);
+      });
     },
     onSuccess: () => {
       // Reset form and close dialog
@@ -181,42 +182,24 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Start Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className="w-full pl-3 text-left font-normal"
-                            type="button"
-                          >
-                            {field.value ? (
-                              format(field.value, "MMM d, yyyy")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={(date) => {
-                            if (date) {
-                              field.onChange(date);
-                              
-                              // If end date is before the new start date, update end date
-                              const endDate = form.getValues("endDate");
-                              if (endDate && endDate < date) {
-                                form.setValue("endDate", date);
-                              }
-                            }
-                          }}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <FormControl>
+                      <Input
+                        type="date"
+                        value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                        onChange={(e) => {
+                          const date = e.target.value ? new Date(e.target.value) : undefined;
+                          field.onChange(date);
+                          
+                          // If end date is before the new start date, update end date
+                          const endDate = form.getValues("endDate");
+                          if (date && endDate && endDate < date) {
+                            form.setValue("endDate", date);
+                          }
+                        }}
+                        min={new Date().toISOString().split('T')[0]}
+                        className="w-full"
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -228,40 +211,20 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>End Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className="w-full pl-3 text-left font-normal"
-                            type="button"
-                          >
-                            {field.value ? (
-                              format(field.value, "MMM d, yyyy")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={(date) => {
-                            if (date) {
-                              field.onChange(date);
-                            }
-                          }}
-                          initialFocus
-                          disabled={(date) => {
-                            const startDate = form.getValues("startDate");
-                            return startDate ? date < startDate : false;
-                          }}
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <FormControl>
+                      <Input 
+                        type="date"
+                        value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                        onChange={(e) => {
+                          const date = e.target.value ? new Date(e.target.value) : undefined;
+                          field.onChange(date);
+                        }}
+                        min={form.getValues("startDate") 
+                          ? new Date(form.getValues("startDate")).toISOString().split('T')[0]
+                          : new Date().toISOString().split('T')[0]}
+                        className="w-full"
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
