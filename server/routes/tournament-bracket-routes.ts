@@ -27,7 +27,7 @@ import {
   insertTournamentTeamSchema,
   insertTournamentBracketSchema,
 } from '../../shared/schema/tournament-brackets';
-import { eq, and, or } from 'drizzle-orm';
+import { eq, and, or, sql } from 'drizzle-orm';
 import { createSingleEliminationBracket, getBracketWithMatches, recordMatchResult } from '../services/bracket-generator';
 
 const router = Router();
@@ -129,12 +129,13 @@ router.post('/tournaments', async (req, res) => {
       
       // Execute raw SQL that only uses the columns that actually exist in the database
       // This bypasses Drizzle's automatic mapping which is causing the error
-      const { db: sql } = await import('../db');
-      const result = await sql.unsafe(`
+      const { db } = await import('../db'); 
+      const { sql } = await import('drizzle-orm');
+      const result = await db.execute(sql`
         INSERT INTO tournaments (name, description, location, start_date, end_date, level) 
-        VALUES ($1, $2, $3, $4, $5, $6)
+        VALUES (${name}, ${description}, ${location}, ${startDate}, ${endDate}, ${level})
         RETURNING id, name, description, start_date, end_date, level;
-      `, [name, description, location, startDate, endDate, level]);
+      `);
       
       console.log('[API][Tournament] SQL insert result:', result);
       
