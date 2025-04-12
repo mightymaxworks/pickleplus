@@ -28,6 +28,14 @@ import {
   passportVerifications, type PassportVerification, type InsertPassportVerification
 } from "@shared/schema/events";
 
+// PKL-278651-TOURN-0001-BRCKT - Tournament Bracket System
+import {
+  tournamentBrackets, type TournamentBracket, type InsertTournamentBracket,
+  tournamentRounds, type TournamentRound, type InsertTournamentRound,
+  tournamentBracketMatches, type TournamentBracketMatch, type InsertTournamentBracketMatch,
+  tournamentTeams, type TournamentTeam, type InsertTournamentTeam
+} from "@shared/schema/tournament-brackets";
+
 // Define types for database results
 type MatchStatistics = typeof matchStatistics.$inferSelect;
 type PerformanceImpact = typeof performanceImpacts.$inferSelect;
@@ -155,6 +163,27 @@ export interface IStorage {
     endDate?: Date;
     suspicious?: boolean;
   }): Promise<AuditLog[]>;
+
+  // PKL-278651-TOURN-0001-BRCKT - Tournament Bracket System
+  // Tournament Bracket operations
+  getBracketById(id: number): Promise<TournamentBracket | undefined>;
+  getBracketsByTournament(tournamentId: number): Promise<TournamentBracket[]>;
+  createBracket(bracketData: InsertTournamentBracket): Promise<TournamentBracket>;
+  updateBracket(id: number, updates: Partial<InsertTournamentBracket>): Promise<TournamentBracket | undefined>;
+  deleteBracket(id: number): Promise<boolean>;
+
+  // Tournament Bracket Match operations
+  getBracketMatch(id: number): Promise<TournamentBracketMatch | undefined>;
+  getMatchesByBracket(bracketId: number): Promise<TournamentBracketMatch[]>;
+  getMatchesByRound(roundId: number): Promise<TournamentBracketMatch[]>;
+  createBracketMatch(matchData: InsertTournamentBracketMatch): Promise<TournamentBracketMatch>;
+  updateBracketMatch(id: number, updates: Partial<InsertTournamentBracketMatch>): Promise<TournamentBracketMatch | undefined>;
+  recordMatchResult(matchId: number, resultData: {
+    winnerId: number;
+    loserId: number;
+    score: string;
+    scoreDetails?: any;
+  }): Promise<TournamentBracketMatch | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
