@@ -77,9 +77,13 @@ export function SeedTeamsDialog({
     isError: isBracketError 
   } = useQuery({
     queryKey: [`bracket-${bracketId}`],
-    queryFn: () => bracketId ? 
-      apiRequest(`/api/brackets/${bracketId}`) : 
-      Promise.reject('No bracket ID provided'),
+    queryFn: async () => {
+      if (!bracketId) {
+        return Promise.reject('No bracket ID provided');
+      }
+      const response = await apiRequest('GET', `/api/brackets/${bracketId}`);
+      return response.json();
+    },
     enabled: !!bracketId,
   });
   
