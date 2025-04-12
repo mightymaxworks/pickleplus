@@ -8,16 +8,25 @@
 
 import { CreateTournamentWizard } from './CreateTournamentWizard';
 
+// Export a constant for tournament query key to ensure consistency across components
+export const TOURNAMENT_QUERY_KEY = 'api/tournaments';
+
 // This component has the same interface as CreateTournamentDialog so it can be
 // used as a drop-in replacement while we transition
 interface TournamentWizardProviderProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  queryKey?: string; // Optional custom query key
 }
 
-export function CreateTournamentDialog({ open, onOpenChange }: TournamentWizardProviderProps) {
+export function CreateTournamentDialog({ 
+  open, 
+  onOpenChange, 
+  queryKey = TOURNAMENT_QUERY_KEY 
+}: TournamentWizardProviderProps) {
   return (
     <CreateTournamentWizard
+      queryKey={queryKey}
       open={open}
       onOpenChange={onOpenChange}
     />

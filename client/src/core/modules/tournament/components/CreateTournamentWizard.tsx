@@ -460,9 +460,14 @@ export type TournamentFormValues = z.infer<typeof tournamentFormSchema>;
 type CreateTournamentWizardProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  queryKey?: string; // Optional query key for cache invalidation
 };
 
-export function CreateTournamentWizard({ open, onOpenChange }: CreateTournamentWizardProps) {
+export function CreateTournamentWizard({ 
+  open, 
+  onOpenChange,
+  queryKey = 'api/tournaments' // Default matches TournamentManagementPage
+}: CreateTournamentWizardProps) {
   const queryClient = useQueryClient();
   
   // Track the current step
