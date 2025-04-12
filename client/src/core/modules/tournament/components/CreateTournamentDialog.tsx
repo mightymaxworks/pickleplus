@@ -25,14 +25,28 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-// Tournament form schema
+/**
+ * Tournament form schema
+ * Carefully designed to match the actual database schema columns
+ * Following Framework 5.0 principles - added validation and error handling
+ */
 const tournamentFormSchema = z.object({
+  // Required fields that exist in the database
   name: z.string().min(3, { message: 'Tournament name must be at least 3 characters' }),
-  description: z.string().optional(),
-  location: z.string().optional(),
   startDate: z.date({ required_error: 'Start date is required' }),
   endDate: z.date({ required_error: 'End date is required' }),
   status: z.enum(['draft', 'published']),
+  
+  // Optional fields that exist in the database 
+  description: z.string().optional(),
+  location: z.string().optional(), 
+  
+  // Required fields with defaults (match database schema exactly)
+  format: z.string().default('doubles'),
+  division: z.string().default('open'),
+  level: z.string().default('club'),
+  
+  // UI-only field (not in database schema)
   registrationOpen: z.boolean().default(true),
 });
 
@@ -47,7 +61,7 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
   const queryClient = useQueryClient();
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
-  // Default form values
+  // Default form values - updated to include all required fields from schema
   const defaultValues: Partial<TournamentFormValues> = {
     name: '',
     description: '',
@@ -56,6 +70,9 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
     registrationOpen: true,
     startDate: new Date(),
     endDate: new Date(),
+    format: 'doubles',
+    division: 'open',
+    level: 'club',
   };
 
   const form = useForm<TournamentFormValues>({
@@ -121,19 +138,47 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
       
       // Extract a more user-friendly message from the error
       let errorMessage = 'An unexpected error occurred.';
+      let errorDetails = '';
       
-      if (error.message) {
-        errorMessage = error.message;
-        
-        // If it's a CSRF token error, provide more specific guidance
-        if (errorMessage.includes('CSRF')) {
-          errorMessage = 'Security validation failed. Please try refreshing the page and submitting again.';
+      // Enhanced error handling logic (Framework 5.0 principle)
+      try {
+        if (error.message) {
+          errorMessage = error.message;
+          
+          // If it's a CSRF token error, provide more specific guidance
+          if (errorMessage.includes('CSRF')) {
+            errorMessage = 'Security validation failed. Please try refreshing the page and submitting again.';
+          }
+          
+          // If it's a database schema mismatch error
+          if (errorMessage.includes('Database schema mismatch')) {
+            errorMessage = 'Database schema issue detected. Please contact support.';
+            errorDetails = error.message;
+          }
+          
+          // If it contains a structured error response
+          if (error.response) {
+            try {
+              const responseData = JSON.parse(error.response);
+              if (responseData.message) {
+                errorMessage = responseData.message;
+              }
+              if (responseData.errors) {
+                errorDetails = JSON.stringify(responseData.errors, null, 2);
+              }
+            } catch (parseError) {
+              console.warn('[Tournament] Could not parse error response:', parseError);
+            }
+          }
         }
+      } catch (handlingError) {
+        console.error('[Tournament] Error while handling error:', handlingError);
       }
       
-      // Log detailed diagnostics
+      // Log detailed diagnostics (Framework 5.0 principle: Always log the context)
       console.log('[Tournament] Current form values:', form.getValues());
       console.log('[Tournament] Form validation state:', form.formState);
+      console.log('[Tournament] Error details:', errorDetails || 'No detailed error information available');
       
       toast({
         title: 'Failed to create tournament',
@@ -270,27 +315,103 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
               />
             </div>
             
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="published">Published</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="draft">Draft</SelectItem>
+                        <SelectItem value="published">Published</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="format"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Format</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select format" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="singles">Singles</SelectItem>
+                        <SelectItem value="doubles">Doubles</SelectItem>
+                        <SelectItem value="mixed">Mixed Doubles</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="division"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Division</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select division" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="open">Open</SelectItem>
+                        <SelectItem value="age_50+">50+</SelectItem>
+                        <SelectItem value="age_60+">60+</SelectItem>
+                        <SelectItem value="junior">Junior</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="level"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Level</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select level" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="beginner">Beginner</SelectItem>
+                        <SelectItem value="intermediate">Intermediate</SelectItem>
+                        <SelectItem value="advanced">Advanced</SelectItem>
+                        <SelectItem value="club">Club</SelectItem>
+                        <SelectItem value="pro">Professional</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <DialogFooter>
               <Button 

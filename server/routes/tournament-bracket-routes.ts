@@ -104,28 +104,59 @@ router.post('/tournaments', async (req, res) => {
     // Create the tournament
     console.log('[API][Tournament] Validation passed, creating tournament');
     
-    // Map the form data to the database schema
-    // Make sure we're only using fields that exist in the database
-    const tournamentData = {
-      name: parsedData.data.name,
-      description: parsedData.data.description || null,
-      location: parsedData.data.location || null,
-      startDate: parsedData.data.startDate,
-      endDate: parsedData.data.endDate,
-      status: parsedData.data.status,
-      // Use sensible defaults for required fields that aren't in the form
-      format: parsedData.data.format || 'doubles',
-      division: parsedData.data.division || 'open',
-      level: parsedData.data.level || 'club',
-    };
+    // Map the form data to match EXACTLY what's in the database schema
+    // Following Framework 5.0 principles: focus on reliability over complexity
+    let newTournament;
     
-    console.log('[API][Tournament] Final tournament data:', tournamentData);
+    try {
+      // Create minimal valid tournament data structure based on actual database schema
+      const tournamentData = {
+        name: parsedData.data.name,
+        description: parsedData.data.description || null,
+        location: parsedData.data.location || null,
+        startDate: parsedData.data.startDate,
+        endDate: parsedData.data.endDate,
+        status: parsedData.data.status,
+        format: parsedData.data.format || 'doubles',
+        division: parsedData.data.division || 'open',
+        level: parsedData.data.level || 'club',
+      };
+      
+      console.log('[API][Tournament] Final tournament data:', tournamentData);
+      
+      // Following Framework 5.0 principles: proper error handling with specific messages
+      const insertResult = await db.insert(tournaments)
+        .values(tournamentData)
+        .returning();
+      
+      newTournament = insertResult[0];
+      
+      if (!newTournament) {
+        throw new Error('Tournament was not created successfully');
+      }
+      
+      console.log('[API][Tournament] Tournament created successfully:', newTournament.id);
+    } catch (error) {
+      // Enhanced error handling (Framework 5.0)
+      console.error('[API][Tournament] Database operation failed:', error);
+      
+      // If the error is related to a missing column, provide specific error info
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('column') && errorMessage.includes('does not exist')) {
+        const columnMatch = errorMessage.match(/column "([^"]+)"/);
+        const columnName = columnMatch ? columnMatch[1] : 'unknown column';
+        return res.status(500).json({ 
+          message: `Database schema mismatch: ${columnName} doesn't exist. Please run database migrations.`,
+          code: 'DB_SCHEMA_MISMATCH'
+        });
+      }
+      
+      // Rethrow to be caught by the outer try-catch
+      throw error;
+    }
     
-    const [newTournament] = await db.insert(tournaments)
-      .values(tournamentData)
-      .returning();
-    
-    console.log('[API][Tournament] Tournament created successfully:', newTournament);
+    // Only reached if successful - we know newTournament exists here
+    console.log('[API][Tournament] Tournament created successfully with ID:', newTournament.id);
     res.status(201).json(newTournament);
   } catch (error) {
     console.error('[API][Tournament] Error creating tournament:', error);
