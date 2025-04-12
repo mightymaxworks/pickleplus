@@ -1,9 +1,10 @@
 /**
- * PKL-278651-TOURN-0001-BRCKT
- * Tournament Details Page
+ * PKL-278651-TOURN-0002-ADMIN
+ * Tournament Details Page - Admin Integration
  * 
  * This page displays details for a specific tournament and allows
- * management of teams and brackets.
+ * management of teams and brackets. Integrated with the admin interface
+ * for consistent look and feel according to the PKL-278651-ADMIN series.
  */
 
 import { useState } from 'react';
@@ -30,6 +31,8 @@ import { CreateBracketDialog } from '../components/CreateBracketDialog';
 import { BracketsList } from '../components/BracketsList';
 import { TeamsList } from '../components/TeamsList';
 import { CreateTeamDialog } from '../components/CreateTeamDialog';
+import { AdminLayout } from '@/modules/admin/components/AdminLayout';
+import { Tournament } from '@shared/schema';
 
 export function TournamentDetailsPage() {
   const [, params] = useRoute('/tournaments/:id');
