@@ -9,7 +9,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRoute, Link } from 'wouter';
-import { useTournamentChanges } from '../context/TournamentChangeContext';
+import { useTournamentChanges, TournamentChangeType } from '../context/TournamentChangeContext';
 import { 
   Card, 
   CardContent, 
@@ -129,21 +129,20 @@ export function BracketDetailsPage() {
       console.log(`[PKL-278651-TOURN-0015-SYNC] Cache event detected, checking if bracket ${bracketId} is affected`);
       
       // Manual check if our specific query was invalidated (for safety)
-      const matchingQueryKey1 = [`bracket-${bracketId}`];
-      const matchingQueryKey2 = ['/api/tournament/brackets', bracketId];
       
       const queries = queryClient.getQueryCache().findAll();
       const bracketQueryInvalidated = queries.some(query => {
         // Check both possible key formats for our bracket
         const key = query.queryKey;
         
-        // Direct string key match 
-        if (key === matchingQueryKey1[0]) return true;
+        // Direct string key match - check if the key is an array with a single string
+        if (Array.isArray(key) && key.length === 1 && typeof key[0] === 'string' && 
+            key[0] === `bracket-${bracketId}`) return true;
         
-        // Array key match with ID
-        if (Array.isArray(key) && 
-            key[0] === matchingQueryKey2[0] && 
-            key[1] === matchingQueryKey2[1]) return true;
+        // Array key match with ID - ensure both key elements match
+        if (Array.isArray(key) && key.length >= 2 &&
+            typeof key[0] === 'string' && key[0] === '/api/tournament/brackets' && 
+            typeof key[1] === 'number' && key[1] === bracketId) return true;
             
         return false;
       });
