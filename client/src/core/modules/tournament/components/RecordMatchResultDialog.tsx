@@ -1,10 +1,12 @@
 /**
- * PKL-278651-TOURN-0015-SYNC
- * Record Match Result Dialog Component with Enhanced State Synchronization
+ * PKL-278651-TOURN-0017-SCORE
+ * Enhanced Record Match Result Dialog with Visual Score Input
  * 
  * Dialog for recording tournament match results with comprehensive state synchronization
  * mechanisms to ensure bracket visualization updates consistently across the system.
  * Implements Framework 5.0 redundant update mechanisms with optimized cache invalidation.
+ * 
+ * Enhanced with visual score input for a more intuitive user experience.
  */
 
 import { useState, useCallback } from "react";
@@ -36,6 +38,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { TournamentMatchScoreInput } from "./TournamentMatchScoreInput";
 
 // Import enhanced API client functions
 import { recordMatchResult } from "../api/brackets";
@@ -71,6 +74,8 @@ export function RecordMatchResultDialog({
 }: RecordMatchResultDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [scoreData, setScoreData] = useState({ team1Score: 0, team2Score: 0, scoreFormat: "0-0" });
+  const [selectedWinnerId, setSelectedWinnerId] = useState<number | null>(null);
   const queryClient = useQueryClient();
   const tournamentChanges = useTournamentChanges();
 
