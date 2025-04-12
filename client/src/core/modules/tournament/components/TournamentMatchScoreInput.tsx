@@ -504,59 +504,101 @@ export function TournamentMatchScoreInput({
         </Card>
       </div>
       
-      {/* Match Format Selector */}
-      <div className="mb-2">
-        <div className="text-sm font-medium mb-2">Match Format</div>
-        <Select
-          value={value.matchFormat || 'single'}
-          onValueChange={(format) => handleMatchFormatChange(format as MatchFormat)}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select match format" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="single">Single Game</SelectItem>
-            <SelectItem value="best_of_3">Best of 3 Games</SelectItem>
-            <SelectItem value="best_of_5">Best of 5 Games</SelectItem>
-            <SelectItem value="custom">Custom Format</SelectItem>
-          </SelectContent>
-        </Select>
-        <div className="text-xs text-gray-500 mt-1">
-          {value.matchFormat === 'single' ? (
-            'Single game format: First to win one game wins the match'
-          ) : value.matchFormat === 'best_of_3' ? (
-            'Best of 3: First to win 2 games wins the match'
-          ) : value.matchFormat === 'best_of_5' ? (
-            'Best of 5: First to win 3 games wins the match'
-          ) : (
-            'Custom match format'
-          )}
+      {/* Enhanced Mobile-Friendly Match Format Controls */}
+      <div className="bg-gray-50 rounded-lg p-4 mb-4 border border-gray-200">
+        {/* Match Progress Summary */}
+        <div className="flex justify-between items-center mb-3">
+          <Badge variant="outline" className="font-normal py-1">
+            Match Progress
+          </Badge>
+          
+          <Badge 
+            variant={value.team1GamesWon === 0 && value.team2GamesWon === 0 ? "outline" : "secondary"}
+            className="font-normal py-1"
+          >
+            {value.team1GamesWon === 0 && value.team2GamesWon === 0 
+              ? "In progress" 
+              : `${value.team1GamesWon ?? 0} - ${value.team2GamesWon ?? 0}`}
+          </Badge>
         </div>
-      </div>
-      
-      {/* Scoring Format Selector */}
-      <div className="mb-2">
-        <div className="text-sm font-medium mb-2">Scoring Format</div>
-        <Select
-          value={value.scoringType || 'traditional'}
-          onValueChange={(format) => handleScoringFormatChange(format as ScoringFormat)}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select scoring format" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="traditional">Traditional Scoring</SelectItem>
-            <SelectItem value="rally">Rally Scoring</SelectItem>
-            <SelectItem value="custom">Custom Format</SelectItem>
-          </SelectContent>
-        </Select>
-        <div className="text-xs text-gray-500 mt-1">
-          {value.scoringType === 'traditional' ? (
-            'Side-out scoring: Only the serving team can score points'
-          ) : value.scoringType === 'rally' ? (
-            'Rally scoring: Points awarded on every rally regardless of server'
-          ) : (
-            'Custom scoring format'
+        
+        {/* Visual Team Progress */}
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          <div className={`text-center p-2 rounded ${getMatchWinner() === 'team1' ? 'bg-primary/20 shadow-sm' : 'bg-gray-100'}`}>
+            <div className="text-xs font-medium mb-1 truncate">{team1Name}</div>
+            <div className={`text-xl font-bold ${getMatchWinner() === 'team1' ? 'text-primary' : ''}`}>
+              {value.team1GamesWon || 0}
+              {getMatchWinner() === 'team1' && <Trophy className="h-4 w-4 inline ml-1 text-primary" />}
+            </div>
+            <div className="text-xs mt-1">games won</div>
+          </div>
+          
+          <div className={`text-center p-2 rounded ${getMatchWinner() === 'team2' ? 'bg-primary/20 shadow-sm' : 'bg-gray-100'}`}>
+            <div className="text-xs font-medium mb-1 truncate">{team2Name}</div>
+            <div className={`text-xl font-bold ${getMatchWinner() === 'team2' ? 'text-primary' : ''}`}>
+              {value.team2GamesWon || 0}
+              {getMatchWinner() === 'team2' && <Trophy className="h-4 w-4 inline ml-1 text-primary" />}
+            </div>
+            <div className="text-xs mt-1">games won</div>
+          </div>
+        </div>
+        
+        {/* Format Selectors - 2 Column Layout on Desktop, 1 Column on Mobile */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Match Format Selector */}
+          <div>
+            <div className="text-sm font-medium mb-1">Match Format</div>
+            <Select
+              value={value.matchFormat || 'single'}
+              onValueChange={(format) => handleMatchFormatChange(format as MatchFormat)}
+            >
+              <SelectTrigger className="w-full touch-manipulation">
+                <SelectValue placeholder="Select match format" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="single">Single Game</SelectItem>
+                <SelectItem value="best_of_3">Best of 3 Games</SelectItem>
+                <SelectItem value="best_of_5">Best of 5 Games</SelectItem>
+                <SelectItem value="custom">Custom Format</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Scoring Format Selector */}
+          <div>
+            <div className="text-sm font-medium mb-1">Scoring Type</div>
+            <Select
+              value={value.scoringType || 'traditional'}
+              onValueChange={(format) => handleScoringFormatChange(format as ScoringFormat)}
+            >
+              <SelectTrigger className="w-full touch-manipulation">
+                <SelectValue placeholder="Select scoring type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="traditional">Traditional</SelectItem>
+                <SelectItem value="rally">Rally</SelectItem>
+                <SelectItem value="custom">Custom</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
+        {/* Format Description */}
+        <div className="text-xs text-gray-600 mt-3 text-center">
+          {value.scoringType === 'traditional' && (
+            <div>Side-out scoring: Only the serving team can score points</div>
+          )}
+          {value.scoringType === 'rally' && (
+            <div>Rally scoring: Points awarded on every rally regardless of server</div>
+          )}
+          {value.matchFormat === 'single' && (
+            <div className="mt-1">Single game: First to win one game wins the match</div>
+          )}
+          {value.matchFormat === 'best_of_3' && (
+            <div className="mt-1">Best of 3: First to win 2 games wins the match</div>
+          )}
+          {value.matchFormat === 'best_of_5' && (
+            <div className="mt-1">Best of 5: First to win 3 games wins the match</div>
           )}
         </div>
       </div>
