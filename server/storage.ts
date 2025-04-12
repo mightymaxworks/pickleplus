@@ -833,8 +833,13 @@ export class DatabaseStorage implements IStorage {
         
         console.log("Search SQL:", whereClause);
         
-        // Execute the search query
+        // PKL-278651-TOURN-0008-SRCH - Enhanced user search for tournament team registration
+        // Execute the search query with Framework 5.0 reliability patterns
         // IMPORTANT: We're avoiding chaining multiple where clauses as that seems to be causing issues
+        console.log('[PKL-278651-TOURN-0008-SRCH] Executing user search with enhanced reliability patterns');
+        
+        // Using explicit field selection with only known valid columns
+        // Remove reference to users.rating which doesn't exist in the schema
         let results = await db.select({
           id: users.id,
           username: users.username,
@@ -843,8 +848,8 @@ export class DatabaseStorage implements IStorage {
           passportCode: users.passportId,
           avatarInitials: users.avatarInitials,
           location: users.location,
-          rating: users.rating, // Added rating field for tournament team creation
-          duprRating: users.duprRating // Also include DUPR rating if available
+          // Ratings are stored in other fields, not directly on users table
+          duprRating: users.duprRating 
         })
         .from(users)
         .where(whereClause)
@@ -858,7 +863,7 @@ export class DatabaseStorage implements IStorage {
         console.log(`Search found ${results.length} results for "${safeQuery}"`);
         console.log("Results:", results.map(u => `${u.id}: ${u.username}`).join(", "));
         
-        // Return the results with rating information for tournament team creation
+        // PKL-278651-TOURN-0008-SRCH - Ensure rating mapping doesn't access non-existent fields
         const mappedResults = results.map(user => ({
           id: user.id,
           username: user.username,
@@ -866,7 +871,8 @@ export class DatabaseStorage implements IStorage {
           passportCode: user.passportCode || null, 
           avatarUrl: null, // Safe default
           avatarInitials: user.avatarInitials || (user.username ? user.username.substring(0, 2).toUpperCase() : "??"),
-          rating: user.rating || (user.duprRating ? parseFloat(user.duprRating) : null) // Use rating or DUPR rating as fallback
+          // Use DUPR rating when available
+          rating: user.duprRating ? parseFloat(user.duprRating) : null
         }));
         
         // Show what we're returning
@@ -876,14 +882,14 @@ export class DatabaseStorage implements IStorage {
       } catch (dbError) {
         console.error("Database error in searchUsers:", dbError);
         
-        // Try a fallback approach - get all users and filter in memory
-        console.log("Trying fallback approach - get all users and filter in JS");
+        // PKL-278651-TOURN-0008-SRCH - Fix fallback approach with Framework 5.0 reliability patterns
+        console.log("[PKL-278651-TOURN-0008-SRCH] Trying fallback approach with robust field selection");
         try {
           const allUsers = await db.select({
             id: users.id,
             username: users.username,
             displayName: users.displayName,
-            rating: users.rating,
+            // Remove reference to non-existent users.rating field
             duprRating: users.duprRating
           }).from(users).limit(100);
           
@@ -904,7 +910,7 @@ export class DatabaseStorage implements IStorage {
           
           console.log(`Fallback filtering found ${filteredUsers.length} matches`);
           
-          // Map to simplified user objects with only what we need for the player select
+          // PKL-278651-TOURN-0008-SRCH - Use consistent rating fallbacks in all code paths
           return filteredUsers.map(user => ({
             id: user.id,
             username: user.username,
@@ -912,7 +918,8 @@ export class DatabaseStorage implements IStorage {
             passportCode: null,
             avatarUrl: null,
             avatarInitials: user.username?.substring(0, 2).toUpperCase() || "??",
-            rating: user.rating || (user.duprRating ? parseFloat(user.duprRating) : null) // Use rating or DUPR rating as fallback
+            // Use only DUPR rating, as the rating field doesn't exist
+            rating: user.duprRating ? parseFloat(user.duprRating) : null
           }));
         } catch (fallbackError) {
           console.error("Fallback search approach also failed:", fallbackError);
