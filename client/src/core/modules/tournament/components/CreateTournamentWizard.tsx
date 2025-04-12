@@ -638,23 +638,21 @@ export function CreateTournamentWizard({ open, onOpenChange }: CreateTournamentW
           <div className="space-y-4">
             {renderCurrentStep()}
             
-            {/* Simplified footer with better touch targets */}
-            <div className="flex justify-between pt-3 border-t mt-3">
-              {step > 0 ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={goBack}
-                  disabled={isPending}
-                  className="h-9"
-                  size="sm"
-                >
-                  <ChevronLeft className="mr-1 h-4 w-4" /> Back
-                </Button>
-              ) : (
-                // Empty div to maintain flex spacing
-                <div></div>
-              )}
+            <DialogFooter className="flex justify-between pt-3 border-t mt-3">
+              <div>
+                {step > 0 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={goBack}
+                    disabled={isPending}
+                    className="h-9"
+                    size="sm"
+                  >
+                    <ChevronLeft className="mr-1 h-4 w-4" /> Back
+                  </Button>
+                )}
+              </div>
               
               <div className="flex gap-2">
                 <Button 
@@ -683,7 +681,7 @@ export function CreateTournamentWizard({ open, onOpenChange }: CreateTournamentW
                   }
                 </Button>
               </div>
-            </div>
+            </DialogFooter>
           </div>
         </Form>
       </DialogContent>
