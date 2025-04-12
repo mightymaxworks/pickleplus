@@ -23,6 +23,7 @@ import { setupAdminDashboardRoutes } from "./routes/admin-dashboard-routes";
 import { registerTournamentBracketRoutes } from "./routes/register-tournament-bracket-routes";
 import { registerUserSearchRoutes } from "./routes/user-search-routes";
 import { default as registerTournamentSeedTeamsRoutes } from "./routes/tournament-seed-teams-routes";
+import { registerMatchResultRoutes } from "./routes/register-match-result-routes";
 
 // Import necessary schema
 import { 
@@ -83,6 +84,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Register Tournament Seed Teams routes (PKL-278651-TOURN-0003-MATCH)
   registerTournamentSeedTeamsRoutes(app, storage);
+  
+  // Register Match Result routes (PKL-278651-TOURN-0003.1-API)
+  registerMatchResultRoutes(app);
   
   // API routes
   
