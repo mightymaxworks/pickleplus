@@ -277,10 +277,11 @@ router.post('/tournaments/:id/teams', async (req, res) => {
       console.log(`  - ${key}: ${value._def.typeName} (Required: ${!value.isOptional()})`);
     });
     
-    // Validate request body with extended schema
+    // Validate request body with extended schema (Framework 5.0 updates)
     const teamDataSchema = insertTournamentTeamSchema.extend({
       playerOneId: z.number(),
       playerTwoId: z.number(),
+      tournamentId: z.number().optional(), // Make tournamentId optional since we extract it from URL
     });
     
     // Parse the data
@@ -301,10 +302,14 @@ router.post('/tournaments/:id/teams', async (req, res) => {
     
     console.log('[API][Tournament] Team data validation successful');
     
+    // Framework 5.0: Handle tournamentId correctly
+    // If the client sent a tournamentId, use it, otherwise use the one from the route
     const teamData = {
       ...parsedData.data,
-      tournamentId,
+      tournamentId: parsedData.data.tournamentId || tournamentId,
     };
+    
+    console.log('[API][Tournament] Final team data with tournamentId:', teamData);
     
     // Check if both players exist
     const playerOne = await db.query.users.findFirst({
