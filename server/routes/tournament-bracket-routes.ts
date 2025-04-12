@@ -268,28 +268,33 @@ router.post('/tournaments/:id/teams', async (req, res) => {
       return res.status(404).json({ message: 'Tournament not found' });
     }
     
-    // Validate request body
+    console.log('[API][Tournament] Creating team with request body:', JSON.stringify(req.body, null, 2));
+    
+    // Let's inspect the schema definition and input data in more detail (Framework 5.0 approach)
+    const teamSchema = insertTournamentTeamSchema.shape;
+    console.log('[API][Tournament][Debug] Required tournament team schema fields:');
+    Object.entries(teamSchema).forEach(([key, value]) => {
+      console.log(`  - ${key}: ${value._def.typeName} (Required: ${!value.isOptional()})`);
+    });
+    
+    // Validate request body with extended schema
     const teamDataSchema = insertTournamentTeamSchema.extend({
       playerOneId: z.number(),
       playerTwoId: z.number(),
     });
     
-    console.log('[API][Tournament] Creating team with data:', JSON.stringify(req.body));
-    
-    // Framework 5.0: Enhanced validation debugging
-    console.log('[API][Tournament][Debug] Team schema requirements:', 
-                Object.keys(teamDataSchema.shape).map(key => `${key}:${teamDataSchema.shape[key].description}`));
-    
+    // Parse the data
     const parsedData = teamDataSchema.safeParse(req.body);
     
     if (!parsedData.success) {
-      // Log detailed validation errors for debugging
-      console.log('[API][Tournament][Debug] Validation failed for team data. Received:', JSON.stringify(req.body));
-      console.log('[API][Tournament][Debug] Validation errors:', JSON.stringify(parsedData.error.format(), null, 2));
+      // Framework 5.0: Detailed error logging
+      console.error('[API][Tournament][Error] Team validation failed');
+      console.error('[API][Tournament][Error] Validation errors:', JSON.stringify(parsedData.error.format(), null, 2));
+      console.error('[API][Tournament][Error] Expected fields:', Object.keys(teamDataSchema.shape));
+      console.error('[API][Tournament][Error] Received fields:', Object.keys(req.body));
       
       return res.status(400).json({ 
-        message: 'Invalid team data', 
-        debug: process.env.NODE_ENV !== 'production',
+        message: 'Invalid team data: ' + parsedData.error.errors.map(e => e.message).join(', '), 
         errors: parsedData.error.format() 
       });
     }
