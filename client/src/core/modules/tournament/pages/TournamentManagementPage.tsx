@@ -23,7 +23,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, Calendar, Users, Award, ChevronRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TournamentList } from '../components/TournamentList';
-import { CreateTournamentDialog } from '../components/CreateTournamentDialog';
+// Import the new wizard component (PKL-278651-TOURN-0001-FORM)
+import { CreateTournamentWizard } from '../components/CreateTournamentWizard';
 import { Badge } from '@/components/ui/badge';
 import { AdminLayout } from '@/modules/admin/components/AdminLayout';
 import { LayoutContainer } from '@/components/layout/LayoutContainer';
@@ -184,7 +185,8 @@ export function TournamentManagementPage() {
         </Tabs>
       </div>
       
-      <CreateTournamentDialog 
+      {/* PKL-278651-TOURN-0001-FORM: Enhanced Tournament Creation Wizard */}
+      <CreateTournamentWizard 
         open={isCreateDialogOpen} 
         onOpenChange={setIsCreateDialogOpen} 
       />
