@@ -450,23 +450,51 @@ export function RecordMatchResultDialog({
                 pointsToWin={21}
               />
               
-              {/* Mobile-optimized submit button */}
-              <div className="mt-4 flex justify-center">
-                <Button 
-                  type="submit" 
-                  className="w-full md:w-auto text-lg py-6 touch-manipulation" 
-                  size="lg"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <LoaderCircle className="mr-2 h-5 w-5 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    <>Submit Score</>
-                  )}
-                </Button>
+              {/* Enhanced Mobile-optimized action buttons */}
+              <div className="sticky bottom-0 left-0 right-0 mt-6 pb-1 pt-2 bg-white border-t border-gray-100 shadow-sm">
+                <div className="flex gap-2 md:hidden mb-1">
+                  <Button 
+                    type="button"
+                    variant="outline"
+                    className="w-1/3 py-6 touch-manipulation" 
+                    onClick={() => onOpenChange(false)}
+                    disabled={isSubmitting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    className="w-2/3 text-lg py-7 touch-manipulation font-semibold rounded-md" 
+                    size="lg"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <LoaderCircle className="mr-2 h-6 w-6 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>SUBMIT SCORE</>
+                    )}
+                  </Button>
+                </div>
+                <div className="hidden md:block">
+                  <Button 
+                    type="submit" 
+                    className="w-full text-lg py-7 touch-manipulation font-semibold rounded-md" 
+                    size="lg"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <LoaderCircle className="mr-2 h-6 w-6 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>SUBMIT SCORE</>
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
             
@@ -511,26 +539,29 @@ export function RecordMatchResultDialog({
               )}
             />
 
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                    Recording...
-                  </>
-                ) : (
-                  "Record Result"
-                )}
-              </Button>
-            </DialogFooter>
+            {/* Mobile-optimized dialog footer - hidden on small screens */}
+            <div className="hidden md:block">
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                      Recording...
+                    </>
+                  ) : (
+                    "Record Result"
+                  )}
+                </Button>
+              </DialogFooter>
+            </div>
           </form>
         </Form>
       </DialogContent>

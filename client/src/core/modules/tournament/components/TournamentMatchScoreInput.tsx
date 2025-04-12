@@ -718,10 +718,10 @@ export function TournamentMatchScoreInput({
                       </div>
                     </div>
                     
-                    {/* Score Controls - Two Column Layout */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {/* Score Controls - Better Mobile Layout */}
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-2">
                       {/* Team 1 score controls */}
-                      <div className={`flex items-center space-x-1 rounded-md p-2 ${
+                      <div className={`flex items-center space-x-2 rounded-md p-4 ${
                         gameWinner === 'team1' ? 'bg-primary/10' : 'bg-gray-50'
                       }`}>
                         <div className={`text-sm font-medium truncate max-w-[100px] ${
@@ -784,7 +784,7 @@ export function TournamentMatchScoreInput({
                       </div>
                       
                       {/* Team 2 score controls */}
-                      <div className={`flex items-center space-x-1 rounded-md p-2 ${
+                      <div className={`flex items-center space-x-2 rounded-md p-4 ${
                         gameWinner === 'team2' ? 'bg-primary/10' : 'bg-gray-50'
                       }`}>
                         <div className={`text-sm font-medium truncate max-w-[100px] ${
