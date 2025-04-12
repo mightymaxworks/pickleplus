@@ -17,18 +17,21 @@ interface TournamentWizardProviderProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   queryKey?: string; // Optional custom query key
+  onTournamentCreated?: () => void; // Optional callback after tournament creation
 }
 
 export function CreateTournamentDialog({ 
   open, 
   onOpenChange, 
-  queryKey = TOURNAMENT_QUERY_KEY 
+  queryKey = TOURNAMENT_QUERY_KEY,
+  onTournamentCreated
 }: TournamentWizardProviderProps) {
   return (
     <CreateTournamentWizard
       queryKey={queryKey}
       open={open}
       onOpenChange={onOpenChange}
+      onTournamentCreated={onTournamentCreated}
     />
   );
 }

@@ -462,12 +462,14 @@ type CreateTournamentWizardProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   queryKey?: string; // Optional query key for cache invalidation
+  onTournamentCreated?: () => void; // Optional callback after tournament creation
 };
 
 export function CreateTournamentWizard({ 
   open, 
   onOpenChange,
-  queryKey = 'api/tournaments' // Default matches TournamentManagementPage
+  queryKey = 'api/tournaments', // Default matches TournamentManagementPage
+  onTournamentCreated
 }: CreateTournamentWizardProps) {
   const queryClient = useQueryClient();
   const { notifyTournamentChanged } = useTournamentChanges();
@@ -621,6 +623,12 @@ export function CreateTournamentWizard({
       // This will force components using this context to re-render
       notifyTournamentChanged();
       console.log('[Tournament] Notified context of tournament change');
+      
+      // Call the callback if provided (new multi-layer refresh strategy)
+      if (onTournamentCreated) {
+        console.log('[Tournament] Calling onTournamentCreated callback');
+        onTournamentCreated();
+      }
       
       toast({
         title: 'Tournament created',
