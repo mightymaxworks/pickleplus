@@ -435,7 +435,7 @@ export function RecordMatchResultDialog({
         )}
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form id="record-match-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {/* Visual Score Input with enhanced mobile UI */}
             <div className="mb-4">
               <FormLabel className="mb-2 block">Match Score</FormLabel>
