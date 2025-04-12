@@ -169,8 +169,23 @@ export function BracketDetailsPage() {
     setIsRecordResultDialogOpen(true);
   };
   
-  // Find selected match details for the dialog
+  // Find selected match details for the dialog with enriched team data
   const selectedMatch = matches?.find(match => match.id === selectedMatchId);
+  
+  // Process selected match to ensure it has proper team information
+  const processedSelectedMatch = selectedMatch ? {
+    ...selectedMatch,
+    // Ensure team objects have required properties by looking them up from bracketData.teams
+    team1: selectedMatch.team1Id ? bracketData.teams.find(team => team.id === selectedMatch.team1Id) || null : null,
+    team2: selectedMatch.team2Id ? bracketData.teams.find(team => team.id === selectedMatch.team2Id) || null : null
+  } : null;
+  
+  // Enhanced debug logging for match result recording
+  console.log(`[BracketDetailsPage][PKL-278651-TOURN-0003.1-API] Selected match for recording:`, {
+    originalMatch: selectedMatch,
+    processedMatch: processedSelectedMatch,
+    teams: bracketData.teams
+  });
   
   // Get team information for the selected match
   const getTeamById = (teamId: number | null) => {
@@ -338,8 +353,8 @@ export function BracketDetailsPage() {
           open={isRecordResultDialogOpen}
           onOpenChange={setIsRecordResultDialogOpen}
           matchId={selectedMatchId}
-          team1={selectedMatch?.team1 || null}
-          team2={selectedMatch?.team2 || null}
+          team1={processedSelectedMatch?.team1 || null}
+          team2={processedSelectedMatch?.team2 || null}
           onSuccess={() => {
             // PKL-278651-TOURN-0015-SYNC: The RecordMatchResultDialog now handles all 
             // necessary refresh mechanisms internally, so this is just a safeguard

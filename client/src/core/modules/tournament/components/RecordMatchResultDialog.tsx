@@ -254,7 +254,26 @@ export function RecordMatchResultDialog({
     recordResultMutation.mutate(data);
   };
 
-  if (!team1 || !team2) {
+  // Enhanced check for team assignments with detailed logging
+  console.log(`[RecordMatchResultDialog][PKL-278651-TOURN-0003.1-API] Checking team assignments for match ${matchId}:`, {
+    team1,
+    team2
+  });
+  
+  // Check for missing teams or missing team IDs
+  const team1Missing = !team1 || team1.id === undefined || team1.id === null;
+  const team2Missing = !team2 || team2.id === undefined || team2.id === null;
+  
+  if (team1Missing || team2Missing) {
+    // Log detailed information about the issue
+    console.error(`[RecordMatchResultDialog][PKL-278651-TOURN-0003.1-API] Cannot record match result - team assignments incomplete:`, {
+      matchId,
+      team1Missing,
+      team2Missing,
+      team1: team1 || 'null',
+      team2: team2 || 'null'
+    });
+    
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent>
