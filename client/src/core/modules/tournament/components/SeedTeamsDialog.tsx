@@ -94,19 +94,21 @@ export function SeedTeamsDialog({
     isError: isTeamsError
   } = useQuery({
     queryKey: [`tournament-${tournamentId}-teams`],
-    queryFn: () => tournamentId ? 
-      apiRequest(`/api/tournaments/${tournamentId}/teams`) : 
-      Promise.reject('No tournament ID provided'),
+    queryFn: async () => {
+      if (!tournamentId) {
+        return Promise.reject('No tournament ID provided');
+      }
+      const response = await apiRequest('GET', `/api/tournaments/${tournamentId}/teams`);
+      return response.json();
+    },
     enabled: !!tournamentId,
   });
   
   // Seed teams mutation
   const { mutate, isPending, isError, error } = useMutation({
     mutationFn: async (data: {assignments: {[key: number]: number | null}, method: string}) => {
-      return apiRequest(`/api/brackets/${bracketId}/seed`, {
-        method: 'POST',
-        data,
-      });
+      const response = await apiRequest('POST', `/api/brackets/${bracketId}/seed`, data);
+      return response.json();
     },
     onSuccess: () => {
       // Reset and close dialog
