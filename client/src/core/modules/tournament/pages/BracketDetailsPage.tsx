@@ -18,6 +18,7 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
+import { TournamentTeam } from '../types';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { 
@@ -276,10 +277,18 @@ export function BracketDetailsPage() {
                 <div className="overflow-auto">
                   <BracketVisualization 
                     rounds={rounds} 
-                    matches={matches.map(match => ({
-                      ...match,
-                      matchDate: match.matchDate || null // Ensure matchDate is never undefined
-                    }))} 
+                    matches={matches.map(match => {
+                      // Add team information to each match by looking it up from bracketData.teams
+                      const team1 = bracketData.teams.find(team => team.id === match.team1Id) || null;
+                      const team2 = bracketData.teams.find(team => team.id === match.team2Id) || null;
+                      
+                      return {
+                        ...match,
+                        matchDate: match.matchDate || null, // Ensure matchDate is never undefined
+                        team1: team1,
+                        team2: team2
+                      };
+                    })} 
                     onRecordResult={handleRecordResult}
                   />
                 </div>
@@ -298,10 +307,18 @@ export function BracketDetailsPage() {
               <CardContent>
                 {matches && matches.length > 0 ? (
                   <MatchesList 
-                    matches={matches.map(match => ({
-                      ...match,
-                      matchDate: match.matchDate || null // Ensure matchDate is never undefined
-                    }))} 
+                    matches={matches.map(match => {
+                      // Add team information to each match by looking it up from bracketData.teams
+                      const team1 = bracketData.teams.find(team => team.id === match.team1Id) || null;
+                      const team2 = bracketData.teams.find(team => team.id === match.team2Id) || null;
+                      
+                      return {
+                        ...match,
+                        matchDate: match.matchDate || null, // Ensure matchDate is never undefined
+                        team1: team1,
+                        team2: team2
+                      };
+                    })} 
                     onRecordResult={handleRecordResult}
                   />
                 ) : (

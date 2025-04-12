@@ -98,6 +98,7 @@ export interface BracketData {
   bracket: TournamentBracket;
   rounds: TournamentRound[];
   matches: TournamentMatch[];
+  teams: TournamentTeam[];
 }
 
 export interface MatchResult {
