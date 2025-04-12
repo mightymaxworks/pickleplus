@@ -24,22 +24,13 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ChevronRight, ChevronLeft, Check, CalendarIcon, InfoIcon, LayoutIcon } from 'lucide-react';
 
-// Dynamically imported components to avoid circular dependencies
-import type { TournamentBasicInfoStepType } from './wizard-steps/TournamentBasicInfoStep';
-import type { TournamentStructureStepType } from './wizard-steps/TournamentStructureStep';
-import type { TournamentSchedulingStepType } from './wizard-steps/TournamentSchedulingStep';
+// Dynamic imports to avoid circular dependencies
 import { lazy, Suspense } from 'react';
 
-// Lazily load step components
-const TournamentBasicInfoStep = lazy(() => import('./wizard-steps/TournamentBasicInfoStep').then(
-  module => ({ default: module.TournamentBasicInfoStep as unknown as typeof TournamentBasicInfoStepType })
-));
-const TournamentStructureStep = lazy(() => import('./wizard-steps/TournamentStructureStep').then(
-  module => ({ default: module.TournamentStructureStep as unknown as typeof TournamentStructureStepType })
-));
-const TournamentSchedulingStep = lazy(() => import('./wizard-steps/TournamentSchedulingStep').then(
-  module => ({ default: module.TournamentSchedulingStep as unknown as typeof TournamentSchedulingStepType })
-));
+// Simple lazy loading of components
+const TournamentBasicInfoStep = lazy(() => import('./wizard-steps/TournamentBasicInfoStep'));
+const TournamentStructureStep = lazy(() => import('./wizard-steps/TournamentStructureStep'));
+const TournamentSchedulingStep = lazy(() => import('./wizard-steps/TournamentSchedulingStep'));
 
 /**
  * Tournament form schema
@@ -288,26 +279,31 @@ export function CreateTournamentWizard({ open, onOpenChange }: CreateTournamentW
     })();
   };
   
-  // Render the current step
+  // Render the current step with proper Suspense boundaries
   const renderStep = () => {
-    switch (step) {
-      case 0:
-        return <TournamentBasicInfoStep form={form} />;
-      case 1:
-        return <TournamentStructureStep form={form} />;
-      case 2:
-        return <TournamentSchedulingStep form={form} />;
-      default:
-        return null;
-    }
+    return (
+      <Suspense fallback={
+        <div className="flex items-center justify-center h-40">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+          <span className="ml-2">Loading step...</span>
+        </div>
+      }>
+        {step === 0 && <TournamentBasicInfoStep form={form} />}
+        {step === 1 && <TournamentStructureStep form={form} />}
+        {step === 2 && <TournamentSchedulingStep form={form} />}
+      </Suspense>
+    );
   };
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent 
+        className="sm:max-w-[600px]"
+        aria-describedby="tournament-wizard-description"
+      >
         <DialogHeader>
           <DialogTitle>Create Tournament</DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="tournament-wizard-description">
             Step {step + 1} of {totalSteps}: {steps[step].label} - {steps[step].description}
           </DialogDescription>
         </DialogHeader>

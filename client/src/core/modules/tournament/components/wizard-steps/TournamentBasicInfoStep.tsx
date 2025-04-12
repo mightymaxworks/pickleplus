@@ -32,11 +32,7 @@ interface TournamentBasicInfoStepProps {
   className?: string;
 }
 
-// Export the type for the dynamic import
-export type TournamentBasicInfoStepType = 
-  (props: TournamentBasicInfoStepProps) => JSX.Element;
-
-export function TournamentBasicInfoStep({ form, className }: TournamentBasicInfoStepProps) {
+function TournamentBasicInfoStep({ form, className }: TournamentBasicInfoStepProps) {
   return (
     <div className={cn("space-y-4", className)}>
       <div className="space-y-2 mb-4">
