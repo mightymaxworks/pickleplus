@@ -2,7 +2,8 @@
  * PKL-278651-ADMIN-0002-UI
  * Admin Protected Route Component
  * 
- * This component wraps admin routes to ensure only users with admin privileges can access them
+ * This component wraps admin routes to ensure only users with admin privileges can access them.
+ * Updated to use proper admin layout according to Framework 5.0 requirements.
  */
 
 import React from 'react';
@@ -73,6 +74,7 @@ const AdminProtectedRoute: React.FC<AdminProtectedRouteProps> = ({ children }) =
     );
   }
   
+  // Return the children components for admin pages
   return <>{children}</>;
 };
 
