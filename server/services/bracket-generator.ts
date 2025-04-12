@@ -233,21 +233,42 @@ async function updateNextMatchReferences(
 
 /**
  * Place teams in the bracket according to seeding
+ * 
+ * @param bracketId - ID of the bracket
+ * @param teams - Array of teams to place in the bracket
+ * @param bracketSize - Size of the bracket
+ * @param seedingOrder - Optional array specifying the seeding order by team ID
+ * @param method - Optional seeding method (manual, rating_based, random)
+ * @returns Object containing information about the update
  */
-async function seedTeamsInBracket(
+export async function seedTeamsInBracket(
   bracketId: number,
   teams: TournamentTeam[],
   bracketSize: number,
-  seedingOrder?: number[]
-): Promise<void> {
+  seedingOrder?: number[],
+  method: 'manual' | 'rating_based' | 'random' = 'manual'
+): Promise<{
+  updatedMatches: number,
+  seedMethod: string,
+  bracketId: number
+}> {
+  console.log(`[PKL-278651-TOURN-0016-SEED] Seeding teams in bracket ${bracketId} using method: ${method}`);
+  console.log(`[PKL-278651-TOURN-0016-SEED] Teams count: ${teams.length}, bracket size: ${bracketSize}`);
+  
+  if (seedingOrder) {
+    console.log(`[PKL-278651-TOURN-0016-SEED] Using provided seed order: ${seedingOrder.join(', ')}`);
+  }
+  
   // Get the first-round matches
   const firstRoundMatches = await db.query.tournamentBracketMatches.findMany({
     where: and(
       eq(tournamentBracketMatches.bracketId, bracketId),
-      eq(tournamentBracketMatches.matchNumber, 1)
+      eq(tournamentBracketMatches.roundNumber, 1)
     ),
     orderBy: (matches) => matches.matchNumber
   });
+  
+  console.log(`[PKL-278651-TOURN-0016-SEED] Found ${firstRoundMatches.length} first-round matches`);
   
   const totalFirstRoundMatches = bracketSize / 2;
   
@@ -257,22 +278,35 @@ async function seedTeamsInBracket(
   // Apply standard seeding pattern
   const seedPositions = generateSeedPositions(bracketSize);
   
-  // Sort teams according to seedingOrder if provided, otherwise use team's seedNumber
+  // Sort teams according to the requested method
   let sortedTeams = [...teams];
   
-  if (seedingOrder) {
+  if (method === 'manual' && seedingOrder && seedingOrder.length > 0) {
     // Use provided custom seeding order
     const teamMap = new Map(teams.map(team => [team.id, team]));
     sortedTeams = seedingOrder
       .map(teamId => teamMap.get(teamId))
       .filter(team => team !== undefined) as TournamentTeam[];
+      
+    console.log(`[PKL-278651-TOURN-0016-SEED] Manual seeding order applied: ${sortedTeams.map(t => t.id).join(', ')}`);
+  } else if (method === 'random') {
+    // Randomize team order
+    sortedTeams = [...teams].sort(() => Math.random() - 0.5);
+    console.log(`[PKL-278651-TOURN-0016-SEED] Random seeding order applied`);
   } else {
-    // Sort by team's seedNumber (if available)
+    // Default to rating-based (use team's seedNumber or courtIQRating if available)
     sortedTeams.sort((a, b) => {
-      const seedA = a.seedNumber || Number.MAX_SAFE_INTEGER;
-      const seedB = b.seedNumber || Number.MAX_SAFE_INTEGER;
-      return seedA - seedB;
+      // First try to use seedNumber if available
+      if (a.seedNumber !== undefined && b.seedNumber !== undefined) {
+        return a.seedNumber - b.seedNumber;
+      }
+      
+      // If no seedNumber, fall back to ratings or just sort by ID
+      const ratingA = a.courtIQRating || Number.MAX_SAFE_INTEGER;
+      const ratingB = b.courtIQRating || Number.MAX_SAFE_INTEGER;
+      return ratingA - ratingB;
     });
+    console.log(`[PKL-278651-TOURN-0016-SEED] Rating-based seeding order applied`);
   }
   
   // Calculate which teams go into which spots
@@ -288,6 +322,8 @@ async function seedTeamsInBracket(
     const team1 = team1Index < sortedTeams.length ? sortedTeams[team1Index] : null;
     const team2 = team2Index < sortedTeams.length ? sortedTeams[team2Index] : null;
     
+    console.log(`[PKL-278651-TOURN-0016-SEED] Setting match ${match.id} (${match.matchNumber}): team1=${team1?.id || 'null'}, team2=${team2?.id || 'null'}`);
+    
     // Update the match with team IDs
     updates.push(
       db.update(tournamentBracketMatches)
@@ -301,6 +337,22 @@ async function seedTeamsInBracket(
   
   // Execute all updates
   await Promise.all(updates);
+  
+  // Update the bracket record with the seeding method
+  await db.update(tournamentBrackets)
+    .set({ 
+      seedingMethod: method,
+      status: 'active', // Activate the bracket now that teams are seeded
+      updatedAt: new Date() 
+    })
+    .where(eq(tournamentBrackets.id, bracketId));
+  
+  // Return information about the update
+  return {
+    updatedMatches: updates.length,
+    seedMethod: method,
+    bracketId
+  };
 }
 
 /**
