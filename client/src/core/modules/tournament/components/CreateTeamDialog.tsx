@@ -145,6 +145,7 @@ export function CreateTeamDialog({ open, onOpenChange, tournamentId }: CreateTea
   
   const { mutate, isPending, isError, error } = useMutation({
     mutationFn: async (values: TeamFormValues) => {
+      console.log('[TeamDialog][Debug] Submitting team data:', values);
       return apiRequest("POST", `/api/tournaments/${tournamentId}/teams`, values);
     },
     onSuccess: () => {

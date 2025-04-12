@@ -274,14 +274,19 @@ router.post('/tournaments/:id/teams', async (req, res) => {
       playerTwoId: z.number(),
     });
     
+    console.log('[API][Tournament] Creating team with data:', JSON.stringify(req.body));
+    
     const parsedData = teamDataSchema.safeParse(req.body);
     
     if (!parsedData.success) {
+      console.log('[API][Tournament] Validation failed:', JSON.stringify(parsedData.error.format()));
       return res.status(400).json({ 
         message: 'Invalid team data', 
         errors: parsedData.error.format() 
       });
     }
+    
+    console.log('[API][Tournament] Team data validation successful');
     
     const teamData = {
       ...parsedData.data,
