@@ -45,7 +45,7 @@ export function BracketDetailsPage() {
   // PKL-278651-TOURN-0011-ROUT: Update route path to align with App.tsx route definition
   const [, params] = useRoute('/admin/brackets/:id');
   console.log('[BracketDetailsPage][PKL-278651-TOURN-0011-ROUT] Route params:', params);
-  const bracketId = params?.id ? parseInt(params.id) : null;
+  const bracketId = params?.id ? parseInt(params.id) : 0;
   console.log('[BracketDetailsPage][PKL-278651-TOURN-0011-ROUT] Bracket ID:', bracketId);
   
   const [activeTab, setActiveTab] = useState('bracket');

@@ -61,15 +61,37 @@ export default function registerTournamentSeedTeamsRoutes(router: Router, storag
         });
       });
 
-      // For now we'll just log the assignments
-      // The actual update logic will be implemented in a future PR
-      // once we add the necessary storage methods
+      // Process the team assignments by updating match data in the database
       console.log('[Seed Teams] Processing team assignments:', seedAssignments);
       
-      // This is placeholder code for now - in a real implementation we would update the matches
+      // Get bracket details to make sure it exists
+      const bracket = await storage.getBracketById(bracketId);
+      if (!bracket) {
+        return res.status(404).json({ error: 'Bracket not found' });
+      }
+      
+      // Update matches with team assignments
       for (const assignment of seedAssignments) {
         const { matchId, position, teamId } = assignment;
-        console.log(`[Seed Teams] Would update match ${matchId}, position ${position} with team ${teamId}`);
+        console.log(`[Seed Teams] Updating match ${matchId}, position ${position} with team ${teamId}`);
+        
+        try {
+          // Get the match to verify it exists
+          const match = await storage.getBracketMatch(matchId);
+          if (!match) {
+            console.error(`[Seed Teams] Match ${matchId} not found`);
+            continue;
+          }
+          
+          // Update team assignment based on position
+          if (position === 1) {
+            await storage.updateBracketMatch(matchId, { team1Id: teamId });
+          } else if (position === 2) {
+            await storage.updateBracketMatch(matchId, { team2Id: teamId });
+          }
+        } catch (error) {
+          console.error(`[Seed Teams] Error updating match ${matchId}:`, error);
+        }
       }
 
       // For now, log the activity to console
