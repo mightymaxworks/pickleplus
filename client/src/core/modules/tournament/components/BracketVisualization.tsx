@@ -109,13 +109,7 @@ const MatchCard = memo(({
         </span>
       </div>
       
-      {/* DEBUG DATA - For development purposes */}
-      <div className="text-xs text-gray-400 mb-1">
-        Team1Id: {match.team1Id || 'null'}, Team1: {match.team1 ? 'object' : 'null'}
-      </div>
-      <div className="text-xs text-gray-400 mb-1">
-        Team2Id: {match.team2Id || 'null'}, Team2: {match.team2 ? 'object' : 'null'}
-      </div>
+      {/* End of team information */}
       
       {/* Score */}
       {match.score && (

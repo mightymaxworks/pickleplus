@@ -136,7 +136,7 @@ export function BracketDetailsPage() {
     );
   }
   
-  const { bracket, rounds, matches } = bracketData;
+  const { bracket, rounds, matches, teams } = bracketData;
   
   const getBracketTypeName = (type: string) => {
     switch (type) {
