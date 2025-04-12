@@ -114,6 +114,37 @@ const TournamentBasicInfoStep = ({ form }: { form: ReturnType<typeof useForm<Tou
         )}
       />
       
+      {/* Tournament Tier - for CourtIQ rating integration */}
+      <FormField
+        control={form.control}
+        name="tier"
+        render={({ field }) => (
+          <FormItem className="mb-2">
+            <FormLabel className="text-sm font-medium">Tournament Tier*</FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Select tournament tier" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="local">Local/Club</SelectItem>
+                <SelectItem value="city">City/Municipal</SelectItem>
+                <SelectItem value="district">District/Regional</SelectItem>
+                <SelectItem value="state">State</SelectItem>
+                <SelectItem value="national">National</SelectItem>
+                <SelectItem value="international">International</SelectItem>
+                <SelectItem value="professional">Professional</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormDescription className="text-xs">
+              Tournament tier affects CourtIQ ranking points
+            </FormDescription>
+            <FormMessage className="text-xs" />
+          </FormItem>
+        )}
+      />
+      
       <FormField
         control={form.control}
         name="status"
@@ -207,9 +238,18 @@ const TournamentStructureStep = ({ form }: { form: ReturnType<typeof useForm<Tou
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="open">Open (All ages)</SelectItem>
-                  <SelectItem value="age_50+">50+</SelectItem>
-                  <SelectItem value="age_60+">60+</SelectItem>
-                  <SelectItem value="junior">Junior</SelectItem>
+                  <SelectItem value="mens">Men's</SelectItem>
+                  <SelectItem value="womens">Women's</SelectItem>
+                  <SelectItem value="mixed">Mixed</SelectItem>
+                  <SelectItem value="junior">Junior (Under 18)</SelectItem>
+                  <SelectItem value="youth">Youth (Under 23)</SelectItem>
+                  <SelectItem value="senior">Senior (35+)</SelectItem>
+                  <SelectItem value="senior_50">Senior (50+)</SelectItem>
+                  <SelectItem value="senior_60">Senior (60+)</SelectItem>
+                  <SelectItem value="senior_65">Senior (65+)</SelectItem>
+                  <SelectItem value="senior_70">Senior (70+)</SelectItem>
+                  <SelectItem value="wheelchair">Wheelchair</SelectItem>
+                  <SelectItem value="adaptive">Adaptive Play</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage className="text-xs" />
@@ -397,6 +437,9 @@ const tournamentFormSchema = z.object({
   division: z.string().default('open'),
   level: z.string().default('club'),
   
+  // Tournament tier for CourtIQ integration
+  tier: z.string().default('local'),
+  
   // UI-only field (not in database schema)
   registrationOpen: z.boolean().default(true),
 });
@@ -453,6 +496,7 @@ export function CreateTournamentWizard({ open, onOpenChange }: CreateTournamentW
     format: 'doubles',
     division: 'open',
     level: 'club',
+    tier: 'local',
   };
   
   // Framework 5.0: Use standardized hook-form initialization
