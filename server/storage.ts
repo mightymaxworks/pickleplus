@@ -804,43 +804,50 @@ export class DatabaseStorage implements IStorage {
       console.log("Total users in database:", userCount[0].count);
       
       try {
-        // Framework 5.0: Use the simplest direct SQL approach possible to avoid ORM issues
-        console.log(`[Storage] Executing direct SQL query for users matching "${safeQuery}"`);
+        // Framework 5.0: Use Drizzle ORM with SQL to ensure type safety and query construction
+        console.log(`[Storage] Executing optimized query for users matching "${safeQuery}"`);
         
-        // Avoid SQL injection by using parameterized query
+        // Create the search pattern for LIKE
         const searchPattern = `%${safeQuery}%`;
         
-        // Prepare the SQL statement based on whether we have an excludeUserId
-        let sqlStatement = `
-          SELECT id, username, display_name as "displayName", 
-                 passport_id as "passportId", avatar_initials as "avatarInitials",
-                 dupr_rating as "duprRating"
-          FROM users
-          WHERE (LOWER(username) LIKE LOWER($1) OR LOWER(COALESCE(display_name, '')) LIKE LOWER($1))
-        `;
+        // Build conditions for the search
+        const searchConditions = or(
+          sql`LOWER(${users.username}) LIKE LOWER(${searchPattern})`,
+          sql`LOWER(COALESCE(${users.displayName}, '')) LIKE LOWER(${searchPattern})`
+        );
         
-        // Add parameters and exclusion logic
-        let params = [searchPattern];
+        // Prepare all conditions
+        let allConditions = searchConditions;
+        
+        // If exclude user ID is present, add that condition
         if (excludeUserId !== undefined) {
-          sqlStatement += ` AND id != $2`;
-          params.push(excludeUserId);
+          allConditions = and(
+            searchConditions,
+            ne(users.id, excludeUserId)
+          );
         }
         
-        // Add limit
-        sqlStatement += ` LIMIT $${params.length + 1}`;
-        params.push(limit);
+        // Execute query with all conditions at once
+        const results = await db.select({
+          id: users.id,
+          username: users.username,
+          displayName: users.displayName,
+          passportId: users.passportId,
+          avatarInitials: users.avatarInitials,
+          duprRating: users.duprRating,
+        })
+        .from(users)
+        .where(conditions)
+        .limit(limit);
         
-        // Execute the query directly with node-postgres
-        const result = await db.execute(sqlStatement, params);
+        console.log(`[Storage] Found ${results.length} users matching "${safeQuery}"`);
         
-        console.log(`[Storage] Found ${result.rowCount} users matching "${safeQuery}"`);
-        
-        if (result.rowCount > 0) {
-          console.log(`[Storage] Results:`, result.rows.map(u => `${u.id}: ${u.username}`).join(", "));
+        if (results.length > 0) {
+          console.log(`[Storage] Results:`, results.map(u => `${u.id}: ${u.username}`).join(", "));
         }
         
-        // Map the raw rows to our expected return type
-        const mappedResults = result.rows.map(user => ({
+        // Map to the expected return format
+        const mappedResults = results.map(user => ({
           id: Number(user.id),
           username: String(user.username || ''),
           displayName: String(user.displayName || user.username || ''),
