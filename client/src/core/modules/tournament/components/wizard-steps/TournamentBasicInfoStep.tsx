@@ -32,7 +32,7 @@ interface TournamentBasicInfoStepProps {
   className?: string;
 }
 
-function TournamentBasicInfoStep({ form, className }: TournamentBasicInfoStepProps) {
+export function TournamentBasicInfoStep({ form, className }: TournamentBasicInfoStepProps) {
   return (
     <div className={cn("space-y-4", className)}>
       <div className="space-y-2 mb-4">
@@ -116,3 +116,6 @@ function TournamentBasicInfoStep({ form, className }: TournamentBasicInfoStepPro
     </div>
   );
 }
+
+// Default export for lazy loading
+export default TournamentBasicInfoStep;

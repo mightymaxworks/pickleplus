@@ -43,7 +43,7 @@ interface TournamentStructureStepProps {
 export type TournamentStructureStepType = 
   (props: TournamentStructureStepProps) => JSX.Element;
 
-export function TournamentStructureStep({ form, className }: TournamentStructureStepProps) {
+function TournamentStructureStep({ form, className }: TournamentStructureStepProps) {
   return (
     <div className={cn("space-y-4", className)}>
       <div className="space-y-2 mb-4">
