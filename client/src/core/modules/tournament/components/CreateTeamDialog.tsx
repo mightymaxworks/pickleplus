@@ -41,7 +41,6 @@ const teamFormSchema = z.object({
   seedNumber: z.number().optional(),
   notes: z.string().optional(),
   status: z.enum(['active', 'pending', 'withdrawn']).default('active'),
-  tournamentId: z.number().optional(), // Added to match server-side schema requirement
 });
 
 type TeamFormValues = z.infer<typeof teamFormSchema>;
@@ -167,29 +166,10 @@ export function CreateTeamDialog({ open, onOpenChange, tournamentId }: CreateTea
       });
     },
     onError: (error: any) => {
-      // Framework 5.0: Enhanced error handling and logging
-      console.error('[TeamDialog][Error] Team creation failed:', error);
-      
-      // Extract validation errors from response if available
-      let errorDetails = '';
-      try {
-        if (error.response?.data?.errors) {
-          const validationErrors = error.response.data.errors;
-          console.error('[TeamDialog][Error] Validation errors:', JSON.stringify(validationErrors, null, 2));
-          
-          // Format validation errors for display
-          errorDetails = Object.entries(validationErrors)
-            .filter(([key, value]) => key !== '_errors')
-            .map(([key, value]: [string, any]) => `${key}: ${value._errors?.join(', ')}`)
-            .join('; ');
-        }
-      } catch (e) {
-        console.error('[TeamDialog][Error] Failed to parse error details:', e);
-      }
-      
+      console.error('Error creating team:', error);
       toast({
         title: 'Failed to create team',
-        description: errorDetails || error.message || 'An unexpected error occurred.',
+        description: error.message || 'An unexpected error occurred.',
         variant: 'destructive',
       });
     },
@@ -216,15 +196,7 @@ export function CreateTeamDialog({ open, onOpenChange, tournamentId }: CreateTea
       form.setValue('teamName', values.teamName);
     }
     
-    // Framework 5.0: Log complete submission data and validate before sending
-    const submissionData = {
-      ...values,
-      tournamentId: Number(tournamentId), // Include tournamentId for schema validation
-    };
-    
-    console.log('[TeamDialog][Debug] Final team submission data:', submissionData);
-    
-    mutate(submissionData);
+    mutate(values);
   }
   
   function handleSelectPlayer(player: User) {

@@ -783,118 +783,145 @@ export class DatabaseStorage implements IStorage {
     rating: number | null;
   }[]> {
     try {
-      // Framework 5.0: Original working implementation reinstated as per principles
       console.log("[Storage] searchUsers called with query:", query, "limit:", limit, "excludeUserId:", excludeUserId);
       
-      // Basic validation
+      // More detailed logging
       if (!query) {
-        console.log("[Storage] Search query is empty, returning empty array");
+        console.log("Search query is empty or null, returning empty array");
         return [];
       }
       
-      // Normalize and validate query
+      // Extra safety for query parameter - ensure it's a string and trim it
       const safeQuery = String(query).trim();
       if (safeQuery.length < 2) {
-        console.log("[Storage] Search query too short (< 2 chars), returning empty array");
+        console.log("Search query is too short (needs 2+ chars), returning empty array");
         return [];
       }
       
-      // Log total users for debugging purposes
+      // Simply check if there are any users at all - for debugging
       const userCount = await db.select({ count: sql<number>`count(*)` }).from(users);
-      console.log("[Storage] Total users in database:", userCount[0].count);
+      console.log("Total users in database:", userCount[0].count);
       
-      // Create search pattern for LIKE queries
+      // Handle excludeUserId validation
+      let numericExcludeId: number | undefined = undefined;
+      
+      if (excludeUserId !== undefined && excludeUserId !== null) {
+        // Make sure we're dealing with a number
+        const tempId = typeof excludeUserId === 'number' ? excludeUserId : Number(excludeUserId);
+        
+        if (!isNaN(tempId) && tempId > 0) {
+          numericExcludeId = tempId;
+          console.log("Will exclude user ID:", numericExcludeId, "from search results");
+        } else {
+          console.log("Invalid excludeUserId:", excludeUserId, "converted to", tempId, "- Will not exclude any users");
+        }
+      }
+      
+      // Create a simple pattern for SQL LIKE
       const searchPattern = `%${safeQuery}%`;
       
-      // Build the search condition
-      const searchCondition = or(
-        sql`LOWER(${users.username}) LIKE LOWER(${searchPattern})`,
-        sql`LOWER(COALESCE(${users.displayName}, '')) LIKE LOWER(${searchPattern})`
-      );
-      
-      // Add exclusion condition if needed
-      const finalCondition = excludeUserId !== undefined 
-        ? and(searchCondition, ne(users.id, excludeUserId))
-        : searchCondition;
-      
-      // Execute the search query
-      const results = await db.select({
-        id: users.id,
-        username: users.username,
-        displayName: users.displayName,
-        passportId: users.passportId,
-        avatarInitials: users.avatarInitials,
-        duprRating: users.duprRating,
-      })
-      .from(users)
-      .where(finalCondition)
-      .limit(limit);
-      
-      console.log(`[Storage] Found ${results.length} users matching "${safeQuery}"`);
-      
-      // Map to the expected return format
-      const mappedResults = results.map(user => ({
-        id: Number(user.id),
-        username: String(user.username || ''),
-        displayName: String(user.displayName || user.username || ''),
-        passportCode: user.passportId ? String(user.passportId) : null,
-        avatarUrl: null, // We don't store this directly
-        avatarInitials: user.avatarInitials ? 
-          String(user.avatarInitials) : 
-          (user.username ? String(user.username).substring(0, 2).toUpperCase() : "??"),
-        rating: user.duprRating ? parseFloat(String(user.duprRating)) : null
-      }));
-      
-      return mappedResults;
-      
-    } catch (error) {
-      // Comprehensive error handling
-      console.error("[Storage] Error in searchUsers:", error);
-      
-      // Try fallback approach if primary method fails
       try {
-        console.log("[Storage] Attempting fallback search method");
+        // We'll perform a direct search without any preliminary checks
+        console.log("Executing direct user search with pattern:", searchPattern);
         
-        // Get a limited set of users to filter in memory
-        const allUsers = await db.select({
+        // Build the search query with the where clause directly
+        const whereClause = or(
+          sql`LOWER(${users.username}) LIKE LOWER(${searchPattern})`,
+          sql`LOWER(COALESCE(${users.displayName}, '')) LIKE LOWER(${searchPattern})`,
+          sql`LOWER(COALESCE(${users.email}, '')) LIKE LOWER(${searchPattern})`
+        );
+        
+        console.log("Search SQL:", whereClause);
+        
+        // Execute the search query
+        // IMPORTANT: We're avoiding chaining multiple where clauses as that seems to be causing issues
+        let results = await db.select({
           id: users.id,
           username: users.username,
           displayName: users.displayName,
-          duprRating: users.duprRating
-        }).from(users).limit(100);
+          email: users.email,
+          passportCode: users.passportId,
+          avatarInitials: users.avatarInitials,
+          location: users.location,
+          rating: users.rating, // Added rating field for tournament team creation
+          duprRating: users.duprRating // Also include DUPR rating if available
+        })
+        .from(users)
+        .where(whereClause)
+        .limit(limit);
         
-        console.log(`[Storage] Retrieved ${allUsers.length} users for in-memory filtering`);
+        // If we need to exclude a user, do it in memory to avoid SQL issues
+        if (numericExcludeId !== undefined) {
+          results = results.filter(user => user.id !== numericExcludeId);
+        }
         
-        // Filter users in memory
-        const lowercaseQuery = String(query).trim().toLowerCase();
-        const filteredUsers = allUsers.filter(user => {
-          // Skip the excluded user if specified
-          if (excludeUserId !== undefined && user.id === excludeUserId) return false;
-          
-          // Match on username and displayName
-          return (
-            user.username?.toLowerCase().includes(lowercaseQuery) ||
-            (user.displayName && user.displayName.toLowerCase().includes(lowercaseQuery))
-          );
-        }).slice(0, limit); // Apply the limit
+        console.log(`Search found ${results.length} results for "${safeQuery}"`);
+        console.log("Results:", results.map(u => `${u.id}: ${u.username}`).join(", "));
         
-        console.log(`[Storage] Fallback found ${filteredUsers.length} matching users`);
-        
-        // Map to the expected return format
-        return filteredUsers.map(user => ({
+        // Return the results with rating information for tournament team creation
+        const mappedResults = results.map(user => ({
           id: user.id,
-          username: user.username || '',
-          displayName: user.displayName || user.username || '',
-          passportCode: null,
-          avatarUrl: null,
-          avatarInitials: (user.username || '').substring(0, 2).toUpperCase() || "??",
-          rating: user.duprRating ? parseFloat(String(user.duprRating)) : null
+          username: user.username,
+          displayName: user.displayName || user.username,
+          passportCode: user.passportCode || null, 
+          avatarUrl: null, // Safe default
+          avatarInitials: user.avatarInitials || (user.username ? user.username.substring(0, 2).toUpperCase() : "??"),
+          rating: user.rating || (user.duprRating ? parseFloat(user.duprRating) : null) // Use rating or DUPR rating as fallback
         }));
         
-      } catch (fallbackError) {
-        console.error("[Storage] Fallback search method also failed:", fallbackError);
-        return []; // Return empty array as last resort
+        // Show what we're returning
+        console.log("Returning", mappedResults.length, "user matches for", safeQuery);
+        return mappedResults;
+        
+      } catch (dbError) {
+        console.error("Database error in searchUsers:", dbError);
+        
+        // Try a fallback approach - get all users and filter in memory
+        console.log("Trying fallback approach - get all users and filter in JS");
+        try {
+          const allUsers = await db.select({
+            id: users.id,
+            username: users.username,
+            displayName: users.displayName,
+            rating: users.rating,
+            duprRating: users.duprRating
+          }).from(users).limit(100);
+          
+          console.log(`Got ${allUsers.length} total users for in-memory filtering`);
+          
+          // Filter in JS
+          const lowercaseQuery = safeQuery.toLowerCase();
+          const filteredUsers = allUsers.filter(user => {
+            // Skip the excluded user if specified
+            if (numericExcludeId && user.id === numericExcludeId) return false;
+            
+            // Match on username and displayName
+            return (
+              user.username?.toLowerCase().includes(lowercaseQuery) ||
+              (user.displayName && user.displayName.toLowerCase().includes(lowercaseQuery))
+            );
+          }).slice(0, 10); // Limit to 10 results
+          
+          console.log(`Fallback filtering found ${filteredUsers.length} matches`);
+          
+          // Map to simplified user objects with only what we need for the player select
+          return filteredUsers.map(user => ({
+            id: user.id,
+            username: user.username,
+            displayName: user.displayName || user.username,
+            passportCode: null,
+            avatarUrl: null,
+            avatarInitials: user.username?.substring(0, 2).toUpperCase() || "??",
+            rating: user.rating || (user.duprRating ? parseFloat(user.duprRating) : null) // Use rating or DUPR rating as fallback
+          }));
+        } catch (fallbackError) {
+          console.error("Fallback search approach also failed:", fallbackError);
+          return []; // Empty array as last resort
+        }
       }
+    } catch (outerError) {
+      console.error("Outer error in searchUsers:", outerError);
+      return []; // Empty array as last resort
     }
   }
 

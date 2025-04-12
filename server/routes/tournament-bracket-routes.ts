@@ -268,48 +268,30 @@ router.post('/tournaments/:id/teams', async (req, res) => {
       return res.status(404).json({ message: 'Tournament not found' });
     }
     
-    console.log('[API][Tournament] Creating team with request body:', JSON.stringify(req.body, null, 2));
-    
-    // Let's inspect the schema definition and input data in more detail (Framework 5.0 approach)
-    const teamSchema = insertTournamentTeamSchema.shape;
-    console.log('[API][Tournament][Debug] Required tournament team schema fields:');
-    Object.entries(teamSchema).forEach(([key, value]) => {
-      console.log(`  - ${key}: ${value._def.typeName} (Required: ${!value.isOptional()})`);
-    });
-    
-    // Validate request body with extended schema (Framework 5.0 updates)
+    // Validate request body
     const teamDataSchema = insertTournamentTeamSchema.extend({
       playerOneId: z.number(),
       playerTwoId: z.number(),
-      tournamentId: z.number().optional(), // Make tournamentId optional since we extract it from URL
     });
     
-    // Parse the data
+    console.log('[API][Tournament] Creating team with data:', JSON.stringify(req.body));
+    
     const parsedData = teamDataSchema.safeParse(req.body);
     
     if (!parsedData.success) {
-      // Framework 5.0: Detailed error logging
-      console.error('[API][Tournament][Error] Team validation failed');
-      console.error('[API][Tournament][Error] Validation errors:', JSON.stringify(parsedData.error.format(), null, 2));
-      console.error('[API][Tournament][Error] Expected fields:', Object.keys(teamDataSchema.shape));
-      console.error('[API][Tournament][Error] Received fields:', Object.keys(req.body));
-      
+      console.log('[API][Tournament] Validation failed:', JSON.stringify(parsedData.error.format()));
       return res.status(400).json({ 
-        message: 'Invalid team data: ' + parsedData.error.errors.map(e => e.message).join(', '), 
+        message: 'Invalid team data', 
         errors: parsedData.error.format() 
       });
     }
     
     console.log('[API][Tournament] Team data validation successful');
     
-    // Framework 5.0: Handle tournamentId correctly
-    // If the client sent a tournamentId, use it, otherwise use the one from the route
     const teamData = {
       ...parsedData.data,
-      tournamentId: parsedData.data.tournamentId || tournamentId,
+      tournamentId,
     };
-    
-    console.log('[API][Tournament] Final team data with tournamentId:', teamData);
     
     // Check if both players exist
     const playerOne = await db.query.users.findFirst({
