@@ -140,7 +140,8 @@ export function BracketsList({ brackets, tournamentId }: BracketsListProps) {
               </DropdownMenuContent>
             </DropdownMenu>
             
-            <Link to={`/brackets/${bracket.id}`}>
+            {/* PKL-278651-TOURN-0011-ROUT: Updated bracket view link path to align with App.tsx route definition */}
+            <Link to={`/admin/brackets/${bracket.id}`}>
               <Button variant="outline" className="gap-1">
                 <span>View Bracket</span>
                 <ChevronRight size={16} />
