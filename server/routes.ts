@@ -81,6 +81,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Register User Search routes (PKL-278651-TOURN-0003-SEARCH)
   registerUserSearchRoutes(app);
   
+  // Register Tournament Seed Teams routes (PKL-278651-TOURN-0003-MATCH)
+  registerTournamentSeedTeamsRoutes(app);
+  
   // API routes
   
   // User info endpoint
