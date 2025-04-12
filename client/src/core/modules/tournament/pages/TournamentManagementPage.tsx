@@ -40,7 +40,15 @@ export function TournamentManagementPage() {
   const [forceRefreshKey, setForceRefreshKey] = useState(Date.now());
   
   // Use the tournament change context to force re-renders when tournaments change
-  const { lastChangeTimestamp } = useTournamentChanges();
+  // If context isn't available, use a local timestamp (this happens in AdminProtectedRoute)
+  let contextValue = { lastChangeTimestamp: Date.now() };
+  try {
+    contextValue = useTournamentChanges();
+    console.log("[TournamentPage] Successfully connected to TournamentChangeContext");
+  } catch (error) {
+    console.warn("[TournamentPage] TournamentChangeContext not available, using local state only");
+  }
+  const { lastChangeTimestamp } = contextValue;
   
   // Framework 5.0: Enhance reliability with proper stale time and refetch settings
   // Define consistent query key string directly (without leading slash)
