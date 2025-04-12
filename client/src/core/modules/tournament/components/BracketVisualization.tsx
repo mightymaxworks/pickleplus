@@ -1,15 +1,17 @@
 /**
- * PKL-278651-TOURN-0003-MATCH
- * Bracket Visualization Component
+ * PKL-278651-TOURN-0014-SEED
+ * Enhanced Bracket Visualization Component
  * 
  * This component visualizes a tournament bracket structure with rounds and matches,
  * allowing users to view the bracket progress and record match results.
+ * Updated with Framework 5.0 enhanced refresh mechanisms for team seeding.
  */
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Trophy, ArrowRight } from "lucide-react";
+import { useTournamentChanges } from "../context/TournamentChangeContext";
 
 interface TournamentRound {
   id: number;
@@ -48,7 +50,42 @@ export function BracketVisualization({
   onRecordResult,
 }: BracketVisualizationProps) {
   const [hoveredMatchId, setHoveredMatchId] = useState<number | null>(null);
+  const [forceUpdateKey, setForceUpdateKey] = useState<number>(0);
+  const tournamentChanges = useTournamentChanges();
+  const lastRender = useRef<number>(Date.now());
+  const bracketId = rounds?.[0]?.bracketId; // Get bracket ID from the first round
+  
+  // PKL-278651-TOURN-0014-SEED: Listen for tournament changes and refresh when teams are seeded
+  useEffect(() => {
+    console.log(`[PKL-278651-TOURN-0014-SEED] BracketVisualization mounted for bracket ${bracketId}`);
+    
+    // Check for tournament changes periodically
+    const checkInterval = setInterval(() => {
+      // Has there been a 'teams_seeded' change for this bracket?
+      const hasTeamsSeededChange = tournamentChanges.isChangedSince(
+        lastRender.current,
+        'teams_seeded',
+        bracketId
+      );
+      
+      // If so, force a re-render of the bracket visualization
+      if (hasTeamsSeededChange) {
+        console.log(
+          `[PKL-278651-TOURN-0014-SEED] Detected teams_seeded change for bracket ${bracketId}, forcing bracket visualization update`
+        );
+        setForceUpdateKey(prev => prev + 1);
+        lastRender.current = Date.now();
+      }
+    }, 500); // Check every 500ms
+    
+    // Cleanup
+    return () => {
+      clearInterval(checkInterval);
+    };
+  }, [tournamentChanges, bracketId]);
 
+  console.log(`[PKL-278651-TOURN-0014-SEED] Rendering BracketVisualization with key ${forceUpdateKey}`);
+  
   // Sort rounds by number
   const sortedRounds = [...rounds].sort((a, b) => a.roundNumber - b.roundNumber);
 

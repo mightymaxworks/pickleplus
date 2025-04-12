@@ -1,13 +1,14 @@
 /**
- * PKL-278651-TOURN-0001-BRCKT / PKL-278651-TOURN-0013-API
- * Bracket Details Page
+ * PKL-278651-TOURN-0014-SEED
+ * Enhanced Bracket Details Page
  * 
  * This page displays the details and visualization of a tournament bracket.
- * Updated to use the dedicated tournament bracket API client for better API/UI alignment.
+ * Updated to integrate with Framework 5.0 enhanced state refresh mechanisms.
  */
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRoute, Link } from 'wouter';
+import { useTournamentChanges } from '../context/TournamentChangeContext';
 import { 
   Card, 
   CardContent, 
@@ -55,18 +56,45 @@ export function BracketDetailsPage() {
   const [isRecordResultDialogOpen, setIsRecordResultDialogOpen] = useState(false);
   const [isSeedTeamsDialogOpen, setIsSeedTeamsDialogOpen] = useState(false);
   const queryClient = useQueryClient();
+  const tournamentChanges = useTournamentChanges();
+  const lastRefresh = useRef<number>(Date.now());
   
-  // PKL-278651-TOURN-0013-API: Use dedicated API client for fetching bracket data
+  // PKL-278651-TOURN-0014-SEED: Enhanced bracket data loading with tournament change monitoring
   const { 
     data: bracketData, 
     isLoading, 
-    isError 
+    isError,
+    refetch
   } = useQuery({
     queryKey: [`bracket-${bracketId}`],
     queryFn: () => bracketId ? getBracket(bracketId) : Promise.reject('No bracket ID provided'),
     enabled: !!bracketId,
     retry: 1,
   });
+  
+  // PKL-278651-TOURN-0014-SEED: Listen for team seeding changes and refresh data
+  useEffect(() => {
+    console.log(`[PKL-278651-TOURN-0014-SEED] BracketDetailsPage monitoring changes for bracket ${bracketId}`);
+    
+    // Set up polling to check for changes
+    const checkInterval = setInterval(() => {
+      const hasRelevantChange = tournamentChanges.isChangedSince(
+        lastRefresh.current, 
+        'teams_seeded', 
+        bracketId
+      );
+      
+      if (hasRelevantChange) {
+        console.log(`[PKL-278651-TOURN-0014-SEED] Detected relevant bracket change, refreshing data`);
+        refetch();
+        lastRefresh.current = Date.now();
+      }
+    }, 1000); // Check every second
+    
+    return () => {
+      clearInterval(checkInterval);
+    };
+  }, [bracketId, refetch, tournamentChanges]);
   
   // Loading state
   if (isLoading) {
@@ -280,8 +308,17 @@ export function BracketDetailsPage() {
           team1={selectedMatch?.team1 || null}
           team2={selectedMatch?.team2 || null}
           onSuccess={() => {
-            // Refetch bracket data on successful match recording
+            // PKL-278651-TOURN-0014-SEED: Multiple refresh mechanisms
+            console.log(`[PKL-278651-TOURN-0014-SEED] Match result recorded, triggering multiple refresh mechanisms`);
+            
+            // 1. Invalidate cache for bracket data (first refresh mechanism)
             queryClient.invalidateQueries({ queryKey: [`bracket-${bracketId}`] });
+            
+            // 2. Notify via tournament change context (second refresh mechanism)
+            tournamentChanges.notifySpecificChange('match_result_recorded', bracketId);
+            
+            // 3. Update last refresh timestamp
+            lastRefresh.current = Date.now();
           }}
         />
       )}

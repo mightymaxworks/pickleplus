@@ -107,9 +107,10 @@ export function SeedTeamsDialog({
     enabled: !!tournamentId,
   });
   
-  // Seed teams mutation
+  // Seed teams mutation with enhanced Framework 5.0 state management
   const { mutate, isPending, isError, error } = useMutation({
     mutationFn: async (data: {assignments: {[key: number]: number | null}, method: string}) => {
+      console.log(`[PKL-278651-TOURN-0014-SEED] Saving team seeds for bracket ${bracketId}`);
       const response = await apiRequest('POST', `/api/brackets/${bracketId}/seed`, data);
       return response.json();
     },
@@ -117,10 +118,16 @@ export function SeedTeamsDialog({
       // Reset and close dialog
       onOpenChange(false);
       
-      // Invalidate queries to refetch data
+      // PKL-278651-TOURN-0014-SEED: Enhanced refresh mechanism
+      console.log(`[PKL-278651-TOURN-0014-SEED] Teams seeded successfully, triggering multiple refresh mechanisms`);
+      
+      // 1. Invalidate cache for bracket data (first refresh mechanism)
       queryClient.invalidateQueries({ queryKey: [`bracket-${bracketId}`] });
       
-      // Notify success
+      // 2. Notify via tournament change context (second refresh mechanism)
+      tournamentChanges.notifySpecificChange('teams_seeded', bracketId);
+      
+      // 3. Notify success with toast notification (third refresh mechanism - UI feedback)
       toast({
         title: "Teams seeded successfully",
         description: "The bracket has been updated with your team assignments.",
@@ -128,7 +135,7 @@ export function SeedTeamsDialog({
       });
     },
     onError: (err) => {
-      console.error("Error seeding teams:", err);
+      console.error("[PKL-278651-TOURN-0014-SEED] Error seeding teams:", err);
       toast({
         title: "Failed to seed teams",
         description: "There was an error assigning teams to the bracket.",
