@@ -587,13 +587,20 @@ export function CreateTournamentWizard({
       onOpenChange(false);
       setStep(0);
       
+      // Use the consistent queryKey parameter for cache invalidation
+      console.log(`[Tournament] Invalidating query cache with key: [${queryKey}]`);
+      
       // Force refetch tournament list - use both invalidation and explicit refetch for maximum reliability
-      queryClient.invalidateQueries({ queryKey: ['/api/tournaments'] });
+      queryClient.invalidateQueries({ queryKey: [queryKey] });
       
       // Manually trigger an immediate refetch of tournaments - add this as an extra reliability measure
-      queryClient.refetchQueries({ queryKey: ['/api/tournaments'] });
+      queryClient.refetchQueries({ queryKey: [queryKey] });
       
       console.log('[Tournament] Refetching tournament list');
+      
+      // Extra insurance: Log all active queries for debugging
+      const queries = queryClient.getQueryCache().getAll();
+      console.log('[Tournament] Active queries:', queries.map(q => q.queryKey));
       
       toast({
         title: 'Tournament created',

@@ -37,11 +37,11 @@ export function TournamentManagementPage() {
   const [activeTab, setActiveTab] = useState('all');
   
   // Framework 5.0: Enhance reliability with proper stale time and refetch settings
-  // Define a consistent TOURNAMENT_QUERY_KEY for reuse
-  const TOURNAMENT_QUERY_KEY = 'api/tournaments';
+  // Define consistent query key string directly (without leading slash)
+  const TOURNAMENTS_QUERY_KEY = 'api/tournaments';
   
   const { data: tournaments = [], isLoading, isError, refetch } = useQuery<Tournament[]>({
-    queryKey: [TOURNAMENT_QUERY_KEY], // Consistent format without leading slash
+    queryKey: [TOURNAMENTS_QUERY_KEY], // Consistent format without leading slash
     retry: 1,
     staleTime: 30 * 1000, // Consider data fresh for 30 seconds
     refetchOnWindowFocus: true, // Refetch when tab gets focus
@@ -204,7 +204,8 @@ export function TournamentManagementPage() {
             console.log('[Tournament] Dialog closing, refreshing list');
             refetch();
           }
-        }} 
+        }}
+        queryKey={TOURNAMENTS_QUERY_KEY} // Pass the same query key used for fetching
       />
     </LayoutContainer>
   );
