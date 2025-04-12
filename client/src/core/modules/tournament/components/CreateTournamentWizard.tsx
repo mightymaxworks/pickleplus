@@ -35,6 +35,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import {
+  Form,
   FormControl,
   FormDescription,
   FormField,
@@ -47,7 +48,7 @@ import {
 // where all wizard components are defined in a single file to eliminate import issues
 
 // Basic Info Step Component
-const TournamentBasicInfoStep = ({ form }: { form: any }) => {
+const TournamentBasicInfoStep = ({ form }: { form: ReturnType<typeof useForm<TournamentFormValues>> }) => {
   return (
     <div className="space-y-4">
       <div className="space-y-2 mb-4">
@@ -133,7 +134,7 @@ const TournamentBasicInfoStep = ({ form }: { form: any }) => {
 };
 
 // Structure Step Component
-const TournamentStructureStep = ({ form }: { form: any }) => {
+const TournamentStructureStep = ({ form }: { form: ReturnType<typeof useForm<TournamentFormValues>> }) => {
   return (
     <div className="space-y-4">
       <div className="space-y-2 mb-4">
@@ -244,7 +245,7 @@ const TournamentStructureStep = ({ form }: { form: any }) => {
 };
 
 // Scheduling Step Component 
-const TournamentSchedulingStep = ({ form }: { form: any }) => {
+const TournamentSchedulingStep = ({ form }: { form: ReturnType<typeof useForm<TournamentFormValues>> }) => {
   // Check for date validation errors
   const startDateError = form.formState.errors.startDate;
   const endDateError = form.formState.errors.endDate;
@@ -687,45 +688,47 @@ export function CreateTournamentWizard({ open, onOpenChange }: CreateTournamentW
         </div>
         
         {/* Form steps */}
-        <form className="space-y-4">
-          {renderStep()}
-          
-          <DialogFooter className="flex justify-between pt-4 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={prevStep}
-              disabled={step === 0 || isPending}
-              className={step === 0 ? 'invisible' : ''}
-            >
-              <ChevronLeft className="mr-2 h-4 w-4" /> Back
-            </Button>
+        <Form {...form}>
+          <div className="space-y-4">
+            {renderStep()}
             
-            <div className="flex gap-2">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => onOpenChange(false)}
-                disabled={isPending}
+            <DialogFooter className="flex justify-between pt-4 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={prevStep}
+                disabled={step === 0 || isPending}
+                className={step === 0 ? 'invisible' : ''}
               >
-                Cancel
+                <ChevronLeft className="mr-2 h-4 w-4" /> Back
               </Button>
               
-              <Button 
-                type="button" 
-                onClick={nextStep}
-                disabled={isPending}
-              >
-                {isPending 
-                  ? 'Creating...' 
-                  : step === totalSteps - 1 
-                    ? 'Create Tournament' 
-                    : <>Next <ChevronRight className="ml-2 h-4 w-4" /></>
-                }
-              </Button>
-            </div>
-          </DialogFooter>
-        </form>
+              <div className="flex gap-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => onOpenChange(false)}
+                  disabled={isPending}
+                >
+                  Cancel
+                </Button>
+                
+                <Button 
+                  type="button" 
+                  onClick={nextStep}
+                  disabled={isPending}
+                >
+                  {isPending 
+                    ? 'Creating...' 
+                    : step === totalSteps - 1 
+                      ? 'Create Tournament' 
+                      : <>Next <ChevronRight className="ml-2 h-4 w-4" /></>
+                  }
+                </Button>
+              </div>
+            </DialogFooter>
+          </div>
+        </Form>
       </DialogContent>
     </Dialog>
   );
