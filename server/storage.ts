@@ -783,135 +783,118 @@ export class DatabaseStorage implements IStorage {
     rating: number | null;
   }[]> {
     try {
-      // Framework 5.0: Completely rewritten search function to fix database errors
+      // Framework 5.0: Original working implementation reinstated as per principles
       console.log("[Storage] searchUsers called with query:", query, "limit:", limit, "excludeUserId:", excludeUserId);
       
-      // More detailed logging
+      // Basic validation
       if (!query) {
-        console.log("Search query is empty or null, returning empty array");
+        console.log("[Storage] Search query is empty, returning empty array");
         return [];
       }
       
-      // Extra safety for query parameter - ensure it's a string and trim it
+      // Normalize and validate query
       const safeQuery = String(query).trim();
       if (safeQuery.length < 2) {
-        console.log("Search query is too short (needs 2+ chars), returning empty array");
+        console.log("[Storage] Search query too short (< 2 chars), returning empty array");
         return [];
       }
       
-      // Simply check if there are any users at all - for debugging
+      // Log total users for debugging purposes
       const userCount = await db.select({ count: sql<number>`count(*)` }).from(users);
-      console.log("Total users in database:", userCount[0].count);
+      console.log("[Storage] Total users in database:", userCount[0].count);
       
+      // Create search pattern for LIKE queries
+      const searchPattern = `%${safeQuery}%`;
+      
+      // Build the search condition
+      const searchCondition = or(
+        sql`LOWER(${users.username}) LIKE LOWER(${searchPattern})`,
+        sql`LOWER(COALESCE(${users.displayName}, '')) LIKE LOWER(${searchPattern})`
+      );
+      
+      // Add exclusion condition if needed
+      const finalCondition = excludeUserId !== undefined 
+        ? and(searchCondition, ne(users.id, excludeUserId))
+        : searchCondition;
+      
+      // Execute the search query
+      const results = await db.select({
+        id: users.id,
+        username: users.username,
+        displayName: users.displayName,
+        passportId: users.passportId,
+        avatarInitials: users.avatarInitials,
+        duprRating: users.duprRating,
+      })
+      .from(users)
+      .where(finalCondition)
+      .limit(limit);
+      
+      console.log(`[Storage] Found ${results.length} users matching "${safeQuery}"`);
+      
+      // Map to the expected return format
+      const mappedResults = results.map(user => ({
+        id: Number(user.id),
+        username: String(user.username || ''),
+        displayName: String(user.displayName || user.username || ''),
+        passportCode: user.passportId ? String(user.passportId) : null,
+        avatarUrl: null, // We don't store this directly
+        avatarInitials: user.avatarInitials ? 
+          String(user.avatarInitials) : 
+          (user.username ? String(user.username).substring(0, 2).toUpperCase() : "??"),
+        rating: user.duprRating ? parseFloat(String(user.duprRating)) : null
+      }));
+      
+      return mappedResults;
+      
+    } catch (error) {
+      // Comprehensive error handling
+      console.error("[Storage] Error in searchUsers:", error);
+      
+      // Try fallback approach if primary method fails
       try {
-        // Framework 5.0: Use Drizzle ORM with SQL to ensure type safety and query construction
-        console.log(`[Storage] Executing optimized query for users matching "${safeQuery}"`);
+        console.log("[Storage] Attempting fallback search method");
         
-        // Create the search pattern for LIKE
-        const searchPattern = `%${safeQuery}%`;
-        
-        // Build conditions for the search
-        const searchConditions = or(
-          sql`LOWER(${users.username}) LIKE LOWER(${searchPattern})`,
-          sql`LOWER(COALESCE(${users.displayName}, '')) LIKE LOWER(${searchPattern})`
-        );
-        
-        // Prepare all conditions
-        let allConditions = searchConditions;
-        
-        // If exclude user ID is present, add that condition
-        if (excludeUserId !== undefined) {
-          allConditions = and(
-            searchConditions,
-            ne(users.id, excludeUserId)
-          );
-        }
-        
-        // Execute query with all conditions at once
-        const results = await db.select({
+        // Get a limited set of users to filter in memory
+        const allUsers = await db.select({
           id: users.id,
           username: users.username,
           displayName: users.displayName,
-          passportId: users.passportId,
-          avatarInitials: users.avatarInitials,
-          duprRating: users.duprRating,
-        })
-        .from(users)
-        .where(conditions)
-        .limit(limit);
+          duprRating: users.duprRating
+        }).from(users).limit(100);
         
-        console.log(`[Storage] Found ${results.length} users matching "${safeQuery}"`);
+        console.log(`[Storage] Retrieved ${allUsers.length} users for in-memory filtering`);
         
-        if (results.length > 0) {
-          console.log(`[Storage] Results:`, results.map(u => `${u.id}: ${u.username}`).join(", "));
-        }
+        // Filter users in memory
+        const lowercaseQuery = String(query).trim().toLowerCase();
+        const filteredUsers = allUsers.filter(user => {
+          // Skip the excluded user if specified
+          if (excludeUserId !== undefined && user.id === excludeUserId) return false;
+          
+          // Match on username and displayName
+          return (
+            user.username?.toLowerCase().includes(lowercaseQuery) ||
+            (user.displayName && user.displayName.toLowerCase().includes(lowercaseQuery))
+          );
+        }).slice(0, limit); // Apply the limit
+        
+        console.log(`[Storage] Fallback found ${filteredUsers.length} matching users`);
         
         // Map to the expected return format
-        const mappedResults = results.map(user => ({
-          id: Number(user.id),
-          username: String(user.username || ''),
-          displayName: String(user.displayName || user.username || ''),
-          passportCode: user.passportId ? String(user.passportId) : null,
-          avatarUrl: null, // Safe default
-          avatarInitials: user.avatarInitials ? 
-            String(user.avatarInitials) : 
-            (user.username ? String(user.username).substring(0, 2).toUpperCase() : "??"),
+        return filteredUsers.map(user => ({
+          id: user.id,
+          username: user.username || '',
+          displayName: user.displayName || user.username || '',
+          passportCode: null,
+          avatarUrl: null,
+          avatarInitials: (user.username || '').substring(0, 2).toUpperCase() || "??",
           rating: user.duprRating ? parseFloat(String(user.duprRating)) : null
         }));
         
-        console.log(`[Storage] Returning ${mappedResults.length} mapped user matches`);
-        return mappedResults;
-        
-      } catch (dbError) {
-        console.error("Database error in searchUsers:", dbError);
-        
-        // Try a fallback approach - get all users and filter in memory
-        console.log("Trying fallback approach - get all users and filter in JS");
-        try {
-          // Framework 5.0: Fix - Remove non-existent fields (rating) to avoid errors
-          const allUsers = await db.select({
-            id: users.id,
-            username: users.username,
-            displayName: users.displayName,
-            duprRating: users.duprRating
-          }).from(users).limit(100);
-          
-          console.log(`Got ${allUsers.length} total users for in-memory filtering`);
-          
-          // Filter in JS
-          const lowercaseQuery = safeQuery.toLowerCase();
-          const filteredUsers = allUsers.filter(user => {
-            // Skip the excluded user if specified
-            if (excludeUserId && user.id === excludeUserId) return false;
-            
-            // Match on username and displayName
-            return (
-              user.username?.toLowerCase().includes(lowercaseQuery) ||
-              (user.displayName && user.displayName.toLowerCase().includes(lowercaseQuery))
-            );
-          }).slice(0, 10); // Limit to 10 results
-          
-          console.log(`Fallback filtering found ${filteredUsers.length} matches`);
-          
-          // Map to simplified user objects with only what we need for the player select
-          // Framework 5.0: Fix - Remove non-existent fields (rating) and use duprRating instead
-          return filteredUsers.map(user => ({
-            id: user.id,
-            username: user.username,
-            displayName: user.displayName || user.username,
-            passportCode: null,
-            avatarUrl: null,
-            avatarInitials: user.username?.substring(0, 2).toUpperCase() || "??",
-            rating: user.duprRating ? parseFloat(user.duprRating) : null // Use DUPR rating directly
-          }));
-        } catch (fallbackError) {
-          console.error("Fallback search approach also failed:", fallbackError);
-          return []; // Empty array as last resort
-        }
+      } catch (fallbackError) {
+        console.error("[Storage] Fallback search method also failed:", fallbackError);
+        return []; // Return empty array as last resort
       }
-    } catch (outerError) {
-      console.error("Outer error in searchUsers:", outerError);
-      return []; // Empty array as last resort
     }
   }
 
