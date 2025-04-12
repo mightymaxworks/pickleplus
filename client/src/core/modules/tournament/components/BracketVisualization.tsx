@@ -59,30 +59,47 @@ export function BracketVisualization({
   useEffect(() => {
     console.log(`[PKL-278651-TOURN-0014-SEED] BracketVisualization mounted for bracket ${bracketId}`);
     
+    // Set the current time as our reference point
+    lastRender.current = Date.now();
+    
     // Check for tournament changes periodically
     const checkInterval = setInterval(() => {
-      // Has there been a 'teams_seeded' change for this bracket?
+      // Check for any changes related to this bracket - both teams_seeded and match_result_recorded
       const hasTeamsSeededChange = tournamentChanges.isChangedSince(
         lastRender.current,
         'teams_seeded',
         bracketId
       );
       
-      // If so, force a re-render of the bracket visualization
-      if (hasTeamsSeededChange) {
+      const hasMatchResultChange = tournamentChanges.isChangedSince(
+        lastRender.current,
+        'match_result_recorded',
+        bracketId
+      );
+      
+      // If any relevant change is detected, force a re-render
+      if (hasTeamsSeededChange || hasMatchResultChange) {
         console.log(
-          `[PKL-278651-TOURN-0014-SEED] Detected teams_seeded change for bracket ${bracketId}, forcing bracket visualization update`
+          `[PKL-278651-TOURN-0014-SEED] Detected bracket change for bracket ${bracketId}, forcing visualization update`
         );
+        // Increment our key to force a complete re-render of the component
         setForceUpdateKey(prev => prev + 1);
+        // Update our last render timestamp
         lastRender.current = Date.now();
       }
-    }, 500); // Check every 500ms
+    }, 300); // Check more frequently (300ms) for better responsiveness
     
     // Cleanup
     return () => {
       clearInterval(checkInterval);
     };
   }, [tournamentChanges, bracketId]);
+  
+  // Also re-render when rounds or matches change
+  useEffect(() => {
+    console.log(`[PKL-278651-TOURN-0014-SEED] BracketVisualization data updated, forcing refresh`);
+    setForceUpdateKey(prev => prev + 1);
+  }, [rounds, matches]);
 
   console.log(`[PKL-278651-TOURN-0014-SEED] Rendering BracketVisualization with key ${forceUpdateKey}`);
   

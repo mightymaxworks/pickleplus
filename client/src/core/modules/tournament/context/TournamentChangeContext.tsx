@@ -82,12 +82,16 @@ export function TournamentChangeProvider({ children }: TournamentChangeProviderP
     
     // Otherwise, check if there was a specific change event that matches the criteria
     if (lastChangeEvent && lastChangeEvent.timestamp > timestamp) {
+      // First verify the change type matches
+      const typeMatches = lastChangeEvent.type === changeType;
+      
       // If entity ID is specified, check that too
-      if (entityId !== undefined) {
-        return lastChangeEvent.type === changeType && lastChangeEvent.entityId === entityId;
+      if (entityId !== undefined && lastChangeEvent.entityId !== undefined) {
+        return typeMatches && lastChangeEvent.entityId === entityId;
       }
-      // Otherwise just check the change type
-      return lastChangeEvent.type === changeType;
+      
+      // If we're not checking entity ID or the event doesn't have one
+      return typeMatches;
     }
     
     return false;

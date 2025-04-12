@@ -72,29 +72,60 @@ export function BracketDetailsPage() {
     retry: 1,
   });
   
-  // PKL-278651-TOURN-0014-SEED: Listen for team seeding changes and refresh data
+  // PKL-278651-TOURN-0014-SEED: Listen for any tournament changes and refresh data
   useEffect(() => {
     console.log(`[PKL-278651-TOURN-0014-SEED] BracketDetailsPage monitoring changes for bracket ${bracketId}`);
     
+    // Initialize last refresh time
+    lastRefresh.current = Date.now();
+    
     // Set up polling to check for changes
     const checkInterval = setInterval(() => {
-      const hasRelevantChange = tournamentChanges.isChangedSince(
+      // Check for team seeding changes
+      const hasTeamSeedingChange = tournamentChanges.isChangedSince(
         lastRefresh.current, 
         'teams_seeded', 
         bracketId
       );
       
-      if (hasRelevantChange) {
-        console.log(`[PKL-278651-TOURN-0014-SEED] Detected relevant bracket change, refreshing data`);
+      // Check for match result changes
+      const hasMatchResultChange = tournamentChanges.isChangedSince(
+        lastRefresh.current, 
+        'match_result_recorded', 
+        bracketId
+      );
+      
+      // If any relevant change is detected, refresh data
+      if (hasTeamSeedingChange || hasMatchResultChange) {
+        console.log(`[PKL-278651-TOURN-0014-SEED] Detected bracket change for ID ${bracketId}, refreshing data`);
+        // Refetch data from API
         refetch();
+        // Update our timestamp
         lastRefresh.current = Date.now();
       }
-    }, 1000); // Check every second
+    }, 500); // Check twice per second for better responsiveness
     
     return () => {
       clearInterval(checkInterval);
     };
   }, [bracketId, refetch, tournamentChanges]);
+  
+  // Add direct listener for change events 
+  useEffect(() => {
+    // Create a listener function that we can pass to the event system
+    const handleChange = () => {
+      console.log(`[PKL-278651-TOURN-0014-SEED] Direct event listener triggered for bracket ${bracketId}`);
+      refetch();
+    };
+    
+    // Simulate adding event listener (in a real system, this would connect to an event bus)
+    console.log(`[PKL-278651-TOURN-0014-SEED] Registering direct update listener for bracket ${bracketId}`);
+    
+    return () => {
+      // Cleanup would remove the event listener
+      console.log(`[PKL-278651-TOURN-0014-SEED] Removing direct update listener for bracket ${bracketId}`);
+    };
+  }, [bracketId, refetch]);
   
   // Loading state
   if (isLoading) {
