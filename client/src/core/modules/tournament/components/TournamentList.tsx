@@ -94,7 +94,7 @@ function TournamentCard({ tournament }: { tournament: Tournament }) {
         </div>
       </CardContent>
       <CardFooter className="pt-0 flex justify-end">
-        <Link to={`/tournaments/${tournament.id}`}>
+        <Link to={`/admin/tournaments/${tournament.id}`}>
           <Button variant="outline" className="gap-1">
             <span>Manage</span>
             <ChevronRight size={16} />

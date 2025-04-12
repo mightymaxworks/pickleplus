@@ -61,6 +61,10 @@ This framework defines the core principles and practices for developing the Pick
    - Always use `useQuery` with proper query keys for fetching
    - Always use `useMutation` for data modifications
    - Properly invalidate queries with precise query keys after mutations
+   - For critical operations, implement multiple independent cache invalidation strategies
+   - Use predicate-based invalidation to catch all variants of query keys when necessary
+   - Consider both with/without leading slash patterns in API paths for invalidation
+   - Manually trigger immediate refetches for time-critical operations
 
 2. **API Request Lifecycle**
    - **NEVER directly manipulate response objects**
@@ -87,6 +91,25 @@ This framework defines the core principles and practices for developing the Pick
    - Use existing shadcn components wherever possible
    - When extending components, maintain accessibility
    - Follow consistent styling patterns using theme variables
+   
+3. **Component Communication Strategy**
+   - Use explicit callback props for critical operations (onCreated, onUpdated, etc.)
+   - For components with complex state requirements, implement React Context
+   - Implement error boundaries or try-catch when consuming context
+   - Provide fallback mechanisms when context might be unavailable
+   - For lists requiring immediate updates after CRUD operations, implement multiple data refresh mechanisms
+   - Include timestamps or force refresh keys in component state to trigger re-renders
+
+4. **UI Refresh Strategy**
+   - For critical UI updates, implement multiple independent refresh mechanisms
+   - Never rely solely on React Query cache invalidation for critical UI updates
+   - Consider combining these approaches for maximum reliability:
+     - Context system for broadcasting changes to interested components
+     - Direct API calls that bypass the cache entirely
+     - Callback propagation between parent-child components
+     - Component state refresh triggers (forceRefreshKey)
+     - Window focus event handlers for automatic refreshes
+   - Add comprehensive logging for each refresh strategy
 
 ## Testing and Quality Assurance
 
@@ -156,6 +179,29 @@ This framework defines the core principles and practices for developing the Pick
    - Log both request and response details in development mode
    - Create dedicated debugging tools that don't modify the core data flow
 
+## Resilient Component Design
+
+1. **UI Refresh Reliability**
+   - Design components to be resilient to different data refresh mechanisms
+   - Implement multi-layer refresh strategies for critical CRUD operations
+   - Use redundant notification systems for maximum reliability
+   - Never assume cache invalidation alone will be sufficient
+
+2. **Context System Design**
+   - Wrap context providers close to where they're needed
+   - Include error handling in context consumers
+   - Provide multiple mechanisms for components to detect data changes:
+     - Timestamp-based change detection
+     - Direct notification callbacks
+     - Force refresh mechanisms
+   - Document context dependencies and fallback behaviors
+
+3. **Form Dialog Communication**
+   - Dialog components should always have explicit callbacks for completion events
+   - For critical operations, implement at least three independent refresh mechanisms
+   - Add verbose logging of component lifecycles
+   - Implement robust error handling with clear user feedback
+
 ## Golden Ticket Subsystem Guidelines
 
 1. **File Uploads**
@@ -173,6 +219,27 @@ This framework defines the core principles and practices for developing the Pick
    - Use proper date format validation and parsing
    - Apply consistent rate limiting
 
+## Debug-Friendly Development
+
+1. **Console Logging Standards**
+   - Add comprehensive prefixed logging for all critical operations
+   - Use consistent prefixes for related components (e.g., `[Tournament]`, `[API]`, etc.)
+   - Log the exact values being used in queries and mutations
+   - Implement lifecycle logging (start, processing, completion) for critical operations
+   - Include timestamps in logs for tracing sequential operations
+
+2. **Component Instrumentation**
+   - Add internal state monitoring capabilities
+   - Log query key composition and cache state
+   - Include console reporting for context updates
+   - Add direct visibility into cache operations
+
+3. **Defensive Logging**
+   - Log both success and error paths
+   - Add verbose logging around critical boundaries
+   - Include logging for fallback paths
+   - Make failure conditions explicitly visible
+
 ## Troubleshooting Checklist
 
 When an issue occurs, follow this checklist:
@@ -185,3 +252,6 @@ When an issue occurs, follow this checklist:
 6. Check component props and state flow
 7. Verify route handlers are correctly registered
 8. Check database schema matches expected fields
+9. Examine console logs for component refresh operations
+10. Verify multiple refresh strategies are working
+11. Check for error handling around context usage
