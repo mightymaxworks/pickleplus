@@ -252,7 +252,30 @@ export function CreateBracketDialog({
         </DialogHeader>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form 
+            onSubmit={(e) => {
+              console.log('[BracketDialog][PKL-278651-TOURN-0010-BRCKT] Form submission event triggered');
+              e.preventDefault(); // Prevent default form submission
+              
+              // Log form state before submission
+              console.log('[BracketDialog][PKL-278651-TOURN-0010-BRCKT] Form state before submission:', {
+                valid: form.formState.isValid,
+                dirty: form.formState.isDirty,
+                errors: form.formState.errors,
+                values: form.getValues()
+              });
+              
+              try {
+                // Manually call onSubmit function with form values
+                const formValues = form.getValues();
+                console.log('[BracketDialog][PKL-278651-TOURN-0010-BRCKT] Calling onSubmit with values:', formValues);
+                onSubmit(formValues);
+              } catch (error) {
+                console.error('[BracketDialog][PKL-278651-TOURN-0010-BRCKT] Error in form submission handler:', error);
+              }
+            }} 
+            className="space-y-6"
+          >
             {step === 1 && (
               <div className="space-y-6">
                 <FormField
@@ -324,7 +347,10 @@ export function CreateBracketDialog({
                 <div className="pt-4">
                   <Button 
                     type="button" 
-                    onClick={() => setStep(2)}
+                    onClick={() => {
+                      console.log('[BracketDialog][PKL-278651-TOURN-0010-BRCKT] Moving to step 2');
+                      setStep(2);
+                    }}
                     disabled={!form.watch('name') || !form.watch('bracketType')}
                   >
                     Next: Select Teams
@@ -366,9 +392,10 @@ export function CreateBracketDialog({
                                 <Checkbox 
                                   id={`team-${team.id}`}
                                   checked={selectedTeams[team.id] || false}
-                                  onCheckedChange={(checked) => 
-                                    handleTeamToggle(team.id, checked as boolean)
-                                  }
+                                  onCheckedChange={(checked) => {
+                                    console.log(`[BracketDialog][PKL-278651-TOURN-0010-BRCKT] Team ${team.id} selection changed to ${checked}`);
+                                    handleTeamToggle(team.id, checked as boolean);
+                                  }}
                                 />
                               </TableCell>
                               <TableCell>{team.teamName}</TableCell>
@@ -403,12 +430,19 @@ export function CreateBracketDialog({
                   <Button 
                     type="button" 
                     variant="outline" 
-                    onClick={() => setStep(1)}
+                    onClick={() => {
+                      console.log('[BracketDialog][PKL-278651-TOURN-0010-BRCKT] Moving back to step 1');
+                      setStep(1);
+                    }}
                   >
                     Back
                   </Button>
                   <Button 
                     type="submit" 
+                    onClick={(e) => {
+                      console.log('[BracketDialog][PKL-278651-TOURN-0010-BRCKT] Submit button clicked');
+                      // Event will be handled by the form's onSubmit handler
+                    }}
                     disabled={
                       isPending || 
                       Object.values(selectedTeams).filter(Boolean).length < 2 ||
