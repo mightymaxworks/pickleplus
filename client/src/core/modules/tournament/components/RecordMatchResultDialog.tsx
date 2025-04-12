@@ -74,16 +74,29 @@ export function RecordMatchResultDialog({
 }: RecordMatchResultDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Enhanced score data state with support for multi-game matches
   const [scoreData, setScoreData] = useState<{ 
     team1Score: number; 
     team2Score: number; 
     scoreFormat?: string;
     scoringType?: 'traditional' | 'rally' | 'custom';
+    matchFormat?: 'single' | 'best_of_3' | 'best_of_5' | 'custom';
+    games?: Array<{
+      team1Score: number;
+      team2Score: number;
+      winner?: 'team1' | 'team2';
+    }>;
+    team1GamesWon?: number;
+    team2GamesWon?: number;
   }>({ 
     team1Score: 0, 
     team2Score: 0, 
     scoreFormat: "0-0",
-    scoringType: "traditional"
+    scoringType: "traditional",
+    matchFormat: "single",
+    games: [{ team1Score: 0, team2Score: 0 }],
+    team1GamesWon: 0,
+    team2GamesWon: 0
   });
   const [selectedWinnerId, setSelectedWinnerId] = useState<number | null>(null);
   const queryClient = useQueryClient();
@@ -110,25 +123,85 @@ export function RecordMatchResultDialog({
     team2Score: number; 
     scoreFormat?: string;
     scoringType?: 'traditional' | 'rally' | 'custom';
+    matchFormat?: 'single' | 'best_of_3' | 'best_of_5' | 'custom';
+    games?: Array<{
+      team1Score: number;
+      team2Score: number;
+      winner?: 'team1' | 'team2';
+    }>;
+    team1GamesWon?: number;
+    team2GamesWon?: number;
   }) => {
     setScoreData(newScoreData);
     
-    // Create a formatted score string that includes scoring type information
+    // Create a formatted score string that includes scoring and match format information
     let formattedScore: string;
     
-    if (newScoreData.scoreFormat) {
-      formattedScore = newScoreData.scoreFormat;
+    // For multi-game formats, build a comprehensive score string
+    if (newScoreData.matchFormat && newScoreData.matchFormat !== 'single' && newScoreData.games && newScoreData.games.length > 1) {
+      // Format like "21-15, 19-21, 21-18" for multiple games
+      formattedScore = newScoreData.games.map(game => `${game.team1Score}-${game.team2Score}`).join(', ');
+      
+      // Add match format information
+      if (newScoreData.matchFormat === 'best_of_3') {
+        formattedScore += ' (Best of 3)';
+      } else if (newScoreData.matchFormat === 'best_of_5') {
+        formattedScore += ' (Best of 5)';
+      }
+      
+      // Add final result
+      if (newScoreData.team1GamesWon !== undefined && newScoreData.team2GamesWon !== undefined) {
+        formattedScore += ` [${newScoreData.team1GamesWon}-${newScoreData.team2GamesWon}]`;
+      }
     } else {
-      formattedScore = `${newScoreData.team1Score}-${newScoreData.team2Score}`;
-    }
-    
-    // Add scoring format information if available
-    if (newScoreData.scoringType && newScoreData.scoringType !== 'custom') {
-      formattedScore += ` (${newScoreData.scoringType})`;
+      // Single game format
+      if (newScoreData.scoreFormat) {
+        formattedScore = newScoreData.scoreFormat;
+      } else {
+        formattedScore = `${newScoreData.team1Score}-${newScoreData.team2Score}`;
+      }
+      
+      // Add scoring format information if available
+      if (newScoreData.scoringType && newScoreData.scoringType !== 'custom') {
+        formattedScore += ` (${newScoreData.scoringType})`;
+      }
     }
     
     // Update the form's score field with the formatted score
     form.setValue("score", formattedScore);
+    
+    // Update the winner selection based on the match format
+    if (team1?.id && team2?.id) {
+      let winnerId: number | null = null;
+      
+      if (newScoreData.matchFormat === 'single') {
+        // Single game: winner is the team with the higher score in the one game
+        if (newScoreData.team1Score > newScoreData.team2Score && 
+            newScoreData.team1Score >= 21 && 
+            (newScoreData.team1Score - newScoreData.team2Score) >= 2) {
+          winnerId = team1.id;
+        } else if (newScoreData.team2Score > newScoreData.team1Score && 
+                  newScoreData.team2Score >= 21 && 
+                  (newScoreData.team2Score - newScoreData.team1Score) >= 2) {
+          winnerId = team2.id;
+        }
+      } else if (newScoreData.team1GamesWon !== undefined && newScoreData.team2GamesWon !== undefined) {
+        // Multi-game: winner is the team that won more games
+        const winThreshold = newScoreData.matchFormat === 'best_of_3' ? 2 : 3;
+        
+        if (newScoreData.team1GamesWon >= winThreshold) {
+          winnerId = team1.id;
+        } else if (newScoreData.team2GamesWon >= winThreshold) {
+          winnerId = team2.id;
+        }
+      }
+      
+      // Update the winner if one is determined
+      if (winnerId) {
+        setSelectedWinnerId(winnerId);
+        form.setValue("winnerId", winnerId);
+      }
+    }
   };
 
   // Record match result mutation using our enhanced API client
