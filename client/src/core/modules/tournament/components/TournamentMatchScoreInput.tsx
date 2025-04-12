@@ -1,9 +1,16 @@
 /**
- * PKL-278651-TOURN-0017-SCORE
- * Enhanced Tournament Match Score Input Component
+ * PKL-278651-TOURN-0017-UI
+ * Enhanced Tournament Match Score Input Component with Multi-Game Support
  * 
- * Visual score input component for tournament matches with team-specific UI
- * and integrated validation following Framework 5.0 principles.
+ * UI-optimized component for tournament match score recording, supporting:
+ * - Single game, best of 3, best of 5, and custom match formats
+ * - Traditional and rally scoring formats
+ * - Game-by-game score tracking with winner detection
+ * - Responsive design optimized for both desktop and mobile
+ * - Visual indicators for completed games and match winners
+ * 
+ * Follows Framework 5.0 principles with explicit state management 
+ * and consistent visual language.
  */
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -558,16 +565,16 @@ export function TournamentMatchScoreInput({
       {value.matchFormat !== 'single' && (
         <div className="space-y-4 mt-4 mb-2">
           {/* Match Progress Summary */}
-          <div className="bg-gray-50 p-3 rounded-md">
-            <div className="flex items-center justify-between">
+          <div className={`p-4 rounded-md ${getMatchWinner() ? 'bg-primary/10 border border-primary/20' : 'bg-gray-50'}`}>
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <div className="text-sm font-medium">Match Progress</div>
-                <Badge variant="outline" className="ml-2">
+                <Badge variant={getMatchWinner() ? "default" : "outline"} className="ml-2">
                   {value.matchFormat === 'best_of_3' ? 'Best of 3' : value.matchFormat === 'best_of_5' ? 'Best of 5' : 'Custom'}
                 </Badge>
               </div>
               
-              <div className="flex items-center text-xs text-gray-500">
+              <div className="flex items-center text-xs font-medium text-gray-700">
                 {value.matchFormat === 'best_of_3' 
                   ? 'First to win 2 games wins' 
                   : value.matchFormat === 'best_of_5' 
@@ -577,22 +584,38 @@ export function TournamentMatchScoreInput({
             </div>
             
             {/* Score Indicator */}
-            <div className="mt-2 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className={`px-3 py-1 rounded-md ${value.team1GamesWon && value.team1GamesWon > (value.team2GamesWon || 0) ? 'bg-primary text-white font-bold' : 'bg-gray-100'}`}>
-                  {team1Name}: {value.team1GamesWon || 0}
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+              {/* Games Won Indicators */}
+              <div className="flex items-center gap-2 flex-grow">
+                <div className={`px-4 py-1.5 rounded-md flex-grow text-center ${value.team1GamesWon && value.team1GamesWon > (value.team2GamesWon || 0) ? 'bg-primary text-white font-bold shadow-sm' : 'bg-gray-100'}`}>
+                  <div className="text-xs uppercase tracking-wide mb-1 opacity-80">Team 1</div>
+                  <div className="flex items-center justify-center gap-1">
+                    <span className="font-semibold">{team1Name}</span>
+                    <span className="font-bold text-lg">{value.team1GamesWon || 0}</span>
+                  </div>
                 </div>
-                <div className="text-gray-500 text-sm">-</div>
-                <div className={`px-3 py-1 rounded-md ${value.team2GamesWon && value.team2GamesWon > (value.team1GamesWon || 0) ? 'bg-primary text-white font-bold' : 'bg-gray-100'}`}>
-                  {team2Name}: {value.team2GamesWon || 0}
+                
+                <div className="text-gray-400 text-xl font-light">vs</div>
+                
+                <div className={`px-4 py-1.5 rounded-md flex-grow text-center ${value.team2GamesWon && value.team2GamesWon > (value.team1GamesWon || 0) ? 'bg-primary text-white font-bold shadow-sm' : 'bg-gray-100'}`}>
+                  <div className="text-xs uppercase tracking-wide mb-1 opacity-80">Team 2</div>
+                  <div className="flex items-center justify-center gap-1">
+                    <span className="font-semibold">{team2Name}</span>
+                    <span className="font-bold text-lg">{value.team2GamesWon || 0}</span>
+                  </div>
                 </div>
               </div>
               
               {/* Match Status */}
               {value.team1GamesWon !== undefined && value.team2GamesWon !== undefined && (
-                <Badge variant={getMatchWinner() ? "default" : "outline"} className="ml-auto">
+                <Badge variant={getMatchWinner() ? "default" : "outline"} className={`${getMatchWinner() ? 'text-base px-3 py-1.5' : ''} flex items-center gap-1.5`}>
                   {getMatchWinner() 
-                    ? `${getMatchWinner() === 'team1' ? team1Name : team2Name} wins match!` 
+                    ? (
+                      <>
+                        <Trophy className="h-4 w-4" />
+                        <span>{getMatchWinner() === 'team1' ? team1Name : team2Name} wins match!</span>
+                      </>
+                    ) 
                     : `In progress`}
                 </Badge>
               )}
@@ -612,37 +635,54 @@ export function TournamentMatchScoreInput({
                   
                 return (
                   <div key={index} 
-                    className={`border rounded-md p-3 ${gameWinner ? 
-                      (gameWinner === 'team1' ? 'border-l-4 border-l-primary' : 'border-r-4 border-r-primary') : 
-                      'border-gray-200'}`}>
+                    className={`border rounded-md p-3 transition-all ${
+                      gameWinner 
+                        ? (gameWinner === 'team1' 
+                           ? 'border-l-4 border-l-primary bg-primary/5' 
+                           : 'border-r-4 border-r-primary bg-primary/5') 
+                        : 'border-gray-200'
+                      } ${
+                      getMatchWinner() && game.winner 
+                        ? 'shadow-sm' 
+                        : ''
+                    }`}>
                     
                     {/* Game Header with Winner Badge */}
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center">
-                        <div className="font-medium text-sm bg-gray-100 px-2 py-0.5 rounded-md">Game {index + 1}</div>
+                    <div className="flex flex-wrap items-center justify-between mb-2 gap-2">
+                      <div className="flex items-center flex-wrap gap-1">
+                        <div className="font-medium text-sm bg-gray-100 px-2 py-0.5 rounded-md">
+                          Game {index + 1}
+                        </div>
                         {gameWinner && (
-                          <Badge variant="outline" className="ml-2 bg-primary/10 text-primary">
-                            {gameWinner === 'team1' ? team1Name : team2Name} won
+                          <Badge variant="outline" className="ml-2 bg-primary/10 text-primary flex items-center gap-1">
+                            <Trophy className="h-3 w-3" />
+                            <span className="text-xs">{gameWinner === 'team1' ? team1Name : team2Name} won</span>
                           </Badge>
                         )}
                       </div>
                       
                       {/* Score Display for Quick View */}
-                      <div className="text-sm font-medium">
+                      <div className="text-sm font-semibold bg-gray-100 px-2 py-0.5 rounded">
                         {game.team1Score} - {game.team2Score}
                       </div>
                     </div>
                     
                     {/* Score Controls - Two Column Layout */}
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {/* Team 1 score controls */}
-                      <div className="flex items-center space-x-1 bg-gray-50 rounded-md p-1.5">
-                        <div className="text-xs font-medium truncate max-w-[80px]">{team1Name}</div>
-                        <div className="flex items-center ml-auto">
+                      <div className={`flex items-center space-x-1 rounded-md p-2 ${
+                        gameWinner === 'team1' ? 'bg-primary/10' : 'bg-gray-50'
+                      }`}>
+                        <div className={`text-xs font-medium truncate max-w-[80px] ${
+                          gameWinner === 'team1' ? 'text-primary font-semibold' : ''
+                        }`}>
+                          {team1Name}
+                        </div>
+                        <div className="flex items-center ml-auto touch-manipulation">
                           <Button
-                            variant="outline"
+                            variant={gameWinner === 'team1' ? "default" : "outline"}
                             size="sm"
-                            className="h-6 w-6 p-0 rounded-full"
+                            className="h-7 w-7 p-0 rounded-full"
                             onClick={() => updateGameScore(index, 'team1', -1)}
                             disabled={game.team1Score <= 0}
                           >
@@ -675,18 +715,16 @@ export function TournamentMatchScoreInput({
                                 team1Score: newScore
                               };
                               
-                              onChange({
-                                ...value,
-                                games: newGames
-                              });
+                              // Check if game has a winner after score change
+                              updateGameScore(index, 'team1', 0);
                             }}
-                            className={`text-center w-10 h-7 text-sm font-medium border ${gameWinner === 'team1' ? 'border-primary bg-primary/5' : 'border-gray-200'} rounded-md focus:outline-none focus:ring-1 focus:ring-primary`}
+                            className={`text-center w-10 h-8 text-sm font-medium border ${gameWinner === 'team1' ? 'border-primary bg-white' : 'border-gray-200'} rounded-md focus:outline-none focus:ring-1 focus:ring-primary`}
                           />
                           
                           <Button
-                            variant="outline"
+                            variant={gameWinner === 'team1' ? "default" : "outline"}
                             size="sm"
-                            className="h-6 w-6 p-0 rounded-full"
+                            className="h-7 w-7 p-0 rounded-full"
                             onClick={() => updateGameScore(index, 'team1', 1)}
                           >
                             <Plus className="h-3 w-3" />
@@ -695,13 +733,19 @@ export function TournamentMatchScoreInput({
                       </div>
                       
                       {/* Team 2 score controls */}
-                      <div className="flex items-center space-x-1 bg-gray-50 rounded-md p-1.5">
-                        <div className="text-xs font-medium truncate max-w-[80px]">{team2Name}</div>
-                        <div className="flex items-center ml-auto">
+                      <div className={`flex items-center space-x-1 rounded-md p-2 ${
+                        gameWinner === 'team2' ? 'bg-primary/10' : 'bg-gray-50'
+                      }`}>
+                        <div className={`text-xs font-medium truncate max-w-[80px] ${
+                          gameWinner === 'team2' ? 'text-primary font-semibold' : ''
+                        }`}>
+                          {team2Name}
+                        </div>
+                        <div className="flex items-center ml-auto touch-manipulation">
                           <Button
-                            variant="outline"
+                            variant={gameWinner === 'team2' ? "default" : "outline"}
                             size="sm"
-                            className="h-6 w-6 p-0 rounded-full"
+                            className="h-7 w-7 p-0 rounded-full"
                             onClick={() => updateGameScore(index, 'team2', -1)}
                             disabled={game.team2Score <= 0}
                           >
@@ -734,18 +778,16 @@ export function TournamentMatchScoreInput({
                                 team2Score: newScore
                               };
                               
-                              onChange({
-                                ...value,
-                                games: newGames
-                              });
+                              // Check if game has a winner after score change
+                              updateGameScore(index, 'team2', 0);
                             }}
-                            className={`text-center w-10 h-7 text-sm font-medium border ${gameWinner === 'team2' ? 'border-primary bg-primary/5' : 'border-gray-200'} rounded-md focus:outline-none focus:ring-1 focus:ring-primary`}
+                            className={`text-center w-10 h-8 text-sm font-medium border ${gameWinner === 'team2' ? 'border-primary bg-white' : 'border-gray-200'} rounded-md focus:outline-none focus:ring-1 focus:ring-primary`}
                           />
                           
                           <Button
-                            variant="outline"
+                            variant={gameWinner === 'team2' ? "default" : "outline"}
                             size="sm"
-                            className="h-6 w-6 p-0 rounded-full"
+                            className="h-7 w-7 p-0 rounded-full"
                             onClick={() => updateGameScore(index, 'team2', 1)}
                           >
                             <Plus className="h-3 w-3" />
@@ -761,33 +803,95 @@ export function TournamentMatchScoreInput({
         </div>
       )}
       
-      <div className="text-center text-xs sm:text-sm p-2 mt-1 bg-gray-50 rounded-md">
-        {value.matchFormat !== 'single' ? (
-          // Multi-game format explanation
-          <span>
-            {value.matchFormat === 'best_of_3' 
-              ? 'First team to win 2 games wins the match' 
-              : value.matchFormat === 'best_of_5' 
-                ? 'First team to win 3 games wins the match'
-                : 'Multiple games format'}
-          </span>
-        ) : (
-          // Single game format
-          <>
-            {winner ? (
-              <span className="text-green-600 font-medium">
-                Match complete! {winner === "team1" ? team1Name : team2Name} has won.
-              </span>
-            ) : scoreWarning ? (
-              <div className="flex items-center justify-center gap-1 text-red-500">
-                <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                <span>{scoreWarning}</span>
+      <div className={`p-3 mt-3 rounded-md ${
+        (value.matchFormat === 'single' && winner) || getMatchWinner() 
+          ? 'bg-primary/10 border border-primary/20' 
+          : scoreWarning 
+            ? 'bg-red-50 border border-red-100' 
+            : 'bg-gray-50'
+      }`}>
+        <div className="flex flex-col items-center justify-center">
+          {/* Match Format Icon */}
+          <div className="mb-1.5">
+            {value.matchFormat === 'single' ? (
+              <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
+                <span className="text-xs font-bold text-primary">1</span>
+              </div>
+            ) : value.matchFormat === 'best_of_3' ? (
+              <div className="flex items-center gap-0.5">
+                <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
+                  <span className="text-xs font-bold text-primary">3</span>
+                </div>
+              </div>
+            ) : value.matchFormat === 'best_of_5' ? (
+              <div className="flex items-center gap-0.5">
+                <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
+                  <span className="text-xs font-bold text-primary">5</span>
+                </div>
               </div>
             ) : (
-              <span>First to {pointsToWin} points with a 2-point lead wins</span>
+              <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
+                <span className="text-xs font-bold text-gray-600">C</span>
+              </div>
             )}
-          </>
-        )}
+          </div>
+          
+          {value.matchFormat !== 'single' ? (
+            // Multi-game format explanation
+            <div className="flex flex-col items-center">
+              <div className="text-sm font-medium mb-1">
+                {value.matchFormat === 'best_of_3' 
+                  ? 'Best of 3 Games Format' 
+                  : value.matchFormat === 'best_of_5' 
+                    ? 'Best of 5 Games Format'
+                    : 'Custom Multiple Games Format'}
+              </div>
+              <div className="text-xs text-gray-600">
+                {getMatchWinner() ? (
+                  <div className="flex items-center gap-1 text-primary font-medium">
+                    <Trophy className="h-3.5 w-3.5" />
+                    <span>{getMatchWinner() === 'team1' ? team1Name : team2Name} has won the match!</span>
+                  </div>
+                ) : (
+                  <span>
+                    {value.matchFormat === 'best_of_3' 
+                      ? 'First team to win 2 games wins the match' 
+                      : value.matchFormat === 'best_of_5' 
+                        ? 'First team to win 3 games wins the match'
+                        : 'Multiple games format'}
+                  </span>
+                )}
+              </div>
+            </div>
+          ) : (
+            // Single game format
+            <>
+              {winner ? (
+                <div className="flex flex-col items-center">
+                  <div className="text-sm font-medium text-primary mb-1 flex items-center gap-1.5">
+                    <Trophy className="h-4 w-4" />
+                    <span>Match Complete!</span>
+                  </div>
+                  <div className="text-xs font-medium">
+                    {winner === "team1" ? team1Name : team2Name} has won with a score of {value.team1Score}-{value.team2Score}
+                  </div>
+                </div>
+              ) : scoreWarning ? (
+                <div className="flex items-center justify-center gap-1.5 text-red-600">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                  <span className="text-sm font-medium">{scoreWarning}</span>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center">
+                  <div className="text-sm font-medium mb-1">Single Game Format</div>
+                  <div className="text-xs text-gray-600">
+                    First to {pointsToWin} points with a 2-point lead wins
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
