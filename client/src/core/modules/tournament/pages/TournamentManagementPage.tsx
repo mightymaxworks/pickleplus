@@ -35,9 +35,13 @@ export function TournamentManagementPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   
-  const { data: tournaments = [], isLoading, isError } = useQuery<Tournament[]>({
+  // Framework 5.0: Enhance reliability with proper stale time and refetch settings
+  const { data: tournaments = [], isLoading, isError, refetch } = useQuery<Tournament[]>({
     queryKey: ['/api/tournaments'],
     retry: 1,
+    staleTime: 30 * 1000, // Consider data fresh for 30 seconds
+    refetchOnWindowFocus: true, // Refetch when tab gets focus
+    refetchOnMount: true, // Always refetch when component mounts
   });
 
   const upcomingTournaments = tournaments.filter((tournament) => {
@@ -189,7 +193,14 @@ export function TournamentManagementPage() {
       {/* Tournament Creation Dialog */}
       <CreateTournamentDialog
         open={isCreateDialogOpen} 
-        onOpenChange={setIsCreateDialogOpen} 
+        onOpenChange={(open) => {
+          setIsCreateDialogOpen(open);
+          // If dialog is closing, refetch tournaments to ensure list is up-to-date
+          if (!open) {
+            console.log('[Tournament] Dialog closing, refreshing list');
+            refetch();
+          }
+        }} 
       />
     </LayoutContainer>
   );

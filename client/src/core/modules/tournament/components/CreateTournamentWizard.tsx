@@ -581,7 +581,14 @@ export function CreateTournamentWizard({ open, onOpenChange }: CreateTournamentW
       form.reset();
       onOpenChange(false);
       setStep(0);
+      
+      // Force refetch tournament list - use both invalidation and explicit refetch for maximum reliability
       queryClient.invalidateQueries({ queryKey: ['/api/tournaments'] });
+      
+      // Manually trigger an immediate refetch of tournaments - add this as an extra reliability measure
+      queryClient.refetchQueries({ queryKey: ['/api/tournaments'] });
+      
+      console.log('[Tournament] Refetching tournament list');
       
       toast({
         title: 'Tournament created',
