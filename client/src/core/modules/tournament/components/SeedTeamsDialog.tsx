@@ -72,7 +72,7 @@ export function SeedTeamsDialog({
   const queryClient = useQueryClient();
   const tournamentChanges = useTournamentChanges();
   const [seedMethod, setSeedMethod] = useState<'manual' | 'rating' | 'random'>('manual');
-  const [teamAssignments, setTeamAssignments] = useState<{[key: number]: number | null}>({});
+  const [teamAssignments, setTeamAssignments] = useState<{[key: string]: number | null}>({});
   const [isProcessing, setIsProcessing] = useState(false);
   
   // Get bracket data
@@ -111,7 +111,7 @@ export function SeedTeamsDialog({
   
   // PKL-278651-TOURN-0016-SEED: Enhanced seeding with proper API endpoint
   const { mutate, isPending, isError, error } = useMutation({
-    mutationFn: async (data: {assignments: {[key: number]: number | null}, method: string}) => {
+    mutationFn: async (data: {assignments: {[key: string]: number | null}, method: string}) => {
       console.log(`[PKL-278651-TOURN-0016-SEED] Saving team seeds for bracket ${bracketId}`);
       // Get CSRF token
       const csrfResponse = await apiRequest('GET', `/api/security/csrf-token`);
