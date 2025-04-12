@@ -74,11 +74,7 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (values: TournamentFormValues) => {
-      return apiRequest({
-        url: '/api/tournaments',
-        method: 'POST',
-        data: values,
-      });
+      return apiRequest('POST', '/api/tournaments', values);
     },
     onSuccess: () => {
       // Reset form and close dialog
