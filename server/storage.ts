@@ -773,16 +773,17 @@ export class DatabaseStorage implements IStorage {
   }
   
   // For user search, we only need a minimal set of user information
-  async searchUsers(query: string, excludeUserId?: number): Promise<{ 
+  async searchUsers(query: string, limit: number = 10, excludeUserId?: number): Promise<{ 
     id: number; 
     username: string; 
     displayName: string; 
     passportCode: string | null; 
     avatarUrl: string | null; 
-    avatarInitials: string; 
+    avatarInitials: string;
+    rating: number | null;
   }[]> {
     try {
-      console.log("Storage searchUsers called with query:", query, "excludeUserId:", excludeUserId);
+      console.log("[Storage] searchUsers called with query:", query, "limit:", limit, "excludeUserId:", excludeUserId);
       
       // More detailed logging
       if (!query) {
@@ -862,7 +863,8 @@ export class DatabaseStorage implements IStorage {
           displayName: user.displayName || user.username,
           passportCode: user.passportCode || null, 
           avatarUrl: null, // Safe default
-          avatarInitials: user.avatarInitials || (user.username ? user.username.substring(0, 2).toUpperCase() : "??")
+          avatarInitials: user.avatarInitials || (user.username ? user.username.substring(0, 2).toUpperCase() : "??"),
+          rating: null // Default rating for now
         }));
         
         // Show what we're returning
@@ -905,7 +907,8 @@ export class DatabaseStorage implements IStorage {
             displayName: user.displayName || user.username,
             passportCode: null,
             avatarUrl: null,
-            avatarInitials: user.username?.substring(0, 2).toUpperCase() || "??"
+            avatarInitials: user.username?.substring(0, 2).toUpperCase() || "??",
+            rating: null // Default rating for now
           }));
         } catch (fallbackError) {
           console.error("Fallback search approach also failed:", fallbackError);

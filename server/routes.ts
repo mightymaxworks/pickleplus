@@ -21,6 +21,7 @@ import { registerPassportVerificationRoutes } from "./routes/passport-verificati
 import { registerAdminReportRoutes } from "./routes/admin-report-routes";
 import { setupAdminDashboardRoutes } from "./routes/admin-dashboard-routes";
 import { registerTournamentBracketRoutes } from "./routes/register-tournament-bracket-routes";
+import { registerUserSearchRoutes } from "./routes/user-search-routes";
 
 // Import necessary schema
 import { 
@@ -75,6 +76,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Register Tournament Bracket routes (PKL-278651-TOURN-0001-BRCKT)
   registerTournamentBracketRoutes(app);
+  
+  // Register User Search routes (PKL-278651-TOURN-0003-SEARCH)
+  registerUserSearchRoutes(app);
   
   // API routes
   
