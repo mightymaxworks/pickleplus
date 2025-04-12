@@ -1,8 +1,9 @@
 /**
- * PKL-278651-TOURN-0001-BRCKT
+ * PKL-278651-TOURN-0009-TEAM
  * Create Team Dialog Component
  * 
  * Dialog for creating a new team for a tournament
+ * Enhanced with tournament ID inclusion for proper validation
  */
 
 import { useState } from 'react';
