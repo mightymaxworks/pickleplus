@@ -435,7 +435,7 @@ export function RecordMatchResultDialog({
         )}
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-4">
             {/* Visual Score Input with enhanced mobile UI */}
             <div className="mb-4">
               <FormLabel className="mb-2 block">Match Score</FormLabel>
@@ -463,10 +463,11 @@ export function RecordMatchResultDialog({
                     Cancel
                   </Button>
                   <Button 
-                    type="submit" 
+                    type="button" 
                     className="w-2/3 text-lg py-7 touch-manipulation font-semibold rounded-md" 
                     size="lg"
                     disabled={isSubmitting}
+                    onClick={form.handleSubmit(onSubmit)}
                   >
                     {isSubmitting ? (
                       <>
@@ -480,10 +481,11 @@ export function RecordMatchResultDialog({
                 </div>
                 <div className="hidden md:block">
                   <Button 
-                    type="submit" 
+                    type="button" 
                     className="w-full text-lg py-7 touch-manipulation font-semibold rounded-md" 
                     size="lg"
                     disabled={isSubmitting}
+                    onClick={form.handleSubmit(onSubmit)}
                   >
                     {isSubmitting ? (
                       <>
@@ -550,7 +552,7 @@ export function RecordMatchResultDialog({
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isSubmitting}>
+                <Button type="button" onClick={form.handleSubmit(onSubmit)} disabled={isSubmitting}>
                   {isSubmitting ? (
                     <>
                       <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
@@ -562,7 +564,7 @@ export function RecordMatchResultDialog({
                 </Button>
               </DialogFooter>
             </div>
-          </form>
+          </div>
         </Form>
       </DialogContent>
     </Dialog>
