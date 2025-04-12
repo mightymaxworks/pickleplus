@@ -98,18 +98,32 @@ export default function App() {
             <Route path="/matches">
               {(params) => <ProtectedRoute component={ModernizedMatchPage} path="/matches" />}
             </Route>
-            {/* Tournament routes */}
+            {/* Tournament discovery route - available to all users */}
             <Route path="/tournaments" exact>
               {(params) => <ProtectedRoute component={TournamentDiscoveryPage} path="/tournaments" />}
             </Route>
-            <Route path="/tournaments/manage">
-              {(params) => <ProtectedRoute component={TournamentManagementPage} path="/tournaments/manage" />}
+
+            {/* Admin routes for tournament management - PKL-278651-TOURN-0002-ADMIN */}
+            <Route path="/admin/tournaments">
+              {(params) => (
+                <AdminProtectedRoute>
+                  <TournamentManagementPage />
+                </AdminProtectedRoute>
+              )}
             </Route>
-            <Route path="/tournaments/:id">
-              {(params) => <ProtectedRoute component={TournamentDetailsPage} path={`/tournaments/${params.id}`} />}
+            <Route path="/admin/tournaments/:id">
+              {(params) => (
+                <AdminProtectedRoute>
+                  <TournamentDetailsPage />
+                </AdminProtectedRoute>
+              )}
             </Route>
-            <Route path="/brackets/:id">
-              {(params) => <ProtectedRoute component={BracketDetailsPage} path={`/brackets/${params.id}`} />}
+            <Route path="/admin/brackets/:id">
+              {(params) => (
+                <AdminProtectedRoute>
+                  <BracketDetailsPage />
+                </AdminProtectedRoute>
+              )}
             </Route>
             <Route path="/training">
               {(params) => <ProtectedRoute component={Dashboard} path="/training" />}
