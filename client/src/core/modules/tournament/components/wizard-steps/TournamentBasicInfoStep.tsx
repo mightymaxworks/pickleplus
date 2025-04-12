@@ -32,6 +32,10 @@ interface TournamentBasicInfoStepProps {
   className?: string;
 }
 
+// Export the type for the dynamic import
+export type TournamentBasicInfoStepType = 
+  (props: TournamentBasicInfoStepProps) => JSX.Element;
+
 export function TournamentBasicInfoStep({ form, className }: TournamentBasicInfoStepProps) {
   return (
     <div className={cn("space-y-4", className)}>
@@ -95,29 +99,18 @@ export function TournamentBasicInfoStep({ form, className }: TournamentBasicInfo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Status*</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select 
+              onValueChange={field.onChange} 
+              defaultValue={field.value}
+            >
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a status" />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="draft">
-                  <div className="flex flex-col">
-                    <span>Draft</span>
-                    <span className="text-xs text-muted-foreground">
-                      Not visible to players
-                    </span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="published">
-                  <div className="flex flex-col">
-                    <span>Published</span>
-                    <span className="text-xs text-muted-foreground">
-                      Visible to all players
-                    </span>
-                  </div>
-                </SelectItem>
+                <SelectItem value="draft">Draft (Not visible to players)</SelectItem>
+                <SelectItem value="published">Published (Visible to all players)</SelectItem>
               </SelectContent>
             </Select>
             <FormMessage />

@@ -27,6 +27,10 @@ interface TournamentSchedulingStepProps {
   className?: string;
 }
 
+// Export the type for the dynamic import
+export type TournamentSchedulingStepType = 
+  (props: TournamentSchedulingStepProps) => JSX.Element;
+
 export function TournamentSchedulingStep({ form, className }: TournamentSchedulingStepProps) {
   // Check for date validation errors
   const startDateError = form.formState.errors.startDate;
@@ -70,15 +74,18 @@ export function TournamentSchedulingStep({ form, className }: TournamentScheduli
               <FormControl>
                 <Input
                   type="date"
-                  value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                  value={field.value instanceof Date ? field.value.toISOString().split('T')[0] : ''}
                   onChange={(e) => {
-                    const date = e.target.value ? new Date(e.target.value) : undefined;
-                    field.onChange(date);
-                    
-                    // If end date is before the new start date, update end date
-                    const endDate = form.getValues("endDate");
-                    if (date && endDate && endDate < date) {
-                      form.setValue("endDate", date);
+                    if (e.target.value) {
+                      // Create date at noon to avoid timezone issues
+                      const date = new Date(e.target.value + 'T12:00:00');
+                      field.onChange(date);
+                      
+                      // If end date is before the new start date, update end date
+                      const endDate = form.getValues("endDate");
+                      if (endDate && endDate < date) {
+                        form.setValue("endDate", date);
+                      }
                     }
                   }}
                   min={new Date().toISOString().split('T')[0]}
@@ -102,13 +109,16 @@ export function TournamentSchedulingStep({ form, className }: TournamentScheduli
               <FormControl>
                 <Input 
                   type="date"
-                  value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                  value={field.value instanceof Date ? field.value.toISOString().split('T')[0] : ''}
                   onChange={(e) => {
-                    const date = e.target.value ? new Date(e.target.value) : undefined;
-                    field.onChange(date);
+                    if (e.target.value) {
+                      // Create date at noon to avoid timezone issues
+                      const date = new Date(e.target.value + 'T12:00:00');
+                      field.onChange(date);
+                    }
                   }}
-                  min={form.getValues("startDate") 
-                    ? new Date(form.getValues("startDate")).toISOString().split('T')[0]
+                  min={form.getValues("startDate") instanceof Date
+                    ? form.getValues("startDate").toISOString().split('T')[0]
                     : new Date().toISOString().split('T')[0]}
                   className="w-full"
                 />

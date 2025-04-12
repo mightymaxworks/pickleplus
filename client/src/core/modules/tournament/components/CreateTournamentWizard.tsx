@@ -24,10 +24,22 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ChevronRight, ChevronLeft, Check, CalendarIcon, InfoIcon, LayoutIcon } from 'lucide-react';
 
-// Step components
-import { TournamentBasicInfoStep } from './wizard-steps/TournamentBasicInfoStep';
-import { TournamentStructureStep } from './wizard-steps/TournamentStructureStep';
-import { TournamentSchedulingStep } from './wizard-steps/TournamentSchedulingStep';
+// Dynamically imported components to avoid circular dependencies
+import type { TournamentBasicInfoStepType } from './wizard-steps/TournamentBasicInfoStep';
+import type { TournamentStructureStepType } from './wizard-steps/TournamentStructureStep';
+import type { TournamentSchedulingStepType } from './wizard-steps/TournamentSchedulingStep';
+import { lazy, Suspense } from 'react';
+
+// Lazily load step components
+const TournamentBasicInfoStep = lazy(() => import('./wizard-steps/TournamentBasicInfoStep').then(
+  module => ({ default: module.TournamentBasicInfoStep as unknown as typeof TournamentBasicInfoStepType })
+));
+const TournamentStructureStep = lazy(() => import('./wizard-steps/TournamentStructureStep').then(
+  module => ({ default: module.TournamentStructureStep as unknown as typeof TournamentStructureStepType })
+));
+const TournamentSchedulingStep = lazy(() => import('./wizard-steps/TournamentSchedulingStep').then(
+  module => ({ default: module.TournamentSchedulingStep as unknown as typeof TournamentSchedulingStepType })
+));
 
 /**
  * Tournament form schema
@@ -98,14 +110,18 @@ export function CreateTournamentWizard({ open, onOpenChange }: CreateTournamentW
   };
   
   // Default form values - updated to include all required fields from schema
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
   const defaultValues: Partial<TournamentFormValues> = {
     name: '',
     description: '',
     location: '',
     status: 'draft',
     registrationOpen: true,
-    startDate: new Date(),
-    endDate: new Date(new Date().setDate(new Date().getDate() + 1)), // Default to tomorrow
+    startDate: today,
+    endDate: tomorrow,
     format: 'doubles',
     division: 'open',
     level: 'club',

@@ -39,6 +39,10 @@ interface TournamentStructureStepProps {
   className?: string;
 }
 
+// Export the type for the dynamic import
+export type TournamentStructureStepType = 
+  (props: TournamentStructureStepProps) => JSX.Element;
+
 export function TournamentStructureStep({ form, className }: TournamentStructureStepProps) {
   return (
     <div className={cn("space-y-4", className)}>
@@ -58,48 +62,38 @@ export function TournamentStructureStep({ form, className }: TournamentStructure
             <FormDescription>
               Select the playing format for the tournament
             </FormDescription>
-            <RadioGroup
-              onValueChange={field.onChange}
-              defaultValue={field.value}
-              className="grid grid-cols-3 gap-4"
-            >
-              <FormItem>
-                <FormLabel className="[&:has([data-state=checked])>div]:border-primary">
-                  <FormControl>
-                    <RadioGroupItem value="singles" className="sr-only" />
-                  </FormControl>
-                  <div className="border-2 rounded-md p-4 cursor-pointer hover:border-primary/50 transition-colors">
-                    <User className="h-6 w-6 mb-2" />
-                    <h4 className="font-medium">Singles</h4>
-                    <p className="text-xs text-muted-foreground">1v1 matches</p>
-                  </div>
-                </FormLabel>
-              </FormItem>
-              <FormItem>
-                <FormLabel className="[&:has([data-state=checked])>div]:border-primary">
-                  <FormControl>
-                    <RadioGroupItem value="doubles" className="sr-only" />
-                  </FormControl>
-                  <div className="border-2 rounded-md p-4 cursor-pointer hover:border-primary/50 transition-colors">
-                    <Users className="h-6 w-6 mb-2" />
-                    <h4 className="font-medium">Doubles</h4>
-                    <p className="text-xs text-muted-foreground">2v2 matches</p>
-                  </div>
-                </FormLabel>
-              </FormItem>
-              <FormItem>
-                <FormLabel className="[&:has([data-state=checked])>div]:border-primary">
-                  <FormControl>
-                    <RadioGroupItem value="mixed" className="sr-only" />
-                  </FormControl>
-                  <div className="border-2 rounded-md p-4 cursor-pointer hover:border-primary/50 transition-colors">
-                    <Users className="h-6 w-6 mb-2" />
-                    <h4 className="font-medium">Mixed</h4>
-                    <p className="text-xs text-muted-foreground">Mixed doubles</p>
-                  </div>
-                </FormLabel>
-              </FormItem>
-            </RadioGroup>
+            <div className="grid grid-cols-3 gap-4">
+              <div
+                className={`border-2 rounded-md p-4 cursor-pointer hover:border-primary/50 transition-colors ${
+                  field.value === 'singles' ? 'border-primary' : ''
+                }`}
+                onClick={() => field.onChange('singles')}
+              >
+                <User className="h-6 w-6 mb-2" />
+                <h4 className="font-medium">Singles</h4>
+                <p className="text-xs text-muted-foreground">1v1 matches</p>
+              </div>
+              <div
+                className={`border-2 rounded-md p-4 cursor-pointer hover:border-primary/50 transition-colors ${
+                  field.value === 'doubles' ? 'border-primary' : ''
+                }`}
+                onClick={() => field.onChange('doubles')}
+              >
+                <Users className="h-6 w-6 mb-2" />
+                <h4 className="font-medium">Doubles</h4>
+                <p className="text-xs text-muted-foreground">2v2 matches</p>
+              </div>
+              <div
+                className={`border-2 rounded-md p-4 cursor-pointer hover:border-primary/50 transition-colors ${
+                  field.value === 'mixed' ? 'border-primary' : ''
+                }`}
+                onClick={() => field.onChange('mixed')}
+              >
+                <Users className="h-6 w-6 mb-2" />
+                <h4 className="font-medium">Mixed</h4>
+                <p className="text-xs text-muted-foreground">Mixed doubles</p>
+              </div>
+            </div>
             <FormMessage />
           </FormItem>
         )}
