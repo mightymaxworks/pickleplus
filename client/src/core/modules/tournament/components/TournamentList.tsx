@@ -18,17 +18,8 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin, Users, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 
-type Tournament = {
-  id: number;
-  name: string;
-  location?: string;
-  startDate: string | Date;
-  endDate: string | Date;
-  status: string;
-  description?: string;
-  participantsCount?: number;
-  bracketCount?: number;
-};
+// Import the Tournament type from shared types file
+import { Tournament } from '../types';
 
 type TournamentListProps = {
   tournaments: Tournament[];

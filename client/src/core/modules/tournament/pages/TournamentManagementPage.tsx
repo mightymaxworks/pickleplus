@@ -29,7 +29,8 @@ import { CreateTournamentDialog } from '../components/TournamentWizardProvider';
 import { Badge } from '@/components/ui/badge';
 import { AdminLayout } from '@/modules/admin/components/AdminLayout';
 import { LayoutContainer } from '@/components/layout/LayoutContainer';
-import { Tournament } from '@shared/schema';
+// Import the Tournament type from shared types
+import { Tournament } from '../types';
 
 export function TournamentManagementPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
