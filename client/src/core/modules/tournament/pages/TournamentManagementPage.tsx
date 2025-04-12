@@ -37,17 +37,27 @@ export function TournamentManagementPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   
+  // Use the tournament change context to force re-renders when tournaments change
+  const { lastChangeTimestamp } = useTournamentChanges();
+  
   // Framework 5.0: Enhance reliability with proper stale time and refetch settings
   // Define consistent query key string directly (without leading slash)
   const TOURNAMENTS_QUERY_KEY = 'api/tournaments';
   
+  // Every time lastChangeTimestamp changes, this component will re-render
+  // and the query will be refetched due to the timestamp in the queryKey
   const { data: tournaments = [], isLoading, isError, refetch } = useQuery<Tournament[]>({
-    queryKey: [TOURNAMENTS_QUERY_KEY], // Consistent format without leading slash
+    queryKey: [TOURNAMENTS_QUERY_KEY, { timestamp: lastChangeTimestamp }], // Add timestamp to force refresh
     retry: 1,
     staleTime: 30 * 1000, // Consider data fresh for 30 seconds
     refetchOnWindowFocus: true, // Refetch when tab gets focus
     refetchOnMount: true, // Always refetch when component mounts
   });
+  
+  // Log when context triggers a refetch
+  useEffect(() => {
+    console.log(`[Tournament] Management page refetching due to context change at: ${new Date(lastChangeTimestamp).toISOString()}`);
+  }, [lastChangeTimestamp]);
 
   const upcomingTournaments = tournaments.filter((tournament) => {
     const tournamentDate = new Date(tournament.startDate);

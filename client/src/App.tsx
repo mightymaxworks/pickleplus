@@ -4,6 +4,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from './lib/queryClient'
 import { Toaster } from '@/components/ui/toaster'
 import { AuthProvider } from '@/hooks/useAuth'
+import { TournamentChangeProvider } from './core/modules/tournament/context/TournamentChangeContext'
 
 // Import module initializations
 import '@/modules/admin/init'
@@ -82,7 +83,8 @@ export default function App() {
     <Fragment>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <Switch>
+          <TournamentChangeProvider>
+            <Switch>
             {/* Public Routes */}
             <Route path="/" component={EnhancedLandingPage} />
             <Route path="/login" component={EnhancedAuthPage} />
@@ -244,6 +246,7 @@ export default function App() {
             {/* 404 Route */}
             <Route component={NotFound} />
           </Switch>
+          </TournamentChangeProvider>
         </AuthProvider>
       </QueryClientProvider>
       <Toaster />
