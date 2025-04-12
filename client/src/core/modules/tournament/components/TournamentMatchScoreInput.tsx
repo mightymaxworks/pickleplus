@@ -13,19 +13,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Minus, Trophy, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-// Scoring format types
-type ScoringFormat = 'traditional' | 'rally' | 'custom';
-type MatchFormat = 'single' | 'best_of_3' | 'best_of_5' | 'custom';
+// Scoring format types - exported for use in other components
+export type ScoringFormat = 'traditional' | 'rally' | 'custom';
+export type MatchFormat = 'single' | 'best_of_3' | 'best_of_5' | 'custom';
 
 // Individual game score
-interface GameScore {
+export interface GameScore {
   team1Score: number;
   team2Score: number;
   winner?: 'team1' | 'team2';
 }
 
 // Complete match score with multiple games
-interface MatchScore {
+export interface MatchScore {
   team1Score: number;
   team2Score: number;
   games: GameScore[];

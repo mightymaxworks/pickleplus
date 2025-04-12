@@ -38,7 +38,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { TournamentMatchScoreInput } from "./TournamentMatchScoreInput";
+import { TournamentMatchScoreInput, MatchScore, GameScore, ScoringFormat, MatchFormat } from "./TournamentMatchScoreInput";
 
 // Import enhanced API client functions
 import { recordMatchResult } from "../api/brackets";
@@ -75,20 +75,7 @@ export function RecordMatchResultDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Enhanced score data state with support for multi-game matches
-  const [scoreData, setScoreData] = useState<{ 
-    team1Score: number; 
-    team2Score: number; 
-    scoreFormat?: string;
-    scoringType?: 'traditional' | 'rally' | 'custom';
-    matchFormat?: 'single' | 'best_of_3' | 'best_of_5' | 'custom';
-    games?: Array<{
-      team1Score: number;
-      team2Score: number;
-      winner?: 'team1' | 'team2';
-    }>;
-    team1GamesWon?: number;
-    team2GamesWon?: number;
-  }>({ 
+  const [scoreData, setScoreData] = useState<MatchScore>({ 
     team1Score: 0, 
     team2Score: 0, 
     scoreFormat: "0-0",
@@ -118,20 +105,7 @@ export function RecordMatchResultDialog({
   };
   
   // Handle score data changes from visual component
-  const handleScoreChange = (newScoreData: { 
-    team1Score: number; 
-    team2Score: number; 
-    scoreFormat?: string;
-    scoringType?: 'traditional' | 'rally' | 'custom';
-    matchFormat?: 'single' | 'best_of_3' | 'best_of_5' | 'custom';
-    games?: Array<{
-      team1Score: number;
-      team2Score: number;
-      winner?: 'team1' | 'team2';
-    }>;
-    team1GamesWon?: number;
-    team2GamesWon?: number;
-  }) => {
+  const handleScoreChange = (newScoreData: MatchScore) => {
     setScoreData(newScoreData);
     
     // Create a formatted score string that includes scoring and match format information
