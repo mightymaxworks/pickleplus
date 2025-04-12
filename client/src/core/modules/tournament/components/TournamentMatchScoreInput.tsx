@@ -199,7 +199,7 @@ export function TournamentMatchScoreInput({
                         value.matchFormat === 'best_of_5' ? 3 : 
                         null;
                         
-    if (!winThreshold || !value.team1GamesWon || !value.team2GamesWon) {
+    if (!winThreshold || value.team1GamesWon === undefined || value.team2GamesWon === undefined) {
       return null;
     }
     
@@ -352,6 +352,13 @@ export function TournamentMatchScoreInput({
       team1Score: newGames[0]?.team1Score || 0,
       team2Score: newGames[0]?.team2Score || 0
     });
+    
+    // Check if the match has been won based on the new games state
+    const matchWinner = getMatchWinner();
+    if (matchWinner && onWinnerSelected && team1Id && team2Id) {
+      const winnerId = matchWinner === 'team1' ? team1Id : team2Id;
+      onWinnerSelected(winnerId);
+    }
   };
 
   return (
