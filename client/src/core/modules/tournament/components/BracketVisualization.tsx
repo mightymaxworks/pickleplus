@@ -95,7 +95,7 @@ const MatchCard = memo(({
           <CheckCircle className="h-4 w-4 text-green-600 mr-1" />
         )}
         <span className={match.winnerId === match.team1Id ? "text-green-700" : ""}>
-          {match.team1 ? match.team1.teamName : "TBD"}
+          {match.team1 ? match.team1.teamName : (match.team1Id ? `Team ${match.team1Id}` : "TBD")}
         </span>
       </div>
       
@@ -105,8 +105,16 @@ const MatchCard = memo(({
           <CheckCircle className="h-4 w-4 text-green-600 mr-1" />
         )}
         <span className={match.winnerId === match.team2Id ? "text-green-700" : ""}>
-          {match.team2 ? match.team2.teamName : "TBD"}
+          {match.team2 ? match.team2.teamName : (match.team2Id ? `Team ${match.team2Id}` : "TBD")}
         </span>
+      </div>
+      
+      {/* DEBUG DATA - For development purposes */}
+      <div className="text-xs text-gray-400 mb-1">
+        Team1Id: {match.team1Id || 'null'}, Team1: {match.team1 ? 'object' : 'null'}
+      </div>
+      <div className="text-xs text-gray-400 mb-1">
+        Team2Id: {match.team2Id || 'null'}, Team2: {match.team2 ? 'object' : 'null'}
       </div>
       
       {/* Score */}
