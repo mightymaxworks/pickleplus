@@ -192,26 +192,23 @@ export function TournamentChangeProvider({
   }, []);
   
   // Enhanced backwards compatibility function that leverages the enhanced event system
+  // Removed potential recursion in delayed notification for Framework 5.0 
   const notifyTournamentChanged = useCallback(() => {
-    // Create the primary notification
+    // Only create a single notification to prevent potential recursion
     const newEvent = processChangeEvent('tournament_updated', undefined, undefined, {
       origin: 'system',
       severity: 'medium'
     });
     
-    // For greater compatibility, use a redundant refresh by triggering a secondary event after a delay
-    setTimeout(() => {
-      processChangeEvent('tournament_updated', undefined, undefined, {
-        origin: 'system',
-        severity: 'low',
-        isDelayedNotification: true
-      });
-    }, 300);
+    // We're removing the delayed event to prevent potential recursion
+    // This was causing issues in the bracket details page
+    console.log(`[PKL-278651-TOURN-0015-SYNC][Context] Tournament change notification processed without delayed duplicate`);
     
     return newEvent;
   }, []);
 
   // Enhanced isChangedSince with comprehensive Framework 5.0 event filtering
+  // Fixed to prevent potential infinite recursion
   const isChangedSince = useCallback((
     timestamp: number, 
     changeType?: TournamentChangeType, 
@@ -222,76 +219,90 @@ export function TournamentChangeProvider({
       origin?: 'user_action' | 'system' | 'api_response' | 'background_sync';
     }
   ): boolean => {
-    // If the timestamp is in the future or invalid, return false
-    if (!timestamp || timestamp > Date.now()) {
-      return false;
-    }
-    
-    // Performance optimization: First check against global timestamp for quick rejection
-    if (eventsStoreRef.current.globalTimestamp <= timestamp) {
-      return false;
-    }
-    
-    // If no specific change type is requested and we don't need to filter on additional criteria, we already know there was a change
-    if (!changeType && !options) {
-      return true;
-    }
-    
-    // Map severity levels to numeric values for comparison
-    const severityLevels = {
-      'low': 1,
-      'medium': 2,
-      'high': 3,
-      'critical': 4
-    };
-    
-    // If minimum severity is specified, get its numeric level
-    const minSeverityLevel = options?.minimumSeverity ? 
-      severityLevels[options.minimumSeverity] : 0;
-    
-    // Find a matching event in the events array using enhanced filtering
-    return eventsStoreRef.current.events.some(event => {
-      // Performance optimization: Event must be newer than the timestamp (most efficient check first)
-      if (event.timestamp <= timestamp) {
+    try {
+      // If the timestamp is in the future or invalid, return false
+      if (!timestamp || timestamp > Date.now()) {
         return false;
       }
       
-      // Only filter by type if one was specified
-      if (changeType && event.type !== changeType) {
+      // Performance optimization: First check against global timestamp for quick rejection
+      if (eventsStoreRef.current.globalTimestamp <= timestamp) {
         return false;
       }
       
-      // Filter by entityId if specified
-      if (entityId !== undefined) {
-        // If includeRelatedEntities is true, check both the direct entity and related entities
-        if (options?.includeRelatedEntities && event.relatedEntityIds?.includes(entityId)) {
-          // Found in related entities
-        } 
-        // If entity ID doesn't match directly and we're not checking related entities, or it's not in related entities
-        else if (event.entityId !== entityId) {
+      // Safety check for events array
+      if (!eventsStoreRef.current.events || eventsStoreRef.current.events.length === 0) {
+        return false;
+      }
+      
+      // If no specific change type is requested and we don't need to filter on additional criteria, we already know there was a change
+      if (!changeType && !options) {
+        return true;
+      }
+      
+      // Map severity levels to numeric values for comparison
+      const severityLevels = {
+        'low': 1,
+        'medium': 2,
+        'high': 3,
+        'critical': 4
+      };
+      
+      // If minimum severity is specified, get its numeric level
+      const minSeverityLevel = options?.minimumSeverity ? 
+        severityLevels[options.minimumSeverity] : 0;
+      
+      // Find a matching event in the events array using enhanced filtering
+      return eventsStoreRef.current.events.some(event => {
+        // Safety check for null events
+        if (!event) return false;
+        
+        // Performance optimization: Event must be newer than the timestamp (most efficient check first)
+        if (event.timestamp <= timestamp) {
           return false;
         }
-      }
-      
-      // Filter by origin if specified
-      if (options?.origin && event.origin !== options.origin) {
-        return false;
-      }
-      
-      // Filter by minimum severity if specified
-      if (minSeverityLevel > 0 && event.severity) {
-        const eventSeverityLevel = severityLevels[event.severity];
-        if (eventSeverityLevel < minSeverityLevel) {
+        
+        // Only filter by type if one was specified
+        if (changeType && event.type !== changeType) {
           return false;
         }
-      }
-      
-      // If all filters pass, the event matches
-      return true;
-    });
+        
+        // Filter by entityId if specified
+        if (entityId !== undefined) {
+          const matchesDirectEntity = event.entityId === entityId;
+          const matchesRelatedEntity = options?.includeRelatedEntities && 
+                                      event.relatedEntityIds && 
+                                      event.relatedEntityIds.includes(entityId);
+                                      
+          if (!matchesDirectEntity && !matchesRelatedEntity) {
+            return false;
+          }
+        }
+        
+        // Filter by origin if specified
+        if (options?.origin && event.origin !== options.origin) {
+          return false;
+        }
+        
+        // Filter by minimum severity if specified
+        if (minSeverityLevel > 0 && event.severity) {
+          const eventSeverityLevel = severityLevels[event.severity] || 0;
+          if (eventSeverityLevel < minSeverityLevel) {
+            return false;
+          }
+        }
+        
+        // If all filters pass, the event matches
+        return true;
+      });
+    } catch (error) {
+      console.error(`[PKL-278651-TOURN-0015-SYNC][Context] Error in isChangedSince:`, error);
+      return false; // Fail safely
+    }
   }, []);
 
   // Enhanced getChangesSince with Framework 5.0 filtering capabilities
+  // Fixed to prevent potential recursion and crash issues
   const getChangesSince = useCallback((
     timestamp: number,
     options?: {
@@ -303,75 +314,91 @@ export function TournamentChangeProvider({
       excludeDelayedNotifications?: boolean;
     }
   ): TournamentChangeEvent[] => {
-    // If the timestamp is in the future or invalid, return empty array
-    if (!timestamp || timestamp > Date.now()) {
-      return [];
+    try {
+      // If the timestamp is in the future or invalid, return empty array
+      if (!timestamp || timestamp > Date.now()) {
+        return [];
+      }
+      
+      // Performance optimization: Quick check if any events exist after the timestamp
+      if (eventsStoreRef.current.globalTimestamp <= timestamp) {
+        return [];
+      }
+      
+      // Safety check for events array
+      if (!eventsStoreRef.current.events || eventsStoreRef.current.events.length === 0) {
+        return [];
+      }
+      
+      // Map severity levels to numeric values for comparison
+      const severityLevels = {
+        'low': 1,
+        'medium': 2,
+        'high': 3,
+        'critical': 4
+      };
+      
+      // If minimum severity is specified, get its numeric level
+      const minSeverityLevel = options?.minimumSeverity ? 
+        severityLevels[options.minimumSeverity] : 0;
+      
+      // Limit the number of events we process to prevent potential stack overflow
+      const eventsToProcess = eventsStoreRef.current.events.slice(0, 100);
+      
+      // Return filtered events newer than the timestamp
+      return eventsToProcess.filter(event => {
+        // Safety check for null events
+        if (!event) return false;
+        
+        // Basic timestamp check
+        if (event.timestamp <= timestamp) {
+          return false;
+        }
+        
+        // Filter by change types if specified
+        if (options?.changeTypes && options.changeTypes.length > 0) {
+          if (!options.changeTypes.includes(event.type)) {
+            return false;
+          }
+        }
+        
+        // Filter by entityIds if specified
+        if (options?.entityIds && options.entityIds.length > 0) {
+          const directMatch = event.entityId !== undefined && options.entityIds.includes(event.entityId);
+          const relatedMatch = options.includeRelatedEntities && 
+            event.relatedEntityIds && 
+            event.relatedEntityIds.some(id => options.entityIds!.includes(id));
+            
+          if (!directMatch && !relatedMatch) {
+            return false;
+          }
+        }
+        
+        // Filter by origin if specified
+        if (options?.origin && event.origin !== options.origin) {
+          return false;
+        }
+        
+        // Filter by minimum severity if specified
+        if (minSeverityLevel > 0 && event.severity) {
+          const eventSeverityLevel = severityLevels[event.severity] || 0;
+          if (eventSeverityLevel < minSeverityLevel) {
+            return false;
+          }
+        }
+        
+        // Filter out delayed notifications if specified
+        if (options?.excludeDelayedNotifications && event.isDelayedNotification) {
+          return false;
+        }
+        
+        // If all filters pass, include the event
+        return true;
+      });
+    } catch (error) {
+      console.error(`[PKL-278651-TOURN-0015-SYNC][Context] Error in getChangesSince:`, error);
+      return []; // Return empty array on error
     }
-    
-    // Performance optimization: Quick check if any events exist after the timestamp
-    if (eventsStoreRef.current.globalTimestamp <= timestamp) {
-      return [];
-    }
-    
-    // Map severity levels to numeric values for comparison
-    const severityLevels = {
-      'low': 1,
-      'medium': 2,
-      'high': 3,
-      'critical': 4
-    };
-    
-    // If minimum severity is specified, get its numeric level
-    const minSeverityLevel = options?.minimumSeverity ? 
-      severityLevels[options.minimumSeverity] : 0;
-    
-    // Return filtered events newer than the timestamp
-    return eventsStoreRef.current.events.filter(event => {
-      // Basic timestamp check
-      if (event.timestamp <= timestamp) {
-        return false;
-      }
-      
-      // Filter by change types if specified
-      if (options?.changeTypes && options.changeTypes.length > 0) {
-        if (!options.changeTypes.includes(event.type)) {
-          return false;
-        }
-      }
-      
-      // Filter by entityIds if specified
-      if (options?.entityIds && options.entityIds.length > 0) {
-        const directMatch = event.entityId !== undefined && options.entityIds.includes(event.entityId);
-        const relatedMatch = options.includeRelatedEntities && 
-          event.relatedEntityIds && 
-          event.relatedEntityIds.some(id => options.entityIds!.includes(id));
-          
-        if (!directMatch && !relatedMatch) {
-          return false;
-        }
-      }
-      
-      // Filter by origin if specified
-      if (options?.origin && event.origin !== options.origin) {
-        return false;
-      }
-      
-      // Filter by minimum severity if specified
-      if (minSeverityLevel > 0 && event.severity) {
-        const eventSeverityLevel = severityLevels[event.severity];
-        if (eventSeverityLevel < minSeverityLevel) {
-          return false;
-        }
-      }
-      
-      // Filter out delayed notifications if specified
-      if (options?.excludeDelayedNotifications && event.isDelayedNotification) {
-        return false;
-      }
-      
-      // If all filters pass, include the event
-      return true;
-    });
   }, []);
 
   // Clear all change events (useful for testing or resetting state)
