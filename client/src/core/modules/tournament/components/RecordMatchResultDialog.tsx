@@ -1,9 +1,10 @@
 /**
- * PKL-278651-TOURN-0003-MATCH
+ * PKL-278651-TOURN-0003-MATCH / PKL-278651-TOURN-0003.1-API
  * Record Match Result Dialog Component
  * 
  * Dialog for recording tournament match results, allowing score entry
- * and winner selection for a bracket match
+ * and winner selection for a bracket match.
+ * Updated to use enhanced API client with proper error handling.
  */
 
 import { useState } from "react";
@@ -11,8 +12,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle, AlertTriangle } from "lucide-react";
 
 import {
   Dialog,
@@ -34,8 +34,13 @@ import {
 } from "@/components/ui/form";
 import { toast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-// Schema for match result
+// Import enhanced API client functions
+import { recordMatchResult } from "../api/brackets";
+import { MatchResult, TournamentError, TournamentErrorCode } from "../types";
+
+// Schema for match result with enhanced validation
 const matchResultSchema = z.object({
   winnerId: z.number({
     required_error: "Please select a winner",
@@ -64,6 +69,7 @@ export function RecordMatchResultDialog({
   onSuccess,
 }: RecordMatchResultDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   // Form setup with validation
@@ -75,40 +81,98 @@ export function RecordMatchResultDialog({
     },
   });
 
-  // Record match result mutation
+  // Record match result mutation using our enhanced API client
   const recordResultMutation = useMutation({
     mutationFn: async (data: MatchResultFormValues) => {
+      console.log('[RecordMatchResultDialog][PKL-278651-TOURN-0003.1-API] Recording match result', { matchId, data });
+      
+      // Clear any previous errors
+      setError(null);
+      
       const winner = data.winnerId;
       const loser = winner === (team1?.id || 0) ? (team2?.id || 0) : (team1?.id || 0);
       
-      return apiRequest(`/api/brackets/matches/${matchId}/result`, {
-        method: "POST",
-        body: JSON.stringify({
-          winnerId: winner,
-          loserId: loser,
-          score: data.score,
-          notes: data.notes,
-        }),
-      });
+      // Create result data object using our defined type
+      const resultData: MatchResult = {
+        winnerId: winner,
+        loserId: loser,
+        score: data.score,
+        notes: data.notes || undefined,
+      };
+      
+      // Use our enhanced API client function
+      return recordMatchResult(matchId, resultData);
     },
     onSuccess: () => {
-      // Invalidate bracket queries to refresh the data
-      queryClient.invalidateQueries({ queryKey: ['/api/brackets'] });
+      // Framework 5.0: Use predicate-based cache invalidation
+      console.log('[RecordMatchResultDialog][PKL-278651-TOURN-0003.1-API] Match result recorded successfully');
+      
+      // Invalidate all bracket-related queries
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const queryKey = query.queryKey;
+          return (
+            // Match specific bracket data
+            (Array.isArray(queryKey) && queryKey[0].toString().startsWith('bracket-')) ||
+            // Tournament brackets list
+            (Array.isArray(queryKey) && queryKey[0].toString().includes('/brackets')) ||
+            // For backward compatibility
+            queryKey.toString().includes('/brackets')
+          );
+        }
+      });
+      
       toast({
         title: "Match result recorded",
         description: "The match result has been recorded successfully",
       });
+      
       form.reset();
       onOpenChange(false);
       onSuccess?.();
     },
-    onError: (error) => {
-      console.error("Error recording match result:", error);
-      toast({
-        title: "Error recording match result",
-        description: "There was an error recording the match result. Please try again.",
-        variant: "destructive",
-      });
+    onError: (error: unknown) => {
+      console.error("[RecordMatchResultDialog][PKL-278651-TOURN-0003.1-API] Error recording match result:", error);
+      
+      // Handle typed errors
+      if ((error as TournamentError)?.code) {
+        const tournamentError = error as TournamentError;
+        let errorMessage = "There was an error recording the match result.";
+        
+        switch (tournamentError.code) {
+          case TournamentErrorCode.MATCH_NOT_FOUND:
+            errorMessage = "Match not found. It may have been deleted.";
+            break;
+          case TournamentErrorCode.MATCH_ALREADY_COMPLETED:
+            errorMessage = "This match has already been completed. You cannot modify the result.";
+            break;
+          case TournamentErrorCode.INVALID_TEAMS:
+            errorMessage = "Invalid team selection. Please make sure both teams are assigned.";
+            break;
+          case TournamentErrorCode.VALIDATION_ERROR:
+            errorMessage = "Invalid match data. Please check your input and try again.";
+            break;
+          default:
+            errorMessage = tournamentError.message || "Unknown error occurred.";
+        }
+        
+        setError(errorMessage);
+        
+        toast({
+          title: "Error recording match result",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      } else {
+        // Generic error handling
+        setError("There was an error recording the match result. Please try again.");
+        
+        toast({
+          title: "Error recording match result",
+          description: "There was an error recording the match result. Please try again.",
+          variant: "destructive",
+        });
+      }
     },
     onSettled: () => {
       setIsSubmitting(false);
@@ -118,6 +182,7 @@ export function RecordMatchResultDialog({
   // Form submission handler
   const onSubmit = (data: MatchResultFormValues) => {
     if (!team1 || !team2) {
+      setError("Both teams must be assigned before recording a result");
       toast({
         title: "Error",
         description: "Both teams must be assigned before recording a result",
@@ -158,6 +223,14 @@ export function RecordMatchResultDialog({
           </DialogDescription>
         </DialogHeader>
 
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
