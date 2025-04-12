@@ -276,12 +276,20 @@ router.post('/tournaments/:id/teams', async (req, res) => {
     
     console.log('[API][Tournament] Creating team with data:', JSON.stringify(req.body));
     
+    // Framework 5.0: Enhanced validation debugging
+    console.log('[API][Tournament][Debug] Team schema requirements:', 
+                Object.keys(teamDataSchema.shape).map(key => `${key}:${teamDataSchema.shape[key].description}`));
+    
     const parsedData = teamDataSchema.safeParse(req.body);
     
     if (!parsedData.success) {
-      console.log('[API][Tournament] Validation failed:', JSON.stringify(parsedData.error.format()));
+      // Log detailed validation errors for debugging
+      console.log('[API][Tournament][Debug] Validation failed for team data. Received:', JSON.stringify(req.body));
+      console.log('[API][Tournament][Debug] Validation errors:', JSON.stringify(parsedData.error.format(), null, 2));
+      
       return res.status(400).json({ 
         message: 'Invalid team data', 
+        debug: process.env.NODE_ENV !== 'production',
         errors: parsedData.error.format() 
       });
     }
