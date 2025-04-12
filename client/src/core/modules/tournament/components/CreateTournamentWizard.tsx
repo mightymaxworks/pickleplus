@@ -470,6 +470,7 @@ export function CreateTournamentWizard({
   queryKey = 'api/tournaments' // Default matches TournamentManagementPage
 }: CreateTournamentWizardProps) {
   const queryClient = useQueryClient();
+  const { notifyTournamentChanged } = useTournamentChanges();
   
   // Track the current step
   const [step, setStep] = useState(0);
@@ -615,6 +616,11 @@ export function CreateTournamentWizard({
       // Extra insurance: Log all active queries for debugging
       const queries = queryClient.getQueryCache().getAll();
       console.log('[Tournament] Active queries:', queries.map(q => q.queryKey));
+      
+      // Notify the context that a tournament has been changed
+      // This will force components using this context to re-render
+      notifyTournamentChanged();
+      console.log('[Tournament] Notified context of tournament change');
       
       toast({
         title: 'Tournament created',

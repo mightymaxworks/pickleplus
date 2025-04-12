@@ -7,7 +7,7 @@
  * look and feel according to the PKL-278651-ADMIN series.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
   Card, 
@@ -17,6 +17,7 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
+import { useTournamentChanges } from '../context/TournamentChangeContext';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
