@@ -166,20 +166,17 @@ export function BracketDetailsPage() {
     };
   }, [bracketId, refetch, queryClient]);
   
+  // Create a ref to track the last change check timestamp
+  const lastChangeCheckTime = useRef<number>(Date.now());
+
   // Third Mechanism: Context-based change detection using TournamentChangeContext
   useEffect(() => {
     console.log(`[PKL-278651-TOURN-0015-SYNC] Setting up Framework 5.0 change listener for bracket ${bracketId}`);
     
-    // Store the initial timestamp reference for change detection
-    const initialTimestamp = Date.now();
-    // Use a ref to track our last checked timestamp to avoid recursive calls
-    const lastChangeCheckTime = useRef<number>(initialTimestamp);
-    
     // Set up interval to periodically check for specific bracket changes in tournament change context
     const checkForContextChanges = setInterval(() => {
       try {
-        // Only process changes since our last successful check, not initial timestamp
-        // This prevents checking the same changes repeatedly
+        // Only process changes since our last successful check
         const latestCheckTime = Date.now();
         
         // Check for specific bracket change types that would affect our view
