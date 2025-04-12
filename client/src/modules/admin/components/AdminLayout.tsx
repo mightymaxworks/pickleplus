@@ -337,9 +337,12 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
                         Dashboard
                       </h3>
                       <div className="space-y-1">
-                        {categorizedNavItems[NavCategory.DASHBOARD].map((item) => (
-                          <NavItem key={item.path} item={item} />
-                        ))}
+                        {categorizedNavItems[NavCategory.DASHBOARD]
+                          .filter(item => !item.metadata?.desktopVisible === false)
+                          .map((item) => (
+                            <NavItem key={item.path} item={item} />
+                          ))
+                        }
                       </div>
                     </div>
                   )}
@@ -363,9 +366,12 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
                         Events
                       </h3>
                       <div className="space-y-1">
-                        {categorizedNavItems[NavCategory.EVENTS].map((item) => (
-                          <NavItem key={item.path} item={item} />
-                        ))}
+                        {categorizedNavItems[NavCategory.EVENTS]
+                          .filter(item => !item.metadata?.desktopVisible === false)
+                          .map((item) => (
+                            <NavItem key={item.path} item={item} />
+                          ))
+                        }
                       </div>
                     </div>
                   )}

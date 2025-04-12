@@ -36,6 +36,18 @@ export enum AdminComponentType {
 }
 
 /**
+ * Admin Navigation Item Metadata
+ * Additional properties for navigation items
+ */
+export interface AdminNavItemMetadata {
+  category?: string;       // Category for the navigation item (used for grouping in mobile view)
+  mobileVisible?: boolean; // Whether to show this item in mobile view (default: true)
+  desktopVisible?: boolean; // Whether to show this item in desktop view (default: true)
+  description?: string;    // Description for tooltip or accessibility
+  tags?: string[];         // Additional tags for filtering or identification
+}
+
+/**
  * Admin Navigation Item
  * Represents an item in the admin navigation sidebar
  */
@@ -46,6 +58,7 @@ export interface AdminNavItem {
   order: number;           // Order in which to display (lower numbers first)
   children?: AdminNavItem[]; // Optional sub-items for nested navigation
   permission?: string;     // Optional permission key required to view this item
+  metadata?: AdminNavItemMetadata; // Additional metadata for the navigation item
 }
 
 /**

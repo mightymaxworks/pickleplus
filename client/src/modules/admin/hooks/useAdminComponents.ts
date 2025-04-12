@@ -28,6 +28,16 @@ export enum NavCategory {
  * Determine the category for a navigation item based on its path or label
  */
 export function getCategoryForNavItem(item: AdminNavItem): NavCategory {
+  // Check if metadata category is specified first (Framework 5.0 approach)
+  if (item.metadata?.category) {
+    // Ensure the category exists, otherwise default to OTHER
+    const category = item.metadata.category;
+    const isValidCategory = Object.values(NavCategory).includes(category as NavCategory);
+    if (isValidCategory) {
+      return category as NavCategory;
+    }
+  }
+  
   const path = item.path.toLowerCase();
   const label = item.label.toLowerCase();
   

@@ -20,44 +20,29 @@ let hasRegistered = false;
  * and Framework 5.0 modular architecture principles.
  */
 export function registerTournamentAdminComponents() {
-  // Prevent duplicate registrations which can happen during HMR (hot module replacement)
-  if (hasRegistered) {
-    console.log('[Tournament] Tournament admin components already registered, skipping');
-    return;
-  }
-  
   try {
+    // For Framework 5.0 compliance, always ensure our components are registered correctly
     // First, unregister all tournament components from the registry
     adminComponentRegistry.unregisterModuleComponents('tournament');
     
-    // Clear any existing nav items with the same path to prevent duplicates
-    const existingNavItems = adminComponentRegistry.getNavItems()
+    // Register the tournament navigation item in the admin sidebar
+    adminComponentRegistry.registerNavItem('tournament', AdminTournamentNavItem);
+    console.log('[Tournament] Tournament nav item registered successfully');
+    
+    // Mark as registered to prevent duplicate registrations during development
+    hasRegistered = true;
+    
+    // Check if registration was successful
+    const registeredItems = adminComponentRegistry.getNavItems()
       .filter(item => item.path === '/admin/tournaments');
     
-    if (existingNavItems.length > 0) {
-      console.log('[Tournament] Found existing tournament nav items, clearing...');
-      adminComponentRegistry.clearComponentsOfType(AdminComponentType.NAV_ITEM);
-      
-      // Re-register all other nav items from the admin module
-      // This ensures we don't lose other navigation items
-      import('@/modules/admin/services/componentRegistrationService')
-        .then(({ registerAllAdminComponents }) => {
-          registerAllAdminComponents();
-          console.log('[Tournament] Re-registered admin components');
-          
-          // Now register our tournament nav item
-          adminComponentRegistry.registerNavItem('tournament', AdminTournamentNavItem);
-          console.log('[Tournament] Tournament nav item registered');
-        });
+    if (registeredItems.length === 0) {
+      console.error('[Tournament] Failed to register tournament nav item, not found in registry');
     } else {
-      // If no duplicates found, just register normally
-      adminComponentRegistry.registerNavItem('tournament', AdminTournamentNavItem);
-      console.log('[Tournament] Tournament nav item registered normally');
+      console.log('[Tournament] Verified tournament nav item is in registry');
     }
-    
-    // Mark as registered to prevent duplicate registrations
-    hasRegistered = true;
   } catch (error) {
     console.error('[Tournament] Failed to register tournament admin components:', error);
+    hasRegistered = false;
   }
 }
