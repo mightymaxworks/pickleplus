@@ -527,8 +527,8 @@ export function CreateTournamentWizard({ open, onOpenChange }: CreateTournamentW
         const { csrfToken } = await csrfResponse.json();
         console.log('[Tournament] CSRF token obtained successfully');
         
-        // Create a submission object that matches the actual database schema
-        // We'll store tier in a separate service/handler for CourtIQ integration later
+        // Create a submission object that EXACTLY matches the actual database schema
+        // Only include fields that exist in the database (based on our SQL check)
         const submissionData = {
           name: values.name,
           description: values.description,
@@ -537,9 +537,9 @@ export function CreateTournamentWizard({ open, onOpenChange }: CreateTournamentW
           endDate: values.endDate,
           format: values.format,
           division: values.division,
-          level: values.level,
-          status: values.status,
-          registrationOpen: values.registrationOpen
+          level: values.level
+          // The following fields don't exist in the database yet:
+          // status, registrationOpen, registrationStartDate, registrationEndDate, tier
         };
         
         // Submit tournament data

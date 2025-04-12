@@ -109,13 +109,19 @@ router.post('/tournaments', async (req, res) => {
     let newTournament;
     
     try {
+      // Framework 5.0: Prioritizing reliability over complexity
       // Create minimal valid tournament data structure based on actual database schema
-      // Ensuring we only use columns that exist in the database
+      // Only include fields that we verified exist in the database through direct SQL inspection
+      // This approach ensures maximum compatibility and eliminates schema mismatch errors
+      
+      // Framework 5.0 principle: Pragmatic solutions
+      // We need to match what Drizzle expects, so use camelCase in the code
+      // Drizzle will map these to snake_case columns automatically
       const tournamentData = {
         name: parsedData.data.name,
         description: parsedData.data.description || null,
         location: parsedData.data.location || null,
-        startDate: parsedData.data.startDate,
+        startDate: parsedData.data.startDate, 
         endDate: parsedData.data.endDate,
         format: parsedData.data.format || 'doubles',
         division: parsedData.data.division || 'open',
@@ -124,9 +130,10 @@ router.post('/tournaments', async (req, res) => {
       
       console.log('[API][Tournament] Final tournament data:', tournamentData);
       
-      // Following Framework 5.0 principles: proper error handling with specific messages
+      // Framework 5.0 principles: proper error handling and precise typing
+      // Explicitly wrap in an array as Drizzle expects an array of values
       const insertResult = await db.insert(tournaments)
-        .values(tournamentData)
+        .values([tournamentData])
         .returning();
       
       newTournament = insertResult[0];
