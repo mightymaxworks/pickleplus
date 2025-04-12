@@ -103,18 +103,26 @@ router.post('/tournaments', async (req, res) => {
     
     // Create the tournament
     console.log('[API][Tournament] Validation passed, creating tournament');
+    
+    // Map the form data to the database schema
+    // Make sure we're only using fields that exist in the database
+    const tournamentData = {
+      name: parsedData.data.name,
+      description: parsedData.data.description || null,
+      location: parsedData.data.location || null,
+      startDate: parsedData.data.startDate,
+      endDate: parsedData.data.endDate,
+      status: parsedData.data.status,
+      // Use sensible defaults for required fields that aren't in the form
+      format: parsedData.data.format || 'doubles',
+      division: parsedData.data.division || 'open',
+      level: parsedData.data.level || 'club',
+    };
+    
+    console.log('[API][Tournament] Final tournament data:', tournamentData);
+    
     const [newTournament] = await db.insert(tournaments)
-      .values({
-        name: parsedData.data.name,
-        description: parsedData.data.description,
-        location: parsedData.data.location,
-        startDate: parsedData.data.startDate,
-        endDate: parsedData.data.endDate,
-        status: parsedData.data.status,
-        format: parsedData.data.format,
-        division: parsedData.data.division,
-        level: parsedData.data.level,
-      })
+      .values(tournamentData)
       .returning();
     
     console.log('[API][Tournament] Tournament created successfully:', newTournament);

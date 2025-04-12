@@ -1,3 +1,10 @@
+// Extend the express session interface at file scope
+declare module 'express-session' {
+  interface SessionData {
+    csrfToken?: string;
+  }
+}
+
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Express, Request, Response, NextFunction } from "express";
@@ -327,12 +334,7 @@ export function setupAuth(app: Express) {
   app.get("/api/auth/csrf-token", isAuthenticated, (req, res) => {
     console.log("[API][Auth] Generating CSRF token for user:", (req.user as any).id);
     
-    // Extend the express session interface
-    declare module 'express-session' {
-      interface SessionData {
-        csrfToken?: string;
-      }
-    }
+    // Session interface is already extended at the top of the file
     
     // Generate a CSRF token and store it in the session
     if (!req.session.csrfToken) {
