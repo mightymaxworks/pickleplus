@@ -327,12 +327,20 @@ export function setupAuth(app: Express) {
   app.get("/api/auth/csrf-token", isAuthenticated, (req, res) => {
     console.log("[API][Auth] Generating CSRF token for user:", (req.user as any).id);
     
+    // Extend the express session interface
+    declare module 'express-session' {
+      interface SessionData {
+        csrfToken?: string;
+      }
+    }
+    
     // Generate a CSRF token and store it in the session
     if (!req.session.csrfToken) {
       // Generate a random token if one doesn't exist
       const crypto = require('crypto');
-      req.session.csrfToken = crypto.randomBytes(32).toString('hex');
-      console.log("[API][Auth] Created new CSRF token:", req.session.csrfToken.substring(0, 8) + '...');
+      const token = crypto.randomBytes(32).toString('hex');
+      req.session.csrfToken = token;
+      console.log("[API][Auth] Created new CSRF token:", token.substring(0, 8) + '...');
     } else {
       console.log("[API][Auth] Using existing CSRF token:", req.session.csrfToken.substring(0, 8) + '...');
     }

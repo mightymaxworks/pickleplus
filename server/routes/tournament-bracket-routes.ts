@@ -5,6 +5,13 @@
  * This file contains API routes for managing tournament brackets.
  */
 
+// Extend the express session interface at file scope
+declare module 'express-session' {
+  interface SessionData {
+    csrfToken?: string;
+  }
+}
+
 import { Router } from 'express';
 import { z } from 'zod';
 import { db } from '../db';
@@ -54,9 +61,23 @@ router.post('/tournaments', async (req, res) => {
     
     // Check CSRF token
     console.log('[API][Tournament] Request headers:', req.headers);
-    if (!req.headers['x-csrf-token']) {
+    const csrfToken = req.headers['x-csrf-token'];
+    
+    if (!csrfToken) {
       console.error('[API][Tournament] CSRF token missing');
+      return res.status(403).json({ message: 'CSRF token missing' });
     }
+    
+    // Use the session interface from the module declaration at the top of the file
+    
+    // Validate the CSRF token against the one in the session
+    if (!req.session || !req.session.csrfToken || req.session.csrfToken !== csrfToken) {
+      console.error('[API][Tournament] CSRF token validation failed');
+      console.error(`[API][Tournament] Expected: ${req.session?.csrfToken?.substring(0, 8) || 'undefined'}, Got: ${(csrfToken as string)?.substring(0, 8) || 'undefined'}`);
+      return res.status(403).json({ message: 'CSRF token validation failed' });
+    }
+    
+    console.log('[API][Tournament] CSRF token validated successfully');
     
     // Validate the request body
     const parsedData = z.object({
