@@ -724,7 +724,7 @@ export function TournamentMatchScoreInput({
                       <div className={`flex items-center space-x-1 rounded-md p-2 ${
                         gameWinner === 'team1' ? 'bg-primary/10' : 'bg-gray-50'
                       }`}>
-                        <div className={`text-xs font-medium truncate max-w-[80px] ${
+                        <div className={`text-sm font-medium truncate max-w-[100px] ${
                           gameWinner === 'team1' ? 'text-primary font-semibold' : ''
                         }`}>
                           {team1Name}
@@ -733,11 +733,11 @@ export function TournamentMatchScoreInput({
                           <Button
                             variant={gameWinner === 'team1' ? "default" : "outline"}
                             size="sm"
-                            className="h-7 w-7 p-0 rounded-full"
+                            className="h-10 w-10 p-0 rounded-full"
                             onClick={() => updateGameScore(index, 'team1', -1)}
                             disabled={game.team1Score <= 0}
                           >
-                            <Minus className="h-3 w-3" />
+                            <Minus className="h-4 w-4" />
                           </Button>
                           
                           <input
@@ -769,16 +769,16 @@ export function TournamentMatchScoreInput({
                               // Check if game has a winner after score change
                               updateGameScore(index, 'team1', 0);
                             }}
-                            className={`text-center w-10 h-8 text-sm font-medium border ${gameWinner === 'team1' ? 'border-primary bg-white' : 'border-gray-200'} rounded-md focus:outline-none focus:ring-1 focus:ring-primary`}
+                            className={`text-center w-12 h-10 text-sm font-medium border ${gameWinner === 'team1' ? 'border-primary bg-white' : 'border-gray-200'} rounded-md focus:outline-none focus:ring-1 focus:ring-primary`}
                           />
                           
                           <Button
                             variant={gameWinner === 'team1' ? "default" : "outline"}
                             size="sm"
-                            className="h-7 w-7 p-0 rounded-full"
+                            className="h-10 w-10 p-0 rounded-full"
                             onClick={() => updateGameScore(index, 'team1', 1)}
                           >
-                            <Plus className="h-3 w-3" />
+                            <Plus className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
@@ -787,7 +787,7 @@ export function TournamentMatchScoreInput({
                       <div className={`flex items-center space-x-1 rounded-md p-2 ${
                         gameWinner === 'team2' ? 'bg-primary/10' : 'bg-gray-50'
                       }`}>
-                        <div className={`text-xs font-medium truncate max-w-[80px] ${
+                        <div className={`text-sm font-medium truncate max-w-[100px] ${
                           gameWinner === 'team2' ? 'text-primary font-semibold' : ''
                         }`}>
                           {team2Name}
@@ -796,11 +796,11 @@ export function TournamentMatchScoreInput({
                           <Button
                             variant={gameWinner === 'team2' ? "default" : "outline"}
                             size="sm"
-                            className="h-7 w-7 p-0 rounded-full"
+                            className="h-10 w-10 p-0 rounded-full"
                             onClick={() => updateGameScore(index, 'team2', -1)}
                             disabled={game.team2Score <= 0}
                           >
-                            <Minus className="h-3 w-3" />
+                            <Minus className="h-4 w-4" />
                           </Button>
                           
                           <input
@@ -832,16 +832,16 @@ export function TournamentMatchScoreInput({
                               // Check if game has a winner after score change
                               updateGameScore(index, 'team2', 0);
                             }}
-                            className={`text-center w-10 h-8 text-sm font-medium border ${gameWinner === 'team2' ? 'border-primary bg-white' : 'border-gray-200'} rounded-md focus:outline-none focus:ring-1 focus:ring-primary`}
+                            className={`text-center w-12 h-10 text-sm font-medium border ${gameWinner === 'team2' ? 'border-primary bg-white' : 'border-gray-200'} rounded-md focus:outline-none focus:ring-1 focus:ring-primary`}
                           />
                           
                           <Button
                             variant={gameWinner === 'team2' ? "default" : "outline"}
                             size="sm"
-                            className="h-7 w-7 p-0 rounded-full"
+                            className="h-10 w-10 p-0 rounded-full"
                             onClick={() => updateGameScore(index, 'team2', 1)}
                           >
-                            <Plus className="h-3 w-3" />
+                            <Plus className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
