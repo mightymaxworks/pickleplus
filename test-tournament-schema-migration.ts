@@ -67,11 +67,19 @@ async function testTournamentSchemaMigration() {
       SELECT * FROM tournaments WHERE id = ${tournamentId}
     `);
     
-    if (!createdTournament.rows || createdTournament.rows.length === 0) {
+    console.log("Tournament query result:", createdTournament);
+    
+    // Handle different response formats
+    let tournamentData;
+    if (Array.isArray(createdTournament) && createdTournament.length > 0) {
+      tournamentData = createdTournament[0];
+    } else if (createdTournament.rows && Array.isArray(createdTournament.rows) && createdTournament.rows.length > 0) {
+      tournamentData = createdTournament.rows[0];
+    } else {
       throw new Error("Failed to retrieve the created tournament");
     }
     
-    console.log("Created tournament details:", createdTournament.rows[0]);
+    console.log("Created tournament details:", tournamentData);
     
     // 4. Clean up - delete test tournament
     await db.execute(sql`
@@ -90,18 +98,28 @@ async function testTournamentSchemaMigration() {
  * Get column names for a table
  */
 async function getTableColumns(tableName: string): Promise<string[]> {
-  const result = await db.execute(sql`
-    SELECT column_name
-    FROM information_schema.columns
-    WHERE table_name = ${tableName}
-  `);
-  
-  if (!result.rows) {
-    console.error("No rows returned from column query:", result);
+  try {
+    const result = await db.execute(sql`
+      SELECT column_name
+      FROM information_schema.columns
+      WHERE table_name = ${tableName}
+    `);
+    
+    console.log("Database column query returned:", result);
+    
+    // Handle both possible response formats
+    if (Array.isArray(result)) {
+      return result.map((row: any) => row.column_name);
+    } else if (result.rows && Array.isArray(result.rows)) {
+      return result.rows.map((row: any) => row.column_name);
+    } else {
+      console.error("Unexpected result format:", result);
+      return [];
+    }
+  } catch (error) {
+    console.error("Error fetching table columns:", error);
     return [];
   }
-  
-  return result.rows.map((row: any) => row.column_name);
 }
 
 // Run the test
