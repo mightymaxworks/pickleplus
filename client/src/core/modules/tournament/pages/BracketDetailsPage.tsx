@@ -24,7 +24,8 @@ import {
   Trophy, 
   Users, 
   Calendar, 
-  ArrowRightLeft 
+  ArrowRightLeft,
+  Shuffle
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -38,6 +39,7 @@ import {
 import { BracketVisualization } from '../components/BracketVisualization';
 import { MatchesList } from '../components/MatchesList';
 import { RecordMatchResultDialog } from '../components/RecordMatchResultDialog';
+import { SeedTeamsDialog } from '../components/SeedTeamsDialog';
 import { getBracket } from '../api';
 import { BracketData } from '../types';
 
@@ -51,6 +53,7 @@ export function BracketDetailsPage() {
   const [activeTab, setActiveTab] = useState('bracket');
   const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
   const [isRecordResultDialogOpen, setIsRecordResultDialogOpen] = useState(false);
+  const [isSeedTeamsDialogOpen, setIsSeedTeamsDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   
   // PKL-278651-TOURN-0013-API: Use dedicated API client for fetching bracket data
@@ -178,6 +181,17 @@ export function BracketDetailsPage() {
               {getBracketTypeName(bracket.bracketType)}
             </p>
           </div>
+          
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              onClick={() => setIsSeedTeamsDialogOpen(true)}
+              className="gap-2"
+              variant="outline"
+            >
+              <Shuffle size={16} />
+              Seed Teams
+            </Button>
+          </div>
         </div>
         
         <div className="flex flex-wrap gap-6 text-sm">
@@ -271,6 +285,14 @@ export function BracketDetailsPage() {
           }}
         />
       )}
+      
+      {/* Seed Teams Dialog */}
+      <SeedTeamsDialog
+        open={isSeedTeamsDialogOpen}
+        onOpenChange={setIsSeedTeamsDialogOpen}
+        bracketId={bracketId}
+        tournamentId={bracket?.tournamentId || 0}
+      />
     </LayoutContainer>
   );
 }
