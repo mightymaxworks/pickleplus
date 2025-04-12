@@ -146,6 +146,31 @@ class AdminComponentRegistry {
   }
 
   /**
+   * Clear all registered components of a specific type
+   * @param type The type of components to clear
+   */
+  clearComponentsOfType(type: AdminComponentType): void {
+    // Filter out components of the specified type
+    this.registrations = this.registrations.filter(reg => reg.type !== type);
+    
+    // Publish appropriate event based on type
+    switch (type) {
+      case AdminComponentType.NAV_ITEM:
+        eventBus.publish(Events.ADMIN_NAV_UPDATED, { cleared: true });
+        break;
+      case AdminComponentType.DASHBOARD_CARD:
+        eventBus.publish(Events.ADMIN_DASHBOARD_UPDATED, { cleared: true });
+        break;
+      case AdminComponentType.ADMIN_VIEW:
+        eventBus.publish(Events.ADMIN_VIEWS_UPDATED, { cleared: true });
+        break;
+      case AdminComponentType.ADMIN_ACTION:
+        eventBus.publish(Events.ADMIN_ACTIONS_UPDATED, { cleared: true });
+        break;
+    }
+  }
+  
+  /**
    * Unregister all components from a specific module
    * @param moduleId ID of the module
    */
