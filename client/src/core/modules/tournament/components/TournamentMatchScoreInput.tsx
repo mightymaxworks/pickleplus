@@ -9,13 +9,18 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Minus, Trophy, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+// Scoring format types
+type ScoringFormat = 'traditional' | 'rally' | 'custom';
 
 interface MatchScore {
   team1Score: number;
   team2Score: number;
   scoreFormat?: string; // e.g., "21-10, 19-21, 21-15"
+  scoringType?: ScoringFormat; // The scoring format to use
 }
 
 interface TournamentMatchScoreInputProps {
@@ -48,6 +53,16 @@ export function TournamentMatchScoreInput({
 
   // Track previous warnings to prevent excessive toast notifications
   const [prevWarningState, setPrevWarningState] = useState<string | null>(null);
+  
+  // Initialize scoring type if not set
+  useEffect(() => {
+    if (!value.scoringType) {
+      onChange({
+        ...value,
+        scoringType: 'traditional'
+      });
+    }
+  }, []);
   
   // Auto-update score format when scores change
   useEffect(() => {
@@ -140,6 +155,36 @@ export function TournamentMatchScoreInput({
     
     // Otherwise use first letter
     return teamName.charAt(0);
+  };
+  
+  // Handle scoring format change
+  const handleScoringFormatChange = (format: ScoringFormat) => {
+    // Update scoring type
+    onChange({
+      ...value,
+      scoringType: format
+    });
+    
+    // Update points to win and format based on scoring type
+    let formattedScore: string;
+    
+    if (format === 'rally') {
+      // Rally scoring typically uses different point sequences
+      formattedScore = `${value.team1Score}-${value.team2Score} (Rally)`;
+    } else if (format === 'traditional') {
+      // Traditional scoring
+      formattedScore = `${value.team1Score}-${value.team2Score} (Traditional)`;
+    } else {
+      // Custom format
+      formattedScore = `${value.team1Score}-${value.team2Score}`;
+    }
+    
+    // Update the formatted score
+    onChange({
+      ...value,
+      scoringType: format,
+      scoreFormat: formattedScore
+    });
   };
 
   return (
@@ -276,6 +321,33 @@ export function TournamentMatchScoreInput({
             </Button>
           </div>
         </Card>
+      </div>
+      
+      {/* Scoring Format Selector */}
+      <div className="mb-2">
+        <div className="text-sm font-medium mb-2">Scoring Format</div>
+        <Select
+          value={value.scoringType || 'traditional'}
+          onValueChange={(format) => handleScoringFormatChange(format as ScoringFormat)}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select scoring format" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="traditional">Traditional Scoring</SelectItem>
+            <SelectItem value="rally">Rally Scoring</SelectItem>
+            <SelectItem value="custom">Custom Format</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="text-xs text-gray-500 mt-1">
+          {value.scoringType === 'traditional' ? (
+            'Side-out scoring: Only the serving team can score points'
+          ) : value.scoringType === 'rally' ? (
+            'Rally scoring: Points awarded on every rally regardless of server'
+          ) : (
+            'Custom scoring format'
+          )}
+        </div>
       </div>
       
       <div className="text-center text-xs sm:text-sm p-2 mt-1 bg-gray-50 rounded-md">

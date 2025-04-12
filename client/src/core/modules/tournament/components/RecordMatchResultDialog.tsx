@@ -74,10 +74,16 @@ export function RecordMatchResultDialog({
 }: RecordMatchResultDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [scoreData, setScoreData] = useState<{ team1Score: number; team2Score: number; scoreFormat?: string }>({ 
+  const [scoreData, setScoreData] = useState<{ 
+    team1Score: number; 
+    team2Score: number; 
+    scoreFormat?: string;
+    scoringType?: 'traditional' | 'rally' | 'custom';
+  }>({ 
     team1Score: 0, 
     team2Score: 0, 
-    scoreFormat: "0-0" 
+    scoreFormat: "0-0",
+    scoringType: "traditional"
   });
   const [selectedWinnerId, setSelectedWinnerId] = useState<number | null>(null);
   const queryClient = useQueryClient();
@@ -99,15 +105,30 @@ export function RecordMatchResultDialog({
   };
   
   // Handle score data changes from visual component
-  const handleScoreChange = (newScoreData: { team1Score: number; team2Score: number; scoreFormat?: string }) => {
+  const handleScoreChange = (newScoreData: { 
+    team1Score: number; 
+    team2Score: number; 
+    scoreFormat?: string;
+    scoringType?: 'traditional' | 'rally' | 'custom';
+  }) => {
     setScoreData(newScoreData);
     
-    // Update the form's score field with formatted score
+    // Create a formatted score string that includes scoring type information
+    let formattedScore: string;
+    
     if (newScoreData.scoreFormat) {
-      form.setValue("score", newScoreData.scoreFormat);
+      formattedScore = newScoreData.scoreFormat;
     } else {
-      form.setValue("score", `${newScoreData.team1Score}-${newScoreData.team2Score}`);
+      formattedScore = `${newScoreData.team1Score}-${newScoreData.team2Score}`;
     }
+    
+    // Add scoring format information if available
+    if (newScoreData.scoringType && newScoreData.scoringType !== 'custom') {
+      formattedScore += ` (${newScoreData.scoringType})`;
+    }
+    
+    // Update the form's score field with the formatted score
+    form.setValue("score", formattedScore);
   };
 
   // Record match result mutation using our enhanced API client
