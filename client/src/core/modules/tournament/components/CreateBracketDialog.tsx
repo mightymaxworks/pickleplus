@@ -5,12 +5,12 @@
  * Dialog for creating a new tournament bracket
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, fetchCSRFToken } from '@/lib/queryClient';
 import { 
   Dialog, 
   DialogContent, 
@@ -100,9 +100,25 @@ export function CreateBracketDialog({
     defaultValues,
   });
   
+  // PKL-278651-TOURN-0010-CSRF: Add state for CSRF token
+  const [csrfToken, setCsrfToken] = useState<string | null>(null);
+  
+  // PKL-278651-TOURN-0010-CSRF: Fetch CSRF token when dialog opens
+  useEffect(() => {
+    if (open) {
+      console.log('[BracketDialog][CSRF] Dialog opened, fetching CSRF token');
+      fetchCSRFToken().then((token) => {
+        console.log('[BracketDialog][CSRF] Token fetch result:', token ? 'Success' : 'Failed');
+        setCsrfToken(token);
+      }).catch(error => {
+        console.error('[BracketDialog][CSRF] Error fetching CSRF token:', error);
+      });
+    }
+  }, [open]);
+  
   const { mutate, isPending, isError, error } = useMutation({
     mutationFn: async (values: BracketFormValues) => {
-      // PKL-278651-TOURN-0010-BRCKT: Enhanced API communication and error handling
+      // PKL-278651-TOURN-0010-CSRF: Enhanced API communication with CSRF security
       console.log('[BracketDialog][API] Calling API with values:', values);
       
       try {
@@ -114,23 +130,26 @@ export function CreateBracketDialog({
         
         // Log the exact request that's being made
         console.log(`[BracketDialog][API] Making POST request to: /api/tournaments/${tournamentId}/brackets`);
-        console.log('[BracketDialog][API] Request body:', JSON.stringify(values));
         
-        // Make the API request with proper error handling
-        const response = await fetch(`/api/tournaments/${tournamentId}/brackets`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify(values)
-        });
+        // PKL-278651-TOURN-0010-CSRF: Use apiRequest which handles CSRF tokens
+        const response = await apiRequest(
+          'POST', 
+          `/api/tournaments/${tournamentId}/brackets`, 
+          values
+        );
         
         console.log(`[BracketDialog][API] Response status: ${response.status}`);
         
         if (!response.ok) {
           const errorText = await response.text();
           console.error(`[BracketDialog][API] Error response: ${errorText}`);
+          
+          // Handle CSRF specific errors with better error messages
+          if (response.status === 403 && errorText.includes('CSRF')) {
+            console.error('[BracketDialog][CSRF] CSRF token validation failed');
+            throw new Error('Security validation failed. Please refresh the page and try again.');
+          }
+          
           throw new Error(`API Error: ${response.status} - ${errorText}`);
         }
         
