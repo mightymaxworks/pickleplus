@@ -73,159 +73,38 @@ export function BracketDetailsPage() {
     retry: 1,
   });
   
-  // PKL-278651-TOURN-0015-SYNC: Enhanced change detection with multiple independent mechanisms
+  // PKL-278651-TOURN-0015-SYNC: DISABLED First Mechanism - Removed to prevent recursion
   useEffect(() => {
-    console.log(`[PKL-278651-TOURN-0015-SYNC] BracketDetailsPage monitoring changes for bracket ${bracketId}`);
+    console.log(`[PKL-278651-TOURN-0015-SYNC] First refresh mechanism DISABLED for bracket ${bracketId}`);
     
     // Initialize last refresh time
     lastRefresh.current = Date.now();
     
-    // First Mechanism: Enhanced Context-based Change Detection
-    const checkInterval = setInterval(() => {
-      // Get all recent change events since last refresh
-      const recentChanges = tournamentChanges.getChangesSince(lastRefresh.current);
-      
-      // Filter for relevant changes to this bracket
-      const relevantChanges = recentChanges.filter(event => {
-        // Check if this is a change type we care about
-        const isRelevantType = [
-          'teams_seeded', 
-          'match_result_recorded', 
-          'bracket_updated'
-        ].includes(event.type);
-        
-        // If no entity ID is specified, it's a global change
-        if (!event.entityId) return isRelevantType;
-        
-        // Check if this event is for our bracket
-        return isRelevantType && event.entityId === bracketId;
-      });
-      
-      // If we have relevant changes, trigger refresh
-      if (relevantChanges.length > 0) {
-        console.log(
-          `[PKL-278651-TOURN-0015-SYNC] Detected ${relevantChanges.length} changes for bracket ${bracketId}:`, 
-          relevantChanges.map(c => `${c.type} at ${new Date(c.timestamp).toISOString()}`)
-        );
-        
-        // Refresh data with optimized strategy
-        queryClient.invalidateQueries({ queryKey: [`bracket-${bracketId}`] });
-        refetch();
-        
-        // Update timestamp to prevent duplicate processing
-        lastRefresh.current = Date.now();
-      }
-    }, 300); // Increased frequency for better responsiveness
-    
     return () => {
-      clearInterval(checkInterval);
+      // No cleanup needed
     };
-  }, [bracketId, refetch, tournamentChanges, queryClient]);
+  }, [bracketId]);
   
-  // Second Mechanism: React Query Cache Invalidation Listener
+  // Second Mechanism: DISABLED - React Query Cache Invalidation Listener
   useEffect(() => {
-    // Use callback approach for type safety
-    const listener = () => {
-      console.log(`[PKL-278651-TOURN-0015-SYNC] Cache event detected, checking if bracket ${bracketId} is affected`);
-      
-      // Manual check if our specific query was invalidated (for safety)
-      
-      const queries = queryClient.getQueryCache().findAll();
-      const bracketQueryInvalidated = queries.some(query => {
-        // Check both possible key formats for our bracket
-        const key = query.queryKey;
-        
-        // Direct string key match - check if the key is an array with a single string
-        if (Array.isArray(key) && key.length === 1 && typeof key[0] === 'string' && 
-            key[0] === `bracket-${bracketId}`) return true;
-        
-        // Array key match with ID - ensure both key elements match
-        if (Array.isArray(key) && key.length >= 2 &&
-            typeof key[0] === 'string' && key[0] === '/api/tournament/brackets' && 
-            typeof key[1] === 'number' && key[1] === bracketId) return true;
-            
-        return false;
-      });
-      
-      if (bracketQueryInvalidated) {
-        console.log(`[PKL-278651-TOURN-0015-SYNC] Detected cache invalidation for bracket ${bracketId}`);
-        
-        // This acts as an independent refresh trigger distinct from the polling mechanism
-        if (Date.now() - lastRefresh.current > 200) { // Debounce rapid changes
-          refetch();
-          lastRefresh.current = Date.now();
-        }
-      }
-    };
-    
-    // Subscribe to all cache events - we'll filter in our callback
-    const unsubscribe = queryClient.getQueryCache().subscribe(listener);
+    console.log(`[PKL-278651-TOURN-0015-SYNC] Second refresh mechanism DISABLED for bracket ${bracketId}`);
     
     return () => {
-      unsubscribe(); // Clean up subscription
+      // No cleanup needed
     };
-  }, [bracketId, refetch, queryClient]);
+  }, [bracketId]);
   
   // Create a ref to track the last change check timestamp
   const lastChangeCheckTime = useRef<number>(Date.now());
 
-  // Third Mechanism: Context-based change detection using TournamentChangeContext
+  // Third Mechanism: DISABLED - Context-based change detection using TournamentChangeContext
   useEffect(() => {
-    console.log(`[PKL-278651-TOURN-0015-SYNC] Setting up Framework 5.0 change listener for bracket ${bracketId}`);
+    console.log(`[PKL-278651-TOURN-0015-SYNC] Third refresh mechanism DISABLED for bracket ${bracketId}`);
     
-    // Set up interval to periodically check for specific bracket changes in tournament change context
-    const checkForContextChanges = setInterval(() => {
-      try {
-        // Only process changes since our last successful check
-        const latestCheckTime = Date.now();
-        
-        // Check for specific bracket change types that would affect our view
-        // Using a limited set of change types to reduce processing
-        const relevantChangeTypes: TournamentChangeType[] = [
-          'bracket_updated',
-          'teams_seeded',
-          'teams_unseeded',
-          'match_result_recorded',
-          'match_result_updated'
-        ];
-        
-        // Get all changes since our last check timestamp that match our relevant types
-        const bracketChanges = tournamentChanges.getChangesSince(
-          lastChangeCheckTime.current,
-          {
-            changeTypes: relevantChangeTypes,
-            minimumSeverity: 'medium' // Only care about significant changes
-          }
-        );
-        
-        // Update our last check timestamp regardless of found changes
-        lastChangeCheckTime.current = latestCheckTime;
-        
-        // If we have bracket changes, log them for debugging
-        if (bracketChanges.length > 0) {
-          console.log(`[PKL-278651-TOURN-0015-SYNC] Bracket changes detected:`, 
-            bracketChanges.map(c => c.type).join(', '));
-          
-          // Third redundant refresh mechanism - with debouncing
-          const currentTime = Date.now();
-          if (currentTime - lastRefresh.current > 500) { // Increased debounce time
-            console.log(`[PKL-278651-TOURN-0015-SYNC] Refreshing due to detected changes`);
-            refetch();
-            lastRefresh.current = currentTime;
-          }
-        }
-      } catch (error) {
-        // Safety net to prevent app crashes
-        console.error('[PKL-278651-TOURN-0015-SYNC] Error in change detection:', error);
-      }
-    }, 2000); // Reduced frequency to every 2 seconds
-    
-    // Clean up interval when unmounting
     return () => {
-      console.log(`[PKL-278651-TOURN-0015-SYNC] Removing context-based change listener for bracket ${bracketId}`);
-      clearInterval(checkForContextChanges);
+      // No cleanup needed
     };
-  }, [bracketId, refetch, tournamentChanges]);
+  }, [bracketId]);
   
   // Loading state
   if (isLoading) {
