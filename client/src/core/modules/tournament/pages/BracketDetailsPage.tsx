@@ -6,7 +6,7 @@
  * Updated to use the dedicated tournament bracket API client for better API/UI alignment.
  */
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRoute, Link } from 'wouter';
 import { 
   Card, 
@@ -51,6 +51,7 @@ export function BracketDetailsPage() {
   const [activeTab, setActiveTab] = useState('bracket');
   const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
   const [isRecordResultDialogOpen, setIsRecordResultDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
   
   // PKL-278651-TOURN-0013-API: Use dedicated API client for fetching bracket data
   const { 
@@ -124,6 +125,23 @@ export function BracketDetailsPage() {
   const handleRecordResult = (matchId: number) => {
     setSelectedMatchId(matchId);
     setIsRecordResultDialogOpen(true);
+  };
+  
+  // Find selected match details for the dialog
+  const selectedMatch = matches?.find(match => match.id === selectedMatchId);
+  
+  // Get team information for the selected match
+  const getTeamById = (teamId: number | null) => {
+    if (!teamId) return null;
+    // Look through all matches to find teams
+    const team = matches?.flatMap(m => [
+      m.team1 ? { id: m.team1Id, teamName: m.team1.teamName } : null,
+      m.team2 ? { id: m.team2Id, teamName: m.team2.teamName } : null
+    ])
+    .filter(Boolean)
+    .find(t => t?.id === teamId);
+    
+    return team || null;
   };
   
   return (
@@ -245,7 +263,12 @@ export function BracketDetailsPage() {
           open={isRecordResultDialogOpen}
           onOpenChange={setIsRecordResultDialogOpen}
           matchId={selectedMatchId}
-          bracketId={bracketId}
+          team1={selectedMatch?.team1 || null}
+          team2={selectedMatch?.team2 || null}
+          onSuccess={() => {
+            // Refetch bracket data on successful match recording
+            queryClient.invalidateQueries({ queryKey: [`bracket-${bracketId}`] });
+          }}
         />
       )}
     </LayoutContainer>
