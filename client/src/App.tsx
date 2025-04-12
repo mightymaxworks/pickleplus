@@ -7,6 +7,9 @@ import { AuthProvider } from '@/hooks/useAuth'
 
 // Import admin module initialization
 import '@/modules/admin/init'
+
+// Import tournament admin components
+import '@/core/modules/tournament/components/admin'
 import EnhancedLandingPage from './pages/EnhancedLandingPage'
 import EnhancedAuthPage from './pages/EnhancedAuthPage'
 import TestAuthPage from './pages/TestAuthPage'
@@ -99,7 +102,7 @@ export default function App() {
               {(params) => <ProtectedRoute component={ModernizedMatchPage} path="/matches" />}
             </Route>
             {/* Tournament discovery route - available to all users */}
-            <Route path="/tournaments" exact>
+            <Route path="/tournaments">
               {(params) => <ProtectedRoute component={TournamentDiscoveryPage} path="/tournaments" />}
             </Route>
 
