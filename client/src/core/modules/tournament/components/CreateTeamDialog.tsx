@@ -39,6 +39,7 @@ const teamFormSchema = z.object({
   teamName: z.string().min(3, { message: 'Team name must be at least 3 characters' }),
   playerOneId: z.number({ required_error: 'Player One is required' }),
   playerTwoId: z.number({ required_error: 'Player Two is required' }),
+  tournamentId: z.number({ required_error: 'Tournament ID is required' }),
   seedNumber: z.number().optional(),
   notes: z.string().optional(),
   status: z.enum(['active', 'pending', 'withdrawn']).default('active'),
@@ -76,6 +77,7 @@ export function CreateTeamDialog({ open, onOpenChange, tournamentId }: CreateTea
   const defaultValues: Partial<TeamFormValues> = {
     teamName: '',
     status: 'active',
+    tournamentId: tournamentId, // Include the tournament ID from props
   };
   
   const form = useForm<TeamFormValues>({
@@ -146,11 +148,25 @@ export function CreateTeamDialog({ open, onOpenChange, tournamentId }: CreateTea
   
   const { mutate, isPending, isError, error } = useMutation({
     mutationFn: async (values: TeamFormValues) => {
-      console.log('[TeamDialog][Debug] Submitting team data:', values);
-      return apiRequest("POST", `/api/tournaments/${tournamentId}/teams`, values);
+      // PKL-278651-TOURN-0009-TEAM: Enhanced API communication and error handling
+      console.log('[PKL-278651-TOURN-0009-TEAM] Submitting team data to API:', values);
+      
+      try {
+        // Make sure tournamentId is included in the form data
+        if (!values.tournamentId) {
+          console.error('[PKL-278651-TOURN-0009-TEAM] Tournament ID missing in form data');
+          throw new Error('Tournament ID is required');
+        }
+        
+        return apiRequest("POST", `/api/tournaments/${tournamentId}/teams`, values);
+      } catch (error) {
+        console.error('[PKL-278651-TOURN-0009-TEAM] API request error:', error);
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       // Reset form and close dialog
+      console.log('[PKL-278651-TOURN-0009-TEAM] Team creation successful, resetting form');
       form.reset();
       onOpenChange(false);
       setStep(1);
@@ -158,6 +174,7 @@ export function CreateTeamDialog({ open, onOpenChange, tournamentId }: CreateTea
       setSearchQuery('');
       
       // Invalidate teams query to trigger a refetch
+      console.log('[PKL-278651-TOURN-0009-TEAM] Invalidating teams cache to refresh UI');
       queryClient.invalidateQueries({ queryKey: [`/api/tournaments/${tournamentId}/teams`] });
       
       // Show success toast
@@ -167,16 +184,32 @@ export function CreateTeamDialog({ open, onOpenChange, tournamentId }: CreateTea
       });
     },
     onError: (error: any) => {
-      console.error('Error creating team:', error);
+      console.error('[PKL-278651-TOURN-0009-TEAM] Error creating team:', error);
+      
+      let errorMessage = 'An unexpected error occurred.';
+      
+      // Try to extract a more specific error message
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.errors) {
+        errorMessage = 'Validation failed. Please check your inputs.';
+        console.error('[PKL-278651-TOURN-0009-TEAM] Validation errors:', error.response.data.errors);
+      }
+      
       toast({
         title: 'Failed to create team',
-        description: error.message || 'An unexpected error occurred.',
+        description: errorMessage,
         variant: 'destructive',
       });
     },
   });
   
   function onSubmit(values: TeamFormValues) {
+    // PKL-278651-TOURN-0009-TEAM: Enhanced validation and logging for team creation
+    console.log('[PKL-278651-TOURN-0009-TEAM] Starting team creation submission');
+    
     // Use the selected player IDs from our state
     if (!selectedPlayers.player1 || !selectedPlayers.player2) {
       toast({
@@ -184,6 +217,7 @@ export function CreateTeamDialog({ open, onOpenChange, tournamentId }: CreateTea
         description: 'Both players must be selected.',
         variant: 'destructive',
       });
+      console.log('[PKL-278651-TOURN-0009-TEAM] Team creation aborted: Missing players');
       return;
     }
     
@@ -191,12 +225,17 @@ export function CreateTeamDialog({ open, onOpenChange, tournamentId }: CreateTea
     values.playerOneId = selectedPlayers.player1.id;
     values.playerTwoId = selectedPlayers.player2.id;
     
+    // Explicitly ensure tournamentId is set from props
+    values.tournamentId = tournamentId;
+    console.log(`[PKL-278651-TOURN-0009-TEAM] Tournament ID set in form data: ${tournamentId}`);
+    
     // If no team name is provided, generate one from player names
     if (!values.teamName || values.teamName.trim() === '') {
       values.teamName = `${selectedPlayers.player1.displayName} / ${selectedPlayers.player2.displayName}`;
       form.setValue('teamName', values.teamName);
     }
     
+    console.log('[PKL-278651-TOURN-0009-TEAM] Submitting team data with values:', values);
     mutate(values);
   }
   
