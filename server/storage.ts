@@ -842,11 +842,13 @@ export class DatabaseStorage implements IStorage {
           email: users.email,
           passportCode: users.passportId,
           avatarInitials: users.avatarInitials,
-          location: users.location
+          location: users.location,
+          rating: users.rating, // Added rating field for tournament team creation
+          duprRating: users.duprRating // Also include DUPR rating if available
         })
         .from(users)
         .where(whereClause)
-        .limit(10);
+        .limit(limit);
         
         // If we need to exclude a user, do it in memory to avoid SQL issues
         if (numericExcludeId !== undefined) {
@@ -856,7 +858,7 @@ export class DatabaseStorage implements IStorage {
         console.log(`Search found ${results.length} results for "${safeQuery}"`);
         console.log("Results:", results.map(u => `${u.id}: ${u.username}`).join(", "));
         
-        // Just return the simplified results since we only need id, name and avatar for search
+        // Return the results with rating information for tournament team creation
         const mappedResults = results.map(user => ({
           id: user.id,
           username: user.username,
@@ -864,7 +866,7 @@ export class DatabaseStorage implements IStorage {
           passportCode: user.passportCode || null, 
           avatarUrl: null, // Safe default
           avatarInitials: user.avatarInitials || (user.username ? user.username.substring(0, 2).toUpperCase() : "??"),
-          rating: null // Default rating for now
+          rating: user.rating || (user.duprRating ? parseFloat(user.duprRating) : null) // Use rating or DUPR rating as fallback
         }));
         
         // Show what we're returning
@@ -880,7 +882,9 @@ export class DatabaseStorage implements IStorage {
           const allUsers = await db.select({
             id: users.id,
             username: users.username,
-            displayName: users.displayName
+            displayName: users.displayName,
+            rating: users.rating,
+            duprRating: users.duprRating
           }).from(users).limit(100);
           
           console.log(`Got ${allUsers.length} total users for in-memory filtering`);
@@ -908,7 +912,7 @@ export class DatabaseStorage implements IStorage {
             passportCode: null,
             avatarUrl: null,
             avatarInitials: user.username?.substring(0, 2).toUpperCase() || "??",
-            rating: null // Default rating for now
+            rating: user.rating || (user.duprRating ? parseFloat(user.duprRating) : null) // Use rating or DUPR rating as fallback
           }));
         } catch (fallbackError) {
           console.error("Fallback search approach also failed:", fallbackError);
