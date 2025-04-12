@@ -417,7 +417,7 @@ export function RecordMatchResultDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[525px]">
+      <DialogContent className="sm:max-w-[525px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Record Match Result</DialogTitle>
           <DialogDescription>
@@ -451,7 +451,7 @@ export function RecordMatchResultDialog({
               />
               
               {/* Enhanced Mobile-optimized action buttons */}
-              <div className="sticky bottom-0 left-0 right-0 mt-6 pb-1 pt-2 bg-white border-t border-gray-100 shadow-sm">
+              <div className="sticky bottom-0 left-0 right-0 mt-6 pb-1 pt-2 bg-white border-t border-gray-100 shadow-sm z-10">
                 <div className="flex gap-2 md:hidden mb-1">
                   <Button 
                     type="button"

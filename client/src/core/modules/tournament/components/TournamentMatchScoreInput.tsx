@@ -605,7 +605,7 @@ export function TournamentMatchScoreInput({
       
       {/* Multi-Game Interface (when match format is not single) */}
       {value.matchFormat !== 'single' && (
-        <div className="space-y-4 mt-4 mb-2">
+        <div className="space-y-6 mt-5 mb-3">
           {/* Match Progress Summary */}
           <div className={`p-4 rounded-md ${getMatchWinner() ? 'bg-primary/10 border border-primary/20' : 'bg-gray-50'}`}>
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -678,7 +678,7 @@ export function TournamentMatchScoreInput({
             </div>
             
             {/* Game scores list - Enhanced Mobile Layout */}
-            <div className="space-y-3">
+            <div className="space-y-5">
               {value.games && value.games.map((game, index) => {
                 const gameWinner = isGameWon(game.team1Score, game.team2Score)
                   ? game.team1Score > game.team2Score ? 'team1' : 'team2'
@@ -686,7 +686,7 @@ export function TournamentMatchScoreInput({
                   
                 return (
                   <div key={index} 
-                    className={`border rounded-md p-3 transition-all ${
+                    className={`border rounded-md p-4 transition-all ${
                       gameWinner 
                         ? (gameWinner === 'team1' 
                            ? 'border-l-4 border-l-primary bg-primary/5' 
