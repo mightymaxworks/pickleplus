@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { ShieldAlert } from 'lucide-react';
+import { AdminLayout } from '@/modules/admin/components/AdminLayout';
 
 interface AdminProtectedRouteProps {
   children: React.ReactNode;
@@ -74,8 +75,9 @@ const AdminProtectedRoute: React.FC<AdminProtectedRouteProps> = ({ children }) =
     );
   }
   
-  // Return the children components for admin pages
-  return <>{children}</>;
+  // Wrap the children components with AdminLayout for consistent admin experience
+  // This ensures proper navigation and layout according to Framework 5.0
+  return <AdminLayout>{children}</AdminLayout>;
 };
 
 export default AdminProtectedRoute;

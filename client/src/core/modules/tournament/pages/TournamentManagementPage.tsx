@@ -56,141 +56,139 @@ export function TournamentManagementPage() {
   });
 
   return (
-    <AdminLayout title="Tournament Management">
-      <LayoutContainer className="max-w-6xl">
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Tournament Management</h1>
-              <p className="text-muted-foreground">
-                Create and manage tournaments, brackets, and teams
-              </p>
-            </div>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
-              Create Tournament
-            </Button>
+    <LayoutContainer className="max-w-6xl">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Tournament Management</h1>
+            <p className="text-muted-foreground">
+              Create and manage tournaments, brackets, and teams
+            </p>
           </div>
-
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl flex items-center gap-2">
-                  <Calendar size={18} className="text-primary" />
-                  <span>Upcoming</span>
-                  <Badge className="ml-2">{upcomingTournaments.length}</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-sm">
-                  Tournaments that haven't started yet
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl flex items-center gap-2">
-                  <Users size={18} className="text-primary" />
-                  <span>In Progress</span>
-                  <Badge className="ml-2">{inProgressTournaments.length}</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-sm">
-                  Currently active tournaments
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl flex items-center gap-2">
-                  <Award size={18} className="text-primary" />
-                  <span>Completed</span>
-                  <Badge className="ml-2">{pastTournaments.length}</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-sm">
-                  Tournaments that have finished
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Tabs defaultValue="all" onValueChange={setActiveTab} value={activeTab}>
-            <TabsList className="grid grid-cols-4 md:w-[400px]">
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-              <TabsTrigger value="in-progress">In Progress</TabsTrigger>
-              <TabsTrigger value="past">Completed</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="all" className="mt-4">
-              {isLoading ? (
-                <LoadingState />
-              ) : isError ? (
-                <ErrorState />
-              ) : tournaments.length ? (
-                <TournamentList tournaments={tournaments} />
-              ) : (
-                <EmptyState onCreateClick={() => setIsCreateDialogOpen(true)} />
-              )}
-            </TabsContent>
-            
-            <TabsContent value="upcoming" className="mt-4">
-              {isLoading ? (
-                <LoadingState />
-              ) : isError ? (
-                <ErrorState />
-              ) : upcomingTournaments.length ? (
-                <TournamentList tournaments={upcomingTournaments} />
-              ) : (
-                <EmptyState 
-                  message="No upcoming tournaments found"
-                  onCreateClick={() => setIsCreateDialogOpen(true)} 
-                />
-              )}
-            </TabsContent>
-            
-            <TabsContent value="in-progress" className="mt-4">
-              {isLoading ? (
-                <LoadingState />
-              ) : isError ? (
-                <ErrorState />
-              ) : inProgressTournaments.length ? (
-                <TournamentList tournaments={inProgressTournaments} />
-              ) : (
-                <EmptyState 
-                  message="No tournaments currently in progress"
-                  onCreateClick={() => setIsCreateDialogOpen(true)} 
-                />
-              )}
-            </TabsContent>
-            
-            <TabsContent value="past" className="mt-4">
-              {isLoading ? (
-                <LoadingState />
-              ) : isError ? (
-                <ErrorState />
-              ) : pastTournaments.length ? (
-                <TournamentList tournaments={pastTournaments} />
-              ) : (
-                <EmptyState 
-                  message="No completed tournaments found"
-                  onCreateClick={() => setIsCreateDialogOpen(true)} 
-                />
-              )}
-            </TabsContent>
-          </Tabs>
+          <Button onClick={() => setIsCreateDialogOpen(true)}>
+            Create Tournament
+          </Button>
         </div>
-        
-        <CreateTournamentDialog 
-          open={isCreateDialogOpen} 
-          onOpenChange={setIsCreateDialogOpen} 
-        />
-      </LayoutContainer>
-    </AdminLayout>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xl flex items-center gap-2">
+                <Calendar size={18} className="text-primary" />
+                <span>Upcoming</span>
+                <Badge className="ml-2">{upcomingTournaments.length}</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground text-sm">
+                Tournaments that haven't started yet
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xl flex items-center gap-2">
+                <Users size={18} className="text-primary" />
+                <span>In Progress</span>
+                <Badge className="ml-2">{inProgressTournaments.length}</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground text-sm">
+                Currently active tournaments
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xl flex items-center gap-2">
+                <Award size={18} className="text-primary" />
+                <span>Completed</span>
+                <Badge className="ml-2">{pastTournaments.length}</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground text-sm">
+                Tournaments that have finished
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Tabs defaultValue="all" onValueChange={setActiveTab} value={activeTab}>
+          <TabsList className="grid grid-cols-4 md:w-[400px]">
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+            <TabsTrigger value="in-progress">In Progress</TabsTrigger>
+            <TabsTrigger value="past">Completed</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="all" className="mt-4">
+            {isLoading ? (
+              <LoadingState />
+            ) : isError ? (
+              <ErrorState />
+            ) : tournaments.length ? (
+              <TournamentList tournaments={tournaments} />
+            ) : (
+              <EmptyState onCreateClick={() => setIsCreateDialogOpen(true)} />
+            )}
+          </TabsContent>
+          
+          <TabsContent value="upcoming" className="mt-4">
+            {isLoading ? (
+              <LoadingState />
+            ) : isError ? (
+              <ErrorState />
+            ) : upcomingTournaments.length ? (
+              <TournamentList tournaments={upcomingTournaments} />
+            ) : (
+              <EmptyState 
+                message="No upcoming tournaments found"
+                onCreateClick={() => setIsCreateDialogOpen(true)} 
+              />
+            )}
+          </TabsContent>
+          
+          <TabsContent value="in-progress" className="mt-4">
+            {isLoading ? (
+              <LoadingState />
+            ) : isError ? (
+              <ErrorState />
+            ) : inProgressTournaments.length ? (
+              <TournamentList tournaments={inProgressTournaments} />
+            ) : (
+              <EmptyState 
+                message="No tournaments currently in progress"
+                onCreateClick={() => setIsCreateDialogOpen(true)} 
+              />
+            )}
+          </TabsContent>
+          
+          <TabsContent value="past" className="mt-4">
+            {isLoading ? (
+              <LoadingState />
+            ) : isError ? (
+              <ErrorState />
+            ) : pastTournaments.length ? (
+              <TournamentList tournaments={pastTournaments} />
+            ) : (
+              <EmptyState 
+                message="No completed tournaments found"
+                onCreateClick={() => setIsCreateDialogOpen(true)} 
+              />
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
+      
+      <CreateTournamentDialog 
+        open={isCreateDialogOpen} 
+        onOpenChange={setIsCreateDialogOpen} 
+      />
+    </LayoutContainer>
   );
 }
 
