@@ -438,6 +438,8 @@ const tournamentFormSchema = z.object({
   level: z.string().default('club'),
   
   // Tournament tier for CourtIQ integration
+  // NOTE: This field is not yet present in the database schema
+  // It will be stored in a separate service/table for CourtIQ integration
   tier: z.string().default('local'),
   
   // UI-only field (not in database schema)
@@ -525,6 +527,21 @@ export function CreateTournamentWizard({ open, onOpenChange }: CreateTournamentW
         const { csrfToken } = await csrfResponse.json();
         console.log('[Tournament] CSRF token obtained successfully');
         
+        // Create a submission object that matches the actual database schema
+        // We'll store tier in a separate service/handler for CourtIQ integration later
+        const submissionData = {
+          name: values.name,
+          description: values.description,
+          location: values.location,
+          startDate: values.startDate,
+          endDate: values.endDate,
+          format: values.format,
+          division: values.division,
+          level: values.level,
+          status: values.status,
+          registrationOpen: values.registrationOpen
+        };
+        
         // Submit tournament data
         const response = await fetch('/api/tournaments', {
           method: 'POST',
@@ -532,7 +549,7 @@ export function CreateTournamentWizard({ open, onOpenChange }: CreateTournamentW
             'Content-Type': 'application/json',
             'X-CSRF-Token': csrfToken,
           },
-          body: JSON.stringify(values),
+          body: JSON.stringify(submissionData),
           credentials: 'include',
         });
         

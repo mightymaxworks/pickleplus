@@ -110,13 +110,13 @@ router.post('/tournaments', async (req, res) => {
     
     try {
       // Create minimal valid tournament data structure based on actual database schema
+      // Ensuring we only use columns that exist in the database
       const tournamentData = {
         name: parsedData.data.name,
         description: parsedData.data.description || null,
         location: parsedData.data.location || null,
         startDate: parsedData.data.startDate,
         endDate: parsedData.data.endDate,
-        status: parsedData.data.status,
         format: parsedData.data.format || 'doubles',
         division: parsedData.data.division || 'open',
         level: parsedData.data.level || 'club',
