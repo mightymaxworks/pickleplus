@@ -181,12 +181,36 @@ export function TournamentMatchScoreInput({
     onChange(newValue);
   };
 
-  // Determine winner (for UI only)
+  // Determine winner for single game (for UI only)
   const winner = isGameWon(value.team1Score, value.team2Score)
     ? value.team1Score > value.team2Score 
       ? "team1" 
       : "team2"
     : null;
+    
+  // Determine match winner for multi-game formats
+  const getMatchWinner = (): 'team1' | 'team2' | null => {
+    if (!value.matchFormat || value.matchFormat === 'single') {
+      return winner;
+    }
+    
+    // For multi-game formats, check if a team has won enough games
+    const winThreshold = value.matchFormat === 'best_of_3' ? 2 : 
+                        value.matchFormat === 'best_of_5' ? 3 : 
+                        null;
+                        
+    if (!winThreshold || !value.team1GamesWon || !value.team2GamesWon) {
+      return null;
+    }
+    
+    if (value.team1GamesWon >= winThreshold) {
+      return 'team1';
+    } else if (value.team2GamesWon >= winThreshold) {
+      return 'team2';
+    }
+    
+    return null;
+  };
 
   // Get team initials or first letters
   const getTeamInitials = (teamName: string, providedInitials?: string): string => {
@@ -526,160 +550,205 @@ export function TournamentMatchScoreInput({
       {/* Multi-Game Interface (when match format is not single) */}
       {value.matchFormat !== 'single' && (
         <div className="space-y-4 mt-4 mb-2">
-          <div className="text-sm font-medium mb-2">Game Scores</div>
+          {/* Match Progress Summary */}
+          <div className="bg-gray-50 p-3 rounded-md">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="text-sm font-medium">Match Progress</div>
+                <Badge variant="outline" className="ml-2">
+                  {value.matchFormat === 'best_of_3' ? 'Best of 3' : value.matchFormat === 'best_of_5' ? 'Best of 5' : 'Custom'}
+                </Badge>
+              </div>
+              
+              <div className="flex items-center text-xs text-gray-500">
+                {value.matchFormat === 'best_of_3' 
+                  ? 'First to win 2 games wins' 
+                  : value.matchFormat === 'best_of_5' 
+                    ? 'First to win 3 games wins' 
+                    : 'Custom format'}
+              </div>
+            </div>
+            
+            {/* Score Indicator */}
+            <div className="mt-2 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className={`px-3 py-1 rounded-md ${value.team1GamesWon && value.team1GamesWon > (value.team2GamesWon || 0) ? 'bg-primary text-white font-bold' : 'bg-gray-100'}`}>
+                  {team1Name}: {value.team1GamesWon || 0}
+                </div>
+                <div className="text-gray-500 text-sm">-</div>
+                <div className={`px-3 py-1 rounded-md ${value.team2GamesWon && value.team2GamesWon > (value.team1GamesWon || 0) ? 'bg-primary text-white font-bold' : 'bg-gray-100'}`}>
+                  {team2Name}: {value.team2GamesWon || 0}
+                </div>
+              </div>
+              
+              {/* Match Status */}
+              {value.team1GamesWon !== undefined && value.team2GamesWon !== undefined && (
+                <Badge variant={getMatchWinner() ? "default" : "outline"} className="ml-auto">
+                  {getMatchWinner() 
+                    ? `${getMatchWinner() === 'team1' ? team1Name : team2Name} wins match!` 
+                    : `In progress`}
+                </Badge>
+              )}
+            </div>
+          </div>
           
-          <div className="space-y-3">
-            {/* Game scores list */}
-            {value.games && value.games.map((game, index) => {
-              const gameWinner = isGameWon(game.team1Score, game.team2Score)
-                ? game.team1Score > game.team2Score ? 'team1' : 'team2'
-                : null;
-                
-              return (
-                <div key={index} className="border rounded-md p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="font-medium text-sm">Game {index + 1}</div>
-                    {gameWinner && (
-                      <Badge variant="outline" className={gameWinner === 'team1' ? 'bg-primary/10 text-primary' : 'bg-primary/10 text-primary'}>
-                        {gameWinner === 'team1' ? team1Name : team2Name} won
-                      </Badge>
-                    )}
-                  </div>
+          {/* Game Scores Section */}
+          <div className="space-y-2">
+            <div className="text-sm font-medium">Game Scores</div>
+            
+            {/* Game scores list - Compact Layout */}
+            <div className="space-y-2">
+              {value.games && value.games.map((game, index) => {
+                const gameWinner = isGameWon(game.team1Score, game.team2Score)
+                  ? game.team1Score > game.team2Score ? 'team1' : 'team2'
+                  : null;
                   
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Team 1 score controls */}
-                    <div className="flex items-center gap-2">
-                      <div className="text-xs font-medium">{team1Name}</div>
-                      <div className="flex items-center ml-auto">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 w-7 p-0 rounded-full"
-                          onClick={() => updateGameScore(index, 'team1', -1)}
-                          disabled={game.team1Score <= 0}
-                        >
-                          <Minus className="h-3 w-3" />
-                        </Button>
-                        
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          value={game.team1Score || ''}
-                          onChange={(e) => {
-                            if (!value.games) return;
-                            const newValue = e.target.value;
-                            
-                            // Allow empty string or convert to number
-                            let newScore: number;
-                            if (newValue === '') {
-                              newScore = 0;
-                            } else if (/^\d+$/.test(newValue)) {
-                              newScore = parseInt(newValue);
-                            } else {
-                              return;
-                            }
-                            
-                            // Clone games array and update this game
-                            const newGames = [...value.games];
-                            newGames[index] = {
-                              ...newGames[index],
-                              team1Score: newScore
-                            };
-                            
-                            onChange({
-                              ...value,
-                              games: newGames
-                            });
-                          }}
-                          className={`text-center w-10 h-8 text-sm font-medium border ${gameWinner === 'team1' ? 'border-primary bg-primary/5' : 'border-gray-200'} rounded-md focus:outline-none focus:ring-1 focus:ring-primary`}
-                        />
-                        
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 w-7 p-0 rounded-full"
-                          onClick={() => updateGameScore(index, 'team1', 1)}
-                        >
-                          <Plus className="h-3 w-3" />
-                        </Button>
+                return (
+                  <div key={index} 
+                    className={`border rounded-md p-3 ${gameWinner ? 
+                      (gameWinner === 'team1' ? 'border-l-4 border-l-primary' : 'border-r-4 border-r-primary') : 
+                      'border-gray-200'}`}>
+                    
+                    {/* Game Header with Winner Badge */}
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center">
+                        <div className="font-medium text-sm bg-gray-100 px-2 py-0.5 rounded-md">Game {index + 1}</div>
+                        {gameWinner && (
+                          <Badge variant="outline" className="ml-2 bg-primary/10 text-primary">
+                            {gameWinner === 'team1' ? team1Name : team2Name} won
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      {/* Score Display for Quick View */}
+                      <div className="text-sm font-medium">
+                        {game.team1Score} - {game.team2Score}
                       </div>
                     </div>
                     
-                    {/* Team 2 score controls */}
-                    <div className="flex items-center gap-2">
-                      <div className="text-xs font-medium">{team2Name}</div>
-                      <div className="flex items-center ml-auto">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 w-7 p-0 rounded-full"
-                          onClick={() => updateGameScore(index, 'team2', -1)}
-                          disabled={game.team2Score <= 0}
-                        >
-                          <Minus className="h-3 w-3" />
-                        </Button>
-                        
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          value={game.team2Score || ''}
-                          onChange={(e) => {
-                            if (!value.games) return;
-                            const newValue = e.target.value;
-                            
-                            // Allow empty string or convert to number
-                            let newScore: number;
-                            if (newValue === '') {
-                              newScore = 0;
-                            } else if (/^\d+$/.test(newValue)) {
-                              newScore = parseInt(newValue);
-                            } else {
-                              return;
-                            }
-                            
-                            // Clone games array and update this game
-                            const newGames = [...value.games];
-                            newGames[index] = {
-                              ...newGames[index],
-                              team2Score: newScore
-                            };
-                            
-                            onChange({
-                              ...value,
-                              games: newGames
-                            });
-                          }}
-                          className={`text-center w-10 h-8 text-sm font-medium border ${gameWinner === 'team2' ? 'border-primary bg-primary/5' : 'border-gray-200'} rounded-md focus:outline-none focus:ring-1 focus:ring-primary`}
-                        />
-                        
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 w-7 p-0 rounded-full"
-                          onClick={() => updateGameScore(index, 'team2', 1)}
-                        >
-                          <Plus className="h-3 w-3" />
-                        </Button>
+                    {/* Score Controls - Two Column Layout */}
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Team 1 score controls */}
+                      <div className="flex items-center space-x-1 bg-gray-50 rounded-md p-1.5">
+                        <div className="text-xs font-medium truncate max-w-[80px]">{team1Name}</div>
+                        <div className="flex items-center ml-auto">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-6 w-6 p-0 rounded-full"
+                            onClick={() => updateGameScore(index, 'team1', -1)}
+                            disabled={game.team1Score <= 0}
+                          >
+                            <Minus className="h-3 w-3" />
+                          </Button>
+                          
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={game.team1Score || ''}
+                            onChange={(e) => {
+                              if (!value.games) return;
+                              const newValue = e.target.value;
+                              
+                              // Allow empty string or convert to number
+                              let newScore: number;
+                              if (newValue === '') {
+                                newScore = 0;
+                              } else if (/^\d+$/.test(newValue)) {
+                                newScore = parseInt(newValue);
+                              } else {
+                                return;
+                              }
+                              
+                              // Clone games array and update this game
+                              const newGames = [...value.games];
+                              newGames[index] = {
+                                ...newGames[index],
+                                team1Score: newScore
+                              };
+                              
+                              onChange({
+                                ...value,
+                                games: newGames
+                              });
+                            }}
+                            className={`text-center w-10 h-7 text-sm font-medium border ${gameWinner === 'team1' ? 'border-primary bg-primary/5' : 'border-gray-200'} rounded-md focus:outline-none focus:ring-1 focus:ring-primary`}
+                          />
+                          
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-6 w-6 p-0 rounded-full"
+                            onClick={() => updateGameScore(index, 'team1', 1)}
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      {/* Team 2 score controls */}
+                      <div className="flex items-center space-x-1 bg-gray-50 rounded-md p-1.5">
+                        <div className="text-xs font-medium truncate max-w-[80px]">{team2Name}</div>
+                        <div className="flex items-center ml-auto">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-6 w-6 p-0 rounded-full"
+                            onClick={() => updateGameScore(index, 'team2', -1)}
+                            disabled={game.team2Score <= 0}
+                          >
+                            <Minus className="h-3 w-3" />
+                          </Button>
+                          
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={game.team2Score || ''}
+                            onChange={(e) => {
+                              if (!value.games) return;
+                              const newValue = e.target.value;
+                              
+                              // Allow empty string or convert to number
+                              let newScore: number;
+                              if (newValue === '') {
+                                newScore = 0;
+                              } else if (/^\d+$/.test(newValue)) {
+                                newScore = parseInt(newValue);
+                              } else {
+                                return;
+                              }
+                              
+                              // Clone games array and update this game
+                              const newGames = [...value.games];
+                              newGames[index] = {
+                                ...newGames[index],
+                                team2Score: newScore
+                              };
+                              
+                              onChange({
+                                ...value,
+                                games: newGames
+                              });
+                            }}
+                            className={`text-center w-10 h-7 text-sm font-medium border ${gameWinner === 'team2' ? 'border-primary bg-primary/5' : 'border-gray-200'} rounded-md focus:outline-none focus:ring-1 focus:ring-primary`}
+                          />
+                          
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-6 w-6 p-0 rounded-full"
+                            onClick={() => updateGameScore(index, 'team2', 1)}
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-          
-          {/* Match summary - who's winning overall */}
-          <div className="bg-gray-50 p-3 rounded-md flex items-center justify-between">
-            <div className="text-sm font-medium">Match Summary</div>
-            <div className="flex gap-4">
-              <div className={`text-sm ${value.team1GamesWon && value.team1GamesWon > (value.team2GamesWon || 0) ? 'font-bold text-primary' : ''}`}>
-                {team1Name}: {value.team1GamesWon || 0} games
-              </div>
-              <div className={`text-sm ${value.team2GamesWon && value.team2GamesWon > (value.team1GamesWon || 0) ? 'font-bold text-primary' : ''}`}>
-                {team2Name}: {value.team2GamesWon || 0} games
-              </div>
+                );
+              })}
             </div>
           </div>
         </div>
