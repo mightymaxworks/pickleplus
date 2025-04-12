@@ -1,8 +1,9 @@
 /**
- * PKL-278651-TOURN-0003-MATCH
- * Seed Teams Dialog Component
+ * PKL-278651-TOURN-0014-SEED
+ * Enhanced Seed Teams Dialog Component
  * 
  * Dialog for manually seeding teams into a tournament bracket
+ * Updated to use Framework 5.0 enhanced state refresh mechanisms
  */
 
 import { useState, useEffect } from 'react';
@@ -45,6 +46,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import { useTournamentChanges } from '../context/TournamentChangeContext';
 
 interface SeedTeamsDialogProps {
   open: boolean;
@@ -66,6 +68,7 @@ export function SeedTeamsDialog({
   tournamentId
 }: SeedTeamsDialogProps) {
   const queryClient = useQueryClient();
+  const tournamentChanges = useTournamentChanges();
   const [seedMethod, setSeedMethod] = useState<'manual' | 'rating' | 'random'>('manual');
   const [teamAssignments, setTeamAssignments] = useState<{[key: number]: number | null}>({});
   const [isProcessing, setIsProcessing] = useState(false);
