@@ -28,7 +28,12 @@ import {
   insertTournamentBracketSchema,
 } from '../../shared/schema/tournament-brackets';
 import { eq, and, or, sql } from 'drizzle-orm';
-import { createSingleEliminationBracket, getBracketWithMatches, recordMatchResult } from '../services/bracket-generator';
+import { 
+  createSingleEliminationBracket, 
+  getBracketWithMatches, 
+  recordMatchResult,
+  seedTeamsInBracket 
+} from '../services/bracket-generator';
 
 const router = Router();
 
@@ -498,6 +503,116 @@ router.post('/brackets/matches/:id/result', async (req, res) => {
       }
     }
     
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+/**
+ * PKL-278651-TOURN-0016-SEED
+ * Seed teams in a bracket
+ * POST /api/brackets/:id/seed
+ */
+router.post('/brackets/:id/seed', async (req, res) => {
+  try {
+    console.log('[API][PKL-278651-TOURN-0016-SEED] Processing team seeding request');
+    
+    // Validate bracket ID
+    const bracketId = parseInt(req.params.id);
+    if (isNaN(bracketId)) {
+      return res.status(400).json({ message: 'Invalid bracket ID' });
+    }
+    
+    // Validate CSRF token
+    const csrfToken = req.headers['x-csrf-token'] || req.body._csrf;
+    if (!csrfToken || csrfToken !== req.session?.csrfToken) {
+      console.error('[SEC] CSRF token validation failed for bracket seeding');
+      return res.status(403).json({ message: 'CSRF validation failed' });
+    }
+    
+    // Get the bracket
+    const bracket = await db.query.tournamentBrackets.findFirst({
+      where: eq(tournamentBrackets.id, bracketId)
+    });
+    
+    if (!bracket) {
+      return res.status(404).json({ message: 'Bracket not found' });
+    }
+    
+    // Check if the bracket is in a valid state for seeding
+    if (bracket.status === 'completed') {
+      return res.status(400).json({ message: 'Cannot seed teams in a completed bracket' });
+    }
+    
+    // Validate request body
+    const seedTeamsSchema = z.object({
+      method: z.enum(['manual', 'rating_based', 'random']),
+      assignments: z.record(z.number().nullable())
+    });
+    
+    const parsedData = seedTeamsSchema.safeParse(req.body);
+    
+    if (!parsedData.success) {
+      return res.status(400).json({ 
+        message: 'Invalid team seeding data', 
+        errors: parsedData.error.format() 
+      });
+    }
+    
+    const { method, assignments } = parsedData.data;
+    console.log(`[API][PKL-278651-TOURN-0016-SEED] Seeding method: ${method}, assignments:`, assignments);
+    
+    // Get all teams for this tournament
+    const tournamentId = bracket.tournamentId;
+    const teams = await db.query.tournamentTeams.findMany({
+      where: eq(tournamentTeams.tournamentId, tournamentId)
+    });
+    
+    if (teams.length === 0) {
+      return res.status(400).json({ message: 'No teams found for this tournament' });
+    }
+    
+    console.log(`[API][PKL-278651-TOURN-0016-SEED] Found ${teams.length} teams for tournament ${tournamentId}`);
+    
+    // Get the bracket size
+    const allMatches = await db.query.tournamentBracketMatches.findMany({
+      where: eq(tournamentBracketMatches.bracketId, bracketId)
+    });
+    
+    // Calculate bracket size based on the number of matches
+    // A bracket with N teams has N-1 matches, so bracketSize = matches + 1
+    const bracketSize = allMatches.length + 1;
+    
+    // Convert assignments to seed order if using manual method
+    let seedOrder: number[] | undefined;
+    if (method === 'manual' && assignments) {
+      // The assignments object contains keys like "1" => teamId
+      // Convert it to an array of team IDs in the specified order
+      seedOrder = Object.entries(assignments)
+        .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+        .map(([_, teamId]) => teamId)
+        .filter(teamId => teamId !== null) as number[];
+      
+      console.log(`[API][PKL-278651-TOURN-0016-SEED] Seed order: ${seedOrder.join(', ')}`);
+    }
+    
+    // Seed the teams in the bracket
+    const result = await seedTeamsInBracket(
+      bracketId, 
+      teams, 
+      bracketSize, 
+      seedOrder, 
+      method
+    );
+    
+    // Return success response
+    res.json({
+      success: true,
+      message: 'Teams seeded successfully',
+      ...result
+    });
+    
+  } catch (error) {
+    console.error('[API][PKL-278651-TOURN-0016-SEED] Error seeding teams:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

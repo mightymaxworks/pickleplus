@@ -261,12 +261,14 @@ export async function seedTeamsInBracket(
   
   // Get the first-round matches
   const firstRoundMatches = await db.query.tournamentBracketMatches.findMany({
-    where: and(
-      eq(tournamentBracketMatches.bracketId, bracketId),
-      eq(tournamentBracketMatches.roundNumber, 1)
-    ),
+    where: eq(tournamentBracketMatches.bracketId, bracketId),
     orderBy: (matches) => matches.matchNumber
   });
+  
+  // Filter for first round matches (they have the lowest match numbers)
+  const firstRoundMatchesFiltered = firstRoundMatches
+    .sort((a, b) => a.matchNumber - b.matchNumber)
+    .slice(0, Math.floor(firstRoundMatches.length / 2));
   
   console.log(`[PKL-278651-TOURN-0016-SEED] Found ${firstRoundMatches.length} first-round matches`);
   
@@ -294,24 +296,25 @@ export async function seedTeamsInBracket(
     sortedTeams = [...teams].sort(() => Math.random() - 0.5);
     console.log(`[PKL-278651-TOURN-0016-SEED] Random seeding order applied`);
   } else {
-    // Default to rating-based (use team's seedNumber or courtIQRating if available)
+    // Default to rating-based (use team's seedNumber if available)
     sortedTeams.sort((a, b) => {
       // First try to use seedNumber if available
-      if (a.seedNumber !== undefined && b.seedNumber !== undefined) {
-        return a.seedNumber - b.seedNumber;
+      const seedA = a.seedNumber !== null && a.seedNumber !== undefined ? a.seedNumber : null;
+      const seedB = b.seedNumber !== null && b.seedNumber !== undefined ? b.seedNumber : null;
+      
+      if (seedA !== null && seedB !== null) {
+        return seedA - seedB;
       }
       
-      // If no seedNumber, fall back to ratings or just sort by ID
-      const ratingA = a.courtIQRating || Number.MAX_SAFE_INTEGER;
-      const ratingB = b.courtIQRating || Number.MAX_SAFE_INTEGER;
-      return ratingA - ratingB;
+      // If no seedNumber, just sort by ID
+      return a.id - b.id;
     });
     console.log(`[PKL-278651-TOURN-0016-SEED] Rating-based seeding order applied`);
   }
   
   // Calculate which teams go into which spots
   for (let i = 0; i < totalFirstRoundMatches; i++) {
-    const match = firstRoundMatches[i];
+    const match = firstRoundMatchesFiltered[i] || firstRoundMatches[i];
     if (!match) continue;
     
     // For each match (i), we need to get the seeded position
