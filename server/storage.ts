@@ -783,6 +783,7 @@ export class DatabaseStorage implements IStorage {
     rating: number | null;
   }[]> {
     try {
+      // Framework 5.0: Completely rewritten search function to fix database errors
       console.log("[Storage] searchUsers called with query:", query, "limit:", limit, "excludeUserId:", excludeUserId);
       
       // More detailed logging
@@ -802,75 +803,56 @@ export class DatabaseStorage implements IStorage {
       const userCount = await db.select({ count: sql<number>`count(*)` }).from(users);
       console.log("Total users in database:", userCount[0].count);
       
-      // Handle excludeUserId validation
-      let numericExcludeId: number | undefined = undefined;
-      
-      if (excludeUserId !== undefined && excludeUserId !== null) {
-        // Make sure we're dealing with a number
-        const tempId = typeof excludeUserId === 'number' ? excludeUserId : Number(excludeUserId);
-        
-        if (!isNaN(tempId) && tempId > 0) {
-          numericExcludeId = tempId;
-          console.log("Will exclude user ID:", numericExcludeId, "from search results");
-        } else {
-          console.log("Invalid excludeUserId:", excludeUserId, "converted to", tempId, "- Will not exclude any users");
-        }
-      }
-      
-      // Create a simple pattern for SQL LIKE
-      const searchPattern = `%${safeQuery}%`;
-      
       try {
-        // We'll perform a direct search without any preliminary checks
-        console.log("Executing direct user search with pattern:", searchPattern);
+        // Framework 5.0: Use the simplest direct SQL approach possible to avoid ORM issues
+        console.log(`[Storage] Executing direct SQL query for users matching "${safeQuery}"`);
         
-        // Build the search query with the where clause directly
-        const whereClause = or(
-          sql`LOWER(${users.username}) LIKE LOWER(${searchPattern})`,
-          sql`LOWER(COALESCE(${users.displayName}, '')) LIKE LOWER(${searchPattern})`,
-          sql`LOWER(COALESCE(${users.email}, '')) LIKE LOWER(${searchPattern})`
-        );
+        // Avoid SQL injection by using parameterized query
+        const searchPattern = `%${safeQuery}%`;
         
-        console.log("Search SQL:", whereClause);
+        // Prepare the SQL statement based on whether we have an excludeUserId
+        let sqlStatement = `
+          SELECT id, username, display_name as "displayName", 
+                 passport_id as "passportId", avatar_initials as "avatarInitials",
+                 dupr_rating as "duprRating"
+          FROM users
+          WHERE (LOWER(username) LIKE LOWER($1) OR LOWER(COALESCE(display_name, '')) LIKE LOWER($1))
+        `;
         
-        // Execute the search query
-        // IMPORTANT: We're avoiding chaining multiple where clauses as that seems to be causing issues
-        // Framework 5.0: Fix - Remove non-existent fields (rating) to avoid "Cannot convert undefined or null to object" error
-        let results = await db.select({
-          id: users.id,
-          username: users.username,
-          displayName: users.displayName,
-          email: users.email,
-          passportCode: users.passportId,
-          avatarInitials: users.avatarInitials,
-          location: users.location,
-          duprRating: users.duprRating // Use DUPR rating from database
-        })
-        .from(users)
-        .where(whereClause)
-        .limit(limit);
-        
-        // If we need to exclude a user, do it in memory to avoid SQL issues
-        if (numericExcludeId !== undefined) {
-          results = results.filter(user => user.id !== numericExcludeId);
+        // Add parameters and exclusion logic
+        let params = [searchPattern];
+        if (excludeUserId !== undefined) {
+          sqlStatement += ` AND id != $2`;
+          params.push(excludeUserId);
         }
         
-        console.log(`Search found ${results.length} results for "${safeQuery}"`);
-        console.log("Results:", results.map(u => `${u.id}: ${u.username}`).join(", "));
+        // Add limit
+        sqlStatement += ` LIMIT $${params.length + 1}`;
+        params.push(limit);
         
-        // Return the results with rating information for tournament team creation
-        const mappedResults = results.map(user => ({
-          id: user.id,
-          username: user.username,
-          displayName: user.displayName || user.username,
-          passportCode: user.passportCode || null, 
+        // Execute the query directly with node-postgres
+        const result = await db.execute(sqlStatement, params);
+        
+        console.log(`[Storage] Found ${result.rowCount} users matching "${safeQuery}"`);
+        
+        if (result.rowCount > 0) {
+          console.log(`[Storage] Results:`, result.rows.map(u => `${u.id}: ${u.username}`).join(", "));
+        }
+        
+        // Map the raw rows to our expected return type
+        const mappedResults = result.rows.map(user => ({
+          id: Number(user.id),
+          username: String(user.username || ''),
+          displayName: String(user.displayName || user.username || ''),
+          passportCode: user.passportId ? String(user.passportId) : null,
           avatarUrl: null, // Safe default
-          avatarInitials: user.avatarInitials || (user.username ? user.username.substring(0, 2).toUpperCase() : "??"),
-          rating: user.duprRating ? parseFloat(user.duprRating) : null // Use DUPR rating as fallback
+          avatarInitials: user.avatarInitials ? 
+            String(user.avatarInitials) : 
+            (user.username ? String(user.username).substring(0, 2).toUpperCase() : "??"),
+          rating: user.duprRating ? parseFloat(String(user.duprRating)) : null
         }));
         
-        // Show what we're returning
-        console.log("Returning", mappedResults.length, "user matches for", safeQuery);
+        console.log(`[Storage] Returning ${mappedResults.length} mapped user matches`);
         return mappedResults;
         
       } catch (dbError) {
@@ -893,7 +875,7 @@ export class DatabaseStorage implements IStorage {
           const lowercaseQuery = safeQuery.toLowerCase();
           const filteredUsers = allUsers.filter(user => {
             // Skip the excluded user if specified
-            if (numericExcludeId && user.id === numericExcludeId) return false;
+            if (excludeUserId && user.id === excludeUserId) return false;
             
             // Match on username and displayName
             return (
