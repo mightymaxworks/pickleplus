@@ -1,13 +1,9 @@
 /**
- * PKL-278651-TOURN-0001-BRCKT
+ * PKL-278651-TOURN-0001-BRCKT / PKL-278651-TOURN-0013-API
  * Bracket Details Page
  * 
- * This page displays the details and visualization of a tournament bracket
- */
-
-/**
- * PKL-278651-TOURN-0013-API
- * Updated Bracket Details Page to use the dedicated bracket API client
+ * This page displays the details and visualization of a tournament bracket.
+ * Updated to use the dedicated tournament bracket API client for better API/UI alignment.
  */
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -43,6 +39,7 @@ import { BracketVisualization } from '../components/BracketVisualization';
 import { MatchesList } from '../components/MatchesList';
 import { RecordMatchResultDialog } from '../components/RecordMatchResultDialog';
 import { getBracket } from '../api';
+import { BracketData } from '../types';
 
 export function BracketDetailsPage() {
   // PKL-278651-TOURN-0011-ROUT: Update route path to align with App.tsx route definition
