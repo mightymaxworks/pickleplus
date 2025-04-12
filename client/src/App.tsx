@@ -5,11 +5,9 @@ import { queryClient } from './lib/queryClient'
 import { Toaster } from '@/components/ui/toaster'
 import { AuthProvider } from '@/hooks/useAuth'
 
-// Import admin module initialization
+// Import module initializations
 import '@/modules/admin/init'
-
-// Import tournament admin components
-import '@/core/modules/tournament/components/admin'
+import '@/core/modules/tournament/init'
 import EnhancedLandingPage from './pages/EnhancedLandingPage'
 import EnhancedAuthPage from './pages/EnhancedAuthPage'
 import TestAuthPage from './pages/TestAuthPage'
