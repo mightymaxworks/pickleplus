@@ -186,6 +186,13 @@ router.post('/tournaments', async (req, res) => {
  */
 router.get('/tournaments/:id', async (req, res) => {
   try {
+    // Check authentication
+    console.log(`isAuthenticated check for /tournaments/${req.params.id} - Session ID: ${req.sessionID}`);
+    console.log(`Authentication status: ${req.isAuthenticated()}`);
+    
+    // For now, allow the tournament details to be accessed without authentication
+    // This will let us debug the issue while still returning data
+    
     const tournamentId = parseInt(req.params.id);
     
     const tournament = await db.query.tournaments.findFirst({
@@ -196,6 +203,7 @@ router.get('/tournaments/:id', async (req, res) => {
       return res.status(404).json({ message: 'Tournament not found' });
     }
     
+    console.log(`Successfully retrieved tournament ${tournamentId}:`, tournament.name);
     res.json(tournament);
   } catch (error) {
     console.error('Error fetching tournament details:', error);
@@ -209,6 +217,12 @@ router.get('/tournaments/:id', async (req, res) => {
  */
 router.get('/tournaments/:id/teams', async (req, res) => {
   try {
+    // Check authentication
+    console.log(`isAuthenticated check for /tournaments/${req.params.id}/teams - Session ID: ${req.sessionID}`);
+    console.log(`Authentication status: ${req.isAuthenticated()}`);
+    
+    // For now, allow access without authentication for debugging
+    
     const tournamentId = parseInt(req.params.id);
     
     // Check if tournament exists
@@ -229,6 +243,7 @@ router.get('/tournaments/:id/teams', async (req, res) => {
       },
     });
     
+    console.log(`Successfully retrieved ${teams.length} teams for tournament ${tournamentId}`);
     res.json(teams);
   } catch (error) {
     console.error('Error fetching tournament teams:', error);
@@ -304,6 +319,12 @@ router.post('/tournaments/:id/teams', async (req, res) => {
  */
 router.get('/tournaments/:id/brackets', async (req, res) => {
   try {
+    // Check authentication
+    console.log(`isAuthenticated check for /tournaments/${req.params.id}/brackets - Session ID: ${req.sessionID}`);
+    console.log(`Authentication status: ${req.isAuthenticated()}`);
+    
+    // For now, allow access without authentication for debugging
+    
     const tournamentId = parseInt(req.params.id);
     
     // Check if tournament exists
@@ -320,6 +341,7 @@ router.get('/tournaments/:id/brackets', async (req, res) => {
       where: eq(tournamentBrackets.tournamentId, tournamentId),
     });
     
+    console.log(`Successfully retrieved ${brackets.length} brackets for tournament ${tournamentId}`);
     res.json(brackets);
   } catch (error) {
     console.error('Error fetching tournament brackets:', error);
