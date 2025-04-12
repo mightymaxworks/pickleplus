@@ -1,12 +1,13 @@
 /**
- * PKL-278651-TOURN-0014-SEED
- * Enhanced Seed Teams Dialog Component
+ * PKL-278651-TOURN-0015-SYNC
+ * Enhanced Seed Teams Dialog Component with Robust State Synchronization
  * 
  * Dialog for manually seeding teams into a tournament bracket
- * Updated to use Framework 5.0 enhanced state refresh mechanisms
+ * Updated to use Framework 5.0 enhanced state synchronization patterns with
+ * multiple independent refresh mechanisms and improved cache invalidation
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { 
@@ -107,35 +108,58 @@ export function SeedTeamsDialog({
     enabled: !!tournamentId,
   });
   
-  // Seed teams mutation with enhanced Framework 5.0 state management
+  // Seed teams mutation with Framework 5.0 comprehensive state synchronization
   const { mutate, isPending, isError, error } = useMutation({
     mutationFn: async (data: {assignments: {[key: number]: number | null}, method: string}) => {
-      console.log(`[PKL-278651-TOURN-0014-SEED] Saving team seeds for bracket ${bracketId}`);
+      console.log(`[PKL-278651-TOURN-0015-SYNC] Saving team seeds for bracket ${bracketId}`);
       const response = await apiRequest('POST', `/api/brackets/${bracketId}/seed`, data);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (response) => {
       // Reset and close dialog
       onOpenChange(false);
       
-      // PKL-278651-TOURN-0014-SEED: Enhanced refresh mechanism
-      console.log(`[PKL-278651-TOURN-0014-SEED] Teams seeded successfully, triggering multiple refresh mechanisms`);
+      console.log(`[PKL-278651-TOURN-0015-SYNC] Teams seeded successfully, triggering comprehensive refresh mechanisms`);
       
-      // 1. Invalidate cache for bracket data (first refresh mechanism)
+      // 1. First independent refresh mechanism: granular query invalidation with specific keys
+      // Invalidate all potential queryKeys that might contain bracket information
       queryClient.invalidateQueries({ queryKey: [`bracket-${bracketId}`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tournament/brackets', bracketId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/brackets', bracketId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tournament/brackets', bracketId, 'matches'] });
       
-      // 2. Notify via tournament change context (second refresh mechanism)
-      tournamentChanges.notifySpecificChange('teams_seeded', bracketId);
+      // 2. Second independent refresh mechanism: context notification with detailed metadata
+      // This allows components to selectively refresh based on the type and scope of change
+      tournamentChanges.notifySpecificChange('teams_seeded', bracketId, {
+        timestamp: Date.now(),
+        method: data.method,
+        teamCount: Object.keys(data.assignments).length,
+        changedMatches: Object.keys(data.assignments).map(key => key.split('-')[0])
+      });
       
-      // 3. Notify success with toast notification (third refresh mechanism - UI feedback)
+      // 3. Third independent refresh mechanism: global tournament data refresh
+      // This ensures any components displaying tournament lists or summaries are updated
+      queryClient.invalidateQueries({ queryKey: ['/api/tournaments'] });
+      queryClient.invalidateQueries({ queryKey: [`tournament-${tournamentId}`] });
+      
+      // 4. Fourth refresh mechanism: UI feedback with completion notification
       toast({
         title: "Teams seeded successfully",
         description: "The bracket has been updated with your team assignments.",
         variant: "default",
       });
+      
+      // 5. Fifth refresh mechanism: Delayed secondary notification to handle race conditions
+      setTimeout(() => {
+        console.log(`[PKL-278651-TOURN-0015-SYNC] Sending delayed secondary notification for bracket ${bracketId}`);
+        tournamentChanges.notifySpecificChange('teams_seeded', bracketId, {
+          timestamp: Date.now(),
+          isDelayedNotification: true
+        });
+      }, 300);
     },
     onError: (err) => {
-      console.error("[PKL-278651-TOURN-0014-SEED] Error seeding teams:", err);
+      console.error("[PKL-278651-TOURN-0015-SYNC] Error seeding teams:", err);
       toast({
         title: "Failed to seed teams",
         description: "There was an error assigning teams to the bracket.",
