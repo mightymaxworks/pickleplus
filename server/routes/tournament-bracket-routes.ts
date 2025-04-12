@@ -114,18 +114,17 @@ router.post('/tournaments', async (req, res) => {
       // Only include fields that we verified exist in the database through direct SQL inspection
       // This approach ensures maximum compatibility and eliminates schema mismatch errors
       
-      // Framework 5.0 principle: Pragmatic solutions
-      // We need to match what Drizzle expects, so use camelCase in the code
-      // Drizzle will map these to snake_case columns automatically
+      // Framework 5.0 principle: Pragmatic solutions - Only use fields that ACTUALLY exist in the database
+      // These are the ONLY fields that exist in the database based on SQL inspection
       const tournamentData = {
         name: parsedData.data.name,
         description: parsedData.data.description || null,
         location: parsedData.data.location || null,
         startDate: parsedData.data.startDate, 
         endDate: parsedData.data.endDate,
-        format: parsedData.data.format || 'doubles',
-        division: parsedData.data.division || 'open',
         level: parsedData.data.level || 'club',
+        // Removed fields that don't exist in the actual database (format, division)
+        // Also note: status is validated but not used in insert as it doesn't exist in the database
       };
       
       console.log('[API][Tournament] Final tournament data:', tournamentData);
