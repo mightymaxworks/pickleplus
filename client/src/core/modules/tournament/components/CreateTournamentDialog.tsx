@@ -11,6 +11,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
+import { useTournamentChanges } from '../context/TournamentChangeContext';
 import { 
   Dialog, 
   DialogContent, 
@@ -60,6 +61,7 @@ type CreateTournamentDialogProps = {
 export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentDialogProps) {
   const queryClient = useQueryClient();
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const { notifyTournamentChanged } = useTournamentChanges();
 
   // Default form values - updated to include all required fields from schema
   const defaultValues: Partial<TournamentFormValues> = {
@@ -119,13 +121,19 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
       console.log('[Tournament] Tournament created successfully');
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('[Tournament] onSuccess handler called with data:', data);
+      
       // Reset form and close dialog
       form.reset();
       onOpenChange(false);
 
       // Invalidate tournaments query to trigger a refetch
       queryClient.invalidateQueries({ queryKey: ['/api/tournaments'] });
+      
+      // Notify the context that a tournament has been created
+      console.log('[Tournament] Notifying context of tournament change');
+      notifyTournamentChanged();
 
       // Show success toast
       toast({

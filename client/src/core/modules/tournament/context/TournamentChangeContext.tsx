@@ -22,11 +22,14 @@ interface TournamentChangeProviderProps {
 export function TournamentChangeProvider({ children }: TournamentChangeProviderProps) {
   // Track the last time a tournament was changed with a timestamp
   const [lastChangeTimestamp, setLastChangeTimestamp] = useState<number>(Date.now());
+  
+  console.log('[Context] TournamentChangeProvider initialized with timestamp:', lastChangeTimestamp);
 
   // Function to notify that a tournament has been changed
   const notifyTournamentChanged = () => {
-    console.log('[Tournament] Notifying tournament changed');
-    setLastChangeTimestamp(Date.now());
+    const newTimestamp = Date.now();
+    console.log('[Context] Tournament change notified. Old timestamp:', lastChangeTimestamp, 'New timestamp:', newTimestamp);
+    setLastChangeTimestamp(newTimestamp);
   };
 
   return (
