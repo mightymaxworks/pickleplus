@@ -31,14 +31,76 @@ const router = Router();
  */
 router.get('/tournaments', async (req, res) => {
   try {
+    console.log('[API][Tournament] Fetching all tournaments');
     const allTournaments = await db.query.tournaments.findMany({
       orderBy: (tournament) => tournament.startDate,
     });
     
+    console.log(`[API][Tournament] Found ${allTournaments.length} tournaments`);
     res.json(allTournaments);
   } catch (error) {
-    console.error('Error fetching tournaments:', error);
+    console.error('[API][Tournament] Error fetching tournaments:', error);
     res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+/**
+ * Create a new tournament
+ * POST /api/tournaments
+ */
+router.post('/tournaments', async (req, res) => {
+  try {
+    console.log('[API][Tournament] Creating new tournament with data:', req.body);
+    
+    // Check CSRF token
+    console.log('[API][Tournament] Request headers:', req.headers);
+    if (!req.headers['x-csrf-token']) {
+      console.error('[API][Tournament] CSRF token missing');
+    }
+    
+    // Validate the request body
+    const parsedData = z.object({
+      name: z.string().min(3),
+      description: z.string().optional(),
+      location: z.string().optional(),
+      startDate: z.coerce.date(),
+      endDate: z.coerce.date(),
+      status: z.string(),
+      registrationOpen: z.boolean().optional().default(true),
+      format: z.string().optional().default('doubles'),
+      division: z.string().optional().default('open'),
+      level: z.string().optional().default('club'),
+    }).safeParse(req.body);
+    
+    if (!parsedData.success) {
+      console.error('[API][Tournament] Validation failed:', parsedData.error.format());
+      return res.status(400).json({ 
+        message: 'Invalid tournament data', 
+        errors: parsedData.error.format() 
+      });
+    }
+    
+    // Create the tournament
+    console.log('[API][Tournament] Validation passed, creating tournament');
+    const [newTournament] = await db.insert(tournaments)
+      .values({
+        name: parsedData.data.name,
+        description: parsedData.data.description,
+        location: parsedData.data.location,
+        startDate: parsedData.data.startDate,
+        endDate: parsedData.data.endDate,
+        status: parsedData.data.status,
+        format: parsedData.data.format,
+        division: parsedData.data.division,
+        level: parsedData.data.level,
+      })
+      .returning();
+    
+    console.log('[API][Tournament] Tournament created successfully:', newTournament);
+    res.status(201).json(newTournament);
+  } catch (error) {
+    console.error('[API][Tournament] Error creating tournament:', error);
+    res.status(500).json({ message: 'Internal server error creating tournament' });
   }
 });
 

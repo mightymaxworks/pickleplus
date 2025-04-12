@@ -65,19 +65,41 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (values: TournamentFormValues) => {
+      console.log('[Tournament] Preparing to create tournament with data:', values);
+      
+      // First, fetch the CSRF token
+      console.log('[Tournament] Fetching CSRF token');
+      const csrfResponse = await fetch('/api/auth/csrf-token', {
+        credentials: 'include'
+      });
+      
+      if (!csrfResponse.ok) {
+        console.error('[Tournament] Failed to fetch CSRF token:', csrfResponse.status, csrfResponse.statusText);
+        throw new Error('Failed to fetch CSRF token');
+      }
+      
+      const { csrfToken } = await csrfResponse.json();
+      console.log('[Tournament] Successfully obtained CSRF token');
+      
+      // Now send the actual tournament creation request with the token
+      console.log('[Tournament] Sending tournament creation request');
       const response = await fetch('/api/tournaments', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken,
         },
         body: JSON.stringify(values),
         credentials: 'include',
       });
       
       if (!response.ok) {
-        throw new Error('Failed to create tournament');
+        const errorBody = await response.text();
+        console.error('[Tournament] Error creating tournament:', response.status, response.statusText, errorBody);
+        throw new Error(`Failed to create tournament: ${response.status} ${response.statusText}`);
       }
       
+      console.log('[Tournament] Tournament created successfully');
       return response.json();
     },
     onSuccess: () => {
@@ -95,10 +117,27 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
       });
     },
     onError: (error: any) => {
-      console.error('Error creating tournament:', error);
+      console.error('[Tournament] Error in mutation handler:', error);
+      
+      // Extract a more user-friendly message from the error
+      let errorMessage = 'An unexpected error occurred.';
+      
+      if (error.message) {
+        errorMessage = error.message;
+        
+        // If it's a CSRF token error, provide more specific guidance
+        if (errorMessage.includes('CSRF')) {
+          errorMessage = 'Security validation failed. Please try refreshing the page and submitting again.';
+        }
+      }
+      
+      // Log detailed diagnostics
+      console.log('[Tournament] Current form values:', form.getValues());
+      console.log('[Tournament] Form validation state:', form.formState);
+      
       toast({
         title: 'Failed to create tournament',
-        description: error.message || 'An unexpected error occurred.',
+        description: errorMessage,
         variant: 'destructive',
       });
     },

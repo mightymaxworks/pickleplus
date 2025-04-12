@@ -323,6 +323,24 @@ export function setupAuth(app: Express) {
     });
   });
 
+  // CSRF token route - Provides a CSRF token for authenticated users
+  app.get("/api/auth/csrf-token", isAuthenticated, (req, res) => {
+    console.log("[API][Auth] Generating CSRF token for user:", (req.user as any).id);
+    
+    // Generate a CSRF token and store it in the session
+    if (!req.session.csrfToken) {
+      // Generate a random token if one doesn't exist
+      const crypto = require('crypto');
+      req.session.csrfToken = crypto.randomBytes(32).toString('hex');
+      console.log("[API][Auth] Created new CSRF token:", req.session.csrfToken.substring(0, 8) + '...');
+    } else {
+      console.log("[API][Auth] Using existing CSRF token:", req.session.csrfToken.substring(0, 8) + '...');
+    }
+    
+    // Return the token to the client
+    res.json({ csrfToken: req.session.csrfToken });
+  });
+
   // Current user route
   app.get("/api/auth/current-user", async (req, res) => {
     console.log("Current user check - Is authenticated:", req.isAuthenticated());
