@@ -623,11 +623,20 @@ export function TournamentMatchScoreInput({
           </div>
           
           {/* Game Scores Section */}
-          <div className="space-y-2">
-            <div className="text-sm font-medium">Game Scores</div>
+          <div className="space-y-3">
+            <div className="text-sm font-medium flex items-center justify-between">
+              <span>Game Scores</span>
+              <Badge variant="outline" className="font-normal">
+                {value.matchFormat === 'best_of_3' 
+                  ? 'Best of 3' 
+                  : value.matchFormat === 'best_of_5' 
+                    ? 'Best of 5'
+                    : 'Single Game'}
+              </Badge>
+            </div>
             
-            {/* Game scores list - Compact Layout */}
-            <div className="space-y-2">
+            {/* Game scores list - Enhanced Mobile Layout */}
+            <div className="space-y-3">
               {value.games && value.games.map((game, index) => {
                 const gameWinner = isGameWon(game.team1Score, game.team2Score)
                   ? game.team1Score > game.team2Score ? 'team1' : 'team2'
