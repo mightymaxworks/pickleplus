@@ -3,7 +3,11 @@
  * Multi-Step Tournament Creation Wizard
  * 
  * A user-friendly step-by-step wizard for creating tournaments
- * Implements Framework 5.0 principles for form validation and error handling
+ * Implements Framework 5.0 principles for validation and error handling:
+ * - Reliability over complexity
+ * - Progressive enhancement
+ * - Focused validation
+ * - Comprehensive error handling
  */
 
 import { useState } from 'react';
@@ -447,14 +451,7 @@ export function CreateTournamentWizard({ open, onOpenChange }: CreateTournamentW
     }
   ];
   
-  // Determine which form fields to validate at each step
-  const stepValidationFields = {
-    0: ['name', 'description', 'location', 'status'],
-    1: ['format', 'division', 'level'],
-    2: ['startDate', 'endDate', 'registrationOpen']
-  };
-  
-  // Default form values - updated to include all required fields from schema
+  // Default form values - Framework 5.0: Be explicit about form state
   const today = new Date();
   const tomorrow = new Date(today);
   tomorrow.setDate(today.getDate() + 1);
@@ -472,32 +469,30 @@ export function CreateTournamentWizard({ open, onOpenChange }: CreateTournamentW
     level: 'club',
   };
   
+  // Framework 5.0: Use standardized hook-form initialization
   const form = useForm<TournamentFormValues>({
     resolver: zodResolver(tournamentFormSchema),
     defaultValues,
     mode: 'onChange', // Validate fields on change
   });
   
+  // Setup form submission with reliable error handling (Framework 5.0 priority)
   const { mutate, isPending } = useMutation({
     mutationFn: async (values: TournamentFormValues) => {
-      console.log('[Tournament] Preparing to create tournament with data:', values);
+      console.log('[Tournament] Creating tournament with data:', values);
       
-      // First, fetch the CSRF token
-      console.log('[Tournament] Fetching CSRF token');
+      // Get CSRF token for security
       const csrfResponse = await fetch('/api/auth/csrf-token', {
         credentials: 'include'
       });
       
       if (!csrfResponse.ok) {
-        console.error('[Tournament] Failed to fetch CSRF token:', csrfResponse.status, csrfResponse.statusText);
         throw new Error('Failed to fetch CSRF token');
       }
       
       const { csrfToken } = await csrfResponse.json();
-      console.log('[Tournament] Successfully obtained CSRF token');
       
-      // Now send the actual tournament creation request with the token
-      console.log('[Tournament] Sending tournament creation request');
+      // Submit tournament data
       const response = await fetch('/api/tournaments', {
         method: 'POST',
         headers: {
@@ -510,76 +505,40 @@ export function CreateTournamentWizard({ open, onOpenChange }: CreateTournamentW
       
       if (!response.ok) {
         const errorBody = await response.text();
-        console.error('[Tournament] Error creating tournament:', response.status, response.statusText, errorBody);
+        console.error('[Tournament] Error:', response.status, response.statusText, errorBody);
         throw new Error(`Failed to create tournament: ${response.status} ${response.statusText}`);
       }
       
-      console.log('[Tournament] Tournament created successfully');
       return response.json();
     },
     onSuccess: () => {
-      // Reset form and close dialog
+      // Framework 5.0: Clean up after success
       form.reset();
       onOpenChange(false);
-      
-      // Reset wizard to first step
       setStep(0);
-
-      // Invalidate tournaments query to trigger a refetch
       queryClient.invalidateQueries({ queryKey: ['/api/tournaments'] });
-
-      // Show success toast
+      
       toast({
         title: 'Tournament created',
         description: 'Your tournament has been created successfully.',
       });
     },
     onError: (error: any) => {
-      console.error('[Tournament] Error in mutation handler:', error);
+      console.error('[Tournament] Error in mutation:', error);
       
-      // Extract a more user-friendly message from the error
-      let errorMessage = 'An unexpected error occurred.';
-      let errorDetails = '';
+      // Simple, user-friendly error message
+      let errorMessage = 'An unexpected error occurred. Please try again.';
       
-      // Enhanced error handling logic (Framework 5.0 principle)
-      try {
-        if (error.message) {
+      if (error?.message) {
+        // Provide specific guidance for common errors
+        if (error.message.includes('CSRF')) {
+          errorMessage = 'Security validation failed. Please refresh the page and try again.';
+        } else if (error.message.includes('Database')) {
+          errorMessage = 'Database issue detected. Please contact support.';
+        } else {
           errorMessage = error.message;
-          
-          // If it's a CSRF token error, provide more specific guidance
-          if (errorMessage.includes('CSRF')) {
-            errorMessage = 'Security validation failed. Please try refreshing the page and submitting again.';
-          }
-          
-          // If it's a database schema mismatch error
-          if (errorMessage.includes('Database schema mismatch')) {
-            errorMessage = 'Database schema issue detected. Please contact support.';
-            errorDetails = error.message;
-          }
-          
-          // If it contains a structured error response
-          if (error.response) {
-            try {
-              const responseData = JSON.parse(error.response);
-              if (responseData.message) {
-                errorMessage = responseData.message;
-              }
-              if (responseData.errors) {
-                errorDetails = JSON.stringify(responseData.errors, null, 2);
-              }
-            } catch (parseError) {
-              console.warn('[Tournament] Could not parse error response:', parseError);
-            }
-          }
         }
-      } catch (handlingError) {
-        console.error('[Tournament] Error while handling error:', handlingError);
       }
-      
-      // Log detailed diagnostics (Framework 5.0 principle: Always log the context)
-      console.log('[Tournament] Current form values:', form.getValues());
-      console.log('[Tournament] Form validation state:', form.formState);
-      console.log('[Tournament] Error details:', errorDetails || 'No detailed error information available');
       
       toast({
         title: 'Failed to create tournament',
@@ -589,62 +548,62 @@ export function CreateTournamentWizard({ open, onOpenChange }: CreateTournamentW
     },
   });
   
-  // Navigation functions
+  // Framework 5.0: Simple step navigation
   const nextStep = async () => {
-    // Validate the current step's fields
-    const fieldsToValidate = stepValidationFields[step as keyof typeof stepValidationFields];
+    // Validate current step fields
+    let fieldsToValidate: string[] = [];
     
-    // Check if the current step's fields are valid
+    if (step === 0) {
+      fieldsToValidate = ['name', 'status']; // Only validate required fields
+    } else if (step === 1) {
+      fieldsToValidate = ['format', 'division', 'level'];
+    } else {
+      fieldsToValidate = ['startDate', 'endDate'];
+      
+      // Check dates relationship
+      const values = form.getValues();
+      if (values.startDate && values.endDate && values.endDate < values.startDate) {
+        form.setError('endDate', {
+          type: 'manual',
+          message: 'End date cannot be before start date',
+        });
+        return;
+      }
+    }
+    
     const result = await form.trigger(fieldsToValidate as any);
     
     if (result) {
-      // Special validation for the last step
-      if (step === 2) {
-        const values = form.getValues();
-        // Make sure end date is not before start date
-        if (values.endDate < values.startDate) {
-          form.setError('endDate', {
-            type: 'manual',
-            message: 'End date cannot be before start date',
-          });
-          return;
-        }
-      }
-      
       if (step < totalSteps - 1) {
         setStep(prev => prev + 1);
       } else {
-        // If this is the last step, submit the form
-        submitForm();
+        // Submit the form on last step
+        form.handleSubmit((values) => {
+          mutate(values);
+        })();
       }
     }
   };
   
-  const prevStep = () => {
+  const goBack = () => {
     if (step > 0) {
       setStep(prev => prev - 1);
     }
   };
   
-  // Form submission
-  const submitForm = () => {
-    form.handleSubmit((values) => {
-      mutate(values);
-    })();
-  };
-  
-  // Framework 5.0 direct rendering without Suspense (simpler and more reliable)
-  const renderStep = () => {
-    // Prepare a consistent set of props to pass to each step component
+  // Framework 5.0: Direct, simple component rendering based on step
+  const renderCurrentStep = () => {
     const stepProps = { form };
     
-    // Simplified direct component rendering (Framework 5.0 principle: use simplest approach)
-    if (step === 0) {
-      return <TournamentBasicInfoStep {...stepProps} />;
-    } else if (step === 1) {
-      return <TournamentStructureStep {...stepProps} />;
-    } else {
-      return <TournamentSchedulingStep {...stepProps} />;
+    switch (step) {
+      case 0:
+        return <TournamentBasicInfoStep {...stepProps} />;
+      case 1:
+        return <TournamentStructureStep {...stepProps} />;
+      case 2:
+        return <TournamentSchedulingStep {...stepProps} />;
+      default:
+        return <TournamentBasicInfoStep {...stepProps} />;
     }
   };
   
@@ -687,16 +646,16 @@ export function CreateTournamentWizard({ open, onOpenChange }: CreateTournamentW
           ))}
         </div>
         
-        {/* Form steps */}
+        {/* Form with clear structure (Framework 5.0: Improve predictability) */}
         <Form {...form}>
           <div className="space-y-4">
-            {renderStep()}
+            {renderCurrentStep()}
             
             <DialogFooter className="flex justify-between pt-4 border-t">
               <Button
                 type="button"
                 variant="outline"
-                onClick={prevStep}
+                onClick={goBack}
                 disabled={step === 0 || isPending}
                 className={step === 0 ? 'invisible' : ''}
               >
