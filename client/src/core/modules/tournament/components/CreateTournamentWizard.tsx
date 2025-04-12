@@ -24,13 +24,34 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ChevronRight, ChevronLeft, Check, CalendarIcon, InfoIcon, LayoutIcon } from 'lucide-react';
 
-// Dynamic imports to avoid circular dependencies
+// Import React's lazy loading functionality
 import { lazy, Suspense } from 'react';
 
-// Simple lazy loading of components
-const TournamentBasicInfoStep = lazy(() => import('./wizard-steps/TournamentBasicInfoStep'));
-const TournamentStructureStep = lazy(() => import('./wizard-steps/TournamentStructureStep'));
-const TournamentSchedulingStep = lazy(() => import('./wizard-steps/TournamentSchedulingStep'));
+// Enhanced lazy loading with better error handling for Framework 5.0
+const TournamentBasicInfoStep = lazy(() => 
+  import('./wizard-steps/TournamentBasicInfoStep')
+    .catch(error => {
+      console.error('[Framework 5.0] Failed to load BasicInfoStep:', error);
+      // Return a module with a default export to prevent runtime crashes
+      return { default: (props: any) => <div>Error loading component</div> };
+    })
+);
+
+const TournamentStructureStep = lazy(() => 
+  import('./wizard-steps/TournamentStructureStep')
+    .catch(error => {
+      console.error('[Framework 5.0] Failed to load StructureStep:', error);
+      return { default: (props: any) => <div>Error loading component</div> };
+    })
+);
+
+const TournamentSchedulingStep = lazy(() => 
+  import('./wizard-steps/TournamentSchedulingStep')
+    .catch(error => {
+      console.error('[Framework 5.0] Failed to load SchedulingStep:', error);
+      return { default: (props: any) => <div>Error loading component</div> };
+    })
+);
 
 /**
  * Tournament form schema
@@ -279,8 +300,12 @@ export function CreateTournamentWizard({ open, onOpenChange }: CreateTournamentW
     })();
   };
   
-  // Render the current step with proper Suspense boundaries
+  // Framework 5.0 compliant step rendering with error boundaries
   const renderStep = () => {
+    // Prepare a consistent set of props to pass to each step component
+    const stepProps = { form };
+    
+    // Use Suspense with enhanced error handling
     return (
       <Suspense fallback={
         <div className="flex items-center justify-center h-40">
@@ -288,9 +313,14 @@ export function CreateTournamentWizard({ open, onOpenChange }: CreateTournamentW
           <span className="ml-2">Loading step...</span>
         </div>
       }>
-        {step === 0 && <TournamentBasicInfoStep form={form} />}
-        {step === 1 && <TournamentStructureStep form={form} />}
-        {step === 2 && <TournamentSchedulingStep form={form} />}
+        {/* A cleaner pattern using ternary operators */}
+        {step === 0 ? (
+          <TournamentBasicInfoStep {...stepProps} />
+        ) : step === 1 ? (
+          <TournamentStructureStep {...stepProps} />
+        ) : (
+          <TournamentSchedulingStep {...stepProps} />
+        )}
       </Suspense>
     );
   };
