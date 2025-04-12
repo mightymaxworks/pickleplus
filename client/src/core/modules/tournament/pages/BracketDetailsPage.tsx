@@ -5,6 +5,10 @@
  * This page displays the details and visualization of a tournament bracket
  */
 
+/**
+ * PKL-278651-TOURN-0013-API
+ * Updated Bracket Details Page to use the dedicated bracket API client
+ */
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRoute, Link } from 'wouter';
@@ -38,6 +42,7 @@ import {
 import { BracketVisualization } from '../components/BracketVisualization';
 import { MatchesList } from '../components/MatchesList';
 import { RecordMatchResultDialog } from '../components/RecordMatchResultDialog';
+import { getBracket } from '../api';
 
 export function BracketDetailsPage() {
   // PKL-278651-TOURN-0011-ROUT: Update route path to align with App.tsx route definition
@@ -50,13 +55,14 @@ export function BracketDetailsPage() {
   const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
   const [isRecordResultDialogOpen, setIsRecordResultDialogOpen] = useState(false);
   
-  // Fetch bracket data with all related matches
+  // PKL-278651-TOURN-0013-API: Use dedicated API client for fetching bracket data
   const { 
     data: bracketData, 
     isLoading, 
     isError 
   } = useQuery({
-    queryKey: [`/api/brackets/${bracketId}`],
+    queryKey: [`bracket-${bracketId}`],
+    queryFn: () => bracketId ? getBracket(bracketId) : Promise.reject('No bracket ID provided'),
     enabled: !!bracketId,
     retry: 1,
   });
