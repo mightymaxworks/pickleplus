@@ -56,9 +56,16 @@ type TournamentFormValues = z.infer<typeof tournamentFormSchema>;
 type CreateTournamentDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  queryKey?: string; // Optional - may be used for cache invalidation
+  onTournamentCreated?: () => void; // New callback for more direct notification
 };
 
-export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentDialogProps) {
+export function CreateTournamentDialog({ 
+  open, 
+  onOpenChange, 
+  queryKey = '/api/tournaments',
+  onTournamentCreated
+}: CreateTournamentDialogProps) {
   const queryClient = useQueryClient();
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const { notifyTournamentChanged } = useTournamentChanges();
@@ -128,12 +135,33 @@ export function CreateTournamentDialog({ open, onOpenChange }: CreateTournamentD
       form.reset();
       onOpenChange(false);
 
-      // Invalidate tournaments query to trigger a refetch
+      // Multiple invalidation strategies for maximum reliability
+      console.log(`[Tournament] Invalidating cache with key: ${queryKey}`);
+      
+      // Try multiple approaches to invalidate the cache
+      queryClient.invalidateQueries({ queryKey: [queryKey] });
+      queryClient.invalidateQueries({ queryKey: ['api/tournaments'] });
       queryClient.invalidateQueries({ queryKey: ['/api/tournaments'] });
+      
+      // Refetch queries immediately to ensure fresh data
+      queryClient.refetchQueries({ queryKey: [queryKey] });
       
       // Notify the context that a tournament has been created
       console.log('[Tournament] Notifying context of tournament change');
       notifyTournamentChanged();
+
+      // Call the callback if provided to trigger direct UI refresh
+      if (onTournamentCreated) {
+        console.log('[Tournament] Calling onTournamentCreated callback');
+        onTournamentCreated();
+      }
+      
+      // Force browser refetch with a direct API call
+      fetch('/api/tournaments').then(res => {
+        console.log('[Tournament] Direct API fetch completed to ensure fresh data');
+      }).catch(err => {
+        console.error('[Tournament] Error in direct fetch:', err);
+      });
 
       // Show success toast
       toast({

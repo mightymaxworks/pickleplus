@@ -7,7 +7,7 @@
  * look and feel according to the PKL-278651-ADMIN series.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
   Card, 
@@ -36,6 +36,8 @@ import { Tournament } from '../types';
 export function TournamentManagementPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
+  // This local state will be used to force component re-renders
+  const [forceRefreshKey, setForceRefreshKey] = useState(Date.now());
   
   // Use the tournament change context to force re-renders when tournaments change
   const { lastChangeTimestamp } = useTournamentChanges();
@@ -44,29 +46,59 @@ export function TournamentManagementPage() {
   // Define consistent query key string directly (without leading slash)
   const TOURNAMENTS_QUERY_KEY = 'api/tournaments';
   
-  // Every time lastChangeTimestamp changes, this component will re-render
-  // and the query will be refetched due to the timestamp in the queryKey
-  console.log(`[TournamentPage] Using timestamp in query key: ${lastChangeTimestamp}`);
+  // Combine multiple refresh strategies for maximum reliability
+  console.log(`[TournamentPage] Using refresh key: ${forceRefreshKey}, timestamp: ${lastChangeTimestamp}`);
   
-  const { data: tournaments = [], isLoading, isError, refetch } = useQuery<Tournament[]>({
-    queryKey: [TOURNAMENTS_QUERY_KEY, { timestamp: lastChangeTimestamp }], // Add timestamp to force refresh
-    retry: 1,
-    staleTime: 0, // Consider data stale immediately to force refetch
-    refetchOnWindowFocus: true, // Refetch when tab gets focus
-    refetchOnMount: true, // Always refetch when component mounts
-    refetchInterval: false, // Don't auto-refetch at intervals
+  // Use a direct API call instead of React Query to ensure fresh data
+  const [directApiData, setDirectApiData] = useState<Tournament[]>([]);
+
+  // Function to fetch tournaments directly from API - bypassing cache
+  const fetchTournamentsDirectly = useCallback(async () => {
+    console.log('[TournamentPage] Fetching tournaments directly from API');
+    try {
+      const response = await fetch('/api/tournaments');
+      if (!response.ok) throw new Error('Failed to fetch tournaments');
+      const data = await response.json();
+      console.log(`[TournamentPage] Direct API fetch successful. Got ${data.length} tournaments`);
+      setDirectApiData(data);
+    } catch (error) {
+      console.error('[TournamentPage] Direct API fetch error:', error);
+    }
+  }, []);
+  
+  // The React Query is still here as a fallback
+  const { data: reactQueryData = [], isLoading: isReactQueryLoading, isError: isReactQueryError, refetch } = useQuery<Tournament[]>({
+    queryKey: [TOURNAMENTS_QUERY_KEY, { timestamp: lastChangeTimestamp, forceRefreshKey }],
+    retry: 2,
+    staleTime: 0, // Always consider data stale
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
   
-  // Log when context triggers a refetch
+  // Use direct API data if available, otherwise fall back to React Query data
+  const tournaments = directApiData.length > 0 ? directApiData : reactQueryData;
+  const isLoading = isReactQueryLoading && directApiData.length === 0;
+  const isError = isReactQueryError && directApiData.length === 0;
+  
+  // When this component mounts or when the timestamp changes, fetch fresh data
   useEffect(() => {
-    console.log(`[TournamentPage] Detected context change at: ${new Date(lastChangeTimestamp).toISOString()}`);
-    console.log(`[TournamentPage] Current tournaments count: ${tournaments.length}`);
+    console.log('[TournamentPage] Initial data fetch or timestamp changed');
+    fetchTournamentsDirectly();
+    // Also trigger a force refresh to be extra safe
+    setForceRefreshKey(Date.now());
+  }, [fetchTournamentsDirectly, lastChangeTimestamp]);
+  
+  // Force refresh on window focus too
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log('[TournamentPage] Window focused, refreshing data');
+      fetchTournamentsDirectly();
+      setForceRefreshKey(Date.now());
+    };
     
-    // Force an explicit refetch when the context changes
-    refetch().then(result => {
-      console.log(`[TournamentPage] Manual refetch completed. Tournaments count: ${result.data?.length || 0}`);
-    });
-  }, [lastChangeTimestamp, refetch]);
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [fetchTournamentsDirectly]);
 
   const upcomingTournaments = tournaments.filter((tournament) => {
     const tournamentDate = new Date(tournament.startDate);
@@ -226,6 +258,11 @@ export function TournamentManagementPage() {
           }
         }}
         queryKey={TOURNAMENTS_QUERY_KEY} // Pass the same query key used for fetching
+        onTournamentCreated={() => {
+          console.log('[Tournament] Direct callback triggered to force UI refresh');
+          fetchTournamentsDirectly(); // This will bypass the cache completely
+          setForceRefreshKey(Date.now()); // This will force component re-renders
+        }}
       />
     </LayoutContainer>
   );
