@@ -80,6 +80,9 @@ export function CreateBracketDialog({
   tournamentId,
   teams = []
 }: CreateBracketDialogProps) {
+  // PKL-278651-TOURN-0010-BRCKT-DEBUG: Enhanced bracket creation diagnostic
+  console.log('[BracketDialog][Debug] Rendering dialog with props:', { open, tournamentId, teamCount: teams.length });
+  
   const queryClient = useQueryClient();
   const [selectedTeams, setSelectedTeams] = useState<Record<number, boolean>>({});
   const [step, setStep] = useState(1);
@@ -99,10 +102,8 @@ export function CreateBracketDialog({
   
   const { mutate, isPending, isError, error } = useMutation({
     mutationFn: async (values: BracketFormValues) => {
-      return apiRequest(`/api/tournaments/${tournamentId}/brackets`, {
-        method: 'POST',
-        data: values,
-      });
+      console.log('[BracketDialog][API] Calling API with values:', values);
+      return apiRequest("POST", `/api/tournaments/${tournamentId}/brackets`, values);
     },
     onSuccess: () => {
       // Reset form and close dialog
@@ -131,16 +132,23 @@ export function CreateBracketDialog({
   });
   
   function onSubmit(values: BracketFormValues) {
+    // PKL-278651-TOURN-0010-BRCKT-DEBUG: Enhanced bracket creation debugging
+    console.log('[BracketDialog][Submit] Starting form submission process');
+    
     // Set the selected team IDs from our checkbox state
     const teamIds = Object.entries(selectedTeams)
       .filter(([_, isSelected]) => isSelected)
       .map(([id]) => parseInt(id, 10));
+    
+    console.log('[BracketDialog][Submit] Selected team IDs:', teamIds);
+    console.log('[BracketDialog][Submit] Selected teams count:', teamIds.length);
     
     // Update form values with selected team IDs
     values.teamIds = teamIds;
     
     // Validate minimum teams
     if (teamIds.length < 2) {
+      console.log('[BracketDialog][Submit] Error: Not enough teams selected');
       form.setError('teamIds', {
         type: 'manual',
         message: 'Select at least 2 teams',
@@ -148,7 +156,15 @@ export function CreateBracketDialog({
       return;
     }
     
-    mutate(values);
+    console.log('[BracketDialog][Submit] Form values to be submitted:', values);
+    console.log('[BracketDialog][Submit] Sending to endpoint:', `/api/tournaments/${tournamentId}/brackets`);
+    
+    try {
+      mutate(values);
+      console.log('[BracketDialog][Submit] Mutation triggered successfully');
+    } catch (error) {
+      console.error('[BracketDialog][Submit] Error triggering mutation:', error);
+    }
   }
   
   function handleTeamToggle(teamId: number, checked: boolean) {
