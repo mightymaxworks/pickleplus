@@ -417,18 +417,23 @@ const TournamentSchedulingStep = ({ form }: { form: ReturnType<typeof useForm<To
 };
 
 /**
+ * PKL-278651-TOURN-0001-FORM
  * Tournament form schema
- * Carefully designed to match the actual database schema columns
- * Following Framework 5.0 principles - added validation and error handling
+ * Following Framework 5.0 principles: reliability over complexity
+ * 
+ * We're tracking extra fields for the UI/UX but only submitting
+ * the ones that actually exist in the database
  */
 const tournamentFormSchema = z.object({
-  // Required fields that exist in the database
+  // Required fields that exist in the database (verified via SQL)
   name: z.string().min(3, { message: 'Tournament name must be at least 3 characters' }),
   startDate: z.date({ required_error: 'Start date is required' }),
   endDate: z.date({ required_error: 'End date is required' }),
+  
+  // UI fields for statuses (not yet in database)
   status: z.enum(['draft', 'published']),
   
-  // Optional fields that exist in the database 
+  // Optional fields that exist in the database (verified via SQL)
   description: z.string().optional(),
   location: z.string().optional(), 
   
@@ -437,9 +442,13 @@ const tournamentFormSchema = z.object({
   division: z.string().default('open'),
   level: z.string().default('club'),
   
-  // Tournament tier for CourtIQ integration
-  // NOTE: This field is not yet present in the database schema
-  // It will be stored in a separate service/table for CourtIQ integration
+  /**
+   * CourtIQ Integration Fields
+   * These fields support the integration with CourtIQ's rating system
+   * but are not yet present in the database schema.
+   * They are stored here for UI purposes and will be used when
+   * calculating tournament performance multipliers and ranking points.
+   */
   tier: z.string().default('local'),
   
   // UI-only field (not in database schema)
