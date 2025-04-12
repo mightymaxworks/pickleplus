@@ -170,67 +170,58 @@ export function BracketDetailsPage() {
   useEffect(() => {
     console.log(`[PKL-278651-TOURN-0015-SYNC] Setting up Framework 5.0 change listener for bracket ${bracketId}`);
     
-    // Create a timestamp reference for change detection
-    const changeDetectionTimestamp = Date.now();
+    // Store the initial timestamp reference for change detection
+    const initialTimestamp = Date.now();
+    // Use a ref to track our last checked timestamp to avoid recursive calls
+    const lastChangeCheckTime = useRef<number>(initialTimestamp);
     
     // Set up interval to periodically check for specific bracket changes in tournament change context
     const checkForContextChanges = setInterval(() => {
-      // Check for any specific changes related to our bracket
-      const bracketSpecificChanges = tournamentChanges.isChangedSince(
-        changeDetectionTimestamp,
-        undefined, // Any change type
-        bracketId,
-        {
-          includeRelatedEntities: true, // Also detect changes to related entities
-          minimumSeverity: 'low'        // Detect all changes including low severity
-        }
-      );
-      
-      // If bracket-specific changes are detected, refresh
-      if (bracketSpecificChanges) {
-        const currentTime = Date.now();
+      try {
+        // Only process changes since our last successful check, not initial timestamp
+        // This prevents checking the same changes repeatedly
+        const latestCheckTime = Date.now();
         
-        // Avoid rapid re-renders by debouncing
-        if (currentTime - lastRefresh.current > 200) {
-          console.log(`[PKL-278651-TOURN-0015-SYNC] Bracket ${bracketId} change detected via context`);
-          refetch();
-          lastRefresh.current = currentTime;
-        }
-      }
-      
-      // Also check for specific bracket change types that would affect our view
-      const relevantChangeTypes: TournamentChangeType[] = [
-        'bracket_updated',
-        'teams_seeded',
-        'teams_unseeded',
-        'match_result_recorded',
-        'match_result_updated',
-        'match_teams_changed',
-        'match_date_changed'
-      ];
-      
-      // Get all changes since our detection timestamp that match our relevant types
-      const bracketChanges = tournamentChanges.getChangesSince(
-        changeDetectionTimestamp,
-        {
-          changeTypes: relevantChangeTypes,
-          minimumSeverity: 'low'
-        }
-      );
-      
-      // If we have bracket changes, log them for debugging
-      if (bracketChanges.length > 0) {
-        console.log(`[PKL-278651-TOURN-0015-SYNC] Bracket changes detected:`, 
-          bracketChanges.map(c => c.type).join(', '));
+        // Check for specific bracket change types that would affect our view
+        // Using a limited set of change types to reduce processing
+        const relevantChangeTypes: TournamentChangeType[] = [
+          'bracket_updated',
+          'teams_seeded',
+          'teams_unseeded',
+          'match_result_recorded',
+          'match_result_updated'
+        ];
         
-        // This is a third redundant refresh mechanism
-        const currentTime = Date.now();
-        if (currentTime - lastRefresh.current > 200) {
-          refetch();
-          lastRefresh.current = currentTime;
+        // Get all changes since our last check timestamp that match our relevant types
+        const bracketChanges = tournamentChanges.getChangesSince(
+          lastChangeCheckTime.current,
+          {
+            changeTypes: relevantChangeTypes,
+            minimumSeverity: 'medium' // Only care about significant changes
+          }
+        );
+        
+        // Update our last check timestamp regardless of found changes
+        lastChangeCheckTime.current = latestCheckTime;
+        
+        // If we have bracket changes, log them for debugging
+        if (bracketChanges.length > 0) {
+          console.log(`[PKL-278651-TOURN-0015-SYNC] Bracket changes detected:`, 
+            bracketChanges.map(c => c.type).join(', '));
+          
+          // Third redundant refresh mechanism - with debouncing
+          const currentTime = Date.now();
+          if (currentTime - lastRefresh.current > 500) { // Increased debounce time
+            console.log(`[PKL-278651-TOURN-0015-SYNC] Refreshing due to detected changes`);
+            refetch();
+            lastRefresh.current = currentTime;
+          }
         }
+      } catch (error) {
+        // Safety net to prevent app crashes
+        console.error('[PKL-278651-TOURN-0015-SYNC] Error in change detection:', error);
       }
-    }, 1000); // Check every second
+    }, 2000); // Reduced frequency to every 2 seconds
     
     // Clean up interval when unmounting
     return () => {
