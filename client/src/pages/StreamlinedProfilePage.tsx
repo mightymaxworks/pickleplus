@@ -1160,7 +1160,7 @@ const StreamlinedProfilePage: FC = () => {
                                 });
                                 return;
                               }
-                              saveProfileField('firstName', firstNameField);
+                              saveProfileField('first_name', firstNameField);
                             }}
                           >
                             <Check className="h-4 w-4 mr-1" /> Save
@@ -1217,7 +1217,7 @@ const StreamlinedProfilePage: FC = () => {
                                 });
                                 return;
                               }
-                              saveProfileField('lastName', lastNameField);
+                              saveProfileField('last_name', lastNameField);
                             }}
                           >
                             <Check className="h-4 w-4 mr-1" /> Save
