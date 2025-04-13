@@ -28,6 +28,7 @@ export const events = pgTable('events', {
   requiresCheckIn: boolean('requires_check_in').default(true),
   checkInCode: text('check_in_code'),
   eventType: text('event_type').default('regular'), // 'regular', 'tournament', 'workshop', etc.
+  isTestData: boolean('is_test_data').default(false), // PKL-278651-SEC-0002-TESTVIS - Test data visibility control
   status: text('status').default('upcoming'), // 'upcoming', 'ongoing', 'completed', 'cancelled'
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

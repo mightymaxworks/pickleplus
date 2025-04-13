@@ -75,6 +75,7 @@ export const users = pgTable("users", {
   xpMultiplier: integer("xp_multiplier").default(100),
   profileCompletionPct: integer("profile_completion_pct").default(0),
   rankingPoints: integer("ranking_points").default(0),
+  isTestData: boolean("is_test_data").default(false), // PKL-278651-SEC-0002-TESTVIS - Test data visibility control
   // Note: rankingTier is calculated at runtime based on ranking points
   // rankingTier: varchar("ranking_tier", { length: 20 }).default("bronze"),
   // Note: consecutiveWins doesn't exist in the database
@@ -173,6 +174,7 @@ export const tournaments = pgTable("tournaments", {
   status: varchar("status", { length: 50 }).notNull().default("upcoming"),
   level: varchar("level", { length: 50 }).notNull().default("club"), // club, district, city, provincial, national, regional, international
   organizer: varchar("organizer", { length: 255 }),
+  isTestData: boolean("is_test_data").default(false), // PKL-278651-SEC-0002-TESTVIS - Test data visibility control
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
@@ -344,6 +346,7 @@ export const matches = pgTable("matches", {
   // stageType: varchar("stage_type", { length: 50 }), // main, qualifying, consolation
   isRated: boolean("is_rated").default(true),
   isVerified: boolean("is_verified").default(false), // Whether opponents have verified the result
+  isTestData: boolean("is_test_data").default(false), // PKL-278651-SEC-0002-TESTVIS - Test data visibility control
   
   // VALMAT - Match Validation
   validationStatus: varchar("validation_status", { length: 50 }).notNull().default("pending"), // pending, validated, disputed, rejected
