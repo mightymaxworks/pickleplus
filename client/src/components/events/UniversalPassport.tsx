@@ -1,15 +1,24 @@
 /**
- * PKL-278651-CONN-0004-PASS-REG-UI-PHASE2
- * Universal Passport Component
+ * PKL-278651-CONN-0005-PASS-UI
+ * Enhanced Universal Passport Component
  * 
- * Displays the user's universal passport QR code that works across all events
+ * Displays the user's universal passport QR code with improved visual design
+ * and animations for a more engaging user experience
  */
 
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
-import { TicketIcon, ScanIcon, InfoIcon, CalendarDaysIcon, Copy } from 'lucide-react';
+import { 
+  TicketIcon, 
+  ScanIcon, 
+  InfoIcon, 
+  CalendarDaysIcon, 
+  Copy, 
+  ShieldCheckIcon,
+  CheckCircle2Icon 
+} from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
