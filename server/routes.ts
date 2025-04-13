@@ -162,6 +162,18 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
         return res.status(401).json({ error: "Not authenticated" });
       }
       
+      // CSRF protection
+      const csrfToken = req.headers['x-csrf-token'];
+      if (!csrfToken) {
+        console.error('[API] CSRF token missing in profile update request');
+        return res.status(403).json({ message: "CSRF token validation failed" });
+      }
+      
+      if (!req.session || !req.session.csrfToken || req.session.csrfToken !== csrfToken) {
+        console.error(`[API] CSRF token mismatch. Expected: ${req.session?.csrfToken?.substring(0, 8) || 'undefined'}, Got: ${(csrfToken as string)?.substring(0, 8) || 'undefined'}`);
+        return res.status(403).json({ message: "CSRF token validation failed" });
+      }
+      
       console.log("[API] Profile update request received:", JSON.stringify(req.body, null, 2));
       
       // Get the current user data to compare later for XP rewards

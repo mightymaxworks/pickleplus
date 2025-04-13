@@ -94,11 +94,25 @@ export function ContextualEditField({
         [fieldName]: type === "number" ? parseFloat(value) : value
       };
       
-      // Send direct fetch request to avoid any type issues
+      // Get CSRF token first
+      const csrfResponse = await fetch('/api/auth/csrf-token', {
+        method: 'GET',
+        credentials: 'include'
+      });
+      
+      if (!csrfResponse.ok) {
+        console.error('[Profile] Failed to fetch CSRF token:', csrfResponse.status, csrfResponse.statusText);
+        throw new Error('Failed to fetch CSRF token');
+      }
+      
+      const { csrfToken } = await csrfResponse.json();
+      
+      // Send direct fetch request with CSRF token
       await fetch(apiEndpoint, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken
         },
         credentials: "include",
         body: JSON.stringify(payload)
@@ -112,6 +126,7 @@ export function ContextualEditField({
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'X-CSRF-Token': csrfToken
             },
             credentials: 'include',
             body: JSON.stringify({
