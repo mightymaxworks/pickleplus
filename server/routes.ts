@@ -189,46 +189,27 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
         return res.status(400).json({ error: "No profile data provided for update" });
       }
       
-      // DIRECT DATABASE UPDATE APPROACH
-      // Handle the firstName field
-      if ('firstName' in req.body) {
-        try {
-          console.log(`[DIRECT_UPDATE] Setting firstName = "${req.body.firstName}" for user ID ${req.user.id}`);
-          const [result] = await db.update(users)
-            .set({ firstName: req.body.firstName })
-            .where(eq(users.id, req.user.id))
-            .returning();
-          console.log('[DIRECT_UPDATE] First name update result:', result ? 'Success' : 'Failed');
-        } catch (firstNameError) {
-          console.error('[DIRECT_UPDATE] First name update error:', firstNameError);
-          return res.status(500).json({ error: "Failed to update first name" });
-        }
+      // Use standard storage interface for updating profile
+      // The storage.updateUserProfile method handles all the field mapping 
+      // between camelCase (frontend/TypeScript) and snake_case (database)
+      const profileData = { ...req.body };
+      console.log(`[API] Processing profile update with data:`, JSON.stringify(profileData, null, 2));
+      
+      // Update the user's profile using the storage interface
+      const updatedUserProfile = await storage.updateUserProfile(req.user.id, profileData);
+      if (!updatedUserProfile) {
+        console.error("[API] Failed to update profile with storage interface");
+        return res.status(500).json({ error: "Failed to update profile" });
       }
       
-      // Handle the lastName field
-      if ('lastName' in req.body) {
-        try {
-          console.log(`[DIRECT_UPDATE] Setting lastName = "${req.body.lastName}" for user ID ${req.user.id}`);
-          const [result] = await db.update(users)
-            .set({ lastName: req.body.lastName })
-            .where(eq(users.id, req.user.id))
-            .returning();
-          console.log('[DIRECT_UPDATE] Last name update result:', result ? 'Success' : 'Failed');
-        } catch (lastNameError) {
-          console.error('[DIRECT_UPDATE] Last name update error:', lastNameError);
-          return res.status(500).json({ error: "Failed to update last name" });
-        }
-      }
-      
-      // Get updated user data
-      const updatedUser = await storage.getUser(req.user.id);
-      if (!updatedUser) {
-        return res.status(500).json({ error: "Failed to retrieve updated profile" });
-      }
+      console.log("[API] Profile update successful:", JSON.stringify({
+        firstName: updatedUserProfile.firstName,
+        lastName: updatedUserProfile.lastName
+      }, null, 2));
       
       // Check if profile completion crossed a threshold to award XP
       const oldCompletion = oldUser.profileCompletionPct || 0;
-      const newCompletion = updatedUser.profileCompletionPct || 0;
+      const newCompletion = updatedUserProfile.profileCompletionPct || 0;
       
       let xpAwarded = 0;
       
