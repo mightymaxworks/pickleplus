@@ -346,6 +346,22 @@ router.get("/my/attended", isAuthenticated, async (req: Request, res: Response) 
   }
 });
 
+// PKL-278651-CONN-0004-PASS-REG - Route to get events the current user has registered for
+router.get("/my/registered", isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
+    const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
+    
+    console.log(`[API] Getting registered events for user ${req.user!.id}`);
+    const events = await storage.getRegisteredEvents(req.user!.id, limit, offset);
+    
+    res.json(events);
+  } catch (error) {
+    console.error("[API] Error getting registered events:", error);
+    res.status(500).json({ error: "Server error retrieving your registered events" });
+  }
+});
+
 export function registerEventRoutes(app: express.Express) {
   console.log("[API] Registering PicklePass™ routes (PKL-278651-CONN-0003-EVENT)");
   app.use("/api/events", router);
