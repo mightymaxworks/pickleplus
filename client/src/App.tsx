@@ -37,6 +37,8 @@ import SettingsPage from './pages/admin/SettingsPage'
 import AdminDashboardPage from './pages/AdminDashboardPage'
 import QRTestPage from './pages/dev/QRTestPage'
 import EventTestPage from './pages/events/EventTestPage'
+import EventDiscoveryPage from './pages/events/EventDiscoveryPage'
+import MyEventsPage from './pages/events/MyEventsPage'
 import NotFound from './pages/not-found'
 
 // Import tournament bracket pages
@@ -238,7 +240,18 @@ export default function App() {
             {/* QR Code Development Test Page (PKL-278651-CONN-0002-QR) */}
             <Route path="/dev/qr-test" component={QRTestPage} />
             
-            {/* Event Check-in System Test Page (PKL-278651-CONN-0003-EVENT) */}
+            {/* PKL-278651-CONN-0006-ROUTE - PicklePass™ URL Structure Refinement */}
+            {/* Main Events Discovery Page */}
+            <Route path="/events">
+              {(params) => <ProtectedRoute component={EventDiscoveryPage} path="/events" />}
+            </Route>
+            
+            {/* My Events Page */}
+            <Route path="/events/my">
+              {(params) => <ProtectedRoute component={MyEventsPage} path="/events/my" />}
+            </Route>
+            
+            {/* Legacy route - redirect handled by EventTestPage */}
             <Route path="/events/test">
               {(params) => <ProtectedRoute component={EventTestPage} path="/events/test" />}
             </Route>
