@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AppHeader } from '@/components/layout/AppHeader';
 import { 
   TicketIcon, 
   UserCircle2Icon, 
@@ -110,36 +111,40 @@ export default function EventDiscoveryPage() {
   };
   
   return (
-    <div className="container py-10 max-w-6xl mx-auto">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-bold mb-2 flex items-center">
-            <TicketIcon className="h-7 w-7 mr-2 text-primary/80" />
-            PicklePass™ Events
-          </h1>
-          <p className="text-muted-foreground">
-            Discover and register for events, view your universal passport
-          </p>
+    <>
+      {/* Use the same AppHeader as the dashboard */}
+      <AppHeader />
+      
+      <div className="container py-10 max-w-6xl mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-bold mb-2 flex items-center">
+              <TicketIcon className="h-7 w-7 mr-2 text-primary/80" />
+              PicklePass™ Events
+            </h1>
+            <p className="text-muted-foreground">
+              Discover and register for events, view your universal passport
+            </p>
+          </div>
+          
+          <Button 
+            variant="default"
+            className="bg-primary/90 hover:bg-primary transition-all duration-300"
+            onClick={handleViewPassportClick}
+          >
+            {!user ? (
+              <>
+                <LockIcon className="mr-2 h-4 w-4" />
+                Login to View Passport
+              </>
+            ) : (
+              <>
+                <TicketIcon className="mr-2 h-4 w-4" />
+                Show My Universal Passport
+              </>
+            )}
+          </Button>
         </div>
-        
-        <Button 
-          variant="default"
-          className="bg-primary/90 hover:bg-primary transition-all duration-300"
-          onClick={handleViewPassportClick}
-        >
-          {!user ? (
-            <>
-              <LockIcon className="mr-2 h-4 w-4" />
-              Login to View Passport
-            </>
-          ) : (
-            <>
-              <TicketIcon className="mr-2 h-4 w-4" />
-              Show My Universal Passport
-            </>
-          )}
-        </Button>
-      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Left column - Events list */}
@@ -372,5 +377,6 @@ export default function EventDiscoveryPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </>
   );
 }
