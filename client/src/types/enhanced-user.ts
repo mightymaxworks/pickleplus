@@ -5,6 +5,8 @@ export interface EnhancedUser {
   username: string;
   email: string | null;
   password: string;
+  firstName?: string | null;
+  lastName?: string | null;
   displayName: string | null;
   location: string | null;
   bio: string | null;

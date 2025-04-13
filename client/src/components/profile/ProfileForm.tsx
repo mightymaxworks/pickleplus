@@ -25,6 +25,9 @@ import { Link } from "wouter";
 
 // Form schema using zod
 const profileFormSchema = z.object({
+  // Basic information
+  firstName: z.string().min(1, "First name is required").max(100, "First name must be less than 100 characters").optional(),
+  lastName: z.string().min(1, "Last name is required").max(100, "Last name must be less than 100 characters").optional(),
   displayName: z.string().min(1, "Display name is required"),
   bio: z.string().optional(),
   location: z.string().optional(),
@@ -79,6 +82,8 @@ export function ProfileForm() {
   const form = useForm<ProfileUpdateFormData>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
+      firstName: user?.firstName || "",
+      lastName: user?.lastName || "",
       displayName: user?.displayName || "",
       bio: user?.bio || "",
       location: user?.location || "",
@@ -116,6 +121,8 @@ export function ProfileForm() {
   useEffect(() => {
     if (user) {
       form.reset({
+        firstName: user?.firstName || "",
+        lastName: user?.lastName || "",
         displayName: user.displayName || "",
         bio: user?.bio || "",
         location: user?.location || "",
@@ -237,6 +244,42 @@ export function ProfileForm() {
                 
                 {/* Basic Info Tab */}
                 <TabsContent value="basic" className="space-y-4 mt-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="firstName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>First Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Your first name" {...field} />
+                          </FormControl>
+                          <FormDescription>
+                            Your real first name for tournaments and passports
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="lastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Last Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Your last name" {...field} />
+                          </FormControl>
+                          <FormDescription>
+                            Your real last name for tournaments and passports
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
                   <FormField
                     control={form.control}
                     name="displayName"
@@ -246,6 +289,9 @@ export function ProfileForm() {
                         <FormControl>
                           <Input placeholder="Your display name" {...field} />
                         </FormControl>
+                        <FormDescription>
+                          The name you want to be displayed publicly
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
