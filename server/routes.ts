@@ -254,6 +254,92 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     }
   });
   
+  // Profile Field Completion Endpoint (PKL-278651-XPPS-0001)
+  app.post("/api/profile/field-completion", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      // CSRF protection
+      const csrfToken = req.headers['x-csrf-token'];
+      if (!csrfToken) {
+        console.error('[API] CSRF token missing in field completion request');
+        return res.status(403).json({ message: "CSRF token validation failed" });
+      }
+      
+      if (!req.session || !req.session.csrfToken || req.session.csrfToken !== csrfToken) {
+        console.error(`[API] CSRF token mismatch. Expected: ${req.session?.csrfToken?.substring(0, 8) || 'undefined'}, Got: ${(csrfToken as string)?.substring(0, 8) || 'undefined'}`);
+        return res.status(403).json({ message: "CSRF token validation failed" });
+      }
+      
+      const { fieldName, fieldType } = req.body;
+      
+      if (!fieldName || !fieldType) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+      
+      // Check if this field has already been completed
+      const alreadyCompleted = await storage.checkProfileFieldCompletion(req.user.id, fieldName);
+      
+      if (alreadyCompleted) {
+        return res.status(200).json({ 
+          success: true, 
+          message: "Field already completed", 
+          alreadyAwarded: true,
+          xpAwarded: 0
+        });
+      }
+      
+      // Determine XP amount based on field type according to specification PKL-278651-XPPS-0001
+      let xpAmount = 5; // Default for basic fields
+      
+      switch (fieldType) {
+        case 'basic':
+          xpAmount = 5;
+          break;
+        case 'equipment':
+          xpAmount = 10;
+          break;
+        case 'playing-attribute':
+          xpAmount = 15;
+          break;
+        case 'skill-assessment':
+          xpAmount = 20;
+          break;
+        case 'profile-media':
+          xpAmount = 25;
+          break;
+        default:
+          xpAmount = 5;
+      }
+      
+      // Record that this field has been completed and award XP
+      await storage.markProfileFieldComplete(req.user.id, fieldName);
+      await storage.updateUserXP(req.user.id, xpAmount);
+      
+      // Record activity
+      await storage.createActivity({
+        userId: req.user.id,
+        type: 'profile_field_complete',
+        description: `Completed profile field: ${fieldName}`,
+        xpEarned: xpAmount,
+        metadata: { fieldName, fieldType }
+      });
+      
+      // Return success response
+      res.status(200).json({
+        success: true,
+        message: "Field completion recorded",
+        alreadyAwarded: false,
+        xpAwarded: xpAmount
+      });
+    } catch (error) {
+      console.error("[API] Error recording field completion:", error);
+      res.status(500).json({ error: "Server error recording field completion" });
+    }
+  });
+  
   // Match API endpoints
   app.post("/api/match/record", isAuthenticated, async (req: Request, res: Response) => {
     try {
