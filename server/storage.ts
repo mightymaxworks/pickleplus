@@ -803,7 +803,7 @@ export class DatabaseStorage implements IStorage {
   }
   
   // For user search, we only need a minimal set of user information
-  async searchUsers(query: string, limit: number = 10, excludeUserId?: number): Promise<{ 
+  async searchUsers(query: string, limit: number = 10, excludeUserId?: number, requestingUserId?: number): Promise<{ 
     id: number; 
     username: string; 
     displayName: string; 
@@ -813,7 +813,11 @@ export class DatabaseStorage implements IStorage {
     rating: number | null;
   }[]> {
     try {
-      console.log("[Storage] searchUsers called with query:", query, "limit:", limit, "excludeUserId:", excludeUserId);
+      console.log("[Storage] searchUsers called with query:", query, "limit:", limit, "excludeUserId:", excludeUserId, "requestingUserId:", requestingUserId || 'none');
+      
+      // Check if the requesting user is an admin
+      const isAdmin = requestingUserId ? await this.isUserAdmin(requestingUserId) : false;
+      console.log(`[Storage] searchUsers - isAdmin check for user ${requestingUserId || 'none'}: ${isAdmin}`);
       
       // More detailed logging
       if (!query) {
@@ -1152,7 +1156,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async getMatchesByUser(userId: number, limit: number = 20, offset: number = 0): Promise<Match[]> {
+  async getMatchesByUser(userId: number, limit: number = 20, offset: number = 0, requestingUserId?: number): Promise<Match[]> {
     try {
       // Validate userId is a proper number to avoid database errors
       const numericUserId = Number(userId);
@@ -1162,10 +1166,14 @@ export class DatabaseStorage implements IStorage {
         return [];
       }
       
-      console.log(`[Storage] getMatchesByUser called with userId: ${numericUserId}, limit: ${limit}, offset: ${offset}`);
+      console.log(`[Storage] getMatchesByUser called with userId: ${numericUserId}, limit: ${limit}, offset: ${offset}, requestingUserId: ${requestingUserId || 'none'}`);
+      
+      // Check if the requesting user is an admin
+      const isAdmin = requestingUserId ? await this.isUserAdmin(requestingUserId) : false;
+      console.log(`[Storage] getMatchesByUser - isAdmin check for user ${requestingUserId || 'none'}: ${isAdmin}`);
       
       // Find matches where the user was a player or partner
-      const userMatches = await db.select()
+      let query = db.select()
         .from(matches)
         .where(
           or(
@@ -1174,10 +1182,21 @@ export class DatabaseStorage implements IStorage {
             eq(matches.playerOnePartnerId, numericUserId),
             eq(matches.playerTwoPartnerId, numericUserId)
           )
-        )
-        .orderBy(desc(matches.matchDate))
+        );
+      
+      // PKL-278651-SEC-0002-TESTVIS - Test Data Visibility Control
+      // Apply test data filter for non-admins
+      if (!isAdmin) {
+        query = query.where(sql`(${matches.isTestData} = FALSE OR ${matches.isTestData} IS NULL)`);
+      }
+      
+      // Apply sorting and pagination
+      query = query.orderBy(desc(matches.matchDate))
         .limit(limit)
         .offset(offset);
+      
+      const userMatches = await query;
+      console.log(`[Storage] getMatchesByUser - Retrieved ${userMatches.length} matches (filtered by test data visibility: ${!isAdmin})`);
       
       return userMatches;
     } catch (error) {
@@ -1414,16 +1433,26 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async getEvents(limit: number = 100, offset: number = 0, filters?: Partial<Event>): Promise<Event[]> {
+  async getEvents(limit: number = 100, offset: number = 0, filters?: Partial<Event>, requestingUserId?: number): Promise<Event[]> {
     try {
-      console.log(`[Storage] getEvents called with limit: ${limit}, offset: ${offset}`);
+      console.log(`[Storage] getEvents called with limit: ${limit}, offset: ${offset}, requestingUserId: ${requestingUserId || 'none'}`);
+      
+      // Check if the requesting user is an admin
+      const isAdmin = requestingUserId ? await this.isUserAdmin(requestingUserId) : false;
+      console.log(`[Storage] getEvents - isAdmin check for user ${requestingUserId || 'none'}: ${isAdmin}`);
       
       let query = db.select().from(events);
       
       // Apply filters if provided
+      const conditions = [];
+      
+      // Apply test data filter based on admin status
+      // PKL-278651-SEC-0002-TESTVIS - Test Data Visibility Control
+      if (!isAdmin) {
+        conditions.push(sql`(${events.isTestData} = FALSE OR ${events.isTestData} IS NULL)`);
+      }
+      
       if (filters) {
-        const conditions = [];
-        
         if (filters.eventType) {
           conditions.push(eq(events.eventType, filters.eventType));
         }
@@ -1439,10 +1468,11 @@ export class DatabaseStorage implements IStorage {
         if (filters.requiresCheckIn !== undefined) {
           conditions.push(eq(events.requiresCheckIn, filters.requiresCheckIn));
         }
-        
-        if (conditions.length > 0) {
-          query = query.where(and(...conditions));
-        }
+      }
+      
+      // Apply all conditions if any exist
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
       }
       
       // Apply pagination
@@ -1452,6 +1482,7 @@ export class DatabaseStorage implements IStorage {
       query = query.orderBy(desc(events.startDateTime));
       
       const eventList = await query;
+      console.log(`[Storage] getEvents - Retrieved ${eventList.length} events (filtered by test data visibility: ${!isAdmin})`);
       return eventList;
     } catch (error) {
       console.error('[Storage] getEvents error:', error);
@@ -1484,24 +1515,35 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async getUpcomingEvents(limit: number = 10): Promise<Event[]> {
+  async getUpcomingEvents(limit: number = 10, requestingUserId?: number): Promise<Event[]> {
     try {
-      console.log(`[Storage] getUpcomingEvents called with limit: ${limit}`);
+      console.log(`[Storage] getUpcomingEvents called with limit: ${limit}, requestingUserId: ${requestingUserId || 'none'}`);
+      
+      // Check if the requesting user is an admin
+      const isAdmin = requestingUserId ? await this.isUserAdmin(requestingUserId) : false;
+      console.log(`[Storage] getUpcomingEvents - isAdmin check for user ${requestingUserId || 'none'}: ${isAdmin}`);
       
       // Use SQL template literal for safe query construction with proper date formatting
       const now = new Date();
       const formattedDate = now.toISOString();
+      
+      // Define the test data filter based on user's admin status
+      // PKL-278651-SEC-0002-TESTVIS - Test Data Visibility Control
+      const testDataFilter = isAdmin 
+        ? "" 
+        : "AND (is_test_data = FALSE OR is_test_data IS NULL) ";
       
       // Use SQL with formatted date string
       const upcomingEvents = await db.execute(sql`
         SELECT * FROM events 
         WHERE (status = 'upcoming' OR end_date_time >= ${formattedDate}) 
         AND is_private = false 
+        ${sql.raw(testDataFilter)}
         ORDER BY start_date_time ASC 
         LIMIT ${limit};
       `);
       
-      console.log(`[Storage] getUpcomingEvents found ${upcomingEvents.length} events`);
+      console.log(`[Storage] getUpcomingEvents found ${upcomingEvents.length} events (filtered by test data visibility: ${!isAdmin})`);
       return upcomingEvents as unknown as Event[];
     } catch (error) {
       console.error('[Storage] getUpcomingEvents error:', error);
