@@ -15,7 +15,15 @@ const queryClient = postgres(connectionString, {
   max: 10, // Maximum number of connections
   idle_timeout: 30, // Timeout in seconds
   connect_timeout: 10, // Connection timeout in seconds
-  prepare: true, // Enable prepared statements for better SQL generation
+  prepare: true, // Enable prepared statements
+  debug: true, // Enable query debugging
+  transform: {
+    // Transform from camelCase JavaScript to snake_case SQL by default
+    column: {
+      from: postgres.toCamel,
+      to: postgres.fromCamel
+    }
+  }
 });
 
 // Create the drizzle instance with the schema
