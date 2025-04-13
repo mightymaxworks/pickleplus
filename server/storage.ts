@@ -523,6 +523,13 @@ export class DatabaseStorage implements IStorage {
       // Update the user profile with validated data
       let updatedUser;
       try {
+        // This is the critical fix - ensure we actually have fields to update
+        // before making the SQL query.
+        if (Object.keys(profileData).length === 0) {
+          console.log(`[Storage] updateUserProfile - No fields to update in SQL, returning current user.`);
+          return currentUser;
+        }
+        
         const [result] = await db.update(users)
           .set(profileData)
           .where(eq(users.id, numericId))
