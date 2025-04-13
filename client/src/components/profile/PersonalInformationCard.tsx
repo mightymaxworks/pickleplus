@@ -21,6 +21,13 @@ interface PersonalInformationCardProps {
 }
 
 export function PersonalInformationCard({ user }: PersonalInformationCardProps) {
+  // Debug the user object to see what fields are available
+  console.log("[DEBUG] PersonalInformationCard user object:", user);
+  console.log("[DEBUG] firstName field:", user.firstName);
+  console.log("[DEBUG] lastName field:", user.lastName);
+  console.log("[DEBUG] first_name field:", (user as any).first_name);
+  console.log("[DEBUG] last_name field:", (user as any).last_name);
+  
   return (
     <ProfileEditProvider>
       <Card>
@@ -33,6 +40,15 @@ export function PersonalInformationCard({ user }: PersonalInformationCardProps) 
           </div>
         </CardHeader>
         <CardContent>
+          {/* Debug card for firstName/lastName */}
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <h4 className="text-sm font-semibold text-red-700">Debug Information:</h4>
+            <p className="text-xs text-red-600">firstName: {user.firstName ? user.firstName : 'null/undefined'}</p>
+            <p className="text-xs text-red-600">lastName: {user.lastName ? user.lastName : 'null/undefined'}</p>
+            <p className="text-xs text-red-600">first_name: {(user as any).first_name ? (user as any).first_name : 'null/undefined'}</p>
+            <p className="text-xs text-red-600">last_name: {(user as any).last_name ? (user as any).last_name : 'null/undefined'}</p>
+          </div>
+          
           <div className="space-y-5">
             {/* Name Information */}
             <div>
