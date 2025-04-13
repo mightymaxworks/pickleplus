@@ -151,6 +151,93 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     }
   });
   
+  // Profile Update Endpoint (PKL-278651-PROF-0001-NAME)
+  app.patch("/api/profile/update", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      console.log("[API] Profile update request received:", JSON.stringify(req.body, null, 2));
+      
+      // Get the current user data to compare later for XP rewards
+      const oldUser = await storage.getUser(req.user.id);
+      if (!oldUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Special handling for firstName/lastName fields to map to database columns
+      const profileData = { ...req.body };
+      
+      // Map firstName/lastName to snake_case column names if they exist
+      if (profileData.firstName !== undefined) {
+        profileData.first_name = profileData.firstName;
+        delete profileData.firstName;
+        console.log("[API] Mapped firstName to first_name:", profileData.first_name);
+      }
+      
+      if (profileData.lastName !== undefined) {
+        profileData.last_name = profileData.lastName;
+        delete profileData.lastName;
+        console.log("[API] Mapped lastName to last_name:", profileData.last_name);
+      }
+      
+      // Update the user's profile
+      const updatedUser = await storage.updateUserProfile(req.user.id, profileData);
+      if (!updatedUser) {
+        return res.status(500).json({ error: "Failed to update profile" });
+      }
+      
+      // Check if profile completion crossed a threshold to award XP
+      const oldCompletion = oldUser.profileCompletionPct || 0;
+      const newCompletion = updatedUser.profileCompletionPct || 0;
+      
+      let xpAwarded = 0;
+      
+      // XP thresholds: award XP at 25%, 50%, 75%, and 100% completion
+      const thresholds = [
+        { threshold: 25, reward: 25 },
+        { threshold: 50, reward: 50 },
+        { threshold: 75, reward: 75 },
+        { threshold: 100, reward: 100 }
+      ];
+      
+      // Check if any thresholds were crossed
+      for (const tier of thresholds) {
+        if (oldCompletion < tier.threshold && newCompletion >= tier.threshold) {
+          xpAwarded += tier.reward;
+          
+          // Record activity
+          await storage.createActivity({
+            userId: req.user.id,
+            type: 'profile_update',
+            description: `Profile ${tier.threshold}% complete: +${tier.reward}XP`,
+            xpEarned: tier.reward,
+            metadata: { 
+              oldCompletion, 
+              newCompletion,
+              threshold: tier.threshold 
+            }
+          });
+          
+          // Award XP
+          await storage.updateUserXP(req.user.id, tier.reward);
+        }
+      }
+      
+      // Get the latest user data after possible XP awards
+      const finalUser = await storage.getUser(req.user.id);
+      
+      res.json({
+        user: finalUser,
+        xpAwarded
+      });
+    } catch (error) {
+      console.error("[API] Error updating profile:", error);
+      res.status(500).json({ error: "Server error updating profile" });
+    }
+  });
+  
   // Match API endpoints
   app.post("/api/match/record", isAuthenticated, async (req: Request, res: Response) => {
     try {

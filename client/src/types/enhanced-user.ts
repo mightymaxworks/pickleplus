@@ -92,6 +92,11 @@ export interface EnhancedUser {
   skillLevel?: string;
   privacyProfile?: string;
   
+  // Social connections and community
+  coach?: string;
+  clubs?: string;
+  leagues?: string;
+  
   // Goals and development
   playerGoals?: string;
   
