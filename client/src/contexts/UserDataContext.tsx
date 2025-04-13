@@ -11,11 +11,38 @@
  */
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { getQueryFn } from '@/lib/queryClient';
 import { EnhancedUser } from '@/types/enhanced-user';
 
 // Cache timeout (15 minutes)
 const CACHE_EXPIRY_MS = 15 * 60 * 1000;
+
+// Simple fetch wrapper for user data
+async function fetchUserDataFromApi(): Promise<EnhancedUser | null> {
+  try {
+    const response = await fetch('/api/auth/current-user', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache'
+      }
+    });
+    
+    if (response.status === 401) {
+      return null;
+    }
+    
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data as EnhancedUser;
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+    throw error;
+  }
+}
 
 interface UserDataContextType {
   userData: EnhancedUser | null;
@@ -41,8 +68,7 @@ export function UserDataProvider({ children }: UserDataProviderProps) {
   const fetchUserData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const queryFn = getQueryFn({ on401: 'returnNull' });
-      const data = await queryFn({ queryKey: ['/api/auth/current-user'] });
+      const data = await fetchUserDataFromApi();
       
       if (!data) {
         // This is not necessarily an error - user might be logged out
@@ -53,7 +79,7 @@ export function UserDataProvider({ children }: UserDataProviderProps) {
       }
       
       console.log('[UserDataContext] User data refreshed from API');
-      setUserData(data as EnhancedUser);
+      setUserData(data);
       setLastFetched(Date.now());
       setError(null);
     } catch (err) {

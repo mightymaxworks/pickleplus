@@ -1,4 +1,4 @@
-import { Fragment, useEffect } from 'react'
+import { Fragment, useEffect, Suspense } from 'react'
 import { Route, Switch, useLocation } from 'wouter'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from './lib/queryClient'
@@ -6,46 +6,55 @@ import { Toaster } from '@/components/ui/toaster'
 import { AuthProvider } from '@/hooks/useAuth'
 import { TournamentChangeProvider } from './core/modules/tournament/context/TournamentChangeContext'
 import { UserDataProvider } from '@/contexts/UserDataContext' // PKL-278651-PERF-0001.1-CACHE
+import { LazyLoadingFallback } from '@/utils/lazyLoad' // PKL-278651-PERF-0001.2-SPLIT
 
 // Import module initializations
 import '@/modules/admin/init'
 import '@/core/modules/tournament/init'
-import EnhancedLandingPage from './pages/EnhancedLandingPage'
-import EnhancedAuthPage from './pages/EnhancedAuthPage'
+
+// Import lazy-loaded components (PKL-278651-PERF-0001.2-SPLIT)
+import {
+  LazyLandingPage,
+  LazyAuthPage,
+  LazyAboutUsPage,
+  LazyProfilePage,
+  LazyProfileEditPage,
+  LazyMatchesPage, 
+  LazyRecordMatchPage,
+  LazyTournamentDiscoveryPage,
+  LazyTournamentManagementPage,
+  LazyTournamentDetailsPage,
+  LazyBracketDetailsPage,
+  LazyLeaderboardPage,
+  LazyMasteryPathsPage,
+  LazyEventDiscoveryPage,
+  LazyMyEventsPage,
+  LazyAdminDashboardPage,
+  LazyPrizeDrawingPage,
+  LazyGoldenTicketAdmin,
+  LazyPassportVerificationPage,
+  LazyReportsPage,
+  LazySettingsPage,
+  LazyMobileTestPage,
+  LazyNotFoundPage,
+  LazyDashboardPage,
+  preloadProfilePages,
+  preloadMatchPages,
+  preloadTournamentPages,
+  preloadEventPages,
+  preloadAdminPages
+} from './lazyComponents'
+
+// Keep imports for non-lazy loaded pages
 import TestAuthPage from './pages/TestAuthPage'
 import TestRoutingPage from './pages/TestRoutingPage'
-import Dashboard from './pages/Dashboard'
-import RecordMatchPage from './pages/record-match-page'
-import MatchesPage from './pages/matches-page'
-import ModernizedMatchPage from './pages/modernized-match-page'
 import MatchRewardDemo from './pages/match-reward-demo'
 import EnhancedProfile from './pages/EnhancedProfile'
 import EnhancedProfilePage from './pages/EnhancedProfilePage'
 import ContextualEnhancedProfile from './pages/ContextualEnhancedProfile'
-import ProfileEdit from './pages/ProfileEdit'
-import StreamlinedProfilePage from './pages/StreamlinedProfilePage'
-import { LeaderboardPage } from './pages/LeaderboardPage'
 import LandingPageTest from './pages/LandingPageTest'
-import MasteryPathsPage from './pages/MasteryPathsPage'
-import TournamentDiscoveryPage from './pages/TournamentDiscoveryPage'
-import AboutUs from './pages/AboutUs'
-import PrizeDrawingPage from './pages/admin/PrizeDrawingPage'
-import GoldenTicketAdmin from './pages/admin/GoldenTicketAdmin'
-import PassportVerificationPage from './pages/admin/PassportVerificationPage'
-import MobileTestPage from './pages/admin/MobileTestPage'
-import ReportsPage from './pages/admin/ReportsPage'
-import SettingsPage from './pages/admin/SettingsPage'
-import AdminDashboardPage from './pages/AdminDashboardPage'
 import QRTestPage from './pages/dev/QRTestPage'
 import EventTestPage from './pages/events/EventTestPage'
-import EventDiscoveryPage from './pages/events/EventDiscoveryPage'
-import MyEventsPage from './pages/events/MyEventsPage'
-import NotFound from './pages/not-found'
-
-// Import tournament bracket pages
-import { TournamentManagementPage } from './core/modules/tournament/pages/TournamentManagementPage'
-import { TournamentDetailsPage } from './core/modules/tournament/pages/TournamentDetailsPage'
-import { BracketDetailsPage } from './core/modules/tournament/pages/BracketDetailsPage'
 
 import { useAuth } from './hooks/useAuth'
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute'
@@ -88,62 +97,63 @@ export default function App() {
         <AuthProvider>
           <UserDataProvider> {/* PKL-278651-PERF-0001.1-CACHE */}
             <TournamentChangeProvider>
-              <Switch>
+              <Suspense fallback={<LazyLoadingFallback />}>
+                <Switch>
               {/* Public Routes */}
-              <Route path="/" component={EnhancedLandingPage} />
-              <Route path="/login" component={EnhancedAuthPage} />
-              <Route path="/register" component={EnhancedAuthPage} />
-              <Route path="/auth" component={EnhancedAuthPage} />
-              <Route path="/about" component={AboutUs} />
+              <Route path="/" component={LazyLandingPage} />
+              <Route path="/login" component={LazyAuthPage} />
+              <Route path="/register" component={LazyAuthPage} />
+              <Route path="/auth" component={LazyAuthPage} />
+              <Route path="/about" component={LazyAboutUsPage} />
               <Route path="/test-routing" component={TestRoutingPage} />
               <Route path="/landing-test" component={LandingPageTest} />
             
             {/* Protected Routes */}
             <Route path="/dashboard">
-              {(params) => <ProtectedRoute component={Dashboard} path="/dashboard" />}
+              {(params) => <ProtectedRoute component={LazyDashboardPage} path="/dashboard" />}
             </Route>
             <Route path="/matches">
-              {(params) => <ProtectedRoute component={ModernizedMatchPage} path="/matches" />}
+              {(params) => <ProtectedRoute component={LazyMatchesPage} path="/matches" />}
             </Route>
             {/* Tournament discovery route - available to all users */}
             <Route path="/tournaments">
-              {(params) => <ProtectedRoute component={TournamentDiscoveryPage} path="/tournaments" />}
+              {(params) => <ProtectedRoute component={LazyTournamentDiscoveryPage} path="/tournaments" />}
             </Route>
 
             {/* Admin routes for tournament management - PKL-278651-TOURN-0002-ADMIN */}
             <Route path="/admin/tournaments">
               {(params) => (
                 <AdminProtectedRoute>
-                  <TournamentManagementPage />
+                  <LazyTournamentManagementPage />
                 </AdminProtectedRoute>
               )}
             </Route>
             <Route path="/admin/tournaments/:id">
               {(params) => (
                 <AdminProtectedRoute>
-                  <TournamentDetailsPage />
+                  <LazyTournamentDetailsPage />
                 </AdminProtectedRoute>
               )}
             </Route>
             <Route path="/admin/brackets/:id">
               {(params) => (
                 <AdminProtectedRoute>
-                  <BracketDetailsPage />
+                  <LazyBracketDetailsPage />
                 </AdminProtectedRoute>
               )}
             </Route>
             <Route path="/training">
-              {(params) => <ProtectedRoute component={Dashboard} path="/training" />}
+              {(params) => <ProtectedRoute component={LazyDashboardPage} path="/training" />}
             </Route>
             <Route path="/community">
-              {(params) => <ProtectedRoute component={Dashboard} path="/community" />}
+              {(params) => <ProtectedRoute component={LazyDashboardPage} path="/community" />}
             </Route>
             <Route path="/passport">
-              {(params) => <ProtectedRoute component={Dashboard} path="/passport" />}
+              {(params) => <ProtectedRoute component={LazyDashboardPage} path="/passport" />}
             </Route>
             {/* Main profile route now points to StreamlinedProfilePage */}
             <Route path="/profile">
-              {(params) => <ProtectedRoute component={StreamlinedProfilePage} path="/profile" />}
+              {(params) => <ProtectedRoute component={LazyProfilePage} path="/profile" />}
             </Route>
             {/* Legacy profile routes kept for backward compatibility */}
             <Route path="/profile/enhanced">
@@ -153,39 +163,39 @@ export default function App() {
               {(params) => <ProtectedRoute component={ContextualEnhancedProfile} path="/profile/contextual" />}
             </Route>
             <Route path="/profile/edit">
-              {(params) => <ProtectedRoute component={ProfileEdit} path="/profile/edit" />}
+              {(params) => <ProtectedRoute component={LazyProfileEditPage} path="/profile/edit" />}
             </Route>
             <Route path="/profile/streamlined">
-              {(params) => <ProtectedRoute component={StreamlinedProfilePage} path="/profile/streamlined" />}
+              {(params) => <ProtectedRoute component={LazyProfilePage} path="/profile/streamlined" />}
             </Route>
             <Route path="/record-match">
-              {(params) => <ProtectedRoute component={RecordMatchPage} path="/record-match" />}
+              {(params) => <ProtectedRoute component={LazyRecordMatchPage} path="/record-match" />}
             </Route>
             <Route path="/admin">
               {(params) => (
                 <AdminProtectedRoute>
-                  <AdminDashboardPage />
+                  <LazyAdminDashboardPage />
                 </AdminProtectedRoute>
               )}
             </Route>
             <Route path="/admin/prize-drawing">
               {(params) => (
                 <AdminProtectedRoute>
-                  <PrizeDrawingPage />
+                  <LazyPrizeDrawingPage />
                 </AdminProtectedRoute>
               )}
             </Route>
             <Route path="/admin/golden-ticket">
               {(params) => (
                 <AdminProtectedRoute>
-                  <GoldenTicketAdmin />
+                  <LazyGoldenTicketAdmin />
                 </AdminProtectedRoute>
               )}
             </Route>
             <Route path="/admin/passport-verification">
               {(params) => (
                 <AdminProtectedRoute>
-                  <PassportVerificationPage />
+                  <LazyPassportVerificationPage />
                 </AdminProtectedRoute>
               )}
             </Route>
@@ -194,7 +204,7 @@ export default function App() {
             <Route path="/admin/mobile-test">
               {(params) => (
                 <AdminProtectedRoute>
-                  <MobileTestPage />
+                  <LazyMobileTestPage />
                 </AdminProtectedRoute>
               )}
             </Route>
@@ -203,7 +213,7 @@ export default function App() {
             <Route path="/admin/reports">
               {(params) => (
                 <AdminProtectedRoute>
-                  <ReportsPage />
+                  <LazyReportsPage />
                 </AdminProtectedRoute>
               )}
             </Route>
@@ -212,7 +222,7 @@ export default function App() {
             <Route path="/admin/reporting">
               {(params) => (
                 <AdminProtectedRoute>
-                  <ReportsPage />
+                  <LazyReportsPage />
                 </AdminProtectedRoute>
               )}
             </Route>
@@ -221,19 +231,19 @@ export default function App() {
             <Route path="/admin/settings">
               {(params) => (
                 <AdminProtectedRoute>
-                  <SettingsPage />
+                  <LazySettingsPage />
                 </AdminProtectedRoute>
               )}
             </Route>
             
             {/* Leaderboard Route */}
             <Route path="/leaderboard">
-              {(params) => <ProtectedRoute component={LeaderboardPage} path="/leaderboard" />}
+              {(params) => <ProtectedRoute component={LazyLeaderboardPage} path="/leaderboard" />}
             </Route>
             
             {/* Mastery Paths Route */}
             <Route path="/mastery-paths">
-              {(params) => <ProtectedRoute component={MasteryPathsPage} path="/mastery-paths" />}
+              {(params) => <ProtectedRoute component={LazyMasteryPathsPage} path="/mastery-paths" />}
             </Route>
             
             {/* For now we'll keep the Match Reward Demo accessible */}
@@ -245,12 +255,12 @@ export default function App() {
             {/* PKL-278651-CONN-0006-ROUTE - PicklePass™ URL Structure Refinement */}
             {/* Main Events Discovery Page */}
             <Route path="/events">
-              {(params) => <ProtectedRoute component={EventDiscoveryPage} path="/events" />}
+              {(params) => <ProtectedRoute component={LazyEventDiscoveryPage} path="/events" />}
             </Route>
             
             {/* My Events Page */}
             <Route path="/events/my">
-              {(params) => <ProtectedRoute component={MyEventsPage} path="/events/my" />}
+              {(params) => <ProtectedRoute component={LazyMyEventsPage} path="/events/my" />}
             </Route>
             
             {/* Legacy route - redirect handled by EventTestPage */}
@@ -259,8 +269,9 @@ export default function App() {
             </Route>
             
             {/* 404 Route */}
-            <Route component={NotFound} />
+            <Route component={LazyNotFoundPage} />
           </Switch>
+              </Suspense>
             </TournamentChangeProvider>
           </UserDataProvider>
         </AuthProvider>
