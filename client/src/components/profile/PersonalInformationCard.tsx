@@ -52,46 +52,30 @@ export function PersonalInformationCard({ user }: PersonalInformationCardProps) 
                     Adding your real name helps us verify your identity for tournaments and official events.
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="relative">
-                      <label className="text-xs text-orange-800 mb-1 block">First Name</label>
-                      <input 
-                        type="text" 
-                        className="w-full px-3 py-2 border border-orange-200 rounded-md text-orange-900 bg-white focus:border-orange-400 focus:ring focus:ring-orange-300 focus:ring-opacity-40"
-                        placeholder="Your first name"
-                        value={user.firstName || ''}
-                        onChange={(e) => {
-                          fetch('/api/profile/update', {
-                            method: 'PATCH',
-                            headers: {
-                              'Content-Type': 'application/json',
-                            },
-                            credentials: 'include',
-                            body: JSON.stringify({
-                              firstName: e.target.value
-                            })
-                          });
-                        }}
+                    {/* First Name - Using ContextualEditField for consistency */}
+                    <div className="relative p-3 bg-white rounded-md">
+                      <h5 className="text-xs text-orange-800 mb-1 font-medium">First Name</h5>
+                      <ContextualEditField
+                        fieldName="firstName"
+                        fieldLabel="First Name"
+                        initialValue={user.firstName}
+                        placeholder="Enter your first name"
+                        validator={z.string().min(2, "First name must be at least 2 characters")}
+                        fieldType="basic"
+                        className="mt-1"
                       />
                     </div>
-                    <div className="relative">
-                      <label className="text-xs text-orange-800 mb-1 block">Last Name</label>
-                      <input 
-                        type="text" 
-                        className="w-full px-3 py-2 border border-orange-200 rounded-md text-orange-900 bg-white focus:border-orange-400 focus:ring focus:ring-orange-300 focus:ring-opacity-40"
-                        placeholder="Your last name"
-                        value={user.lastName || ''}
-                        onChange={(e) => {
-                          fetch('/api/profile/update', {
-                            method: 'PATCH',
-                            headers: {
-                              'Content-Type': 'application/json',
-                            },
-                            credentials: 'include',
-                            body: JSON.stringify({
-                              lastName: e.target.value
-                            })
-                          });
-                        }}
+                    {/* Last Name - Using ContextualEditField for consistency */}
+                    <div className="relative p-3 bg-white rounded-md">
+                      <h5 className="text-xs text-orange-800 mb-1 font-medium">Last Name</h5>
+                      <ContextualEditField
+                        fieldName="lastName"
+                        fieldLabel="Last Name"
+                        initialValue={user.lastName}
+                        placeholder="Enter your last name"
+                        validator={z.string().min(2, "Last name must be at least 2 characters")}
+                        fieldType="basic"
+                        className="mt-1"
                       />
                     </div>
                   </div>
