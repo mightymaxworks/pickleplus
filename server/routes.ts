@@ -315,17 +315,11 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       }
       
       // Record that this field has been completed and award XP
-      await storage.markProfileFieldComplete(req.user.id, fieldName);
+      await storage.recordProfileFieldCompletion(req.user.id, fieldName, xpAmount);
       await storage.updateUserXP(req.user.id, xpAmount);
       
-      // Record activity
-      await storage.createActivity({
-        userId: req.user.id,
-        type: 'profile_field_complete',
-        description: `Completed profile field: ${fieldName}`,
-        xpEarned: xpAmount,
-        metadata: { fieldName, fieldType }
-      });
+      // We'll only record XP via the updateUserXP call
+      // No separate activity logging since we don't have createActivity in the interface
       
       // Return success response
       res.status(200).json({
@@ -397,8 +391,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
         eventTier: req.body.eventTier || "local",
         gameScores: req.body.gameScores || [],
         notes: req.body.notes || "",
-        // submitterId is not used in the DB schema, just use it for validation
-        validationStatus: "pending", // Initially pending until validated
+        // Remove validationStatus as it's not in InsertMatch type
         matchDate: new Date(),
       };
       

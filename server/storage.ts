@@ -597,6 +597,12 @@ export class DatabaseStorage implements IStorage {
       console.log(`[Storage] updateUserProfile - SQL UPDATE operation. Data to update:`, JSON.stringify(validData, null, 2));
       console.log(`[Storage] updateUserProfile - Updating user with id=${numericId}`);
       
+      // Check if there are actual fields to update
+      if (Object.keys(validData).length === 0) {
+        console.log(`[Storage] updateUserProfile - No valid fields to update, skipping SQL operation`);
+        return currentUser; // Return the current user without performing update
+      }
+      
       let updatedUser;
       try {
         const [result] = await db.update(users)
