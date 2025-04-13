@@ -385,7 +385,24 @@ export function setupAuth(app: Express) {
       
       // Return the user data without the password
       const { password, ...userWithoutPassword } = freshUserData;
-      res.json(userWithoutPassword);
+      
+      // Transform snake_case fields to camelCase for frontend consumption
+      const transformedUserData = { ...userWithoutPassword };
+      
+      // Specifically map the first_name and last_name fields to camelCase
+      if ('first_name' in transformedUserData) {
+        transformedUserData.firstName = transformedUserData.first_name;
+        delete transformedUserData.first_name;
+        console.log("[API] Mapped first_name to firstName:", transformedUserData.firstName);
+      }
+      
+      if ('last_name' in transformedUserData) {
+        transformedUserData.lastName = transformedUserData.last_name;
+        delete transformedUserData.last_name;
+        console.log("[API] Mapped last_name to lastName:", transformedUserData.lastName);
+      }
+      
+      res.json(transformedUserData);
     } catch (error) {
       console.error("Error fetching current user:", error);
       res.status(500).json({ message: "Server error fetching user data" });
