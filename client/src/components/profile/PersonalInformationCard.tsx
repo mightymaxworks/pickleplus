@@ -1,6 +1,6 @@
 import { 
   User, MapPin, Clock, Dumbbell, Database, Hand, KeyRound, 
-  Smartphone, Award, Heart
+  Smartphone, Award, Heart, UserCircle2, UserCheck
 } from "lucide-react";
 import { 
   Card, 
@@ -35,6 +35,33 @@ export function PersonalInformationCard({ user }: PersonalInformationCardProps) 
       </CardHeader>
       <CardContent>
         <div className="space-y-5">
+          {/* Name Information */}
+          <div>
+            <h4 className="text-sm font-medium text-muted-foreground mb-3">Identity</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex items-start">
+                <div className="bg-[#FF9800]/10 text-[#FF9800] p-2 rounded-md mr-3">
+                  <UserCircle2 className="h-4 w-4" />
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground mb-1">First Name</div>
+                  <div>{user.firstName || "Not provided"}</div>
+                </div>
+              </div>
+              <div className="flex items-start">
+                <div className="bg-[#FF9800]/10 text-[#FF9800] p-2 rounded-md mr-3">
+                  <UserCheck className="h-4 w-4" />
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground mb-1">Last Name</div>
+                  <div>{user.lastName || "Not provided"}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+          
           {/* Contact Information */}
           <div>
             <h4 className="text-sm font-medium text-muted-foreground mb-3">Contact</h4>
