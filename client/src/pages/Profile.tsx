@@ -268,7 +268,7 @@ export default function Profile() {
                       className="bg-[#FF9800] hover:bg-[#FF8800] text-white w-56" 
                       onClick={() => setLocation('/profile/edit')}
                     >
-                      <UserCircle2 className="h-3.5 w-3.5 mr-1" />
+                      <User className="h-3.5 w-3.5 mr-1" />
                       Complete Your Name Information
                     </Button>
                   )}

@@ -1,6 +1,6 @@
 import { 
   User, MapPin, Clock, Dumbbell, Database, Hand, KeyRound, 
-  Smartphone, Award, Heart, UserCircle2, UserCheck
+  Smartphone, Award, Heart, User as UserCircle2, UserCheck
 } from "lucide-react";
 import { 
   Card, 
@@ -21,13 +21,6 @@ interface PersonalInformationCardProps {
 }
 
 export function PersonalInformationCard({ user }: PersonalInformationCardProps) {
-  // Debug the user object to see what fields are available
-  console.log("[DEBUG] PersonalInformationCard user object:", user);
-  console.log("[DEBUG] firstName field:", user.firstName);
-  console.log("[DEBUG] lastName field:", user.lastName);
-  console.log("[DEBUG] first_name field:", (user as any).first_name);
-  console.log("[DEBUG] last_name field:", (user as any).last_name);
-  
   return (
     <ProfileEditProvider>
       <Card>
@@ -40,19 +33,71 @@ export function PersonalInformationCard({ user }: PersonalInformationCardProps) 
           </div>
         </CardHeader>
         <CardContent>
-          {/* Debug card for firstName/lastName */}
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-            <h4 className="text-sm font-semibold text-red-700">Debug Information:</h4>
-            <p className="text-xs text-red-600">firstName: {user.firstName ? user.firstName : 'null/undefined'}</p>
-            <p className="text-xs text-red-600">lastName: {user.lastName ? user.lastName : 'null/undefined'}</p>
-            <p className="text-xs text-red-600">first_name: {(user as any).first_name ? (user as any).first_name : 'null/undefined'}</p>
-            <p className="text-xs text-red-600">last_name: {(user as any).last_name ? (user as any).last_name : 'null/undefined'}</p>
-          </div>
           
           <div className="space-y-5">
             {/* Name Information */}
             <div>
               <h4 className="text-sm font-medium text-muted-foreground mb-3">Identity</h4>
+              
+              {/* If name is missing, show prominent edit box */}
+              {(!user.firstName || !user.lastName) && (
+                <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-md">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="bg-orange-100 p-2 rounded-full">
+                      <UserCircle2 className="h-5 w-5 text-orange-500" />
+                    </div>
+                    <h3 className="font-medium text-orange-800">Complete Your Profile</h3>
+                  </div>
+                  <p className="text-sm text-orange-700 mb-3">
+                    Adding your real name helps us verify your identity for tournaments and official events.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="relative">
+                      <label className="text-xs text-orange-800 mb-1 block">First Name</label>
+                      <input 
+                        type="text" 
+                        className="w-full px-3 py-2 border border-orange-200 rounded-md text-orange-900 bg-white focus:border-orange-400 focus:ring focus:ring-orange-300 focus:ring-opacity-40"
+                        placeholder="Your first name"
+                        value={user.firstName || ''}
+                        onChange={(e) => {
+                          fetch('/api/profile/update', {
+                            method: 'PATCH',
+                            headers: {
+                              'Content-Type': 'application/json',
+                            },
+                            credentials: 'include',
+                            body: JSON.stringify({
+                              firstName: e.target.value
+                            })
+                          });
+                        }}
+                      />
+                    </div>
+                    <div className="relative">
+                      <label className="text-xs text-orange-800 mb-1 block">Last Name</label>
+                      <input 
+                        type="text" 
+                        className="w-full px-3 py-2 border border-orange-200 rounded-md text-orange-900 bg-white focus:border-orange-400 focus:ring focus:ring-orange-300 focus:ring-opacity-40"
+                        placeholder="Your last name"
+                        value={user.lastName || ''}
+                        onChange={(e) => {
+                          fetch('/api/profile/update', {
+                            method: 'PATCH',
+                            headers: {
+                              'Content-Type': 'application/json',
+                            },
+                            credentials: 'include',
+                            body: JSON.stringify({
+                              lastName: e.target.value
+                            })
+                          });
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex items-start">
                   <div className="bg-[#FF9800]/10 text-[#FF9800] p-2 rounded-md mr-3 mt-2">
