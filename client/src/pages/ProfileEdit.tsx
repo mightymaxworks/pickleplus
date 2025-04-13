@@ -26,6 +26,8 @@ import { ProfileImageEditor } from "@/components/profile/ProfileImageEditor";
 
 // Form validation schema
 const profileSchema = z.object({
+  firstName: z.string().min(1, "First name is required").max(100, "First name must be less than 100 characters"),
+  lastName: z.string().min(1, "Last name is required").max(100, "Last name must be less than 100 characters"),
   displayName: z.string().min(2, "Display name must be at least 2 characters").max(50, "Display name must be less than 50 characters"),
   location: z.string().min(1, "Location is required").max(100),
   bio: z.string().max(500, "Bio must be less than 500 characters").optional(),
@@ -73,6 +75,8 @@ export default function ProfileEdit() {
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
+      firstName: user?.firstName || "",
+      lastName: user?.lastName || "",
       displayName: user?.displayName || "",
       location: user?.location || "",
       bio: user?.bio || "",
@@ -91,6 +95,8 @@ export default function ProfileEdit() {
   useEffect(() => {
     if (user) {
       form.reset({
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
         displayName: user.displayName || "",
         location: user.location || "",
         bio: user.bio || "",
