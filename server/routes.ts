@@ -175,6 +175,10 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       }
       
       console.log("[API] Profile update request received:", JSON.stringify(req.body, null, 2));
+      // Debug raw request body too
+      console.log("[API] Raw profile request body keys:", Object.keys(req.body));
+      console.log("[API] firstName present:", 'firstName' in req.body);
+      console.log("[API] lastName present:", 'lastName' in req.body);
       
       // Get the current user data to compare later for XP rewards
       const oldUser = await storage.getUser(req.user.id);
