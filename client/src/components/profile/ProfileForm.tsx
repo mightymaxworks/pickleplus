@@ -1,4 +1,5 @@
-import { User, ProfileCompletionData } from "@/types";
+import { ProfileCompletionData } from "@/types";
+import { EnhancedUser } from "@/types/enhanced-user";
 import { 
   Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage 
 } from "@/components/ui/form";

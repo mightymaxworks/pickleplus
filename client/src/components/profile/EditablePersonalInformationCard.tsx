@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { Edit, User, Calendar, MapPin, Star, Shield, GripVertical } from "lucide-react";
+import { Edit, User, Calendar, MapPin, Star, Shield, GripVertical, UserCircle2, UserCheck } from "lucide-react";
 
 interface EditablePersonalInformationCardProps {
   user: any;
@@ -34,6 +34,30 @@ export function EditablePersonalInformationCard({ user }: EditablePersonalInform
       </CardHeader>
       <CardContent className="pb-4">
         <div className="space-y-4">
+          {user.firstName && (
+            <div className="flex items-start gap-3">
+              <UserCircle2 className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <div className="font-medium text-sm">First Name</div>
+                <div className="text-sm text-muted-foreground">
+                  {user.firstName}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {user.lastName && (
+            <div className="flex items-start gap-3">
+              <UserCheck className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <div className="font-medium text-sm">Last Name</div>
+                <div className="text-sm text-muted-foreground">
+                  {user.lastName}
+                </div>
+              </div>
+            </div>
+          )}
+          
           {user.yearOfBirth && (
             <div className="flex items-start gap-3">
               <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
@@ -118,7 +142,7 @@ export function EditablePersonalInformationCard({ user }: EditablePersonalInform
             </div>
           )}
           
-          {(!user.yearOfBirth && !user.location && !user.playingSince && !user.skillLevel && 
+          {(!user.firstName && !user.lastName && !user.yearOfBirth && !user.location && !user.playingSince && !user.skillLevel && 
             !user.dominantHand && !user.preferredPosition && !user.playingStyle) && (
             <div className="text-center py-6 text-muted-foreground">
               <User className="h-10 w-10 mx-auto mb-2 opacity-20" />
