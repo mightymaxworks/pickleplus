@@ -1,22 +1,12 @@
 /**
- * Application Version Information
- * 
- * This file contains version information for the Pickle+ application.
- * Update this file when releasing new versions.
+ * Application version information
+ * This file is used to track and display version information throughout the application
  */
 
 export const VERSION = {
-  number: '1.1.0',
+  number: '1.5.0',
   name: 'Tournament Edition',
+  codename: 'Court Monarch',
   releaseDate: '2025-04-13',
-  codename: 'Swift Smash',
-  features: [
-    'Enhanced Tournament Module',
-    'Multi-Game Match UI Improvements',
-    'CourtIQ Integration for Tournament Ratings',
-    'Mobile-Optimized Match Recording',
-    'Improved Bracket Visualization'
-  ]
+  environment: import.meta.env.MODE || 'development'
 };
-
-export default VERSION;

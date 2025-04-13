@@ -9,6 +9,7 @@ import { EasterEggModal } from "@/components/EasterEggModal";
 import { useState, useEffect } from "react";
 import { Features, useFeatureFlag } from "@/lib/featureFlags";
 import BounceMascot from "@/modules/guidance-mini/components/BounceMascot";
+import Footer from "@/components/Footer";
 
 // Import enhanced components
 import { EnhancedHeroSection } from "@/components/EnhancedHeroSection";
