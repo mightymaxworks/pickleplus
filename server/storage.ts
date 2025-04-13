@@ -611,7 +611,7 @@ export class DatabaseStorage implements IStorage {
       console.log(`[Storage] updateUserProfile - SQL UPDATE operation. Data to update:`, JSON.stringify(validData, null, 2));
       console.log(`[Storage] updateUserProfile - Updating user with id=${numericId}`);
       
-      // Check if there are actual fields to update
+      // CRITICAL: Check if there are actual fields to update
       if (Object.keys(validData).length === 0) {
         console.log(`[Storage] updateUserProfile - No valid fields to update, skipping SQL operation`);
         return currentUser; // Return the current user without performing update
@@ -649,9 +649,13 @@ export class DatabaseStorage implements IStorage {
           (updatedUser as any).regularSchedule = null;
         }
         
-        // Map back from snake_case to camelCase for frontend use
-        (updatedUser as any).firstName = updatedUser.first_name;
-        (updatedUser as any).lastName = updatedUser.last_name;
+        // Map back from database column names to camelCase for frontend use
+        if ('first_name' in updatedUser) {
+          (updatedUser as any).firstName = updatedUser.first_name;
+        }
+        if ('last_name' in updatedUser) {
+          (updatedUser as any).lastName = updatedUser.last_name;
+        }
       }
       
       // Update the profile completion percentage if it changed
@@ -673,9 +677,13 @@ export class DatabaseStorage implements IStorage {
             (finalUser as any).regularSchedule = null;
           }
           
-          // Map back from snake_case to camelCase for frontend use
-          (finalUser as any).firstName = finalUser.first_name;
-          (finalUser as any).lastName = finalUser.last_name;
+          // Map back from database column names to camelCase for frontend use
+          if ('first_name' in finalUser) {
+            (finalUser as any).firstName = finalUser.first_name;
+          }
+          if ('last_name' in finalUser) {
+            (finalUser as any).lastName = finalUser.last_name;
+          }
         }
         
         return finalUser;
