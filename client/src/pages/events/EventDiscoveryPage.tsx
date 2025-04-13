@@ -145,16 +145,17 @@ export default function EventDiscoveryPage() {
                   
                   <div className="flex flex-wrap gap-3">
                     {/* Enhanced Universal Passport Dialog */}
+                    <Button 
+                      variant="default"
+                      className="bg-primary hover:bg-primary/90 transition-all duration-300"
+                      onClick={handleViewPassportClick}
+                    >
+                      <TicketIcon className="mr-2 h-4 w-4" />
+                      Show My Passport
+                    </Button>
+
+                    {/* Enhanced Universal Passport Dialog */}
                     <Dialog open={showPassportDialog} onOpenChange={setShowPassportDialog}>
-                      <DialogTrigger asChild>
-                        <Button 
-                          variant="default"
-                          className="bg-primary hover:bg-primary/90 transition-all duration-300"
-                        >
-                          <TicketIcon className="mr-2 h-4 w-4" />
-                          Show My Passport
-                        </Button>
-                      </DialogTrigger>
                       <DialogContent className="sm:max-w-md p-6 rounded-xl border-primary/10 shadow-lg">
                         <DialogHeader className="pb-2">
                           <DialogTitle className="text-xl flex items-center">

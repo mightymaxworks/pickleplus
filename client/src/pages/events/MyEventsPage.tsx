@@ -11,7 +11,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ArrowLeftIcon, TicketIcon, CalendarDaysIcon } from 'lucide-react';
+import { ArrowLeftIcon, TicketIcon, CalendarIcon } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 
 // Components
@@ -79,7 +79,7 @@ export default function MyEventsPage() {
             <CardHeader className="pb-3">
               <div className="flex justify-between items-center">
                 <CardTitle className="text-lg flex items-center">
-                  <CalendarDaysIcon className="h-5 w-5 mr-2 text-primary" />
+                  <CalendarIcon className="h-5 w-5 mr-2 text-primary" />
                   My Events
                 </CardTitle>
                 <Button 
