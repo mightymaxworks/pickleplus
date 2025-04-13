@@ -54,6 +54,8 @@ const StreamlinedProfilePage: FC = () => {
   const [, navigate] = useLocation();
   
   // Overview tab fields
+  const [firstNameField, setFirstNameField] = useState('');
+  const [lastNameField, setLastNameField] = useState('');
   const [bioField, setBioField] = useState('');
   const [playingStyleField, setPlayingStyleField] = useState('');
   const [playingSinceField, setPlayingSinceField] = useState('');
@@ -462,6 +464,8 @@ const StreamlinedProfilePage: FC = () => {
   useEffect(() => {
     if (user) {
       // Overview tab fields
+      setFirstNameField(user.firstName || '');
+      setLastNameField(user.lastName || '');
       setBioField(user.bio || '');
       setPlayingStyleField(user.playingStyle || '');
       setPlayingSinceField(user.playingSince || '');
