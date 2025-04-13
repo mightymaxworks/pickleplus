@@ -42,6 +42,7 @@ This framework defines the core principles and practices for developing the Pick
    - Use proper migration scripts for any schema changes with "up" and "down" paths
    - Implement data integrity through constraints, defaults, and transactions
    - Maintain synchronization between application code and database schema
+   - **CRITICAL**: Enforce consistent naming conventions in both database schema and application code
 
 2. **ORM Configuration**
    - Define all schemas in `shared/schema.ts` to ensure frontend and backend consistency
@@ -51,6 +52,9 @@ This framework defines the core principles and practices for developing the Pick
      - Create insert schema with `createInsertSchema`
      - Create insert type with `z.infer<typeof insertSchema>`
      - Create select type with `typeof table.$inferSelect`
+   - **NEW**: Always be aware of naming convention translation between TypeScript fields and DB columns
+   - **NEW**: Understand exactly how your ORM maps JavaScript/TypeScript property names to database column names
+   - **NEW**: When defining columns with different naming styles (e.g., camelCase in code, snake_case in DB), ensure the mapping layer correctly translates between them
 
 ## Frontend Data Management
 
@@ -168,16 +172,25 @@ This framework defines the core principles and practices for developing the Pick
    - Avoid type assertions (`as`) except when absolutely necessary
    - Use proper type guards to check shapes of data
    - Minimize use of `any` type
+   - **NEW**: Ensure all field names are consistently used between frontend and backend
 
-4. **Component Integration Testing**:
+4. **Data Access Abstraction**:
+   - **CRITICAL**: Always use standardized storage interfaces for database operations
+   - **NEW**: Never bypass the storage layer with direct database operations
+   - **NEW**: Use storage interfaces that properly handle field name conversions
+   - **NEW**: Keep route handlers thin and delegate data operations to storage interfaces
+   - **NEW**: If storage interface doesn't support a specific operation, extend it rather than creating workarounds
+
+5. **Component Integration Testing**:
    - Test complete user flows, not just API calls
    - Verify data appears correctly in the UI before considering a feature complete
    - Use React Query's built-in devtools to inspect query states during development
 
-5. **Enhanced Logging Strategy**:
+6. **Enhanced Logging Strategy**:
    - Implement structured logging at key points in the data flow
    - Log both request and response details in development mode
    - Create dedicated debugging tools that don't modify the core data flow
+   - **NEW**: Log the exact data being sent to and returned from the database for debugging
 
 ## Resilient Component Design
 
@@ -251,7 +264,30 @@ When an issue occurs, follow this checklist:
 5. Validate form data against schema requirements
 6. Check component props and state flow
 7. Verify route handlers are correctly registered
-8. Check database schema matches expected fields
-9. Examine console logs for component refresh operations
-10. Verify multiple refresh strategies are working
-11. Check for error handling around context usage
+8. **NEW**: Verify field naming conventions match between frontend and database
+9. **NEW**: Check if column names in database (snake_case) align with property names in code (camelCase)
+10. **NEW**: Verify storage interface correctly handles field name translation
+11. **NEW**: Ensure API route handlers use storage interfaces instead of direct database operations
+12. Check database schema matches expected fields
+13. Examine console logs for component refresh operations
+14. Verify multiple refresh strategies are working
+15. Check for error handling around context usage
+
+### Field Naming Convention Debugging
+
+When dealing with field mapping issues:
+
+1. **Identify the data path**: 
+   - Frontend field name (e.g., `firstName`) 
+   - → API route parameter 
+   - → Storage interface method 
+   - → SQL column name (e.g., `first_name`)
+
+2. **Check field name transformation**: 
+   - Verify how field names are transformed at each layer
+   - Ensure the storage interface correctly maps between camelCase and snake_case
+   - Add logging to see the exact field names being sent to and returned from the database
+
+3. **Use standard interfaces**:
+   - Always prefer using the established storage interface over direct SQL operations
+   - If special handling is needed, extend the interface rather than bypassing it
