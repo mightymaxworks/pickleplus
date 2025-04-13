@@ -325,9 +325,11 @@ export function EventList({
   }
 
   // Function to determine attendance fill level for visual indicator
-  const getAttendanceLevel = (current: number = 0, max: number = 0) => {
-    if (!max) return 'low';
-    const percentage = (current / max) * 100;
+  const getAttendanceLevel = (current: number | null = 0, max: number | null = 0) => {
+    const currentValue = current ?? 0;
+    const maxValue = max ?? 0;
+    if (!maxValue) return 'low';
+    const percentage = (currentValue / maxValue) * 100;
     if (percentage >= 85) return 'high';
     if (percentage >= 50) return 'medium';
     return 'low';
@@ -337,7 +339,6 @@ export function EventList({
   const isEventFeatured = (event: Event & {isRegistered?: boolean}) => {
     // Events are featured if they're happening soon, have special status, etc.
     if (event.isRegistered) return true;
-    if (event.featured) return true;
     
     // Check if event is happening in the next 48 hours
     if (event.startDateTime) {

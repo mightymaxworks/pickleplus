@@ -1,13 +1,27 @@
 /**
  * PKL-278651-CONN-0004-PASS-REG-UI-PHASE2
- * My Events Tab Component
+ * PKL-278651-CONN-0008-UX - PicklePass™ UI/UX Enhancement Sprint
  * 
+ * My Events Tab Component with enhanced UI/UX
  * Displays events that the current user has registered for but not yet attended
+ * with improved visual hierarchy, animations, and mobile experience
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { CalendarIcon, MapPinIcon, UsersIcon, TicketIcon, CheckIcon, XCircleIcon, CalendarDaysIcon } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  CalendarIcon, 
+  MapPinIcon, 
+  UsersIcon, 
+  TicketIcon, 
+  CheckIcon, 
+  XCircleIcon, 
+  CalendarDaysIcon,
+  ClockIcon,
+  AlertCircleIcon,
+  FilterIcon
+} from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -16,6 +30,13 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -193,88 +214,251 @@ export function MyEventsTab({ className, onEventClick, onPassportClick }: MyEven
     );
   }
 
-  // Render events list
+  // Process events for UI display
+  const processedEvents = useMemo(() => {
+    if (!events) return [];
+    
+    // Group events by date
+    const grouped: Record<string, typeof events> = {};
+    
+    events.forEach(event => {
+      if (!event.startDateTime) {
+        if (!grouped['Date TBD']) grouped['Date TBD'] = [];
+        grouped['Date TBD'].push(event);
+        return;
+      }
+      
+      const dateKey = formatDate(new Date(event.startDateTime), { 
+        month: 'long', 
+        day: 'numeric',
+        year: 'numeric'
+      } as Intl.DateTimeFormatOptions);
+      
+      if (!grouped[dateKey]) grouped[dateKey] = [];
+      grouped[dateKey].push(event);
+    });
+    
+    // Convert to array format for rendering
+    return Object.entries(grouped).map(([date, dateEvents]) => ({
+      date,
+      events: dateEvents
+    })).sort((a, b) => {
+      // Sort TBD dates to the end
+      if (a.date === 'Date TBD') return 1;
+      if (b.date === 'Date TBD') return -1;
+      
+      // Compare dates for the rest
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return dateA.getTime() - dateB.getTime();
+    });
+  }, [events]);
+  
+  // Function to determine attendance fill level
+  const getAttendanceLevel = (current: number | null = 0, max: number | null = 0) => {
+    const currentValue = current ?? 0;
+    const maxValue = max ?? 0;
+    if (!maxValue) return 'low';
+    const percentage = (currentValue / maxValue) * 100;
+    if (percentage >= 85) return 'high';
+    if (percentage >= 50) return 'medium';
+    return 'low';
+  };
+  
+  // Determine if an event is happening soon (next 24 hours)
+  const isEventSoon = (event: Event) => {
+    if (!event.startDateTime) return false;
+    
+    const eventDate = new Date(event.startDateTime);
+    const now = new Date();
+    const diffHours = (eventDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+    return diffHours > 0 && diffHours <= 24;
+  };
+
+  // Render events list with enhanced UI
   return (
     <div className={cn("space-y-4", className)}>
-      <div className="flex justify-between items-center mb-2">
-        <h3 className="text-lg font-semibold">My Registered Events</h3>
-        <Button 
-          variant="default" 
-          size="sm" 
-          className="text-xs bg-primary/90 hover:bg-primary transition-all duration-300"
-          onClick={onPassportClick}
-          disabled={!onPassportClick}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-2">
+        <div>
+          <h3 className="text-lg font-semibold flex items-center">
+            <CalendarDaysIcon className="h-5 w-5 mr-2 text-primary/70" />
+            My Registered Events
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Events you've registered for through PicklePass™
+          </p>
+        </div>
+        
+        <motion.div
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
         >
-          <TicketIcon className="mr-1.5 h-3.5 w-3.5" />
-          View Passport
-        </Button>
+          <Button 
+            variant="default" 
+            className="bg-primary/90 hover:bg-primary transition-all duration-300 w-full sm:w-auto"
+            onClick={onPassportClick}
+            disabled={!onPassportClick}
+          >
+            <TicketIcon className="mr-2 h-4 w-4" />
+            View My Passport
+          </Button>
+        </motion.div>
       </div>
       
-      <ScrollArea className="h-[400px] pr-4">
-        <div className="space-y-4 pr-2">
-          {events.map((event) => (
-            <Card 
-              key={event.id} 
-              className={cn(
-                "overflow-hidden transition-all", 
-                onEventClick && "hover:shadow-md cursor-pointer"
-              )}
-              onClick={() => handleEventClick(event)}
-            >
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">{event.name}</CardTitle>
-                  {getEventStatusBadge(event)}
+      <ScrollArea className="h-[450px] pr-4">
+        <AnimatePresence>
+          <div className="space-y-6 pr-2">
+            {processedEvents.map((group, groupIndex) => (
+              <motion.div 
+                key={group.date} 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: groupIndex * 0.1, duration: 0.4 }}
+                className="space-y-3"
+              >
+                {/* Date heading with subtle separator */}
+                <div className="flex items-center">
+                  <CalendarIcon className="h-4 w-4 mr-2 text-primary/70" />
+                  <h3 className="text-sm font-medium text-primary/80">{group.date}</h3>
+                  <Separator className="ml-3 flex-1" />
                 </div>
-                <CardDescription>
-                  <div className="flex items-center mt-1">
-                    <CalendarIcon className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
-                    <span>
-                      {event.startDateTime ? `${formatDate(new Date(event.startDateTime), { month: 'short', day: 'numeric' })} at ${formatTime(new Date(event.startDateTime))}` : 'Date TBD'}
-                    </span>
-                  </div>
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pb-3 text-sm">
-                {event.location && (
-                  <div className="flex items-center text-muted-foreground mb-1.5">
-                    <MapPinIcon className="h-3.5 w-3.5 mr-1.5" />
-                    <span>{event.location}</span>
-                  </div>
-                )}
-                {event.maxAttendees && (
-                  <div className="flex items-center text-muted-foreground">
-                    <UsersIcon className="h-3.5 w-3.5 mr-1.5" />
-                    <span>
-                      {event.currentAttendees || 0} / {event.maxAttendees} attending
-                    </span>
-                  </div>
-                )}
                 
-                <div className="mt-2">
-                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                    <CheckIcon className="h-3 w-3 mr-1" />
-                    Registered
-                  </Badge>
+                {/* Events for this date */}
+                <div className="space-y-3 pl-1">
+                  {group.events.map((event, eventIndex) => {
+                    const soon = isEventSoon(event);
+                    const attendanceLevel = getAttendanceLevel(event.currentAttendees, event.maxAttendees);
+                    
+                    return (
+                      <motion.div
+                        key={event.id}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ 
+                          delay: (groupIndex * 0.1) + (eventIndex * 0.05),
+                          duration: 0.3 
+                        }}
+                        className="origin-top"
+                      >
+                        <Card 
+                          className={cn(
+                            "overflow-hidden border-l-4 transition-all",
+                            onEventClick && "hover:shadow-md cursor-pointer",
+                            soon ? "border-l-amber-500 bg-gradient-to-r from-amber-50/40 to-transparent" : 
+                              "border-l-primary/70 bg-gradient-to-r from-primary/5 to-transparent"
+                          )}
+                          onClick={() => handleEventClick(event)}
+                        >
+                          <CardHeader className="pb-2">
+                            <div className="flex justify-between items-start">
+                              <CardTitle className="text-lg flex items-center gap-2">
+                                {soon && (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <AlertCircleIcon className="h-4 w-4 text-amber-500" />
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Happening in less than 24 hours!</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
+                                {event.name}
+                              </CardTitle>
+                              {getEventStatusBadge(event)}
+                            </div>
+                            <CardDescription>
+                              <div className="flex items-center mt-1">
+                                <ClockIcon className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
+                                <span>
+                                  {event.startDateTime ? formatTime(new Date(event.startDateTime)) : 'Time TBD'}
+                                  {event.endDateTime && ` - ${formatTime(new Date(event.endDateTime))}`}
+                                </span>
+                              </div>
+                            </CardDescription>
+                          </CardHeader>
+                          
+                          <CardContent className="pb-3 text-sm">
+                            {event.location && (
+                              <div className="flex items-center text-muted-foreground mb-1.5">
+                                <MapPinIcon className="h-3.5 w-3.5 mr-1.5" />
+                                <span>{event.location}</span>
+                              </div>
+                            )}
+                            
+                            {event.maxAttendees ? (
+                              <div className="text-muted-foreground">
+                                <div className="flex items-center mb-1">
+                                  <UsersIcon className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
+                                  <span>
+                                    {event.currentAttendees || 0} / {event.maxAttendees} attending
+                                    {attendanceLevel === 'high' && (
+                                      <span className="ml-2 text-amber-600 text-xs">Almost full</span>
+                                    )}
+                                  </span>
+                                </div>
+                                
+                                {/* Attendance progress bar */}
+                                <div className="h-1.5 rounded-full bg-muted/50 w-full mt-1 overflow-hidden">
+                                  <div 
+                                    className={cn(
+                                      "h-full rounded-full",
+                                      attendanceLevel === 'high' ? "bg-amber-500" : 
+                                      attendanceLevel === 'medium' ? "bg-blue-500" : 
+                                      "bg-green-500"
+                                    )}
+                                    style={{ 
+                                      width: `${Math.min(100, event.maxAttendees ? (event.currentAttendees || 0) / event.maxAttendees * 100 : 0)}%` 
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex items-center text-muted-foreground">
+                                <AlertCircleIcon className="h-3.5 w-3.5 mr-1.5" />
+                                <span>Unlimited attendance</span>
+                              </div>
+                            )}
+                            
+                            <motion.div 
+                              className="mt-2"
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ delay: 0.2 }}
+                            >
+                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                <CheckIcon className="h-3 w-3 mr-1" />
+                                Registered
+                              </Badge>
+                            </motion.div>
+                          </CardContent>
+                          
+                          <CardFooter className="pt-0">
+                            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="text-xs text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openCancelDialog(event);
+                                }}
+                              >
+                                <XCircleIcon className="h-3 w-3 mr-1" />
+                                Cancel Registration
+                              </Button>
+                            </motion.div>
+                          </CardFooter>
+                        </Card>
+                      </motion.div>
+                    );
+                  })}
                 </div>
-              </CardContent>
-              <CardFooter className="pt-0">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="text-xs text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openCancelDialog(event);
-                  }}
-                >
-                  <XCircleIcon className="h-3 w-3 mr-1" />
-                  Cancel Registration
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </div>
+        </AnimatePresence>
       </ScrollArea>
       
       {/* Cancel Registration Confirmation Dialog */}
