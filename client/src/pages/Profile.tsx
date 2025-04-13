@@ -259,30 +259,45 @@ export default function Profile() {
                   {tierInfo.description}
                 </div>
                 
-                <div className="mt-6 flex justify-center gap-6">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="text-xs" 
-                    onClick={() => setLocation('/profile/edit')}
-                  >
-                    <UserCog className="h-3.5 w-3.5 mr-1" />
-                    Edit Profile
-                  </Button>
+                <div className="mt-6 flex flex-col items-center gap-3">
+                  {/* Prominent name edit button */}
+                  {(!user.firstName || !user.lastName) && (
+                    <Button 
+                      variant="default" 
+                      size="sm" 
+                      className="bg-[#FF9800] hover:bg-[#FF8800] text-white w-56" 
+                      onClick={() => setLocation('/profile/edit')}
+                    >
+                      <UserCircle2 className="h-3.5 w-3.5 mr-1" />
+                      Complete Your Name Information
+                    </Button>
+                  )}
                   
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                    onClick={() => {
-                      const url = `https://pickleplus.app/player/${user.username}`;
-                      navigator.clipboard.writeText(url);
-                      alert('Profile URL copied to clipboard!');
-                    }}
-                  >
-                    <Share2 className="h-3.5 w-3.5 mr-1" />
-                    Share Profile
-                  </Button>
+                  <div className="flex gap-3">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-xs" 
+                      onClick={() => setLocation('/profile/edit')}
+                    >
+                      <UserCog className="h-3.5 w-3.5 mr-1" />
+                      Edit Profile
+                    </Button>
+                    
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      className="text-xs"
+                      onClick={() => {
+                        const url = `https://pickleplus.app/player/${user.username}`;
+                        navigator.clipboard.writeText(url);
+                        alert('Profile URL copied to clipboard!');
+                      }}
+                    >
+                      <Share2 className="h-3.5 w-3.5 mr-1" />
+                      Share Profile
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
