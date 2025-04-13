@@ -44,11 +44,30 @@ const safeFormatDateTime = (dateString: any) => {
 };
 
 export default function EventDiscoveryPage() {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const { toast } = useToast();
+  const [, navigate] = useLocation();
   
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [activeTab, setActiveTab] = useState<string>('upcoming');
   const [showPassportDialog, setShowPassportDialog] = useState<boolean>(false);
+  
+  // PKL-278651-CONN-0007-AUTH: Handle tab change with authentication check
+  const handleTabChange = (value: string) => {
+    // If trying to access protected tabs without being logged in
+    if ((value === 'registered' || value === 'attended') && !user) {
+      console.log('[Auth] Unauthorized user attempting to access protected tab:', value);
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to view your events",
+        variant: "default"
+      });
+      navigate('/login');
+      return;
+    }
+    
+    setActiveTab(value);
+  };
   
   // Fetch the selected event details when an event is selected
   const { data: eventDetails } = useQuery({
@@ -63,7 +82,19 @@ export default function EventDiscoveryPage() {
   };
 
   // Handle "View My Passport" click from the My Events tab
+  // PKL-278651-CONN-0007-AUTH: Authentication check for passport view
   const handleViewPassportClick = () => {
+    if (!user) {
+      console.log('[Auth] Unauthorized user attempting to view passport, showing login prompt');
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to view your universal passport",
+        variant: "default"
+      });
+      navigate('/login');
+      return;
+    }
+    
     setShowPassportDialog(true);
   };
   
@@ -77,11 +108,17 @@ export default function EventDiscoveryPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Left column - Events list */}
         <div className="md:col-span-1">
-          <Tabs defaultValue="upcoming" value={activeTab} onValueChange={setActiveTab}>
+          <Tabs defaultValue="upcoming" value={activeTab} onValueChange={handleTabChange}>
             <TabsList className="grid w-full grid-cols-3 mb-4">
               <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-              <TabsTrigger value="registered">My Events</TabsTrigger>
-              <TabsTrigger value="attended">Attended</TabsTrigger>
+              <TabsTrigger value="registered" className="flex items-center">
+                {!user && <LockIcon className="h-3 w-3 mr-1 text-muted-foreground" />}
+                My Events
+              </TabsTrigger>
+              <TabsTrigger value="attended" className="flex items-center">
+                {!user && <LockIcon className="h-3 w-3 mr-1 text-muted-foreground" />}
+                Attended
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="upcoming" className="mt-0">
@@ -152,8 +189,17 @@ export default function EventDiscoveryPage() {
                       className="bg-primary hover:bg-primary/90 transition-all duration-300"
                       onClick={handleViewPassportClick}
                     >
-                      <TicketIcon className="mr-2 h-4 w-4" />
-                      Show My Passport
+                      {!user ? (
+                        <>
+                          <LockIcon className="mr-2 h-4 w-4" />
+                          Login to View Passport
+                        </>
+                      ) : (
+                        <>
+                          <TicketIcon className="mr-2 h-4 w-4" />
+                          Show My Passport
+                        </>
+                      )}
                     </Button>
 
                     {/* Enhanced Universal Passport Dialog */}
@@ -194,8 +240,17 @@ export default function EventDiscoveryPage() {
                   onClick={handleViewPassportClick}
                   className="bg-primary/90 hover:bg-primary transition-all duration-300 px-6 py-5 rounded-lg"
                 >
-                  <TicketIcon className="mr-2 h-5 w-5" />
-                  View My Universal Passport
+                  {!user ? (
+                    <>
+                      <LockIcon className="mr-2 h-5 w-5" />
+                      Login to View Passport
+                    </>
+                  ) : (
+                    <>
+                      <TicketIcon className="mr-2 h-5 w-5" />
+                      View My Universal Passport
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
