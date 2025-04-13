@@ -11,12 +11,12 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * Formats a date into a human-readable string
  * @param date The date to format
- * @param options Additional formatting options
+ * @param options Additional formatting options or Intl.DateTimeFormatOptions
  * @returns Formatted date string
  */
 export function formatDate(
   date: Date,
-  options: {
+  options: Intl.DateTimeFormatOptions | {
     weekday?: boolean;
     year?: boolean;
     month?: "short" | "long" | "numeric" | "2-digit";
@@ -26,6 +26,25 @@ export function formatDate(
     second?: boolean;
   } = {}
 ): string {
+  // Check if options is already an Intl.DateTimeFormatOptions object
+  if (options && 
+      (typeof (options as Intl.DateTimeFormatOptions).weekday === 'string' ||
+       typeof (options as Intl.DateTimeFormatOptions).year === 'string' ||
+       typeof (options as Intl.DateTimeFormatOptions).hour === 'string')) {
+    return new Intl.DateTimeFormat("en-US", options as Intl.DateTimeFormatOptions).format(date);
+  }
+  
+  // Process our simplified options format
+  const customOptions = options as {
+    weekday?: boolean;
+    year?: boolean;
+    month?: "short" | "long" | "numeric" | "2-digit";
+    day?: "numeric" | "2-digit";
+    hour?: boolean;
+    minute?: boolean;
+    second?: boolean;
+  };
+  
   const {
     weekday = false,
     year = true,
@@ -34,7 +53,7 @@ export function formatDate(
     hour = false,
     minute = false,
     second = false,
-  } = options;
+  } = customOptions;
 
   const formatOptions: Intl.DateTimeFormatOptions = {
     month,

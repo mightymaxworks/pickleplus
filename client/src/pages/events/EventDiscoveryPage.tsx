@@ -16,8 +16,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { TicketIcon, UserCircle2Icon, LockIcon } from 'lucide-react';
+import { 
+  TicketIcon, 
+  UserCircle2Icon, 
+  LockIcon, 
+  CalendarIcon, 
+  CheckIcon,
+  MapPinIcon,
+  UsersIcon
+} from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
 

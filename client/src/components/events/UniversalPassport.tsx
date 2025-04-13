@@ -1,9 +1,11 @@
 /**
  * PKL-278651-CONN-0005-PASS-UI
+ * PKL-278651-CONN-0008-UX - PicklePass™ UI/UX Enhancement Sprint
+ * 
  * Enhanced Universal Passport Component
  * 
- * Displays the user's universal passport QR code with improved visual design
- * and animations for a more engaging user experience
+ * Displays the user's universal passport QR code with improved visual design,
+ * animations, and accessibility for a more engaging and inclusive experience
  */
 
 import { useEffect, useState } from 'react';
@@ -151,46 +153,71 @@ export function UniversalPassport({ className, onViewRegisteredEvents }: Univers
   // Render passport card
   return (
     <Card className={cn("overflow-hidden shadow-lg border-primary/10", className)}>
-      <CardHeader className="pb-2 bg-gradient-to-r from-primary/5 to-primary/0">
-        <CardTitle className="flex items-center">
-          <TicketIcon className="h-5 w-5 mr-2 text-primary" />
-          My PicklePass™ Passport
-        </CardTitle>
-        <CardDescription>
-          Your universal passport for all PicklePass™ events
-        </CardDescription>
+      <CardHeader className="pb-2 bg-gradient-to-r from-primary/5 via-primary/2 to-transparent">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <CardTitle className="flex items-center">
+            <TicketIcon className="h-5 w-5 mr-2 text-primary" />
+            My PicklePass™ Passport
+          </CardTitle>
+          <CardDescription>
+            Your universal passport for all PicklePass™ events
+          </CardDescription>
+        </motion.div>
       </CardHeader>
-      <CardContent className="flex flex-col items-center justify-center pt-6 pb-8">
-        {/* Verification badge */}
+      <CardContent className="flex flex-col items-center justify-center pt-6 pb-8 relative">
+        {/* Verification badge with enhanced animation */}
         <motion.div 
-          className="absolute top-2 right-2"
+          className="absolute top-2 right-2 z-10"
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
         >
           <Badge 
             variant="outline" 
-            className="py-1 px-2 bg-primary/5 text-primary border-primary/20 flex items-center gap-1"
+            className="py-1 px-2 bg-primary/5 text-primary border-primary/20 flex items-center gap-1 shadow-sm"
           >
             <ShieldCheckIcon className="h-3 w-3" />
             <span className="text-xs font-medium">Verified</span>
           </Badge>
         </motion.div>
         
+        {/* Background decoration element for visual interest */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <motion.div 
+            className="absolute -right-20 -top-20 w-40 h-40 rounded-full bg-primary/5 blur-3xl"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.5 }}
+            transition={{ duration: 0.8 }}
+          />
+          <motion.div 
+            className="absolute -left-20 -bottom-20 w-40 h-40 rounded-full bg-primary/5 blur-3xl"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.5 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          />
+        </div>
+        
         {/* QR Code Display with enhanced animations */}
         <motion.div
           className={cn(
-            "p-5 rounded-xl border-2 border-primary/10 bg-white",
+            "p-5 rounded-xl border-2 border-primary/10 bg-white relative z-10",
             highlightCode && "border-primary"
           )}
-          animate={{
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ 
+            scale: 1, 
+            opacity: 1,
             boxShadow: highlightCode 
               ? '0 0 15px 4px rgba(255, 87, 34, 0.2)' 
               : '0 4px 12px rgba(0, 0, 0, 0.08)'
           }}
           transition={{ 
             duration: 0.6, 
-            ease: "easeInOut" 
+            ease: "easeOut" 
           }}
           whileHover={{ 
             scale: 1.02,
@@ -237,21 +264,32 @@ export function UniversalPassport({ className, onViewRegisteredEvents }: Univers
         
         {/* Passport code display with enhanced styling */}
         <motion.div 
-          className="mt-8 flex flex-col items-center"
+          className="mt-8 flex flex-col items-center w-full"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <div className="text-lg font-medium flex items-center bg-primary/5 px-4 py-2 rounded-full">
+          <motion.div 
+            className="text-lg font-medium flex items-center bg-primary/5 px-4 py-2 rounded-full shadow-sm"
+            whileHover={{ 
+              backgroundColor: "rgba(255, 87, 34, 0.08)",
+              transition: { duration: 0.2 }
+            }}
+          >
             <span className="text-muted-foreground mr-2">Code:</span>
-            <span 
+            <motion.span 
               className={cn(
                 "font-bold text-primary tracking-wide",
-                highlightCode && "bg-primary/10 px-2 py-0.5 rounded-md transition-all duration-500"
+                highlightCode && "bg-primary/10 px-2 py-0.5 rounded-md"
               )}
+              animate={{
+                scale: highlightCode ? 1.05 : 1,
+                color: highlightCode ? "rgb(235, 67, 14)" : "rgb(255, 87, 34)"
+              }}
+              transition={{ duration: 0.4 }}
             >
               {passportCode}
-            </span>
+            </motion.span>
             <AnimatePresence>
               {copiedCode && (
                 <motion.div
@@ -267,29 +305,40 @@ export function UniversalPassport({ className, onViewRegisteredEvents }: Univers
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-6 w-6 ml-2 hover:bg-primary/10"
-                    onClick={copyPassportCode}
+                  <motion.div
+                    whileHover={{ scale: 1.2 }}
+                    whileTap={{ scale: 0.9 }}
                   >
-                    <Copy className={cn(
-                      "h-3.5 w-3.5", 
-                      copiedCode ? "text-green-500" : "text-muted-foreground"
-                    )} />
-                  </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6 ml-2 hover:bg-primary/10"
+                      onClick={copyPassportCode}
+                      aria-label="Copy passport code"
+                    >
+                      <Copy className={cn(
+                        "h-3.5 w-3.5", 
+                        copiedCode ? "text-green-500" : "text-muted-foreground"
+                      )} />
+                    </Button>
+                  </motion.div>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Copy passport code</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-          </div>
+          </motion.div>
           
-          <div className="text-sm text-muted-foreground mt-3 flex items-center px-3 py-1.5 bg-muted/40 rounded-full">
+          <motion.div 
+            className="text-sm text-muted-foreground mt-3 flex items-center px-3 py-1.5 bg-muted/40 rounded-full"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
             <InfoIcon className="h-3.5 w-3.5 mr-2" />
             Present this code when checking in to events
-          </div>
+          </motion.div>
         </motion.div>
         
         {/* Registered events badge with enhanced animation */}
@@ -302,7 +351,7 @@ export function UniversalPassport({ className, onViewRegisteredEvents }: Univers
           >
             <Badge 
               variant="outline" 
-              className="py-2 px-4 text-sm bg-green-50 border-green-200 text-green-700 flex items-center"
+              className="py-2 px-4 text-sm bg-green-50 border-green-200 text-green-700 flex items-center shadow-sm"
             >
               <CalendarDaysIcon className="h-4 w-4 mr-2" />
               {registeredEvents.length} Registered Event{registeredEvents.length !== 1 ? 's' : ''}
@@ -314,12 +363,15 @@ export function UniversalPassport({ className, onViewRegisteredEvents }: Univers
         {/* View Registered Events button with animation */}
         {registeredEvents && registeredEvents.length > 0 && (
           <motion.div className="w-full"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
             <Button 
               variant="default" 
-              className="w-full bg-primary/90 hover:bg-primary transition-all duration-300"
+              className="w-full bg-primary/90 hover:bg-primary transition-all duration-300 shadow-sm"
               onClick={onViewRegisteredEvents}
               disabled={!onViewRegisteredEvents}
             >
@@ -334,13 +386,17 @@ export function UniversalPassport({ className, onViewRegisteredEvents }: Univers
           <Tooltip>
             <TooltipTrigger asChild>
               <motion.div
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
                 whileHover={{ rotate: 15, scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >
                 <Button 
                   variant="outline" 
                   size="icon" 
-                  className="h-10 w-10 rounded-full border-primary/30 hover:border-primary/70 hover:bg-primary/5"
+                  className="h-10 w-10 rounded-full border-primary/30 hover:border-primary/70 hover:bg-primary/5 shadow-sm"
+                  aria-label="How to use your passport"
                 >
                   <ScanIcon className="h-5 w-5 text-primary" />
                 </Button>
