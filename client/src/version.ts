@@ -4,7 +4,7 @@
  */
 
 export const VERSION = {
-  number: '1.5.0',
+  number: '0.9.0',
   name: 'Tournament Edition',
   codename: 'Court Monarch',
   releaseDate: '2025-04-13',
