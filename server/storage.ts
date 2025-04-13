@@ -503,124 +503,28 @@ export class DatabaseStorage implements IStorage {
       // Calculate previous profile completion percentage
       const previousCompletion = this.calculateProfileCompletion(currentUser);
       
-      // Filter out any properties that don't belong to the users table
-      // but make sure to keep external rating fields
-      const validData: Record<string, any> = {};
-      
-      // Log all keys available in the profileData object
-      console.log(`[Storage] updateUserProfile - Fields in request:`, Object.keys(profileData));
-      console.log(`[Storage] updateUserProfile - Complete profileData:`, JSON.stringify(profileData, null, 2));
-      
-      // DEBUG: Print all columns in the users table
-      console.log(`[Storage] All users table columns:`, Object.keys(users));
-      
-      // List of all mapped fields - camelCase fields map to snake_case database column names
-      const fieldMappings: Record<string, string> = {
-        // External rating fields
-        'duprRating': 'dupr_rating',
-        'duprProfileUrl': 'dupr_profile_url',
-        'utprRating': 'utpr_rating',
-        'utprProfileUrl': 'utpr_profile_url',
-        'wprRating': 'wpr_rating',
-        'wprProfileUrl': 'wpr_profile_url',
-        'externalRatingsVerified': 'external_ratings_verified',
-        'lastExternalRatingUpdate': 'last_external_rating_update',
-        
-        // Basic user fields
-        'firstName': 'first_name',
-        'lastName': 'last_name',
-        'first_name': 'first_name',  // Also accept snake_case just in case
-        'last_name': 'last_name'     // Also accept snake_case just in case
-      };
-      
-      // IMPORTANT DEBUG: Check what's in the profileData object
-      console.log(`[Storage] updateUserProfile - JSON stringified profileData:`, JSON.stringify(profileData));
-      
-      // Map camelCase field names to snake_case database column names
-      Object.keys(profileData).forEach(key => {
-        if (fieldMappings[key]) {
-          // Use the mapped database column name
-          const dbColumnName = fieldMappings[key];
-          validData[dbColumnName] = profileData[key];
-          console.log(`[Storage] updateUserProfile - Including mapped field: ${key} -> ${dbColumnName} with value:`, profileData[key]);
-        } 
-        // Also include any fields that exist directly in the schema
-        else if (key in users) {
-          validData[key] = profileData[key];
-          console.log(`[Storage] updateUserProfile - Including direct field: ${key} with value:`, profileData[key]);
-        } else {
-          console.log(`[Storage] updateUserProfile - Skipping field not in schema: ${key}`);
-        }
-      });
-      
-      // Special handling for first name and last name - check for both camelCase and snake_case
-      if ('firstName' in profileData) {
-        validData.first_name = profileData.firstName;
-        console.log(`[Storage] updateUserProfile - Force adding first_name with value:`, profileData.firstName);
-      } else if ('first_name' in profileData) {
-        validData.first_name = profileData.first_name;
-        console.log(`[Storage] updateUserProfile - Direct adding first_name with value:`, profileData.first_name);
-      }
-      
-      if ('lastName' in profileData) {
-        validData.last_name = profileData.lastName;
-        console.log(`[Storage] updateUserProfile - Force adding last_name with value:`, profileData.lastName);
-      } else if ('last_name' in profileData) {
-        validData.last_name = profileData.last_name;
-        console.log(`[Storage] updateUserProfile - Direct adding last_name with value:`, profileData.last_name);
-      }
-      
-      // CRITICAL: Force add the values for external ratings if they exist in the profileData
-      // This is a workaround for the mapping issue
-      if ('duprRating' in profileData) {
-        validData.dupr_rating = profileData.duprRating;
-        console.log(`[Storage] updateUserProfile - Force adding dupr_rating with value:`, profileData.duprRating);
-      }
-      
-      if ('duprProfileUrl' in profileData) {
-        validData.dupr_profile_url = profileData.duprProfileUrl;
-        console.log(`[Storage] updateUserProfile - Force adding dupr_profile_url with value:`, profileData.duprProfileUrl);
-      }
-      
-      if ('utprRating' in profileData) {
-        validData.utpr_rating = profileData.utprRating;
-        console.log(`[Storage] updateUserProfile - Force adding utpr_rating with value:`, profileData.utprRating);
-      }
-      
-      if ('utprProfileUrl' in profileData) {
-        validData.utpr_profile_url = profileData.utprProfileUrl;
-        console.log(`[Storage] updateUserProfile - Force adding utpr_profile_url with value:`, profileData.utprProfileUrl);
-      }
-      
-      if ('wprRating' in profileData) {
-        validData.wpr_rating = profileData.wprRating;
-        console.log(`[Storage] updateUserProfile - Force adding wpr_rating with value:`, profileData.wprRating);
-      }
-      
-      if ('wprProfileUrl' in profileData) {
-        validData.wpr_profile_url = profileData.wprProfileUrl;
-        console.log(`[Storage] updateUserProfile - Force adding wpr_profile_url with value:`, profileData.wprProfileUrl);
-      }
-      
-      // Add last external rating update timestamp if ratings were updated
-      if ('duprRating' in profileData || 'utprRating' in profileData || 'wprRating' in profileData) {
-        validData.last_external_rating_update = new Date();
-      }
-      
-      // Update the user profile with validated data
-      console.log(`[Storage] updateUserProfile - SQL UPDATE operation. Data to update:`, JSON.stringify(validData, null, 2));
-      console.log(`[Storage] updateUserProfile - Updating user with id=${numericId}`);
-      
-      // CRITICAL: Check if there are actual fields to update
-      if (Object.keys(validData).length === 0) {
+      // CRITICAL: Make sure we have data to update
+      if (!profileData || Object.keys(profileData).length === 0) {
         console.log(`[Storage] updateUserProfile - No valid fields to update, skipping SQL operation`);
         return currentUser; // Return the current user without performing update
       }
       
+      // Log received data
+      console.log(`[Storage] updateUserProfile - Original data:`, JSON.stringify(profileData, null, 2));
+      
+      // Note: The route has already mapped firstName to first_name and lastName to last_name
+      // External ratings handling
+      if ('duprRating' in profileData || 'utprRating' in profileData || 'wprRating' in profileData) {
+        profileData.last_external_rating_update = new Date();
+      }
+      
+      console.log(`[Storage] updateUserProfile - Processing data:`, JSON.stringify(profileData, null, 2));
+      
+      // Update the user profile with validated data
       let updatedUser;
       try {
         const [result] = await db.update(users)
-          .set(validData)
+          .set(profileData)
           .where(eq(users.id, numericId))
           .returning();
         
