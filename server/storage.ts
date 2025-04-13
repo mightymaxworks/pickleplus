@@ -199,6 +199,43 @@ export class DatabaseStorage implements IStorage {
     });
   }
   
+  /**
+   * PKL-278651-SEC-0002-TESTVIS - Test Data Visibility Control
+   * Helper method to add isTestData filter conditions based on user's admin status
+   * @param isAdmin Boolean indicating if the current user is an admin
+   * @returns SQL conditions for filtering test data
+   */
+  private getTestDataFilter(isAdmin: boolean): SQL<unknown> {
+    if (isAdmin) {
+      // Admins can see all data, no filtering needed
+      return sql`TRUE`;
+    } else {
+      // Non-admins should not see test data
+      return sql`is_test_data = FALSE OR is_test_data IS NULL`;
+    }
+  }
+  
+  /**
+   * PKL-278651-SEC-0002-TESTVIS - Test Data Visibility Control
+   * Helper method to check if a user is an admin
+   * @param userId User ID to check
+   * @returns Boolean indicating if the user is an admin
+   */
+  private async isUserAdmin(userId: number | undefined | null): Promise<boolean> {
+    if (!userId) return false;
+    
+    try {
+      const [user] = await db.select({ isAdmin: users.isAdmin })
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      return user?.isAdmin === true;
+    } catch (error) {
+      console.error('[Storage] isUserAdmin error:', error);
+      return false;
+    }
+  }
+  
   // User operations
   async getUser(id: number): Promise<User | undefined> {
     try {
