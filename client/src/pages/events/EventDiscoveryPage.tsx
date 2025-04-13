@@ -20,7 +20,7 @@ import { useAuth } from '@/lib/auth';
 // Components
 import EventCheckInScanner from '@/components/events/EventCheckInScanner';
 import EventList from '@/components/events/EventList';
-import MyEventsTab from '@/components/events/MyEventsTab';
+import { MyEventsTab } from '@/components/events/MyEventsTab';
 import UniversalPassport from '@/components/events/UniversalPassport';
 
 // Data and types

@@ -362,6 +362,137 @@ router.get("/my/registered", isAuthenticated, async (req: Request, res: Response
   }
 });
 
+// PKL-278651-CONN-0004-PASS-REG - Route to check if a user is registered for an event
+router.get("/:id/registration-status", isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const eventId = parseInt(req.params.id);
+    
+    if (isNaN(eventId)) {
+      return res.status(400).json({ error: "Invalid event ID" });
+    }
+    
+    // Check if the event exists
+    const event = await storage.getEvent(eventId);
+    
+    if (!event) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+    
+    const isRegistered = await storage.isUserRegisteredForEvent(eventId, req.user!.id);
+    console.log(`[API] User ${req.user!.id} registration status for event ${eventId}: ${isRegistered}`);
+    
+    res.json(isRegistered);
+  } catch (error) {
+    console.error(`[API] Error checking registration status for event ${req.params.id}:`, error);
+    res.status(500).json({ error: "Server error checking registration status" });
+  }
+});
+
+// PKL-278651-CONN-0004-PASS-REG - Route to register for an event
+router.post("/:id/register", isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const eventId = parseInt(req.params.id);
+    
+    if (isNaN(eventId)) {
+      return res.status(400).json({ error: "Invalid event ID" });
+    }
+    
+    // Check if the event exists
+    const event = await storage.getEvent(eventId);
+    
+    if (!event) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+    
+    // Check if user is already registered
+    const isRegistered = await storage.isUserRegisteredForEvent(eventId, req.user!.id);
+    
+    if (isRegistered) {
+      return res.status(400).json({ error: "You are already registered for this event" });
+    }
+    
+    // Register the user for the event
+    const registration = await storage.registerUserForEvent({
+      eventId,
+      userId: req.user!.id,
+      status: 'confirmed',
+      notes: req.body.notes || null
+    });
+    
+    console.log(`[API] User ${req.user!.id} successfully registered for event ${eventId}`);
+    
+    res.status(201).json(registration);
+  } catch (error) {
+    console.error(`[API] Error registering for event ${req.params.id}:`, error);
+    res.status(500).json({ error: "Server error registering for event" });
+  }
+});
+
+// PKL-278651-CONN-0004-PASS-REG - Route to cancel registration for an event
+router.post("/:id/cancel-registration", isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const eventId = parseInt(req.params.id);
+    
+    if (isNaN(eventId)) {
+      return res.status(400).json({ error: "Invalid event ID" });
+    }
+    
+    // Check if the event exists
+    const event = await storage.getEvent(eventId);
+    
+    if (!event) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+    
+    // Get the registration if it exists
+    const registrations = await storage.getUserEventRegistrations(req.user!.id);
+    const registration = registrations.find(reg => reg.eventId === eventId);
+    
+    if (!registration) {
+      return res.status(404).json({ error: "You are not registered for this event" });
+    }
+    
+    // Cancel the registration
+    const success = await storage.cancelEventRegistration(registration.id);
+    
+    if (success) {
+      console.log(`[API] User ${req.user!.id} successfully cancelled registration for event ${eventId}`);
+      res.json({ success: true });
+    } else {
+      res.status(500).json({ success: false, error: "Failed to cancel registration" });
+    }
+  } catch (error) {
+    console.error(`[API] Error cancelling registration for event ${req.params.id}:`, error);
+    res.status(500).json({ success: false, error: "Server error cancelling registration" });
+  }
+});
+
+// PKL-278651-CONN-0004-PASS-REG - Route to get registration count for an event
+router.get("/:id/registration-count", isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const eventId = parseInt(req.params.id);
+    
+    if (isNaN(eventId)) {
+      return res.status(400).json({ error: "Invalid event ID" });
+    }
+    
+    // Check if the event exists
+    const event = await storage.getEvent(eventId);
+    
+    if (!event) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+    
+    const count = await storage.getEventRegistrationCount(eventId);
+    console.log(`[API] Registration count for event ${eventId}: ${count}`);
+    
+    res.json(count);
+  } catch (error) {
+    console.error(`[API] Error getting registration count for event ${req.params.id}:`, error);
+    res.status(500).json({ error: "Server error getting registration count" });
+  }
+});
+
 export function registerEventRoutes(app: express.Express) {
   console.log("[API] Registering PicklePass™ routes (PKL-278651-CONN-0003-EVENT)");
   app.use("/api/events", router);

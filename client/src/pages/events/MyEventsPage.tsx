@@ -15,7 +15,7 @@ import { ArrowLeftIcon, TicketIcon, CalendarIcon } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 
 // Components
-import MyEventsTab from '@/components/events/MyEventsTab';
+import { MyEventsTab } from '@/components/events/MyEventsTab';
 import UniversalPassport from '@/components/events/UniversalPassport';
 
 // Data and types
