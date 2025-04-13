@@ -553,6 +553,16 @@ export class DatabaseStorage implements IStorage {
         }
       });
       
+      // Special handling for first name and last name
+      if (profileData.firstName) {
+        validData.first_name = profileData.firstName;
+        console.log(`[Storage] updateUserProfile - Force adding first_name with value:`, profileData.firstName);
+      }
+      if (profileData.lastName) {
+        validData.last_name = profileData.lastName;
+        console.log(`[Storage] updateUserProfile - Force adding last_name with value:`, profileData.lastName);
+      }
+      
       // CRITICAL: Force add the values for external ratings if they exist in the profileData
       // This is a workaround for the mapping issue
       if (profileData.duprRating) {
