@@ -138,7 +138,7 @@ export function AppHeader() {
                 <Award className="mr-2 h-4 w-4" />
                 Mastery Paths
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/events/test")}>
+              <DropdownMenuItem onClick={() => navigate("/events")}>
                 <Calendar className="mr-2 h-4 w-4" />
                 Event Check-in
               </DropdownMenuItem>

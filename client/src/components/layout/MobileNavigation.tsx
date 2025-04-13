@@ -28,7 +28,7 @@ export function MobileNavigation({ user }: MobileNavigationProps) {
     >
       {/* PicklePass button - positioned at the bottom left */}
       <motion.button
-        onClick={() => navigate('/events/test')}
+        onClick={() => navigate('/events')}
         className="absolute -top-14 left-4 w-12 h-12 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center shadow-md border border-gray-200 dark:border-gray-700"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}

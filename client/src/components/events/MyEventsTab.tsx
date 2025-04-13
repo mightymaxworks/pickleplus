@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { CalendarIcon, MapPinIcon, UsersIcon, TicketIcon, CheckIcon, XCircleIcon } from 'lucide-react';
+import { CalendarIcon, MapPinIcon, UsersIcon, TicketIcon, CheckIcon, XCircleIcon, CalendarDaysIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
