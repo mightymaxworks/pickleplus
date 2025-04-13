@@ -1070,6 +1070,123 @@ const StreamlinedProfilePage: FC = () => {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-2">Identity</h4>
+                    {/* First Name Field */}
+                    {isEditMode && editingFields.firstName ? (
+                      <div className="space-y-2 mb-4">
+                        <Input 
+                          value={firstNameField}
+                          onChange={(e) => setFirstNameField(e.target.value)}
+                          placeholder="Enter your first name"
+                        />
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => {
+                              setFirstNameField(user.firstName || '');
+                              setEditingFields(prev => ({ ...prev, firstName: false }));
+                            }}
+                          >
+                            <X className="h-4 w-4 mr-1" /> Cancel
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            onClick={() => {
+                              // Validation - name must be at least 2 chars
+                              if (firstNameField.trim().length < 2) {
+                                toast({
+                                  title: "Validation Error",
+                                  description: "First name must be at least 2 characters",
+                                  variant: "destructive"
+                                });
+                                return;
+                              }
+                              saveProfileField('firstName', firstNameField);
+                            }}
+                          >
+                            <Check className="h-4 w-4 mr-1" /> Save
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div 
+                        className={`relative mb-4 ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                        onClick={() => {
+                          if (isEditMode) {
+                            setEditingFields(prev => ({ ...prev, firstName: true }));
+                          }
+                        }}
+                      >
+                        <div className="flex justify-between">
+                          <p className="text-sm font-medium">First Name</p>
+                          {isEditMode && (
+                            <Edit2 className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </div>
+                        <p>{user.firstName || 'Not specified'}</p>
+                      </div>
+                    )}
+                    
+                    {/* Last Name Field */}
+                    {isEditMode && editingFields.lastName ? (
+                      <div className="space-y-2 mb-4">
+                        <Input 
+                          value={lastNameField}
+                          onChange={(e) => setLastNameField(e.target.value)}
+                          placeholder="Enter your last name"
+                        />
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => {
+                              setLastNameField(user.lastName || '');
+                              setEditingFields(prev => ({ ...prev, lastName: false }));
+                            }}
+                          >
+                            <X className="h-4 w-4 mr-1" /> Cancel
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            onClick={() => {
+                              // Validation - name must be at least 2 chars
+                              if (lastNameField.trim().length < 2) {
+                                toast({
+                                  title: "Validation Error",
+                                  description: "Last name must be at least 2 characters",
+                                  variant: "destructive"
+                                });
+                                return;
+                              }
+                              saveProfileField('lastName', lastNameField);
+                            }}
+                          >
+                            <Check className="h-4 w-4 mr-1" /> Save
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div 
+                        className={`relative ${isEditMode ? 'cursor-pointer hover:bg-muted/50 rounded p-2 -ml-2' : ''}`}
+                        onClick={() => {
+                          if (isEditMode) {
+                            setEditingFields(prev => ({ ...prev, lastName: true }));
+                          }
+                        }}
+                      >
+                        <div className="flex justify-between">
+                          <p className="text-sm font-medium">Last Name</p>
+                          {isEditMode && (
+                            <Edit2 className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </div>
+                        <p>{user.lastName || 'Not specified'}</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div>
                     <h4 className="text-sm font-medium text-muted-foreground mb-2">Bio</h4>
                     {isEditMode && editingFields.bio ? (
                       <div className="space-y-2">
