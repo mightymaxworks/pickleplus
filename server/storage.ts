@@ -514,8 +514,9 @@ export class DatabaseStorage implements IStorage {
       // DEBUG: Print all columns in the users table
       console.log(`[Storage] All users table columns:`, Object.keys(users));
       
-      // List of all external rating fields - map them to database column names
-      const externalRatingFieldsMap: Record<string, string> = {
+      // List of all mapped fields - camelCase fields map to snake_case database column names
+      const fieldMappings: Record<string, string> = {
+        // External rating fields
         'duprRating': 'dupr_rating',
         'duprProfileUrl': 'dupr_profile_url',
         'utprRating': 'utpr_rating',
@@ -523,17 +524,23 @@ export class DatabaseStorage implements IStorage {
         'wprRating': 'wpr_rating',
         'wprProfileUrl': 'wpr_profile_url',
         'externalRatingsVerified': 'external_ratings_verified',
-        'lastExternalRatingUpdate': 'last_external_rating_update'
+        'lastExternalRatingUpdate': 'last_external_rating_update',
+        
+        // Basic user fields
+        'firstName': 'first_name',
+        'lastName': 'last_name',
+        'first_name': 'first_name',  // Also accept snake_case just in case
+        'last_name': 'last_name'     // Also accept snake_case just in case
       };
       
       // IMPORTANT DEBUG: Check what's in the profileData object
       console.log(`[Storage] updateUserProfile - JSON stringified profileData:`, JSON.stringify(profileData));
       
-      // Map camelCase field names to snake_case database column names for external ratings
+      // Map camelCase field names to snake_case database column names
       Object.keys(profileData).forEach(key => {
-        if (externalRatingFieldsMap[key]) {
+        if (fieldMappings[key]) {
           // Use the mapped database column name
-          const dbColumnName = externalRatingFieldsMap[key];
+          const dbColumnName = fieldMappings[key];
           validData[dbColumnName] = profileData[key];
           console.log(`[Storage] updateUserProfile - Including mapped field: ${key} -> ${dbColumnName} with value:`, profileData[key]);
         } 
