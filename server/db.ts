@@ -15,7 +15,7 @@ const queryClient = postgres(connectionString, {
   max: 10, // Maximum number of connections
   idle_timeout: 30, // Timeout in seconds
   connect_timeout: 10, // Connection timeout in seconds
-  prepare: false, // Don't use prepared statements for better performance
+  prepare: true, // Enable prepared statements for better SQL generation
 });
 
 // Create the drizzle instance with the schema
