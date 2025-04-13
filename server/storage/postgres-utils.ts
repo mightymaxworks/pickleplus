@@ -6,8 +6,16 @@
  * particularly focused on supporting batch API requests.
  */
 
-import { sql } from 'drizzle-orm';
 import { db } from '../db';
+import { eq, inArray } from 'drizzle-orm';
+import NodeCache from 'node-cache';
+
+// Create a cache with auto-expiration
+const queryCache = new NodeCache({
+  stdTTL: 300, // Default TTL: 5 minutes
+  checkperiod: 60, // Check for expired keys every 60 seconds
+  useClones: false // For better performance
+});
 
 /**
  * Execute a Postgres stored procedure/function with parameters
@@ -21,14 +29,13 @@ export async function executeStoredProcedure<T>(
   procedureName: string,
   params: any[] = []
 ): Promise<T> {
-  // Build the parameter placeholders
+  // Format the parameters for SQL query
   const paramPlaceholders = params.map((_, i) => `$${i + 1}`).join(', ');
   
-  // Build the SQL statement
-  const statement = sql.raw(`SELECT * FROM ${procedureName}(${paramPlaceholders})`);
-  
-  // Execute the query with parameters
-  const result = await db.execute(statement);
+  // Build and execute the query
+  // We'll need to execute raw SQL here because Drizzle ORM doesn't have a direct
+  // method for calling stored procedures
+  const result = await db.execute(`SELECT * FROM ${procedureName}(${paramPlaceholders})`, params);
   
   return result as T;
 }
@@ -41,27 +48,39 @@ export async function executeStoredProcedure<T>(
  * @param idColumn The name of the ID column (default: "id")
  * @returns Map of ID to record
  */
-export async function batchFetchByIds<T>(
-  table: any,
+export async function batchFetchByIds<T extends Record<string, any>>(
+  table: string,
   ids: number[],
-  idColumn: string = 'id'
+  idColumn: string = "id"
 ): Promise<Map<number, T>> {
-  // Early return if no IDs
-  if (ids.length === 0) {
-    return new Map();
+  // Check if we have any IDs to fetch
+  if (!ids.length) {
+    return new Map<number, T>();
   }
   
-  // Execute a single query to fetch all records
-  const records = await db
-    .select()
-    .from(table)
-    .where(sql`${sql.identifier(idColumn)} IN (${ids.join(',')})`)
-    .execute();
+  // Construct query result map
+  const resultMap = new Map<number, T>();
   
-  // Convert result to a Map for O(1) lookup
-  return new Map(
-    records.map((record: any) => [record[idColumn], record])
-  );
+  try {
+    // Since we don't have the schema information here, we need to use SQL directly
+    // or use the Drizzle SQL builder dynamically
+    const result = await db.execute(
+      `SELECT * FROM ${table} WHERE ${idColumn} IN (${ids.join(', ')})`
+    );
+    
+    // Convert result to array if it isn't already
+    const records = Array.isArray(result) ? result : [result];
+    
+    // Populate the result map
+    for (const record of records) {
+      resultMap.set(record[idColumn], record as T);
+    }
+  } catch (error) {
+    console.error(`Error in batchFetchByIds for table ${table}:`, error);
+    throw error;
+  }
+  
+  return resultMap;
 }
 
 /**
@@ -72,31 +91,24 @@ export async function batchFetchByIds<T>(
  * @param ttlMs Time to live in milliseconds (default: 5 minutes)
  * @returns The query results
  */
-const queryCache = new Map<string, { data: any; timestamp: number }>();
-const DEFAULT_TTL = 5 * 60 * 1000; // 5 minutes
-
 export async function cachedQuery<T>(
   cacheKey: string,
   queryFn: () => Promise<T>,
-  ttlMs: number = DEFAULT_TTL
+  ttlMs: number = 5 * 60 * 1000 // 5 minutes default
 ): Promise<T> {
-  // Check cache
-  const cached = queryCache.get(cacheKey);
-  const now = Date.now();
-  
-  // Return cached result if it exists and is not expired
-  if (cached && (now - cached.timestamp) < ttlMs) {
-    return cached.data as T;
+  // Check if we have a cached result
+  const cachedResult = queryCache.get<T>(cacheKey);
+  if (cachedResult !== undefined) {
+    console.log(`[DB] Cache hit for key: ${cacheKey}`);
+    return cachedResult;
   }
   
-  // Cache miss - execute the query
+  // No cache hit, execute the query
+  console.log(`[DB] Cache miss for key: ${cacheKey}, executing query`);
   const result = await queryFn();
   
   // Store in cache
-  queryCache.set(cacheKey, {
-    data: result,
-    timestamp: now
-  });
+  queryCache.set(cacheKey, result, Math.floor(ttlMs / 1000));
   
   return result;
 }
@@ -107,9 +119,21 @@ export async function cachedQuery<T>(
  * @param keyPrefix The prefix of cache keys to invalidate
  */
 export function invalidateCache(keyPrefix: string): void {
-  for (const key of queryCache.keys()) {
+  console.log(`[DB] Invalidating cache entries with prefix: ${keyPrefix}`);
+  
+  // Find all keys that match the prefix
+  const allKeys = queryCache.keys();
+  const keysToDelete = [];
+  
+  for (const key of allKeys) {
     if (key.startsWith(keyPrefix)) {
-      queryCache.delete(key);
+      keysToDelete.push(key);
     }
+  }
+  
+  // Delete the matching keys
+  if (keysToDelete.length > 0) {
+    console.log(`[DB] Invalidating ${keysToDelete.length} cache entries`);
+    queryCache.del(keysToDelete);
   }
 }

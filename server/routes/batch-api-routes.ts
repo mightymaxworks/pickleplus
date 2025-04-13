@@ -2,151 +2,183 @@
  * PKL-278651-PERF-0001.4-API
  * Batch API Routes
  * 
- * This file implements the server-side component of the request batching system,
- * allowing multiple API requests to be handled in a single HTTP request.
+ * This file defines the batch API endpoints for consolidating multiple API requests
+ * into a single request, reducing network overhead and improving performance.
  */
 
-import { Router } from 'express';
-import { z } from 'zod';
-import fetch from 'node-fetch';
-import { executeStoredProcedure } from '../storage/postgres-utils';
+import express, { Request, Response } from 'express';
+import { isAuthenticated } from '../auth';
+import { db } from '../db';
+import { storage } from '../storage';
+import { executeStoredProcedure, batchFetchByIds, cachedQuery } from '../storage/postgres-utils';
 
-const router = Router();
+// Create a router for batch API routes
+const router = express.Router();
 
-// Define the schema for batch requests
-const batchRequestSchema = z.object({
-  requests: z.array(z.object({
-    id: z.string(),
-    endpoint: z.string(),
-    method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH']),
-    body: z.any().optional(),
-  })),
-});
-
-// Create a URL for the internal API call
-function createInternalApiUrl(endpoint: string): string {
-  // Remove the /api prefix for internal routing
-  const path = endpoint.startsWith('/api/') ? endpoint.substring(4) : endpoint;
-  return `http://localhost:${process.env.PORT || 3000}/api/${path}`;
-}
-
-// Process a single batch request
-async function processBatchRequest(req: any, requestItem: z.infer<typeof batchRequestSchema>['requests'][0]) {
+/**
+ * Batch API endpoint
+ * 
+ * Allows the client to make multiple API requests in a single HTTP request
+ * Each request in the batch is processed independently and the results are returned
+ * in the same order they were requested.
+ * 
+ * Request body format:
+ * {
+ *   requests: [
+ *     { url: '/api/match/recent', method: 'GET', params: { limit: 5 } },
+ *     { url: '/api/profile/completion', method: 'GET' }
+ *   ]
+ * }
+ */
+router.post('/batch', isAuthenticated, async (req: Request, res: Response) => {
   try {
-    const { id, endpoint, method, body } = requestItem;
+    console.log('[Batch API] Processing batch request');
     
-    // Prepare options for the internal fetch request
-    const options: any = {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        // Forward authentication headers
-        'Cookie': req.headers.cookie,
-        'Authorization': req.headers.authorization,
-      },
-      credentials: 'include',
-    };
-    
-    // Add body for non-GET requests
-    if (method !== 'GET' && body) {
-      options.body = JSON.stringify(body);
+    if (!req.body.requests || !Array.isArray(req.body.requests)) {
+      return res.status(400).json({ error: "Invalid batch request format" });
     }
     
-    // For database optimization, check if this is a common query pattern that can be 
-    // handled with a stored procedure instead of multiple separate queries
-    const optimizedResult = await attemptOptimizedDatabaseQuery(endpoint, method, body);
-    if (optimizedResult) {
-      return {
-        id,
-        status: 200,
-        data: optimizedResult
+    // Process each request in the batch
+    const results = await Promise.all(
+      req.body.requests.map(async (request: any, index: number) => {
+        try {
+          const { url, method = 'GET', params = {} } = request;
+          
+          if (!url) {
+            throw new Error(`Request at index ${index} missing required 'url' field`);
+          }
+          
+          console.log(`[Batch API] Processing request ${index + 1}/${req.body.requests.length}: ${method} ${url}`);
+          
+          // Process the request based on the URL and method
+          const result = await processApiRequest(url, method, params, req.user?.id);
+          
+          return {
+            status: 'success',
+            data: result,
+            originalRequest: request
+          };
+        } catch (error) {
+          console.error(`[Batch API] Error processing request at index ${index}:`, error);
+          
+          return {
+            status: 'error',
+            error: error instanceof Error ? error.message : String(error),
+            originalRequest: request
+          };
+        }
+      })
+    );
+    
+    res.json({ results });
+  } catch (error) {
+    console.error('[Batch API] Error processing batch request:', error);
+    res.status(500).json({ error: 'Failed to process batch request' });
+  }
+});
+
+/**
+ * Process an individual API request within a batch
+ */
+async function processApiRequest(url: string, method: string, params: any, userId?: number): Promise<any> {
+  // Extract the API endpoint path
+  const apiPath = url.replace(/^\/api\//, '');
+  
+  // Process the request based on the API path
+  switch (apiPath) {
+    case 'me':
+      return userId ? await storage.getUser(userId) : null;
+      
+    case 'profile/completion': {
+      if (!userId) return null;
+      
+      const user = await storage.getUser(userId);
+      if (!user) return null;
+      
+      // Fields to check for completion
+      const fieldsToCheck = [
+        'firstName', 'lastName', 'email', 'birthYear', 'country', 
+        'state', 'city', 'avatarUrl', 'bio', 'experience'
+      ];
+      
+      const completedFields: string[] = [];
+      const totalFields = fieldsToCheck.length;
+      
+      fieldsToCheck.forEach(field => {
+        if (user[field as keyof typeof user]) {
+          completedFields.push(field);
+        }
+      });
+      
+      const completionPercentage = Math.round((completedFields.length / totalFields) * 100);
+      
+      return { 
+        completion: completionPercentage,
+        completedFields,
+        pendingFields: fieldsToCheck.filter(field => !completedFields.includes(field))
       };
     }
     
-    // Make the internal API request
-    const url = createInternalApiUrl(endpoint);
-    const response = await fetch(url, options);
-    const data = await response.json();
+    case 'match/recent': {
+      const targetUserId = params.userId ? parseInt(params.userId, 10) : userId;
+      const limit = params.limit ? parseInt(params.limit, 10) : 10;
+      
+      if (!targetUserId) return [];
+      
+      return storage.getRecentMatches(targetUserId, limit);
+    }
     
-    return {
-      id,
-      status: response.status,
-      data,
-      error: response.status >= 400 ? data.message || 'Error processing request' : undefined
-    };
-  } catch (error) {
-    console.error(`Error processing batch request ${requestItem.id}:`, error);
-    return {
-      id: requestItem.id,
-      status: 500,
-      data: null,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    };
-  }
-}
-
-/**
- * Attempt to optimize common query patterns by using stored procedures 
- * or consolidated database queries instead of multiple API calls
- */
-async function attemptOptimizedDatabaseQuery(
-  endpoint: string, 
-  method: string, 
-  body?: any
-): Promise<any | null> {
-  // Only optimize GET requests for now
-  if (method !== 'GET') return null;
-  
-  // Example: Optimize multiple user profile requests
-  if (endpoint.match(/^\/api\/users\/\d+$/)) {
-    const userId = parseInt(endpoint.split('/').pop() || '0', 10);
-    if (userId) {
-      // This would be handled by a custom function that efficiently gets user data
-      // return await getUserById(userId);
+    case 'multi-rankings/leaderboard': {
+      const type = params.type || 'general';
+      const timeframe = params.timeframe || 'all';
+      const limit = params.limit ? parseInt(params.limit, 10) : 10;
+      
+      return cachedQuery(
+        `leaderboard:${type}:${timeframe}:${limit}`,
+        async () => await storage.getLeaderboard(type, timeframe, limit),
+        5 * 60 * 1000 // Cache for 5 minutes
+      );
     }
-  }
-  
-  // Example: Optimize multiple tournament lookups
-  if (endpoint.match(/^\/api\/tournaments\/\d+$/)) {
-    const tournamentId = parseInt(endpoint.split('/').pop() || '0', 10);
-    if (tournamentId) {
-      // This would be handled by a stored procedure
-      // return await executeStoredProcedure('get_tournament_details', [tournamentId]);
+    
+    case 'match/user-stats': {
+      const targetUserId = params.userId ? parseInt(params.userId, 10) : userId;
+      
+      if (!targetUserId) return null;
+      
+      const cacheKey = `user-stats:${targetUserId}`;
+      
+      return cachedQuery(
+        cacheKey,
+        async () => await storage.getUserMatchStats(targetUserId),
+        10 * 60 * 1000 // Cache for 10 minutes
+      );
     }
-  }
-  
-  // No optimization available for this endpoint
-  return null;
-}
-
-// Handle batch API requests
-router.post('/batch', async (req, res) => {
-  try {
-    // Validate the request body
-    const validationResult = batchRequestSchema.safeParse(req.body);
-    if (!validationResult.success) {
-      return res.status(400).json({ 
-        message: 'Invalid batch request format',
-        errors: validationResult.error.format() 
+    
+    case 'users/batch': {
+      if (!params.ids || !Array.isArray(params.ids) || params.ids.length === 0) {
+        return [];
+      }
+      
+      const userIds = params.ids.map((id: string) => parseInt(id, 10)).filter(Boolean);
+      
+      if (userIds.length === 0) return [];
+      
+      const users = await batchFetchByIds(
+        'users',
+        userIds,
+        'id'
+      );
+      
+      // Remove sensitive information
+      return Array.from(users.values()).map(user => {
+        const { password, ...safeUser } = user;
+        return safeUser;
       });
     }
     
-    const { requests } = validationResult.data;
-    
-    // Process each request in parallel
-    const results = await Promise.all(
-      requests.map(requestItem => processBatchRequest(req, requestItem))
-    );
-    
-    // Return the combined results
-    return res.json(results);
-  } catch (error) {
-    console.error('Error processing batch request:', error);
-    return res.status(500).json({ 
-      message: 'Error processing batch request',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
+    default:
+      throw new Error(`Unsupported API endpoint: ${apiPath}`);
   }
-});
+}
 
 export default router;
