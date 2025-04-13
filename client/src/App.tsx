@@ -5,6 +5,7 @@ import { queryClient } from './lib/queryClient'
 import { Toaster } from '@/components/ui/toaster'
 import { AuthProvider } from '@/hooks/useAuth'
 import { TournamentChangeProvider } from './core/modules/tournament/context/TournamentChangeContext'
+import { UserDataProvider } from '@/contexts/UserDataContext' // PKL-278651-PERF-0001.1-CACHE
 
 // Import module initializations
 import '@/modules/admin/init'
@@ -85,16 +86,17 @@ export default function App() {
     <Fragment>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <TournamentChangeProvider>
-            <Switch>
-            {/* Public Routes */}
-            <Route path="/" component={EnhancedLandingPage} />
-            <Route path="/login" component={EnhancedAuthPage} />
-            <Route path="/register" component={EnhancedAuthPage} />
-            <Route path="/auth" component={EnhancedAuthPage} />
-            <Route path="/about" component={AboutUs} />
-            <Route path="/test-routing" component={TestRoutingPage} />
-            <Route path="/landing-test" component={LandingPageTest} />
+          <UserDataProvider> {/* PKL-278651-PERF-0001.1-CACHE */}
+            <TournamentChangeProvider>
+              <Switch>
+              {/* Public Routes */}
+              <Route path="/" component={EnhancedLandingPage} />
+              <Route path="/login" component={EnhancedAuthPage} />
+              <Route path="/register" component={EnhancedAuthPage} />
+              <Route path="/auth" component={EnhancedAuthPage} />
+              <Route path="/about" component={AboutUs} />
+              <Route path="/test-routing" component={TestRoutingPage} />
+              <Route path="/landing-test" component={LandingPageTest} />
             
             {/* Protected Routes */}
             <Route path="/dashboard">
@@ -259,7 +261,8 @@ export default function App() {
             {/* 404 Route */}
             <Route component={NotFound} />
           </Switch>
-          </TournamentChangeProvider>
+            </TournamentChangeProvider>
+          </UserDataProvider>
         </AuthProvider>
       </QueryClientProvider>
       <Toaster />
