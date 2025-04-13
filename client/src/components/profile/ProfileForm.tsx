@@ -69,7 +69,7 @@ export function ProfileForm() {
   const { toast } = useToast();
   
   // Get current user data
-  const { data: user } = useQuery<User>({
+  const { data: user } = useQuery<EnhancedUser>({
     queryKey: ["/api/auth/current-user"],
   });
   
