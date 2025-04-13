@@ -3,6 +3,7 @@ import { Server } from "http";
 import { isAuthenticated, isAdmin, setupAuth } from "./auth";
 import { db } from "./db";
 import { eq, and, or, desc, sql } from "drizzle-orm";
+import { users } from "@shared/schema";
 import { storage } from "./storage";
 import { matchRoutes } from "./api/match";
 import rankingRoutes from "./api/ranking";
@@ -175,10 +176,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       }
       
       console.log("[API] Profile update request received:", JSON.stringify(req.body, null, 2));
-      // Debug raw request body too
       console.log("[API] Raw profile request body keys:", Object.keys(req.body));
-      console.log("[API] firstName present:", 'firstName' in req.body);
-      console.log("[API] lastName present:", 'lastName' in req.body);
       
       // Get the current user data to compare later for XP rewards
       const oldUser = await storage.getUser(req.user.id);
@@ -191,26 +189,41 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
         return res.status(400).json({ error: "No profile data provided for update" });
       }
       
-      // Special handling for firstName/lastName fields to map to database columns
-      const profileData: Record<string, any> = { ...req.body };
-      
-      // Map firstName/lastName to snake_case column names if they exist
-      if ('firstName' in profileData) {
-        profileData.first_name = profileData.firstName;
-        delete profileData.firstName;
-        console.log("[API] Mapped firstName to first_name:", profileData.first_name);
+      // DIRECT DATABASE UPDATE APPROACH
+      // Handle the firstName field
+      if ('firstName' in req.body) {
+        try {
+          console.log(`[DIRECT_UPDATE] Setting firstName = "${req.body.firstName}" for user ID ${req.user.id}`);
+          const [result] = await db.update(users)
+            .set({ firstName: req.body.firstName })
+            .where(eq(users.id, req.user.id))
+            .returning();
+          console.log('[DIRECT_UPDATE] First name update result:', result ? 'Success' : 'Failed');
+        } catch (firstNameError) {
+          console.error('[DIRECT_UPDATE] First name update error:', firstNameError);
+          return res.status(500).json({ error: "Failed to update first name" });
+        }
       }
       
-      if ('lastName' in profileData) {
-        profileData.last_name = profileData.lastName;
-        delete profileData.lastName;
-        console.log("[API] Mapped lastName to last_name:", profileData.last_name);
+      // Handle the lastName field
+      if ('lastName' in req.body) {
+        try {
+          console.log(`[DIRECT_UPDATE] Setting lastName = "${req.body.lastName}" for user ID ${req.user.id}`);
+          const [result] = await db.update(users)
+            .set({ lastName: req.body.lastName })
+            .where(eq(users.id, req.user.id))
+            .returning();
+          console.log('[DIRECT_UPDATE] Last name update result:', result ? 'Success' : 'Failed');
+        } catch (lastNameError) {
+          console.error('[DIRECT_UPDATE] Last name update error:', lastNameError);
+          return res.status(500).json({ error: "Failed to update last name" });
+        }
       }
       
-      // Update the user's profile
-      const updatedUser = await storage.updateUserProfile(req.user.id, profileData);
+      // Get updated user data
+      const updatedUser = await storage.getUser(req.user.id);
       if (!updatedUser) {
-        return res.status(500).json({ error: "Failed to update profile" });
+        return res.status(500).json({ error: "Failed to retrieve updated profile" });
       }
       
       // Check if profile completion crossed a threshold to award XP
