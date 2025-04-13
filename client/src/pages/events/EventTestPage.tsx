@@ -141,22 +141,28 @@ export default function EventTestPage() {
                   <Separator />
                   
                   <div className="flex flex-wrap gap-3">
-                    {/* Universal Passport Dialog */}
+                    {/* Enhanced Universal Passport Dialog */}
                     <Dialog open={showPassportDialog} onOpenChange={setShowPassportDialog}>
                       <DialogTrigger asChild>
-                        <Button variant="default">
+                        <Button 
+                          variant="default"
+                          className="bg-primary hover:bg-primary/90 transition-all duration-300"
+                        >
                           <TicketIcon className="mr-2 h-4 w-4" />
                           Show My Passport
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="sm:max-w-md">
-                        <DialogHeader>
-                          <DialogTitle>PicklePass™ Universal Passport</DialogTitle>
-                          <DialogDescription>
+                      <DialogContent className="sm:max-w-md p-6 rounded-xl border-primary/10 shadow-lg">
+                        <DialogHeader className="pb-2">
+                          <DialogTitle className="text-xl flex items-center">
+                            <TicketIcon className="h-5 w-5 mr-2 text-primary" />
+                            PicklePass™ Universal Passport
+                          </DialogTitle>
+                          <DialogDescription className="text-muted-foreground">
                             Your universal passport works for all PicklePass™ events you're registered for.
                           </DialogDescription>
                         </DialogHeader>
-                        <div className="py-4">
+                        <div className="pt-4 pb-2">
                           <UniversalPassport 
                             onViewRegisteredEvents={() => {
                               setShowPassportDialog(false);
@@ -180,10 +186,11 @@ export default function EventTestPage() {
                   Select an event from the list to view details and PicklePass™ options.
                 </p>
                 <Button 
-                  variant="outline"
+                  variant="default"
                   onClick={handleViewPassportClick}
+                  className="bg-primary/90 hover:bg-primary transition-all duration-300 px-6 py-5 rounded-lg"
                 >
-                  <UserCircle2Icon className="mr-2 h-4 w-4" />
+                  <TicketIcon className="mr-2 h-5 w-5" />
                   View My Universal Passport
                 </Button>
               </div>

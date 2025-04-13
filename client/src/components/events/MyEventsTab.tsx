@@ -150,27 +150,30 @@ export function MyEventsTab({ className, onEventClick, onPassportClick }: MyEven
   // Render empty state with link to passport
   if (!events || events.length === 0) {
     return (
-      <Card className={cn("bg-muted/30", className)}>
-        <CardHeader>
-          <CardTitle>No Registered Events</CardTitle>
+      <Card className={cn("bg-gradient-to-b from-muted/20 to-muted/5 border-primary/10 shadow-md", className)}>
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center">
+            <CalendarDaysIcon className="h-5 w-5 mr-2 text-primary" />
+            No Registered Events
+          </CardTitle>
           <CardDescription>
             You haven't registered for any upcoming PicklePass™ events yet.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
-            <div className="rounded-full bg-muted w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-              <TicketIcon className="w-8 h-8 text-muted-foreground" />
+            <div className="rounded-full bg-primary/5 w-20 h-20 mx-auto mb-5 flex items-center justify-center border border-primary/10 shadow-inner">
+              <TicketIcon className="w-9 h-9 text-primary/70" />
             </div>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-muted-foreground mb-7 max-w-xs mx-auto">
               Register for events from the Events tab and they'll appear here.
             </p>
             <Button 
               onClick={onPassportClick} 
-              className="bg-primary hover:bg-primary/90"
+              className="bg-primary/90 hover:bg-primary transition-colors duration-300 py-6 px-8 rounded-lg shadow-md"
               disabled={!onPassportClick}
             >
-              <TicketIcon className="mr-2 h-4 w-4" />
+              <TicketIcon className="mr-2 h-5 w-5" />
               View My Passport
             </Button>
           </div>
@@ -196,13 +199,13 @@ export function MyEventsTab({ className, onEventClick, onPassportClick }: MyEven
       <div className="flex justify-between items-center mb-2">
         <h3 className="text-lg font-semibold">My Registered Events</h3>
         <Button 
-          variant="outline" 
+          variant="default" 
           size="sm" 
-          className="text-xs"
+          className="text-xs bg-primary/90 hover:bg-primary transition-all duration-300"
           onClick={onPassportClick}
           disabled={!onPassportClick}
         >
-          <TicketIcon className="mr-1 h-3.5 w-3.5" />
+          <TicketIcon className="mr-1.5 h-3.5 w-3.5" />
           View Passport
         </Button>
       </div>
