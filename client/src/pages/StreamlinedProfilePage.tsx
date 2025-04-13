@@ -271,16 +271,34 @@ const StreamlinedProfilePage: FC = () => {
     }
     
     try {
+      // First, fetch the CSRF token
+      console.log('[Profile] Fetching CSRF token for avatar upload');
+      const csrfResponse = await fetch('/api/auth/csrf-token', {
+        credentials: 'include'
+      });
+      
+      if (!csrfResponse.ok) {
+        console.error('[Profile] Failed to fetch CSRF token:', csrfResponse.status, csrfResponse.statusText);
+        throw new Error('Failed to fetch CSRF token');
+      }
+      
+      const { csrfToken } = await csrfResponse.json();
+      console.log('[Profile] Successfully obtained CSRF token for avatar upload');
+      
       const formData = new FormData();
       formData.append('avatar', avatarFile);
       
       const response = await fetch('/api/profile/upload-avatar', {
         method: 'POST',
         credentials: 'include',
+        headers: {
+          'X-CSRF-Token': csrfToken,
+        },
         body: formData,
       });
       
       if (!response.ok) {
+        console.error('[Profile] Avatar upload failed:', response.status, response.statusText);
         throw new Error('Failed to upload avatar');
       }
       
@@ -313,16 +331,34 @@ const StreamlinedProfilePage: FC = () => {
   const saveBanner = async () => {
     try {
       if (bannerFile) {
+        // First, fetch the CSRF token
+        console.log('[Profile] Fetching CSRF token for banner upload');
+        const csrfResponse = await fetch('/api/auth/csrf-token', {
+          credentials: 'include'
+        });
+        
+        if (!csrfResponse.ok) {
+          console.error('[Profile] Failed to fetch CSRF token:', csrfResponse.status, csrfResponse.statusText);
+          throw new Error('Failed to fetch CSRF token');
+        }
+        
+        const { csrfToken } = await csrfResponse.json();
+        console.log('[Profile] Successfully obtained CSRF token for banner upload');
+        
         const formData = new FormData();
         formData.append('banner', bannerFile);
         
         const response = await fetch('/api/profile/upload-banner', {
           method: 'POST',
           credentials: 'include',
+          headers: {
+            'X-CSRF-Token': csrfToken,
+          },
           body: formData,
         });
         
         if (!response.ok) {
+          console.error('[Profile] Banner upload failed:', response.status, response.statusText);
           throw new Error('Failed to upload banner');
         }
       } else if (bannerPatternField) {
@@ -420,16 +456,38 @@ const StreamlinedProfilePage: FC = () => {
   // Function to handle saving profile updates
   const saveProfileField = async (fieldName: string, value: string | boolean | number | null) => {
     try {
-      await fetch('/api/profile/update', {
+      // First, fetch the CSRF token
+      console.log('[Profile] Fetching CSRF token');
+      const csrfResponse = await fetch('/api/auth/csrf-token', {
+        credentials: 'include'
+      });
+      
+      if (!csrfResponse.ok) {
+        console.error('[Profile] Failed to fetch CSRF token:', csrfResponse.status, csrfResponse.statusText);
+        throw new Error('Failed to fetch CSRF token');
+      }
+      
+      const { csrfToken } = await csrfResponse.json();
+      console.log('[Profile] Successfully obtained CSRF token');
+      
+      // Now send the profile update request with the token
+      const updateResponse = await fetch('/api/profile/update', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken,
         },
         credentials: 'include',
         body: JSON.stringify({
           [fieldName]: value,
         }),
       });
+      
+      if (!updateResponse.ok) {
+        console.error('[Profile] Update failed:', updateResponse.status, updateResponse.statusText);
+        const errorData = await updateResponse.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to update profile');
+      }
       
       // Invalidate the user query to refresh the data
       queryClient.invalidateQueries({ queryKey: ['/api/auth/current-user'] });
