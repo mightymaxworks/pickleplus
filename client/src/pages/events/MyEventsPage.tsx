@@ -5,7 +5,7 @@
  * My Events Page for the PicklePass™ Event Management System
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ArrowLeftIcon, TicketIcon, CalendarIcon } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
+import { useToast } from '@/hooks/use-toast';
 
 // Components
 import { MyEventsTab } from '@/components/events/MyEventsTab';
@@ -24,11 +25,26 @@ import { formatDateTime } from '@/lib/utils';
 import type { Event } from '@shared/schema/events';
 
 export default function MyEventsPage() {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [, navigate] = useLocation();
+  const { toast } = useToast();
   
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showPassportDialog, setShowPassportDialog] = useState<boolean>(false);
+  
+  // PKL-278651-CONN-0007-AUTH: Authentication guard for protected route
+  useEffect(() => {
+    // Only redirect after auth check completes and user is confirmed not logged in
+    if (!isAuthLoading && !user) {
+      console.log('[Auth] Unauthorized access attempt to MyEventsPage, redirecting to login');
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to view your registered events",
+        variant: "default"
+      });
+      navigate('/login');
+    }
+  }, [user, isAuthLoading, navigate, toast]);
   
   // Fetch the selected event details when an event is selected
   const { data: eventDetails } = useQuery({

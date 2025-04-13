@@ -7,15 +7,17 @@
  * Main Event Discovery Page for the PicklePass™ Event Management System
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { TicketIcon, UserCircle2Icon } from 'lucide-react';
+import { TicketIcon, UserCircle2Icon, LockIcon } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
+import { useToast } from '@/hooks/use-toast';
 
 // Components
 import EventCheckInScanner from '@/components/events/EventCheckInScanner';
