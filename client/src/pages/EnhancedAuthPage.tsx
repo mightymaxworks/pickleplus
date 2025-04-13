@@ -175,9 +175,10 @@ export default function EnhancedAuthPage() {
             variant="ghost" 
             className="absolute left-0 top-0" 
             onClick={() => navigate("/")}
+            title="Back to Home"
+            aria-label="Back to Home"
           >
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            Back to Home
+            <ChevronLeft className="h-5 w-5" />
           </Button>
           <motion.div
             initial={{ opacity: 0, y: -20 }}
