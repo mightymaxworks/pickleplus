@@ -182,17 +182,22 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
         return res.status(404).json({ error: "User not found" });
       }
       
+      // Ensure we have data to update
+      if (!req.body || Object.keys(req.body).length === 0) {
+        return res.status(400).json({ error: "No profile data provided for update" });
+      }
+      
       // Special handling for firstName/lastName fields to map to database columns
-      const profileData = { ...req.body };
+      const profileData: Record<string, any> = { ...req.body };
       
       // Map firstName/lastName to snake_case column names if they exist
-      if (profileData.firstName !== undefined) {
+      if ('firstName' in profileData) {
         profileData.first_name = profileData.firstName;
         delete profileData.firstName;
         console.log("[API] Mapped firstName to first_name:", profileData.first_name);
       }
       
-      if (profileData.lastName !== undefined) {
+      if ('lastName' in profileData) {
         profileData.last_name = profileData.lastName;
         delete profileData.lastName;
         console.log("[API] Mapped lastName to last_name:", profileData.last_name);

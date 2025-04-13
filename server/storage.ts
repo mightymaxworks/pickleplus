@@ -553,45 +553,59 @@ export class DatabaseStorage implements IStorage {
         }
       });
       
-      // Special handling for first name and last name
-      if (profileData.firstName) {
+      // Special handling for first name and last name - check for both camelCase and snake_case
+      if ('firstName' in profileData) {
         validData.first_name = profileData.firstName;
         console.log(`[Storage] updateUserProfile - Force adding first_name with value:`, profileData.firstName);
+      } else if ('first_name' in profileData) {
+        validData.first_name = profileData.first_name;
+        console.log(`[Storage] updateUserProfile - Direct adding first_name with value:`, profileData.first_name);
       }
-      if (profileData.lastName) {
+      
+      if ('lastName' in profileData) {
         validData.last_name = profileData.lastName;
         console.log(`[Storage] updateUserProfile - Force adding last_name with value:`, profileData.lastName);
+      } else if ('last_name' in profileData) {
+        validData.last_name = profileData.last_name;
+        console.log(`[Storage] updateUserProfile - Direct adding last_name with value:`, profileData.last_name);
       }
       
       // CRITICAL: Force add the values for external ratings if they exist in the profileData
       // This is a workaround for the mapping issue
-      if (profileData.duprRating) {
+      if ('duprRating' in profileData) {
         validData.dupr_rating = profileData.duprRating;
         console.log(`[Storage] updateUserProfile - Force adding dupr_rating with value:`, profileData.duprRating);
       }
-      if (profileData.duprProfileUrl) {
+      
+      if ('duprProfileUrl' in profileData) {
         validData.dupr_profile_url = profileData.duprProfileUrl;
         console.log(`[Storage] updateUserProfile - Force adding dupr_profile_url with value:`, profileData.duprProfileUrl);
       }
-      if (profileData.utprRating) {
+      
+      if ('utprRating' in profileData) {
         validData.utpr_rating = profileData.utprRating;
         console.log(`[Storage] updateUserProfile - Force adding utpr_rating with value:`, profileData.utprRating);
       }
-      if (profileData.utprProfileUrl) {
+      
+      if ('utprProfileUrl' in profileData) {
         validData.utpr_profile_url = profileData.utprProfileUrl;
         console.log(`[Storage] updateUserProfile - Force adding utpr_profile_url with value:`, profileData.utprProfileUrl);
       }
-      if (profileData.wprRating) {
+      
+      if ('wprRating' in profileData) {
         validData.wpr_rating = profileData.wprRating;
         console.log(`[Storage] updateUserProfile - Force adding wpr_rating with value:`, profileData.wprRating);
       }
-      if (profileData.wprProfileUrl) {
+      
+      if ('wprProfileUrl' in profileData) {
         validData.wpr_profile_url = profileData.wprProfileUrl;
         console.log(`[Storage] updateUserProfile - Force adding wpr_profile_url with value:`, profileData.wprProfileUrl);
       }
       
-      // Add last external rating update timestamp
-      validData.last_external_rating_update = new Date().toISOString();
+      // Add last external rating update timestamp if ratings were updated
+      if ('duprRating' in profileData || 'utprRating' in profileData || 'wprRating' in profileData) {
+        validData.last_external_rating_update = new Date();
+      }
       
       // Update the user profile with validated data
       console.log(`[Storage] updateUserProfile - SQL UPDATE operation. Data to update:`, JSON.stringify(validData, null, 2));
@@ -634,6 +648,10 @@ export class DatabaseStorage implements IStorage {
         if (!('regularSchedule' in updatedUser)) {
           (updatedUser as any).regularSchedule = null;
         }
+        
+        // Map back from snake_case to camelCase for frontend use
+        (updatedUser as any).firstName = updatedUser.first_name;
+        (updatedUser as any).lastName = updatedUser.last_name;
       }
       
       // Update the profile completion percentage if it changed
@@ -654,6 +672,10 @@ export class DatabaseStorage implements IStorage {
           if (!('regularSchedule' in finalUser)) {
             (finalUser as any).regularSchedule = null;
           }
+          
+          // Map back from snake_case to camelCase for frontend use
+          (finalUser as any).firstName = finalUser.first_name;
+          (finalUser as any).lastName = finalUser.last_name;
         }
         
         return finalUser;
