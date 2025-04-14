@@ -127,12 +127,14 @@ export default function SettingsPage() {
     });
   };
 
-  // Handle select changes
-  const handleSelectChange = (category: keyof typeof settings, setting: string, value: string) => {
+  // Handle select changes - properly typed
+  const handleSelectChange = (category: keyof SettingsType, setting: string, value: string) => {
+    const categorySettings = settings[category];
+    
     setSettings({
       ...settings,
       [category]: {
-        ...settings[category as keyof typeof settings],
+        ...categorySettings,
         [setting]: value
       }
     });
