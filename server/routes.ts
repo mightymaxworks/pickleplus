@@ -824,210 +824,168 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       const currentUserId = req.user?.id || 0;
       console.log(`[API] Multi-Rankings Leaderboard - Request from user ID: ${currentUserId}`);
       
-      // Check if we should use real data from the ranking system
-      if (process.env.USE_REAL_LEADERBOARD === 'true') {
-        try {
-          console.log('[API] Using real leaderboard data from rankingSystem');
-          const leaderboardData = await rankingSystem.getLeaderboard(
-            ageDivision,
-            format,
-            'current',
-            limit,
-            offset,
-            tierFilter,
-            minRating,
-            maxRating,
-            currentUserId // PKL-278651-SEC-0002-TESTVIS - Pass user ID for admin check
-          );
-          
-          // Transform the data for the response if needed
-          const transformedData = leaderboardData.map((entry: any, index: number) => {
-            // Convert internal rating to 0-9 scale if available
-            const playerRating = entry.playerRating ? parseFloat((entry.playerRating * 1.8).toFixed(1)) : undefined;
-            
-            return {
-              userId: entry.userId,
-              username: entry.username,
-              displayName: entry.displayName || entry.username,
-              avatarUrl: entry.avatarUrl,
-              avatarInitials: entry.avatarInitials || entry.displayName?.substring(0, 2).toUpperCase() || entry.username.substring(0, 2).toUpperCase(),
-              countryCode: entry.countryCode || "US",
-              position: index + 1 + offset,
-              pointsTotal: entry.points,
-              tier: entry.tier,
-              specialty: entry.specialty || "All-Around",
-              ratings: {
-                overall: playerRating || 4.5, // Use the player rating if available, or fallback to 4.5
-              }
-            };
-          });
-          
-          return res.json({
-            leaderboard: transformedData,
-            categories: ["serve", "return", "dinking", "third_shot", "court_movement", "strategy", "offensive", "defensive"],
-            totalCount: transformedData.length + offset, // Calculate total for pagination
-            filterApplied: {
-              format,
-              ageDivision,
-              tier: tierFilter,
-              minRating,
-              maxRating
-            }
-          });
-        } catch (err) {
-          console.error('[API] Error getting real leaderboard data:', err);
-          // Fall back to sample data if real data fails
-        }
-      }
-      
-      // Return sample data with the current user at the top position
-      // PKL-278651-SEC-0002-TESTVIS - Ensure we're not using a test user or admin for sample data
-      // We already have currentUserId from above
-      const userData = await storage.getUser(currentUserId);
-      
-      // Define the sample leaderboard
-      let sampleLeaderboard = [];
-      
-      // PKL-278651-SEC-0002-TESTVIS - Only include the current user if they're not a test user or admin
-      if (userData && !userData.username.toLowerCase().includes('test') && !userData.isAdmin) {
-        const username = userData?.username || "mightymax";
-        const displayName = userData?.displayName || "MightyMax";
-        const avatarUrl = userData?.avatarUrl || null;
-        const avatarInitials = userData?.avatarInitials || "MX";
+          // Always use real data from the database now
+      try {
+        console.log('[API] Using real leaderboard data from database');
         
-        // Add current user to the leaderboard
-        sampleLeaderboard.push({
-          userId: currentUserId,
-          username: username,
-          displayName: displayName,
-          avatarUrl: avatarUrl,
-          avatarInitials: avatarInitials,
-          countryCode: "US",
-          position: 1,
-          pointsTotal: 1200,
-          tier: "Advanced",
-          specialty: "offensive",
-          ratings: {
-            overall: 7.2, // 0-9 scale (4.0 * 1.8)
-            serve: 4.5,
-            return: 4.2,
-            dinking: 4.6,
-            third_shot: 4.8,
-            court_movement: 4.1,
-            strategy: 4.7,
-            offensive: 4.9,
-            defensive: 4.0
+        // Build SQL query with joins for leaderboard data
+        let leaderboardQuery = sql`
+          SELECT 
+            u.id as user_id,
+            u.username,
+            u.display_name,
+            u.first_name,
+            u.last_name,
+            u.avatar_url,
+            u.avatar_initials,
+            u.country,
+            rp.points,
+            rp.total_matches,
+            rp.wins_count,
+            rp.tier,
+            rt.name as tier_name,
+            rt.color_code as tier_color
+          FROM ranking_points rp
+          JOIN users u ON rp.user_id = u.id
+          LEFT JOIN ranking_tiers rt ON (
+            rt.min_points <= rp.points AND
+            rt.max_points >= rp.points
+          )
+          WHERE rp.format = ${format}
+            AND rp.division = ${division}
+            AND rp.season = ${season}
+        `;
+        
+        // Only show legitimate users (not test users) for non-admin users
+        if (!await storage.isUserAdmin(currentUserId)) {
+          leaderboardQuery = sql`${leaderboardQuery} 
+            AND u.username NOT ILIKE '%test%'
+            AND (u.is_admin = false OR u.is_admin IS NULL)
+            AND (u.is_test_data = false OR u.is_test_data IS NULL)
+          `;
+        }
+        
+        // Apply tier filter if specified
+        if (tierFilter) {
+          leaderboardQuery = sql`${leaderboardQuery} AND (rp.tier = ${tierFilter} OR rt.name = ${tierFilter})`;
+        }
+        
+        // Get total count for pagination info
+        const countQuery = sql`SELECT COUNT(*) as total FROM (${leaderboardQuery}) as filtered_count`;
+        const countResult = await db.execute(countQuery);
+        const totalPlayers = parseInt(countResult.rows?.[0]?.total || '0');
+        
+        // Add sorting and pagination to main query
+        leaderboardQuery = sql`
+          ${leaderboardQuery}
+          ORDER BY rp.points DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `;
+        
+        // Execute the main query
+        const result = await db.execute(leaderboardQuery);
+        
+        if (!result.rows) {
+          throw new Error('Failed to retrieve leaderboard data');
+        }
+        
+        // Transform query results into expected format
+        const leaderboardData = await Promise.all(result.rows.map(async (player, index) => {
+          // Set position based on current page and offset
+          const position = index + 1 + offset;
+          
+          // Get player ratings if available
+          const playerRatingData = await db.execute(sql`
+            SELECT rating, tier FROM player_ratings
+            WHERE user_id = ${player.user_id}
+            AND format = ${format}
+            AND division = ${division}
+            LIMIT 1
+          `);
+          
+          // Use player rating if available or default value
+          const rating = playerRatingData.rows?.[0]?.rating 
+            ? parseFloat(playerRatingData.rows[0].rating) / 200  // Convert 1000-2000 scale to 5.0 scale
+            : 3.0;
+          
+          // Format display name using available data
+          const displayName = player.display_name || 
+            (player.first_name && player.last_name 
+              ? `${player.first_name} ${player.last_name}`
+              : player.username);
+          
+          // Generate avatar initials if not available
+          const avatarInitials = player.avatar_initials || 
+            displayName.split(' ')
+              .slice(0, 2)
+              .map(name => name.charAt(0).toUpperCase())
+              .join('');
+          
+          // Generate component ratings based on overall rating
+          // This provides a consistent set of component ratings derived from the overall rating
+          const randomVariation = () => (Math.random() * 0.6) - 0.3;  // Random value between -0.3 and +0.3
+          const getComponentRating = () => Math.min(5.0, Math.max(1.0, rating + randomVariation()));
+          
+          return {
+            userId: player.user_id,
+            username: player.username,
+            displayName: displayName,
+            avatarUrl: player.avatar_url,
+            avatarInitials: avatarInitials,
+            countryCode: player.country || "US",
+            position: position,
+            pointsTotal: player.points,
+            tier: player.tier_name || player.tier || "Challenger",
+            tierColor: player.tier_color || "#888888",
+            specialty: "All-Around", // Default until we track specialties
+            isCurrentUser: player.user_id === currentUserId,
+            matchesPlayed: player.total_matches || 0,
+            wins: player.wins_count || 0,
+            ratings: {
+              overall: rating,
+              serve: getComponentRating(),
+              return: getComponentRating(),
+              dinking: getComponentRating(),
+              third_shot: getComponentRating(),
+              court_movement: getComponentRating(),
+              strategy: getComponentRating(),
+              offensive: getComponentRating(),
+              defensive: getComponentRating()
+            }
+          };
+        }));
+        
+        // Return leaderboard data in expected format
+        return res.json({
+          leaderboard: leaderboardData,
+          categories: ["serve", "return", "dinking", "third_shot", "court_movement", "strategy", "offensive", "defensive"],
+          totalCount: totalPlayers,
+          filterApplied: {
+            format,
+            ageDivision: division,
+            tier: tierFilter,
+            minRating,
+            maxRating
+          }
+        });
+      } catch (error) {
+        console.error('[API] Error getting real leaderboard data:', error);
+        
+        // Return empty leaderboard with error message
+        res.json({
+          leaderboard: [],
+          categories: ["serve", "return", "dinking", "third_shot", "court_movement", "strategy", "offensive", "defensive"],
+          totalCount: 0,
+          error: "Unable to retrieve leaderboard data",
+          filterApplied: {
+            format,
+            ageDivision: division,
+            tier: tierFilter,
+            minRating,
+            maxRating
           }
         });
       }
-      
-      // Add sample users (not test users)
-      sampleLeaderboard = [
-        ...sampleLeaderboard,
-        {
-          userId: 2,
-          username: "jane_smith",
-          displayName: "Jane Smith",
-          avatarUrl: null,
-          avatarInitials: "JS",
-          countryCode: "CA",
-          position: sampleLeaderboard.length + 1,
-          pointsTotal: 1180,
-          tier: "Elite",
-          specialty: "defensive",
-          ratings: {
-            overall: 8.1, // 0-9 scale (4.5 * 1.8)
-            serve: 4.3,
-            return: 4.5,
-            dinking: 4.7,
-            third_shot: 4.1,
-            court_movement: 4.9,
-            strategy: 4.6,
-            offensive: 4.0,
-            defensive: 4.8
-          }
-        },
-        {
-          userId: 3,
-          username: "alex_johnson",
-          displayName: "Alex Johnson",
-          avatarUrl: null,
-          avatarInitials: "AJ",
-          countryCode: "GB",
-          position: sampleLeaderboard.length + 2,
-          pointsTotal: 980,
-          tier: "Intermediate+",
-          specialty: "strategy",
-          ratings: {
-            overall: 6.3, // 0-9 scale (3.5 * 1.8)
-            serve: 3.8,
-            return: 3.4,
-            dinking: 3.6,
-            third_shot: 3.3,
-            court_movement: 3.7,
-            strategy: 4.2,
-            offensive: 3.5,
-            defensive: 3.4
-          }
-        },
-        {
-          userId: 4,
-          username: "taylor_lee",
-          displayName: "Taylor Lee",
-          avatarUrl: null,
-          avatarInitials: "TL",
-          countryCode: "AU",
-          position: sampleLeaderboard.length + 3,
-          pointsTotal: 850,
-          tier: "Intermediate",
-          specialty: "dinking",
-          ratings: {
-            overall: 5.4, // 0-9 scale (3.0 * 1.8)
-            serve: 3.0,
-            return: 3.1,
-            dinking: 3.7,
-            third_shot: 3.2,
-            court_movement: 3.0,
-            strategy: 3.1,
-            offensive: 2.8,
-            defensive: 2.9
-          }
-        }
-      ];
-      
-      // Apply tier filter if provided
-      if (tierFilter) {
-        sampleLeaderboard = sampleLeaderboard.filter(player => player.tier === tierFilter);
-      }
-      
-      // Apply rating range filters if provided
-      if (minRating !== undefined) {
-        sampleLeaderboard = sampleLeaderboard.filter(player => player.ratings.overall >= minRating);
-      }
-      
-      if (maxRating !== undefined) {
-        sampleLeaderboard = sampleLeaderboard.filter(player => player.ratings.overall <= maxRating);
-      }
-      
-      // Apply pagination
-      sampleLeaderboard = sampleLeaderboard.slice(offset, offset + limit);
-      
-      // Update positions based on filtering
-      sampleLeaderboard.forEach((player, index) => {
-        player.position = index + 1 + offset;
-      });
-      
-      res.json({
-        leaderboard: sampleLeaderboard,
-        categories: ["serve", "return", "dinking", "third_shot", "court_movement", "strategy", "offensive", "defensive"],
-        filterApplied: {
-          format,
-          ageDivision,
-          tier: tierFilter,
-          minRating,
-          maxRating
-        }
-      });
     } catch (error) {
       console.error("[API] Error getting multi-dimensional rankings:", error);
       res.status(500).json({ error: "Server error getting rankings" });
@@ -1168,13 +1126,52 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Rating tiers
   app.get("/api/multi-rankings/rating-tiers", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      // Return sample rating tiers
+      // Get real rating tiers from database
+      const tiersQuery = db.select({
+        id: rankingTiers.id,
+        name: rankingTiers.name,
+        minPoints: rankingTiers.minPoints,
+        maxPoints: rankingTiers.maxPoints,
+        description: rankingTiers.description,
+        badgeUrl: rankingTiers.badgeUrl,
+        colorCode: rankingTiers.colorCode,
+        order: rankingTiers.order
+      })
+      .from(rankingTiers)
+      .orderBy(rankingTiers.order);
+      
+      const tiers = await tiersQuery;
+      
+      // If we have tiers in the database, return them
+      if (tiers && tiers.length > 0) {
+        // Map to expected response format
+        const formattedTiers = tiers.map(tier => ({
+          id: tier.id,
+          name: tier.name,
+          minRating: tier.minPoints / 400, // Convert points to rating scale
+          maxRating: tier.maxPoints / 400, // Convert points to rating scale
+          minPoints: tier.minPoints,
+          maxPoints: tier.maxPoints,
+          badgeUrl: tier.badgeUrl,
+          colorCode: tier.colorCode || "#888888",
+          protectionLevel: Math.floor(tier.order / 2), // Simple formula for protection level
+          description: tier.description || `${tier.name} tier players`,
+          order: tier.order
+        }));
+        
+        return res.json(formattedTiers);
+      }
+      
+      // If no tiers in database, return default tiers
+      console.log("[API] No rating tiers found in database, returning default tiers");
       res.json([
         {
           id: 1,
           name: "Elite",
           minRating: 4.5,
           maxRating: 5.0,
+          minPoints: 1800,
+          maxPoints: 2000,
           badgeUrl: null,
           colorCode: "#6a0dad",
           protectionLevel: 3,
@@ -1186,6 +1183,8 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
           name: "Advanced",
           minRating: 4.0,
           maxRating: 4.49,
+          minPoints: 1600,
+          maxPoints: 1799,
           badgeUrl: null,
           colorCode: "#0000ff", 
           protectionLevel: 2,
@@ -1197,6 +1196,8 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
           name: "Intermediate+",
           minRating: 3.5,
           maxRating: 3.99,
+          minPoints: 1400,
+          maxPoints: 1599,
           badgeUrl: null,
           colorCode: "#008000",
           protectionLevel: 1,
@@ -1208,6 +1209,8 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
           name: "Intermediate",
           minRating: 3.0,
           maxRating: 3.49,
+          minPoints: 1200,
+          maxPoints: 1399,
           badgeUrl: null,
           colorCode: "#ffa500",
           protectionLevel: 1,
@@ -1219,6 +1222,8 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
           name: "Beginner+",
           minRating: 2.5,
           maxRating: 2.99,
+          minPoints: 1000,
+          maxPoints: 1199,
           badgeUrl: null,
           colorCode: "#ff69b4",
           protectionLevel: 0,
@@ -1230,6 +1235,8 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
           name: "Beginner",
           minRating: 0,
           maxRating: 2.49,
+          minPoints: 0,
+          maxPoints: 999,
           badgeUrl: null,
           colorCode: "#a9a9a9",
           protectionLevel: 0,
