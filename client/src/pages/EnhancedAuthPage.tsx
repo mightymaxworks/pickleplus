@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
+import { queryClient } from "@/lib/queryClient";
 import { PicklePlusNewLogo } from "../components/icons/PicklePlusNewLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +14,7 @@ import { insertUserSchema } from "@shared/schema";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { z } from "zod";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Info, ArrowRight, ChevronLeft, Mail, Lock, User, MapPin, Calendar, Award } from "lucide-react";
+import { Info, ArrowRight, AlertCircle, ChevronLeft, Mail, Lock, User, MapPin, Calendar, Award } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -125,13 +126,58 @@ export default function EnhancedAuthPage() {
 
   const handleLogin = async (data: LoginFormData) => {
     try {
-      await loginMutation.mutateAsync({
-        username: data.username,
-        password: data.password
-      });
-      navigate("/dashboard");
+      try {
+        // Make direct fetch call to get detailed error information
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            username: data.username,
+            password: data.password
+          }),
+        });
+        
+        console.log("[DEBUG] Login response status:", response.status);
+        
+        if (response.ok) {
+          const userData = await response.json();
+          console.log("[DEBUG] Login successful, user data:", userData);
+          // Update query client data
+          queryClient.setQueryData(["/api/auth/current-user"], userData);
+          navigate("/dashboard");
+        } else {
+          // Handle specific error responses
+          const errorData = await response.json();
+          console.error("[DEBUG] Login error response:", errorData);
+          
+          // Handle invalid credentials
+          if (errorData.message.includes("Invalid credentials")) {
+            loginForm.setError("root", { 
+              type: "manual",
+              message: "Invalid username or password. Please try again."
+            });
+          } else {
+            // Generic error at form level
+            loginForm.setError("root", { 
+              type: "manual",
+              message: errorData.message || "Login failed. Please try again."
+            });
+          }
+        }
+      } catch (fetchError) {
+        console.error("[DEBUG] Fetch error during login:", fetchError);
+        loginForm.setError("root", { 
+          type: "manual",
+          message: "Network error occurred. Please check your connection and try again."
+        });
+      }
     } catch (error) {
       console.error("Login error:", error);
+      loginForm.setError("root", { 
+        type: "manual",
+        message: "An unexpected error occurred during login. Please try again."
+      });
     }
   };
 
@@ -152,10 +198,63 @@ export default function EnhancedAuthPage() {
         skillLevel: formData.skillLevel || null,
       };
       
-      await registerMutation.mutateAsync(registrationData);
-      navigate("/dashboard");
+      try {
+        // Make direct fetch call to get detailed error information
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify(registrationData),
+        });
+        
+        console.log("[DEBUG] Registration response status:", response.status);
+        
+        if (response.ok) {
+          const userData = await response.json();
+          console.log("[DEBUG] Registration successful, user data:", userData);
+          // Update query client data
+          // @ts-ignore - TypeScript doesn't know about the specific query key
+          queryClient.setQueryData(["/api/auth/current-user"], userData);
+          navigate("/dashboard");
+        } else {
+          // Handle specific error responses
+          const errorData = await response.json();
+          console.error("[DEBUG] Registration error response:", errorData);
+          
+          // Set appropriate field errors based on server response
+          if (errorData.message.includes("Username already exists")) {
+            registerForm.setError("username", { 
+              type: "manual",
+              message: "This username is already taken. Please choose another."
+            });
+          } else if (errorData.message.includes("Email already exists")) {
+            registerForm.setError("email", { 
+              type: "manual",
+              message: "This email is already registered. Please use another email or try logging in."
+            });
+          } else {
+            // Generic error at form level
+            registerForm.setError("root", { 
+              type: "manual",
+              message: errorData.message || "Registration failed. Please try again."
+            });
+          }
+        }
+      } catch (fetchError) {
+        console.error("[DEBUG] Fetch error during registration:", fetchError);
+        registerForm.setError("root", { 
+          type: "manual",
+          message: "Network error occurred. Please check your connection and try again."
+        });
+      }
     } catch (error) {
       console.error("Registration error:", error);
+      registerForm.setError("root", { 
+        type: "manual",
+        message: "An unexpected error occurred during registration. Please try again."
+      });
     }
   };
 
@@ -243,6 +342,14 @@ export default function EnhancedAuthPage() {
                     <Form {...loginForm}>
                       <form onSubmit={loginForm.handleSubmit(handleLogin)}>
                         <CardContent className="space-y-4">
+                          {/* Form-level error display */}
+                          {loginForm.formState.errors.root?.message && (
+                            <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
+                              <AlertCircle className="h-4 w-4 inline mr-2" />
+                              {loginForm.formState.errors.root.message}
+                            </div>
+                          )}
+                          
                           <FormField
                             control={loginForm.control}
                             name="username"
@@ -358,6 +465,14 @@ export default function EnhancedAuthPage() {
                     <Form {...registerForm}>
                       <form onSubmit={registerForm.handleSubmit(handleRegister)}>
                         <CardContent className="space-y-4">
+                          {/* Form-level error display */}
+                          {registerForm.formState.errors.root?.message && (
+                            <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
+                              <AlertCircle className="h-4 w-4 inline mr-2" />
+                              {registerForm.formState.errors.root.message}
+                            </div>
+                          )}
+                        
                           <div className="grid grid-cols-1 gap-4">
                             <FormField
                               control={registerForm.control}
