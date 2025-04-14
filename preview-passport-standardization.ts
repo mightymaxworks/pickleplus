@@ -10,13 +10,11 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { users } from './shared/schema';
-import { isNotNull } from 'drizzle-orm';
-import { normalizePassportId } from './shared/utils/passport-utils';
+import { isNotNull, eq, sql } from 'drizzle-orm';
+import { normalizePassportId, generatePassportId } from './shared/utils/passport-utils';
 
-// Standard passport ID format: PKL-AAAA-BBB where:
-// - AAAA is a 4-digit numeric or alphanumeric code
-// - BBB is a 3-character alphanumeric code
-const STANDARD_FORMAT_REGEX = /^PKL-\d{4}-[A-Z0-9]{3}$/i;
+// Standard passport ID format: 7 alphanumeric characters
+const STANDARD_FORMAT_REGEX = /^[A-Z0-9]{7}$/i;
 
 /**
  * Main function to preview passport ID standardization
@@ -48,60 +46,54 @@ async function previewPassportStandardization() {
     
     if (usersToStandardize.length === 0) {
       console.log('\n[PREVIEW] All passport IDs already follow the standard format. No changes needed.');
-      return;
-    }
-    
-    console.log(`\n[PREVIEW] Found ${usersToStandardize.length} users that need passport ID standardization`);
-    console.log('\n----- STANDARDIZATION PREVIEW -----');
-    
-    // Process each user that needs standardization
-    for (const user of usersToStandardize) {
-      const originalPassportId = user.passportId || '';
+    } else {
+      console.log(`\n[PREVIEW] Found ${usersToStandardize.length} users that need passport ID standardization`);
+      console.log('\n----- STANDARDIZATION PREVIEW -----');
       
-      // Normalize the passport ID components
-      const normalizedId = normalizePassportId(originalPassportId);
-      
-      // Skip if we can't create a proper ID
-      if (!normalizedId || normalizedId.length < 5) {
-        console.log(`\n[PREVIEW] User ${user.username} has invalid passport ID: ${originalPassportId}`);
-        console.log('  Cannot standardize this ID - manual review required');
-        continue;
-      }
-      
-      // Extract the standardized 7-digit code
-      let idComponents: string[] = [];
-      
-      if (originalPassportId.includes('-')) {
-        // Handle existing formatted IDs - keep the format but standardize
-        const parts = originalPassportId.split('-');
-        if (parts.length >= 3) {
-          // Already has PKL- prefix, standardize the rest
-          const normalizedCore = normalizePassportId(originalPassportId);
-          const firstPart = normalizedCore.slice(0, 4).padEnd(4, '0');
-          const secondPart = normalizedCore.slice(4, 7).padEnd(3, 'X');
-          idComponents = ['PKL', firstPart, secondPart];
+      // Process each user that needs standardization
+      for (const user of usersToStandardize) {
+        const originalPassportId = user.passportId || '';
+        
+        // Extract a simplified 7-character ID from the existing one if possible
+        let standardizedPassportId = normalizePassportId(originalPassportId);
+        
+        // If we can't extract enough characters, generate a new random ID
+        if (standardizedPassportId.length < 7) {
+          standardizedPassportId = generatePassportId();
+          console.log(`\n[PREVIEW] User ${user.username} has insufficient passport ID: ${originalPassportId}`);
+          console.log(`  Will generate a new random ID: ${standardizedPassportId}`);
         } else {
-          // Missing proper format, create from normalized ID
-          const firstPart = normalizedId.slice(0, 4).padEnd(4, '0');
-          const secondPart = normalizedId.slice(4, 7).padEnd(3, 'X');
-          idComponents = ['PKL', firstPart, secondPart];
+          console.log(`\n[PREVIEW] User "${user.username}" (ID: ${user.id}):`);
+          console.log(`  Current:  ${originalPassportId}`);
+          console.log(`  Standard: ${standardizedPassportId}`);
         }
-      } else {
-        // No formatting at all, create from normalized ID
-        const firstPart = normalizedId.slice(0, 4).padEnd(4, '0');
-        const secondPart = normalizedId.slice(4, 7).padEnd(3, 'X');
-        idComponents = ['PKL', firstPart, secondPart];
       }
       
-      // Create standardized passport ID
-      const standardizedPassportId = idComponents.join('-');
-      
-      console.log(`\n[PREVIEW] User "${user.username}" (ID: ${user.id}):`);
-      console.log(`  Current:  ${originalPassportId}`);
-      console.log(`  Standard: ${standardizedPassportId}`);
+      console.log('\n----- END PREVIEW -----');
     }
     
-    console.log('\n----- END PREVIEW -----');
+    // Check for users without passport IDs
+    const usersWithoutPassportIds = await db
+      .select({
+        id: users.id,
+        username: users.username
+      })
+      .from(users)
+      .where(sql`${users.passportId} IS NULL`);
+    
+    if (usersWithoutPassportIds.length > 0) {
+      console.log(`\n[PREVIEW] Found ${usersWithoutPassportIds.length} users without passport IDs`);
+      console.log('\n----- USERS NEEDING NEW PASSPORT IDS -----');
+      
+      for (const user of usersWithoutPassportIds) {
+        const newPassportId = generatePassportId();
+        console.log(`\n[PREVIEW] User "${user.username}" (ID: ${user.id}):`);
+        console.log(`  Will generate: ${newPassportId}`);
+      }
+      
+      console.log('\n----- END PREVIEW -----');
+    }
+    
     console.log('\nTo apply these changes, run the migration script with: npx tsx run-passport-id-standardization.ts');
     
   } catch (error) {

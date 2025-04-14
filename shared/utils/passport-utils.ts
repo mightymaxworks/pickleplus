@@ -5,8 +5,27 @@
  */
 
 /**
+ * Generates a random 7-character alphanumeric passport ID
+ * Format: 7 random alphanumeric characters (letters and numbers only)
+ * 
+ * @returns A new random 7-character passport ID
+ */
+export function generatePassportId(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed similar looking characters (I, O, 0, 1)
+  let result = '';
+  
+  // Generate 7 random characters
+  for (let i = 0; i < 7; i++) {
+    const randomIndex = Math.floor(Math.random() * chars.length);
+    result += chars[randomIndex];
+  }
+  
+  return result;
+}
+
+/**
  * Normalizes a passport ID for search purposes
- * Removes the PKL- prefix and any dashes to create a standardized search format
+ * Removes any prefixes, dashes, or formatting to create a clean 7-character string
  * 
  * @param passportId The passport ID to normalize
  * @returns The normalized passport ID for search purposes
@@ -14,45 +33,41 @@
 export function normalizePassportId(passportId: string | null | undefined): string {
   if (!passportId) return '';
   
-  // Remove PKL- prefix and all dashes, and convert to uppercase
-  return passportId.replace(/^PKL-/, '').replace(/-/g, '').toUpperCase();
+  // Remove PKL- prefix, dashes, and any non-alphanumeric characters, then convert to uppercase
+  const normalized = passportId
+    .replace(/^PKL-/, '')
+    .replace(/-/g, '')
+    .replace(/[^A-Z0-9]/gi, '')
+    .toUpperCase();
+  
+  // Limit to 7 characters
+  return normalized.substring(0, 7);
 }
 
 /**
- * Extracts the 7-digit core passport code from a full passport ID
- * This is the format used for search and display in the UI
+ * Extracts a clean 7-character passport ID from any format
  * 
- * @param passportId The full passport ID (e.g., "PKL-1000-MM7")
- * @returns The 7-digit core passport code (e.g., "1000MM7")
+ * @param passportId The passport ID in any format
+ * @returns A clean 7-character passport ID
  */
 export function extractPassportCode(passportId: string | null | undefined): string | null {
   if (!passportId) return null;
   
-  // For the newer format with more segments (PKL-YK876-5432-109)
-  // Extract appropriate segments to form a 7-digit code
-  const segments = passportId.replace(/^PKL-/, '').split('-');
+  const normalized = normalizePassportId(passportId);
   
-  if (segments.length >= 2) {
-    // For newer format with multiple segments
-    // Take the first 3-5 characters from the first segment and
-    // enough characters from the second segment to make 7 total
-    const firstPart = segments[0].substring(0, 5);
-    const secondPartLength = Math.min(7 - firstPart.length, segments[1].length);
-    const secondPart = segments[1].substring(0, secondPartLength);
-    
-    return (firstPart + secondPart).toUpperCase();
+  // Ensure exactly 7 characters by padding if needed
+  if (normalized.length < 7) {
+    return normalized.padEnd(7, '0');
   }
   
-  // For the original format (PKL-1000-MM7)
-  const normalized = normalizePassportId(passportId);
-  return normalized.length > 7 ? normalized.substring(0, 7) : normalized;
+  return normalized;
 }
 
 /**
  * Checks if a search term matches a passport ID
- * Supports partial matching of any segment of the passport ID
+ * Supports partial matching of the passport ID
  * 
- * @param passportId The full passport ID to check against
+ * @param passportId The passport ID to check against
  * @param searchTerm The search term to look for
  * @returns True if the search term matches any part of the passport ID
  */
@@ -61,7 +76,7 @@ export function isPassportIdMatch(passportId: string | null | undefined, searchT
   
   // Normalize both the passport ID and the search term
   const normalizedPassportId = normalizePassportId(passportId);
-  const normalizedSearchTerm = searchTerm.replace(/-/g, '').toUpperCase();
+  const normalizedSearchTerm = searchTerm.replace(/[^A-Z0-9]/gi, '').toUpperCase();
   
   // Check if the search term is contained in the normalized passport ID
   return normalizedPassportId.includes(normalizedSearchTerm);
