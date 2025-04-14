@@ -17,6 +17,11 @@ import { useToast } from "@/hooks/use-toast";
 // Create a schema for the registration form
 const registerSchema = insertUserSchema.extend({
   confirmPassword: z.string().min(6, "Password must be at least 6 characters"),
+  // Make firstName and lastName required fields
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  // Make display name optional since we'll construct it if not provided
+  displayName: z.string().optional(),
   // Include a root field for form-level errors
   root: z.string().optional(),
 }).refine(data => data.password === data.confirmPassword, {
@@ -35,6 +40,8 @@ export default function Register() {
     resolver: zodResolver(registerSchema),
     defaultValues: {
       username: "",
+      firstName: "", // Add firstName field
+      lastName: "",  // Add lastName field
       email: "",
       password: "",
       confirmPassword: "",
@@ -56,21 +63,25 @@ export default function Register() {
     try {
       console.log("[DEBUG] Attempting registration with form data:", formData);
       
-      if (!formData.username || !formData.password || !formData.displayName) {
+      if (!formData.username || !formData.password || !formData.firstName || !formData.lastName) {
         console.error("[DEBUG] Registration error: Missing required fields");
         form.setError("root", { 
           type: "manual",
-          message: "Registration failed: Username, password, and display name are required"
+          message: "Registration failed: Username, password, first name, and last name are required"
         });
         return;
       }
       
-      // Get first and last name from display name
-      const nameParts = formData.displayName.split(" ");
-      const firstName = nameParts.length > 0 ? nameParts[0] : formData.displayName;
-      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "User";
+      // Use directly entered first and last name instead of extracting from display name
+      const firstName = formData.firstName || "";
+      const lastName = formData.lastName || "";
       
-      console.log("[DEBUG] Extracted firstName:", firstName, "lastName:", lastName);
+      // If display name isn't provided, construct it from first and last name
+      if (!formData.displayName) {
+        formData.displayName = `${firstName} ${lastName}`.trim();
+      }
+      
+      console.log("[DEBUG] Using firstName:", firstName, "lastName:", lastName);
       
       // Framework 5.0: Create a properly formatted registration object matching RegisterData type
       // Directly embed firstName and lastName as required fields by the server schema
@@ -187,7 +198,7 @@ export default function Register() {
                   <p>{form.formState.errors.root.message}</p>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3">
                 <FormField
                   control={form.control}
                   name="username"
@@ -201,15 +212,47 @@ export default function Register() {
                     </FormItem>
                   )}
                 />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel>First Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="First name" {...field} value={field.value || ""} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 
+                <FormField
+                  control={form.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel>Last Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Last name" {...field} value={field.value || ""} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 gap-3">
                 <FormField
                   control={form.control}
                   name="displayName"
                   render={({ field }) => (
                     <FormItem className="space-y-1">
-                      <FormLabel>Display Name</FormLabel>
+                      <FormLabel>Display Name (optional)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Full name" {...field} value={field.value || ""} />
+                        <Input placeholder="How you'll appear to others" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
