@@ -6,7 +6,7 @@ import { Toaster } from '@/components/ui/toaster'
 import { AuthProvider } from '@/hooks/useAuth'
 import { TournamentChangeProvider } from './core/modules/tournament/context/TournamentChangeContext'
 import { UserDataProvider } from '@/contexts/UserDataContext' // PKL-278651-PERF-0001.1-CACHE
-import { LazyLoadingFallback } from '@/utils/lazyLoad' // PKL-278651-PERF-0001.2-SPLIT
+import { LazyLoadingFallback, lazyLoad } from '@/utils/lazyLoad' // PKL-278651-PERF-0001.2-SPLIT
 
 // Import module initializations
 import '@/modules/admin/init'
@@ -59,6 +59,7 @@ import EventTestPage from './pages/events/EventTestPage'
 import CommunityPage from './pages/CommunityPage'
 import SettingsPage from './pages/SettingsPage'
 import SearchTestPage from './pages/SearchTest'
+import Register from './pages/Register'
 
 import { useAuth } from './hooks/useAuth'
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute'
@@ -106,7 +107,7 @@ export default function App() {
                   {/* Public Routes */}
                   <Route path="/" component={LazyLandingPage} />
                   <Route path="/login" component={LazyAuthPage} />
-                  <Route path="/register" component={LazyAuthPage} />
+                  <Route path="/register" component={Register} />
                   <Route path="/auth" component={LazyAuthPage} />
                   <Route path="/about" component={LazyAboutUsPage} />
                   <Route path="/test-routing" component={TestRoutingPage} />
