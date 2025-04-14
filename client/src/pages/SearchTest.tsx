@@ -94,7 +94,8 @@ export function SearchTestPage() {
                 <li>Type 2 or more characters to search</li>
                 <li>Search by username, display name, first name, last name or passport code</li>
                 <li>Try searching for "Yoke Kheng" by name</li>
-                <li>Try searching by passport code (e.g., "1000mm7" for user "mightymax")</li>
+                <li>Try searching by passport ID (e.g., "PKL-1000-MM7" for user "mightymax")</li>
+                <li>You can search with just a portion of the ID like "1000" or "MM7"</li>
                 <li>Try different search terms like "yoke", "kheng", or the full name</li>
               </ul>
             </CardContent>

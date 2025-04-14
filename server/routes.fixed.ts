@@ -413,7 +413,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Special case for passport ID - check for PKL- prefix or raw format
       const isPassportIdSearch = query.toUpperCase().includes('PKL-') || 
-                                (query.length >= 6 && /^[A-Z0-9]+$/i.test(query.replace(/[-\s]/g, '')));
+                                (query.length >= 4 && /^[A-Z0-9-]+$/i.test(query));
       
       const searchConditions = searchTerms.map(term => 
         or(
@@ -422,7 +422,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           sql`lower(${users.firstName}) like ${`%${term}%`}`,
           sql`lower(${users.lastName}) like ${`%${term}%`}`,
           // Add passport ID search with flexibility for formatting
-          sql`${users.passportId} like ${`%${term}%`}`
+          sql`lower(${users.passportId}) like ${`%${term.toUpperCase()}%`}`
         )
       );
       
