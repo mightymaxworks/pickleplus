@@ -8,6 +8,7 @@ import { TournamentChangeProvider } from './core/modules/tournament/context/Tour
 import { UserDataProvider } from '@/contexts/UserDataContext' // PKL-278651-PERF-0001.1-CACHE
 import { TutorialProvider } from '@/components/onboarding' // PKL-278651-GAME-0002-TUT
 import { LazyLoadingFallback, lazyLoad } from '@/utils/lazyLoad' // PKL-278651-PERF-0001.2-SPLIT
+import { moduleRegistry } from '@/core/modules/moduleRegistry' // For feedback module
 
 // Import module initializations
 import '@/modules/admin/init'

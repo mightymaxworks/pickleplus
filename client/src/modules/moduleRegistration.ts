@@ -16,6 +16,7 @@ import { socialModule } from './social';
 import { coachingModule } from './coaching';
 import { guidanceMiniModule } from './guidance-mini';
 import { adminModule } from './admin';
+import { feedbackModule } from './feedback/module';
 
 /**
  * Register all modules with the module registry
@@ -30,6 +31,7 @@ export function registerAllModules(): void {
   moduleRegistry.registerModule(coachingModule);
   moduleRegistry.registerModule(guidanceMiniModule);
   moduleRegistry.registerModule(adminModule);
+  moduleRegistry.registerModule(feedbackModule);
   
   console.log('All modules registered successfully.');
   console.log('Registered modules:', moduleRegistry.getAllModules().map(m => `${m.name}@${m.version}`));
