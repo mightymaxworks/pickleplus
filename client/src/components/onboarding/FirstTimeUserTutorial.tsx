@@ -70,7 +70,7 @@ const tutorialSteps: TutorialStep[] = [
     description: 'Track how you measure up against other players with the CourtIQ™ ranking system based on your match performance.',
     icon: <TrendingUp className="h-5 w-5 text-green-500" />,
     position: 'left',
-    route: '/rankings',
+    route: '/leaderboard',
     buttonText: 'Next',
   },
   {
@@ -90,7 +90,7 @@ const tutorialSteps: TutorialStep[] = [
     description: 'Earn badges and XP as you play, improve, and engage with the community. Level up to unlock special features!',
     icon: <Award className="h-5 w-5 text-amber-500" />,
     position: 'right',
-    route: '/achievements',
+    route: '/dashboard',
     buttonText: 'Next',
   },
   {
