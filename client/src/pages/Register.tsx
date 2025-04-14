@@ -11,6 +11,8 @@ import { insertUserSchema } from "@shared/schema";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { z } from "zod";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 // Create a schema for the registration form
 const registerSchema = insertUserSchema.extend({
@@ -49,10 +51,14 @@ export default function Register() {
 
   const handleSubmit = async (formData: RegisterFormData) => {
     try {
-      console.log("Attempting registration with form data:", formData);
+      console.log("[DEBUG] Attempting registration with form data:", formData);
       
       if (!formData.username || !formData.password || !formData.displayName) {
-        console.error("Registration error: Missing required fields");
+        console.error("[DEBUG] Registration error: Missing required fields");
+        form.setError("root", { 
+          type: "manual",
+          message: "Registration failed: Username, password, and display name are required"
+        });
         return;
       }
       
@@ -60,6 +66,8 @@ export default function Register() {
       const nameParts = formData.displayName.split(" ");
       const firstName = nameParts.length > 0 ? nameParts[0] : formData.displayName;
       const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "User";
+      
+      console.log("[DEBUG] Extracted firstName:", firstName, "lastName:", lastName);
       
       // Create a properly formatted registration object matching RegisterData type
       const registrationData = {
@@ -75,12 +83,62 @@ export default function Register() {
         skillLevel: formData.skillLevel || null,
       };
       
-      console.log("Submitting registration data:", {...registrationData, password: '[REDACTED]'});
-      await registerMutation.mutateAsync(registrationData);
-      console.log("Registration successful, redirecting to dashboard");
-      navigate("/dashboard");
+      console.log("[DEBUG] Submitting registration data:", {...registrationData, password: '[REDACTED]'});
+      
+      try {
+        // Make direct fetch call to inspect response in detail
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify(registrationData),
+        });
+        
+        console.log("[DEBUG] Registration response status:", response.status);
+        console.log("[DEBUG] Registration response headers:", 
+          Array.from(response.headers.entries()).reduce((obj, [key, value]) => {
+            obj[key] = value;
+            return obj;
+          }, {} as Record<string, string>)
+        );
+        
+        if (response.ok) {
+          const userData = await response.json();
+          console.log("[DEBUG] Registration successful, user data:", userData);
+          // Update query client data
+          queryClient.setQueryData(["/api/auth/current-user"], userData);
+          toast({
+            title: "Registration successful",
+            description: `Welcome to Pickle+, ${userData.username}!`,
+          });
+          navigate("/dashboard");
+        } else {
+          // Handle error response
+          let errorData;
+          try {
+            errorData = await response.json();
+            console.error("[DEBUG] Registration error response:", errorData);
+          } catch (e) {
+            console.error("[DEBUG] Failed to parse error response:", e);
+            errorData = { message: "Server error. Please try again." };
+          }
+          
+          form.setError("root", { 
+            type: "manual",
+            message: `Registration failed: ${errorData.message || "Unknown error"}`
+          });
+        }
+      } catch (fetchError) {
+        console.error("[DEBUG] Fetch error during registration:", fetchError);
+        form.setError("root", { 
+          type: "manual",
+          message: `Network error during registration: ${fetchError instanceof Error ? fetchError.message : "Unknown error"}`
+        });
+      }
     } catch (error) {
-      console.error("Registration error:", error);
+      console.error("[DEBUG] Registration outer error:", error);
       // Add toast notification for detailed error feedback to user
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
       form.setError("root", { 

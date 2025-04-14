@@ -166,58 +166,115 @@ export function setupAuth(app: Express) {
   // Register route
   app.post("/api/auth/register", async (req, res, next) => {
     try {
-      // Validate the registration data
-      const validatedData = registerSchema.parse(req.body);
-      
-      // Check if the username is already taken
-      const existingUser = await storage.getUserByUsername(validatedData.username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Username already exists" });
-      }
-
-      // Hash the password
-      const hashedPassword = await hashPassword(validatedData.password);
-      
-      // Generate a unique passport code
-      const passportCode = await generateUniquePassportCode();
-      if (!passportCode) {
-        return res.status(500).json({ message: "Failed to generate unique passport code" });
-      }
-
-      // Set avatar initials from name
-      const firstName = validatedData.firstName || '';
-      const lastName = validatedData.lastName || '';
-      const avatarInitials = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
-      
-      // If displayName is not provided, use firstName + lastName
-      const displayName = validatedData.displayName || `${firstName} ${lastName}`;
-
-      // Create user with hashed password and passport code
-      const user = await storage.createUser({
-        ...validatedData,
-        password: hashedPassword,
-        // Use the correct field name from the schema
-        passportCode: passportCode,
-        avatarInitials,
-        displayName,
+      console.log("[DEBUG AUTH] Registration attempt with data:", { 
+        ...req.body, 
+        password: req.body.password ? '[REDACTED]' : undefined 
       });
 
-      // Log the user in automatically after registration
-      req.login(user, (err) => {
-        if (err) return next(err);
+      try {
+        // Validate the registration data
+        const validatedData = registerSchema.parse(req.body);
+        console.log("[DEBUG AUTH] Data validation passed:", {
+          username: validatedData.username,
+          email: validatedData.email,
+          firstName: validatedData.firstName,
+          lastName: validatedData.lastName,
+          displayName: validatedData.displayName
+        });
         
-        // Ensure proper headers for CORS with credentials
-        res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-        res.header('Access-Control-Allow-Credentials', 'true');
+        // Check if the username is already taken
+        const existingUser = await storage.getUserByUsername(validatedData.username);
+        if (existingUser) {
+          console.log("[DEBUG AUTH] Registration failed: Username already exists:", validatedData.username);
+          return res.status(400).json({ message: "Username already exists" });
+        }
+        console.log("[DEBUG AUTH] Username check passed, username is available");
+
+        // Hash the password
+        const hashedPassword = await hashPassword(validatedData.password);
+        console.log("[DEBUG AUTH] Password hashed successfully");
         
-        console.log('Registration successful for user:', user.username);
-        console.log('Session ID:', req.sessionID);
+        // Generate a unique passport code
+        const passportCode = await generateUniquePassportCode();
+        if (!passportCode) {
+          console.log("[DEBUG AUTH] Failed to generate unique passport code");
+          return res.status(500).json({ message: "Failed to generate unique passport code" });
+        }
+        console.log("[DEBUG AUTH] Generated passport code successfully");
+
+        // Set avatar initials from name
+        const firstName = validatedData.firstName || '';
+        const lastName = validatedData.lastName || '';
+        const avatarInitials = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+        console.log("[DEBUG AUTH] Generated avatar initials:", avatarInitials);
         
-        // Return the user data without the password
-        const { password, ...userWithoutPassword } = user;
-        res.status(201).json(userWithoutPassword);
-      });
+        // If displayName is not provided, use firstName + lastName
+        const displayName = validatedData.displayName || `${firstName} ${lastName}`;
+        console.log("[DEBUG AUTH] Using displayName:", displayName);
+
+        // Create user with hashed password and passport code
+        console.log("[DEBUG AUTH] Attempting to create user in storage with data:", {
+          username: validatedData.username,
+          email: validatedData.email,
+          firstName: validatedData.firstName,
+          lastName: validatedData.lastName,
+          displayName,
+          avatarInitials
+        });
+        
+        const user = await storage.createUser({
+          ...validatedData,
+          password: hashedPassword,
+          // Use the correct field name from the schema
+          passportCode: passportCode,
+          avatarInitials,
+          displayName,
+        });
+        
+        if (!user) {
+          console.error("[DEBUG AUTH] User creation failed, storage.createUser returned null/undefined");
+          return res.status(500).json({ message: "User creation failed" });
+        }
+        
+        console.log("[DEBUG AUTH] User created successfully with ID:", user.id);
+
+        // Log the user in automatically after registration
+        req.login(user, (err) => {
+          if (err) {
+            console.error("[DEBUG AUTH] Login after registration failed:", err);
+            return next(err);
+          }
+          
+          // Ensure proper headers for CORS with credentials
+          res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+          res.header('Access-Control-Allow-Credentials', 'true');
+          
+          console.log('[DEBUG AUTH] Registration successful for user:', user.username);
+          console.log('[DEBUG AUTH] Session ID:', req.sessionID);
+          console.log('[DEBUG AUTH] Session data:', req.session);
+          
+          // Return the user data without the password
+          const { password, ...userWithoutPassword } = user;
+          res.status(201).json(userWithoutPassword);
+        });
+      } catch (validationError) {
+        console.error("[DEBUG AUTH] Schema validation error:", validationError);
+        if (validationError instanceof z.ZodError) {
+          // Format Zod validation errors for better readability
+          const formattedErrors = validationError.errors.map(err => ({
+            path: err.path.join('.'),
+            message: err.message
+          }));
+          console.log("[DEBUG AUTH] Formatted validation errors:", formattedErrors);
+          return res.status(400).json({ 
+            message: "Validation failed", 
+            errors: formattedErrors 
+          });
+        }
+        throw validationError; // Re-throw if it's not a Zod error
+      }
     } catch (error) {
+      console.error("[DEBUG AUTH] Unexpected error during registration:", error);
       if (error instanceof z.ZodError) {
         res.status(400).json({ message: "Validation error", errors: error.errors });
       } else {
