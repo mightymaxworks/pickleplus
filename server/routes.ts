@@ -801,7 +801,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   });
   
   // Multi-dimensional rankings leaderboard
-  app.get("/api/multi-rankings/leaderboard", async (req: Request, res: Response) => {
+  app.get("/api/multi-rankings/leaderboard", isAuthenticated, async (req: Request, res: Response) => {
     try {
       // Extract all query parameters with defaults
       const format = (req.query.format as string) || 'singles';
@@ -813,6 +813,10 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       const tierFilter = req.query.tier as string || undefined;
       const minRating = req.query.minRating ? parseFloat(req.query.minRating as string) : undefined;
       const maxRating = req.query.maxRating ? parseFloat(req.query.maxRating as string) : undefined;
+      
+      // PKL-278651-SEC-0002-TESTVIS - Get current user ID for admin check
+      const currentUserId = req.user?.id || 0;
+      console.log(`[API] Multi-Rankings Leaderboard - Request from user ID: ${currentUserId}`);
       
       // Check if we should use real data from the ranking system
       if (process.env.USE_REAL_LEADERBOARD === 'true') {
@@ -826,7 +830,8 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
             offset,
             tierFilter,
             minRating,
-            maxRating
+            maxRating,
+            currentUserId // PKL-278651-SEC-0002-TESTVIS - Pass user ID for admin check
           );
           
           // Transform the data for the response if needed
@@ -871,7 +876,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       
       // Return sample data with the current user at the top position
       // PKL-278651-SEC-0002-TESTVIS - Ensure we're not using a test user or admin for sample data
-      const currentUserId = req.user?.id || 1;
+      // We already have currentUserId from above
       const userData = await storage.getUser(currentUserId);
       
       // Define the sample leaderboard
@@ -1024,7 +1029,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   });
   
   // Multi-dimensional rankings position
-  app.get("/api/multi-rankings/position", async (req: Request, res: Response) => {
+  app.get("/api/multi-rankings/position", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = req.query.userId ? parseInt(req.query.userId as string) : (req.user?.id || 1);
       const format = req.query.format as string || 'singles';
@@ -1048,7 +1053,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   });
   
   // Multi-dimensional rankings history
-  app.get("/api/multi-rankings/history", async (req: Request, res: Response) => {
+  app.get("/api/multi-rankings/history", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = req.query.userId ? parseInt(req.query.userId as string) : (req.user?.id || 1);
       
@@ -1102,7 +1107,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   });
   
   // Rating tiers
-  app.get("/api/multi-rankings/rating-tiers", async (req: Request, res: Response) => {
+  app.get("/api/multi-rankings/rating-tiers", isAuthenticated, async (req: Request, res: Response) => {
     try {
       // Return sample rating tiers
       res.json([
