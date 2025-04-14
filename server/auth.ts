@@ -11,7 +11,7 @@ import { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
 import bcryptjs from "bcryptjs";
 import { storage } from "./storage";
-import { User, insertUserSchema } from "@shared/schema";
+import { User, InsertUser, insertUserSchema } from "@shared/schema";
 import { z } from "zod";
 import { generateUniquePassportCode } from "./utils/passport-code";
 import { AuditAction, AuditResource } from "../shared/schema/audit";
@@ -222,14 +222,19 @@ export function setupAuth(app: Express) {
           avatarInitials
         });
         
-        const user = await storage.createUser({
+        // Create a user data object with all fields
+        const userData: any = {
           ...validatedData,
           password: hashedPassword,
-          // Use the correct field name (passportId) from the schema
-          passportId: passportCode,
           avatarInitials,
           displayName,
-        });
+        };
+        
+        // Manually add the passportId field (which is normally omitted in the InsertUser type)
+        userData.passportId = passportCode;
+        
+        // Create the user with the augmented data object
+        const user = await storage.createUser(userData as InsertUser);
         
         if (!user) {
           console.error("[DEBUG AUTH] User creation failed, storage.createUser returned null/undefined");
@@ -447,23 +452,24 @@ export function setupAuth(app: Express) {
       // Create a type that allows both camelCase and snake_case property access
       const transformedUserData: Record<string, any> = { ...userWithoutPassword };
       
-      // Specifically map the first_name and last_name fields to camelCase
+      // Process and transform firstName
       if ('firstName' in transformedUserData) {
         // Field is already in camelCase format, no transformation needed
         console.log("[API] firstName already in camelCase:", transformedUserData.firstName);
-      } else if ('first_name' in transformedUserData) {
+      } else if (transformedUserData.first_name !== undefined) {
         // Transform from snake_case to camelCase
-        transformedUserData.firstName = transformedUserData.first_name;
+        transformedUserData.firstName = String(transformedUserData.first_name || "");
         delete transformedUserData.first_name;
         console.log("[API] Mapped first_name to firstName:", transformedUserData.firstName);
       }
       
+      // Process and transform lastName
       if ('lastName' in transformedUserData) {
         // Field is already in camelCase format, no transformation needed
         console.log("[API] lastName already in camelCase:", transformedUserData.lastName);
-      } else if ('last_name' in transformedUserData) {
+      } else if (transformedUserData.last_name !== undefined) {
         // Transform from snake_case to camelCase
-        transformedUserData.lastName = transformedUserData.last_name;
+        transformedUserData.lastName = String(transformedUserData.last_name || "");
         delete transformedUserData.last_name;
         console.log("[API] Mapped last_name to lastName:", transformedUserData.lastName);
       }

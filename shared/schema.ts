@@ -495,8 +495,8 @@ export const matchRelations = relations(matches, ({ one, many }) => ({
 export const insertUserSchema = createInsertSchema(users)
   .omit({
     id: true,
-    createdAt: true,
-    passportId: true
+    createdAt: true
+    // passportId is now included in the insertUserSchema
   });
 
 // Create insert schemas for validation
