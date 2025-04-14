@@ -5,14 +5,17 @@
  * This component displays bug report statistics by severity.
  */
 
-import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { AlertTriangle, AlertCircle, AlertOctagon, Info } from 'lucide-react';
+
 import { getBugReportStats } from '../api/feedbackApi';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { AlertTriangle, Bug, BugOff, Zap } from 'lucide-react';
+import { BugReportSeverity, BugReportSeverityCount } from '../types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
+/**
+ * Props for the BugReportStats component
+ */
 interface BugReportStatsProps {
   /** Custom class name for the component */
   className?: string;
@@ -21,140 +24,101 @@ interface BugReportStatsProps {
 /**
  * Get the appropriate icon for a severity level
  */
-const getSeverityIcon = (severity: string) => {
+function getSeverityIcon(severity: BugReportSeverity) {
   switch (severity) {
     case 'critical':
-      return <Zap className="h-4 w-4 text-destructive" />;
+      return <AlertOctagon className="h-5 w-5" />;
     case 'high':
-      return <AlertTriangle className="h-4 w-4 text-amber-500" />;
+      return <AlertCircle className="h-5 w-5" />;
     case 'medium':
-      return <Bug className="h-4 w-4 text-yellow-500" />;
+      return <AlertTriangle className="h-5 w-5" />;
     case 'low':
-      return <BugOff className="h-4 w-4 text-green-500" />;
+      return <Info className="h-5 w-5" />;
     default:
-      return <Bug className="h-4 w-4" />;
+      return <Info className="h-5 w-5" />;
   }
-};
+}
 
 /**
  * Get the color for a severity level
  */
-const getSeverityColor = (severity: string): string => {
+function getSeverityColor(severity: BugReportSeverity) {
   switch (severity) {
     case 'critical':
-      return 'bg-destructive text-destructive-foreground';
+      return 'text-red-500';
     case 'high':
-      return 'bg-amber-500 text-white';
+      return 'text-orange-500';
     case 'medium':
-      return 'bg-yellow-500 text-white';
+      return 'text-yellow-500';
     case 'low':
-      return 'bg-green-500 text-white';
+      return 'text-blue-500';
     default:
-      return 'bg-primary text-primary-foreground';
+      return 'text-blue-500';
   }
-};
+}
 
+/**
+ * Bug report statistics component
+ */
 export function BugReportStats({ className = '' }: BugReportStatsProps) {
   // Fetch bug report statistics
-  const { data: stats, isLoading, isError } = useQuery({
-    queryKey: ['bugReportStats'],
-    queryFn: getBugReportStats,
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['/api/feedback/bug-report/stats'],
+    queryFn: getBugReportStats
   });
   
-  // Calculate total issues
-  const totalIssues = stats?.reduce((sum, stat) => sum + stat.count, 0) || 0;
-  
-  // Calculate percentages for progress bars
-  const getPercentage = (count: number): number => {
-    if (totalIssues === 0) return 0;
-    return Math.round((count / totalIssues) * 100);
-  };
-  
-  if (isLoading) {
+  // If there's an error, show an error message
+  if (error) {
     return (
-      <Card className={className}>
-        <CardHeader>
-          <CardTitle>Bug Report Statistics</CardTitle>
-          <CardDescription>Loading statistics...</CardDescription>
+      <Card className={`${className}`}>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">Bug Report Statistics</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="space-y-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-4 w-full" />
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-  
-  if (isError) {
-    return (
-      <Card className={className}>
-        <CardHeader>
-          <CardTitle>Bug Report Statistics</CardTitle>
-          <CardDescription>Error loading statistics</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            There was an error loading the bug report statistics. Please try again later.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-  
-  if (!stats || stats.length === 0 || totalIssues === 0) {
-    return (
-      <Card className={className}>
-        <CardHeader>
-          <CardTitle>Bug Report Statistics</CardTitle>
-          <CardDescription>No bug reports yet</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            There are no bug reports in the system yet. When users report bugs, statistics will appear here.
-          </p>
+          <p className="text-destructive">Failed to load statistics</p>
         </CardContent>
       </Card>
     );
   }
   
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle>Bug Report Statistics</CardTitle>
-        <CardDescription>Bug reports by severity level</CardDescription>
+    <Card className={`${className}`}>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg">Bug Report Statistics</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {stats.map((stat) => (
-            <div key={stat.severity} className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  {getSeverityIcon(stat.severity)}
-                  <span className="text-sm font-medium capitalize">
-                    {stat.severity} ({stat.count})
-                  </span>
-                </div>
-                <span className="text-sm text-muted-foreground">
-                  {getPercentage(stat.count)}%
-                </span>
-              </div>
-              <Progress 
-                value={getPercentage(stat.count)} 
-                className={`h-2 ${getSeverityColor(stat.severity)}`} 
-              />
-            </div>
-          ))}
-          
-          <div className="pt-2 text-sm text-muted-foreground text-right">
-            Total: {totalIssues} {totalIssues === 1 ? 'issue' : 'issues'}
+        {isLoading ? (
+          // Show skeleton loader while loading
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-8 w-full" />
           </div>
-        </div>
+        ) : data && data.length > 0 ? (
+          // Show statistics when loaded
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {data.map((stat: BugReportSeverityCount) => (
+              <div 
+                key={stat.severity}
+                className="flex items-center justify-between p-2 rounded-md border"
+              >
+                <div className="flex items-center space-x-2">
+                  <span className={getSeverityColor(stat.severity)}>
+                    {getSeverityIcon(stat.severity)}
+                  </span>
+                  <span className="font-medium capitalize">{stat.severity}</span>
+                </div>
+                <span className="text-lg font-semibold">{stat.count}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          // Show message when there are no bug reports
+          <p className="text-muted-foreground text-center py-2">
+            No bug reports submitted yet
+          </p>
+        )}
       </CardContent>
     </Card>
   );

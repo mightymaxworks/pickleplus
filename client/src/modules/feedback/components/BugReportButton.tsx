@@ -2,70 +2,49 @@
  * PKL-278651-FEED-0001-BUG - In-App Bug Reporting System
  * Bug Report Button Component
  * 
- * This component provides a floating action button for users to report bugs.
+ * This component provides a floating action button that opens the bug report form.
  */
 
-import React, { useState } from 'react';
-import { BugIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import { useLocation } from 'wouter';
-import { BugReportForm } from './BugReportForm';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
-
-interface BugReportButtonProps {
-  /**
-   * Position the button in a different corner
-   * @default 'bottom-right'
-   */
-  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-  
-  /**
-   * Add custom class names to the button
-   */
-  className?: string;
-}
+import { Button } from '@/components/ui/button';
+import { BugReportForm } from './BugReportForm';
+import { BugReportButtonProps } from '../types';
 
 /**
- * Get the correct position classes for the button
+ * Bug report floating action button component
  */
-function getPositionClasses(position: BugReportButtonProps['position']): string {
-  switch (position) {
-    case 'bottom-left':
-      return 'bottom-4 left-4';
-    case 'top-right':
-      return 'top-4 right-4';
-    case 'top-left':
-      return 'top-4 left-4';
-    case 'bottom-right':
-    default:
-      return 'bottom-4 right-4';
-  }
-}
-
-export function BugReportButton({ position = 'bottom-right', className = '' }: BugReportButtonProps) {
+export function BugReportButton({ position = 'bottom-right' }: BugReportButtonProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const [location] = useLocation();
-  const [open, setOpen] = useState(false);
   
-  const positionClasses = getPositionClasses(position);
+  // Define position classes based on the position prop
+  const positionClasses = {
+    'bottom-right': 'bottom-4 right-4',
+    'bottom-left': 'bottom-4 left-4',
+    'top-right': 'top-4 right-4',
+    'top-left': 'top-4 left-4'
+  };
   
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button
-          variant="default"
+          variant="secondary"
           size="icon"
-          className={`fixed z-50 shadow-lg hover:shadow-xl transition-all duration-300 ${positionClasses} ${className}`}
+          className={`fixed ${positionClasses[position]} z-50 rounded-full h-12 w-12 shadow-lg`}
           aria-label="Report a bug"
-          title="Report a bug"
-          onClick={() => setOpen(true)}
         >
-          <BugIcon className="h-5 w-5" />
+          <AlertTriangle className="h-5 w-5" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md">
         <BugReportForm 
-          currentPage={location} 
-          onSubmitSuccess={() => setOpen(false)}
+          currentPage={location}
+          onSubmitSuccess={() => setIsOpen(false)}
+          onCancel={() => setIsOpen(false)}
         />
       </DialogContent>
     </Dialog>

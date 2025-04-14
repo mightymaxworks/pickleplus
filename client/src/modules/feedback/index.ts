@@ -1,18 +1,20 @@
 /**
  * PKL-278651-FEED-0001-BUG - In-App Bug Reporting System
- * Feedback Module
+ * Feedback Module Entry Point
  * 
- * This file serves as the entry point for the feedback module,
- * which includes the bug reporting system.
+ * This file exports the feedback module and its components.
  */
 
-// Export components for use in other parts of the application
-export * from './components/BugReportButton';
-export * from './components/BugReportForm';
-export * from './components/BugReportStats';
+// Export the module definition
+export { feedbackModule } from './module';
 
-// Export API interface
-export * from './api/feedbackApi';
+// Re-export components
+export { BugReportButton } from './components/BugReportButton';
+export { BugReportForm } from './components/BugReportForm';
+export { BugReportStats } from './components/BugReportStats';
 
-// Export types
+// Re-export API functions
+export * as feedbackApi from './api/feedbackApi';
+
+// Re-export types
 export * from './types';

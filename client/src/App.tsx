@@ -98,6 +98,11 @@ export default function App() {
     console.log("App.tsx - Location changed to:", location);
   }, [location]);
   
+  // Get BugReportButton from the feedback module
+  const BugReportButton = moduleRegistry.hasModule('feedback') 
+    ? moduleRegistry.getModule('feedback').exports.BugReportButton 
+    : null;
+
   return (
     <div className="app-container">
       <QueryClientProvider client={queryClient}>
@@ -106,6 +111,9 @@ export default function App() {
             <TournamentChangeProvider>
               <TutorialProvider>
                 <Suspense fallback={<LazyLoadingFallback />}>
+                  {/* Add Bug Report Button (PKL-278651-FEED-0001-BUG) */}
+                  {BugReportButton && <BugReportButton position="bottom-right" />}
+                  
                   <Switch>
                     {/* Public Routes */}
                   <Route path="/" component={LazyLandingPage} />
