@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Check, ChevronsUpDown, User, X, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
-import { searchPlayers, UserSearchResult } from "@/lib/sdk/playerSDK";
+import { UserSearchResult } from "@/lib/sdk/playerSDK";
 
 import {
   Dialog,
@@ -13,6 +13,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { searchPlayers } from "@/api/playerSearchApi";
+import { PlayerSearchResult } from "@shared/types/player-search.types";
 
 interface DialogPlayerSelectProps {
   onSelect?: (player: UserSearchResult) => void;
@@ -55,42 +57,23 @@ export function DialogPlayerSelect({
     };
   }, [searchQuery]);
   
-  // Fetch search results
+  // Fetch search results using the unified search component
   const { data: searchResults = [], isLoading, isFetching } = useQuery({
     queryKey: ["player-search", debouncedQuery, excludeUserIds],
     queryFn: async () => {
       if (!debouncedQuery || debouncedQuery.length < 2) return [];
       
       try {
-        // First try the standard API
         console.log("Attempting to search players with query:", debouncedQuery);
         
-        // Using hardcoded test data since we're in mock server mode
-        // These values match real users in the database
-        const mockPlayers = [
-          { id: 6, username: 'dchan2000', displayName: 'Dominic Chan', avatarInitials: 'DC' },
-          { id: 7, username: 'dlim2002', displayName: 'Danel Lim', avatarInitials: 'DL' },
-          { id: 8, username: 'Kit', displayName: 'Kit', avatarInitials: 'KI' },
-          { id: 9, username: 'Johnny_choo', displayName: 'Johnny choo', avatarInitials: 'JC' },
-          { id: 10, username: 'hannytanny', displayName: 'Hannah Esther Tan Shu-En', avatarInitials: 'HE' },
-          { id: 12, username: 'PickleballSniper', displayName: 'Vincent Teo Choon Guan', avatarInitials: 'VT' }
-        ];
-        
-        // Simple client-side filtering
-        const filteredPlayers = mockPlayers.filter(player => {
-          // Skip if excluded
-          if (excludeUserIds.includes(player.id)) return false;
-          
-          // Match against username or display name
-          const query = debouncedQuery.toLowerCase();
-          return (
-            player.username.toLowerCase().includes(query) ||
-            player.displayName.toLowerCase().includes(query)
-          );
+        // Use the unified player search component
+        const searchResponse = await searchPlayers({
+          query: debouncedQuery,
+          excludeUserIds: excludeUserIds
         });
         
-        console.log(`Found ${filteredPlayers.length} players matching "${debouncedQuery}"`);
-        return filteredPlayers;
+        console.log(`Found ${searchResponse.results.length} players matching "${debouncedQuery}"`);
+        return searchResponse.results;
       } catch (error) {
         console.error("Error searching players:", error);
         return [];
@@ -100,9 +83,9 @@ export function DialogPlayerSelect({
   });
   
   // Handle player selection
-  const handleSelectPlayer = (player: UserSearchResult) => {
+  const handleSelectPlayer = (player: PlayerSearchResult) => {
     if (onSelect) {
-      onSelect(player);
+      onSelect(player as UserSearchResult);
     }
     
     // Dispatch a custom event for components that listen for player selection

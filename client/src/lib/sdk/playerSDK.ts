@@ -8,21 +8,23 @@
 import { User } from "@shared/schema";
 import { apiRequest } from "../queryClient";
 import { SocialModuleAPI } from "@/modules/types";
+import { 
+  PlayerSearchResult, 
+  PlayerSearchOptions, 
+  PlayerSearchResponse 
+} from "@shared/types/player-search.types";
+import { searchPlayers as unifiedSearchPlayers } from "@/api/playerSearchApi";
 
-// Define the UserSearchResult interface for consistent use across the application
-export interface UserSearchResult {
-  id: number;
-  username: string;
-  displayName: string | null;
-  avatarInitials?: string;
-  // Note: avatarUrl is not present in the database, but added here as optional 
-  // to maintain compatibility with existing components that expect it
-  avatarUrl?: string | null;
-  passportId?: string | null;
-}
+// Re-export the Player Search types to maintain compatibility
+export type UserSearchResult = PlayerSearchResult;
 
 /**
  * Search for players by name or username
+ * 
+ * This function is for backward compatibility with existing code.
+ * All new code should use the unified player search component from 
+ * @/api/playerSearchApi directly.
+ * 
  * @param query Search query string (min 2 characters)
  * @param excludeUserId Optional user ID to exclude from results
  * @returns Array of matching players
@@ -31,58 +33,25 @@ export async function searchPlayers(
   query: string, 
   excludeUserId?: number
 ): Promise<UserSearchResult[]> {
+  console.log("PlayerSDK: Using unified player search for query:", query);
+  
+  // Convert the legacy parameters to the new format
+  const searchOptions: PlayerSearchOptions = {
+    query,
+    excludeUserIds: excludeUserId ? [excludeUserId] : undefined
+  };
+  
   try {
-    // Client-side validation
-    if (!query || query.length < 2) {
-      console.log("PlayerSDK: Query too short, returning empty results");
+    // Use the unified search component
+    const response: PlayerSearchResponse = await unifiedSearchPlayers(searchOptions);
+    
+    if (response.error) {
+      console.error("PlayerSDK: Search error:", response.error);
       return [];
     }
     
-    // Build the query parameters
-    const params = new URLSearchParams({ q: query });
-    if (excludeUserId !== undefined) {
-      params.append("exclude", excludeUserId.toString());
-    }
-    
-    // Log the API call
-    console.log(`PlayerSDK: Searching players with query: ${query}`);
-    
-    try {
-      // First try the dedicated player search endpoint
-      const response = await apiRequest(
-        "GET", 
-        `/api/player/search?${params.toString()}`
-      );
-      
-      if (!response.ok) {
-        throw new Error(`Search API error: ${response.status}`);
-      }
-      
-      const results = await response.json();
-      console.log(`PlayerSDK: Found ${results.length} players matching "${query}"`);
-      return results;
-    } catch (apiError) {
-      console.error("PlayerSDK: Error with player search API:", apiError);
-      
-      // Fallback to social module if available
-      try {
-        const { moduleRegistry } = await import("@/core/modules/moduleRegistry");
-        
-        if (moduleRegistry && moduleRegistry.hasModule("social")) {
-          const socialModule = moduleRegistry.getModule<{name: string, version: string, exports: SocialModuleAPI}>("social");
-          if (socialModule && typeof socialModule.exports.searchPlayers === "function") {
-            console.log("PlayerSDK: Falling back to social module searchPlayers");
-            const results = await socialModule.exports.searchPlayers(query);
-            return results as UserSearchResult[];
-          }
-        }
-      } catch (moduleError) {
-        console.error("PlayerSDK: Module fallback error:", moduleError);
-      }
-      
-      // If all else fails, return empty results instead of throwing
-      return [];
-    }
+    console.log(`PlayerSDK: Found ${response.results.length} players matching "${query}"`);
+    return response.results;
   } catch (error) {
     console.error("PlayerSDK: Unexpected error in searchPlayers:", error);
     return []; // Return empty array instead of throwing to prevent UI breakage
