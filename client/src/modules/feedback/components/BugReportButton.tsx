@@ -29,7 +29,7 @@ export function BugReportButton({ position = 'bottom-right' }: BugReportButtonPr
   // Define position classes based on the position prop
   // Adjusting placement to avoid conflicts with other floating buttons
   const positionClasses = {
-    'bottom-right': 'bottom-24 right-4', // Moved up to avoid conflicts
+    'bottom-right': 'bottom-48 right-4', // Moved up significantly to avoid all conflicts
     'bottom-left': 'bottom-4 left-4',
     'top-right': 'top-24 right-4', // Moved down to avoid header elements
     'top-left': 'top-24 left-4'  // Moved down to avoid header elements
