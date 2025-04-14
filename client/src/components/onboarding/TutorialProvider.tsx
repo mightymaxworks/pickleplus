@@ -41,13 +41,15 @@ const TutorialProvider: React.FC<TutorialProviderProps> = ({ children }) => {
   const { user, isLoading } = useAuth();
   const [hasCompletedTutorial, setHasCompletedTutorial] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   
   // Local storage key for tracking tutorial completion
   const TUTORIAL_STORAGE_KEY = 'pickle_plus_tutorial_completed';
   
   // Check if user has completed tutorial on mount
   useEffect(() => {
-    if (user && !isLoading) {
+    if (user && !isLoading && !isInitialized) {
+      setIsInitialized(true);
       // If we have a user ID, use a user-specific key
       const storageKey = user?.id 
         ? `${TUTORIAL_STORAGE_KEY}_${user.id}` 
@@ -63,7 +65,7 @@ const TutorialProvider: React.FC<TutorialProviderProps> = ({ children }) => {
         setShowTutorial(true);
       }
     }
-  }, [isLoading, user]);
+  }, [isLoading, user, isInitialized]);
   
   // Handle tutorial completion
   const handleTutorialComplete = () => {

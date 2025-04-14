@@ -15,72 +15,81 @@ import {
   X, 
   User, 
   TrendingUp, 
-  Users, 
+  ClipboardList, 
   Award, 
   Calendar, 
   Trophy,
-  Sparkles
+  Sparkles,
+  CheckCircle
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useDiscoveryTracking, useDiscoveryTrigger } from '@/core/modules/gamification/hooks';
+import { useDiscoveryTracking } from '@/core/modules/gamification/hooks';
 import { cn } from '@/lib/utils';
 import TutorialAlert, { TutorialReward } from './TutorialAlert';
 
+// Define the tutorial step interface
+interface TutorialStep {
+  id: number;
+  code: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  position: 'center' | 'left' | 'right' | 'bottom';
+  route: string;
+  buttonText?: string;
+}
+
 // Define the tutorial steps with their content and targets
-const tutorialSteps = [
+const tutorialSteps: TutorialStep[] = [
   {
     id: 1,
     code: 'first_time_welcome',
     title: 'Welcome to Pickle+!',
-    description: 'Let\'s take a quick tour to help you get started with the key features of Pickle+.',
-    icon: <Sparkles className="h-5 w-5 text-blue-500" />,
+    description: 'Welcome to the premier platform for pickleball players! This quick tour will introduce you to key features to enhance your game.',
+    icon: <Sparkles className="h-5 w-5 text-yellow-500" />,
     position: 'center',
     buttonText: 'Start Tour',
-    route: '/',
+    route: '/dashboard',
   },
   {
     id: 2,
     code: 'first_time_profile',
     title: 'Your Player Profile',
-    description: 'Complete your profile to connect with other players, track your progress, and showcase your skills.',
+    description: 'Your profile displays your progress, stats, and achievements. Complete your profile to earn your first achievement!',
     icon: <User className="h-5 w-5 text-blue-500" />,
     position: 'right',
-    targetSelector: '.profile-link', // This should match an actual element in your app
     route: '/profile',
     buttonText: 'Next',
   },
   {
     id: 3,
     code: 'first_time_rankings',
-    title: 'Competitive Rankings',
-    description: 'Track your progress in the CourtIQ™ ranking system and see how you stack up against other players.',
-    icon: <TrendingUp className="h-5 w-5 text-blue-500" />,
-    position: 'right',
-    targetSelector: '.rankings-link', // This should match an actual element in your app
+    title: 'Rankings & Leaderboards',
+    description: 'Track how you measure up against other players with the CourtIQ™ ranking system based on your match performance.',
+    icon: <TrendingUp className="h-5 w-5 text-green-500" />,
+    position: 'left',
     route: '/rankings',
     buttonText: 'Next',
   },
   {
     id: 4,
-    code: 'first_time_community',
-    title: 'Connect with the Community',
-    description: 'Find players near you, join groups, and build your pickleball network.',
-    icon: <Users className="h-5 w-5 text-blue-500" />,
-    position: 'right',
-    targetSelector: '.community-link', // This should match an actual element in your app
-    route: '/community',
+    code: 'first_time_matches',
+    title: 'Record Your Matches',
+    description: 'After each game, record your matches here. Your results will update your rankings and help track your improvement over time.',
+    icon: <ClipboardList className="h-5 w-5 text-purple-500" />,
+    position: 'bottom',
+    route: '/record-match',
     buttonText: 'Next',
   },
   {
     id: 5,
     code: 'first_time_achievements',
-    title: 'Achievements & Rewards',
-    description: 'Earn badges, XP, and rewards as you play matches and improve your skills.',
-    icon: <Award className="h-5 w-5 text-blue-500" />,
+    title: 'Achievements & XP',
+    description: 'Earn badges and XP as you play, improve, and engage with the community. Level up to unlock special features!',
+    icon: <Award className="h-5 w-5 text-amber-500" />,
     position: 'right',
-    targetSelector: '.achievements-link', // This should match an actual element in your app
     route: '/achievements',
     buttonText: 'Next',
   },
@@ -88,23 +97,21 @@ const tutorialSteps = [
     id: 6,
     code: 'first_time_events',
     title: 'Events & Tournaments',
-    description: 'Discover and register for local tournaments, clinics, and other pickleball events.',
-    icon: <Calendar className="h-5 w-5 text-blue-500" />,
-    position: 'right',
-    targetSelector: '.events-link', // This should match an actual element in your app
+    description: 'Join tournaments, clinics, and social play opportunities. Use your PicklePass™ to check in at events!',
+    icon: <Calendar className="h-5 w-5 text-red-500" />,
+    position: 'left',
     route: '/events',
     buttonText: 'Next',
   },
   {
     id: 7,
-    code: 'first_time_matches',
-    title: 'Record Your Matches',
-    description: 'Track your matches, analyze your performance, and improve your game with detailed statistics.',
-    icon: <Trophy className="h-5 w-5 text-blue-500" />,
-    position: 'right',
-    targetSelector: '.record-match-link', // This should match an actual element in your app
-    route: '/record-match',
-    buttonText: 'Finish Tour',
+    code: 'first_time_complete',
+    title: 'You\'re All Set!',
+    description: 'Congratulations! You\'ve completed the Pickle+ orientation. You\'ve earned 50 XP and the "Platform Navigator" achievement!',
+    icon: <CheckCircle className="h-5 w-5 text-green-600" />,
+    position: 'center',
+    route: '/dashboard',
+    buttonText: 'Start Playing',
   },
 ];
 
@@ -141,24 +148,6 @@ const FirstTimeUserTutorial: React.FC<FirstTimeUserTutorialProps> = ({
   const [showReward, setShowReward] = useState(false);
   const [location, setLocation] = useLocation();
 
-  // Initialize discovery campaign for the tutorial
-  useEffect(() => {
-    if (isFirstTimeUser) {
-      // Add the tutorial campaign to the discovery tracking system
-      addCampaign({
-        id: 101,
-        name: 'First-Time User Tutorial',
-        description: 'Complete the introduction to Pickle+ features',
-        discoveries: tutorialSteps.map(step => ({
-          id: step.id,
-          code: step.code,
-          name: step.title,
-          discovered: false
-        }))
-      });
-    }
-  }, [isFirstTimeUser]);
-
   // Use discovery tracking to manage tutorial progress
   const {
     campaigns,
@@ -173,6 +162,27 @@ const FirstTimeUserTutorial: React.FC<FirstTimeUserTutorialProps> = ({
     }
   });
 
+  // Initialize discovery campaign for the tutorial
+  useEffect(() => {
+    if (isFirstTimeUser) {
+      // Use setTimeout to ensure this doesn't happen during render phase
+      setTimeout(() => {
+        // Add the tutorial campaign to the discovery tracking system
+        addCampaign({
+          id: 101,
+          name: 'First-Time User Tutorial',
+          description: 'Complete the introduction to Pickle+ features',
+          discoveries: tutorialSteps.map(step => ({
+            id: step.id,
+            code: step.code,
+            name: step.title,
+            discovered: false
+          }))
+        });
+      }, 0);
+    }
+  }, [isFirstTimeUser, addCampaign]);
+
   // Track discovery for the current step
   useEffect(() => {
     if (currentStep > 0 && currentStep <= tutorialSteps.length) {
@@ -183,12 +193,20 @@ const FirstTimeUserTutorial: React.FC<FirstTimeUserTutorialProps> = ({
   // Handle advancing to the next step
   const handleNextStep = () => {
     if (currentStep < tutorialSteps.length) {
-      // If route navigation is needed
-      const nextStep = tutorialSteps[currentStep];
-      if (nextStep.route && nextStep.route !== location) {
-        setLocation(nextStep.route);
-      }
+      // Always increment the step first
       setCurrentStep(prev => prev + 1);
+      
+      // Then handle navigation to the appropriate page if needed
+      // We use setTimeout to ensure the step change is processed first
+      const stepIndex = currentStep;
+      const nextStep = tutorialSteps[stepIndex];
+      
+      if (nextStep && nextStep.route && nextStep.route !== location) {
+        // Small delay to ensure state updates are processed first
+        setTimeout(() => {
+          setLocation(nextStep.route);
+        }, 50);
+      }
     } else {
       // Tutorial completed
       setShowTutorial(false);
@@ -223,7 +241,7 @@ const FirstTimeUserTutorial: React.FC<FirstTimeUserTutorialProps> = ({
       <AnimatePresence>
         {showTutorial && (
           <motion.div
-            className={positionStyles[step.position as keyof typeof positionStyles] || positionStyles.center}
+            className={positionStyles[step.position] || positionStyles.center}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
