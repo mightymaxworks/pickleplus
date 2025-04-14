@@ -147,6 +147,14 @@ export default function EnhancedAuthPage() {
           console.log("[DEBUG] Login successful, user data:", userData);
           // Update query client data
           queryClient.setQueryData(["/api/auth/current-user"], userData);
+          
+          // Show success toast
+          toast({
+            title: "Login successful!",
+            description: `Welcome back, ${userData.firstName || userData.username}!`,
+            variant: "default",
+          });
+          
           navigate("/dashboard");
         } else {
           // Handle specific error responses
@@ -219,6 +227,14 @@ export default function EnhancedAuthPage() {
           // Update query client data
           // @ts-ignore - TypeScript doesn't know about the specific query key
           queryClient.setQueryData(["/api/auth/current-user"], userData);
+          
+          // Show success toast with welcome message
+          toast({
+            title: "Account created successfully!",
+            description: `Welcome to PICKLE+, ${formData.firstName}! Your account has been created.`,
+            variant: "default",
+          });
+          
           navigate("/dashboard");
         } else {
           // Handle specific error responses
