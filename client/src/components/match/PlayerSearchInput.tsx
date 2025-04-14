@@ -145,6 +145,12 @@ export function PlayerSearchInput({
                     @{player.username}
                   </span>
                   
+                  {player.passportId && (
+                    <span className="text-muted-foreground ml-2 text-xs font-mono">
+                      ID: {player.passportId}
+                    </span>
+                  )}
+                  
                   {player.isFoundingMember && (
                     <Badge variant="outline" className="ml-2 border-amber-500 text-amber-500">
                       Founder
