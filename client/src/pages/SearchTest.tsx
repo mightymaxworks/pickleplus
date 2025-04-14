@@ -63,6 +63,13 @@ export function SearchTestPage() {
                     
                     <div className="font-medium">Founding Member:</div>
                     <div>{selectedPlayer.isFoundingMember ? 'Yes' : 'No'}</div>
+                    
+                    {selectedPlayer.passportId && (
+                      <>
+                        <div className="font-medium">Passport ID:</div>
+                        <div className="font-mono text-xs">{selectedPlayer.passportId}</div>
+                      </>
+                    )}
                   </div>
                   
                   <Button 
@@ -85,8 +92,9 @@ export function SearchTestPage() {
             <CardContent>
               <ul className="list-disc pl-5 space-y-2">
                 <li>Type 2 or more characters to search</li>
-                <li>Search by username, display name, first name or last name</li>
+                <li>Search by username, display name, first name, last name or passport code</li>
                 <li>Try searching for "Yoke Kheng" by name</li>
+                <li>Try searching by the 7-digit alphanumeric passport code (e.g., "YK8765432" or "KYK1234")</li>
                 <li>Try different search terms like "yoke", "kheng", or the full name</li>
               </ul>
             </CardContent>

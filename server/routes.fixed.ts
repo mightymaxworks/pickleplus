@@ -410,12 +410,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Improve search to include more fields and handle spaces better
       const searchTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+      
+      // Special case for passport ID - check for PKL- prefix or raw format
+      const isPassportIdSearch = query.toUpperCase().includes('PKL-') || 
+                                (query.length >= 6 && /^[A-Z0-9]+$/i.test(query.replace(/[-\s]/g, '')));
+      
       const searchConditions = searchTerms.map(term => 
         or(
           sql`lower(${users.username}) like ${`%${term}%`}`,
           sql`lower(${users.displayName}) like ${`%${term}%`}`,
           sql`lower(${users.firstName}) like ${`%${term}%`}`,
-          sql`lower(${users.lastName}) like ${`%${term}%`}`
+          sql`lower(${users.lastName}) like ${`%${term}%`}`,
+          // Add passport ID search with flexibility for formatting
+          sql`${users.passportId} like ${`%${term}%`}`
         )
       );
       
@@ -436,7 +443,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         firstName: users.firstName,
         lastName: users.lastName,
         avatarInitials: users.avatarInitials,
-        isFoundingMember: users.isFoundingMember
+        isFoundingMember: users.isFoundingMember,
+        passportId: users.passportId
       })
       .from(users)
       .where(whereClause)
@@ -453,7 +461,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ? `${player.firstName} ${player.lastName}`
           : null,
         avatarInitials: player.avatarInitials,
-        isFoundingMember: player.isFoundingMember
+        isFoundingMember: player.isFoundingMember,
+        passportId: player.passportId
       }));
       
       res.json(formattedPlayers);

@@ -37,6 +37,7 @@ export interface UserSearchResult {
   avatarUrl?: string;
   avatarInitials?: string;
   isFoundingMember?: boolean;
+  passportId?: string | null;
 }
 
 interface PlayerSearchInputProps {
