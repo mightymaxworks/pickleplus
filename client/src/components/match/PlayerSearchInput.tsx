@@ -1,3 +1,7 @@
+/**
+ * PKL-278651-SRCH-0001-UNIFD
+ * Enhanced Unified Player Search Component
+ */
 import React, { useState, useEffect } from 'react';
 import { 
   Command, 
@@ -12,6 +16,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, User } from 'lucide-react';
 import { useDebounce } from '@/hooks/useDebounce';
+import { searchPlayers } from '../../api/playerSearchApi';
+import { PlayerSearchResult } from '../../../shared/types/player-search.types';
 
 /**
  * PlayerSearchInput Component
@@ -22,6 +28,7 @@ import { useDebounce } from '@/hooks/useDebounce';
  * - Match Recording: Used to find opponents (Navigation: Match Center → Record Match)
  * - Match Filtering: Used to filter by opponent (Navigation: Match Center → History tab → Filter button)
  * - Social Connections: Used to find players to connect with (Navigation: Social → Find Players)
+ * - Tournament Management: Used to add players to teams (Navigation: Tournaments → Create Team)
  * 
  * Mobile Considerations:
  * - Search results display in a compact dropdown
@@ -29,74 +36,67 @@ import { useDebounce } from '@/hooks/useDebounce';
  * - Touch-friendly hit areas for selection
  */
 
-export interface UserSearchResult {
-  id: number;
-  username: string;
-  displayName: string;
-  fullName?: string | null;
-  avatarUrl?: string;
-  avatarInitials?: string;
-  isFoundingMember?: boolean;
-  passportId?: string | null;
-}
-
 interface PlayerSearchInputProps {
-  onPlayerSelected: (player: UserSearchResult | null) => void;
+  onPlayerSelected: (player: PlayerSearchResult | null) => void;
   placeholder?: string;
   excludeUserIds?: number[];
+  limit?: number;
 }
 
 export function PlayerSearchInput({ 
   onPlayerSelected, 
   placeholder = "Search players...",
-  excludeUserIds = []
+  excludeUserIds = [],
+  limit = 15
 }: PlayerSearchInputProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [results, setResults] = useState<UserSearchResult[]>([]);
+  const [results, setResults] = useState<PlayerSearchResult[]>([]);
+  const [error, setError] = useState<string | null>(null);
   
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   
   // Search for players when the query changes
   useEffect(() => {
-    // Only fetch if we have a valid search query
+    // Reset results and errors if query is empty
     if (!debouncedSearchQuery || debouncedSearchQuery.length < 2) {
       setResults([]);
+      setError(null);
       return;
     }
     
     // Set loading state
     setIsLoading(true);
+    setError(null);
     
     // Flag to handle component unmounting
     let isMounted = true;
     
-    // Make the API call to search players
-    const searchPlayers = async () => {
+    // Execute search using the API client
+    const performSearch = async () => {
       try {
-        const response = await fetch(`/api/player/search?q=${encodeURIComponent(debouncedSearchQuery)}`);
+        // Use the searchPlayers function from our SDK layer
+        const searchResponse = await searchPlayers({
+          query: debouncedSearchQuery,
+          limit,
+          excludeUserIds
+        });
         
-        // Stop if component unmounted
+        // Stop if component unmounted during async operation
         if (!isMounted) return;
         
-        if (!response.ok) {
-          throw new Error(`API error: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        // Filter out excluded users
-        const filteredResults = data.filter((user: UserSearchResult) => 
-          !excludeUserIds.includes(user.id)
-        );
-        
-        if (isMounted) {
-          setResults(filteredResults);
+        // Handle potential error from the API
+        if (searchResponse.error) {
+          setError(searchResponse.error);
+          setResults([]);
+        } else {
+          setResults(searchResponse.results);
         }
       } catch (err) {
-        console.error("Error searching players:", err);
+        console.error("[PlayerSearch] Error in search component:", err);
         if (isMounted) {
+          setError("An unexpected error occurred while searching");
           setResults([]);
         }
       } finally {
@@ -107,13 +107,13 @@ export function PlayerSearchInput({
     };
     
     // Execute the search
-    searchPlayers();
+    performSearch();
     
     // Cleanup function to prevent state updates if component unmounts
     return () => {
       isMounted = false;
     };
-  }, [debouncedSearchQuery, excludeUserIds]);
+  }, [debouncedSearchQuery, excludeUserIds, limit]);
   
   return (
     <Command className="rounded-lg border shadow-md">

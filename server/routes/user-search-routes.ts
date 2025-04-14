@@ -1,8 +1,8 @@
 /**
- * PKL-278651-TOURN-0003-SEARCH
- * User Search Routes for Tournament Team Creation
+ * PKL-278651-SRCH-0001-UNIFD
+ * Enhanced Unified Player Search Component
  * 
- * This file contains the routes for searching users to create tournament teams.
+ * This file contains the routes for searching users across the platform.
  * Framework 5.0: Each route includes comprehensive debug logging and error handling.
  */
 
