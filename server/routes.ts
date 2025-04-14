@@ -2,7 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { Server } from "http";
 import { isAuthenticated, isAdmin, setupAuth } from "./auth";
 import { db } from "./db";
-import { eq, and, or, desc, sql } from "drizzle-orm";
+import { eq, and, or, desc, sql, isNull } from "drizzle-orm";
 import { users } from "@shared/schema";
 import { storage } from "./storage";
 import { matchRoutes } from "./api/match";
@@ -262,8 +262,26 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
       
-      // Get users ordered by XP
-      const leaderboardUsers = await db.select({
+      // PKL-278651-SEC-0002-TESTVIS - Test Data Visibility Control
+      // Check if the requesting user is an admin to determine if we should hide test data
+      const currentUserId = req.user?.id || 0;
+      let isAdmin = false;
+      
+      if (currentUserId) {
+        try {
+          const [adminCheck] = await db.select({ isAdmin: users.isAdmin })
+            .from(users)
+            .where(eq(users.id, currentUserId));
+          isAdmin = adminCheck?.isAdmin === true;
+        } catch (error) {
+          console.error("[API] Error checking admin status:", error);
+        }
+      }
+      
+      console.log(`[API] XP Leaderboard - User ${currentUserId} isAdmin: ${isAdmin}`);
+      
+      // Build the query based on whether the user is an admin
+      let query = db.select({
         id: users.id,
         username: users.username,
         displayName: users.displayName,
@@ -275,17 +293,29 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
         avatarInitials: users.avatarInitials,
         rankingPoints: users.rankingPoints
       })
-      .from(users)
-      .where(
-        and(
-          // PKL-278651-SEC-0002-TESTVIS - Filter out test users (users with 'test' in their name)
-          sql`username NOT ILIKE '%test%'`,
-          // PKL-278651-SEC-0002-TESTVIS - Filter out administrators 
-          or(eq(users.isAdmin, false), isNull(users.isAdmin))
-        )
-      )
-      .orderBy(desc(users.xp))
-      .limit(limit);
+      .from(users);
+      
+      // Only apply test data filters for non-admin users
+      if (!isAdmin) {
+        console.log("[API] Applying test data filters to XP leaderboard (non-admin user)");
+        query = query.where(
+          and(
+            // PKL-278651-SEC-0002-TESTVIS - Filter out test users (users with 'test' in their name)
+            sql`username NOT ILIKE '%test%'`,
+            // PKL-278651-SEC-0002-TESTVIS - Filter out administrators 
+            or(eq(users.isAdmin, false), isNull(users.isAdmin)),
+            // PKL-278651-SEC-0002-TESTVIS - Filter out test data
+            or(eq(users.isTestData, false), isNull(users.isTestData))
+          )
+        );
+      } else {
+        console.log("[API] Skipping test data filters for XP leaderboard (admin user)");
+      }
+      
+      // Apply ordering and limit to the query
+      const leaderboardUsers = await query
+        .orderBy(desc(users.xp))
+        .limit(limit);
       
       console.log(`[API] Returning XP leaderboard with ${leaderboardUsers.length} users (after filtering out test users and admins)`);
       
@@ -302,8 +332,26 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
       
-      // Get users ordered by ranking points
-      const leaderboardUsers = await db.select({
+      // PKL-278651-SEC-0002-TESTVIS - Test Data Visibility Control
+      // Check if the requesting user is an admin to determine if we should hide test data
+      const currentUserId = req.user?.id || 0;
+      let isAdmin = false;
+      
+      if (currentUserId) {
+        try {
+          const [adminCheck] = await db.select({ isAdmin: users.isAdmin })
+            .from(users)
+            .where(eq(users.id, currentUserId));
+          isAdmin = adminCheck?.isAdmin === true;
+        } catch (error) {
+          console.error("[API] Error checking admin status:", error);
+        }
+      }
+      
+      console.log(`[API] Ranking Leaderboard - User ${currentUserId} isAdmin: ${isAdmin}`);
+      
+      // Build the query based on whether the user is an admin
+      let query = db.select({
         id: users.id,
         username: users.username,
         displayName: users.displayName,
@@ -315,17 +363,29 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
         avatarInitials: users.avatarInitials,
         rankingPoints: users.rankingPoints
       })
-      .from(users)
-      .where(
-        and(
-          // PKL-278651-SEC-0002-TESTVIS - Filter out test users (users with 'test' in their name)
-          sql`username NOT ILIKE '%test%'`,
-          // PKL-278651-SEC-0002-TESTVIS - Filter out administrators 
-          or(eq(users.isAdmin, false), isNull(users.isAdmin))
-        )
-      )
-      .orderBy(desc(users.rankingPoints))
-      .limit(limit);
+      .from(users);
+      
+      // Only apply test data filters for non-admin users
+      if (!isAdmin) {
+        console.log("[API] Applying test data filters to ranking leaderboard (non-admin user)");
+        query = query.where(
+          and(
+            // PKL-278651-SEC-0002-TESTVIS - Filter out test users (users with 'test' in their name)
+            sql`username NOT ILIKE '%test%'`,
+            // PKL-278651-SEC-0002-TESTVIS - Filter out administrators 
+            or(eq(users.isAdmin, false), isNull(users.isAdmin)),
+            // PKL-278651-SEC-0002-TESTVIS - Filter out test data
+            or(eq(users.isTestData, false), isNull(users.isTestData))
+          )
+        );
+      } else {
+        console.log("[API] Skipping test data filters for ranking leaderboard (admin user)");
+      }
+      
+      // Apply ordering and limit to the query
+      const leaderboardUsers = await query
+        .orderBy(desc(users.rankingPoints))
+        .limit(limit);
       
       console.log(`[API] Returning ranking leaderboard with ${leaderboardUsers.length} users (after filtering out test users and admins)`);
       
