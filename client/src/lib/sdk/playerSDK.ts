@@ -33,8 +33,6 @@ export async function searchPlayers(
   query: string, 
   excludeUserId?: number
 ): Promise<UserSearchResult[]> {
-  console.log("PlayerSDK: Using unified player search for query:", query);
-  
   // Convert the legacy parameters to the new format
   const searchOptions: PlayerSearchOptions = {
     query,
@@ -46,14 +44,17 @@ export async function searchPlayers(
     const response: PlayerSearchResponse = await unifiedSearchPlayers(searchOptions);
     
     if (response.error) {
-      console.error("PlayerSDK: Search error:", response.error);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error("PlayerSDK: Search error:", response.error);
+      }
       return [];
     }
     
-    console.log(`PlayerSDK: Found ${response.results.length} players matching "${query}"`);
     return response.results;
   } catch (error) {
-    console.error("PlayerSDK: Unexpected error in searchPlayers:", error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.error("PlayerSDK: Unexpected error in searchPlayers:", error);
+    }
     return []; // Return empty array instead of throwing to prevent UI breakage
   }
 }

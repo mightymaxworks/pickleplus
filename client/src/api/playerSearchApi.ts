@@ -40,7 +40,10 @@ export async function searchPlayers(
     
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('Player search error:', errorData);
+      // Log error in production-friendly way
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Player search error:', errorData);
+      }
       return { 
         results: [],
         error: errorData.error || 'Error searching for players' 
@@ -57,7 +60,10 @@ export async function searchPlayers(
     
     return { results };
   } catch (error) {
-    console.error('Player search failed:', error);
+    // Log error in production-friendly way
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Player search failed:', error);
+    }
     return { 
       results: [],
       error: error instanceof Error ? error.message : 'Search failed' 

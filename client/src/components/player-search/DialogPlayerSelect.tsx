@@ -64,18 +64,18 @@ export function DialogPlayerSelect({
       if (!debouncedQuery || debouncedQuery.length < 2) return [];
       
       try {
-        console.log("Attempting to search players with query:", debouncedQuery);
-        
         // Use the unified player search component
         const searchResponse = await searchPlayers({
           query: debouncedQuery,
           excludeUserIds: excludeUserIds
         });
         
-        console.log(`Found ${searchResponse.results.length} players matching "${debouncedQuery}"`);
         return searchResponse.results;
       } catch (error) {
-        console.error("Error searching players:", error);
+        // Log error in production-friendly way
+        if (process.env.NODE_ENV !== 'production') {
+          console.error("Error searching players:", error);
+        }
         return [];
       }
     },

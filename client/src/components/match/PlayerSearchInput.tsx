@@ -89,7 +89,10 @@ export function PlayerSearchInput({
             setError(null);
           }
         } catch (err) {
-          console.error('Player search error:', err);
+          // Log error in production-friendly way
+          if (process.env.NODE_ENV !== 'production') {
+            console.error('Player search error:', err);
+          }
           setError('Failed to search players. Please try again.');
           setResults([]);
         } finally {
