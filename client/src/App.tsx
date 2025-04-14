@@ -56,6 +56,7 @@ import LandingPageTest from './pages/LandingPageTest'
 import QRTestPage from './pages/dev/QRTestPage'
 import EventTestPage from './pages/events/EventTestPage'
 import CommunityPage from './pages/CommunityPage'
+import SettingsPage from './pages/SettingsPage'
 
 import { useAuth } from './hooks/useAuth'
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute'

@@ -22,6 +22,40 @@ import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { Bell, Moon, Sun, Eye, EyeOff, Shield, Activity, Volume2, User, Globe, Clock } from 'lucide-react';
 
+// Type definitions for settings
+type SettingsType = {
+  account: {
+    emailNotifications: boolean;
+    pushNotifications: boolean;
+    marketingEmails: boolean;
+    publicProfile: boolean;
+    darkMode: boolean;
+    matchAlerts: boolean;
+  };
+  privacy: {
+    showRank: boolean;
+    showActivity: boolean;
+    allowFriendRequests: boolean;
+    showRealName: boolean;
+    dataSharing: string;
+  };
+  notification: {
+    volume: number;
+    newMatchNotification: boolean;
+    tournamentReminders: boolean;
+    achievementAlerts: boolean;
+    matchResultAlerts: boolean;
+    systemUpdates: boolean;
+  };
+  display: {
+    fontSize: string;
+    highContrast: boolean;
+    animations: boolean;
+    compactView: boolean;
+    timeFormat: string;
+  };
+};
+
 export default function SettingsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -29,7 +63,7 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('account');
   
   // Settings state - would normally be fetched from API
-  const [settings, setSettings] = useState({
+  const [settings, setSettings] = useState<SettingsType>({
     account: {
       emailNotifications: true,
       pushNotifications: true,
@@ -62,13 +96,16 @@ export default function SettingsPage() {
     }
   });
 
-  // Toggle handler for switches
-  const handleToggle = (category: keyof typeof settings, setting: string) => {
+  // Toggle handler for switches - properly typed
+  const handleToggle = (category: keyof SettingsType, setting: string) => {
+    const categorySettings = settings[category];
+    const currentValue = (categorySettings as any)[setting];
+    
     setSettings({
       ...settings,
       [category]: {
-        ...settings[category],
-        [setting]: !settings[category][setting]
+        ...categorySettings,
+        [setting]: !currentValue
       }
     });
 
@@ -95,7 +132,7 @@ export default function SettingsPage() {
     setSettings({
       ...settings,
       [category]: {
-        ...settings[category],
+        ...settings[category as keyof typeof settings],
         [setting]: value
       }
     });
