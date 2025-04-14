@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { PicklePlusNewLogo } from "../components/icons/PicklePlusNewLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,6 +76,7 @@ export default function EnhancedAuthPage() {
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<string>("login");
   const [showFounderSection, setShowFounderSection] = useState(false);
+  const { toast } = useToast();
 
   // Redirect if user is already logged in - with debug logging
   useEffect(() => {
@@ -428,11 +430,11 @@ export default function EnhancedAuthPage() {
                           <p className="mt-4 text-sm text-center text-gray-500">
                             Don't have an account?{" "}
                             <a
-                              href="/register"
+                              href="#"
                               className="text-[#2196F3] hover:underline"
                               onClick={(e) => {
                                 e.preventDefault();
-                                navigate("/register");
+                                setActiveTab("register");
                               }}
                             >
                               Create account
