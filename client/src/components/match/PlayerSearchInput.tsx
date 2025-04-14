@@ -147,7 +147,7 @@ export function PlayerSearchInput({
                   
                   {player.passportId && (
                     <span className="text-muted-foreground ml-2 text-xs font-mono">
-                      ID: {player.passportId}
+                      ID: {player.passportId.replace('PKL-', '')}
                     </span>
                   )}
                   

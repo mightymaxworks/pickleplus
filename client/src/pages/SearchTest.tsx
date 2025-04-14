@@ -67,7 +67,10 @@ export function SearchTestPage() {
                     {selectedPlayer.passportId && (
                       <>
                         <div className="font-medium">Passport ID:</div>
-                        <div className="font-mono text-xs">{selectedPlayer.passportId}</div>
+                        <div className="font-mono text-xs">
+                          <span className="text-muted-foreground">PKL-</span>
+                          {selectedPlayer.passportId.replace('PKL-', '')}
+                        </div>
                       </>
                     )}
                   </div>
@@ -97,9 +100,9 @@ export function SearchTestPage() {
                 <li>Try searching by passport ID in any format:
                   <ul className="pl-5 mt-1 mb-1 space-y-1 text-sm">
                     <li>Full format: "PKL-1000-MM7" for user "mightymax"</li>
-                    <li>Without prefix: "1000-MM7" or "YK876-5432"</li>
-                    <li>Without dashes: "1000MM7" or "YK8765432"</li>
-                    <li>Just a portion: "1000" or "MM7" or "YK876"</li>
+                    <li>Without prefix: "1000-MM7" or "YK87-654"</li>
+                    <li>Without dashes: "1000MM7" or "YK87654"</li>
+                    <li>Just a portion: "1000" or "MM7" or "YK87"</li>
                   </ul>
                 </li>
                 <li>Try different search terms like "yoke", "kheng", or the full name</li>
