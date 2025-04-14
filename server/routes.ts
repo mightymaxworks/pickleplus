@@ -257,6 +257,86 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     }
   });
   
+  // XP Leaderboard Endpoint (PKL-278651-SEC-0002-TESTVIS - Test Data Visibility Control)
+  app.get("/api/leaderboard", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      
+      // Get users ordered by XP
+      const leaderboardUsers = await db.select({
+        id: users.id,
+        username: users.username,
+        displayName: users.displayName,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        xp: users.xp,
+        level: users.level,
+        avatarUrl: users.avatarUrl,
+        avatarInitials: users.avatarInitials,
+        rankingPoints: users.rankingPoints
+      })
+      .from(users)
+      .where(
+        and(
+          // PKL-278651-SEC-0002-TESTVIS - Filter out test users (users with 'test' in their name)
+          sql`username NOT ILIKE '%test%'`,
+          // PKL-278651-SEC-0002-TESTVIS - Filter out administrators 
+          or(eq(users.isAdmin, false), isNull(users.isAdmin))
+        )
+      )
+      .orderBy(desc(users.xp))
+      .limit(limit);
+      
+      console.log(`[API] Returning XP leaderboard with ${leaderboardUsers.length} users (after filtering out test users and admins)`);
+      
+      // Return the leaderboard data
+      res.json(leaderboardUsers);
+    } catch (error) {
+      console.error("[API] Error getting XP leaderboard:", error);
+      res.status(500).json({ error: "Server error getting leaderboard" });
+    }
+  });
+  
+  // Ranking Points Leaderboard Endpoint (PKL-278651-SEC-0002-TESTVIS - Test Data Visibility Control)
+  app.get("/api/ranking-leaderboard", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      
+      // Get users ordered by ranking points
+      const leaderboardUsers = await db.select({
+        id: users.id,
+        username: users.username,
+        displayName: users.displayName,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        xp: users.xp,
+        level: users.level,
+        avatarUrl: users.avatarUrl,
+        avatarInitials: users.avatarInitials,
+        rankingPoints: users.rankingPoints
+      })
+      .from(users)
+      .where(
+        and(
+          // PKL-278651-SEC-0002-TESTVIS - Filter out test users (users with 'test' in their name)
+          sql`username NOT ILIKE '%test%'`,
+          // PKL-278651-SEC-0002-TESTVIS - Filter out administrators 
+          or(eq(users.isAdmin, false), isNull(users.isAdmin))
+        )
+      )
+      .orderBy(desc(users.rankingPoints))
+      .limit(limit);
+      
+      console.log(`[API] Returning ranking leaderboard with ${leaderboardUsers.length} users (after filtering out test users and admins)`);
+      
+      // Return the leaderboard data
+      res.json(leaderboardUsers);
+    } catch (error) {
+      console.error("[API] Error getting ranking leaderboard:", error);
+      res.status(500).json({ error: "Server error getting leaderboard" });
+    }
+  });
+
   // Profile Field Completion Endpoint (PKL-278651-XPPS-0001)
   app.post("/api/profile/field-completion", isAuthenticated, async (req: Request, res: Response) => {
     try {

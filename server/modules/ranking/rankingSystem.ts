@@ -790,6 +790,12 @@ export class RankingSystem {
       query = sql`${query} AND pr.rating <= ${internalMaxRating}`;
     }
     
+    // PKL-278651-SEC-0002-TESTVIS - Filter out test users (users with 'test' in their name)
+    query = sql`${query} AND u.username NOT ILIKE '%test%'`;
+    
+    // PKL-278651-SEC-0002-TESTVIS - Filter out administrators
+    query = sql`${query} AND (u.is_admin = FALSE OR u.is_admin IS NULL)`;
+    
     // Order and limit
     query = sql`${query}
       ORDER BY rp.points DESC
@@ -798,8 +804,8 @@ export class RankingSystem {
     `;
     
     try {
+      console.log("[RankingSystem] Fetching leaderboard with test user and admin filtering");
       const leaderboard = await db.execute(query);
-      return leaderboard;
     } catch (err) {
       console.error("Error fetching leaderboard:", err);
       return [];
