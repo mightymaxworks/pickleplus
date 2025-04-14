@@ -2,8 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { Server } from "http";
 import { isAuthenticated, isAdmin, setupAuth } from "./auth";
 import { db } from "./db";
-import { eq, and, or, desc, sql, isNull } from "drizzle-orm";
-import { users } from "@shared/schema";
+import { eq, and, or, desc, sql, isNull, lte, gte } from "drizzle-orm";
 import { storage } from "./storage";
 import { matchRoutes } from "./api/match";
 import rankingRoutes from "./api/ranking";
@@ -32,6 +31,11 @@ import {
   matches, matchValidations, users, 
   type InsertMatch
 } from "@shared/schema";
+
+// Import CourtIQ schema for ranking system
+import {
+  rankingPoints, playerRatings, rankingTiers
+} from "@shared/courtiq-schema";
 
 export async function registerRoutes(app: express.Express): Promise<Server> {
   // Setup authentication
@@ -806,7 +810,8 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     try {
       // Extract all query parameters with defaults
       const format = (req.query.format as string) || 'singles';
-      const ageDivision = (req.query.ageDivision as string) || '19plus';
+      const division = (req.query.ageDivision as string) || '19+';
+      const season = "2025-S1"; // Current season
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
       const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
       
@@ -815,7 +820,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       const minRating = req.query.minRating ? parseFloat(req.query.minRating as string) : undefined;
       const maxRating = req.query.maxRating ? parseFloat(req.query.maxRating as string) : undefined;
       
-      // PKL-278651-SEC-0002-TESTVIS - Get current user ID for admin check
+      // Get current user ID for highlighting current user in results
       const currentUserId = req.user?.id || 0;
       console.log(`[API] Multi-Rankings Leaderboard - Request from user ID: ${currentUserId}`);
       
