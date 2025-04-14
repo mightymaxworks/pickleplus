@@ -72,21 +72,28 @@ export default function Register() {
       
       console.log("[DEBUG] Extracted firstName:", firstName, "lastName:", lastName);
       
-      // Create a properly formatted registration object matching RegisterData type
+      // Framework 5.0: Create a properly formatted registration object matching RegisterData type
+      // Directly embed firstName and lastName as required fields by the server schema
       const registrationData = {
         username: formData.username,
         email: formData.email || "",  // Ensure email is never null or undefined
         password: formData.password,
         displayName: formData.displayName, // Make sure to include displayName
-        firstName: firstName, // Add firstName - required by server
-        lastName: lastName,   // Add lastName - required by server
+        firstName, // Required by server schema
+        lastName,  // Required by server schema
         yearOfBirth: formData.yearOfBirth || null,
         location: formData.location || null,
         playingSince: formData.playingSince || null,
         skillLevel: formData.skillLevel || null,
       };
       
-      console.log("[DEBUG] Submitting registration data:", {...registrationData, password: '[REDACTED]'});
+      // Framework 5.0: Enhanced logging to verify firstName and lastName are included
+      console.log("[DEBUG] Submitting registration data:", {
+        ...registrationData, 
+        password: '[REDACTED]',
+        firstName: registrationData.firstName, // Explicitly log to confirm
+        lastName: registrationData.lastName    // Explicitly log to confirm
+      });
       
       try {
         // Make direct fetch call to inspect response in detail
