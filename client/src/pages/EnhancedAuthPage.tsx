@@ -301,11 +301,11 @@ export default function EnhancedAuthPage() {
                           <p className="mt-4 text-sm text-center text-gray-500">
                             Don't have an account?{" "}
                             <a
-                              href="#"
+                              href="/register"
                               className="text-[#2196F3] hover:underline"
                               onClick={(e) => {
                                 e.preventDefault();
-                                setActiveTab("register");
+                                navigate("/register");
                               }}
                             >
                               Create account

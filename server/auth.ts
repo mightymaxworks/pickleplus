@@ -225,8 +225,8 @@ export function setupAuth(app: Express) {
         const user = await storage.createUser({
           ...validatedData,
           password: hashedPassword,
-          // Use the correct field name from the schema
-          passportCode: passportCode,
+          // Use the correct field name (passportId) from the schema
+          passportId: passportCode,
           avatarInitials,
           displayName,
         });
