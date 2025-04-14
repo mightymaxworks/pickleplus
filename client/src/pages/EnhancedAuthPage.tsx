@@ -132,18 +132,24 @@ export default function EnhancedAuthPage() {
 
   const handleRegister = async (formData: RegisterFormData) => {
     try {
-      // Create a properly formatted registration object
+      // Instead of registering here, redirect to the dedicated Register page
+      navigate("/register");
+      return;
+      
+      // The code below is intentionally not run due to the return above
+      // We're keeping it for reference only
       const registrationData = {
         username: formData.username,
         email: formData.email || "",
         password: formData.password,
         displayName: formData.displayName || "",
+        // Add required firstName and lastName fields
+        firstName: "", // This page doesn't collect firstName
+        lastName: "",  // This page doesn't collect lastName
         yearOfBirth: formData.yearOfBirth || null,
         location: formData.location || null,
         playingSince: formData.playingSince || null,
         skillLevel: formData.skillLevel || null,
-        // If founder code is provided, we'll handle it separately on the backend
-        // We don't directly set isFoundingMember here
       };
       
       await registerMutation.mutateAsync(registrationData);
