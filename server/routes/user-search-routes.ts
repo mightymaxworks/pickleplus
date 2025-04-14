@@ -87,8 +87,7 @@ export function registerUserSearchRoutes(app: express.Express): void {
         avatarUrl: player.avatarUrl,
         avatarInitials: player.avatarInitials,
         isFoundingMember: player.isFoundingMember,
-        passportId: player.passportId,
-        rating: player.rating || null
+        passportId: player.passportId
       }));
       
       res.json(formattedPlayers);

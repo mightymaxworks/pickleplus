@@ -2,30 +2,30 @@
  * PKL-278651-SRCH-0001-UNIFD
  * Enhanced Unified Player Search Component
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Command, 
+  CommandInput, 
+  CommandList, 
   CommandEmpty, 
   CommandGroup, 
-  CommandInput, 
-  CommandItem, 
-  CommandList 
-} from "@/components/ui/command";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
-import { Loader2, User } from 'lucide-react';
-import { useDebounce } from '@/hooks/useDebounce';
-import { searchPlayers } from '../../api/playerSearchApi';
+  CommandItem,
+  Command
+} from '@/components/ui/command';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Loader2, Search, AlertCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { searchPlayers, PlayerSearchOptions } from '@/api/playerSearchApi';
 
-// Define the PlayerSearchResult type directly here until the shared types are properly set up
+/**
+ * PlayerSearchResult interface for component consistency
+ */
 export interface PlayerSearchResult {
   id: number;
   username: string;
   displayName: string;
   fullName?: string | null;
-  avatarUrl?: string;
-  avatarInitials?: string;
+  avatarUrl?: string | null;
+  avatarInitials?: string | null;
   isFoundingMember?: boolean;
   passportId?: string | null;
   rating?: number | null;
@@ -47,7 +47,6 @@ export interface PlayerSearchResult {
  * - Avatar size reduced on smaller screens
  * - Touch-friendly hit areas for selection
  */
-
 interface PlayerSearchInputProps {
   onPlayerSelected: (player: PlayerSearchResult | null) => void;
   placeholder?: string;
@@ -57,158 +56,197 @@ interface PlayerSearchInputProps {
 
 export function PlayerSearchInput({ 
   onPlayerSelected, 
-  placeholder = "Search players...",
+  placeholder = 'Search for a player...', 
   excludeUserIds = [],
   limit = 15
 }: PlayerSearchInputProps) {
-  const [open, setOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [query, setQuery] = useState<string>('');
   const [results, setResults] = useState<PlayerSearchResult[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   
-  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  // Check whether there's anything to search
+  const hasQueryToSearch = query && query.length >= 2;
   
-  // Search for players when the query changes
-  useEffect(() => {
-    // Reset results and errors if query is empty
-    if (!debouncedSearchQuery || debouncedSearchQuery.length < 2) {
-      setResults([]);
-      setError(null);
-      return;
+  // Debounced search function
+  const searchWithDebounce = (searchQuery: string) => {
+    // Clear any existing timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
     }
     
-    // Set loading state
-    setIsLoading(true);
-    setError(null);
-    
-    // Flag to handle component unmounting
-    let isMounted = true;
-    
-    // Execute search using the API client
-    const performSearch = async () => {
-      try {
-        // Use the searchPlayers function from our SDK layer
-        const searchResponse = await searchPlayers({
-          query: debouncedSearchQuery,
-          limit,
-          excludeUserIds
-        });
-        
-        // Stop if component unmounted during async operation
-        if (!isMounted) return;
-        
-        // Handle potential error from the API
-        if (searchResponse.error) {
-          setError(searchResponse.error);
+    // Only proceed if we have a valid query
+    if (searchQuery && searchQuery.length >= 2) {
+      setIsLoading(true);
+      setError(null);
+      
+      // Set a new timer
+      debounceTimerRef.current = setTimeout(async () => {
+        try {
+          // Configure search options
+          const searchOptions: PlayerSearchOptions = {
+            query: searchQuery,
+            limit,
+            excludeUserIds
+          };
+          
+          // Perform search
+          const searchResponse = await searchPlayers(searchOptions);
+          
+          if (searchResponse.error) {
+            setError(searchResponse.error);
+            setResults([]);
+          } else {
+            setResults(searchResponse.results);
+            setError(null);
+          }
+        } catch (err) {
+          console.error('Player search error:', err);
+          setError('Failed to search players. Please try again.');
           setResults([]);
-        } else {
-          setResults(searchResponse.results);
-        }
-      } catch (err) {
-        console.error("[PlayerSearch] Error in search component:", err);
-        if (isMounted) {
-          setError("An unexpected error occurred while searching");
-          setResults([]);
-        }
-      } finally {
-        if (isMounted) {
+        } finally {
           setIsLoading(false);
         }
+      }, 300); // 300ms debounce
+    } else {
+      setResults([]);
+    }
+  };
+  
+  // Handle query changes
+  useEffect(() => {
+    searchWithDebounce(query);
+    
+    // Show dropdown if there's a query
+    if (hasQueryToSearch) {
+      setIsOpen(true);
+    }
+    
+    return () => {
+      // Clean up timer on unmount
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
       }
     };
-    
-    // Execute the search
-    performSearch();
-    
-    // Cleanup function to prevent state updates if component unmounts
-    return () => {
-      isMounted = false;
-    };
-  }, [debouncedSearchQuery, excludeUserIds, limit]);
+  }, [query]);
+  
+  // Handle player selection
+  const handleSelectPlayer = (player: PlayerSearchResult) => {
+    onPlayerSelected(player);
+    setQuery('');
+    setResults([]);
+    setIsOpen(false);
+  };
+  
+  // Handle input focus
+  const handleFocus = () => {
+    if (hasQueryToSearch) {
+      setIsOpen(true);
+    }
+  };
   
   return (
-    <Command className="rounded-lg border shadow-md">
-      <CommandInput 
-        placeholder={placeholder} 
-        value={searchQuery}
-        onValueChange={setSearchQuery}
-        onFocus={() => setOpen(true)}
-        onBlur={() => setTimeout(() => setOpen(false), 200)}
-      />
-      {open && (
-        <CommandList>
+    <div className="relative w-full">
+      <Command className="border rounded-lg overflow-visible">
+        <div className="flex items-center border-b px-3">
+          <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+          <CommandInput
+            placeholder={placeholder}
+            value={query}
+            onValueChange={setQuery}
+            onFocus={handleFocus}
+            className="flex-1 min-h-10 outline-none"
+          />
           {isLoading && (
-            <div className="p-2">
-              <Skeleton className="h-8 w-full rounded-md mb-2" />
-              <Skeleton className="h-8 w-full rounded-md mb-2" />
-              <Skeleton className="h-8 w-full rounded-md" />
-            </div>
+            <Loader2 className="animate-spin h-4 w-4 opacity-70" />
           )}
-          
-          {!isLoading && results.length === 0 && (
-            <CommandEmpty>
-              {searchQuery.length < 2 ? (
-                "Type at least 2 characters to search"
-              ) : error ? (
-                <div className="text-red-500">
-                  <span className="text-sm font-semibold">Error: </span>
-                  <span className="text-sm">{error}</span>
+        </div>
+        
+        {isOpen && (query || isLoading || error) && (
+          <div className="relative">
+            <CommandList className="absolute top-0 left-0 right-0 z-50 max-h-64 overflow-auto rounded-b-md border border-t-0 bg-popover shadow-md">
+              {error && (
+                <div className="p-4 text-center">
+                  <div className="flex items-center justify-center gap-2 text-red-500 mb-2">
+                    <AlertCircle className="h-4 w-4" />
+                    <span className="font-medium">Search Error</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{error}</p>
                 </div>
-              ) : (
-                "No players found"
               )}
-            </CommandEmpty>
-          )}
-          
-          {!isLoading && results.length > 0 && (
-            <CommandGroup heading="Players">
-              {results.map((player) => (
-                <CommandItem
-                  key={player.id}
-                  value={`${player.id}-${player.username}`}
-                  onSelect={() => {
-                    onPlayerSelected(player);
-                    setOpen(false);
-                  }}
-                >
-                  <Avatar className="h-6 w-6 mr-2">
-                    {player.avatarUrl ? (
-                      <AvatarImage src={player.avatarUrl} alt={player.displayName} />
-                    ) : (
-                      <AvatarFallback>
-                        {player.avatarInitials || player.displayName.charAt(0)}
-                      </AvatarFallback>
-                    )}
-                  </Avatar>
-                  <span className="font-medium">{player.displayName}</span>
-                  {player.fullName && player.fullName !== player.displayName && (
-                    <span className="text-muted-foreground ml-1 text-xs">
-                      ({player.fullName})
-                    </span>
-                  )}
-                  <span className="text-muted-foreground ml-2 text-xs">
-                    @{player.username}
-                  </span>
-                  
-                  {player.passportId && (
-                    <span className="text-muted-foreground ml-2 text-xs font-mono">
-                      ID: {player.passportId}
-                    </span>
-                  )}
-                  
-                  {player.isFoundingMember && (
-                    <Badge variant="outline" className="ml-2 border-amber-500 text-amber-500">
-                      Founder
-                    </Badge>
-                  )}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          )}
-        </CommandList>
-      )}
-    </Command>
+              
+              {!error && isLoading && (
+                <div className="py-6 text-center">
+                  <Loader2 className="h-8 w-8 animate-spin opacity-50 mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">Searching players...</p>
+                </div>
+              )}
+              
+              {!error && !isLoading && results.length === 0 && query.length >= 2 && (
+                <CommandEmpty className="py-6 text-center">
+                  <p className="text-sm mb-2">No players found</p>
+                  <p className="text-xs text-muted-foreground">
+                    Try a different search term or check spelling
+                  </p>
+                </CommandEmpty>
+              )}
+              
+              {!error && !isLoading && results.length > 0 && (
+                <CommandGroup>
+                  {results.map((player) => (
+                    <CommandItem
+                      key={player.id}
+                      value={player.username}
+                      onSelect={() => handleSelectPlayer(player)}
+                      className="flex items-center gap-2 py-2 cursor-pointer hover:bg-accent"
+                    >
+                      <Avatar className="h-8 w-8">
+                        {player.avatarUrl ? (
+                          <AvatarImage src={player.avatarUrl} alt={player.displayName} />
+                        ) : (
+                          <AvatarFallback className="bg-primary/10 text-primary-foreground">
+                            {player.avatarInitials || player.displayName?.charAt(0) || player.username?.charAt(0) || '?'}
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
+                      
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium truncate">
+                            {player.displayName}
+                          </span>
+                          {player.isFoundingMember && (
+                            <Badge variant="outline" className="h-5 border-amber-500 text-amber-500 text-xs">
+                              Founding
+                            </Badge>
+                          )}
+                        </div>
+                        <span className="text-xs text-muted-foreground truncate">
+                          @{player.username}
+                          {player.passportId && (
+                            <span className="ml-2 text-xs text-muted-foreground font-mono">
+                              ID: {player.passportId}
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                      
+                      {player.rating !== undefined && player.rating !== null && (
+                        <span className="text-sm font-medium ml-auto">
+                          {player.rating}
+                        </span>
+                      )}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+            </CommandList>
+          </div>
+        )}
+      </Command>
+    </div>
   );
 }
 

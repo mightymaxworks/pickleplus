@@ -48,6 +48,7 @@ import {
 // Keep imports for non-lazy loaded pages
 import TestAuthPage from './pages/TestAuthPage'
 import TestRoutingPage from './pages/TestRoutingPage'
+import PlayerSearchTestPage from './pages/PlayerSearchTestPage'
 import MatchRewardDemo from './pages/match-reward-demo'
 import EnhancedProfile from './pages/EnhancedProfile'
 import EnhancedProfilePage from './pages/EnhancedProfilePage'
@@ -279,6 +280,11 @@ export default function App() {
             {/* Player Search Test Page */}
             <Route path="/search-test">
               {(params) => <ProtectedRoute component={SearchTestPage} path="/search-test" />}
+            </Route>
+            
+            {/* PKL-278651-SRCH-0001-UNIFD - Unified Player Search Test Page */}
+            <Route path="/player-search-test">
+              {(params) => <ProtectedRoute component={PlayerSearchTestPage} path="/player-search-test" />}
             </Route>
             
             {/* 404 Route */}

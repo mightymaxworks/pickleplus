@@ -1,12 +1,10 @@
 /**
  * PKL-278651-SRCH-0001-UNIFD
- * Enhanced Unified Player Search Component
+ * Player Search API Client
  * 
- * This file contains the API client functions for player search.
+ * This file contains the SDK layer for the unified player search component.
+ * It provides consistent interfaces for player search operations.
  */
-
-// Import the PlayerSearchResult type from the component for now
-import { PlayerSearchResult } from '../components/match/PlayerSearchInput';
 
 /**
  * Player search options interface
@@ -15,6 +13,21 @@ export interface PlayerSearchOptions {
   query: string;
   limit?: number;
   excludeUserIds?: number[];
+}
+
+/**
+ * Player search result interface
+ */
+export interface PlayerSearchResult {
+  id: number;
+  username: string;
+  displayName: string;
+  fullName?: string | null;
+  avatarUrl?: string | null;
+  avatarInitials?: string | null;
+  isFoundingMember?: boolean;
+  passportId?: string | null;
+  rating?: number | null;
 }
 
 /**
@@ -34,45 +47,48 @@ export interface PlayerSearchResponse {
 export async function searchPlayers(
   options: PlayerSearchOptions
 ): Promise<PlayerSearchResponse> {
-  const { query, limit = 15, excludeUserIds = [] } = options;
-  
   try {
+    const { query, limit = 15, excludeUserIds = [] } = options;
+    
     // Don't search if query is too short
     if (!query || query.length < 2) {
       return { results: [] };
     }
     
-    // Build the query URL with parameters
-    const url = `/api/player/search?q=${encodeURIComponent(query)}${limit ? `&limit=${limit}` : ''}`;
+    // Build search URL with parameters
+    const params = new URLSearchParams();
+    params.append('q', query);
     
-    // Make the API request
-    const response = await fetch(url);
+    if (limit) {
+      params.append('limit', limit.toString());
+    }
     
-    // Handle non-ok responses
+    // Make the API request to the non-authenticated endpoint
+    const response = await fetch(`/api/player/search?${params.toString()}`);
+    
     if (!response.ok) {
-      console.error(`[PlayerSearch] API error: ${response.status}`);
+      const errorData = await response.json();
+      console.error('Player search error:', errorData);
       return { 
         results: [],
-        error: `API error: ${response.status}` 
+        error: errorData.error || 'Error searching for players' 
       };
     }
     
-    // Parse the JSON response
+    // Parse the response and handle data
     const data = await response.json();
     
     // Filter out excluded user IDs if provided
-    const filteredResults = excludeUserIds.length > 0
+    const results = excludeUserIds.length > 0 
       ? data.filter((user: PlayerSearchResult) => !excludeUserIds.includes(user.id))
       : data;
     
-    return { 
-      results: filteredResults
-    };
+    return { results };
   } catch (error) {
-    console.error('[PlayerSearch] Error searching players:', error);
+    console.error('Player search failed:', error);
     return { 
       results: [],
-      error: error instanceof Error ? error.message : 'Unknown error searching for players'
+      error: error instanceof Error ? error.message : 'Search failed' 
     };
   }
 }
