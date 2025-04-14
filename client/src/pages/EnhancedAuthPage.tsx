@@ -27,6 +27,9 @@ const loginSchema = z.object({
 
 const registerSchema = insertUserSchema.extend({
   confirmPassword: z.string().min(6, "Password must be at least 6 characters"),
+  // Make firstName and lastName required fields
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
   termsAccepted: z.boolean().refine(val => val === true, {
     message: "You must accept the terms and conditions",
   }),
@@ -344,7 +347,7 @@ export default function EnhancedAuthPage() {
                     <Form {...registerForm}>
                       <form onSubmit={registerForm.handleSubmit(handleRegister)}>
                         <CardContent className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 gap-4">
                             <FormField
                               control={registerForm.control}
                               name="username"
@@ -361,15 +364,47 @@ export default function EnhancedAuthPage() {
                                 </FormItem>
                               )}
                             />
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={registerForm.control}
+                              name="firstName"
+                              render={({ field }) => (
+                                <FormItem className="space-y-1">
+                                  <FormLabel>First Name</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="First name" {...field} value={field.value || ""} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
                             
+                            <FormField
+                              control={registerForm.control}
+                              name="lastName"
+                              render={({ field }) => (
+                                <FormItem className="space-y-1">
+                                  <FormLabel>Last Name</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Last name" {...field} value={field.value || ""} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                            
+                          <div className="grid grid-cols-1 gap-4">
                             <FormField
                               control={registerForm.control}
                               name="displayName"
                               render={({ field }) => (
                                 <FormItem className="space-y-1">
-                                  <FormLabel>Display Name</FormLabel>
+                                  <FormLabel>Display Name (optional)</FormLabel>
                                   <FormControl>
-                                    <Input placeholder="Full name" {...field} value={field.value || ""} />
+                                    <Input placeholder="How you'll appear to others" {...field} value={field.value || ""} />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
