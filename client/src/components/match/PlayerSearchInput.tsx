@@ -60,30 +60,59 @@ export function PlayerSearchInput({
   
   // Search for players when the query changes
   useEffect(() => {
+    // Only fetch if we have a valid search query
     if (!debouncedSearchQuery || debouncedSearchQuery.length < 2) {
       setResults([]);
       return;
     }
     
+    // Set loading state
     setIsLoading(true);
     
-    // Simulate API call - this would be replaced with a real API call
-    fetch(`/api/player/search?q=${encodeURIComponent(debouncedSearchQuery)}`)
-      .then(res => res.json())
-      .then(data => {
+    // Flag to handle component unmounting
+    let isMounted = true;
+    
+    // Make the API call to search players
+    const searchPlayers = async () => {
+      try {
+        const response = await fetch(`/api/player/search?q=${encodeURIComponent(debouncedSearchQuery)}`);
+        
+        // Stop if component unmounted
+        if (!isMounted) return;
+        
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
         // Filter out excluded users
         const filteredResults = data.filter((user: UserSearchResult) => 
           !excludeUserIds.includes(user.id)
         );
-        setResults(filteredResults);
-      })
-      .catch(err => {
+        
+        if (isMounted) {
+          setResults(filteredResults);
+        }
+      } catch (err) {
         console.error("Error searching players:", err);
-        setResults([]);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+        if (isMounted) {
+          setResults([]);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    // Execute the search
+    searchPlayers();
+    
+    // Cleanup function to prevent state updates if component unmounts
+    return () => {
+      isMounted = false;
+    };
   }, [debouncedSearchQuery, excludeUserIds]);
   
   return (

@@ -17,6 +17,7 @@ export function registerUserSearchRoutes(app: express.Express): void {
   console.log('[API][UserSearch] Registering user search routes');
   
   // Player search endpoint - Enhanced with passport ID search and more flexible search capabilities
+  // Note: This endpoint does not require authentication to allow for broader usage
   app.get("/api/player/search", async (req: Request, res: Response) => {
     try {
       const query = req.query.q as string;
