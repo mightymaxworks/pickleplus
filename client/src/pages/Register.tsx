@@ -58,8 +58,8 @@ export default function Register() {
       
       // Get first and last name from display name
       const nameParts = formData.displayName.split(" ");
-      const firstName = nameParts.length > 0 ? nameParts[0] : undefined;
-      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : undefined;
+      const firstName = nameParts.length > 0 ? nameParts[0] : formData.displayName;
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "User";
       
       // Create a properly formatted registration object matching RegisterData type
       const registrationData = {
@@ -67,6 +67,8 @@ export default function Register() {
         email: formData.email || "",  // Ensure email is never null or undefined
         password: formData.password,
         displayName: formData.displayName, // Make sure to include displayName
+        firstName: firstName, // Add firstName - required by server
+        lastName: lastName,   // Add lastName - required by server
         yearOfBirth: formData.yearOfBirth || null,
         location: formData.location || null,
         playingSince: formData.playingSince || null,
@@ -79,6 +81,12 @@ export default function Register() {
       navigate("/dashboard");
     } catch (error) {
       console.error("Registration error:", error);
+      // Add toast notification for detailed error feedback to user
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+      form.setError("root", { 
+        type: "manual",
+        message: `Registration failed: ${errorMessage}`
+      });
     }
   };
 
@@ -105,6 +113,16 @@ export default function Register() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)}>
             <CardContent className="space-y-3 pb-4">
+              {/* Server error display */}
+              <FormField
+                control={form.control}
+                name="root"
+                render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <div className="grid grid-cols-2 gap-3">
                 <FormField
                   control={form.control}

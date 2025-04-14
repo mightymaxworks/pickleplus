@@ -33,6 +33,8 @@ type RegisterData = {
   email: string;
   password: string;
   displayName: string;
+  firstName: string;   // Add required firstName field
+  lastName: string;    // Add required lastName field
   yearOfBirth?: number | null;
   location?: string | null;
   playingSince?: string | null;
