@@ -24,10 +24,9 @@ import {
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { DiscoveryAlert } from '@/core/modules/gamification/components';
 import { useDiscoveryTracking, useDiscoveryTrigger } from '@/core/modules/gamification/hooks';
 import { cn } from '@/lib/utils';
-import type { Reward } from '@/core/modules/gamification/components/DiscoveryAlert';
+import TutorialAlert, { TutorialReward } from './TutorialAlert';
 
 // Define the tutorial steps with their content and targets
 const tutorialSteps = [
@@ -110,7 +109,7 @@ const tutorialSteps = [
 ];
 
 // XP Reward for completing the tutorial
-const tutorialCompletionReward: Reward = {
+const tutorialCompletionReward: TutorialReward = {
   id: 1001,
   name: 'Platform Navigator',
   description: 'You\'ve completed the Pickle+ tour and learned about the key features',
@@ -278,7 +277,7 @@ const FirstTimeUserTutorial: React.FC<FirstTimeUserTutorialProps> = ({
 
       {/* Completion reward alert */}
       {showReward && (
-        <DiscoveryAlert
+        <TutorialAlert
           title="Tutorial Completed!"
           message="You've completed the Pickle+ orientation tour. Keep exploring to discover more features!"
           level="success"
