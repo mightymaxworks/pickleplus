@@ -813,6 +813,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       // PKL-278651-SEC-0002-TESTVIS - Ensure we're not using a test user or admin for sample data
       const currentUserId = req.user?.id || 1;
       const userData = await storage.getUser(currentUserId);
+      const userData = await storage.getUser(currentUserId);
       
       // Define the sample leaderboard
       let sampleLeaderboard = [];
@@ -961,6 +962,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       console.error("[API] Error getting multi-dimensional rankings:", error);
       res.status(500).json({ error: "Server error getting rankings" });
     }
+  });
   });
   
   // Multi-dimensional rankings position
