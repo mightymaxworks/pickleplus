@@ -55,6 +55,7 @@ import ContextualEnhancedProfile from './pages/ContextualEnhancedProfile'
 import LandingPageTest from './pages/LandingPageTest'
 import QRTestPage from './pages/dev/QRTestPage'
 import EventTestPage from './pages/events/EventTestPage'
+import CommunityPage from './pages/CommunityPage'
 
 import { useAuth } from './hooks/useAuth'
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute'
@@ -234,6 +235,11 @@ export default function App() {
                   <LazySettingsPage />
                 </AdminProtectedRoute>
               )}
+            </Route>
+            
+            {/* User Settings Page (PKL-278651-USER-0007-UX) */}
+            <Route path="/settings">
+              {(params) => <ProtectedRoute component={SettingsPage} path="/settings" />}
             </Route>
             
             {/* Leaderboard Route */}
