@@ -6,53 +6,59 @@
  */
 
 import express, { Request, Response } from 'express';
-import { feedbackService } from './feedbackService';
-import { isAuthenticated } from '../../middleware/auth';
-import { isAdmin } from '../../middleware/admin';
-import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import { insertBugReportSchema } from '@/shared/bug-report-schema';
+import { isAuthenticated } from '../../auth'; // Correct path to auth middleware
 import { ZodError } from 'zod';
 import { fromZodError } from 'zod-validation-error';
-// Setup file upload configuration for screenshots
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const dir = './uploads/bug-reports';
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    cb(null, dir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'bug-report-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({ 
-  storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-  fileFilter: (req, file, cb) => {
-    // Only allow images
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed') as any);
-    }
-  }
-});
+import multer from 'multer';
+import { feedbackService } from './feedbackService';
+import { insertBugReportSchema } from '../../../shared/bug-report-schema'; // Correct path to schema
 
 /**
  * Register feedback routes with the Express application
  */
 export function registerFeedbackRoutes(app: express.Express) {
-  console.log('[API][PKL-278651-FEED-0001-BUG] Registering feedback routes...');
+  console.log('[API][PKL-278651-FEED-0001-BUG] Registering feedback routes');
+  
+  // Set up multer for screenshot uploads
+  const uploadDir = './uploads/bug-reports';
+  if (!fs.existsSync(uploadDir)) {
+    // Create directories recursively
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+  
+  const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+      // Create unique filename with original extension
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const ext = path.extname(file.originalname);
+      cb(null, `screenshot-${uniqueSuffix}${ext}`);
+    }
+  });
+  
+  const upload = multer({ 
+    storage,
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB limit
+    },
+    fileFilter: (req, file, cb) => {
+      // Accept only images
+      if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+      } else {
+        cb(null, false);
+      }
+    }
+  });
   
   // Route for submitting a bug report
   app.post('/api/feedback/bug-report', isAuthenticated, upload.single('screenshot'), async (req: Request, res: Response) => {
     try {
-      // Get user ID from authenticated session
+      // Get user id from session
       const userId = req.user?.id;
       
       // Extract form data
@@ -102,6 +108,7 @@ export function registerFeedbackRoutes(app: express.Express) {
         description,
         severity: severity as any,
         currentPage,
+        includeUserInfo: includeUserInfo === 'true',
         userId: userId || null,
         userAgent: req.headers['user-agent'] || null,
         browserInfo,
@@ -125,17 +132,35 @@ export function registerFeedbackRoutes(app: express.Express) {
     }
   });
   
-  // Route for getting a list of bug reports (admin only)
-  app.get('/api/admin/bug-reports', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+  // Route for getting bug report statistics
+  app.get('/api/feedback/bug-reports/stats', isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const { status, severity, limit, offset } = req.query;
+      // Only count reports from the current user if not admin
+      const userId = req.user?.id;
       
-      const reports = await feedbackService.listBugReports({
-        status: status as any,
-        severity: severity as any,
-        limit: limit ? parseInt(limit as string) : undefined,
-        offset: offset ? parseInt(offset as string) : undefined
-      });
+      // Check if user is admin
+      const isAdmin = req.user?.isAdmin === true;
+      
+      const stats = isAdmin 
+        ? await feedbackService.getReportCountBySeverity() 
+        : (userId ? await feedbackService.getReportCountBySeverity(userId) : []);
+      
+      res.status(200).json(stats);
+    } catch (error) {
+      console.error('Error getting bug report statistics:', error);
+      res.status(500).json({ error: 'Failed to get bug report statistics' });
+    }
+  });
+  
+  // Route for user to view their own submitted bug reports
+  app.get('/api/feedback/my-reports', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'Not authenticated' });
+      }
+      
+      const reports = await feedbackService.listBugReports({ userId });
       
       // Map to response format
       const responseReports = reports.map(report => ({
@@ -145,115 +170,16 @@ export function registerFeedbackRoutes(app: express.Express) {
         severity: report.severity,
         status: report.status,
         currentPage: report.currentPage,
-        userId: report.userId,
-        screenshotPath: report.screenshotPath,
         createdAt: report.createdAt,
         updatedAt: report.updatedAt,
-        resolvedAt: report.resolvedAt,
-        assignedTo: report.assignedTo,
-        isReproducible: report.isReproducible
+        resolvedAt: report.resolvedAt
       }));
       
       res.status(200).json(responseReports);
     } catch (error) {
-      console.error('Error listing bug reports:', error);
+      console.error('Error listing user bug reports:', error);
       res.status(500).json({ error: 'Failed to list bug reports' });
     }
-  });
-  
-  // Route for getting bug report details (admin only)
-  app.get('/api/admin/bug-reports/:id', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
-    try {
-      const reportId = parseInt(req.params.id);
-      
-      const report = await feedbackService.getBugReportById(reportId);
-      
-      if (!report) {
-        return res.status(404).json({ error: 'Bug report not found' });
-      }
-      
-      res.status(200).json(report);
-    } catch (error) {
-      console.error(`Error getting bug report ${req.params.id}:`, error);
-      res.status(500).json({ error: 'Failed to get bug report' });
-    }
-  });
-  
-  // Route for updating bug report status (admin only)
-  app.patch('/api/admin/bug-reports/:id/status', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
-    try {
-      const reportId = parseInt(req.params.id);
-      const { status, adminNotes } = req.body;
-      
-      if (!status) {
-        return res.status(400).json({ error: 'Status is required' });
-      }
-      
-      const updatedReport = await feedbackService.updateBugReportStatus(reportId, status, adminNotes);
-      
-      if (!updatedReport) {
-        return res.status(404).json({ error: 'Bug report not found' });
-      }
-      
-      res.status(200).json({ 
-        success: true, 
-        message: 'Bug report status updated successfully',
-        report: updatedReport
-      });
-    } catch (error) {
-      console.error(`Error updating bug report ${req.params.id}:`, error);
-      res.status(500).json({ error: 'Failed to update bug report status' });
-    }
-  });
-  
-  // Route for assigning bug report to team member (admin only)
-  app.patch('/api/admin/bug-reports/:id/assign', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
-    try {
-      const reportId = parseInt(req.params.id);
-      const { assignedTo } = req.body;
-      
-      const assigneeId = assignedTo ? parseInt(assignedTo) : null;
-      
-      const updatedReport = await feedbackService.assignBugReport(reportId, assigneeId);
-      
-      if (!updatedReport) {
-        return res.status(404).json({ error: 'Bug report not found' });
-      }
-      
-      res.status(200).json({ 
-        success: true, 
-        message: 'Bug report assigned successfully',
-        report: updatedReport
-      });
-    } catch (error) {
-      console.error(`Error assigning bug report ${req.params.id}:`, error);
-      res.status(500).json({ error: 'Failed to assign bug report' });
-    }
-  });
-  
-  // Route for getting bug report statistics (admin only)
-  app.get('/api/admin/bug-reports/stats/severity', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
-    try {
-      const stats = await feedbackService.getReportCountBySeverity();
-      res.status(200).json(stats);
-    } catch (error) {
-      console.error('Error getting bug report statistics:', error);
-      res.status(500).json({ error: 'Failed to get bug report statistics' });
-    }
-  });
-  
-  // Serve uploaded screenshots (admin only)
-  app.get('/api/admin/bug-reports/screenshots/:filename', isAuthenticated, isAdmin, (req: Request, res: Response) => {
-    const filename = req.params.filename;
-    const filePath = path.join('./uploads/bug-reports', filename);
-    
-    // Check if file exists
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ error: 'Screenshot not found' });
-    }
-    
-    // Serve the file
-    res.sendFile(path.resolve(filePath));
   });
   
   console.log('[API][PKL-278651-FEED-0001-BUG] Feedback routes registered successfully');

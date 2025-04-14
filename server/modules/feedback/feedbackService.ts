@@ -6,12 +6,10 @@
  * It provides methods for submitting, retrieving, and managing bug reports.
  */
 
-import { db } from '../../storage';
-import { bugReports, type InsertBugReport, type BugReport } from '@/shared/bug-report-schema';
-import { and, eq, desc, sql } from 'drizzle-orm';
-import path from 'path';
-import fs from 'fs/promises';
-import { users } from '@/shared/schema';
+import { eq, and, desc, sql } from 'drizzle-orm';
+import { db } from '../../db';
+import { bugReports, type InsertBugReport, type BugReport } from '../../../shared/bug-report-schema';
+import { z } from 'zod';
 
 /**
  * Interface defining the FeedbackService capabilities
@@ -22,7 +20,7 @@ export interface IFeedbackService {
   listBugReports(options?: ListBugReportsOptions): Promise<BugReport[]>;
   updateBugReportStatus(id: number, status: BugReport['status'], adminNotes?: string): Promise<BugReport | null>;
   assignBugReport(id: number, assignedTo: number | null): Promise<BugReport | null>;
-  getReportCountBySeverity(): Promise<SeverityCount[]>;
+  getReportCountBySeverity(userId?: number): Promise<SeverityCount[]>;
 }
 
 /**
@@ -53,94 +51,109 @@ export class FeedbackService implements IFeedbackService {
    */
   async submitBugReport(reportData: InsertBugReport): Promise<BugReport> {
     try {
-      // Ensure uploads directory exists
-      if (reportData.screenshotPath) {
-        const dir = path.dirname(reportData.screenshotPath);
-        await fs.mkdir(dir, { recursive: true });
-      }
+      console.log('[FeedbackService] Submitting bug report:', { 
+        title: reportData.title,
+        severity: reportData.severity
+      });
+      
+      // Set the current timestamp for created_at and updated_at
+      const now = new Date();
       
       // Insert the bug report
-      const result = await db.insert(bugReports)
-        .values({
-          ...reportData,
-          updatedAt: new Date(),
-          createdAt: new Date()
-        })
-        .returning();
+      const [result] = await db.insert(bugReports).values({
+        ...reportData,
+        createdAt: now,
+        updatedAt: now
+      }).returning();
       
-      // Log the submission for auditing
-      console.log(`[FeedbackService] Bug report submitted: ID ${result[0].id}`);
+      console.log('[FeedbackService] Bug report submitted successfully:', { id: result.id });
       
-      return result[0];
+      return result;
     } catch (error) {
       console.error('[FeedbackService] Error submitting bug report:', error);
       throw new Error('Failed to submit bug report');
     }
   }
-  
+
   /**
    * Get a bug report by ID
    */
   async getBugReportById(id: number): Promise<BugReport | null> {
     try {
-      const result = await db.query.bugReports.findFirst({
-        where: eq(bugReports.id, id)
-      });
+      console.log(`[FeedbackService] Getting bug report with ID: ${id}`);
       
-      return result || null;
+      const [report] = await db.select().from(bugReports).where(eq(bugReports.id, id));
+      
+      return report || null;
     } catch (error) {
-      console.error(`[FeedbackService] Error getting bug report ${id}:`, error);
-      throw new Error('Failed to retrieve bug report');
+      console.error(`[FeedbackService] Error getting bug report with ID ${id}:`, error);
+      throw new Error('Failed to get bug report');
     }
   }
-  
+
   /**
    * List bug reports with optional filtering
    */
   async listBugReports(options: ListBugReportsOptions = {}): Promise<BugReport[]> {
     try {
-      const { status, severity, userId, limit = 100, offset = 0 } = options;
+      console.log('[FeedbackService] Listing bug reports with options:', options);
       
-      // Build the query conditions
+      let query = db.select().from(bugReports);
+      
+      // Apply filters
       const conditions = [];
       
-      if (status) {
-        conditions.push(eq(bugReports.status, status));
+      if (options.status) {
+        conditions.push(eq(bugReports.status, options.status));
       }
       
-      if (severity) {
-        conditions.push(eq(bugReports.severity, severity));
+      if (options.severity) {
+        conditions.push(eq(bugReports.severity, options.severity));
       }
       
-      if (userId) {
-        conditions.push(eq(bugReports.userId, userId));
+      if (options.userId) {
+        conditions.push(eq(bugReports.userId, options.userId));
       }
       
-      // Execute the query with conditions
-      const result = await db.query.bugReports.findMany({
-        where: conditions.length > 0 ? and(...conditions) : undefined,
-        orderBy: [desc(bugReports.createdAt)],
-        limit,
-        offset
-      });
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
       
-      return result;
+      // Apply sorting - newest first
+      query = query.orderBy(desc(bugReports.createdAt));
+      
+      // Apply pagination
+      if (options.limit) {
+        query = query.limit(options.limit);
+      }
+      
+      if (options.offset) {
+        query = query.offset(options.offset);
+      }
+      
+      const reports = await query;
+      
+      console.log(`[FeedbackService] Found ${reports.length} bug reports`);
+      
+      return reports;
     } catch (error) {
       console.error('[FeedbackService] Error listing bug reports:', error);
       throw new Error('Failed to list bug reports');
     }
   }
-  
+
   /**
    * Update a bug report's status
    */
   async updateBugReportStatus(
-    id: number, 
-    status: BugReport['status'], 
+    id: number,
+    status: BugReport['status'],
     adminNotes?: string
   ): Promise<BugReport | null> {
     try {
-      // Prepare update data
+      console.log(`[FeedbackService] Updating bug report ${id} status to ${status}`);
+      
+      // Setup update data
       const updateData: Partial<BugReport> = {
         status,
         updatedAt: new Date()
@@ -151,42 +164,37 @@ export class FeedbackService implements IFeedbackService {
         updateData.adminNotes = adminNotes;
       }
       
-      // Add resolvedAt timestamp if status is resolved or closed
-      if (status === 'resolved' || status === 'closed') {
+      // Set resolvedAt if the status is 'resolved'
+      if (status === 'resolved') {
         updateData.resolvedAt = new Date();
       }
       
       // Update the bug report
-      const result = await db.update(bugReports)
+      const [updatedReport] = await db
+        .update(bugReports)
         .set(updateData)
         .where(eq(bugReports.id, id))
         .returning();
       
-      return result.length > 0 ? result[0] : null;
+      console.log(`[FeedbackService] Bug report ${id} status updated successfully`);
+      
+      return updatedReport || null;
     } catch (error) {
-      console.error(`[FeedbackService] Error updating bug report ${id}:`, error);
+      console.error(`[FeedbackService] Error updating bug report ${id} status:`, error);
       throw new Error('Failed to update bug report status');
     }
   }
-  
+
   /**
    * Assign a bug report to a team member
    */
   async assignBugReport(id: number, assignedTo: number | null): Promise<BugReport | null> {
     try {
-      // If assignedTo is provided, verify the user exists
-      if (assignedTo) {
-        const userExists = await db.query.users.findFirst({
-          where: eq(users.id, assignedTo)
-        });
-        
-        if (!userExists) {
-          throw new Error(`User with ID ${assignedTo} not found`);
-        }
-      }
+      console.log(`[FeedbackService] Assigning bug report ${id} to ${assignedTo || 'no one'}`);
       
       // Update the bug report
-      const result = await db.update(bugReports)
+      const [updatedReport] = await db
+        .update(bugReports)
         .set({
           assignedTo,
           updatedAt: new Date()
@@ -194,41 +202,62 @@ export class FeedbackService implements IFeedbackService {
         .where(eq(bugReports.id, id))
         .returning();
       
-      return result.length > 0 ? result[0] : null;
+      console.log(`[FeedbackService] Bug report ${id} assigned successfully`);
+      
+      return updatedReport || null;
     } catch (error) {
       console.error(`[FeedbackService] Error assigning bug report ${id}:`, error);
       throw new Error('Failed to assign bug report');
     }
   }
-  
+
   /**
    * Get count of bug reports by severity
    */
-  async getReportCountBySeverity(): Promise<SeverityCount[]> {
+  async getReportCountBySeverity(userId?: number): Promise<SeverityCount[]> {
     try {
-      const result = await db.execute(sql`
-        SELECT severity, COUNT(*) as count
-        FROM bug_reports
-        GROUP BY severity
-        ORDER BY CASE 
-          WHEN severity = 'critical' THEN 1
-          WHEN severity = 'high' THEN 2
-          WHEN severity = 'medium' THEN 3
-          WHEN severity = 'low' THEN 4
-          ELSE 5
-        END
-      `);
+      console.log('[FeedbackService] Getting bug report counts by severity');
       
-      return result.rows.map(row => ({
-        severity: row.severity as BugReport['severity'],
-        count: parseInt(row.count as string)
-      }));
+      // Define the base query for counting
+      let query = db.select({
+        severity: bugReports.severity,
+        count: sql<number>`count(*)::int`
+      }).from(bugReports);
+      
+      // Filter by user ID if provided
+      if (userId) {
+        query = query.where(eq(bugReports.userId, userId));
+      }
+      
+      // Group by severity
+      query = query.groupBy(bugReports.severity);
+      
+      const counts = await query;
+      
+      console.log('[FeedbackService] Bug report counts:', counts);
+      
+      // Make sure we have a count for all severities
+      const allSeverities = ['low', 'medium', 'high', 'critical'] as const;
+      const result: SeverityCount[] = [];
+      
+      for (const severity of allSeverities) {
+        // Find the count for this severity
+        const found = counts.find(row => row.severity === severity);
+        
+        // Add the count (or 0 if not found)
+        result.push({
+          severity: severity,
+          count: found ? found.count : 0
+        });
+      }
+      
+      return result;
     } catch (error) {
-      console.error('[FeedbackService] Error getting report count by severity:', error);
-      throw new Error('Failed to get report statistics');
+      console.error('[FeedbackService] Error getting bug report counts by severity:', error);
+      throw new Error('Failed to get bug report counts');
     }
   }
 }
 
-// Export singleton instance
+// Export a singleton instance of the service
 export const feedbackService = new FeedbackService();
