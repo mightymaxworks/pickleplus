@@ -859,11 +859,28 @@ export class DatabaseStorage implements IStorage {
         console.log("Executing direct user search with pattern:", searchPattern);
         
         // Build the search query with the where clause directly
-        const whereClause = or(
+        const searchCondition = or(
           sql`LOWER(${users.username}) LIKE LOWER(${searchPattern})`,
           sql`LOWER(COALESCE(${users.displayName}, '')) LIKE LOWER(${searchPattern})`,
           sql`LOWER(COALESCE(${users.email}, '')) LIKE LOWER(${searchPattern})`
         );
+        
+        // PKL-278651-SEC-0002-TESTVIS - Test Data Visibility Control
+        // Check if requesting user is admin and filter out test data for non-admins
+        let whereClause;
+        
+        if (isAdmin) {
+          // Admin can see test data
+          whereClause = searchCondition;
+          console.log("[Storage] searchUsers - Admin user, including test data in results");
+        } else {
+          // Non-admin users should not see test data
+          whereClause = and(
+            searchCondition,
+            sql`(${users.isTestData} = FALSE OR ${users.isTestData} IS NULL)`
+          );
+          console.log("[Storage] searchUsers - Non-admin user, excluding test data from results");
+        }
         
         console.log("Search SQL:", whereClause);
         
@@ -882,6 +899,7 @@ export class DatabaseStorage implements IStorage {
           passportCode: users.passportId,
           avatarInitials: users.avatarInitials,
           location: users.location,
+          isTestData: users.isTestData,
           // Ratings are stored in other fields, not directly on users table
           duprRating: users.duprRating 
         })
@@ -919,15 +937,29 @@ export class DatabaseStorage implements IStorage {
         // PKL-278651-TOURN-0008-SRCH - Fix fallback approach with Framework 5.0 reliability patterns
         console.log("[PKL-278651-TOURN-0008-SRCH] Trying fallback approach with robust field selection");
         try {
-          const allUsers = await db.select({
+          // PKL-278651-SEC-0002-TESTVIS - Test Data Visibility Control
+          // Apply test data filter in SQL for non-admin users
+          let userQuery = db.select({
             id: users.id,
             username: users.username,
             displayName: users.displayName,
+            isTestData: users.isTestData,
             // Remove reference to non-existent users.rating field
             duprRating: users.duprRating
-          }).from(users).limit(100);
+          }).from(users);
           
-          console.log(`Got ${allUsers.length} total users for in-memory filtering`);
+          // Filter out test data for non-admin users
+          if (!isAdmin) {
+            userQuery = userQuery.where(sql`(${users.isTestData} = FALSE OR ${users.isTestData} IS NULL)`);
+            console.log("[Storage] searchUsers fallback - Non-admin user, excluding test data from results");
+          } else {
+            console.log("[Storage] searchUsers fallback - Admin user, including test data in results");
+          }
+          
+          // Get users with appropriate test data visibility
+          const allUsers = await userQuery.limit(100);
+          
+          console.log(`Got ${allUsers.length} total users for in-memory filtering (filtered by test data visibility: ${!isAdmin})`);
           
           // Filter in JS
           const lowercaseQuery = safeQuery.toLowerCase();
@@ -1079,7 +1111,7 @@ export class DatabaseStorage implements IStorage {
   
   // PKL-278651-MATCH-0002-XR - Enhanced Match Recording System
   // Match operations
-  async getMatch(id: number): Promise<Match | undefined> {
+  async getMatch(id: number, requestingUserId?: number): Promise<Match | undefined> {
     try {
       // Validate id is a proper number to avoid database errors
       const numericId = Number(id);
@@ -1089,12 +1121,31 @@ export class DatabaseStorage implements IStorage {
         return undefined;
       }
       
-      console.log(`[Storage] getMatch called with valid ID: ${numericId}`);
+      console.log(`[Storage] getMatch called with valid ID: ${numericId}, requestingUserId: ${requestingUserId || 'none'}`);
+      
+      // Check if the requesting user is an admin
+      const isAdmin = requestingUserId ? await this.isUserAdmin(requestingUserId) : false;
+      console.log(`[Storage] getMatch - isAdmin check for user ${requestingUserId || 'none'}: ${isAdmin}`);
       
       // Select all fields from the matches table
-      const [match] = await db.select()
+      const query = db.select()
         .from(matches)
         .where(eq(matches.id, numericId));
+      
+      // PKL-278651-SEC-0002-TESTVIS - Test Data Visibility Control
+      // Apply test data filter for non-admins
+      if (!isAdmin) {
+        query.where(sql`(${matches.isTestData} = FALSE OR ${matches.isTestData} IS NULL)`);
+      }
+      
+      const [match] = await query;
+      
+      if (match) {
+        console.log(`[Storage] getMatch - Retrieved match ${match.id} (filtered by test data visibility: ${!isAdmin})`);
+      } else {
+        // This could be due to either the match not existing or being test data for a non-admin user
+        console.log(`[Storage] getMatch - No match found with ID ${numericId} (filtered by test data visibility: ${!isAdmin})`);
+      }
       
       return match;
     } catch (error) {
@@ -1123,7 +1174,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async getRecentMatches(userId: number, limit: number = 10): Promise<Match[]> {
+  async getRecentMatches(userId: number, limit: number = 10, requestingUserId?: number): Promise<Match[]> {
     try {
       // Validate userId is a proper number to avoid database errors
       const numericUserId = Number(userId);
@@ -1133,10 +1184,14 @@ export class DatabaseStorage implements IStorage {
         return [];
       }
       
-      console.log(`[Storage] getRecentMatches called with userId: ${numericUserId}, limit: ${limit}`);
+      console.log(`[Storage] getRecentMatches called with userId: ${numericUserId}, limit: ${limit}, requestingUserId: ${requestingUserId || 'none'}`);
+      
+      // Check if the requesting user is an admin
+      const isAdmin = requestingUserId ? await this.isUserAdmin(requestingUserId) : false;
+      console.log(`[Storage] getRecentMatches - isAdmin check for user ${requestingUserId || 'none'}: ${isAdmin}`);
       
       // Find matches where the user was a player or partner
-      const recentMatches = await db.select()
+      let query = db.select()
         .from(matches)
         .where(
           or(
@@ -1145,9 +1200,20 @@ export class DatabaseStorage implements IStorage {
             eq(matches.playerOnePartnerId, numericUserId),
             eq(matches.playerTwoPartnerId, numericUserId)
           )
-        )
-        .orderBy(desc(matches.matchDate))
-        .limit(limit);
+        );
+      
+      // PKL-278651-SEC-0002-TESTVIS - Test Data Visibility Control
+      // Apply test data filter for non-admins
+      if (!isAdmin) {
+        // Add an additional where clause for non-test data
+        query = query.where(sql`(${matches.isTestData} = FALSE OR ${matches.isTestData} IS NULL)`);
+      }
+      
+      // Apply sorting and limit
+      query = query.orderBy(desc(matches.matchDate)).limit(limit);
+      
+      const recentMatches = await query;
+      console.log(`[Storage] getRecentMatches - Retrieved ${recentMatches.length} matches (filtered by test data visibility: ${!isAdmin})`);
       
       return recentMatches;
     } catch (error) {
@@ -1411,7 +1477,7 @@ export class DatabaseStorage implements IStorage {
 
   // PKL-278651-CONN-0003-EVENT - Event Check-in QR Code System
   // Event operations
-  async getEvent(id: number): Promise<Event | undefined> {
+  async getEvent(id: number, requestingUserId?: number): Promise<Event | undefined> {
     try {
       const numericId = Number(id);
       
@@ -1420,11 +1486,31 @@ export class DatabaseStorage implements IStorage {
         return undefined;
       }
       
-      console.log(`[Storage] getEvent called with ID: ${numericId}`);
+      console.log(`[Storage] getEvent called with ID: ${numericId}, requestingUserId: ${requestingUserId || 'none'}`);
       
-      const [event] = await db.select()
+      // Check if the requesting user is an admin
+      const isAdmin = requestingUserId ? await this.isUserAdmin(requestingUserId) : false;
+      console.log(`[Storage] getEvent - isAdmin check for user ${requestingUserId || 'none'}: ${isAdmin}`);
+      
+      // Build the query
+      const query = db.select()
         .from(events)
         .where(eq(events.id, numericId));
+      
+      // PKL-278651-SEC-0002-TESTVIS - Test Data Visibility Control
+      // Apply test data filter for non-admins
+      if (!isAdmin) {
+        query.where(sql`(${events.isTestData} = FALSE OR ${events.isTestData} IS NULL)`);
+      }
+      
+      const [event] = await query;
+      
+      if (event) {
+        console.log(`[Storage] getEvent - Retrieved event ${event.id} (filtered by test data visibility: ${!isAdmin})`);
+      } else {
+        // This could be due to either the event not existing or being test data for a non-admin user
+        console.log(`[Storage] getEvent - No event found with ID ${numericId} (filtered by test data visibility: ${!isAdmin})`);
+      }
       
       return event;
     } catch (error) {
@@ -1490,7 +1576,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async getEventsByOrganizer(organizerId: number, limit: number = 100, offset: number = 0): Promise<Event[]> {
+  async getEventsByOrganizer(organizerId: number, limit: number = 100, offset: number = 0, requestingUserId?: number): Promise<Event[]> {
     try {
       const numericOrganizerId = Number(organizerId);
       
@@ -1499,14 +1585,31 @@ export class DatabaseStorage implements IStorage {
         return [];
       }
       
-      console.log(`[Storage] getEventsByOrganizer called with organizerId: ${numericOrganizerId}`);
+      console.log(`[Storage] getEventsByOrganizer called with organizerId: ${numericOrganizerId}, requestingUserId: ${requestingUserId || 'none'}`);
       
-      const eventList = await db.select()
+      // Check if the requesting user is an admin
+      const isAdmin = requestingUserId ? await this.isUserAdmin(requestingUserId) : false;
+      console.log(`[Storage] getEventsByOrganizer - isAdmin check for user ${requestingUserId || 'none'}: ${isAdmin}`);
+      
+      // Build the query with organizer filter
+      let query = db.select()
         .from(events)
-        .where(eq(events.organizerId, numericOrganizerId))
-        .orderBy(desc(events.startDateTime))
+        .where(eq(events.organizerId, numericOrganizerId));
+      
+      // PKL-278651-SEC-0002-TESTVIS - Test Data Visibility Control
+      // Apply test data filter for non-admins
+      if (!isAdmin) {
+        // Add an additional where clause for non-test data
+        query = query.where(sql`(${events.isTestData} = FALSE OR ${events.isTestData} IS NULL)`);
+      }
+      
+      // Apply sorting and pagination
+      query = query.orderBy(desc(events.startDateTime))
         .limit(limit)
         .offset(offset);
+      
+      const eventList = await query;
+      console.log(`[Storage] getEventsByOrganizer - Retrieved ${eventList.length} events (filtered by test data visibility: ${!isAdmin})`);
       
       return eventList;
     } catch (error) {
