@@ -9,11 +9,90 @@
 import express, { Request, Response } from 'express';
 import { isAuthenticated } from '../auth';
 import { storage } from '../storage';
-import { sql, like } from 'drizzle-orm';
+import { sql, like, or, and } from 'drizzle-orm';
 import { users } from '@shared/schema';
+import { db } from '../db';
 
 export function registerUserSearchRoutes(app: express.Express): void {
   console.log('[API][UserSearch] Registering user search routes');
+  
+  // Player search endpoint - Enhanced with passport ID search and more flexible search capabilities
+  app.get("/api/player/search", async (req: Request, res: Response) => {
+    try {
+      const query = req.query.q as string;
+      
+      if (!query || query.length < 2) {
+        return res.json([]);
+      }
+      
+      console.log(`[PlayerSearch] Searching for players with query: "${query}"`);
+      
+      // Import passport utilities
+      const { normalizePassportId } = await import("@shared/utils/passport-utils");
+      
+      // Improve search to include more fields and handle spaces better
+      const searchTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+      
+      // Normalized search for passport IDs
+      const normalizedQuery = normalizePassportId(query);
+      
+      const searchConditions = searchTerms.map(term => 
+        or(
+          sql`lower(${users.username}) like ${`%${term}%`}`,
+          sql`lower(${users.displayName}) like ${`%${term}%`}`,
+          sql`lower(${users.firstName}) like ${`%${term}%`}`,
+          sql`lower(${users.lastName}) like ${`%${term}%`}`,
+          // Flexible passport ID search using normalized form
+          sql`${users.passportId} like ${`%${normalizedQuery}%`}`
+        )
+      );
+      
+      // If multiple terms, try to match them all
+      let whereClause;
+      if (searchConditions.length > 1) {
+        // Multiple terms - each term should match at least one field
+        whereClause = and(...searchConditions);
+      } else if (searchConditions.length === 1) {
+        // Single term - direct match
+        whereClause = searchConditions[0];
+      }
+      
+      const players = await db.select({
+        id: users.id,
+        username: users.username,
+        displayName: users.displayName,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        avatarInitials: users.avatarInitials,
+        isFoundingMember: users.isFoundingMember,
+        passportId: users.passportId
+      })
+      .from(users)
+      .where(whereClause)
+      .limit(15);
+      
+      console.log(`[PlayerSearch] Found ${players.length} matching players`);
+      
+      // Format the player data and include more information
+      const formattedPlayers = players.map(player => ({
+        id: player.id,
+        username: player.username,
+        displayName: player.displayName || player.username,
+        fullName: player.firstName && player.lastName 
+          ? `${player.firstName} ${player.lastName}`
+          : null,
+        avatarInitials: player.avatarInitials,
+        isFoundingMember: player.isFoundingMember,
+        passportId: player.passportId
+      }));
+      
+      res.json(formattedPlayers);
+      
+    } catch (error) {
+      console.error("[PlayerSearch] Error searching players:", error);
+      res.status(500).json({ error: "Server error searching players" });
+    }
+  });
   
   /**
    * Search users endpoint
