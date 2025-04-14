@@ -146,7 +146,7 @@ export default function App() {
               {(params) => <ProtectedRoute component={LazyDashboardPage} path="/training" />}
             </Route>
             <Route path="/community">
-              {(params) => <ProtectedRoute component={LazyDashboardPage} path="/community" />}
+              {(params) => <ProtectedRoute component={CommunityPage} path="/community" />}
             </Route>
             <Route path="/passport">
               {(params) => <ProtectedRoute component={LazyDashboardPage} path="/passport" />}
