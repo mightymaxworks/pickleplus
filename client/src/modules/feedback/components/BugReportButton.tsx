@@ -26,6 +26,18 @@ export function BugReportButton({ position = 'bottom-right' }: BugReportButtonPr
   const [isOpen, setIsOpen] = useState(false);
   const [location] = useLocation();
   
+  // Only show the button on dashboard and other inner pages, not on landing or login
+  const shouldShowButton = location.startsWith('/dashboard') || 
+    location.startsWith('/profile') || 
+    location.startsWith('/tournaments') || 
+    location.startsWith('/matches') ||
+    location.startsWith('/admin') ||
+    (location !== '/' && location !== '/login' && location !== '/register');
+  
+  if (!shouldShowButton) {
+    return null;
+  }
+  
   // Define position classes based on the position prop
   // Adjusting placement to avoid conflicts with other floating buttons
   const positionClasses = {

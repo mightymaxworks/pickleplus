@@ -2,298 +2,361 @@
  * PKL-278651-FEED-0001-BUG - In-App Bug Reporting System
  * Bug Report Form Component
  * 
- * This component provides a form for users to submit bug reports.
+ * This component renders the form for submitting bug reports.
  */
 
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useMutation } from '@tanstack/react-query';
+import * as z from 'zod';
+import { AlertCircle, Bug, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { X } from 'lucide-react';
 
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
-import { submitBugReport } from '../api/feedbackApi';
-import { BugReportFormData, BugReportSeverity } from '../types';
+import { BugReportFormProps, BugReportFormData } from '../types';
+import { submitBugReport, getBrowserInfo } from '../api/feedbackApi';
 
-/**
- * Form validation schema for bug reports
- */
-const bugReportSchema = z.object({
-  title: z.string().min(5, 'Title must be at least 5 characters').max(100, 'Title must be less than 100 characters'),
+// Form validation schema
+const formSchema = z.object({
+  title: z.string().min(5, 'Title must be at least 5 characters'),
   description: z.string().min(10, 'Description must be at least 10 characters'),
-  severity: z.enum(['low', 'medium', 'high', 'critical'] as const),
+  severity: z.enum(['low', 'medium', 'high', 'critical']),
+  url: z.string(),
+  isReproducible: z.boolean().default(false),
+  includeUserInfo: z.boolean().default(true),
   stepsToReproduce: z.string().optional(),
   expectedBehavior: z.string().optional(),
   actualBehavior: z.string().optional(),
-  url: z.string()
 });
-
-/**
- * Props for the bug report form component
- */
-interface BugReportFormProps {
-  /** The current page URL where the form is being displayed */
-  currentPage: string;
-  
-  /** Callback called after successful form submission */
-  onSubmitSuccess?: () => void;
-  
-  /** Callback called when the form is closed without submission */
-  onCancel?: () => void;
-}
 
 /**
  * Bug report form component
  */
 export function BugReportForm({ currentPage, onSubmitSuccess, onCancel }: BugReportFormProps) {
-  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const { toast } = useToast();
   
-  // Set up form with validation
-  const form = useForm<z.infer<typeof bugReportSchema>>({
-    resolver: zodResolver(bugReportSchema),
+  // Initialize form with default values
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       title: '',
       description: '',
-      severity: 'medium' as BugReportSeverity,
+      severity: 'medium',
+      url: currentPage,
+      isReproducible: false,
+      includeUserInfo: true,
       stepsToReproduce: '',
       expectedBehavior: '',
       actualBehavior: '',
-      url: currentPage
-    }
+    },
   });
   
-  // Set up mutation for form submission
-  const mutation = useMutation({
-    mutationFn: (data: BugReportFormData) => {
-      // Add browser and OS info
-      const enhancedData: BugReportFormData = {
+  /**
+   * Handle form submission
+   */
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    setIsSubmitting(true);
+    
+    try {
+      // Add browser info if user consented
+      const formData: BugReportFormData = {
         ...data,
-        browser: navigator.userAgent,
-        os: navigator.platform
+        browserInfo: data.includeUserInfo ? getBrowserInfo() : undefined
       };
       
-      return submitBugReport(enhancedData);
-    },
-    onSuccess: () => {
-      toast({
-        title: 'Bug Report Submitted',
-        description: 'Thank you for helping improve Pickle+!',
-      });
-      form.reset();
-      if (onSubmitSuccess) {
-        onSubmitSuccess();
+      const response = await submitBugReport(formData);
+      
+      if (response.success) {
+        setSubmitSuccess(true);
+        toast({
+          title: "Bug Report Submitted",
+          description: "Thank you for helping us improve Pickle+!",
+          variant: "default",
+        });
+        
+        // Reset form and close dialog after a short delay
+        setTimeout(() => {
+          onSubmitSuccess();
+          form.reset();
+          setSubmitSuccess(false);
+        }, 2000);
+      } else {
+        toast({
+          title: "Submission Failed",
+          description: response.message || "Please try again later.",
+          variant: "destructive",
+        });
       }
-    },
-    onError: () => {
+    } catch (error) {
+      console.error('Error submitting bug report:', error);
       toast({
-        title: 'Error Submitting Report',
-        description: 'Please try again later.',
-        variant: 'destructive'
+        title: "Submission Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
       });
-    }
-  });
-  
-  /**
-   * Submit the form
-   */
-  const onSubmit = (data: z.infer<typeof bugReportSchema>) => {
-    setIsSubmitting(true);
-    mutation.mutate(data as BugReportFormData);
-    setIsSubmitting(false);
-  };
-  
-  /**
-   * Handle cancel button click
-   */
-  const handleCancel = () => {
-    form.reset();
-    if (onCancel) {
-      onCancel();
+    } finally {
+      setIsSubmitting(false);
     }
   };
+  
+  if (submitSuccess) {
+    return (
+      <div className="flex flex-col items-center justify-center space-y-4 p-6">
+        <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+          <Check className="h-6 w-6 text-green-600" />
+        </div>
+        <h2 className="text-xl font-semibold text-center">Bug Report Submitted</h2>
+        <p className="text-center text-muted-foreground">
+          Thank you for helping us improve Pickle+. Our team will review your report.
+        </p>
+      </div>
+    );
+  }
   
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader className="relative pb-2">
-        <CardTitle className="text-xl font-semibold">Report a Bug</CardTitle>
-        {onCancel && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 absolute top-4 right-4"
-            onClick={handleCancel}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        )}
-      </CardHeader>
+    <>
+      <DialogHeader>
+        <DialogTitle className="flex items-center gap-2">
+          <Bug className="h-5 w-5" />
+          Report a Bug
+        </DialogTitle>
+        <DialogDescription>
+          Help us improve by reporting any issues you encounter with the platform.
+        </DialogDescription>
+      </DialogHeader>
       
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Short description of the issue" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Detailed description of the issue" rows={3} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Title</FormLabel>
+                <FormControl>
+                  <Input placeholder="Brief description of the issue" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Description</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="Detailed description of what happened" 
+                    className="h-20"
+                    {...field} 
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="severity"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Severity</FormLabel>
-                  <FormControl>
-                    <RadioGroup 
-                      onValueChange={field.onChange} 
-                      value={field.value}
-                      className="flex space-x-2"
-                    >
-                      <FormItem className="flex items-center space-x-1">
-                        <FormControl>
-                          <RadioGroupItem value="low" />
-                        </FormControl>
-                        <FormLabel className="cursor-pointer text-sm font-normal">Low</FormLabel>
-                      </FormItem>
-                      
-                      <FormItem className="flex items-center space-x-1">
-                        <FormControl>
-                          <RadioGroupItem value="medium" />
-                        </FormControl>
-                        <FormLabel className="cursor-pointer text-sm font-normal">Medium</FormLabel>
-                      </FormItem>
-                      
-                      <FormItem className="flex items-center space-x-1">
-                        <FormControl>
-                          <RadioGroupItem value="high" />
-                        </FormControl>
-                        <FormLabel className="cursor-pointer text-sm font-normal">High</FormLabel>
-                      </FormItem>
-                      
-                      <FormItem className="flex items-center space-x-1">
-                        <FormControl>
-                          <RadioGroupItem value="critical" />
-                        </FormControl>
-                        <FormLabel className="cursor-pointer text-sm font-normal">Critical</FormLabel>
-                      </FormItem>
-                    </RadioGroup>
-                  </FormControl>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select severity" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="critical">Critical</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
-            <FormField
-              control={form.control}
-              name="stepsToReproduce"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Steps to Reproduce (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="1. Go to...\n2. Click on..." rows={2} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="expectedBehavior"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Expected Behavior (Optional)</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="What should happen" rows={2} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="actualBehavior"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Actual Behavior (Optional)</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="What actually happened" rows={2} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
             
             <FormField
               control={form.control}
               name="url"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>URL</FormLabel>
+                  <FormLabel>Page URL</FormLabel>
                   <FormControl>
-                    <Input {...field} readOnly />
+                    <Input {...field} />
                   </FormControl>
+                  <FormDescription>Current page path</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="isReproducible"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                  <div className="space-y-0.5">
+                    <FormLabel>Reproducible</FormLabel>
+                    <FormDescription>
+                      Can you reproduce the issue consistently?
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
             
-            <CardFooter className="px-0 pt-2">
-              <div className="flex justify-end w-full space-x-2">
-                {onCancel && (
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={handleCancel}
-                  >
-                    Cancel
-                  </Button>
+            <FormField
+              control={form.control}
+              name="includeUserInfo"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                  <div className="space-y-0.5">
+                    <FormLabel>Include System Info</FormLabel>
+                    <FormDescription>
+                      Share browser and OS details
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          {form.watch('isReproducible') && (
+            <div className="space-y-4 border p-4 rounded-lg">
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Additional Details</AlertTitle>
+                <AlertDescription>
+                  Please provide detailed steps to help us reproduce and fix the issue.
+                </AlertDescription>
+              </Alert>
+              
+              <FormField
+                control={form.control}
+                name="stepsToReproduce"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Steps to Reproduce</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="1. Go to...\n2. Click on...\n3. Notice that..." 
+                        className="h-20"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
-                <Button 
-                  type="submit" 
-                  disabled={isSubmitting || mutation.isPending}
-                >
-                  {isSubmitting || mutation.isPending ? 'Submitting...' : 'Submit Report'}
-                </Button>
+              />
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="expectedBehavior"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Expected Behavior</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="What should have happened?" 
+                          className="h-20"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="actualBehavior"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Actual Behavior</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="What actually happened?" 
+                          className="h-20"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-            </CardFooter>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+            </div>
+          )}
+          
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onCancel}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Submitting..." : "Submit Report"}
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </>
   );
 }
