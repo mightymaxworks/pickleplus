@@ -16,7 +16,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Check, Info, Search } from 'lucide-react';
-import PlayerSearchInput, { PlayerSearchResult } from '../components/match/PlayerSearchInput';
+import PlayerSearchInput from '../components/match/PlayerSearchInput';
+import { PlayerSearchResult } from '@shared/types/player-search.types';
 
 /**
  * PlayerSearchTestPage component

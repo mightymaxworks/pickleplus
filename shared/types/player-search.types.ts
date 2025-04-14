@@ -1,29 +1,28 @@
 /**
  * PKL-278651-SRCH-0001-UNIFD
- * Enhanced Unified Player Search Component
+ * Shared Player Search Type Definitions
  * 
- * This file contains the TypeScript types for the player search functionality.
+ * This file contains common type definitions used across server and client
+ * for the unified player search functionality, ensuring type consistency.
  */
 
 /**
- * Player search result interface
- * Used for consistent typing across the application
+ * Player search result interface - core definition used across API layers
  */
 export interface PlayerSearchResult {
   id: number;
   username: string;
   displayName: string;
   fullName?: string | null;
-  avatarUrl?: string;
-  avatarInitials?: string;
+  avatarUrl?: string | null;
+  avatarInitials?: string | null;
   isFoundingMember?: boolean;
-  passportId?: string;
+  passportId?: string | null;
   rating?: number | null;
 }
 
 /**
- * Player search options interface
- * Used to configure search parameters
+ * Player search options for configuring search requests
  */
 export interface PlayerSearchOptions {
   query: string;
@@ -32,8 +31,7 @@ export interface PlayerSearchOptions {
 }
 
 /**
- * Player search response interface 
- * Used to handle successful and error responses consistently
+ * Player search response with results and optional error
  */
 export interface PlayerSearchResponse {
   results: PlayerSearchResult[];

@@ -5,38 +5,10 @@
  * This file contains the SDK layer for the unified player search component.
  * It provides consistent interfaces for player search operations.
  */
+import { PlayerSearchOptions, PlayerSearchResult, PlayerSearchResponse } from '@shared/types/player-search.types';
 
-/**
- * Player search options interface
- */
-export interface PlayerSearchOptions {
-  query: string;
-  limit?: number;
-  excludeUserIds?: number[];
-}
-
-/**
- * Player search result interface
- */
-export interface PlayerSearchResult {
-  id: number;
-  username: string;
-  displayName: string;
-  fullName?: string | null;
-  avatarUrl?: string | null;
-  avatarInitials?: string | null;
-  isFoundingMember?: boolean;
-  passportId?: string | null;
-  rating?: number | null;
-}
-
-/**
- * Player search response interface
- */
-export interface PlayerSearchResponse {
-  results: PlayerSearchResult[];
-  error?: string;
-}
+// Re-export types for components that directly import from this module
+export type { PlayerSearchOptions, PlayerSearchResult, PlayerSearchResponse };
 
 /**
  * Searches for players using the unified player search API

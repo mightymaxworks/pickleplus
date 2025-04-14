@@ -14,22 +14,8 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Loader2, Search, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { searchPlayers, PlayerSearchOptions } from '@/api/playerSearchApi';
-
-/**
- * PlayerSearchResult interface for component consistency
- */
-export interface PlayerSearchResult {
-  id: number;
-  username: string;
-  displayName: string;
-  fullName?: string | null;
-  avatarUrl?: string | null;
-  avatarInitials?: string | null;
-  isFoundingMember?: boolean;
-  passportId?: string | null;
-  rating?: number | null;
-}
+import { searchPlayers } from '@/api/playerSearchApi';
+import { PlayerSearchOptions, PlayerSearchResult } from '@shared/types/player-search.types';
 
 /**
  * PlayerSearchInput Component
