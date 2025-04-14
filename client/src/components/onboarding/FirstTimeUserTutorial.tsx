@@ -24,9 +24,10 @@ import {
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { DiscoveryAlert, Reward } from '@/core/modules/gamification/components';
+import { DiscoveryAlert } from '@/core/modules/gamification/components';
 import { useDiscoveryTracking, useDiscoveryTrigger } from '@/core/modules/gamification/hooks';
 import { cn } from '@/lib/utils';
+import type { Reward } from '@/core/modules/gamification/components/DiscoveryAlert';
 
 // Define the tutorial steps with their content and targets
 const tutorialSteps = [

@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/toaster'
 import { AuthProvider } from '@/hooks/useAuth'
 import { TournamentChangeProvider } from './core/modules/tournament/context/TournamentChangeContext'
 import { UserDataProvider } from '@/contexts/UserDataContext' // PKL-278651-PERF-0001.1-CACHE
+import { TutorialProvider } from '@/components/onboarding' // PKL-278651-GAME-0002-TUT
 import { LazyLoadingFallback, lazyLoad } from '@/utils/lazyLoad' // PKL-278651-PERF-0001.2-SPLIT
 
 // Import module initializations
@@ -102,9 +103,10 @@ export default function App() {
         <AuthProvider>
           <UserDataProvider>
             <TournamentChangeProvider>
-              <Suspense fallback={<LazyLoadingFallback />}>
-                <Switch>
-                  {/* Public Routes */}
+              <TutorialProvider>
+                <Suspense fallback={<LazyLoadingFallback />}>
+                  <Switch>
+                    {/* Public Routes */}
                   <Route path="/" component={LazyLandingPage} />
                   <Route path="/login" component={LazyAuthPage} />
                   <Route path="/register" component={Register} />
@@ -256,6 +258,7 @@ export default function App() {
                   <Route component={LazyNotFoundPage} />
                 </Switch>
               </Suspense>
+              </TutorialProvider>
             </TournamentChangeProvider>
           </UserDataProvider>
         </AuthProvider>
