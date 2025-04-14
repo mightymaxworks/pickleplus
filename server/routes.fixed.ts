@@ -405,8 +405,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`[Player API] Searching for players with query: "${query}"`);
       
-      // Assuming 'users' table includes username, displayName, firstName, lastName fields
+      // Import schema and passport utilities
       const { users } = await import("@shared/schema");
+      const { normalizePassportId } = await import("@shared/utils/passport-utils");
       
       // Improve search to include more fields and handle spaces better
       const searchTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
@@ -415,14 +416,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const isPassportIdSearch = query.toUpperCase().includes('PKL-') || 
                                 (query.length >= 4 && /^[A-Z0-9-]+$/i.test(query));
       
+      // Normalized search for passport IDs
+      const normalizedQuery = normalizePassportId(query);
+      
       const searchConditions = searchTerms.map(term => 
         or(
           sql`lower(${users.username}) like ${`%${term}%`}`,
           sql`lower(${users.displayName}) like ${`%${term}%`}`,
           sql`lower(${users.firstName}) like ${`%${term}%`}`,
           sql`lower(${users.lastName}) like ${`%${term}%`}`,
-          // Add passport ID search with flexibility for formatting
-          sql`lower(${users.passportId}) like ${`%${term.toUpperCase()}%`}`
+          // Much more flexible passport ID search using normalized form
+          sql`replace(replace(upper(${users.passportId}), 'PKL-', ''), '-', '') like ${`%${normalizedQuery}%`}`
         )
       );
       
