@@ -394,7 +394,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Player search endpoint
+  // Player search endpoint - Enhanced with more flexible search capabilities
   app.get("/api/player/search", async (req: Request, res: Response) => {
     try {
       const query = req.query.q as string;
@@ -403,30 +403,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json([]);
       }
       
-      // Assuming 'users' table includes username, displayName fields
+      console.log(`[Player API] Searching for players with query: "${query}"`);
+      
+      // Assuming 'users' table includes username, displayName, firstName, lastName fields
       const { users } = await import("@shared/schema");
+      
+      // Improve search to include more fields and handle spaces better
+      const searchTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+      const searchConditions = searchTerms.map(term => 
+        or(
+          sql`lower(${users.username}) like ${`%${term}%`}`,
+          sql`lower(${users.displayName}) like ${`%${term}%`}`,
+          sql`lower(${users.firstName}) like ${`%${term}%`}`,
+          sql`lower(${users.lastName}) like ${`%${term}%`}`
+        )
+      );
+      
+      // If multiple terms, try to match them all
+      let whereClause;
+      if (searchConditions.length > 1) {
+        // Multiple terms - each term should match at least one field
+        whereClause = and(...searchConditions);
+      } else if (searchConditions.length === 1) {
+        // Single term - direct match
+        whereClause = searchConditions[0];
+      }
       
       const players = await db.select({
         id: users.id,
         username: users.username,
         displayName: users.displayName,
-        avatarInitials: users.avatarInitials
+        firstName: users.firstName,
+        lastName: users.lastName,
+        avatarInitials: users.avatarInitials,
+        isFoundingMember: users.isFoundingMember
       })
       .from(users)
-      .where(
-        or(
-          sql`lower(${users.username}) like ${`%${query.toLowerCase()}%`}`,
-          sql`lower(${users.displayName}) like ${`%${query.toLowerCase()}%`}`
-        )
-      )
-      .limit(10);
+      .where(whereClause)
+      .limit(15);
       
-      // Format the player data
+      console.log(`[Player API] Found ${players.length} matching players`);
+      
+      // Format the player data and include more information
       const formattedPlayers = players.map(player => ({
         id: player.id,
         username: player.username,
         displayName: player.displayName || player.username,
-        avatarInitials: player.avatarInitials
+        fullName: player.firstName && player.lastName 
+          ? `${player.firstName} ${player.lastName}`
+          : null,
+        avatarInitials: player.avatarInitials,
+        isFoundingMember: player.isFoundingMember
       }));
       
       res.json(formattedPlayers);
