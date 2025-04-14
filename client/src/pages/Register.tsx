@@ -17,6 +17,8 @@ import { useToast } from "@/hooks/use-toast";
 // Create a schema for the registration form
 const registerSchema = insertUserSchema.extend({
   confirmPassword: z.string().min(6, "Password must be at least 6 characters"),
+  // Include a root field for form-level errors
+  root: z.string().optional(),
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"]
@@ -27,6 +29,7 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 export default function Register() {
   const { registerMutation } = useAuth();
   const [, navigate] = useLocation();
+  const { toast } = useToast();
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -171,16 +174,12 @@ export default function Register() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)}>
             <CardContent className="space-y-3 pb-4">
-              {/* Server error display */}
-              <FormField
-                control={form.control}
-                name="root"
-                render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormMessage />
-                  </FormItem>
+              {/* Server error display - custom error container */}
+              <div className="text-sm text-red-500 font-medium">
+                {form.formState.errors.root?.message && (
+                  <p>{form.formState.errors.root.message}</p>
                 )}
-              />
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
