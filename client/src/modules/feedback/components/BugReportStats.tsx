@@ -143,7 +143,11 @@ export function BugReportStats({ timeFrame = 'week' }: BugReportStatsProps) {
         <div className="flex items-center gap-2">
           <Select
             value={selectedTimeFrame}
-            onValueChange={setSelectedTimeFrame}
+            onValueChange={(value) => {
+              if (value === 'day' || value === 'week' || value === 'month' || value === 'all') {
+                setSelectedTimeFrame(value);
+              }
+            }}
           >
             <SelectTrigger className="w-32">
               <SelectValue placeholder="Time Frame" />
@@ -161,7 +165,7 @@ export function BugReportStats({ timeFrame = 'week' }: BugReportStatsProps) {
             onClick={fetchStats}
             title="Refresh data"
           >
-            <ArrowPathIcon className="h-4 w-4" />
+            <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
       </CardHeader>
