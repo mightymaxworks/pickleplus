@@ -102,6 +102,8 @@ export default function EnhancedAuthPage() {
     resolver: zodResolver(registerSchema),
     defaultValues: {
       username: "",
+      firstName: "", // Add firstName field
+      lastName: "",  // Add lastName field
       email: "",
       password: "",
       confirmPassword: "",
@@ -135,20 +137,15 @@ export default function EnhancedAuthPage() {
 
   const handleRegister = async (formData: RegisterFormData) => {
     try {
-      // Instead of registering here, redirect to the dedicated Register page
-      navigate("/register");
-      return;
-      
-      // The code below is intentionally not run due to the return above
-      // We're keeping it for reference only
+      // Now that we've added firstName and lastName fields, we can proceed with registration
+      // Create a properly formatted registration object with all required fields
       const registrationData = {
         username: formData.username,
         email: formData.email || "",
         password: formData.password,
-        displayName: formData.displayName || "",
-        // Add required firstName and lastName fields
-        firstName: "", // This page doesn't collect firstName
-        lastName: "",  // This page doesn't collect lastName
+        displayName: formData.displayName || `${formData.firstName} ${formData.lastName}`.trim(),
+        firstName: formData.firstName,
+        lastName: formData.lastName,
         yearOfBirth: formData.yearOfBirth || null,
         location: formData.location || null,
         playingSince: formData.playingSince || null,
@@ -162,10 +159,19 @@ export default function EnhancedAuthPage() {
     }
   };
 
-  // Calculate display initials from display name
+  // Calculate avatarInitials from firstName and lastName, fallback to displayName
   useEffect(() => {
+    const firstName = registerForm.watch("firstName");
+    const lastName = registerForm.watch("lastName");
     const displayName = registerForm.watch("displayName");
-    if (displayName) {
+    
+    // Prioritize firstName + lastName for initials if available
+    if (firstName && lastName) {
+      const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+      registerForm.setValue("avatarInitials", initials);
+    } 
+    // Fallback to displayName if no firstName/lastName
+    else if (displayName) {
       const nameParts = displayName.split(" ");
       const initials = nameParts.length > 1 
         ? `${nameParts[0].charAt(0)}${nameParts[1].charAt(0)}`.toUpperCase()
@@ -173,7 +179,12 @@ export default function EnhancedAuthPage() {
       
       registerForm.setValue("avatarInitials", initials);
     }
-  }, [registerForm.watch("displayName"), registerForm]);
+  }, [
+    registerForm.watch("firstName"), 
+    registerForm.watch("lastName"), 
+    registerForm.watch("displayName"), 
+    registerForm
+  ]);
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
