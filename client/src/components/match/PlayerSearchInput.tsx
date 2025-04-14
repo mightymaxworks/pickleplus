@@ -33,6 +33,7 @@ export interface UserSearchResult {
   id: number;
   username: string;
   displayName: string;
+  fullName?: string | null;
   avatarUrl?: string;
   avatarInitials?: string;
   isFoundingMember?: boolean;
@@ -134,6 +135,11 @@ export function PlayerSearchInput({
                     )}
                   </Avatar>
                   <span className="font-medium">{player.displayName}</span>
+                  {player.fullName && player.fullName !== player.displayName && (
+                    <span className="text-muted-foreground ml-1 text-xs">
+                      ({player.fullName})
+                    </span>
+                  )}
                   <span className="text-muted-foreground ml-2 text-xs">
                     @{player.username}
                   </span>

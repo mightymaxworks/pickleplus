@@ -57,6 +57,7 @@ import QRTestPage from './pages/dev/QRTestPage'
 import EventTestPage from './pages/events/EventTestPage'
 import CommunityPage from './pages/CommunityPage'
 import SettingsPage from './pages/SettingsPage'
+import SearchTestPage from './pages/SearchTest'
 
 import { useAuth } from './hooks/useAuth'
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute'
@@ -273,6 +274,11 @@ export default function App() {
             {/* Legacy route - redirect handled by EventTestPage */}
             <Route path="/events/test">
               {(params) => <ProtectedRoute component={EventTestPage} path="/events/test" />}
+            </Route>
+            
+            {/* Player Search Test Page */}
+            <Route path="/search-test">
+              {(params) => <ProtectedRoute component={SearchTestPage} path="/search-test" />}
             </Route>
             
             {/* 404 Route */}
