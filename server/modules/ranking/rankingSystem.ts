@@ -712,6 +712,11 @@ export class RankingSystem {
    * @param maxRating Optional maximum rating value (0-9 scale, converted to internal 0-5 scale)
    * @returns Array of leaderboard entries
    */
+  /**
+   * PKL-278651-SEC-0002-TESTVIS - Test Data Visibility Control
+   * Get the leaderboard for a specific division and format
+   * Now supports filtering test data based on user's admin status
+   */
   async getLeaderboard(
     division: Division = Division.OPEN,
     format: Format = Format.SINGLES,
@@ -720,8 +725,21 @@ export class RankingSystem {
     offset: number = 0,
     tierFilter?: string,
     minRating?: number,
-    maxRating?: number
+    maxRating?: number,
+    requestingUserId?: number
   ): Promise<any[]> {
+    // Check if the requesting user is an admin to determine if we should show test data
+    let isAdmin = false;
+    if (requestingUserId) {
+      try {
+        const [adminCheck] = await db.select({ isAdmin: users.isAdmin })
+          .from(users)
+          .where(eq(users.id, requestingUserId));
+        isAdmin = adminCheck?.isAdmin === true;
+      } catch (error) {
+        console.error("[RankingSystem] Error checking admin status:", error);
+      }
+    }
     // Convert 0-9 scale ratings to internal 0-5 scale
     let internalMinRating: number | undefined;
     let internalMaxRating: number | undefined;
