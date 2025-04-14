@@ -9,6 +9,7 @@ import { UserDataProvider } from '@/contexts/UserDataContext' // PKL-278651-PERF
 import { TutorialProvider } from '@/components/onboarding' // PKL-278651-GAME-0002-TUT
 import { LazyLoadingFallback, lazyLoad } from '@/utils/lazyLoad' // PKL-278651-PERF-0001.2-SPLIT
 import { moduleRegistry } from '@/core/modules/moduleRegistry' // For feedback module
+import { SimpleBugReportButton } from '@/components/bug-report/BugReportButton' // Simplified bug report button
 
 // Import module initializations
 import '@/modules/admin/init'
@@ -98,10 +99,18 @@ export default function App() {
     console.log("App.tsx - Location changed to:", location);
   }, [location]);
   
-  // Get BugReportButton from the feedback module
-  const BugReportButton = moduleRegistry.hasModule('feedback') 
-    ? moduleRegistry.getModule('feedback').exports.BugReportButton 
-    : null;
+  // Import bug report button directly
+  const { BugReportButton } = moduleRegistry.hasModule('feedback') 
+    ? moduleRegistry.getModule('feedback').exports 
+    : { BugReportButton: null };
+
+  // Use this for debugging
+  useEffect(() => {
+    console.log("Feedback module loaded:", moduleRegistry.hasModule('feedback'));
+    if (moduleRegistry.hasModule('feedback')) {
+      console.log("Feedback module exports:", Object.keys(moduleRegistry.getModule('feedback').exports));
+    }
+  }, []);
 
   return (
     <div className="app-container">
@@ -111,8 +120,8 @@ export default function App() {
             <TournamentChangeProvider>
               <TutorialProvider>
                 <Suspense fallback={<LazyLoadingFallback />}>
-                  {/* Add Bug Report Button (PKL-278651-FEED-0001-BUG) */}
-                  {BugReportButton && <BugReportButton position="bottom-right" />}
+                  {/* Add Simplified Bug Report Button (PKL-278651-FEED-0001-BUG) */}
+                  <SimpleBugReportButton position="bottom-right" />
                   
                   <Switch>
                     {/* Public Routes */}

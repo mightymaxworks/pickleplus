@@ -14,11 +14,9 @@ import { submitBugReport, getBugReportStats, getBrowserInfo } from './api/feedba
 /**
  * Feedback module definition
  */
-export const feedbackModule: ModuleDefinition = {
+export const feedbackModule: Module = {
   name: 'feedback',
   version: '1.0.0',
-  description: 'In-app bug reporting and feedback system',
-  dependencies: [],
   exports: {
     // Components
     BugReportButton,
