@@ -1034,18 +1034,71 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     try {
       const userId = req.query.userId ? parseInt(req.query.userId as string) : (req.user?.id || 1);
       const format = req.query.format as string || 'singles';
-      const ageDivision = req.query.ageDivision as string || '19plus';
+      const division = req.query.ageDivision as string || '19+';
+      const season = "2025-S1"; // Current season
       
-      // Return sample data
+      // Log API request for debugging
+      console.log("[API] Multi-Rankings Position - Request for user ID:", userId, "format:", format, "division:", division);
+      
+      // Get user ranking data from database
+      const userRankingData = await db.query.rankingPoints.findFirst({
+        where: and(
+          eq(rankingPoints.userId, userId),
+          eq(rankingPoints.format, format),
+          eq(rankingPoints.division, division),
+          eq(rankingPoints.season, season)
+        )
+      });
+      
+      // Get total number of players with rankings for this format and division
+      const totalPlayersResult = await db.execute(
+        sql`SELECT COUNT(*) as total FROM ranking_points 
+            WHERE format = ${format} AND division = ${division} AND season = ${season}`
+      );
+      const totalPlayers = totalPlayersResult.rows && totalPlayersResult.rows.length > 0 
+        ? parseInt(totalPlayersResult.rows[0].total) 
+        : 0;
+      
+      // Calculate user's rank
+      let userRank = 1;
+      if (userRankingData) {
+        const rankResult = await db.execute(
+          sql`SELECT COUNT(*) as rank FROM ranking_points 
+              WHERE format = ${format} AND division = ${division} AND season = ${season}
+              AND points > ${userRankingData.points}`
+        );
+        userRank = rankResult.rows && rankResult.rows.length > 0 
+          ? parseInt(rankResult.rows[0].rank) + 1  // +1 because position is 1-indexed
+          : 1;
+      }
+      
+      // Get tier ID based on points
+      const pointsValue = userRankingData?.points || 0;
+      const tierResult = await db.query.rankingTiers.findFirst({
+        where: and(
+          lte(rankingTiers.minPoints, pointsValue),
+          gte(rankingTiers.maxPoints, pointsValue)
+        )
+      });
+      
+      // Get skill rating if available (or use default)
+      const playerRatingResult = await db.query.playerRatings.findFirst({
+        where: and(
+          eq(playerRatings.userId, userId),
+          eq(playerRatings.format, format),
+          eq(playerRatings.division, division)
+        )
+      });
+      
       res.json({
         userId: userId,
         format: format,
-        ageDivision: ageDivision,
-        ratingTierId: 1,
-        rankingPoints: 1200,
-        rank: 1,
-        totalPlayers: 250,
-        skillRating: 4.5
+        ageDivision: division,
+        ratingTierId: tierResult?.id || 1,
+        rankingPoints: userRankingData?.points || 0,
+        rank: userRank,
+        totalPlayers: totalPlayers,
+        skillRating: playerRatingResult?.rating || 3.0
       });
     } catch (error) {
       console.error("[API] Error getting ranking position:", error);
