@@ -81,7 +81,8 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Register Tournament Bracket routes (PKL-278651-TOURN-0001-BRCKT)
   registerTournamentBracketRoutes(app);
   
-  // Register User Search routes (PKL-278651-TOURN-0003-SEARCH)
+  // Register User Search routes (PKL-278651-SRCH-0001-UNIFD)
+  // This is a special registration to ensure proper authentication handling
   registerUserSearchRoutes(app);
   
   // Register Tournament Seed Teams routes (PKL-278651-TOURN-0003-MATCH)

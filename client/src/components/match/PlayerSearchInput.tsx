@@ -17,7 +17,19 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, User } from 'lucide-react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { searchPlayers } from '../../api/playerSearchApi';
-import { PlayerSearchResult } from '../../../shared/types/player-search.types';
+
+// Define the PlayerSearchResult type directly here until the shared types are properly set up
+export interface PlayerSearchResult {
+  id: number;
+  username: string;
+  displayName: string;
+  fullName?: string | null;
+  avatarUrl?: string;
+  avatarInitials?: string;
+  isFoundingMember?: boolean;
+  passportId?: string | null;
+  rating?: number | null;
+}
 
 /**
  * PlayerSearchInput Component
@@ -138,6 +150,11 @@ export function PlayerSearchInput({
             <CommandEmpty>
               {searchQuery.length < 2 ? (
                 "Type at least 2 characters to search"
+              ) : error ? (
+                <div className="text-red-500">
+                  <span className="text-sm font-semibold">Error: </span>
+                  <span className="text-sm">{error}</span>
+                </div>
               ) : (
                 "No players found"
               )}

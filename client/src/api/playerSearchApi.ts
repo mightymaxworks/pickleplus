@@ -5,11 +5,25 @@
  * This file contains the API client functions for player search.
  */
 
-import { 
-  PlayerSearchResult, 
-  PlayerSearchOptions, 
-  PlayerSearchResponse 
-} from '../../../shared/types/player-search.types';
+// Import the PlayerSearchResult type from the component for now
+import { PlayerSearchResult } from '../components/match/PlayerSearchInput';
+
+/**
+ * Player search options interface
+ */
+export interface PlayerSearchOptions {
+  query: string;
+  limit?: number;
+  excludeUserIds?: number[];
+}
+
+/**
+ * Player search response interface
+ */
+export interface PlayerSearchResponse {
+  results: PlayerSearchResult[];
+  error?: string;
+}
 
 /**
  * Searches for players using the unified player search API

@@ -16,8 +16,9 @@ import { db } from '../db';
 export function registerUserSearchRoutes(app: express.Express): void {
   console.log('[API][UserSearch] Registering user search routes');
   
-  // Player search endpoint - Enhanced with passport ID search and more flexible search capabilities
-  // Note: This endpoint does not require authentication to allow for broader usage
+  // PKL-278651-SRCH-0001-UNIFD - Enhanced Unified Player Search Component
+  // This endpoint deliberately does not use the isAuthenticated middleware
+  // to allow for broader usage across modules, especially in public tournament displays
   app.get("/api/player/search", async (req: Request, res: Response) => {
     try {
       const query = req.query.q as string;
@@ -64,6 +65,7 @@ export function registerUserSearchRoutes(app: express.Express): void {
         displayName: users.displayName,
         firstName: users.firstName,
         lastName: users.lastName,
+        avatarUrl: users.avatarUrl,
         avatarInitials: users.avatarInitials,
         isFoundingMember: users.isFoundingMember,
         passportId: users.passportId
@@ -82,9 +84,11 @@ export function registerUserSearchRoutes(app: express.Express): void {
         fullName: player.firstName && player.lastName 
           ? `${player.firstName} ${player.lastName}`
           : null,
+        avatarUrl: player.avatarUrl,
         avatarInitials: player.avatarInitials,
         isFoundingMember: player.isFoundingMember,
-        passportId: player.passportId
+        passportId: player.passportId,
+        rating: player.rating || null
       }));
       
       res.json(formattedPlayers);
