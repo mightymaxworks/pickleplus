@@ -19,19 +19,18 @@ specialRouter.get('/courtiq/performance', (req: Request, res: Response) => {
   console.log("[API][CRITICAL][CourtIQ] Direct handler called, query:", req.query);
   
   try {
-    // Simplify to avoid authentication errors
-    // Get userId from query only, default to 1
-    let userId: number = 1; // Default value
+    // Get userId from query, default to 1
+    let userId: number = 1;
     
     if (req.query.userId) {
       try {
         userId = parseInt(req.query.userId as string);
         if (isNaN(userId)) {
-          userId = 1; // Default if parsing fails
+          userId = 1;
         }
       } catch (e) {
         console.log("[API][CRITICAL][CourtIQ] Error parsing userId:", e);
-        userId = 1; // Default on error
+        userId = 1;
       }
     }
     
@@ -39,58 +38,22 @@ specialRouter.get('/courtiq/performance', (req: Request, res: Response) => {
     const format = req.query.format as string || 'singles';
     const division = req.query.division as string || 'open';
     
-    // Create a realistic rating value based on userId (for consistency)
-    const baseRating = 1750 + (userId * 17) % 500;
+    // In a production implementation, we would check if the user has enough
+    // match data to generate meaningful ratings
     
-    // Create skill ratings with some minor variation based on userId
-    const powerBase = 65 + (userId * 3) % 30;
-    const speedBase = 70 + (userId * 5) % 25;
-    const precisionBase = 75 + (userId * 7) % 20;
-    const strategyBase = 60 + (userId * 11) % 35;
-    const controlBase = 80 + (userId * 13) % 15;
-    const consistencyBase = 68 + (userId * 17) % 27;
-    
-    // Determine tier based on rating
-    let tierName = "Bronze";
-    let tierColorCode = "#CD7F32";
-    
-    if (baseRating >= 2000) {
-      tierName = "Diamond";
-      tierColorCode = "#B9F2FF";
-    } else if (baseRating >= 1900) {
-      tierName = "Platinum";
-      tierColorCode = "#E5E4E2";
-    } else if (baseRating >= 1800) {
-      tierName = "Gold";
-      tierColorCode = "#FFD700";
-    } else if (baseRating >= 1700) {
-      tierName = "Silver";
-      tierColorCode = "#C0C0C0";
-    }
-    
-    const performanceData = {
-      overallRating: baseRating,
-      tierName,
-      tierColorCode,
-      skills: {
-        power: powerBase,
-        speed: speedBase,
-        precision: precisionBase,
-        strategy: strategyBase,
-        control: controlBase,
-        consistency: consistencyBase
-      },
-      recentTrends: {
-        change: 15,
-        direction: 'up',
-        matches: 8
-      },
-      strongestArea: "control",
-      weakestArea: "strategy",
-      percentile: 75
-    };
-    
-    res.json(performanceData);
+    // For now, return empty state with clear guidance
+    res.json({
+      status: "insufficient_data",
+      message: "Not enough match data to generate performance metrics",
+      requiredMatches: 5,
+      currentMatches: 0,
+      guidance: {
+        title: "Start tracking your performance",
+        description: "Play at least 5 matches to unlock your CourtIQ™ Performance metrics",
+        primaryAction: "Record a match",
+        primaryActionPath: "/record-match"
+      }
+    });
   } catch (error) {
     console.error('[API][CRITICAL][CourtIQ] Error retrieving performance data:', error);
     res.status(500).json({ 
@@ -108,18 +71,18 @@ specialRouter.get('/user/rating-detail', (req: Request, res: Response) => {
   console.log("[API][CRITICAL][UserRating] Direct handler called, query:", req.query);
   
   try {
-    // Get userId from query only, default to 1
-    let userId: number = 1; // Default value
+    // Get userId from query, default to 1
+    let userId: number = 1;
     
     if (req.query.userId) {
       try {
         userId = parseInt(req.query.userId as string);
         if (isNaN(userId)) {
-          userId = 1; // Default if parsing fails
+          userId = 1;
         }
       } catch (e) {
         console.log("[API][CRITICAL][UserRating] Error parsing userId:", e);
-        userId = 1; // Default on error
+        userId = 1;
       }
     }
     
@@ -127,87 +90,26 @@ specialRouter.get('/user/rating-detail', (req: Request, res: Response) => {
     const format = req.query.format as string || 'singles';
     const division = req.query.division as string || 'open';
     
-    // Create a consistent rating based on userId and format
-    const baseRating = 1750 + (userId * 17) % 500;
-    const formatOffset = format === 'singles' ? 0 : format === 'doubles' ? 100 : 50;
-    const rating = baseRating + formatOffset;
+    // In a production implementation, we would check if this user has enough
+    // completed matches to generate meaningful ratings
     
-    // Determine tier based on rating
-    let tier = "Bronze";
-    
-    if (rating >= 2000) {
-      tier = "Diamond";
-    } else if (rating >= 1900) {
-      tier = "Platinum";
-    } else if (rating >= 1800) {
-      tier = "Gold";
-    } else if (rating >= 1700) {
-      tier = "Silver";
-    }
-    
-    // Create rating data
-    const ratingData = {
-      id: userId * 100 + (format === 'singles' ? 1 : format === 'doubles' ? 2 : 3),
-      userId: userId,
+    // For now, return empty state with clear guidance
+    res.json({
+      status: "insufficient_data",
+      message: "Not enough match data to calculate rating details",
+      requiredMatches: 5,
+      currentMatches: 0,
       format: format,
       division: division,
-      rating: rating,
-      tier: tier,
-      confidenceLevel: 0.85,
-      matchesPlayed: 45,
-      lastMatchDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date().toISOString(),
-      peakRating: rating + 25,
-      allTimeHighRating: rating + 40,
-      currentSeasonHighRating: rating + 20,
-      currentSeasonLowRating: rating - 30,
-      skillBreakdown: {
-        power: 65 + (userId * 3) % 30,
-        speed: 70 + (userId * 5) % 25,
-        precision: 75 + (userId * 7) % 20,
-        strategy: 60 + (userId * 11) % 35,
-        control: 80 + (userId * 13) % 15,
-        consistency: 68 + (userId * 17) % 27
-      },
-      recentMatches: 8,
-      recentChange: 12,
-      percentile: 85,
-      history: [
-        {
-          date: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
-          rating: rating - 100,
-          change: 0,
-          matchId: 1001
-        },
-        {
-          date: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-          rating: rating - 70,
-          change: 30,
-          matchId: 1002
-        },
-        {
-          date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-          rating: rating - 35,
-          change: 35,
-          matchId: 1003
-        },
-        {
-          date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-          rating: rating - 15,
-          change: 20,
-          matchId: 1004
-        },
-        {
-          date: new Date().toISOString(),
-          rating: rating,
-          change: 15,
-          matchId: 1005
-        }
-      ]
-    };
-    
-    res.json(ratingData);
+      guidance: {
+        title: "Your rating is waiting",
+        description: "Play at least 5 matches to establish your player rating",
+        primaryAction: "Find players to match with",
+        primaryActionPath: "/players",
+        secondaryAction: "Record a match",
+        secondaryActionPath: "/record-match"
+      }
+    });
   } catch (error) {
     console.error('[API][CRITICAL][UserRating] Error retrieving rating detail:', error);
     res.status(500).json({ 
@@ -225,8 +127,8 @@ specialRouter.get('/multi-rankings/position', (req: Request, res: Response) => {
   console.log("[API][CRITICAL][MultiRankings] Direct handler called, query:", req.query);
   
   try {
-    // Simplify implementation - use try-catch for safe parsing
-    let userId = 1; // Default value for safety
+    // Parse the userId from the query parameters
+    let userId = 1;
     
     if (req.query.userId) {
       try {
@@ -243,16 +145,24 @@ specialRouter.get('/multi-rankings/position', (req: Request, res: Response) => {
     const format = req.query.format as string || 'singles';
     const ageDivision = req.query.ageDivision as string || '19plus';
     
-    // Return ranking position data
+    // In a production implementation, we would check if the user has completed
+    // enough matches or is enrolled in a competitive league to be ranked
+    
+    // For now, return empty state with clear guidance
     res.json({
-      userId: userId,
+      status: "not_ranked",
+      message: "Not currently ranked in this division",
+      requiresEnrollment: true,
       format: format,
       ageDivision: ageDivision,
-      ratingTierId: 1,
-      rankingPoints: 1200,
-      rank: 1,
-      totalPlayers: 250,
-      skillRating: 4.5
+      guidance: {
+        title: "Join the rankings",
+        description: "Participate in an official league or tournament to establish your ranking",
+        primaryAction: "Find tournaments",
+        primaryActionPath: "/tournaments",
+        secondaryAction: "Join a league",
+        secondaryActionPath: "/leagues"
+      }
     });
   } catch (error) {
     console.error("[API][CRITICAL][MultiRankings] Error getting ranking position:", error);
