@@ -37,7 +37,7 @@ export function SimpleBugReportButton({ position = 'bottom-right' }: BugReportBu
   
   // Define position classes based on the position prop
   const positionClasses = {
-    'bottom-right': 'bottom-48 right-4', // Moved up significantly to avoid all conflicts
+    'bottom-right': 'bottom-4 right-4', // Keep at very bottom to avoid UI conflicts
     'bottom-left': 'bottom-4 left-4',
     'top-right': 'top-24 right-4', // Moved down to avoid header elements
     'top-left': 'top-24 left-4'  // Moved down to avoid header elements
@@ -75,7 +75,7 @@ export function SimpleBugReportButton({ position = 'bottom-right' }: BugReportBu
       <Button
         variant="secondary"
         size="icon"
-        className={`fixed ${positionClasses[position]} z-50 rounded-full h-12 w-12 shadow-lg flex items-center justify-center bg-amber-100 hover:bg-amber-200 border-amber-300 text-amber-700`}
+        className={`fixed ${positionClasses[position]} z-40 rounded-full h-12 w-12 shadow-lg flex items-center justify-center bg-amber-100 hover:bg-amber-200 border-amber-300 text-amber-700`}
         aria-label="Report a bug"
         onClick={() => setIsOpen(true)}
       >
