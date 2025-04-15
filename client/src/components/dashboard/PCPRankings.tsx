@@ -83,7 +83,9 @@ export function PCPRankings({ user }: PCPRankingsProps) {
     }
     
     // Calculate percentile
-    const percentile = Math.round(((position.totalPlayers - position.rank) / position.totalPlayers) * 100);
+    const totalPlayers = position.totalPlayers || 0;
+    const rank = position.rank || 0;
+    const percentile = totalPlayers > 0 ? Math.round(((totalPlayers - rank) / totalPlayers) * 100) : 0;
     
     // Calculate recent ranking gains/losses
     const recentHistory = history
@@ -97,9 +99,10 @@ export function PCPRankings({ user }: PCPRankingsProps) {
     }, 0);
     
     // Determine tier based on points
+    const rankingPoints = position.rankingPoints || 0;
     const userTier = tiers.find(tier => 
-      position.rankingPoints >= tier.minRating && 
-      position.rankingPoints <= (tier.maxRating || 5.0)
+      rankingPoints >= tier.minRating && 
+      rankingPoints <= (tier.maxRating || 5.0)
     ) || tiers[0];
     
     // Format top players from leaderboard
