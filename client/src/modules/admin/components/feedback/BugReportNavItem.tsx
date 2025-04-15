@@ -6,6 +6,7 @@
  * in the admin dashboard.
  */
 
+import React from 'react';
 import { Bug } from 'lucide-react';
 
 /**
@@ -19,7 +20,7 @@ interface NavItemProps {
 /**
  * Bug Report Nav Item component for the admin sidebar
  */
-export function BugReportNavItem({ isActive, onClick }: NavItemProps) {
+function BugReportNavItem({ isActive, onClick }: NavItemProps) {
   return (
     <div
       className={`flex items-center gap-3 rounded-lg px-3 py-2 cursor-pointer transition-colors ${
