@@ -45,8 +45,16 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Register API route modules
   app.use("/api/match", matchRoutes);
   app.use("/api/ranking", rankingRoutes);
+  
+  // Debug route files
+  console.log("[API] CourtIQ routes:", typeof courtiqRoutes, Object.keys(courtiqRoutes));
+  console.log("[API] User rating routes:", typeof userRatingRoutes, Object.keys(userRatingRoutes));
+  
   app.use("/api/courtiq", courtiqRoutes); // PKL-278651-STATS-0002-RD: CourtIQ Performance
+  console.log("[API] Registered courtiq routes");
+  
   app.use("/api/user", userRatingRoutes); // PKL-278651-STATS-0002-RD: User Rating Detail
+  console.log("[API] Registered user rating routes");
   
   // Initialize Mastery Paths database tables
   try {
@@ -967,12 +975,15 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
       res.status(500).json({ error: "Server error getting rankings" });
     }
   });
-  });
   
   // Multi-dimensional rankings position
   app.get("/api/multi-rankings/position", async (req: Request, res: Response) => {
     try {
+      console.log("[API] Multi-rankings position request received, query:", req.query);
+      // Default to userId 1 if no userId provided
       const userId = req.query.userId ? parseInt(req.query.userId as string) : (req.user?.id || 1);
+      console.log("[API] Using userId:", userId);
+      
       const format = req.query.format as string || 'singles';
       const ageDivision = req.query.ageDivision as string || '19plus';
       
