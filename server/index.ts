@@ -76,6 +76,20 @@ app.use((req, res, next) => {
   // Set up security features (after auth but before routes)
   setupSecurity(app);
 
+  // CRITICAL: Register special direct routes first for critical endpoints
+  // This is a Framework 5.0 fix for path resolution issues with certain routes
+  try {
+    // Import and register our special routes
+    console.log("[API][CRITICAL] Registering special direct routes before standard routes");
+    const { specialRouter } = await import('./special-routes');
+    
+    // Mount the special router at the API base path
+    app.use('/api', specialRouter);
+    console.log("[API][CRITICAL] Special routes registered successfully");
+  } catch (error) {
+    console.error("[API][CRITICAL] Error registering special routes:", error);
+  }
+
   // Server API Routes
   await registerRoutes(app);
   
