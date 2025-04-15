@@ -57,6 +57,28 @@ export function PCPRankings({ user }: PCPRankingsProps) {
         percentile: 0,
         recentGain: 0,
         topPlayers: [],
+        hasInsufficientData: false,
+        isNotRanked: false,
+        showEncouragement: true
+      };
+    }
+    
+    // Check for insufficient data or not ranked status
+    const hasInsufficientData = position.status === "insufficient_data";
+    const isNotRanked = position.status === "not_ranked";
+    
+    // If we have insufficient data or not ranked status, return default values with flags
+    if (hasInsufficientData || isNotRanked) {
+      return {
+        points: 0,
+        rank: 0,
+        tier: 'Bronze',
+        percentile: 0,
+        recentGain: 0,
+        topPlayers: [],
+        hasInsufficientData,
+        isNotRanked,
+        showEncouragement: true
       };
     }
     
@@ -89,12 +111,15 @@ export function PCPRankings({ user }: PCPRankingsProps) {
     })) : [];
     
     return {
-      points: position.rankingPoints,
-      rank: position.rank,
+      points: position.rankingPoints || 0,
+      rank: position.rank || 0,
       tier: userTier?.name || 'Bronze',
-      percentile: percentile,
+      percentile: percentile || 0,
       recentGain: recentGain,
-      topPlayers
+      topPlayers,
+      hasInsufficientData: false,
+      isNotRanked: false,
+      showEncouragement: false
     };
   }, [isLoading, isError, position, leaderboard, history, tiers, format, ageDivision, sevenDaysAgo]);
   
@@ -297,11 +322,28 @@ export function PCPRankings({ user }: PCPRankingsProps) {
                   <div className="text-sm font-medium text-gray-500 dark:text-gray-400">PCP Score</div>
                 </div>
                 <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                  {animatedPoints.toLocaleString()}
-                  <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1">pts</span>
+                  {rankingData.showEncouragement ? (
+                    <div className="flex flex-col">
+                      <span className="text-xl font-bold bg-gradient-to-r from-orange-400 to-pink-500 text-transparent bg-clip-text">
+                        {rankingData.hasInsufficientData ? "Ready to Climb!" : "Start Your Journey!"}
+                      </span>
+                      <span className="text-sm font-normal text-gray-500 dark:text-gray-400 mt-1">
+                        Play matches to earn points
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      {animatedPoints.toLocaleString()}
+                      <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1">pts</span>
+                    </>
+                  )}
                 </div>
                 <div className="mt-1 flex items-center text-xs">
-                  {rankingData.recentGain > 0 ? (
+                  {rankingData.showEncouragement ? (
+                    <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded-full">
+                      Track your progress here!
+                    </div>
+                  ) : rankingData.recentGain > 0 ? (
                     <div className="bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-1.5 py-0.5 rounded-full flex items-center">
                       <ArrowUp size={10} className="mr-0.5" />
                       +{rankingData.recentGain} this week
@@ -329,22 +371,41 @@ export function PCPRankings({ user }: PCPRankingsProps) {
                   <Medal size={16} className="text-blue-500 mr-1" />
                   <div className="text-sm font-medium text-gray-500 dark:text-gray-400">Global Rank</div>
                 </div>
-                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
-                  #{animatedRank}
-                  <span className="ml-2 px-2 py-0.5 text-sm text-white rounded-full font-normal flex items-center justify-center" 
-                    style={{ 
-                      background: tiers.find(t => t.name === rankingData.tier)?.colorCode || 'linear-gradient(to right, var(--tier-start), var(--tier-end))',
-                      '--tier-start': '#C0C0C0',
-                      '--tier-end': '#A9A9A9',
-                    } as React.CSSProperties}
-                  >
-                    {rankingData.tier}
-                  </span>
+                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  {rankingData.showEncouragement ? (
+                    <div className="flex flex-col">
+                      <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 text-transparent bg-clip-text">
+                        {rankingData.hasInsufficientData ? "Keep Competing!" : "Future Champion!"}
+                      </span>
+                      <span className="text-sm font-normal text-gray-500 dark:text-gray-400 mt-1">
+                        Complete more matches to rank up
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center">
+                      #{animatedRank}
+                      <span className="ml-2 px-2 py-0.5 text-sm text-white rounded-full font-normal flex items-center justify-center" 
+                        style={{ 
+                          background: tiers.find(t => t.name === rankingData.tier)?.colorCode || 'linear-gradient(to right, var(--tier-start), var(--tier-end))',
+                          '--tier-start': '#C0C0C0',
+                          '--tier-end': '#A9A9A9',
+                        } as React.CSSProperties}
+                      >
+                        {rankingData.tier}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div className="mt-1 text-xs">
-                  <span className="text-gray-500 dark:text-gray-400">
-                    Better than {animatedPercentile}% of players
-                  </span>
+                  {rankingData.showEncouragement ? (
+                    <div className="bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 px-1.5 py-0.5 rounded-full">
+                      Your journey begins here!
+                    </div>
+                  ) : (
+                    <span className="text-gray-500 dark:text-gray-400">
+                      Better than {animatedPercentile}% of players
+                    </span>
+                  )}
                 </div>
               </motion.div>
             </div>
