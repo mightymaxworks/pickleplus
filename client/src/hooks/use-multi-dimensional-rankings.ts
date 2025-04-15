@@ -9,10 +9,24 @@ interface RankingPosition {
   format: PlayFormat;
   ageDivision: AgeDivision;
   ratingTierId?: number;
-  rankingPoints: number;
-  rank: number;
-  totalPlayers: number;
+  rankingPoints?: number;
+  rank?: number;
+  totalPlayers?: number;
   skillRating?: number;
+  // Fields for empty states
+  status?: "not_ranked" | "insufficient_data";
+  message?: string;
+  requiredMatches?: number;
+  currentMatches?: number;
+  requiresEnrollment?: boolean;
+  guidance?: {
+    title: string;
+    description: string;
+    primaryAction: string;
+    primaryActionPath: string;
+    secondaryAction?: string;
+    secondaryActionPath?: string;
+  };
 }
 
 interface RatingTier {
