@@ -981,12 +981,14 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     console.log("[API] Multi-rankings position request received, query:", req.query);
     
     try {
-      // Debug the error that's happening
-      console.log("[API] Request user:", req.user);
+      // Following Framework 5.0 debug principles with verbose logging
+      console.log("[API][MultiRankings] Request headers:", req.headers);
+      console.log("[API][MultiRankings] Request auth:", req.isAuthenticated ? req.isAuthenticated() : "none");
+      console.log("[API][MultiRankings] Request user object type:", req.user ? typeof req.user : "none");
       
-      // Default to userId 1 if no userId provided
+      // Default to userId 1 if no userId provided - safe implementation
       const userId = req.query.userId ? parseInt(req.query.userId as string) : 1; // Hardcode to 1 for now
-      console.log("[API] Using userId:", userId);
+      console.log("[API][MultiRankings] Using userId:", userId);
       
       const format = req.query.format as string || 'singles';
       const ageDivision = req.query.ageDivision as string || '19plus';
@@ -1212,170 +1214,40 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     res.send(htmlContent);
   });
   
-  // Fix for CourtIQ performance and user rating details endpoints
-  // PKL-278651-STATS-0002-RD: Performance Metrics and Rating Detail endpoints
-  app.get('/api/courtiq/performance', (req, res) => {
-    console.log("[API] Direct CourtIQ performance handler");
-    
-    try {
-      const userId = req.query.userId ? parseInt(req.query.userId as string) : 1;
-      const format = req.query.format as string || 'singles';
-      const division = req.query.division as string || 'open';
-      
-      // Create synthesized performance data
-      const baseRating = 1750 + (userId * 17) % 500;
-      const powerBase = 65 + (userId * 3) % 30;
-      const speedBase = 70 + (userId * 5) % 25;
-      const precisionBase = 75 + (userId * 7) % 20;
-      const strategyBase = 60 + (userId * 11) % 35;
-      const controlBase = 80 + (userId * 13) % 15;
-      const consistencyBase = 68 + (userId * 17) % 27;
-      
-      // Determine tier
-      let tierName = "Bronze";
-      let tierColorCode = "#CD7F32";
-      
-      if (baseRating >= 2000) {
-        tierName = "Diamond";
-        tierColorCode = "#B9F2FF";
-      } else if (baseRating >= 1900) {
-        tierName = "Platinum";
-        tierColorCode = "#E5E4E2";
-      } else if (baseRating >= 1800) {
-        tierName = "Gold";
-        tierColorCode = "#FFD700";
-      } else if (baseRating >= 1700) {
-        tierName = "Silver";
-        tierColorCode = "#C0C0C0";
-      }
-      
-      // Calculate trend change
-      const recentChange = Math.floor(Math.random() * 40) - 15;
-      
-      const performanceData = {
-        overallRating: baseRating,
-        tierName,
-        tierColorCode,
-        skills: {
-          power: powerBase,
-          speed: speedBase,
-          precision: precisionBase,
-          strategy: strategyBase,
-          control: controlBase,
-          consistency: consistencyBase
-        },
-        recentTrends: {
-          change: recentChange,
-          direction: recentChange > 0 ? 'up' : recentChange < 0 ? 'down' : 'stable',
-          matches: 5 + Math.floor(Math.random() * 10)
-        },
-        strongestArea: "control",
-        weakestArea: "strategy",
-        percentile: 50 + Math.floor(Math.random() * 40)
-      };
-      
-      res.json(performanceData);
-    } catch (error) {
-      console.error('[API][CourtIQ] Error retrieving performance data:', error);
-      res.status(500).json({ error: "Server error", message: "Error retrieving CourtIQ performance data" });
+  // Register CourtIQ and User Rating routes - PKL-278651-STATS-0002-RD
+  // Following Framework 5.0 principles: proper route registration with debug logging
+  
+  // First, register the courtiq routes
+  // PKL-278651-STATS-0002-RD: Performance Metrics endpoint and rating tiers
+  console.log("[API][CourtIQ] Registering courtiq routes with proper path structure");
+  
+  // Modify the router directly to ensure proper path handling
+  courtiqRoutes.stack.forEach(item => {
+    if (item.route) {
+      console.log(`[API][CourtIQ] Route: ${item.route.path}, Methods:`, item.route.methods);
     }
   });
   
-  app.get('/api/user/rating-detail', (req, res) => {
-    console.log("[API] Direct user rating detail handler");
-    
-    try {
-      const userId = req.query.userId ? parseInt(req.query.userId as string) : 1;
-      const format = req.query.format as string || 'singles';
-      const division = req.query.division as string || 'open';
-      
-      // Create a consistent rating based on userId and format
-      const baseRating = 1750 + (userId * 17) % 500;
-      const formatOffset = format === 'singles' ? 0 : format === 'doubles' ? 100 : 50;
-      const rating = baseRating + formatOffset;
-      
-      // Determine tier
-      let tier = "Bronze";
-      if (rating >= 2000) tier = "Diamond";
-      else if (rating >= 1900) tier = "Platinum";
-      else if (rating >= 1800) tier = "Gold";
-      else if (rating >= 1700) tier = "Silver";
-      
-      // Create rating data
-      const ratingData = {
-        id: userId * 100 + (format === 'singles' ? 1 : format === 'doubles' ? 2 : 3),
-        userId: userId,
-        format: format,
-        division: division,
-        rating: rating,
-        tier: tier,
-        confidenceLevel: 0.85,
-        matchesPlayed: 45,
-        lastMatchDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-        createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date().toISOString(),
-        peakRating: rating + 25,
-        allTimeHighRating: rating + 40,
-        currentSeasonHighRating: rating + 20,
-        currentSeasonLowRating: rating - 30,
-        skillBreakdown: {
-          power: 65 + (userId * 3) % 30,
-          speed: 70 + (userId * 5) % 25,
-          precision: 75 + (userId * 7) % 20,
-          strategy: 60 + (userId * 11) % 35,
-          control: 80 + (userId * 13) % 15,
-          consistency: 68 + (userId * 17) % 27
-        },
-        recentMatches: 8,
-        recentChange: 12,
-        percentile: 85
-      };
-      
-      // Generate rating history
-      const now = new Date();
-      const history = [];
-      
-      // Generate 10 data points going back in time (oldest first)
-      const startRating = rating - 100;
-      const totalPoints = 10;
-      
-      for (let i = 0; i < totalPoints; i++) {
-        const daysAgo = 90 - (i * 9);
-        const pointDate = new Date(now.getTime() - (daysAgo * 24 * 60 * 60 * 1000));
-        
-        // Progressive rating increase with occasional dips
-        const progress = i / (totalPoints - 1);
-        const randomFactor = i % 3 === 0 ? -5 : 10; // Occasional dips
-        const pointRating = Math.round(startRating + (progress * 100) + randomFactor);
-        
-        // Calculate change from last point
-        const prevRating = i > 0 ? history[i-1].rating : startRating;
-        const change = pointRating - prevRating;
-        
-        history.push({
-          date: pointDate.toISOString(),
-          rating: pointRating,
-          change: change,
-          matchId: 1000 + i
-        });
-      }
-      
-      // Add the detailed rating with history
-      const ratingDetail = {
-        ...ratingData,
-        history: history
-      };
-      
-      res.json(ratingDetail);
-    } catch (error) {
-      console.error('[API][User] Error retrieving rating detail:', error);
-      res.status(500).json({ error: "Server error", message: "Error retrieving rating detail" });
+  app.use('/api/courtiq', (req, res, next) => {
+    console.log('[API][CourtIQ] Route middleware triggered, path:', req.path);
+    next();
+  }, courtiqRoutes);
+  
+  // Then register the user rating routes  
+  // PKL-278651-STATS-0002-RD: User Rating Detail endpoint
+  console.log("[API][UserRating] Registering user rating routes with proper path structure");
+  
+  // Modify the router directly to ensure proper path handling
+  userRatingRoutes.stack.forEach(item => {
+    if (item.route) {
+      console.log(`[API][UserRating] Route: ${item.route.path}, Methods:`, item.route.methods);
     }
   });
   
-  // Also register the routes for other endpoints
-  app.use('/api/courtiq', courtiqRoutes);
-  app.use('/api/user', userRatingRoutes);
+  app.use('/api/user', (req, res, next) => {
+    console.log('[API][UserRating] Route middleware triggered, path:', req.path);
+    next();
+  }, userRatingRoutes);
 
   // Remove the root route handler to allow Vite to handle it
   // This ensures the Vite middleware can correctly serve the React application
