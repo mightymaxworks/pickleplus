@@ -2,247 +2,166 @@
  * PKL-278651-FEED-0001-BUG - In-App Bug Reporting System
  * Bug Report List Component
  * 
- * This component displays a list of bug reports for the admin dashboard.
+ * This component displays a list of bug reports in the admin dashboard.
  */
 
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle, 
-  CardDescription,
-  CardFooter
-} from '@/components/ui/card';
+import React, { useState } from 'react';
 import { 
   Table, 
-  TableHeader, 
-  TableRow, 
-  TableHead, 
   TableBody, 
-  TableCell 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
 } from '@/components/ui/table';
 import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { getAllBugReports } from '@/modules/feedback/api/feedbackAdminApi';
-import { Skeleton } from '@/components/ui/skeleton';
+import { BugReport, BugReportStatus, BugReportSeverity } from '@/shared/bug-report-schema';
+import { 
+  AlertTriangle, 
+  Bug, 
+  CheckCircle, 
+  Clock, 
+  Copy, 
+  MoreHorizontal, 
+  XCircle 
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
-import { BugReportDetail } from './BugReportDetail';
+
+interface BugReportListProps {
+  reports: BugReport[];
+  onSelectReport?: (report: BugReport) => void;
+}
 
 /**
- * Helper function to get severity badge color
+ * Returns the appropriate icon based on bug report severity
  */
-function getSeverityBadgeColor(severity: string) {
+const getSeverityIcon = (severity: BugReportSeverity) => {
   switch (severity) {
-    case 'low':
-      return 'bg-blue-100 text-blue-800 hover:bg-blue-100';
-    case 'medium':
-      return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100';
-    case 'high':
-      return 'bg-orange-100 text-orange-800 hover:bg-orange-100';
-    case 'critical':
-      return 'bg-red-100 text-red-800 hover:bg-red-100';
+    case BugReportSeverity.CRITICAL:
+      return <AlertTriangle className="h-4 w-4 text-red-500" />;
+    case BugReportSeverity.HIGH:
+      return <AlertTriangle className="h-4 w-4 text-amber-500" />;
+    case BugReportSeverity.MEDIUM:
+      return <Bug className="h-4 w-4 text-yellow-500" />;
+    case BugReportSeverity.LOW:
     default:
-      return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
+      return <Bug className="h-4 w-4 text-blue-500" />;
   }
-}
+};
 
 /**
- * Helper function to get status badge color
+ * Returns the appropriate status badge based on bug report status
  */
-function getStatusBadgeColor(status: string) {
+const getStatusBadge = (status: BugReportStatus) => {
   switch (status) {
-    case 'new':
-      return 'bg-blue-100 text-blue-800 hover:bg-blue-100';
-    case 'in_progress':
-      return 'bg-purple-100 text-purple-800 hover:bg-purple-100';
-    case 'resolved':
-      return 'bg-green-100 text-green-800 hover:bg-green-100';
-    case 'wont_fix':
-      return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
-    case 'duplicate':
-      return 'bg-amber-100 text-amber-800 hover:bg-amber-100';
+    case BugReportStatus.NEW:
+      return <Badge variant="outline" className="bg-amber-100 text-amber-800">New</Badge>;
+    case BugReportStatus.IN_PROGRESS:
+      return <Badge variant="outline" className="bg-blue-100 text-blue-800">In Progress</Badge>;
+    case BugReportStatus.RESOLVED:
+      return <Badge variant="outline" className="bg-green-100 text-green-800">Resolved</Badge>;
+    case BugReportStatus.WONT_FIX:
+      return <Badge variant="outline" className="bg-gray-100 text-gray-800">Won't Fix</Badge>;
+    case BugReportStatus.DUPLICATE:
+      return <Badge variant="outline" className="bg-purple-100 text-purple-800">Duplicate</Badge>;
     default:
-      return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
+      return <Badge variant="outline">{status}</Badge>;
   }
-}
+};
 
 /**
- * Helper function to format status text
+ * Format relative time for display
  */
-function formatStatus(status: string) {
-  switch (status) {
-    case 'in_progress':
-      return 'In Progress';
-    case 'wont_fix':
-      return 'Won\'t Fix';
-    default:
-      return status.charAt(0).toUpperCase() + status.slice(1);
+const formatTime = (timestamp: string) => {
+  try {
+    return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
+  } catch (e) {
+    return 'Unknown time';
   }
-}
+};
 
 /**
  * Bug Report List component
  */
-export function BugReportList() {
-  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
-  const [severityFilter, setSeverityFilter] = useState<string | undefined>(undefined);
-  const [selectedReportId, setSelectedReportId] = useState<number | null>(null);
-  
-  // Fetch bug reports with filtering
-  const { data: reports, isLoading, isError, refetch } = useQuery({
-    queryKey: ['/api/admin/feedback/bug-reports', statusFilter, severityFilter],
-    queryFn: () => getAllBugReports({ 
-      status: statusFilter, 
-      severity: severityFilter 
-    })
-  });
-  
-  // View a bug report
-  const handleViewReport = (id: number) => {
-    setSelectedReportId(id);
-  };
-  
-  // Close the detail view
-  const handleCloseDetail = () => {
-    setSelectedReportId(null);
-    refetch();
-  };
-  
+const BugReportList: React.FC<BugReportListProps> = ({ reports, onSelectReport }) => {
   return (
-    <div className="space-y-6">
-      {selectedReportId ? (
-        <BugReportDetail id={selectedReportId} onClose={handleCloseDetail} />
-      ) : (
-        <>
-          <Card>
-            <CardHeader>
-              <CardTitle>Bug Reports</CardTitle>
-              <CardDescription>
-                View and manage bug reports submitted by users
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-4 mb-6">
-                <div className="w-full sm:w-auto">
-                  <Select value={statusFilter || ''} onValueChange={(value) => setStatusFilter(value || undefined)}>
-                    <SelectTrigger className="w-full sm:w-[180px]">
-                      <SelectValue placeholder="Filter by status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">All Statuses</SelectItem>
-                      <SelectItem value="new">New</SelectItem>
-                      <SelectItem value="in_progress">In Progress</SelectItem>
-                      <SelectItem value="resolved">Resolved</SelectItem>
-                      <SelectItem value="wont_fix">Won't Fix</SelectItem>
-                      <SelectItem value="duplicate">Duplicate</SelectItem>
-                    </SelectContent>
-                  </Select>
+    <div className="border rounded-md">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[80px]">Severity</TableHead>
+            <TableHead>Title</TableHead>
+            <TableHead>Reported By</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Reported</TableHead>
+            <TableHead className="w-[100px]">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {reports.map((report) => (
+            <TableRow 
+              key={report.id} 
+              className="cursor-pointer hover:bg-muted/50"
+              onClick={() => onSelectReport && onSelectReport(report)}
+            >
+              <TableCell>
+                {getSeverityIcon(report.severity)}
+              </TableCell>
+              <TableCell className="font-medium">
+                {report.title}
+              </TableCell>
+              <TableCell>
+                {report.userName || `User #${report.userId}`}
+              </TableCell>
+              <TableCell>
+                {getStatusBadge(report.status)}
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center">
+                  <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    {formatTime(report.createdAt)}
+                  </span>
                 </div>
-                <div className="w-full sm:w-auto">
-                  <Select value={severityFilter || ''} onValueChange={(value) => setSeverityFilter(value || undefined)}>
-                    <SelectTrigger className="w-full sm:w-[180px]">
-                      <SelectValue placeholder="Filter by severity" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">All Severities</SelectItem>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="critical">Critical</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              {isLoading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-20 w-full" />
-                  <Skeleton className="h-20 w-full" />
-                  <Skeleton className="h-20 w-full" />
-                </div>
-              ) : isError ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  Error loading bug reports. Please try again.
-                </div>
-              ) : reports?.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No bug reports found.
-                </div>
-              ) : (
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Title</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Severity</TableHead>
-                        <TableHead>Submitted</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {reports?.map((report) => (
-                        <TableRow key={report.id}>
-                          <TableCell className="font-medium truncate max-w-[240px]">
-                            {report.title}
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={getStatusBadgeColor(report.status)}>
-                              {formatStatus(report.status)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={getSeverityBadgeColor(report.severity)}>
-                              {report.severity.charAt(0).toUpperCase() + report.severity.slice(1)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {report.createdAt ? formatDistanceToNow(new Date(report.createdAt), { addSuffix: true }) : 'Unknown'}
-                          </TableCell>
-                          <TableCell>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleViewReport(report.id)}
-                            >
-                              View
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <div className="text-sm text-muted-foreground">
-                {!isLoading && !isError && reports && `Showing ${reports.length} results`}
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => refetch()}
-                disabled={isLoading}
-              >
-                Refresh
-              </Button>
-            </CardFooter>
-          </Card>
-        </>
-      )}
+              </TableCell>
+              <TableCell>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                      <span className="sr-only">Open menu</span>
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={(e) => {
+                      e.stopPropagation();
+                      onSelectReport && onSelectReport(report);
+                    }}>
+                      View details
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => {
+                      e.stopPropagation();
+                      // Copy ID to clipboard
+                      navigator.clipboard.writeText(report.id.toString());
+                    }}>
+                      Copy ID
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
-}
+};
 
 export default BugReportList;

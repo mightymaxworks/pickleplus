@@ -5,8 +5,7 @@
  * This file defines the API functions for interacting with the feedback API from the admin interface.
  */
 
-import { apiRequest } from '@/lib/queryClient';
-import { BugReport } from '../../../shared/bug-report-schema';
+import { BugReport } from '@/shared/bug-report-schema';
 
 /**
  * Get all bug reports with optional filtering
@@ -38,14 +37,40 @@ export async function getAllBugReports(params?: {
   const queryString = queryParams.toString();
   const url = `/api/admin/feedback/bug-reports${queryString ? `?${queryString}` : ''}`;
   
-  return apiRequest(url);
+  const response = await fetch(url, {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch bug reports: ${response.statusText}`);
+  }
+  
+  const data = await response.json();
+  return data as BugReport[];
 }
 
 /**
  * Get a specific bug report by ID
  */
 export async function getBugReportById(id: number): Promise<BugReport> {
-  return apiRequest(`/api/admin/feedback/bug-reports/${id}`);
+  const response = await fetch(`/api/admin/feedback/bug-reports/${id}`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch bug report: ${response.statusText}`);
+  }
+  
+  const data = await response.json();
+  return data as BugReport;
 }
 
 /**
@@ -56,13 +81,21 @@ export async function updateBugReportStatus(
   status: string, 
   adminNotes?: string
 ): Promise<BugReport> {
-  return apiRequest(`/api/admin/feedback/bug-reports/${id}/status`, {
+  const response = await fetch(`/api/admin/feedback/bug-reports/${id}/status`, {
     method: 'PATCH',
-    body: JSON.stringify({ status, adminNotes }),
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json'
-    }
+    },
+    body: JSON.stringify({ status, adminNotes })
   });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to update bug report status: ${response.statusText}`);
+  }
+  
+  const data = await response.json();
+  return data as BugReport;
 }
 
 /**
@@ -72,11 +105,19 @@ export async function assignBugReport(
   id: number, 
   assignedTo: number | null
 ): Promise<BugReport> {
-  return apiRequest(`/api/admin/feedback/bug-reports/${id}/assign`, {
+  const response = await fetch(`/api/admin/feedback/bug-reports/${id}/assign`, {
     method: 'PATCH',
-    body: JSON.stringify({ assignedTo }),
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json'
-    }
+    },
+    body: JSON.stringify({ assignedTo })
   });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to assign bug report: ${response.statusText}`);
+  }
+  
+  const data = await response.json();
+  return data as BugReport;
 }
