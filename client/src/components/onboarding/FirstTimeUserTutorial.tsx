@@ -237,16 +237,13 @@ const FirstTimeUserTutorial: React.FC<FirstTimeUserTutorialProps> = ({
       <AnimatePresence>
         {showTutorial && (
           <motion.div
-            className={positionStyles[step.position] || positionStyles.center}
+            className={standardPosition}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className={cn(
-              "p-5 shadow-lg max-w-md w-full bg-white",
-              step.position !== 'center' && "w-80"
-            )}>
+            <Card className="p-5 shadow-lg max-w-md w-full bg-white">
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center">
                   {step.icon}
