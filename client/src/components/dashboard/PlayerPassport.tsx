@@ -167,7 +167,7 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
                   </div>
                 ) : (
                   <div className="font-bold text-sm text-blue-600 dark:text-blue-400">
-                    {rankingPosition?.rankingPoints.toLocaleString() || 0}
+                    {rankingPosition?.status === "not_ranked" ? "Not Ranked" : (rankingPosition?.rankingPoints?.toLocaleString() || 0)}
                   </div>
                 )}
               </div>
@@ -297,7 +297,7 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
                   </div>
                 ) : (
                   <div className="font-bold text-blue-600 dark:text-blue-400">
-                    {rankingPosition?.rankingPoints.toLocaleString() || 0}
+                    {rankingPosition?.status === "not_ranked" ? "Not Ranked" : (rankingPosition?.rankingPoints?.toLocaleString() || 0)}
                   </div>
                 )}
               </div>
