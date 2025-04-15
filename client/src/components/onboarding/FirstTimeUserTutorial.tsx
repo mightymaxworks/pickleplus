@@ -227,9 +227,9 @@ const FirstTimeUserTutorial: React.FC<FirstTimeUserTutorialProps> = ({
   // Get current step data
   const step = currentStep > 0 ? tutorialSteps[currentStep - 1] : tutorialSteps[0];
 
-  // Standardized position style for all tutorial steps - always top center
-  // This ensures consistency and helps avoid UI conflicts with bottom navigation
-  const standardPosition = 'fixed top-24 left-1/2 transform -translate-x-1/2 z-50';
+  // Standardized position style for all tutorial steps - always top left
+  // This ensures consistency and visibility without being cut off on any side
+  const standardPosition = 'fixed top-24 left-8 z-50';
 
   return (
     <>
@@ -243,7 +243,7 @@ const FirstTimeUserTutorial: React.FC<FirstTimeUserTutorialProps> = ({
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="p-5 shadow-lg max-w-md w-full bg-white">
+            <Card className="p-5 shadow-lg max-w-sm w-full bg-white">
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center">
                   {step.icon}
