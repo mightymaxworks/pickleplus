@@ -39,6 +39,7 @@ import {
   LazyReportsPage,
   LazySettingsPage,
   LazyMobileTestPage,
+  LazyBugReportDashboard,
   LazyNotFoundPage,
   LazyDashboardPage,
   preloadProfilePages,
@@ -244,6 +245,13 @@ export default function App() {
                     {(params) => (
                       <AdminProtectedRoute>
                         <LazySettingsPage />
+                      </AdminProtectedRoute>
+                    )}
+                  </Route>
+                  <Route path="/admin/bug-reports">
+                    {(params) => (
+                      <AdminProtectedRoute>
+                        <LazyBugReportDashboard />
                       </AdminProtectedRoute>
                     )}
                   </Route>

@@ -61,6 +61,7 @@ export const LazyPassportVerificationPage = lazyLoad(() => import('./pages/admin
 export const LazyReportsPage = lazyLoad(() => import('./pages/admin/ReportsPage'));
 export const LazySettingsPage = lazyLoad(() => import('./pages/admin/SettingsPage'));
 export const LazyMobileTestPage = lazyLoad(() => import('./pages/admin/MobileTestPage'));
+export const LazyBugReportDashboard = lazyLoad(() => import('./modules/admin/components/feedback/BugReportDashboard'));
 
 // Miscellaneous pages
 export const LazyNotFoundPage = lazyLoad(() => import('./pages/not-found'));
