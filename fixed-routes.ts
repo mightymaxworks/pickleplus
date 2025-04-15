@@ -1208,6 +1208,11 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     res.send(htmlContent);
   });
   
+  // Register CourtIQ and User Rating routes
+  // PKL-278651-STATS-0002-RD: Performance Metrics and Rating Detail endpoints
+  app.use('/api/courtiq', courtiqRoutes);
+  app.use('/api/user', userRatingRoutes);
+
   // Remove the root route handler to allow Vite to handle it
   // This ensures the Vite middleware can correctly serve the React application
   
