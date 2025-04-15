@@ -181,6 +181,111 @@ export function registerFeedbackRoutes(app: express.Express) {
       res.status(500).json({ error: 'Failed to list bug reports' });
     }
   });
+
+  // ADMIN ROUTES
+  
+  // Admin route for listing all bug reports with filtering
+  app.get('/api/admin/feedback/bug-reports', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      // Ensure user is an admin
+      if (!req.user?.isAdmin) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+      
+      // Parse query parameters for filtering
+      const status = typeof req.query.status === 'string' ? req.query.status as any : undefined;
+      const severity = typeof req.query.severity === 'string' ? req.query.severity as any : undefined;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+      const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
+      
+      // Get reports with filters
+      const reports = await feedbackService.listBugReports({
+        status,
+        severity,
+        limit,
+        offset
+      });
+      
+      res.status(200).json(reports);
+    } catch (error) {
+      console.error('Error listing all bug reports:', error);
+      res.status(500).json({ error: 'Failed to list bug reports' });
+    }
+  });
+  
+  // Admin route for updating bug report status
+  app.patch('/api/admin/feedback/bug-reports/:id/status', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      // Ensure user is an admin
+      if (!req.user?.isAdmin) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+      
+      const reportId = parseInt(req.params.id);
+      const { status, adminNotes } = req.body;
+      
+      // Update the status
+      const updatedReport = await feedbackService.updateBugReportStatus(reportId, status, adminNotes);
+      
+      if (!updatedReport) {
+        return res.status(404).json({ error: 'Bug report not found' });
+      }
+      
+      res.status(200).json(updatedReport);
+    } catch (error) {
+      console.error('Error updating bug report status:', error);
+      res.status(500).json({ error: 'Failed to update bug report status' });
+    }
+  });
+  
+  // Admin route for assigning bug reports
+  app.patch('/api/admin/feedback/bug-reports/:id/assign', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      // Ensure user is an admin
+      if (!req.user?.isAdmin) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+      
+      const reportId = parseInt(req.params.id);
+      const assignedTo = req.body.assignedTo !== undefined ? parseInt(req.body.assignedTo) : null;
+      
+      // Update the assignment
+      const updatedReport = await feedbackService.assignBugReport(reportId, assignedTo);
+      
+      if (!updatedReport) {
+        return res.status(404).json({ error: 'Bug report not found' });
+      }
+      
+      res.status(200).json(updatedReport);
+    } catch (error) {
+      console.error('Error assigning bug report:', error);
+      res.status(500).json({ error: 'Failed to assign bug report' });
+    }
+  });
+  
+  // Admin route for detailed bug report view
+  app.get('/api/admin/feedback/bug-reports/:id', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      // Ensure user is an admin
+      if (!req.user?.isAdmin) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+      
+      const reportId = parseInt(req.params.id);
+      
+      // Get the bug report
+      const report = await feedbackService.getBugReportById(reportId);
+      
+      if (!report) {
+        return res.status(404).json({ error: 'Bug report not found' });
+      }
+      
+      res.status(200).json(report);
+    } catch (error) {
+      console.error('Error getting bug report details:', error);
+      res.status(500).json({ error: 'Failed to get bug report details' });
+    }
+  });
   
   console.log('[API][PKL-278651-FEED-0001-BUG] Feedback routes registered successfully');
 }
