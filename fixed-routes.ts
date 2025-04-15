@@ -26,6 +26,8 @@ import { registerUserSearchRoutes } from "./routes/user-search-routes";
 import { default as registerTournamentSeedTeamsRoutes } from "./routes/tournament-seed-teams-routes";
 import { registerMatchResultRoutes } from "./routes/register-match-result-routes";
 import batchApiRoutes from "./routes/batch-api-routes"; // PKL-278651-PERF-0001.4-API
+import courtiqRoutes from "./routes/courtiq-routes"; // PKL-278651-STATS-0002-RD
+import userRatingRoutes from "./routes/user-rating-routes"; // PKL-278651-STATS-0002-RD
 
 // Import necessary schema
 import { 
@@ -43,6 +45,8 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Register API route modules
   app.use("/api/match", matchRoutes);
   app.use("/api/ranking", rankingRoutes);
+  app.use("/api/courtiq", courtiqRoutes); // PKL-278651-STATS-0002-RD: CourtIQ Performance
+  app.use("/api/user", userRatingRoutes); // PKL-278651-STATS-0002-RD: User Rating Detail
   
   // Initialize Mastery Paths database tables
   try {
