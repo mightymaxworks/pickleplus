@@ -108,8 +108,8 @@ const TutorialProvider: React.FC<TutorialProviderProps> = ({ children }) => {
     <TutorialContext.Provider value={tutorialContextValue}>
       {children}
       
-      {/* Render tutorial for authenticated users who haven't completed it */}
-      {showTutorial && user?.id && (
+      {/* Render tutorial for authenticated users who haven't completed it, but never on landing page */}
+      {showTutorial && user?.id && window.location.pathname !== '/' && (
         <FirstTimeUserTutorial
           isFirstTimeUser={true} 
           userId={user.id}

@@ -35,21 +35,23 @@ export function SimpleBugReportButton({ position = 'bottom-right' }: BugReportBu
   const [location] = useLocation();
   const { toast } = useToast();
   
-  // Define position classes based on the position prop
-  const positionClasses = {
-    'bottom-right': 'bottom-4 right-4', // Keep at very bottom to avoid UI conflicts
-    'bottom-left': 'bottom-4 left-4',
-    'top-right': 'top-24 right-4', // Moved down to avoid header elements
-    'top-left': 'top-24 left-4'  // Moved down to avoid header elements
-  };
+  // Standardize position to always be in one location - top right corner
+  // This avoids conflicts with various UI elements across different pages
+  const buttonPosition = 'top-24 right-4';
   
-  // Only show the button on dashboard and other inner pages, not on landing or login
+  // Only show the button on specific inner pages, not on landing, login, or register
   const shouldShowButton = location.startsWith('/dashboard') || 
     location.startsWith('/profile') || 
     location.startsWith('/tournaments') || 
     location.startsWith('/matches') ||
     location.startsWith('/admin') ||
-    (location !== '/' && location !== '/login' && location !== '/register');
+    location.startsWith('/leaderboard') ||
+    location.startsWith('/mastery-paths');
+    
+  // Explicitly exclude these paths
+  if (location === '/' || location === '/login' || location === '/register' || location === '/auth') {
+    return null;
+  }
   
   if (!shouldShowButton) {
     return null;
@@ -75,7 +77,7 @@ export function SimpleBugReportButton({ position = 'bottom-right' }: BugReportBu
       <Button
         variant="secondary"
         size="icon"
-        className={`fixed ${positionClasses[position]} z-40 rounded-full h-12 w-12 shadow-lg flex items-center justify-center bg-amber-100 hover:bg-amber-200 border-amber-300 text-amber-700`}
+        className={`fixed ${buttonPosition} z-40 rounded-full h-12 w-12 shadow-lg flex items-center justify-center bg-amber-100 hover:bg-amber-200 border-amber-300 text-amber-700`}
         aria-label="Report a bug"
         onClick={() => setIsOpen(true)}
       >

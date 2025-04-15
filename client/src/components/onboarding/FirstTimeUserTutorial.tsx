@@ -227,13 +227,9 @@ const FirstTimeUserTutorial: React.FC<FirstTimeUserTutorialProps> = ({
   // Get current step data
   const step = currentStep > 0 ? tutorialSteps[currentStep - 1] : tutorialSteps[0];
 
-  // Position styles based on step position property
-  const positionStyles = {
-    center: 'fixed inset-0 flex items-center justify-center z-50',
-    right: 'fixed top-20 right-4 z-50',
-    left: 'fixed top-20 left-4 z-50',
-    bottom: 'fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50',
-  };
+  // Standardized position style for all tutorial steps - always bottom center
+  // This ensures consistency and helps avoid UI conflicts
+  const standardPosition = 'fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50';
 
   return (
     <>
