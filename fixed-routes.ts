@@ -977,9 +977,10 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   });
   
   // Multi-dimensional rankings position
-  app.get("/api/multi-rankings/position", async (req: Request, res: Response) => {
+  app.get("/api/multi-rankings/position", (req: Request, res: Response) => {
+    console.log("[API] Multi-rankings position request received, query:", req.query);
+    
     try {
-      console.log("[API] Multi-rankings position request received, query:", req.query);
       // Default to userId 1 if no userId provided
       const userId = req.query.userId ? parseInt(req.query.userId as string) : (req.user?.id || 1);
       console.log("[API] Using userId:", userId);

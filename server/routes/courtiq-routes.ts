@@ -15,6 +15,7 @@ const router = Router();
  * GET /api/courtiq/performance
  */
 router.get('/performance', isAuthenticated, async (req: Request, res: Response) => {
+  console.log("[CourtIQ] Performance data requested, path:", req.path, "baseUrl:", req.baseUrl);
   try {
     // Get userId from query or current user
     let userId: number;

@@ -15,6 +15,7 @@ const router = Router();
  * GET /api/user/rating-detail
  */
 router.get('/rating-detail', isAuthenticated, async (req: Request, res: Response) => {
+  console.log("[UserRating] Rating detail requested, path:", req.path, "baseUrl:", req.baseUrl);
   try {
     // Get userId from query or current user
     let userId: number;
