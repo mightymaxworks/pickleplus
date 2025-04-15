@@ -13,6 +13,7 @@ import {
 } from '../components/passport';
 import { AdminMobileTestNavItem } from '../components/mobile-test';
 import { registerReportingComponents } from './reportingComponentRegistration';
+import { registerFeedbackComponents } from './feedbackComponentRegistration';
 // Import settings module to register its components
 import '../components/settings';
 
@@ -48,6 +49,7 @@ export function registerAllAdminComponents() {
   registerPassportVerificationComponents();
   registerMobileTestComponents();
   registerReportingComponents();
+  registerFeedbackComponents();
   
   console.log('[Admin] Admin components registered');
 }

@@ -6,8 +6,15 @@
  * in the admin dashboard.
  */
 
-import { NavItemProps } from '../../types';
 import { Bug } from 'lucide-react';
+
+/**
+ * Props for the navigation item component
+ */
+interface NavItemProps {
+  isActive: boolean;
+  onClick: () => void;
+}
 
 /**
  * Bug Report Nav Item component for the admin sidebar

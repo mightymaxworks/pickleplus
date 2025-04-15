@@ -6,7 +6,7 @@
  */
 
 import { apiRequest } from '@/lib/queryClient';
-import { BugReport } from '../../../../shared/bug-report-schema';
+import { BugReport } from '../../../shared/bug-report-schema';
 
 /**
  * Get all bug reports with optional filtering
