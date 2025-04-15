@@ -167,7 +167,11 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
                   </div>
                 ) : (
                   <div className="font-bold text-sm text-blue-600 dark:text-blue-400">
-                    {rankingPosition?.status === "not_ranked" ? "Not Ranked" : (rankingPosition?.rankingPoints?.toLocaleString() || 0)}
+                    {rankingPosition?.status === "not_ranked" 
+                      ? "Ready for Action!" 
+                      : rankingPosition?.status === "insufficient_data"
+                        ? "Play to Earn!" 
+                        : (rankingPosition?.rankingPoints?.toLocaleString() || "Get Started!")}
                   </div>
                 )}
               </div>
@@ -191,7 +195,13 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
                   </div>
                 ) : (
                   <div className="font-bold text-sm text-purple-600 dark:text-purple-400">
-                    {rankingPosition?.rank ? `${rankingPosition.rank}${getRankSuffix(rankingPosition.rank)}` : '-'}
+                    {rankingPosition?.rank 
+                      ? `${rankingPosition.rank}${getRankSuffix(rankingPosition.rank)}` 
+                      : rankingPosition?.status === "not_ranked" 
+                        ? "Coming Soon!" 
+                        : rankingPosition?.status === "insufficient_data" 
+                          ? "In Progress" 
+                          : "Join Now!"}
                   </div>
                 )}
               </div>
@@ -297,7 +307,11 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
                   </div>
                 ) : (
                   <div className="font-bold text-blue-600 dark:text-blue-400">
-                    {rankingPosition?.status === "not_ranked" ? "Not Ranked" : (rankingPosition?.rankingPoints?.toLocaleString() || 0)}
+                    {rankingPosition?.status === "not_ranked" 
+                      ? "Ready for Action!" 
+                      : rankingPosition?.status === "insufficient_data"
+                        ? "Play to Earn!" 
+                        : (rankingPosition?.rankingPoints?.toLocaleString() || "Get Started!")}
                   </div>
                 )}
               </div>
@@ -321,7 +335,13 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
                   </div>
                 ) : (
                   <div className="font-bold text-purple-600 dark:text-purple-400">
-                    {rankingPosition?.rank ? `${rankingPosition.rank}${getRankSuffix(rankingPosition.rank)}` : '-'}
+                    {rankingPosition?.rank 
+                      ? `${rankingPosition.rank}${getRankSuffix(rankingPosition.rank)}` 
+                      : rankingPosition?.status === "not_ranked" 
+                        ? "Coming Soon!" 
+                        : rankingPosition?.status === "insufficient_data" 
+                          ? "In Progress" 
+                          : "Join Now!"}
                   </div>
                 )}
               </div>
