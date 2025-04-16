@@ -38,6 +38,42 @@ import {
   apiWebhookDeliveryLogs
 } from './schema/api-gateway';
 
+// Import Community schema (PKL-278651-COMM-0006-HUB - Community Hub Implementation)
+import {
+  communities,
+  communityMembers,
+  communityPosts,
+  communityEvents,
+  communityEventAttendees,
+  communityPostComments,
+  communityPostLikes,
+  communityCommentLikes,
+  communityInvitations,
+  communityJoinRequests,
+  communitiesRelations,
+  communityMembersRelations,
+  communityPostsRelations,
+  communityEventsRelations,
+  insertCommunitySchema,
+  insertCommunityMemberSchema,
+  insertCommunityPostSchema,
+  insertCommunityEventSchema,
+  insertCommunityEventAttendeeSchema,
+  insertCommunityPostCommentSchema,
+  type Community,
+  type InsertCommunity,
+  type CommunityMember,
+  type InsertCommunityMember,
+  type CommunityPost,
+  type InsertCommunityPost,
+  type CommunityEvent,
+  type InsertCommunityEvent,
+  type CommunityEventAttendee,
+  type InsertCommunityEventAttendee,
+  type CommunityPostComment,
+  type InsertCommunityPostComment
+} from './schema/community';
+
 // Import tournament bracket schema (PKL-278651-TOURN-0001-BRCKT - Tournament Bracket System)
 import {
   tournamentTeams,
