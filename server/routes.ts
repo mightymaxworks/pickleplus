@@ -79,6 +79,11 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Register Passport Verification routes (PKL-278651-CONN-0004-PASS-ADMIN)
   registerPassportVerificationRoutes(app);
   
+  // Initialize Enhanced User Management module (PKL-278651-ADMIN-0015-USER)
+  // This needs to be initialized before other admin routes to ensure proper routing
+  const adminRouter = initializeAdminModule();
+  app.use("/api/admin", isAuthenticated, isAdmin, adminRouter);
+  
   // Register Admin Reporting routes (PKL-278651-ADMIN-0010-REPORT)
   registerAdminReportRoutes(app);
   
@@ -103,10 +108,6 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Initialize API Gateway and Developer Portal (PKL-278651-API-0001-GATEWAY)
   initApiGateway(app);
-  
-  // Initialize Enhanced User Management module (PKL-278651-ADMIN-0015-USER)
-  const adminRouter = initializeAdminModule();
-  app.use("/api/admin", isAuthenticated, isAdmin, adminRouter);
   
   // Register Batch API routes (PKL-278651-PERF-0001.4-API)
   app.use("/api", batchApiRoutes);
