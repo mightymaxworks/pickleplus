@@ -41,10 +41,21 @@ export function EngagementReports({ timePeriod, onError }: EngagementReportsProp
     async function fetchEngagementReports() {
       setLoading(true);
       try {
-        const response = await apiRequest<ComparisonData[]>(`/api/admin/reports/engagement?timePeriod=${timePeriod}`, {
+        const response = await fetch(`/api/admin/reports/engagement?timePeriod=${timePeriod}`, {
           method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+          },
+          credentials: 'include'
         });
-        setEngagementData(response);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch engagement reports');
+        }
+        
+        const data = await response.json();
+        setEngagementData(data.data || []);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching engagement reports:", error);
