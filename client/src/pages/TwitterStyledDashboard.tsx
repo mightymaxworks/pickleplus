@@ -259,12 +259,12 @@ const FeedItem = ({ item }: { item: typeof feedItems[0] }) => {
                   {item.content.result === "win" ? "WIN" : "LOSS"}
                 </Badge>
                 <span className="font-medium text-sm">{item.content.score}</span>
-                {item.content.courtIQImpact > 0 && (
+                {item.content.courtIQImpact !== undefined && item.content.courtIQImpact > 0 && (
                   <span className="text-xs text-green-500 flex items-center">
                     <ArrowUp className="h-3 w-3 mr-0.5" /> {item.content.courtIQImpact}
                   </span>
                 )}
-                {item.content.courtIQImpact < 0 && (
+                {item.content.courtIQImpact !== undefined && item.content.courtIQImpact < 0 && (
                   <span className="text-xs text-red-500 flex items-center">
                     <ArrowDown className="h-3 w-3 mr-0.5" /> {Math.abs(item.content.courtIQImpact)}
                   </span>
@@ -372,7 +372,7 @@ const PassportCard = ({ user }: { user: typeof currentUser }) => {
         <div className="flex flex-col items-center">
           <div className="bg-primary/10 w-full rounded-lg p-4 flex flex-col items-center">
             <h3 className="font-bold text-lg mb-1">Pickleball Passport</h3>
-            <QRCode value={user.passportId} size={120} className="mb-3" />
+            <QRCodeSVG value={user.passportId} size={120} className="mb-3" />
             <div className="text-2xl font-mono font-bold text-primary">{user.passportId}</div>
             <div className="flex items-center mt-1 text-sm">
               <span className="font-medium">{user.name}</span>
@@ -595,43 +595,42 @@ const TwitterStyledDashboard = () => {
               <PassportCard user={currentUser} />
             </div>
           </div>
-          
-          {/* Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="w-full rounded-none bg-transparent border-b h-12">
-              <TabsTrigger value="for-you" className="flex-1 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none h-full">
-                For You
-              </TabsTrigger>
-              <TabsTrigger value="following" className="flex-1 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none h-full">
-                Following
-              </TabsTrigger>
-              <TabsTrigger value="communities" className="flex-1 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none h-full">
-                Communities
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
         </header>
         
-        {/* Feed */}
-        <div className="flex-1">
-          <TabsContent value="for-you" className="m-0">
-            {feedItems.map(item => (
-              <FeedItem key={item.id} item={item} />
-            ))}
-          </TabsContent>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="w-full rounded-none bg-transparent border-b h-12">
+            <TabsTrigger value="for-you" className="flex-1 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none h-full">
+              For You
+            </TabsTrigger>
+            <TabsTrigger value="following" className="flex-1 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none h-full">
+              Following
+            </TabsTrigger>
+            <TabsTrigger value="communities" className="flex-1 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none h-full">
+              Communities
+            </TabsTrigger>
+          </TabsList>
           
-          <TabsContent value="following" className="m-0">
-            <div className="p-10 text-center text-muted-foreground">
-              Content from people you follow will appear here.
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="communities" className="m-0">
-            <div className="p-10 text-center text-muted-foreground">
-              Updates from your communities will appear here.
-            </div>
-          </TabsContent>
-        </div>
+          {/* Feed */}
+          <div className="flex-1">
+            <TabsContent value="for-you" className="m-0">
+              {feedItems.map(item => (
+                <FeedItem key={item.id} item={item} />
+              ))}
+            </TabsContent>
+            
+            <TabsContent value="following" className="m-0">
+              <div className="p-10 text-center text-muted-foreground">
+                Content from people you follow will appear here.
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="communities" className="m-0">
+              <div className="p-10 text-center text-muted-foreground">
+                Updates from your communities will appear here.
+              </div>
+            </TabsContent>
+          </div>
+        </Tabs>
         
         {/* Floating Action Button - Mobile Only */}
         <div className="fixed bottom-20 right-4 lg:hidden z-10">
