@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   ArrowUp, 
   ArrowDown, 
@@ -21,7 +21,14 @@ import {
   User,
   Bookmark,
   UserPlus,
-  Award
+  Award,
+  Send,
+  MapPin,
+  Filter,
+  PenSquare,
+  Hash,
+  Sparkles,
+  Info
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -31,7 +38,11 @@ import { motion } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link } from 'wouter';
 import { QRCodeSVG } from 'qrcode.react';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 // Custom Pickleball Icon
 const PickleballIcon = () => (
@@ -610,9 +621,20 @@ const TwitterStyledDashboard = () => {
             </TabsTrigger>
           </TabsList>
           
+          {/* Smart Post/Search Component */}
+          <div className="border-b border-border">
+            <div className="p-4">
+              <SmartInteractionBox />
+            </div>
+          </div>
+          
           {/* Feed */}
           <div className="flex-1">
             <TabsContent value="for-you" className="m-0">
+              {/* AI Response Example */}
+              <AiResponseItem />
+              
+              {/* Regular Feed Items */}
               {feedItems.map(item => (
                 <FeedItem key={item.id} item={item} />
               ))}
@@ -625,9 +647,7 @@ const TwitterStyledDashboard = () => {
             </TabsContent>
             
             <TabsContent value="communities" className="m-0">
-              <div className="p-10 text-center text-muted-foreground">
-                Updates from your communities will appear here.
-              </div>
+              <CommunityView />
             </TabsContent>
           </div>
         </Tabs>
@@ -771,6 +791,462 @@ const TwitterStyledDashboard = () => {
             </div>
             <div className="mt-2">
               © 2025 Pickle+ • All rights reserved
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Smart interaction box - Twitter-style + AI-powered interface
+const SmartInteractionBox = () => {
+  const [inputValue, setInputValue] = useState("");
+  const [isAsking, setIsAsking] = useState(false);
+  const [mode, setMode] = useState<'post'|'question'|'community'>('post');
+  const [selectedCommunity, setSelectedCommunity] = useState<number | null>(null);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputValue.trim()) return;
+    
+    // Simulate sending the message to the backend and getting a response
+    setIsAsking(true);
+    
+    // Reset after simulated delay
+    setTimeout(() => {
+      setInputValue("");
+      setIsAsking(false);
+    }, 1000);
+  };
+
+  return (
+    <div className="flex">
+      <Avatar className="h-10 w-10 mr-3 mt-1">
+        <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} />
+        <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
+      </Avatar>
+      
+      <div className="flex-1">
+        <form onSubmit={handleSubmit}>
+          <div className="relative">
+            <Textarea
+              placeholder={
+                mode === 'post' 
+                  ? "What's happening in your pickleball world?" 
+                  : mode === 'question' 
+                    ? "Ask about events, courts, or players near you..." 
+                    : "Share with your community..."
+              }
+              className="min-h-[80px] resize-none text-base placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary pb-10"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+            />
+            
+            {/* Mode toggler */}
+            <div className="absolute bottom-2 left-2 flex space-x-3">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className={`rounded-full p-2 h-8 ${mode === 'post' ? 'text-primary bg-primary/10' : 'text-muted-foreground'}`}
+                onClick={() => setMode('post')}
+              >
+                <PenSquare className="h-4 w-4" />
+              </Button>
+              
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className={`rounded-full p-2 h-8 ${mode === 'question' ? 'text-primary bg-primary/10' : 'text-muted-foreground'}`}
+                onClick={() => setMode('question')}
+              >
+                <Search className="h-4 w-4" />
+              </Button>
+              
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className={`rounded-full p-2 h-8 ${mode === 'community' ? 'text-primary bg-primary/10' : 'text-muted-foreground'}`}
+                    onClick={() => setMode('community')}
+                  >
+                    <Users className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-60 p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search communities..." />
+                    <CommandList>
+                      <CommandEmpty>No communities found.</CommandEmpty>
+                      <CommandGroup heading="Your Communities">
+                        {myCommunities.map(community => (
+                          <CommandItem 
+                            key={community.id}
+                            onSelect={() => {
+                              setSelectedCommunity(community.id);
+                              setMode('community');
+                            }}
+                            className="flex items-center"
+                          >
+                            <div className="h-6 w-6 bg-primary/10 rounded-full flex items-center justify-center mr-2">
+                              <PickleballIcon />
+                            </div>
+                            <span>{community.name}</span>
+                            {selectedCommunity === community.id && (
+                              <CheckCircle2 className="ml-auto h-4 w-4 text-primary" />
+                            )}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-between mt-3">
+            <div className="flex gap-2">
+              {mode === 'post' && (
+                <>
+                  <Button type="button" variant="ghost" size="icon" className="rounded-full h-8 w-8">
+                    <Calendar className="h-4 w-4 text-primary" />
+                  </Button>
+                  <Button type="button" variant="ghost" size="icon" className="rounded-full h-8 w-8">
+                    <MapPin className="h-4 w-4 text-primary" />
+                  </Button>
+                </>
+              )}
+              
+              {mode === 'question' && (
+                <>
+                  <Badge className="bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary">
+                    Events
+                    <X className="ml-1 h-3 w-3" />
+                  </Badge>
+                  <Badge className="bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary">
+                    Near me
+                    <X className="ml-1 h-3 w-3" />
+                  </Badge>
+                </>
+              )}
+              
+              {mode === 'community' && selectedCommunity && (
+                <Badge className="bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary">
+                  {myCommunities.find(c => c.id === selectedCommunity)?.name}
+                  <X 
+                    className="ml-1 h-3 w-3 cursor-pointer" 
+                    onClick={() => setSelectedCommunity(null)} 
+                  />
+                </Badge>
+              )}
+            </div>
+            
+            <Button 
+              type="submit" 
+              size="sm" 
+              className="rounded-full" 
+              disabled={!inputValue.trim() || isAsking}
+            >
+              {isAsking ? (
+                <div className="h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
+              ) : (
+                <>{mode === 'question' ? 'Ask' : 'Post'}</>
+              )}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// AI Response Item - Shows response to user questions
+const AiResponseItem = () => {
+  const [expanded, setExpanded] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
+  const handleLoadMore = () => {
+    setLoading(true);
+    setTimeout(() => {
+      setExpanded(true);
+      setLoading(false);
+    }, 800);
+  };
+  
+  return (
+    <div className="border-b border-border p-4 bg-primary/5">
+      <div className="flex items-start gap-3">
+        <Avatar className="h-10 w-10">
+          <AvatarFallback className="bg-primary text-primary-foreground">
+            <Sparkles className="h-5 w-5" />
+          </AvatarFallback>
+        </Avatar>
+        
+        <div className="flex-1">
+          <div className="flex items-center gap-1">
+            <span className="font-semibold text-sm">Pickle+ Assistant</span>
+            <CheckCircle2 className="w-3 h-3 text-blue-500" />
+            <span className="text-muted-foreground text-xs">@pickleassist</span>
+            <span className="text-muted-foreground text-xs">·</span>
+            <span className="text-muted-foreground text-xs">Just now</span>
+          </div>
+          
+          <div className="mt-2">
+            <p className="text-sm">Here are upcoming events near Seattle this week:</p>
+            
+            <div className="mt-3 space-y-3">
+              <div className="bg-background p-3 rounded-lg border border-border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium text-sm">Seattle Spring Tournament</div>
+                    <div className="text-xs text-muted-foreground flex items-center">
+                      <Calendar className="h-3 w-3 mr-1" />
+                      Apr 20, 2025 • 9:00 AM
+                    </div>
+                    <div className="text-xs text-muted-foreground flex items-center mt-1">
+                      <MapPin className="h-3 w-3 mr-1" />
+                      Seattle Community Center
+                    </div>
+                  </div>
+                  <Button size="sm" variant="outline">Register</Button>
+                </div>
+              </div>
+              
+              <div className="bg-background p-3 rounded-lg border border-border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium text-sm">Beginner Clinic</div>
+                    <div className="text-xs text-muted-foreground flex items-center">
+                      <Calendar className="h-3 w-3 mr-1" />
+                      Apr 18, 2025 • 6:00 PM
+                    </div>
+                    <div className="text-xs text-muted-foreground flex items-center mt-1">
+                      <MapPin className="h-3 w-3 mr-1" />
+                      Greenlake Courts
+                    </div>
+                  </div>
+                  <Button size="sm" variant="outline">Register</Button>
+                </div>
+              </div>
+              
+              {expanded && (
+                <>
+                  <div className="bg-background p-3 rounded-lg border border-border">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium text-sm">Mixed Doubles Showdown</div>
+                        <div className="text-xs text-muted-foreground flex items-center">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          Apr 22, 2025 • 5:30 PM
+                        </div>
+                        <div className="text-xs text-muted-foreground flex items-center mt-1">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          Bellevue Indoor Courts
+                        </div>
+                      </div>
+                      <Button size="sm" variant="outline">Register</Button>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-background p-3 rounded-lg border border-border">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium text-sm">Evening Social Play</div>
+                        <div className="text-xs text-muted-foreground flex items-center">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          Apr 19, 2025 • 7:00 PM
+                        </div>
+                        <div className="text-xs text-muted-foreground flex items-center mt-1">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          Redmond Rec Center
+                        </div>
+                      </div>
+                      <Button size="sm" variant="outline">RSVP</Button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+            
+            {!expanded && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="mt-3 w-full text-xs" 
+                onClick={handleLoadMore}
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="h-4 w-4 border-2 border-t-transparent border-primary rounded-full animate-spin"></div>
+                ) : (
+                  'Show more events'
+                )}
+              </Button>
+            )}
+            
+            <div className="mt-4 text-sm font-medium">
+              Would you like me to filter by skill level or find events on a specific date?
+            </div>
+            
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Button variant="outline" size="sm">Show beginner events</Button>
+              <Button variant="outline" size="sm">Show weekend events</Button>
+              <Button variant="outline" size="sm">Show events with open spots</Button>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-4 mt-3">
+            <button className="flex items-center text-xs text-muted-foreground hover:text-primary transition-colors">
+              <MessageCircle className="h-4 w-4 mr-1" />
+              Ask follow-up
+            </button>
+            
+            <button className="flex items-center text-xs text-muted-foreground hover:text-primary transition-colors">
+              <RefreshCw className="h-4 w-4 mr-1" />
+              Refresh
+            </button>
+            
+            <button className="flex items-center text-xs text-primary transition-colors ml-auto">
+              <Info className="h-4 w-4 mr-1" />
+              How this works
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Community View Component
+const CommunityView = () => {
+  const [selectedCommunity, setSelectedCommunity] = useState(myCommunities[0]);
+  
+  return (
+    <div className="flex flex-col">
+      {/* Community Selector */}
+      <div className="border-b border-border p-3">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="w-full justify-between">
+              <div className="flex items-center">
+                <div className="h-6 w-6 bg-primary/10 rounded-full flex items-center justify-center mr-2">
+                  <PickleballIcon />
+                </div>
+                <span>{selectedCommunity.name}</span>
+              </div>
+              <ChevronDown className="h-4 w-4 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-0">
+            <Command>
+              <CommandInput placeholder="Search communities..." />
+              <CommandList>
+                <CommandEmpty>No communities found.</CommandEmpty>
+                <CommandGroup heading="Your Communities">
+                  {myCommunities.map(community => (
+                    <CommandItem 
+                      key={community.id}
+                      onSelect={() => setSelectedCommunity(community)}
+                      className="flex items-center"
+                    >
+                      <div className="h-6 w-6 bg-primary/10 rounded-full flex items-center justify-center mr-2">
+                        <PickleballIcon />
+                      </div>
+                      <span>{community.name}</span>
+                      {community.id === selectedCommunity.id && (
+                        <CheckCircle2 className="ml-auto h-4 w-4 text-primary" />
+                      )}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      </div>
+      
+      {/* Community Info */}
+      <div className="p-4 border-b border-border">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-bold text-lg">{selectedCommunity.name}</h3>
+            <div className="text-sm text-muted-foreground flex items-center">
+              <Users className="h-4 w-4 mr-1" />
+              {selectedCommunity.memberCount} members
+            </div>
+          </div>
+          <Button size="sm" variant="outline">Community Settings</Button>
+        </div>
+        
+        <div className="mt-4 flex space-x-2">
+          <Button size="sm" variant="outline" className="flex-1">
+            <Calendar className="h-4 w-4 mr-2" />
+            Events
+          </Button>
+          <Button size="sm" variant="outline" className="flex-1">
+            <UserPlus className="h-4 w-4 mr-2" />
+            Invite
+          </Button>
+          <Button size="sm" variant="outline" className="flex-1">
+            <MessageCircle className="h-4 w-4 mr-2" />
+            Chat
+          </Button>
+        </div>
+      </div>
+      
+      {/* Community Feed */}
+      <div className="mt-2">
+        <div className="p-4 border-b border-border">
+          <div className="flex items-center">
+            <Badge className="bg-blue-500 hover:bg-blue-500/90">Announcement</Badge>
+            <span className="font-medium text-sm ml-2">Weekend Tournament Registration</span>
+          </div>
+          <p className="text-sm mt-2">
+            Registration is now open for our weekend tournament! All skill levels welcome.
+            Register by Friday to secure your spot.
+          </p>
+          <div className="flex items-center text-xs text-muted-foreground mt-3">
+            <Calendar className="h-3 w-3 mr-1" />
+            Apr 20, 2025
+          </div>
+          <div className="flex items-center gap-4 mt-3">
+            <Button size="sm">Register Now</Button>
+            <button className="text-xs text-muted-foreground hover:text-primary transition-colors">
+              Learn more
+            </button>
+          </div>
+        </div>
+        
+        <div className="p-4 border-b border-border">
+          <div className="flex items-start">
+            <Avatar className="h-8 w-8 mr-2">
+              <AvatarImage src="https://randomuser.me/api/portraits/women/68.jpg" alt="Sarah" />
+              <AvatarFallback>S</AvatarFallback>
+            </Avatar>
+            <div>
+              <div className="flex items-center">
+                <span className="font-medium text-sm">Sarah Lopez</span>
+                <span className="text-muted-foreground text-xs ml-2">@sarah_l</span>
+              </div>
+              <p className="text-sm mt-1">
+                Looking for a doubles partner for the tournament this weekend! I'm a 3.5 player.
+                Message me if interested!
+              </p>
+              <div className="flex items-center gap-3 mt-2">
+                <button className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                  <MessageCircle className="h-3 w-3 inline mr-1" />
+                  Reply
+                </button>
+                <button className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                  <Heart className="h-3 w-3 inline mr-1" />
+                  Like
+                </button>
+              </div>
             </div>
           </div>
         </div>
