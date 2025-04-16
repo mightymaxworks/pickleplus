@@ -64,7 +64,9 @@ const OFFICIAL_COMMUNITIES = [
     notifications: 3,
     description: "Official community for Pickle+ giveaways and promotions",
     memberCount: 14562,
-    isAdminManaged: true
+    isAdminManaged: true,
+    isActive: true,
+    unread: false
   },
   {
     id: "global-tournaments",
@@ -74,7 +76,9 @@ const OFFICIAL_COMMUNITIES = [
     notifications: 1,
     description: "Stay updated on all major pickleball tournaments worldwide",
     memberCount: 14562,
-    isAdminManaged: true
+    isAdminManaged: true,
+    isActive: false,
+    unread: false
   }
 ];
 
