@@ -65,17 +65,13 @@ export class UserManagementController {
           case 'admin':
             conditions = and(conditions, eq(users.isAdmin, true));
             break;
-          case 'coach':
-            conditions = and(conditions, eq(users.isCoach, true));
-            break;
           case 'founding':
             conditions = and(conditions, eq(users.isFoundingMember, true));
             break;
           case 'active':
-            conditions = and(conditions, sql.raw(`(
-              last_login_at IS NOT NULL AND 
-              last_login_at > NOW() - INTERVAL '30 days'
-            )`));
+            conditions = and(conditions, sql`(
+              users.last_activity > NOW() - INTERVAL '30 days'
+            )`);
             break;
           // Add more filters as needed
         }

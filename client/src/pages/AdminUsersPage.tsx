@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { User } from '@/types';
@@ -58,44 +58,47 @@ const UserManagementPage = () => {
     }
   });
   
-  // Handle search input
-  const handleSearch = (e: React.FormEvent) => {
+  // Handle search input - use useCallback to prevent re-renders
+  const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     // Search is handled by the query hook above
-  };
+  }, []);
   
-  // Toggle sort direction or change sort field
-  const handleSort = (field: string) => {
+  // Toggle sort direction or change sort field - memoize to prevent re-renders
+  const handleSort = useCallback((field: string) => {
     if (sortBy === field) {
-      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+      setSortDir(prevDir => prevDir === 'asc' ? 'desc' : 'asc');
     } else {
       setSortBy(field);
       setSortDir('asc');
     }
-  };
+  }, [sortBy]);
   
-  // View user details
-  const viewUser = (userId: number) => {
+  // View user details - memoize to prevent re-renders
+  const viewUser = useCallback((userId: number) => {
     navigate(`/admin/users/${userId}`);
-  };
+  }, [navigate]);
   
-  // Edit user
-  const editUser = (userId: number) => {
+  // Edit user - memoize to prevent re-renders
+  const editUser = useCallback((userId: number) => {
     navigate(`/admin/users/${userId}/edit`);
-  };
+  }, [navigate]);
   
-  // Handle page change
-  const handlePageChange = (newPage: number) => {
+  // Handle page change - memoize to prevent re-renders
+  const handlePageChange = useCallback((newPage: number) => {
     setPage(newPage);
-  };
+  }, []);
 
-  if (isError) {
-    toast({
-      title: 'Error',
-      description: (error as Error)?.message || 'Failed to fetch users',
-      variant: 'destructive',
-    });
-  }
+  // Move the error handling to useEffect to prevent render-time side effects
+  useEffect(() => {
+    if (isError) {
+      toast({
+        title: 'Error',
+        description: (error as Error)?.message || 'Failed to fetch users',
+        variant: 'destructive',
+      });
+    }
+  }, [isError, error, toast]);
 
   return (
     <div className="container mx-auto py-6">
@@ -109,7 +112,7 @@ const UserManagementPage = () => {
           <Input
             placeholder="Search users..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={useCallback((e) => setSearchQuery(e.target.value), [])}
             className="flex-1"
           />
           <Button type="submit" variant="outline">
