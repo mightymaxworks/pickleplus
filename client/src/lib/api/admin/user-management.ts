@@ -93,10 +93,21 @@ export async function updateUserStatus(
     expiresAt?: string;
   }
 ): Promise<UserAccountStatus> {
-  return apiRequest('/api/admin/users/' + userId + '/status', {
+  const response = await fetch(`/api/admin/users/${userId}/status`, {
     method: 'PUT',
-    body: JSON.stringify(data),
-  }) as Promise<UserAccountStatus>;
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+    },
+    credentials: 'include',
+    body: JSON.stringify(data)
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to update user status');
+  }
+  
+  return await response.json();
 }
 
 /**
@@ -106,10 +117,21 @@ export async function updateUserProfile(
   userId: number,
   data: Partial<User>
 ): Promise<User> {
-  return apiRequest('/api/admin/users/' + userId + '/profile', {
+  const response = await fetch(`/api/admin/users/${userId}/profile`, {
     method: 'PATCH',
-    body: JSON.stringify(data),
-  }) as Promise<User>;
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+    },
+    credentials: 'include',
+    body: JSON.stringify(data)
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to update user profile');
+  }
+  
+  return await response.json();
 }
 
 /**
@@ -141,13 +163,24 @@ export async function performAdminAction(
   userId: number,
   action: AdminAction
 ): Promise<{ success: boolean; message: string }> {
-  return apiRequest('/api/admin/users/actions', {
+  const response = await fetch('/api/admin/users/actions', {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+    },
+    credentials: 'include',
     body: JSON.stringify({
       userId,
       ...action
-    }),
-  }) as Promise<{ success: boolean; message: string }>;
+    })
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to perform admin action');
+  }
+  
+  return await response.json();
 }
 
 /**

@@ -31,10 +31,21 @@ export function UserReports({ timePeriod, onError }: UserReportsProps) {
     async function fetchUserReports() {
       setLoading(true);
       try {
-        const response = await apiRequest<TimeSeriesData[]>(`/api/admin/reports/user?timePeriod=${timePeriod}`, {
+        const response = await fetch(`/api/admin/reports/user?timePeriod=${timePeriod}`, {
           method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+          },
+          credentials: 'include'
         });
-        setUserData(response);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch user reports');
+        }
+        
+        const data = await response.json();
+        setUserData(data.data || []);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching user reports:", error);
