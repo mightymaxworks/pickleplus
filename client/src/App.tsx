@@ -66,6 +66,7 @@ import CommunityPage from './pages/CommunityPage'
 import SettingsPage from './pages/SettingsPage'
 import SearchTestPage from './pages/SearchTest'
 import Register from './pages/Register'
+import TestCommunityPage from './pages/TestCommunityPage' // PKL-278651-COMM-0001-UIMOCK
 
 import { useAuth } from './hooks/useAuth'
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute'
