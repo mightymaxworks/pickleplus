@@ -223,18 +223,36 @@ export async function updateUserScores(
     rankingPoints: number;
   }
 }> {
+  // First, fetch the CSRF token
+  console.log('[Admin] Fetching CSRF token for score update');
+  const csrfResponse = await fetch('/api/auth/csrf-token', {
+    credentials: 'include'
+  });
+  
+  if (!csrfResponse.ok) {
+    console.error('[Admin] Failed to fetch CSRF token:', csrfResponse.status, csrfResponse.statusText);
+    throw new Error('Failed to fetch CSRF token');
+  }
+  
+  const { csrfToken } = await csrfResponse.json();
+  console.log('[Admin] Successfully obtained CSRF token');
+  
+  // Now send the score update request with the token
+  console.log('[Admin] Sending score update request');
   const response = await fetch(`/api/admin/users/${userId}/scores`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
-      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+      'X-CSRF-Token': csrfToken
     },
     credentials: 'include',
     body: JSON.stringify(data)
   });
   
   if (!response.ok) {
-    throw new Error('Failed to update user scores');
+    const errorText = await response.text();
+    console.error('[Admin] Error updating scores:', response.status, response.statusText, errorText);
+    throw new Error(`Failed to update user scores: ${response.status} ${response.statusText}`);
   }
   
   return await response.json();
