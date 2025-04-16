@@ -245,11 +245,11 @@ const UserManagementPage = () => {
         </Table>
         
         {/* Pagination */}
-        {data && data.totalPages > 1 && (
+        {data && data.pagination && data.pagination.totalPages > 1 && (
           <div className="flex justify-center py-4">
             <Pagination
               currentPage={page}
-              totalPages={data.totalPages}
+              totalPages={data.pagination.totalPages}
               onPageChange={handlePageChange}
             />
           </div>
