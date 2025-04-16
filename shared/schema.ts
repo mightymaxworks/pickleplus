@@ -26,6 +26,18 @@ import './match-statistics-schema';
 // Import event schema (PKL-278651-CONN-0003-EVENT - Event Check-in QR Code System)
 import { events, eventCheckIns, eventRegistrations, passportVerifications } from './schema/events';
 
+// Import API Gateway schema (PKL-278651-API-0001-GATEWAY - API Gateway & Developer Portal)
+import {
+  apiDeveloperAccounts,
+  apiApplications,
+  apiKeys,
+  apiUsageLogs,
+  apiRateLimits,
+  apiDocumentation,
+  apiWebhooks,
+  apiWebhookDeliveryLogs
+} from './schema/api-gateway';
+
 // Import tournament bracket schema (PKL-278651-TOURN-0001-BRCKT - Tournament Bracket System)
 import {
   tournamentTeams,
