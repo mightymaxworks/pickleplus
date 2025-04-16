@@ -5,10 +5,17 @@
  * This page contains UI mockups for the Community Module features
  * to validate design patterns before full implementation.
  */
-import React from 'react';
-import CommunityMockupView from '../core/modules/community/components/mockups/CommunityMockupView';
+import React, { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import CommunityDiscoveryMockup from '../core/modules/community/components/mockups/CommunityDiscoveryMockup';
+import CommunityProfileMockup from '../core/modules/community/components/mockups/CommunityProfileMockup';
+import CommunityCreationMockup from '../core/modules/community/components/mockups/CommunityCreationMockup';
+import CommunityEventsMockup from '../core/modules/community/components/mockups/CommunityEventsMockup';
+import CommunityAnnouncementsMockup from '../core/modules/community/components/mockups/CommunityAnnouncementsMockup';
 
 const TestCommunityPage: React.FC = () => {
+  const [activeTab, setActiveTab] = useState('discover');
+  
   return (
     <div className="container mx-auto py-6 px-4">
       <div className="bg-accent/10 p-3 mb-6 rounded-md border border-accent/20">
@@ -20,7 +27,37 @@ const TestCommunityPage: React.FC = () => {
       
       <h1 className="text-3xl font-bold mb-8">Community Features UI Test</h1>
       
-      <CommunityMockupView />
+      <div className="bg-card rounded-lg shadow-md p-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid grid-cols-5 mb-8">
+            <TabsTrigger value="discover">Discovery</TabsTrigger>
+            <TabsTrigger value="profile">Community Profile</TabsTrigger>
+            <TabsTrigger value="create">Create Community</TabsTrigger>
+            <TabsTrigger value="events">Events</TabsTrigger>
+            <TabsTrigger value="announcements">Announcements</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="discover" className="pt-4">
+            <CommunityDiscoveryMockup />
+          </TabsContent>
+          
+          <TabsContent value="profile" className="pt-4">
+            <CommunityProfileMockup />
+          </TabsContent>
+          
+          <TabsContent value="create" className="pt-4">
+            <CommunityCreationMockup />
+          </TabsContent>
+          
+          <TabsContent value="events" className="pt-4">
+            <CommunityEventsMockup />
+          </TabsContent>
+          
+          <TabsContent value="announcements" className="pt-4">
+            <CommunityAnnouncementsMockup />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };
