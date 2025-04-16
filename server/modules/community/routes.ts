@@ -62,7 +62,7 @@ const insertCommentSchema = createInsertSchema(communityPostComments, {
  * GET /api/communities
  * Public route - no authentication required
  */
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', communityAuth, async (req: Request, res: Response) => {
   try {
     const { location, skillLevel, tags, search, limit, offset } = req.query;
     
@@ -93,7 +93,7 @@ router.get('/', async (req: Request, res: Response) => {
  * Get a single community by ID
  * GET /api/communities/:id
  */
-router.get('/:id', async (req: Request, res: Response) => {
+router.get('/:id', communityAuth, async (req: Request, res: Response) => {
   try {
     const communityId = parseInt(req.params.id);
     
@@ -210,7 +210,7 @@ router.patch('/:id', isAuthenticated, async (req: Request, res: Response) => {
  * Get community members
  * GET /api/communities/:id/members
  */
-router.get('/:id/members', async (req: Request, res: Response) => {
+router.get('/:id/members', communityAuth, async (req: Request, res: Response) => {
   try {
     const communityId = parseInt(req.params.id);
     
@@ -340,7 +340,7 @@ router.post('/:id/leave', isAuthenticated, async (req: Request, res: Response) =
  * Get community posts
  * GET /api/communities/:id/posts
  */
-router.get('/:id/posts', async (req: Request, res: Response) => {
+router.get('/:id/posts', communityAuth, async (req: Request, res: Response) => {
   try {
     const communityId = parseInt(req.params.id);
     
@@ -415,7 +415,7 @@ router.post('/:id/posts', isAuthenticated, async (req: Request, res: Response) =
  * Get a single post
  * GET /api/communities/posts/:postId
  */
-router.get('/posts/:postId', async (req: Request, res: Response) => {
+router.get('/posts/:postId', communityAuth, async (req: Request, res: Response) => {
   try {
     const postId = parseInt(req.params.postId);
     
@@ -505,7 +505,7 @@ router.delete('/posts/:postId/like', isAuthenticated, async (req: Request, res: 
  * Get post comments
  * GET /api/communities/posts/:postId/comments
  */
-router.get('/posts/:postId/comments', async (req: Request, res: Response) => {
+router.get('/posts/:postId/comments', communityAuth, async (req: Request, res: Response) => {
   try {
     const postId = parseInt(req.params.postId);
     
@@ -569,7 +569,7 @@ router.post('/posts/:postId/comments', isAuthenticated, async (req: Request, res
  * Get community events
  * GET /api/communities/:id/events
  */
-router.get('/:id/events', async (req: Request, res: Response) => {
+router.get('/:id/events', communityAuth, async (req: Request, res: Response) => {
   try {
     const communityId = parseInt(req.params.id);
     
