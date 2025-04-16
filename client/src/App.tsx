@@ -41,6 +41,7 @@ import {
   LazyMobileTestPage,
   LazyBugReportDashboard,
   LazyUserDetailsPage, // PKL-278651-ADMIN-0015-USER
+  LazyUsersPage, // PKL-278651-ADMIN-0015-USER
   LazyNotFoundPage,
   LazyDashboardPage,
   preloadProfilePages,
@@ -247,6 +248,13 @@ export default function App() {
                     {(params) => (
                       <AdminProtectedRoute>
                         <LazyUserDetailsPage />
+                      </AdminProtectedRoute>
+                    )}
+                  </Route>
+                  <Route path="/admin/users">
+                    {(params) => (
+                      <AdminProtectedRoute>
+                        <LazyUsersPage />
                       </AdminProtectedRoute>
                     )}
                   </Route>

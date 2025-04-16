@@ -63,6 +63,7 @@ export const LazySettingsPage = lazyLoad(() => import('./pages/admin/SettingsPag
 export const LazyMobileTestPage = lazyLoad(() => import('./pages/admin/MobileTestPage'));
 export const LazyBugReportDashboard = lazyLoad(() => import('./modules/admin/components/feedback/BugReportDashboard'));
 export const LazyUserDetailsPage = lazyLoad(() => import('./pages/admin/UserDetailsPage')); // PKL-278651-ADMIN-0015-USER
+export const LazyUsersPage = lazyLoad(() => import('./pages/admin/UsersPage')); // PKL-278651-ADMIN-0015-USER
 
 // Miscellaneous pages
 export const LazyNotFoundPage = lazyLoad(() => import('./pages/not-found'));
@@ -92,4 +93,5 @@ export const preloadAdminPages = () => {
   LazyAdminDashboardPage.preload();
   LazyReportsPage.preload();
   LazyUserDetailsPage.preload(); // PKL-278651-ADMIN-0015-USER
+  LazyUsersPage.preload(); // PKL-278651-ADMIN-0015-USER
 };
