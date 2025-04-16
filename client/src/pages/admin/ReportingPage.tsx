@@ -3,16 +3,11 @@
  * Admin Reporting Page
  * 
  * This page renders the admin reporting dashboard
+ * Note: AdminLayout is provided by AdminProtectedRoute, so we don't need to wrap it here
  */
 
-import { AdminLayout } from "@/modules/admin/components/AdminLayout";
 import { ReportsDashboard } from "@/modules/admin/components/reporting";
-//import { Helmet } from "react-helmet";
 
 export default function ReportingPage() {
-  return (
-    <AdminLayout>
-      <ReportsDashboard />
-    </AdminLayout>
-  );
+  return <ReportsDashboard />;
 }
