@@ -13,3 +13,4 @@ export * from './UserStatusPanel';
 export * from './UserLoginHistoryTable';
 export * from './UserActivityStats';
 export * from './UserMatchHistory';
+export { AdminUserManagementNavItem } from './AdminUserManagementNavItem';
