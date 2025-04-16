@@ -40,6 +40,8 @@ import { users } from '../../shared/schema';
  * Community Storage Interface
  */
 export interface CommunityStorage {
+  // Helper function to get the database instance
+  getDb(): any;
   // Community operations
   getCommunities(filters?: {
     location?: string;
@@ -931,5 +933,5 @@ function getDb() {
   return this.db;
 }
 
-// Attach helper functions to the implementation
+// Bind the helper function to the implementation
 communityStorageImplementation.getDb = getDb;
