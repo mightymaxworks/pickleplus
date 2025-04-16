@@ -20,7 +20,7 @@ import { useDebounce } from "../../hooks/use-debounce";
 
 // Skill level options for filtering
 const SKILL_LEVELS = [
-  { value: "", label: "All Skill Levels" },
+  { value: "all", label: "All Skill Levels" },
   { value: "Beginner", label: "Beginner" },
   { value: "Intermediate", label: "Intermediate" },
   { value: "Advanced", label: "Advanced" },
@@ -29,7 +29,7 @@ const SKILL_LEVELS = [
 
 // Location options for filtering (example)
 const LOCATIONS = [
-  { value: "", label: "All Locations" },
+  { value: "all", label: "All Locations" },
   { value: "West", label: "West" },
   { value: "East", label: "East" },
   { value: "Central", label: "Central" },
@@ -40,8 +40,8 @@ const LOCATIONS = [
 export default function CommunitiesPage() {
   const [, navigate] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
-  const [skillLevel, setSkillLevel] = useState("");
-  const [location, setLocation] = useState("");
+  const [skillLevel, setSkillLevel] = useState("all");
+  const [location, setLocation] = useState("all");
   const [activeTab, setActiveTab] = useState("all");
   
   // Debounce search to prevent too many API calls
@@ -50,8 +50,8 @@ export default function CommunitiesPage() {
   // Fetch communities based on filters
   const { data: communities, isLoading, refetch } = useCommunities({
     query: debouncedQuery,
-    skillLevel,
-    location,
+    skillLevel: skillLevel === "all" ? "" : skillLevel,
+    location: location === "all" ? "" : location,
   });
   
   // Handle creating a new community

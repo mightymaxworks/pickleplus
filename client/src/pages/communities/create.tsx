@@ -47,6 +47,10 @@ const createCommunitySchema = insertCommunitySchema
     location: z.string().optional().or(z.literal("")),
     skillLevel: z.string().optional().or(z.literal("")),
     tags: z.string().optional().or(z.literal("")),
+    isPrivate: z.boolean().default(false),
+    requiresApproval: z.boolean().default(false),
+    rules: z.string().optional().or(z.literal("")),
+    guidelines: z.string().optional().or(z.literal("")),
   });
 
 type CreateCommunityFormValues = z.infer<typeof createCommunitySchema>;
@@ -84,11 +88,31 @@ export default function CreateCommunityPage() {
   // Form submission handler
   const onSubmit = async (data: CreateCommunityFormValues) => {
     try {
-      await createCommunity.mutateAsync(data);
+      // Ensure proper data types before submitting
+      const formattedData = {
+        ...data,
+        isPrivate: Boolean(data.isPrivate),
+        requiresApproval: Boolean(data.requiresApproval),
+        rules: data.rules || "",
+        guidelines: data.guidelines || "",
+      };
+      
+      await createCommunity.mutateAsync(formattedData);
+      
+      toast({
+        title: "Success!",
+        description: "Your community has been created successfully.",
+      });
+      
       navigate("/communities");
     } catch (error) {
       console.error("Failed to create community:", error);
-      // Error is already handled by the mutation's onError callback
+      
+      toast({
+        title: "Error",
+        description: "Failed to create community. Please try again.",
+        variant: "destructive",
+      });
     }
   };
   
@@ -245,7 +269,7 @@ export default function CreateCommunityPage() {
                         </div>
                         <FormControl>
                           <Switch
-                            checked={field.value}
+                            checked={Boolean(field.value)}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
@@ -266,7 +290,7 @@ export default function CreateCommunityPage() {
                         </div>
                         <FormControl>
                           <Switch
-                            checked={field.value}
+                            checked={Boolean(field.value)}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
@@ -286,9 +310,13 @@ export default function CreateCommunityPage() {
                         <FormLabel>Rules</FormLabel>
                         <FormControl>
                           <Textarea
-                            {...field}
                             placeholder="Community rules..."
                             className="min-h-[100px]"
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
                           />
                         </FormControl>
                         <FormDescription>
@@ -307,9 +335,13 @@ export default function CreateCommunityPage() {
                         <FormLabel>Guidelines</FormLabel>
                         <FormControl>
                           <Textarea
-                            {...field}
                             placeholder="Community guidelines..."
                             className="min-h-[100px]"
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
                           />
                         </FormControl>
                         <FormDescription>
