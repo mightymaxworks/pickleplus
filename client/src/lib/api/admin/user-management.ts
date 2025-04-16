@@ -65,10 +65,21 @@ export async function addUserNote(
   userId: number, 
   data: { note: string; visibility: 'admin' | 'system' }
 ): Promise<AdminUserNote> {
-  return apiRequest('/api/admin/users/' + userId + '/notes', {
+  const response = await fetch(`/api/admin/users/${userId}/notes`, {
     method: 'POST',
-    body: JSON.stringify(data),
-  }) as Promise<AdminUserNote>;
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+    },
+    credentials: 'include',
+    body: JSON.stringify(data)
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to add user note');
+  }
+  
+  return await response.json();
 }
 
 /**
