@@ -68,6 +68,7 @@ import SearchTestPage from './pages/SearchTest'
 import Register from './pages/Register'
 import TestCommunityPage from './pages/TestCommunityPage' // PKL-278651-COMM-0001-UIMOCK
 import CommunityDashboardMockup from './pages/CommunityDashboardMockup' // PKL-278651-COMM-0002-DASH-MOCK
+import ModernCommunityDashboard from './pages/ModernCommunityDashboard' // PKL-278651-COMM-0003-DASH-MODERN
 
 import { useAuth } from './hooks/useAuth'
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute'
@@ -313,6 +314,9 @@ export default function App() {
                   
                   {/* PKL-278651-COMM-0002-DASH-MOCK - Community Dashboard Mockup Route */}
                   <Route path="/test/community-dashboard" component={CommunityDashboardMockup} />
+                  
+                  {/* PKL-278651-COMM-0003-DASH-MODERN - Modern Social Media Inspired Dashboard Route */}
+                  <Route path="/test/modern-community" component={ModernCommunityDashboard} />
                   
                   <Route component={LazyNotFoundPage} />
                 </Switch>
