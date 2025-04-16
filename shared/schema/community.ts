@@ -7,8 +7,200 @@
 import { z } from "zod";
 import { createInsertSchema } from "drizzle-zod";
 import { pgTable, serial, text, varchar, timestamp, integer, boolean, json } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { users } from "../schema";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+
+/**
+ * Function to push schema changes to the database
+ */
+export async function pushSchema() {
+  console.log('Using drizzle-orm to push community schema to database...');
+  
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) {
+    throw new Error('DATABASE_URL environment variable is not set.');
+  }
+  
+  // Direct SQL client for raw queries
+  const pgConnection = postgres(dbUrl);
+  const db = drizzle(pgConnection);
+  
+  try {
+    console.log('Creating community tables...');
+    
+    // Create tables in order of dependencies
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS communities (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        description TEXT,
+        location VARCHAR(100),
+        skill_level VARCHAR(50),
+        avatar_url TEXT,
+        banner_url TEXT,
+        banner_pattern VARCHAR(50),
+        is_private BOOLEAN DEFAULT FALSE,
+        requires_approval BOOLEAN DEFAULT FALSE,
+        tags VARCHAR(255),
+        member_count INTEGER DEFAULT 0,
+        event_count INTEGER DEFAULT 0,
+        post_count INTEGER DEFAULT 0,
+        created_by_user_id INTEGER NOT NULL REFERENCES users(id),
+        rules TEXT,
+        guidelines TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS community_members (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        community_id INTEGER NOT NULL REFERENCES communities(id),
+        role VARCHAR(50) NOT NULL DEFAULT 'member',
+        joined_at TIMESTAMP DEFAULT NOW(),
+        is_active BOOLEAN DEFAULT TRUE,
+        last_active TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS community_posts (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        community_id INTEGER NOT NULL REFERENCES communities(id),
+        content TEXT NOT NULL,
+        media_urls JSONB,
+        likes INTEGER DEFAULT 0,
+        comments INTEGER DEFAULT 0,
+        is_pinned BOOLEAN DEFAULT FALSE,
+        is_announcement BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS community_events (
+        id SERIAL PRIMARY KEY,
+        community_id INTEGER NOT NULL REFERENCES communities(id),
+        created_by_user_id INTEGER NOT NULL REFERENCES users(id),
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        event_date TIMESTAMP NOT NULL,
+        end_date TIMESTAMP,
+        location TEXT,
+        is_virtual BOOLEAN DEFAULT FALSE,
+        virtual_meeting_url TEXT,
+        max_attendees INTEGER,
+        current_attendees INTEGER DEFAULT 0,
+        is_private BOOLEAN DEFAULT FALSE,
+        is_recurring BOOLEAN DEFAULT FALSE,
+        recurring_pattern VARCHAR(50),
+        repeat_frequency VARCHAR(50),
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS community_event_attendees (
+        id SERIAL PRIMARY KEY,
+        event_id INTEGER NOT NULL REFERENCES community_events(id),
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        status VARCHAR(50) NOT NULL DEFAULT 'registered',
+        registered_at TIMESTAMP DEFAULT NOW(),
+        checked_in_at TIMESTAMP,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS community_post_comments (
+        id SERIAL PRIMARY KEY,
+        post_id INTEGER NOT NULL REFERENCES community_posts(id),
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        content TEXT NOT NULL,
+        likes INTEGER DEFAULT 0,
+        parent_comment_id INTEGER REFERENCES community_post_comments(id),
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS community_post_likes (
+        id SERIAL PRIMARY KEY,
+        post_id INTEGER NOT NULL REFERENCES community_posts(id),
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS community_comment_likes (
+        id SERIAL PRIMARY KEY,
+        comment_id INTEGER NOT NULL REFERENCES community_post_comments(id),
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS community_invitations (
+        id SERIAL PRIMARY KEY,
+        community_id INTEGER NOT NULL REFERENCES communities(id),
+        invited_by_user_id INTEGER NOT NULL REFERENCES users(id),
+        invited_user_email VARCHAR(255),
+        invited_user_id INTEGER REFERENCES users(id),
+        status VARCHAR(50) NOT NULL DEFAULT 'pending',
+        token VARCHAR(100) NOT NULL,
+        expires_at TIMESTAMP,
+        message TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS community_join_requests (
+        id SERIAL PRIMARY KEY,
+        community_id INTEGER NOT NULL REFERENCES communities(id),
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        message TEXT,
+        status VARCHAR(50) NOT NULL DEFAULT 'pending',
+        reviewed_by_user_id INTEGER REFERENCES users(id),
+        reviewed_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    
+    // Creating indexes for better performance
+    console.log('Creating indexes...');
+    await db.execute(sql`
+      CREATE INDEX IF NOT EXISTS idx_comm_members_user_id ON community_members(user_id);
+      CREATE INDEX IF NOT EXISTS idx_comm_members_community_id ON community_members(community_id);
+      CREATE INDEX IF NOT EXISTS idx_comm_posts_user_id ON community_posts(user_id);
+      CREATE INDEX IF NOT EXISTS idx_comm_posts_community_id ON community_posts(community_id);
+      CREATE INDEX IF NOT EXISTS idx_comm_events_community_id ON community_events(community_id);
+      CREATE INDEX IF NOT EXISTS idx_comm_events_created_by ON community_events(created_by_user_id);
+      CREATE INDEX IF NOT EXISTS idx_comm_events_date ON community_events(event_date);
+      CREATE INDEX IF NOT EXISTS idx_comm_attendees_event_id ON community_event_attendees(event_id);
+      CREATE INDEX IF NOT EXISTS idx_comm_attendees_user_id ON community_event_attendees(user_id);
+      CREATE INDEX IF NOT EXISTS idx_comm_comments_post_id ON community_post_comments(post_id);
+      CREATE INDEX IF NOT EXISTS idx_comm_comments_user_id ON community_post_comments(user_id);
+      CREATE INDEX IF NOT EXISTS idx_comm_post_likes_post_id ON community_post_likes(post_id);
+      CREATE INDEX IF NOT EXISTS idx_comm_post_likes_user_id ON community_post_likes(user_id);
+      CREATE INDEX IF NOT EXISTS idx_comm_comment_likes_comment_id ON community_comment_likes(comment_id);
+      CREATE INDEX IF NOT EXISTS idx_comm_comment_likes_user_id ON community_comment_likes(user_id);
+      CREATE INDEX IF NOT EXISTS idx_comm_invitations_community_id ON community_invitations(community_id);
+      CREATE INDEX IF NOT EXISTS idx_comm_join_requests_community_id ON community_join_requests(community_id);
+
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_community_membership_unique ON community_members(community_id, user_id);
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_community_post_like_unique ON community_post_likes(post_id, user_id);
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_community_comment_like_unique ON community_comment_likes(comment_id, user_id);
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_community_event_attendance_unique ON community_event_attendees(event_id, user_id);
+    `);
+
+    console.log('Community schema pushed successfully');
+    
+  } catch (error) {
+    console.error('Error pushing schema:', error);
+    throw error;
+  } finally {
+    await pgConnection.end();
+  }
+}
 
 // Communities table
 export const communities = pgTable("communities", {
