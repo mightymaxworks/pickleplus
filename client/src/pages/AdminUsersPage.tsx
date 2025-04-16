@@ -103,7 +103,14 @@ const UserManagementPage = () => {
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">User Management</h1>
+        <div>
+          <h1 className="text-2xl font-bold">User Management</h1>
+          {data && data.pagination && (
+            <p className="text-muted-foreground mt-1">
+              Total users: <span className="font-medium">{data.pagination.totalItems}</span>
+            </p>
+          )}
+        </div>
       </div>
       
       {/* Search and Filter */}
@@ -246,7 +253,12 @@ const UserManagementPage = () => {
         
         {/* Pagination */}
         {data && data.pagination && data.pagination.totalPages > 1 && (
-          <div className="flex justify-center py-4">
+          <div className="flex flex-col items-center py-4 gap-2">
+            {data.pagination.totalItems > 0 && (
+              <p className="text-sm text-muted-foreground">
+                Showing users {((page - 1) * 10) + 1}-{Math.min(page * 10, data.pagination.totalItems)} of {data.pagination.totalItems}
+              </p>
+            )}
             <Pagination
               currentPage={page}
               totalPages={data.pagination.totalPages}
