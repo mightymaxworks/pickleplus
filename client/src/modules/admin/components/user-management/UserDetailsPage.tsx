@@ -208,6 +208,8 @@ const UserDetailsPage = () => {
         <TabsContent value="activity">
           <div className="space-y-4">
             <UserActivityStats user={user} />
+            {/* User Scores Panel - Edit XP and Ranking Points */}
+            <UserScoresPanel userId={userId} user={user} />
             <UserActionHistory userId={userId} initialActions={recentActions} />
           </div>
         </TabsContent>
