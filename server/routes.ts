@@ -27,6 +27,7 @@ import { registerMatchResultRoutes } from "./routes/register-match-result-routes
 import batchApiRoutes from "./routes/batch-api-routes"; // PKL-278651-PERF-0001.4-API
 import { registerFeedbackRoutes } from "./modules/feedback/routes"; // PKL-278651-FEED-0001-BUG
 import { initApiGateway } from "./modules/api-gateway"; // PKL-278651-API-0001-GATEWAY
+import { initializeAdminModule } from "./modules/admin"; // PKL-278651-ADMIN-0015-USER
 
 // Import necessary schema
 import { 
@@ -102,6 +103,10 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Initialize API Gateway and Developer Portal (PKL-278651-API-0001-GATEWAY)
   initApiGateway(app);
+  
+  // Initialize Enhanced User Management module (PKL-278651-ADMIN-0015-USER)
+  const adminRouter = initializeAdminModule();
+  app.use("/api/admin", isAuthenticated, isAdmin, adminRouter);
   
   // Register Batch API routes (PKL-278651-PERF-0001.4-API)
   app.use("/api", batchApiRoutes);
