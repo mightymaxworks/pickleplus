@@ -29,13 +29,15 @@ const TestCommunityPage: React.FC = () => {
       
       <div className="bg-card rounded-lg shadow-md p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-5 mb-8">
-            <TabsTrigger value="discover">Discovery</TabsTrigger>
-            <TabsTrigger value="profile">Community Profile</TabsTrigger>
-            <TabsTrigger value="create">Create Community</TabsTrigger>
-            <TabsTrigger value="events">Events</TabsTrigger>
-            <TabsTrigger value="announcements">Announcements</TabsTrigger>
-          </TabsList>
+          <div className="flex justify-center mb-8">
+            <TabsList className="w-full max-w-4xl flex flex-wrap gap-2">
+              <TabsTrigger value="discover" className="flex-1">Discovery</TabsTrigger>
+              <TabsTrigger value="profile" className="flex-1">Community Profile</TabsTrigger>
+              <TabsTrigger value="create" className="flex-1">Create Community</TabsTrigger>
+              <TabsTrigger value="events" className="flex-1">Events</TabsTrigger>
+              <TabsTrigger value="announcements" className="flex-1">Announcements</TabsTrigger>
+            </TabsList>
+          </div>
           
           <TabsContent value="discover" className="pt-4">
             <CommunityDiscoveryMockup />
