@@ -154,6 +154,8 @@ export interface CommunityStorage {
  * Community storage implementation for DatabaseStorage
  */
 export const communityStorageImplementation: CommunityStorage = {
+  // Database access method, will be overridden in DatabaseStorage constructor
+  getDb: () => { throw new Error('getDb must be bound to a DatabaseStorage instance'); },
   // Community operations
   async getCommunities(filters = {}): Promise<Community[]> {
     const db = this.getDb();
@@ -925,13 +927,5 @@ export const communityStorageImplementation: CommunityStorage = {
   }
 };
 
-/**
- * Helper function to get the database instance from this context
- */
-function getDb() {
-  // @ts-ignore - this will be bound to DatabaseStorage instance when used
-  return this.db;
-}
-
-// Bind the helper function to the implementation
-communityStorageImplementation.getDb = getDb;
+// The getDb function is already defined on the implementation and will be overridden
+// in the DatabaseStorage constructor

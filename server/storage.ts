@@ -317,6 +317,9 @@ export class DatabaseStorage implements IStorage {
       },
       createTableIfMissing: true
     });
+    
+    // Bind the database to community storage implementation
+    communityStorageImplementation.getDb = () => db;
   }
   
   /**
