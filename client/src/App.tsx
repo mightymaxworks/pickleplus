@@ -70,6 +70,7 @@ import TestCommunityPage from './pages/TestCommunityPage' // PKL-278651-COMM-000
 import CommunityDashboardMockup from './pages/CommunityDashboardMockup' // PKL-278651-COMM-0002-DASH-MOCK
 import ModernCommunityDashboard from './pages/ModernCommunityDashboard' // PKL-278651-COMM-0003-DASH-MODERN
 import FixedTwitterDashboard from './pages/FixedTwitterDashboard' // PKL-278651-COMM-0004-DASH-TWITTER
+import UnifiedActivityDashboard from './pages/UnifiedActivityDashboard' // PKL-278651-COMM-0005-DASH-UNIFIED
 
 import { useAuth } from './hooks/useAuth'
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute'
@@ -321,6 +322,9 @@ export default function App() {
                   
                   {/* PKL-278651-COMM-0004-DASH-TWITTER - Twitter/X-Inspired Dashboard Route */}
                   <Route path="/test/twitter-style" component={FixedTwitterDashboard} />
+                  
+                  {/* PKL-278651-COMM-0005-DASH-UNIFIED - Unified Activity-Centric Dashboard Route */}
+                  <Route path="/test/unified-activity" component={UnifiedActivityDashboard} />
                   
                   <Route component={LazyNotFoundPage} />
                 </Switch>
