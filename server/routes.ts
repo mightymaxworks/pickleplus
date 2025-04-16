@@ -26,6 +26,7 @@ import { default as registerTournamentSeedTeamsRoutes } from "./routes/tournamen
 import { registerMatchResultRoutes } from "./routes/register-match-result-routes";
 import batchApiRoutes from "./routes/batch-api-routes"; // PKL-278651-PERF-0001.4-API
 import { registerFeedbackRoutes } from "./modules/feedback/routes"; // PKL-278651-FEED-0001-BUG
+import { initApiGateway } from "./modules/api-gateway"; // PKL-278651-API-0001-GATEWAY
 
 // Import necessary schema
 import { 
@@ -98,6 +99,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Register Bug Reporting routes (PKL-278651-FEED-0001-BUG)
   registerFeedbackRoutes(app);
+  
+  // Initialize API Gateway and Developer Portal (PKL-278651-API-0001-GATEWAY)
+  initApiGateway(app);
   
   // Register Batch API routes (PKL-278651-PERF-0001.4-API)
   app.use("/api", batchApiRoutes);

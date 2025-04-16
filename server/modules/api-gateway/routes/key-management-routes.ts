@@ -7,10 +7,10 @@
 
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { db } from '../../../db';
 import { apiDeveloperAccounts, apiApplications, apiKeys } from '../../../../shared/schema/api-gateway';
-import { isAuthenticated } from '../../../middleware/auth';
+import { isAuthenticated } from '../../../auth';
 import { prepareApiKey, isValidKeyFormat } from '../utils/key-generator';
 
 const router = Router();

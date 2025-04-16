@@ -11,7 +11,7 @@ import { eq, and } from 'drizzle-orm';
 import { db } from '../../../db';
 import { apiDeveloperAccounts, apiApplications, insertApiDeveloperAccountSchema, insertApiApplicationSchema } from '../../../../shared/schema/api-gateway';
 import { users } from '../../../../shared/schema';
-import { isAuthenticated } from '../../../middleware/auth';
+import { isAuthenticated } from '../../../auth';
 
 const router = Router();
 
