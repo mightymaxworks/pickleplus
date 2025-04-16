@@ -1,13 +1,13 @@
 /**
  * PKL-278651-FEED-0001-BUG - In-App Bug Reporting System
- * Standalone Bug Report Button Component
+ * Standalone Bug Report Button Component - Fixed Version
  * 
  * A simplified version of the bug report button that doesn't rely on the module system.
+ * Corrected to prevent re-rendering issues.
  */
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { AlertTriangle } from 'lucide-react';
-import { useLocation } from 'wouter';
 import { 
   Dialog, 
   DialogContent, 
@@ -27,37 +27,26 @@ interface BugReportButtonProps {
 }
 
 /**
- * Standalone bug report button and form
+ * Simple bug report button - fixed to prevent infinite re-renders
  */
 export function SimpleBugReportButton({ position = 'bottom-right' }: BugReportButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [location] = useLocation();
   const { toast } = useToast();
   
-  // Standardize position to always be in one location - top right corner
-  // This avoids conflicts with various UI elements across different pages
+  // Fixed position in the top right corner
   const buttonPosition = 'top-24 right-4';
   
-  // Only show the button on specific inner pages, not on landing, login, or register
-  const shouldShowButton = location.startsWith('/dashboard') || 
-    location.startsWith('/profile') || 
-    location.startsWith('/tournaments') || 
-    location.startsWith('/matches') ||
-    location.startsWith('/admin') ||
-    location.startsWith('/leaderboard') ||
-    location.startsWith('/mastery-paths');
-    
-  // Explicitly exclude these paths
-  if (location === '/' || location === '/login' || location === '/register' || location === '/auth') {
-    return null;
-  }
+  // Use useCallback to prevent recreating the function on each render
+  const toggleDialog = useCallback(() => {
+    setIsOpen(prevState => !prevState);
+  }, []);
   
-  if (!shouldShowButton) {
-    return null;
-  }
+  const handleOpenChange = useCallback((open: boolean) => {
+    setIsOpen(open);
+  }, []);
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
@@ -70,7 +59,7 @@ export function SimpleBugReportButton({ position = 'bottom-right' }: BugReportBu
       setIsSubmitting(false);
       setIsOpen(false);
     }, 1000);
-  };
+  }, [toast]);
   
   return (
     <>
@@ -79,12 +68,12 @@ export function SimpleBugReportButton({ position = 'bottom-right' }: BugReportBu
         size="icon"
         className={`fixed ${buttonPosition} z-40 rounded-full h-12 w-12 shadow-lg flex items-center justify-center bg-amber-100 hover:bg-amber-200 border-amber-300 text-amber-700`}
         aria-label="Report a bug"
-        onClick={() => setIsOpen(true)}
+        onClick={toggleDialog}
       >
         <AlertTriangle className="h-5 w-5" />
       </Button>
       
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Report a Bug</DialogTitle>
@@ -108,8 +97,6 @@ export function SimpleBugReportButton({ position = 'bottom-right' }: BugReportBu
                 required
               />
             </div>
-            
-            <input type="hidden" id="currentUrl" value={location} />
             
             <DialogFooter>
               <Button 
