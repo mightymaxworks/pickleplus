@@ -73,6 +73,9 @@ export class UserManagementController {
               users.last_match_date > NOW() - INTERVAL '30 days'
             )`);
             break;
+          case 'coach':
+            // Removed coach filter as there's no isCoach field
+            break;
           // Add more filters as needed
         }
       }
