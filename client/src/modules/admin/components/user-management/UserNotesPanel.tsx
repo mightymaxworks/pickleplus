@@ -1,175 +1,161 @@
 /**
  * PKL-278651-ADMIN-0015-USER
- * User Notes Panel Component
+ * User Notes Panel
  * 
- * Displays admin notes for a user and allows adding new notes
+ * This component displays and allows admin users to add notes to a user account
  */
 
 import { useState } from 'react';
-import { AdminUserNote } from '../../../../shared/types/admin/user-management';
-import { formatDistance } from 'date-fns';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { 
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
-import { PlusCircle, Shield, User } from 'lucide-react';
+import { PlusCircle, Info, MessageCircle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { formatDateTime } from '@/lib/utils';
+import { addUserNote } from '@/lib/api/admin/user-management';
+import { AdminUserNote } from '@shared/types/admin/user-management';
 
 interface UserNotesPanelProps {
+  userId: number;
   notes: AdminUserNote[];
-  onAddNote: (noteData: { note: string; visibility: 'admin' | 'system' }) => void;
-  isAddingNote: boolean;
 }
 
-export const UserNotesPanel = ({ notes, onAddNote, isAddingNote }: UserNotesPanelProps) => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+export function UserNotesPanel({ userId, notes }: UserNotesPanelProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isAdding, setIsAdding] = useState(false);
   const [newNote, setNewNote] = useState('');
-  const [visibility, setVisibility] = useState<'admin' | 'system'>('admin');
-  
-  const handleAddNote = () => {
-    if (newNote.trim()) {
-      onAddNote({
-        note: newNote.trim(),
-        visibility
-      });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Handle submit new note
+  const handleSubmit = async () => {
+    if (!newNote.trim()) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      await addUserNote(userId, { note: newNote, visibility: 'admin' });
+      
+      // Reset form
       setNewNote('');
-      setVisibility('admin');
-      setIsDialogOpen(false);
+      setIsAdding(false);
+      
+      // Invalidate cache to refresh data
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users', userId] });
+      
+      toast({
+        title: 'Note Added',
+        description: 'The note has been added to the user profile.',
+      });
+    } catch (error) {
+      console.error('Failed to add note:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Failed to Add Note',
+        description: 'There was an error adding the note. Please try again.',
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
-  
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Admin Notes</CardTitle>
-        <CardDescription>Notes and comments from administrators</CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Admin Notes</CardTitle>
+            <CardDescription>
+              Add notes and observations about this user
+            </CardDescription>
+          </div>
+          
+          {!isAdding && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1"
+              onClick={() => setIsAdding(true)}
+            >
+              <PlusCircle className="h-4 w-4" />
+              <span>Add Note</span>
+            </Button>
+          )}
+        </div>
       </CardHeader>
-      <CardContent>
+      
+      <CardContent className="space-y-4">
+        {/* Add note form */}
+        {isAdding && (
+          <div className="space-y-2">
+            <Textarea
+              placeholder="Enter note content..."
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+              className="min-h-[100px]"
+            />
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setIsAdding(false);
+                  setNewNote('');
+                }}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleSubmit}
+                disabled={!newNote.trim() || isSubmitting}
+              >
+                {isSubmitting ? 'Adding...' : 'Add Note'}
+              </Button>
+            </div>
+          </div>
+        )}
+        
+        {/* Note list */}
         {notes.length > 0 ? (
           <div className="space-y-4">
             {notes.map((note) => (
-              <div key={note.id} className="flex gap-3">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                    {note.authorUsername?.slice(0, 2).toUpperCase() || 'AD'}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium">{note.authorUsername}</p>
-                    <Badge variant={note.visibility === 'system' ? 'secondary' : 'outline'} className="text-xs">
-                      {note.visibility === 'system' ? 'System' : 'Admin'}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">
-                      {formatDistance(new Date(note.createdAt), new Date(), { addSuffix: true })}
-                    </span>
+              <div key={note.id} className="p-4 rounded-md border">
+                <div className="flex items-start gap-3">
+                  <MessageCircle className="h-5 w-5 text-primary mt-0.5" />
+                  <div className="space-y-1 flex-1">
+                    <div className="flex justify-between items-center">
+                      <p className="text-sm font-semibold">
+                        {note.authorName || `Admin #${note.authorId}`}
+                      </p>
+                      <span className="text-xs text-muted-foreground">
+                        {formatDateTime(note.createdAt)}
+                      </span>
+                    </div>
+                    <p className="text-sm whitespace-pre-line">{note.note}</p>
                   </div>
-                  <p className="mt-1 text-sm">{note.note}</p>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-6">
-            <User className="h-8 w-8 mx-auto text-muted-foreground" />
-            <p className="mt-2 text-muted-foreground">No admin notes have been added for this user.</p>
+          <div className="flex flex-col items-center justify-center p-6 text-center text-muted-foreground">
+            <Info className="h-10 w-10 mb-2 opacity-20" />
+            <p>No notes have been added to this user profile yet.</p>
+            {!isAdding && (
+              <Button
+                variant="link"
+                className="mt-2"
+                onClick={() => setIsAdding(true)}
+              >
+                Add the first note
+              </Button>
+            )}
           </div>
         )}
       </CardContent>
-      <CardFooter>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" className="w-full">
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Add Note
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add Admin Note</DialogTitle>
-              <DialogDescription>
-                Add a note to this user's profile that will be visible to administrators.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label htmlFor="note-visibility" className="text-sm font-medium">
-                  Note Visibility
-                </label>
-                <Select value={visibility} onValueChange={(value: 'admin' | 'system') => setVisibility(value)}>
-                  <SelectTrigger id="note-visibility">
-                    <SelectValue placeholder="Select visibility" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">
-                      <div className="flex items-center">
-                        <User className="h-4 w-4 mr-2" />
-                        <span>Admin Only</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="system">
-                      <div className="flex items-center">
-                        <Shield className="h-4 w-4 mr-2" />
-                        <span>System Note</span>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  {visibility === 'system' 
-                    ? 'System notes appear with special formatting and are used for important account notices.' 
-                    : 'Admin notes are only visible to other administrators.'}
-                </p>
-              </div>
-              
-              <Separator />
-              
-              <div className="space-y-2">
-                <label htmlFor="note-content" className="text-sm font-medium">
-                  Note Content
-                </label>
-                <Textarea
-                  id="note-content"
-                  value={newNote}
-                  onChange={(e) => setNewNote(e.target.value)}
-                  placeholder="Enter your note here..."
-                  rows={5}
-                />
-              </div>
-            </div>
-            
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleAddNote} 
-                disabled={isAddingNote || !newNote.trim()}
-              >
-                {isAddingNote ? 'Adding...' : 'Add Note'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </CardFooter>
     </Card>
   );
-};
+}

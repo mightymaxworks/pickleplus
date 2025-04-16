@@ -65,10 +65,10 @@ export async function addUserNote(
   userId: number, 
   data: { note: string; visibility: 'admin' | 'system' }
 ): Promise<AdminUserNote> {
-  return apiRequest(`/api/admin/users/${userId}/notes`, {
+  return apiRequest('/api/admin/users/' + userId + '/notes', {
     method: 'POST',
     body: JSON.stringify(data),
-  });
+  }) as Promise<AdminUserNote>;
 }
 
 /**
@@ -82,10 +82,10 @@ export async function updateUserStatus(
     expiresAt?: string;
   }
 ): Promise<UserAccountStatus> {
-  return apiRequest(`/api/admin/users/${userId}/status`, {
+  return apiRequest('/api/admin/users/' + userId + '/status', {
     method: 'PUT',
     body: JSON.stringify(data),
-  });
+  }) as Promise<UserAccountStatus>;
 }
 
 /**
@@ -95,10 +95,10 @@ export async function updateUserProfile(
   userId: number,
   data: Partial<User>
 ): Promise<User> {
-  return apiRequest(`/api/admin/users/${userId}/profile`, {
+  return apiRequest('/api/admin/users/' + userId + '/profile', {
     method: 'PATCH',
     body: JSON.stringify(data),
-  });
+  }) as Promise<User>;
 }
 
 /**
@@ -130,13 +130,13 @@ export async function performAdminAction(
   userId: number,
   action: AdminAction
 ): Promise<{ success: boolean; message: string }> {
-  return apiRequest("/api/admin/users/actions", {
+  return apiRequest('/api/admin/users/actions', {
     method: 'POST',
     body: JSON.stringify({
       userId,
       ...action
     }),
-  });
+  }) as Promise<{ success: boolean; message: string }>;
 }
 
 /**

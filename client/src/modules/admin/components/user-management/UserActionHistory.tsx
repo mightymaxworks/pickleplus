@@ -2,205 +2,209 @@
  * PKL-278651-ADMIN-0015-USER
  * User Action History Component
  * 
- * Displays the history of administrative actions taken on a user account
+ * This component displays the history of administrative actions for a user
  */
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AdminUserAction } from '../../../../shared/types/admin/user-management';
-import { getUserAdminActions } from '@/lib/api/admin/user-management';
-import { formatDistance } from 'date-fns';
-import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { 
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import { 
+  Pagination, 
+  PaginationContent, 
+  PaginationItem, 
+  PaginationLink, 
+  PaginationNext, 
+  PaginationPrevious 
+} from '@/components/ui/pagination';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Info, Loader2 } from 'lucide-react';
+import { getUserActions } from '@/lib/api/admin/user-management';
+import { formatDateTime } from '@/lib/utils';
+import { AdminUserAction } from '@shared/types/admin/user-management';
 
 interface UserActionHistoryProps {
-  actions: AdminUserAction[];
-  expandable?: boolean;
-  showLoadMore?: boolean;
-  userId?: number;
+  userId: number;
+  initialActions: AdminUserAction[];
+  showAllActions?: boolean;
 }
 
-export const UserActionHistory = ({ 
-  actions, 
-  expandable = false, 
-  showLoadMore = false,
-  userId
-}: UserActionHistoryProps) => {
-  const [isExpanded, setIsExpanded] = useState<Record<number, boolean>>({});
+export function UserActionHistory({ 
+  userId, 
+  initialActions,
+  showAllActions = false
+}: UserActionHistoryProps) {
   const [page, setPage] = useState(1);
+  const pageSize = 10;
   
-  // Query for more actions when needed
-  const { 
-    data: moreActionsData, 
-    isLoading: isLoadingMore,
-    isFetching: isFetchingMore,
-    fetchNextPage,
-    hasNextPage
-  } = useQuery({
-    queryKey: ['/api/admin/users', userId, 'actions', page],
-    queryFn: () => getUserAdminActions(userId!, { page, limit: 10 }),
-    enabled: showLoadMore && !!userId && page > 1,
+  // Fetch more actions if needed
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin', 'users', userId, 'actions', page],
+    queryFn: async () => await getUserActions(userId, page, pageSize),
+    enabled: showAllActions,
+    initialData: showAllActions ? undefined : { 
+      actions: initialActions,
+      pagination: {
+        page: 1,
+        pageSize,
+        totalItems: initialActions.length,
+        totalPages: 1
+      }
+    }
   });
   
-  // Combine initial actions with loaded actions
-  const allActions = [...actions];
-  if (moreActionsData && moreActionsData.actions) {
-    // Only add actions that aren't already in the list
-    const existingIds = new Set(allActions.map(a => a.id));
-    moreActionsData.actions.forEach(action => {
-      if (!existingIds.has(action.id)) {
-        allActions.push(action);
-      }
-    });
-  }
+  // If not showing all actions, just use the initial ones
+  const actions = data?.actions || initialActions;
+  const totalPages = data?.pagination?.totalPages || 1;
   
-  // Toggle expanded state for an action
-  const toggleExpanded = (actionId: number) => {
-    if (expandable) {
-      setIsExpanded(prev => ({
-        ...prev,
-        [actionId]: !prev[actionId]
-      }));
-    }
-  };
-  
-  // Load more actions
-  const handleLoadMore = () => {
-    if (userId) {
-      setPage(prev => prev + 1);
-    }
-  };
-  
-  // Get badge color based on action type
-  const getActionBadgeVariant = (actionType: string) => {
-    switch (actionType) {
-      case 'UPDATE_STATUS':
-        return 'warning';
-      case 'UPDATE_PROFILE':
-        return 'default';
-      case 'ADD_NOTE':
-        return 'secondary';
-      case 'PERMISSION_CHANGE':
-        return 'outline';
-      default:
-        return undefined;
-    }
-  };
-  
-  // Format action description
-  const formatActionDescription = (action: AdminUserAction) => {
-    // Return basic description
-    return action.description;
-  };
-  
-  // Display metadata if present and expanded
-  const renderMetadata = (action: AdminUserAction) => {
-    if (!action.metadata || !isExpanded[action.id]) return null;
+  // Format action details better
+  const formatActionDetails = (action: AdminUserAction) => {
+    if (!action.details) return null;
     
     try {
-      const metadataObj = JSON.parse(action.metadata);
+      // Try to parse JSON details
+      const details = JSON.parse(action.details);
       return (
-        <div className="mt-2 p-2 bg-muted/50 rounded text-xs">
-          <pre className="whitespace-pre-wrap font-mono">
-            {JSON.stringify(metadataObj, null, 2)}
-          </pre>
+        <div className="text-xs space-y-1 mt-1">
+          {Object.entries(details).map(([key, value]) => (
+            <div key={key}>
+              <span className="font-medium">{key}: </span>
+              <span>{String(value)}</span>
+            </div>
+          ))}
         </div>
       );
-    } catch (e) {
-      // If not valid JSON, just display as text
-      return (
-        <div className="mt-2 p-2 bg-muted/50 rounded text-xs">
-          <p>{action.metadata}</p>
-        </div>
-      );
+    } catch {
+      // If not JSON, just return as string
+      return <div className="text-xs mt-1">{action.details}</div>;
     }
   };
   
-  if (allActions.length === 0) {
-    return (
-      <div className="text-center py-4">
-        <p className="text-muted-foreground">No administrative actions recorded yet.</p>
-      </div>
-    );
-  }
+  // Get human readable action name
+  const getActionName = (action: string) => {
+    const actionMap: Record<string, string> = {
+      add_note: 'Added Note',
+      update_status: 'Updated Status',
+      update_profile: 'Updated Profile',
+      grant_permission: 'Granted Permission',
+      revoke_permission: 'Revoked Permission',
+      login_success: 'Successful Login',
+      login_failure: 'Failed Login Attempt',
+      password_reset: 'Password Reset',
+      email_change: 'Changed Email',
+      account_create: 'Account Created',
+      admin_view: 'Admin Viewed Profile',
+    };
+    
+    return actionMap[action] || action;
+  };
   
   return (
-    <div className="space-y-4">
-      {allActions.map((action, index) => (
-        <div key={action.id}>
-          {index > 0 && <Separator className="my-3" />}
-          <div className="space-y-1">
-            <div className="flex justify-between items-start">
-              <div className="flex items-center gap-2">
-                <Badge variant={getActionBadgeVariant(action.actionType)}>
-                  {action.actionType.replace(/_/g, ' ')}
-                </Badge>
-                <span className="text-xs text-muted-foreground">
-                  {formatDistance(new Date(action.createdAt), new Date(), { addSuffix: true })}
-                </span>
-              </div>
-              {action.adminUsername && (
-                <span className="text-xs">by {action.adminUsername}</span>
-              )}
-            </div>
-            
-            <p className="text-sm">
-              {formatActionDescription(action)}
-              {action.metadata && expandable && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-4 w-4 ml-1 inline-flex"
-                        onClick={() => toggleExpanded(action.id)}
-                      >
-                        <Info className="h-3 w-3" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Click to {isExpanded[action.id] ? 'hide' : 'show'} details</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </p>
-            
-            {renderMetadata(action)}
-          </div>
-        </div>
-      ))}
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          {showAllActions ? 'Admin Action History' : 'Recent Actions'}
+        </CardTitle>
+        <CardDescription>
+          {showAllActions
+            ? 'Complete history of administrative actions on this user account'
+            : 'Recent administrative actions on this user account'}
+        </CardDescription>
+      </CardHeader>
       
-      {showLoadMore && userId && (
-        <div className="pt-2">
-          {isLoadingMore || isFetchingMore ? (
-            <div className="flex justify-center">
-              <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            </div>
-          ) : (
-            moreActionsData?.pagination.hasMore && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleLoadMore} 
-                className="w-full"
-              >
-                Load More
-              </Button>
-            )
-          )}
-        </div>
-      )}
-    </div>
+      <CardContent>
+        {isLoading ? (
+          <div className="space-y-2">
+            {Array(5).fill(0).map((_, i) => (
+              <div key={i} className="flex gap-2">
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-6 w-40" />
+                <Skeleton className="h-6 w-full" />
+              </div>
+            ))}
+          </div>
+        ) : actions.length > 0 ? (
+          <>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date/Time</TableHead>
+                  <TableHead>Admin</TableHead>
+                  <TableHead>Action</TableHead>
+                  <TableHead>Details</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {actions.map((action) => (
+                  <TableRow key={action.id}>
+                    <TableCell className="align-top whitespace-nowrap">
+                      {formatDateTime(action.createdAt)}
+                    </TableCell>
+                    <TableCell className="align-top">
+                      {action.adminName || `Admin #${action.adminId}`}
+                    </TableCell>
+                    <TableCell className="align-top">
+                      {getActionName(action.action)}
+                    </TableCell>
+                    <TableCell className="align-top">
+                      {formatActionDetails(action)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            
+            {showAllActions && totalPages > 1 && (
+              <Pagination className="mt-4">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                      className={page === 1 ? 'pointer-events-none opacity-50' : ''}
+                    />
+                  </PaginationItem>
+                  
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                    <PaginationItem key={p}>
+                      <PaginationLink
+                        onClick={() => setPage(p)}
+                        isActive={page === p}
+                      >
+                        {p}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                      disabled={page === totalPages}
+                      className={page === totalPages ? 'pointer-events-none opacity-50' : ''}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
+          </>
+        ) : (
+          <div className="text-center py-4 text-muted-foreground">
+            No administrative actions recorded for this user yet.
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
-};
+}
