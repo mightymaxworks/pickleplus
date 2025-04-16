@@ -112,7 +112,7 @@ const UserManagementPage = () => {
           <Input
             placeholder="Search users..."
             value={searchQuery}
-            onChange={useCallback((e) => setSearchQuery(e.target.value), [])}
+            onChange={useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value), [])}
             className="flex-1"
           />
           <Button type="submit" variant="outline">
@@ -130,7 +130,6 @@ const UserManagementPage = () => {
             <SelectContent>
               <SelectItem value="all">All Users</SelectItem>
               <SelectItem value="admin">Admins</SelectItem>
-              <SelectItem value="coach">Coaches</SelectItem>
               <SelectItem value="founding">Founding Members</SelectItem>
               <SelectItem value="active">Active Users</SelectItem>
             </SelectContent>
@@ -216,7 +215,6 @@ const UserManagementPage = () => {
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
                       {user.isAdmin && <Badge variant="secondary">Admin</Badge>}
-                      {user.isCoach && <Badge variant="secondary">Coach</Badge>}
                       {user.isFoundingMember && <Badge variant="secondary">Founding</Badge>}
                     </div>
                   </TableCell>

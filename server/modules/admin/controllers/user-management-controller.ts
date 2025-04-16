@@ -6,7 +6,7 @@
  */
 
 import { db } from '../../../db';
-import { eq, sql, desc, asc, and, or, like, isNull } from 'drizzle-orm';
+import { eq, sql, desc, asc, and, or, like, ilike, isNull } from 'drizzle-orm';
 import { users, matches } from '../../../../shared/schema';
 import { 
   adminUserNotes, 
@@ -49,12 +49,12 @@ export class UserManagementController {
         conditions = and(
           conditions,
           or(
-            like(users.username, `%${search}%`),
-            like(users.displayName, `%${search}%`),
-            like(users.firstName, `%${search}%`),
-            like(users.lastName, `%${search}%`),
-            like(users.email, `%${search}%`),
-            like(users.passportId, `%${search}%`)
+            ilike(users.username, `%${search}%`),
+            ilike(users.displayName, `%${search}%`),
+            ilike(users.firstName, `%${search}%`),
+            ilike(users.lastName, `%${search}%`),
+            ilike(users.email, `%${search}%`),
+            ilike(users.passportId, `%${search}%`)
           )
         );
       }
@@ -260,7 +260,7 @@ export class UserManagementController {
       // Only allow updating certain fields
       const allowedFields = [
         'displayName', 'firstName', 'lastName', 'email', 
-        'avatarUrl', 'bio', 'isAdmin', 'isCoach',
+        'avatarUrl', 'bio', 'isAdmin',
         'passportId', 'isFoundingMember', 'isTestData'
       ];
       
@@ -272,8 +272,8 @@ export class UserManagementController {
         }
       }
       
-      // Add updatedAt field
-      filteredData.updatedAt = new Date();
+      // Add lastUpdated field
+      filteredData.lastUpdated = new Date();
       
       // Update user
       await db
