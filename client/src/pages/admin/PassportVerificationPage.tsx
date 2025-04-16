@@ -12,7 +12,7 @@ import { useLocation } from "wouter";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ShieldAlert } from "lucide-react";
-import { AdminLayout } from "@/modules/admin/components/AdminLayout";
+// AdminLayout is provided by AdminProtectedRoute, no need to import it here
 import { useIsMobile } from "@/modules/admin/utils/deviceDetection";
 import { ResponsivePassportVerification } from "@/modules/admin/components/responsive";
 
@@ -75,11 +75,8 @@ const PassportVerificationPage: React.FC = () => {
   }
   
   // Use our responsive component which will render based on device type
-  return (
-    <AdminLayout title="Passport Verification">
-      <ResponsivePassportVerification />
-    </AdminLayout>
-  );
+  // Note: AdminLayout is provided by AdminProtectedRoute wrapper
+  return <ResponsivePassportVerification />;
 };
 
 export default PassportVerificationPage;
