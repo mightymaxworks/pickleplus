@@ -230,6 +230,7 @@ const PickleballIcon = () => (
 // Header component with passport and courtIQ
 const DashboardHeader = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // This is a demo component, so we don't need to handle authentication
   
   return (
     <header className="sticky top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -616,8 +617,21 @@ const RecordMatchFAB = () => {
 
 // Main dashboard component
 const UnifiedActivityDashboard = () => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   
+  // Handle loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-10 w-10 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+          <div className="text-lg font-medium">Loading dashboard...</div>
+        </div>
+      </div>
+    );
+  }
+  
+  // For demo purposes, always show the dashboard even if not authenticated
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <DashboardHeader />
