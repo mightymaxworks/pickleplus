@@ -205,3 +205,37 @@ export async function getUserMatches(
   
   return await response.json();
 }
+
+/**
+ * Update user scores (XP and/or ranking points)
+ */
+export async function updateUserScores(
+  userId: number,
+  data: { xp?: number; rankingPoints?: number }
+): Promise<{ 
+  id: number; 
+  xp: number; 
+  level: number; 
+  rankingPoints: number;
+  previousValues: {
+    xp: number;
+    level: number;
+    rankingPoints: number;
+  }
+}> {
+  const response = await fetch(`/api/admin/users/${userId}/scores`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+    },
+    credentials: 'include',
+    body: JSON.stringify(data)
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to update user scores');
+  }
+  
+  return await response.json();
+}

@@ -302,6 +302,90 @@ export class UserManagementController {
   }
   
   /**
+   * Update user scores (XP and ranking points)
+   */
+  async updateUserScores(userId: number, scoreData: { xp?: number; rankingPoints?: number }) {
+    try {
+      console.log(`[Admin] Updating scores for user ${userId}:`, scoreData);
+      
+      // Get current user data to store previous values
+      const currentUser = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .then(res => res[0]);
+      
+      if (!currentUser) {
+        throw new Error("User not found");
+      }
+      
+      // Store previous values for auditing
+      const previousValues = {
+        xp: currentUser.xp,
+        level: currentUser.level,
+        rankingPoints: currentUser.rankingPoints
+      };
+      
+      // Prepare data for update
+      const updateData: Record<string, any> = {};
+      
+      // Only include provided fields
+      if (scoreData.xp !== undefined) {
+        updateData.xp = scoreData.xp;
+        
+        // Auto-calculate level based on XP (if XP is being updated)
+        // Level formula: Floor of sqrt(XP / 25)
+        const newLevel = Math.floor(Math.sqrt(scoreData.xp / 25));
+        updateData.level = Math.max(1, newLevel); // Minimum level is 1
+      }
+      
+      if (scoreData.rankingPoints !== undefined) {
+        updateData.rankingPoints = scoreData.rankingPoints;
+      }
+      
+      // Add lastUpdated field
+      updateData.lastUpdated = new Date();
+      
+      // Only proceed if we have data to update
+      if (Object.keys(updateData).length === 0) {
+        throw new Error("No valid score data provided");
+      }
+      
+      // Log the update action
+      console.log(`[Admin] Applying score updates:`, updateData);
+      
+      // Update user
+      await db
+        .update(users)
+        .set(updateData)
+        .where(eq(users.id, userId));
+      
+      // Get updated user
+      const updatedUser = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .then(res => res[0]);
+      
+      if (!updatedUser) {
+        throw new Error("User not found after update");
+      }
+      
+      // Return updated and previous values
+      return {
+        id: updatedUser.id,
+        xp: updatedUser.xp,
+        level: updatedUser.level,
+        rankingPoints: updatedUser.rankingPoints,
+        previousValues // Include previous values for comparison and auditing
+      };
+    } catch (error) {
+      console.error("[UserManagementController] Error updating user scores:", error);
+      throw error;
+    }
+  }
+  
+  /**
    * Add note to user
    */
   async addUserNote(
@@ -474,6 +558,16 @@ export class UserManagementController {
         case 'permission':
           // Implement permission update logic
           return { success: true, message: 'Permission updated successfully' };
+          
+        case 'update_scores':
+          // Just record the action, the actual update is done separately
+          await this.recordAdminAction(userId, adminId, 'update_scores', {
+            xp: actionData.xp,
+            previousXp: actionData.previousXp,
+            rankingPoints: actionData.rankingPoints,
+            previousRankingPoints: actionData.previousRankingPoints
+          });
+          return { success: true, message: 'Scores updated successfully' };
           
         default:
           throw new Error(`Unknown action type: ${actionType}`);

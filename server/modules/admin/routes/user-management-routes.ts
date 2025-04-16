@@ -227,4 +227,61 @@ router.get('/:id/matches', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * Update user scores (XP and ranking points)
+ * PATCH /api/admin/users/:id/scores
+ */
+router.patch('/:id/scores', async (req: Request, res: Response) => {
+  try {
+    const userId = parseInt(req.params.id);
+    
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: "Invalid user ID" });
+    }
+    
+    // Validate score data
+    const { xp, rankingPoints } = req.body;
+    
+    if ((xp === undefined || isNaN(Number(xp))) && 
+        (rankingPoints === undefined || isNaN(Number(rankingPoints)))) {
+      return res.status(400).json({ 
+        error: "At least one valid score field (xp or rankingPoints) is required" 
+      });
+    }
+    
+    // Convert to numbers if they're valid
+    const scoreData: { xp?: number; rankingPoints?: number } = {};
+    
+    if (xp !== undefined && !isNaN(Number(xp))) {
+      scoreData.xp = Number(xp);
+    }
+    
+    if (rankingPoints !== undefined && !isNaN(Number(rankingPoints))) {
+      scoreData.rankingPoints = Number(rankingPoints);
+    }
+    
+    // Call controller to update scores
+    const result = await controller.updateUserScores(userId, scoreData);
+    
+    // Record the admin action
+    const adminId = req.user!.id;
+    await controller.performAdminAction(
+      userId,
+      adminId,
+      'update_scores',
+      {
+        xp: scoreData.xp,
+        rankingPoints: scoreData.rankingPoints,
+        previousXp: result.previousValues?.xp,
+        previousRankingPoints: result.previousValues?.rankingPoints
+      }
+    );
+    
+    res.json(result);
+  } catch (error) {
+    console.error("[Admin API] Error updating user scores:", error);
+    res.status(500).json({ error: "Failed to update user scores" });
+  }
+});
+
 export default router;

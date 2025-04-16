@@ -23,6 +23,7 @@ import { UserStatusPanel } from './UserStatusPanel';
 import { UserLoginHistoryTable } from './UserLoginHistoryTable';
 import { UserActivityStats } from './UserActivityStats';
 import { UserMatchHistory } from './UserMatchHistory';
+import { UserScoresPanel } from './UserScoresPanel';
 
 /**
  * User Details Page Component
