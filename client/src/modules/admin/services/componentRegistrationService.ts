@@ -12,6 +12,7 @@ import {
   passportVerificationView
 } from '../components/passport';
 import { AdminMobileTestNavItem } from '../components/mobile-test';
+import { AdminUserManagementNavItem } from '../components/user-management';
 import { registerReportingComponents } from './reportingComponentRegistration';
 import { registerFeedbackComponents } from './feedbackComponentRegistration';
 // Import settings module to register its components
@@ -40,6 +41,17 @@ export function registerMobileTestComponents() {
 }
 
 /**
+ * Register user management components
+ * PKL-278651-ADMIN-0015-USER
+ */
+export function registerUserManagementComponents() {
+  // Register user management nav item
+  adminComponentRegistry.registerNavItem('core', AdminUserManagementNavItem);
+  
+  console.log('[Admin] User Management components registered');
+}
+
+/**
  * Register all admin components
  */
 export function registerAllAdminComponents() {
@@ -50,6 +62,7 @@ export function registerAllAdminComponents() {
   registerMobileTestComponents();
   registerReportingComponents();
   registerFeedbackComponents();
+  registerUserManagementComponents(); // Added User Management
   
   console.log('[Admin] Admin components registered');
 }
