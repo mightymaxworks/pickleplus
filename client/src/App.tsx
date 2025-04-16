@@ -306,6 +306,10 @@ export default function App() {
                   <Route path="/player-search-test">
                     {(params) => <ProtectedRoute component={PlayerSearchTestPage} path="/player-search-test" />}
                   </Route>
+                  
+                  {/* PKL-278651-COMM-0001-UIMOCK - Community Module UI Test Route */}
+                  <Route path="/test/community" component={TestCommunityPage} />
+                  
                   <Route component={LazyNotFoundPage} />
                 </Switch>
               </Suspense>
