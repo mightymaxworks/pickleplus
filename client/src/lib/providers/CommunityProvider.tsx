@@ -6,10 +6,10 @@
  */
 
 import React, { createContext, useContext, useState } from "react";
-import { useNavigate } from "wouter";
-import { Community } from "@shared/schema/community";
+import { useLocation } from "wouter";
+import { Community } from "@/types/community";
 import { toast } from "@/hooks/use-toast";
-import { useJoinCommunity, useLeaveCommunity, useCommunity } from "@lib/hooks/useCommunity";
+import { useJoinCommunity, useLeaveCommunity, useCommunity } from "../hooks/useCommunity";
 
 interface CommunityContextType {
   currentCommunityId: number | null;
@@ -29,7 +29,7 @@ const CommunityContext = createContext<CommunityContextType | undefined>(undefin
 
 export function CommunityProvider({ children }: { children: React.ReactNode }) {
   const [currentCommunityId, setCurrentCommunityId] = useState<number | null>(null);
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
   
   // Mutations
   const joinMutation = useJoinCommunity();

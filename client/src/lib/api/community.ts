@@ -5,7 +5,7 @@
  * This file provides client-side API functions for interacting with the Community Hub endpoints.
  */
 
-import { apiRequest } from "@lib/queryClient";
+import { apiRequest } from "../queryClient";
 import type {
   Community,
   InsertCommunity,
@@ -20,7 +20,7 @@ import type {
   CommunityPostComment,
   InsertCommunityPostComment,
   CommunityJoinRequest,
-} from "@shared/schema/community";
+} from "@/types/community";
 
 const BASE_URL = "/api/communities";
 

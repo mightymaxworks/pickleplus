@@ -6,7 +6,7 @@
  */
 
 import React from "react";
-import { Community } from "@shared/schema/community";
+import { Community } from "@/types/community";
 import { CommunityCard } from "./CommunityCard";
 import { Skeleton } from "@/components/ui/skeleton";
 

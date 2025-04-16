@@ -51,6 +51,11 @@ import {
   preloadAdminPages
 } from './lazyComponents'
 
+// Import community pages (PKL-278651-COMM-0006-HUB-UI)
+import CommunitiesPage from './pages/communities'
+import CommunityDetailPage from './pages/communities/[id]'
+import CreateCommunityPage from './pages/communities/create'
+
 // Keep imports for non-lazy loaded pages
 import TestAuthPage from './pages/TestAuthPage'
 import TestRoutingPage from './pages/TestRoutingPage'
@@ -329,6 +334,17 @@ export default function App() {
                   
                   {/* PKL-278651-COMM-0005-DASH-SIMPLE - Simple Unified Activity-Centric Dashboard Route */}
                   <Route path="/test/simple-unified" component={SimpleUnifiedDashboard} />
+                  
+                  {/* PKL-278651-COMM-0006-HUB - Community Hub Implementation */}
+                  <Route path="/communities/create">
+                    {(params) => <ProtectedRoute component={CreateCommunityPage} path="/communities/create" />}
+                  </Route>
+                  <Route path="/communities/:id">
+                    {(params) => <ProtectedRoute component={CommunityDetailPage} path="/communities/:id" />}
+                  </Route>
+                  <Route path="/communities">
+                    {(params) => <ProtectedRoute component={CommunitiesPage} path="/communities" />}
+                  </Route>
                   
                   <Route component={LazyNotFoundPage} />
                 </Switch>

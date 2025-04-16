@@ -7,13 +7,13 @@
 
 import React from "react";
 import { Link } from "wouter";
-import { Community } from "@shared/schema/community";
+import { Community } from "@/types/community";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MapPin, Users, Calendar, Lock, Shield } from "lucide-react";
-import { useCommunityContext } from "@lib/providers/CommunityProvider";
+import { useCommunityContext } from "../../lib/providers/CommunityProvider";
 
 interface CommunityCardProps {
   community: Community;

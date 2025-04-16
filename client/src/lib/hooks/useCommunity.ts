@@ -6,8 +6,8 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@lib/queryClient";
-import * as communityApi from "@lib/api/community";
+import { apiRequest } from "../queryClient";
+import * as communityApi from "../api/community";
 import { toast } from "@/hooks/use-toast";
 import type {
   Community,
@@ -15,7 +15,7 @@ import type {
   CommunityPost,
   CommunityEvent,
   CommunityPostComment,
-} from "@shared/schema/community";
+} from "@/types/community";
 
 // Query keys
 export const communityKeys = {
