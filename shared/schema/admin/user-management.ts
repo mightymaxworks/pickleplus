@@ -3,10 +3,10 @@
  * Enhanced User Management Schema
  * 
  * This file contains the schema definitions for enhanced user management capabilities
- * including user notes, administrative actions log, and permission records.
+ * including user notes, administrative actions log, user statuses, and permission records.
  */
 
-import { pgTable, serial, integer, varchar, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, varchar, text, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -34,46 +34,31 @@ export const adminUserActions = pgTable("admin_user_actions", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
   adminId: integer("admin_id").notNull().references(() => users.id),
-  actionType: varchar("action_type", { length: 50 }).notNull(),
-  description: text("description").notNull(),
-  metadata: text("metadata"), // JSON stringified additional details
-  ipAddress: varchar("ip_address", { length: 45 }),
-  userAgent: text("user_agent"),
-  createdAt: timestamp("created_at").defaultNow()
-});
-
-/**
- * User Permission Overrides Table
- * Allows for granular control of user permissions beyond basic role flags
- */
-export const userPermissionOverrides = pgTable("user_permission_overrides", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
-  permissionKey: varchar("permission_key", { length: 100 }).notNull(),
-  allowed: boolean("allowed").notNull(),
-  reason: text("reason"),
-  addedById: integer("added_by_id").notNull().references(() => users.id),
+  action: varchar("action", { length: 50 }).notNull(),
+  details: jsonb("details"),
   createdAt: timestamp("created_at").defaultNow(),
-  expiresAt: timestamp("expires_at")
+  ipAddress: varchar("ip_address", { length: 50 }),
+  userAgent: text("user_agent")
 });
 
 /**
  * User Login History Table
- * Tracks user login attempts for security monitoring
+ * Records user login attempts and related information
  */
 export const userLoginHistory = pgTable("user_login_history", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
+  timestamp: timestamp("timestamp").defaultNow(),
   success: boolean("success").notNull(),
-  ipAddress: varchar("ip_address", { length: 45 }),
+  ipAddress: varchar("ip_address", { length: 50 }),
   userAgent: text("user_agent"),
-  deviceInfo: text("device_info"),
-  loginAt: timestamp("login_at").defaultNow()
+  location: varchar("location", { length: 100 }),
+  device: varchar("device", { length: 100 })
 });
 
 /**
  * User Account Status Table
- * Tracks changes to user account status (active, suspended, etc.)
+ * Tracks user account status changes
  */
 export const userAccountStatus = pgTable("user_account_status", {
   id: serial("id").primaryKey(),
@@ -85,70 +70,101 @@ export const userAccountStatus = pgTable("user_account_status", {
   expiresAt: timestamp("expires_at")
 });
 
-// Define relations
+/**
+ * User Permission Overrides Table
+ * Allows for granting or revoking specific permissions to users
+ */
+export const userPermissionOverrides = pgTable("user_permission_overrides", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  permission: varchar("permission", { length: 100 }).notNull(),
+  granted: boolean("granted").notNull(),
+  reason: text("reason"),
+  createdById: integer("created_by_id").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at")
+});
+
+/**
+ * Schema Relations
+ */
+
+// Admin User Notes Relations
 export const adminUserNotesRelations = relations(adminUserNotes, ({ one }) => ({
-  user: one(users, { fields: [adminUserNotes.userId], references: [users.id] }),
-  author: one(users, { fields: [adminUserNotes.authorId], references: [users.id] })
+  user: one(users, {
+    fields: [adminUserNotes.userId],
+    references: [users.id],
+  }),
+  author: one(users, {
+    fields: [adminUserNotes.authorId],
+    references: [users.id],
+  }),
 }));
 
+// Admin User Actions Relations
 export const adminUserActionsRelations = relations(adminUserActions, ({ one }) => ({
-  user: one(users, { fields: [adminUserActions.userId], references: [users.id] }),
-  admin: one(users, { fields: [adminUserActions.adminId], references: [users.id] })
+  user: one(users, {
+    fields: [adminUserActions.userId],
+    references: [users.id],
+  }),
+  admin: one(users, {
+    fields: [adminUserActions.adminId],
+    references: [users.id],
+  }),
 }));
 
-export const userPermissionOverridesRelations = relations(userPermissionOverrides, ({ one }) => ({
-  user: one(users, { fields: [userPermissionOverrides.userId], references: [users.id] }),
-  addedBy: one(users, { fields: [userPermissionOverrides.addedById], references: [users.id] })
-}));
-
+// User Login History Relations
 export const userLoginHistoryRelations = relations(userLoginHistory, ({ one }) => ({
-  user: one(users, { fields: [userLoginHistory.userId], references: [users.id] })
+  user: one(users, {
+    fields: [userLoginHistory.userId],
+    references: [users.id],
+  }),
 }));
 
+// User Account Status Relations
 export const userAccountStatusRelations = relations(userAccountStatus, ({ one }) => ({
-  user: one(users, { fields: [userAccountStatus.userId], references: [users.id] }),
-  changedBy: one(users, { fields: [userAccountStatus.changedById], references: [users.id] })
+  user: one(users, {
+    fields: [userAccountStatus.userId],
+    references: [users.id],
+  }),
+  changedBy: one(users, {
+    fields: [userAccountStatus.changedById],
+    references: [users.id],
+  }),
 }));
 
-// Create insert schemas for validation
-export const insertAdminUserNoteSchema = createInsertSchema(adminUserNotes).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// User Permission Overrides Relations
+export const userPermissionOverridesRelations = relations(userPermissionOverrides, ({ one }) => ({
+  user: one(users, {
+    fields: [userPermissionOverrides.userId],
+    references: [users.id],
+  }),
+  createdBy: one(users, {
+    fields: [userPermissionOverrides.createdById],
+    references: [users.id],
+  }),
+}));
 
-export const insertAdminUserActionSchema = createInsertSchema(adminUserActions).omit({
-  id: true,
-  createdAt: true
-});
+/**
+ * Insert Schemas
+ */
 
-export const insertUserPermissionOverrideSchema = createInsertSchema(userPermissionOverrides).omit({
-  id: true,
-  createdAt: true
-});
-
-export const insertUserLoginHistorySchema = createInsertSchema(userLoginHistory).omit({
-  id: true,
-  loginAt: true
-});
-
-export const insertUserAccountStatusSchema = createInsertSchema(userAccountStatus).omit({
-  id: true,
-  createdAt: true
-});
-
-// Create types from schemas
-export type AdminUserNote = typeof adminUserNotes.$inferSelect;
+// Admin User Notes Insert Schema
+export const insertAdminUserNoteSchema = createInsertSchema(adminUserNotes);
 export type InsertAdminUserNote = z.infer<typeof insertAdminUserNoteSchema>;
 
-export type AdminUserAction = typeof adminUserActions.$inferSelect;
+// Admin User Actions Insert Schema
+export const insertAdminUserActionSchema = createInsertSchema(adminUserActions);
 export type InsertAdminUserAction = z.infer<typeof insertAdminUserActionSchema>;
 
-export type UserPermissionOverride = typeof userPermissionOverrides.$inferSelect;
-export type InsertUserPermissionOverride = z.infer<typeof insertUserPermissionOverrideSchema>;
-
-export type UserLoginHistory = typeof userLoginHistory.$inferSelect;
+// User Login History Insert Schema
+export const insertUserLoginHistorySchema = createInsertSchema(userLoginHistory);
 export type InsertUserLoginHistory = z.infer<typeof insertUserLoginHistorySchema>;
 
-export type UserAccountStatus = typeof userAccountStatus.$inferSelect;
+// User Account Status Insert Schema
+export const insertUserAccountStatusSchema = createInsertSchema(userAccountStatus);
 export type InsertUserAccountStatus = z.infer<typeof insertUserAccountStatusSchema>;
+
+// User Permission Overrides Insert Schema
+export const insertUserPermissionOverrideSchema = createInsertSchema(userPermissionOverrides);
+export type InsertUserPermissionOverride = z.infer<typeof insertUserPermissionOverrideSchema>;

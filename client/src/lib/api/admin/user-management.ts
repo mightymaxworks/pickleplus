@@ -1,123 +1,163 @@
 /**
  * PKL-278651-ADMIN-0015-USER
- * Admin User Management API Client
+ * User Management API Client
  * 
- * SDK layer for interacting with the admin user management API.
+ * This file contains the client-side API functions for the user management feature
  */
 
-import { apiRequest } from '../../queryClient';
-import { User } from '@/types';
-import {
-  DetailedUserProfile,
+import { apiRequest } from '@/lib/queryClient';
+import { User } from '@shared/types'; 
+import { 
+  UserDetailsResponse,
+  UserSearchResponse,
   AdminUserNote,
+  UserActionsResponse,
   UserAccountStatus,
-  AdminUserAction,
-  UserStats,
-  PaginationData
-} from '../../../../shared/types/admin/user-management';
+  AdminAction
+} from '@shared/types/admin/user-management';
 
 /**
- * Get users with pagination, filtering, and sorting
+ * Get a list of users with pagination, sorting, and filtering
  */
-export async function getUsers(params: {
-  page?: number;
-  limit?: number;
-  search?: string;
-  filter?: string;
-  sortBy?: string;
-  sortDir?: 'asc' | 'desc';
-}): Promise<{ users: User[]; pagination: PaginationData }> {
-  const searchParams = new URLSearchParams();
+export async function getUsers(
+  page = 1,
+  limit = 10,
+  sortBy = 'createdAt',
+  sortDir = 'desc',
+  search?: string,
+  filter?: string
+): Promise<UserSearchResponse> {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+    sortBy,
+    sortDir,
+    ...(search && { search }),
+    ...(filter && filter !== 'all' && { filter })
+  });
   
-  if (params.page) searchParams.append('page', params.page.toString());
-  if (params.limit) searchParams.append('limit', params.limit.toString());
-  if (params.search) searchParams.append('search', params.search);
-  if (params.filter) searchParams.append('filter', params.filter);
-  if (params.sortBy) searchParams.append('sortBy', params.sortBy);
-  if (params.sortDir) searchParams.append('sortDir', params.sortDir);
+  const response = await fetch(`/api/admin/users?${params.toString()}`);
   
-  const queryString = searchParams.toString();
-  return apiRequest(`/api/admin/users${queryString ? `?${queryString}` : ''}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch users');
+  }
+  
+  return await response.json() as UserSearchResponse;
 }
 
 /**
- * Get detailed user profile (with admin data)
+ * Get detailed user information including notes, account status, etc.
  */
-export async function getUserDetails(userId: number): Promise<DetailedUserProfile> {
-  return apiRequest(`/api/admin/users/${userId}`);
+export async function getUserDetails(userId: number): Promise<UserDetailsResponse> {
+  const response = await fetch(`/api/admin/users/${userId}`);
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch user details');
+  }
+  
+  return await response.json() as UserDetailsResponse;
 }
 
 /**
  * Add a note to a user's profile
  */
-export async function addUserNote(userId: number, data: {
-  note: string;
-  visibility: 'admin' | 'system';
-}): Promise<AdminUserNote> {
+export async function addUserNote(
+  userId: number, 
+  data: { note: string; visibility: 'admin' | 'system' }
+): Promise<AdminUserNote> {
   return apiRequest(`/api/admin/users/${userId}/notes`, {
     method: 'POST',
-    body: JSON.stringify(data)
+    body: JSON.stringify(data),
   });
 }
 
 /**
  * Update a user's account status
  */
-export async function updateUserStatus(userId: number, data: {
-  status: 'active' | 'suspended' | 'restricted' | 'deactivated';
-  reason?: string;
-  expiresAt?: string;
-}): Promise<UserAccountStatus> {
+export async function updateUserStatus(
+  userId: number,
+  data: { 
+    status: 'active' | 'suspended' | 'restricted' | 'deactivated';
+    reason?: string;
+    expiresAt?: string;
+  }
+): Promise<UserAccountStatus> {
   return apiRequest(`/api/admin/users/${userId}/status`, {
-    method: 'POST',
-    body: JSON.stringify(data)
+    method: 'PUT',
+    body: JSON.stringify(data),
   });
 }
 
 /**
- * Update a user's profile (admin version)
+ * Update a user's profile information
  */
-export async function updateUserProfile(userId: number, data: Partial<User>): Promise<User> {
+export async function updateUserProfile(
+  userId: number,
+  data: Partial<User>
+): Promise<User> {
   return apiRequest(`/api/admin/users/${userId}/profile`, {
     method: 'PATCH',
-    body: JSON.stringify(data)
+    body: JSON.stringify(data),
   });
 }
 
 /**
- * Get admin actions for a user
+ * Get user action history with pagination
  */
-export async function getUserAdminActions(userId: number, params: {
-  page?: number;
-  limit?: number;
-}): Promise<{ actions: AdminUserAction[]; pagination: PaginationData }> {
-  const searchParams = new URLSearchParams();
+export async function getUserActions(
+  userId: number,
+  page = 1,
+  limit = 10
+): Promise<UserActionsResponse> {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString()
+  });
   
-  if (params.page) searchParams.append('page', params.page.toString());
-  if (params.limit) searchParams.append('limit', params.limit.toString());
+  const response = await fetch(`/api/admin/users/${userId}/actions?${params.toString()}`);
   
-  const queryString = searchParams.toString();
-  return apiRequest(`/api/admin/users/${userId}/actions${queryString ? `?${queryString}` : ''}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch user actions');
+  }
+  
+  return await response.json() as UserActionsResponse;
 }
 
 /**
- * Record an admin action
+ * Perform an admin action on a user
  */
-export async function recordAdminAction(data: {
-  userId: number;
-  actionType: string;
-  description: string;
-  metadata?: string;
-}): Promise<AdminUserAction> {
-  return apiRequest('/api/admin/users/actions', {
+export async function performAdminAction(
+  userId: number,
+  action: AdminAction
+): Promise<{ success: boolean; message: string }> {
+  return apiRequest("/api/admin/users/actions", {
     method: 'POST',
-    body: JSON.stringify(data)
+    body: JSON.stringify({
+      userId,
+      ...action
+    }),
   });
 }
 
 /**
- * Get user stats for dashboard
+ * Get matches for a specific user
  */
-export async function getUserStats(): Promise<UserStats> {
-  return apiRequest('/api/admin/users/stats');
+export async function getUserMatches(
+  userId: number,
+  page = 1,
+  limit = 10
+): Promise<any> {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+    userId: userId.toString()
+  });
+  
+  const response = await fetch(`/api/admin/users/${userId}/matches?${params.toString()}`);
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch user matches');
+  }
+  
+  return await response.json();
 }
