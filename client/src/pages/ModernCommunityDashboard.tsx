@@ -31,6 +31,7 @@ import { Card } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Pickleball Pattern SVG
 const CourtPattern = () => (
@@ -1270,9 +1271,14 @@ const ModernCommunityDashboard: React.FC = () => {
                     <div>
                       <div className="font-medium text-sm">Your Name</div>
                       <Select>
-                        <option value="public">Public</option>
-                        <option value="friends">Friends Only</option>
-                        <option value="private">Private</option>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Public" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="public">Public</SelectItem>
+                          <SelectItem value="friends">Friends Only</SelectItem>
+                          <SelectItem value="private">Private</SelectItem>
+                        </SelectContent>
                       </Select>
                     </div>
                   </div>
