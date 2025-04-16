@@ -28,6 +28,7 @@ import batchApiRoutes from "./routes/batch-api-routes"; // PKL-278651-PERF-0001.
 import { registerFeedbackRoutes } from "./modules/feedback/routes"; // PKL-278651-FEED-0001-BUG
 import { initApiGateway } from "./modules/api-gateway"; // PKL-278651-API-0001-GATEWAY
 import { initializeAdminModule } from "./modules/admin"; // PKL-278651-ADMIN-0015-USER
+import { initializeCommunityModule } from "./modules/community"; // PKL-278651-COMM-0006-HUB
 
 // Import necessary schema
 import { 
@@ -108,6 +109,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Initialize API Gateway and Developer Portal (PKL-278651-API-0001-GATEWAY)
   initApiGateway(app);
+  
+  // Initialize Community Hub Module (PKL-278651-COMM-0006-HUB)
+  initializeCommunityModule({ app });
   
   // Register Batch API routes (PKL-278651-PERF-0001.4-API)
   app.use("/api", batchApiRoutes);

@@ -4,11 +4,22 @@
  * 
  * This file implements the API routes for community features.
  */
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { createInsertSchema } from 'drizzle-zod';
 import { storage } from '../../storage';
 import { isAuthenticated } from '../../auth';
+
+// Custom middleware for community module that allows public GET requests
+const communityAuth = (req: Request, res: Response, next: NextFunction) => {
+  // Allow all GET requests to proceed without authentication
+  if (req.method === 'GET') {
+    return next();
+  }
+  
+  // For all other methods (POST, PUT, DELETE, etc.), require authentication
+  return isAuthenticated(req, res, next);
+};
 import {
   communities,
   communityMembers,
@@ -49,6 +60,7 @@ const insertCommentSchema = createInsertSchema(communityPostComments, {
 /**
  * Get all communities with optional filtering
  * GET /api/communities
+ * Public route - no authentication required
  */
 router.get('/', async (req: Request, res: Response) => {
   try {
