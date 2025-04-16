@@ -9,7 +9,9 @@ import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Search, Users, PlusCircle, Calendar, Megaphone,
-  Sparkles, TestTube, FlaskConical, Beaker, Zap
+  Sparkles, TestTube, FlaskConical, Beaker, Zap,
+  Trophy, Activity, LayoutGrid, PartyPopper, ScrollText,
+  Bell, Target, Star, Repeat2
 } from 'lucide-react';
 
 import CommunityDiscoveryMockup from '../core/modules/community/components/mockups/CommunityDiscoveryMockup';
@@ -20,13 +22,23 @@ import CommunityAnnouncementsMockup from '../core/modules/community/components/m
 
 // Pickleball SVG Icon
 const PickleballIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
     <path d="M12 2C13.3 2 14.6 2.3 15.8 2.7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     <path d="M19.4 5.2C21.5 7.8 22.5 11.4 21.5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     <path d="M17.7 19.8C15.1 21.9 11.5 22.5 8.2 21.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     <path d="M3.3 16.5C2 13.3 2.3 9.6 4.3 6.7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     <path d="M8 3.3C8.4 3.1 8.8 3 9.2 2.8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+
+// Custom Paddle SVG Icon
+const PaddleIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M15 4C19 7 20 13 17 17C15 19.5 12 20 9 19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M8.5 18.5L5 22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M4 20.6L5.1 19.5L3.9 18.3L3 19.2C2.8 19.4 2.8 19.8 3 20L4 21C4.2 21.2 4.6 21.2 4.8 21L5.7 20.1L4.5 18.9L3.4 20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M8 6L16 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
   </svg>
 );
 
@@ -37,6 +49,7 @@ const CourtLinesBackground = () => (
       <pattern id="courtLines" width="100" height="100" patternUnits="userSpaceOnUse">
         <line x1="0" y1="50" x2="100" y2="50" stroke="currentColor" strokeWidth="1" />
         <line x1="50" y1="0" x2="50" y2="100" stroke="currentColor" strokeWidth="1" />
+        <rect x="10" y="10" width="80" height="80" stroke="currentColor" strokeWidth="0.5" fill="none" />
       </pattern>
       <rect width="100%" height="100%" fill="url(#courtLines)" />
     </svg>
@@ -47,29 +60,87 @@ const CourtLinesBackground = () => (
 const ConfettiEffect = ({ active }: { active: boolean }) => {
   return active ? (
     <div className="confetti-container absolute inset-0 overflow-hidden pointer-events-none z-50">
-      {Array.from({ length: 40 }).map((_, i) => {
-        const size = Math.random() * 10 + 5;
+      {Array.from({ length: 50 }).map((_, i) => {
+        const size = Math.random() * 12 + 5;
         const left = Math.random() * 100;
         const animationDuration = Math.random() * 3 + 2;
         const delay = Math.random() * 0.5;
+        const type = Math.floor(Math.random() * 3); // 0: square, 1: circle, 2: triangle
+        const colors = ['#F2D362', '#83C167', '#EC4C56', '#45C4E5', '#9683EC'];
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        
+        let shape;
+        if (type === 0) {
+          shape = <div style={{ width: `${size}px`, height: `${size}px`, backgroundColor: color }} className="rounded-sm" />;
+        } else if (type === 1) {
+          shape = <div style={{ width: `${size}px`, height: `${size}px`, backgroundColor: color }} className="rounded-full" />;
+        } else {
+          shape = (
+            <div 
+              style={{ 
+                width: `${size}px`, 
+                height: `${size}px`,
+                backgroundColor: 'transparent',
+                borderLeft: `${size/2}px solid transparent`,
+                borderRight: `${size/2}px solid transparent`,
+                borderBottom: `${size}px solid ${color}`
+              }} 
+            />
+          );
+        }
         
         return (
           <div 
             key={i}
-            className="confetti absolute top-0 rounded-sm"
+            className="confetti absolute top-0"
             style={{
               left: `${left}%`,
-              width: `${size}px`,
-              height: `${size}px`,
-              backgroundColor: ['#F2D362', '#83C167', '#EC4C56', '#45C4E5'][Math.floor(Math.random() * 4)],
               animation: `confetti-fall ${animationDuration}s ease-in ${delay}s forwards`,
               opacity: active ? 1 : 0,
             }}
-          />
+          >
+            {shape}
+          </div>
         );
       })}
     </div>
   ) : null;
+};
+
+// Navigation Icon Button Component
+interface NavIconProps {
+  icon: React.ReactNode;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}
+
+const NavIcon: React.FC<NavIconProps> = ({ icon, label, active, onClick }) => {
+  return (
+    <button 
+      onClick={onClick}
+      className={`
+        relative group flex flex-col items-center justify-center p-3
+        transition-all duration-300 ease-spring
+        ${active 
+          ? 'bg-primary text-primary-foreground scale-110 shadow-lg rounded-xl' 
+          : 'hover:bg-primary/10 text-muted-foreground hover:text-foreground rounded-lg'
+        }
+      `}
+    >
+      <div className={`
+        mb-1 p-2 rounded-full 
+        ${active ? 'bg-primary-foreground/20' : 'bg-transparent group-hover:bg-background/10'}
+      `}>
+        {icon}
+      </div>
+      <span className="text-xs font-medium">{label}</span>
+      
+      {active && (
+        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-primary-foreground/50 rounded-t-full" />
+      )}
+    </button>
+  );
 };
 
 const TestCommunityPage: React.FC = () => {
@@ -86,18 +157,28 @@ const TestCommunityPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Navigation items with icons
+  const navItems = [
+    { id: 'discover', label: 'Discover', icon: <Search className="w-5 h-5" /> },
+    { id: 'profile', label: 'Profile', icon: <Users className="w-5 h-5" /> },
+    { id: 'create', label: 'Create', icon: <PlusCircle className="w-5 h-5" /> },
+    { id: 'events', label: 'Events', icon: <Calendar className="w-5 h-5" /> },
+    { id: 'announcements', label: 'News', icon: <Megaphone className="w-5 h-5" /> }
+  ];
+
   return (
     <div className="relative min-h-screen overflow-x-hidden">
       {/* Background Elements */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#f5f8ff] to-[#edfff1] dark:from-[#121826] dark:to-[#0f1c11] -z-10"></div>
+      <div className="fixed inset-0 bg-gradient-to-br from-[#f5f8ff] via-[#f0f9ff] to-[#edfff1] dark:from-[#121826] dark:via-[#111a22] dark:to-[#0f1c11] -z-10"></div>
       <CourtLinesBackground />
       
       {/* Confetti Effect */}
       <ConfettiEffect active={showConfetti} />
       
       {/* Floating Decoration Elements */}
-      <div className="hidden lg:block absolute top-40 -left-6 w-12 h-12 rounded-full bg-yellow-300/30 backdrop-blur-xl"></div>
-      <div className="hidden lg:block absolute bottom-20 right-10 w-20 h-20 rounded-full bg-green-300/20 backdrop-blur-xl"></div>
+      <div className="hidden lg:block absolute top-40 -left-6 w-12 h-12 rounded-full bg-yellow-300/30 backdrop-blur-xl animate-pulse-slow"></div>
+      <div className="hidden lg:block absolute bottom-20 right-10 w-20 h-20 rounded-full bg-green-300/20 backdrop-blur-xl animate-float"></div>
+      <div className="hidden lg:block absolute top-1/4 right-16 w-8 h-8 rounded-full bg-blue-300/20 backdrop-blur-md animate-float-delay"></div>
       
       <div className="container mx-auto py-8 px-4 relative z-10">
         {/* Header Banner */}
@@ -115,7 +196,7 @@ const TestCommunityPage: React.FC = () => {
           <div className="flex items-start gap-2 pl-12">
             <Beaker className="h-4 w-4 text-muted-foreground mt-0.5" />
             <p className="text-sm text-muted-foreground">
-              This is a UI mockup test page for the Community Module. Use the tabs below to explore different UI components.
+              This is a UI mockup test page for the Community Module. Use the icons below to explore different UI components.
             </p>
           </div>
         </div>
@@ -123,21 +204,28 @@ const TestCommunityPage: React.FC = () => {
         {/* Title Section */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
           <div className="flex items-center">
-            <div className="mr-4 h-10 w-10 rotate-12 flex items-center justify-center text-green-600 bg-green-100 dark:bg-green-900/40 dark:text-green-400 rounded-lg">
+            <div className="relative mr-5 h-12 w-12 rotate-12 flex items-center justify-center text-green-600 bg-green-100 dark:bg-green-900/40 dark:text-green-400 rounded-xl shadow-md">
               <PickleballIcon />
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full animate-ping-slow opacity-70"></div>
             </div>
-            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-primary">
-              Community Features
-            </h1>
+            <div>
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-primary">
+                  Community Features
+                </h1>
+                <PartyPopper className="h-5 w-5 text-yellow-500 animate-wiggle" />
+              </div>
+              <p className="text-sm text-muted-foreground">Interactive UI components for community engagement</p>
+            </div>
           </div>
           
           <div className="flex items-center gap-3">
-            <div className="flex items-center px-3 py-1 rounded-full bg-yellow-400/10 text-yellow-600 dark:text-yellow-400 gap-1.5 border border-yellow-400/30 shadow-sm">
+            <div className="flex items-center px-3 py-1.5 rounded-full bg-yellow-400/10 text-yellow-600 dark:text-yellow-400 gap-1.5 border border-yellow-400/30 shadow-sm">
               <Zap className="h-4 w-4" />
               <span className="text-sm font-medium">Interactive Demo</span>
             </div>
             
-            <div className="flex items-center px-3 py-1 rounded-full bg-primary/10 text-primary gap-1.5 border border-primary/30 shadow-sm">
+            <div className="flex items-center px-3 py-1.5 rounded-full bg-primary/10 text-primary gap-1.5 border border-primary/30 shadow-sm">
               <TestTube className="h-4 w-4" />
               <span className="text-sm font-medium">UI Prototype</span>
             </div>
@@ -145,64 +233,71 @@ const TestCommunityPage: React.FC = () => {
         </div>
         
         {/* Main Content Card */}
-        <div className="relative bg-card/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-muted">
-          {/* Card Corner Decoration */}
-          <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-br-xl rounded-tl-xl transform rotate-45"></div>
+        <div className="relative bg-card/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-muted/60">
+          {/* Corner Decorations */}
+          <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-br-xl rounded-tl-xl transform rotate-45 shadow-sm"></div>
+          <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-green-400 rounded-br-xl rounded-tl-xl transform rotate-45 shadow-sm"></div>
           
+          {/* Subtle Pattern */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-white/0 dark:from-white/10 dark:to-white/0 rounded-2xl"></div>
+          
+          {/* Add the Tabs component with UI content */}
           <Tabs value={activeTab} onValueChange={(value) => {
             setActiveTab(value);
-            // Show mini confetti on tab change
             setShowConfetti(true);
             setTimeout(() => setShowConfetti(false), 2000);
-          }} className="w-full">
-            <div className="flex justify-center mb-8">
-              <TabsList className="w-full max-w-4xl flex flex-wrap gap-3 p-2 bg-muted/70 rounded-xl border border-muted/50">
-                <TabsTrigger 
-                  value="discover" 
-                  className="flex-1 gap-2 py-4 rounded-lg transition-all duration-300 data-[state=active]:shadow-md data-[state=active]:scale-105"
-                >
-                  <Search className="h-4 w-4" />
-                  <span>Discovery</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="profile" 
-                  className="flex-1 gap-2 py-4 rounded-lg transition-all duration-300 data-[state=active]:shadow-md data-[state=active]:scale-105"
-                >
-                  <Users className="h-4 w-4" />
-                  <span>Profile</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="create" 
-                  className="flex-1 gap-2 py-4 rounded-lg transition-all duration-300 data-[state=active]:shadow-md data-[state=active]:scale-105"
-                >
-                  <PlusCircle className="h-4 w-4" />
-                  <span>Create</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="events" 
-                  className="flex-1 gap-2 py-4 rounded-lg transition-all duration-300 data-[state=active]:shadow-md data-[state=active]:scale-105"
-                >
-                  <Calendar className="h-4 w-4" />
-                  <span>Events</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="announcements" 
-                  className="flex-1 gap-2 py-4 rounded-lg transition-all duration-300 data-[state=active]:shadow-md data-[state=active]:scale-105"
-                >
-                  <Megaphone className="h-4 w-4" />
-                  <span>News</span>
-                </TabsTrigger>
-              </TabsList>
-            </div>
-            
+          }}>
+            {/* Icon-based Navigation */}
             <div className="relative">
-              <div className="absolute -top-14 right-0 flex items-center gap-2 text-xs bg-background/70 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm">
+              <div className="absolute -top-5 right-0 flex items-center gap-2 text-xs bg-background/70 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm border border-muted/30">
                 <Sparkles className="h-3.5 w-3.5 text-amber-500" />
                 <span className="text-muted-foreground">Interactive mockups with example data</span>
               </div>
+              
+              <div className="mb-8 p-2 bg-muted/30 rounded-xl border border-muted/80 overflow-hidden shadow-inner">
+                <div className="w-full flex items-center justify-center gap-1 sm:gap-3 lg:gap-6">
+                  {navItems.map((item) => (
+                    <NavIcon 
+                      key={item.id}
+                      icon={item.icon}
+                      label={item.label}
+                      active={activeTab === item.id}
+                      onClick={() => {
+                        setActiveTab(item.id);
+                        setShowConfetti(true);
+                        setTimeout(() => setShowConfetti(false), 2000);
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Feature Badge Pills */}
+              <div className="mb-6 flex flex-wrap gap-2 justify-center">
+                <div className="inline-flex items-center px-2.5 py-1 rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-xs font-medium">
+                  <Target className="h-3 w-3 mr-1" />
+                  <span>Community Goals</span>
+                </div>
+                <div className="inline-flex items-center px-2.5 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-medium">
+                  <Trophy className="h-3 w-3 mr-1" />
+                  <span>Achievements</span>
+                </div>
+                <div className="inline-flex items-center px-2.5 py-1 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 text-xs font-medium">
+                  <Activity className="h-3 w-3 mr-1" />
+                  <span>Activity Feed</span>
+                </div>
+                <div className="inline-flex items-center px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-xs font-medium">
+                  <Bell className="h-3 w-3 mr-1" />
+                  <span>Notifications</span>
+                </div>
+                <div className="inline-flex items-center px-2.5 py-1 rounded-full bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-xs font-medium">
+                  <Star className="h-3 w-3 mr-1" />
+                  <span>Featured Communities</span>
+                </div>
+              </div>
             </div>
             
-            <style jsx global>{`
+            <style>{`
               @keyframes confetti-fall {
                 0% {
                   transform: translateY(-10px) rotate(0deg);
@@ -212,17 +307,86 @@ const TestCommunityPage: React.FC = () => {
                 }
               }
               
-              /* Hover effects for cards */
+              @keyframes ping-slow {
+                0% {
+                  transform: scale(1);
+                  opacity: 0.8;
+                }
+                50% {
+                  transform: scale(1.5);
+                  opacity: 0.4;
+                }
+                100% {
+                  transform: scale(1);
+                  opacity: 0.8;
+                }
+              }
+              
+              @keyframes float {
+                0% {
+                  transform: translateY(0px);
+                }
+                50% {
+                  transform: translateY(-10px);
+                }
+                100% {
+                  transform: translateY(0px);
+                }
+              }
+              
+              @keyframes float-delay {
+                0% {
+                  transform: translateY(0px);
+                }
+                50% {
+                  transform: translateY(-8px);
+                }
+                100% {
+                  transform: translateY(0px);
+                }
+              }
+              
+              @keyframes wiggle {
+                0%, 100% {
+                  transform: rotate(-5deg);
+                }
+                50% {
+                  transform: rotate(5deg);
+                }
+              }
+              
+              .animate-ping-slow {
+                animation: ping-slow 3s cubic-bezier(0, 0, 0.2, 1) infinite;
+              }
+              
+              .animate-float {
+                animation: float 6s ease-in-out infinite;
+              }
+              
+              .animate-float-delay {
+                animation: float-delay 5s ease-in-out 1s infinite;
+              }
+              
+              .animate-wiggle {
+                animation: wiggle 2s ease-in-out infinite;
+              }
+              
+              .ease-spring {
+                transition-timing-function: cubic-bezier(0.5, 0, 0.1, 1.5);
+              }
+              
+              /* Card hover effects */
               .card-hover {
-                transition: transform 0.3s ease, box-shadow 0.3s ease;
+                transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                           box-shadow 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
               }
               
               .card-hover:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+                transform: translateY(-8px) scale(1.02);
+                box-shadow: 0 12px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
               }
               
-              /* Add card hover class to all cards */
+              /* Apply card hover class */
               .bg-card, .bg-background {
                 @apply card-hover;
               }
