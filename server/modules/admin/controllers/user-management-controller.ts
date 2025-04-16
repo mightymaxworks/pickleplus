@@ -84,20 +84,27 @@ export class UserManagementController {
       // Determine sort direction
       const sortDirection = sortDir === 'asc' ? asc : desc;
       
-      // Map frontend field names to database column names
-      const sortMapping: Record<string, any> = {
-        createdAt: users.createdAt,
-        username: users.username,
-        displayName: users.displayName,
-        email: users.email,
-        lastLogin: users.lastLoginAt,
-        xp: users.xp,
-        level: users.level,
-        rankingPoints: users.rankingPoints
-      };
+      // Define a default sort column
+      let sortColumn = users.createdAt;
       
-      // Get the appropriate sort column
-      const sortColumn = sortMapping[sortBy] || users.createdAt;
+      // Map frontend field names to database column names - with null check
+      if (sortBy) {
+        const sortMapping: Record<string, any> = {
+          createdAt: users.createdAt,
+          username: users.username,
+          displayName: users.displayName,
+          email: users.email,
+          lastLogin: users.lastLoginAt,
+          xp: users.xp,
+          level: users.level,
+          rankingPoints: users.rankingPoints
+        };
+        
+        // Only assign if mapping exists
+        if (sortMapping[sortBy]) {
+          sortColumn = sortMapping[sortBy];
+        }
+      }
       
       // Count total users matching the conditions
       const [{ count }] = await db

@@ -26,13 +26,19 @@ router.get('/', async (req: Request, res: Response) => {
       filter
     } = req.query;
     
+    // Parse parameters with proper defaults and validation 
+    const pageNum = parseInt(page as string) || 1;
+    const limitNum = parseInt(limit as string) || 10;
+    const sortByStr = (sortBy as string) || 'createdAt';
+    const sortDirStr = ['asc', 'desc'].includes(sortDir as string) ? (sortDir as string) : 'desc';
+
     const result = await controller.getUsers({
-      page: parseInt(page as string),
-      limit: parseInt(limit as string),
-      sortBy: sortBy as string,
-      sortDir: sortDir as string,
-      search: search as string,
-      filter: filter as string
+      page: pageNum,
+      limit: limitNum,
+      sortBy: sortByStr,
+      sortDir: sortDirStr,
+      search: search as string || undefined,
+      filter: filter as string || undefined
     });
     
     res.json(result);
