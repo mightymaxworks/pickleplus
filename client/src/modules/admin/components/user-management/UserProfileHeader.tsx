@@ -52,7 +52,7 @@ export function UserProfileHeader({ user, accountStatus }: UserProfileHeaderProp
     switch (accountStatus.status) {
       case 'active': return 'success';
       case 'suspended': return 'destructive';
-      case 'restricted': return 'warning';
+      case 'restricted': return 'outline'; // Changed from 'warning' since it's not in our theme
       case 'deactivated': return 'secondary';
       default: return 'outline';
     }
