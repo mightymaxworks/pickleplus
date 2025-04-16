@@ -69,7 +69,7 @@ import Register from './pages/Register'
 import TestCommunityPage from './pages/TestCommunityPage' // PKL-278651-COMM-0001-UIMOCK
 import CommunityDashboardMockup from './pages/CommunityDashboardMockup' // PKL-278651-COMM-0002-DASH-MOCK
 import ModernCommunityDashboard from './pages/ModernCommunityDashboard' // PKL-278651-COMM-0003-DASH-MODERN
-import TwitterStyledDashboard from './pages/TwitterStyledDashboard' // PKL-278651-COMM-0004-DASH-TWITTER
+import FixedTwitterDashboard from './pages/FixedTwitterDashboard' // PKL-278651-COMM-0004-DASH-TWITTER
 
 import { useAuth } from './hooks/useAuth'
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute'
@@ -320,7 +320,7 @@ export default function App() {
                   <Route path="/test/modern-community" component={ModernCommunityDashboard} />
                   
                   {/* PKL-278651-COMM-0004-DASH-TWITTER - Twitter/X-Inspired Dashboard Route */}
-                  <Route path="/test/twitter-style" component={TwitterStyledDashboard} />
+                  <Route path="/test/twitter-style" component={FixedTwitterDashboard} />
                   
                   <Route component={LazyNotFoundPage} />
                 </Switch>
