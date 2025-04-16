@@ -70,7 +70,7 @@ export class UserManagementController {
             break;
           case 'active':
             conditions = and(conditions, sql`(
-              users.last_activity > NOW() - INTERVAL '30 days'
+              users.last_match_date > NOW() - INTERVAL '30 days'
             )`);
             break;
           // Add more filters as needed
@@ -90,7 +90,7 @@ export class UserManagementController {
           username: users.username,
           displayName: users.displayName,
           email: users.email,
-          lastLogin: users.lastLoginAt,
+          lastMatchDate: users.lastMatchDate,
           xp: users.xp,
           level: users.level,
           rankingPoints: users.rankingPoints
@@ -124,9 +124,8 @@ export class UserManagementController {
           level: users.level,
           rankingPoints: users.rankingPoints,
           isAdmin: users.isAdmin,
-          isCoach: users.isCoach,
           isFoundingMember: users.isFoundingMember,
-          lastLoginAt: users.lastLoginAt,
+          lastMatchDate: users.lastMatchDate,
           createdAt: users.createdAt,
           profileCompletionPct: users.profileCompletionPct
         })
