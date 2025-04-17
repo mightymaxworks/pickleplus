@@ -248,7 +248,23 @@ export interface InsertCommunityPost {
   isAnnouncement?: boolean;
 }
 
-// Community event model
+/**
+ * Community Event Type
+ * Defines the type of community event
+ */
+export enum CommunityEventType {
+  MATCH_PLAY = 'match_play',
+  CLINIC = 'clinic',
+  TOURNAMENT = 'tournament',
+  SOCIAL = 'social',
+  WORKSHOP = 'workshop',
+  LEAGUE = 'league'
+}
+
+/**
+ * Community Event Model
+ * Represents an event in a community
+ */
 export interface CommunityEvent {
   id: number;
   communityId: number;
@@ -266,6 +282,11 @@ export interface CommunityEvent {
   isRecurring: boolean;
   recurringPattern: string | null;
   repeatFrequency: string | null;
+  status: CommunityEventStatus;
+  eventType: CommunityEventType;
+  skillLevelRequired: string | null;
+  featuredImage: string | null;
+  registrationDeadline: Date | null;
   createdAt: Date | null;
   updatedAt: Date | null;
   
@@ -273,11 +294,16 @@ export interface CommunityEvent {
   createdBy?: {
     displayName: string;
     username: string;
+    avatarUrl?: string | null;
   };
   isRegistered?: boolean;
+  registrationStatus?: EventAttendeeStatus;
 }
 
-// For creating community events
+/**
+ * Community Event Insert Model
+ * Used when creating a new event in a community
+ */
 export interface InsertCommunityEvent {
   communityId: number;
   createdByUserId: number;
@@ -293,14 +319,22 @@ export interface InsertCommunityEvent {
   isRecurring?: boolean;
   recurringPattern?: string | null;
   repeatFrequency?: string | null;
+  status?: CommunityEventStatus;
+  eventType?: CommunityEventType;
+  skillLevelRequired?: string | null;
+  featuredImage?: string | null;
+  registrationDeadline?: Date | null;
 }
 
-// Community event attendee model
+/**
+ * Community Event Attendee Model
+ * Represents an attendee for a community event
+ */
 export interface CommunityEventAttendee {
   id: number;
   eventId: number;
   userId: number;
-  status: string;
+  status: EventAttendeeStatus;
   registeredAt: Date | null;
   checkedInAt: Date | null;
   notes: string | null;
@@ -312,18 +346,34 @@ export interface CommunityEventAttendee {
     displayName: string;
     username: string;
     avatarUrl: string | null;
+    skillLevel?: string | null;
+    bio?: string | null;
+  };
+  
+  // Extended properties for UI
+  playerRating?: number;
+  attendanceHistory?: {
+    total: number;
+    noShows: number;
+    lastAttended?: Date | null;
   };
 }
 
-// For adding event attendees
+/**
+ * Community Event Attendee Insert Model
+ * Used when registering a user for an event
+ */
 export interface InsertCommunityEventAttendee {
   eventId: number;
   userId: number;
-  status?: string;
+  status?: EventAttendeeStatus;
   notes?: string | null;
 }
 
-// Community post comment model
+/**
+ * Community Post Comment Model
+ * Represents a comment on a post
+ */
 export interface CommunityPostComment {
   id: number;
   postId: number;
@@ -333,32 +383,47 @@ export interface CommunityPostComment {
   parentCommentId: number | null;
   createdAt: Date | null;
   updatedAt: Date | null;
+  mediaUrls?: PostMedia[] | null;
+  isEdited?: boolean;
+  isPinned?: boolean;
   
   // Joined data
   user?: {
     displayName: string;
     username: string;
     avatarUrl: string | null;
+    skillLevel?: string | null;
+    isVerified?: boolean;
   };
   liked?: boolean;
   replies?: CommunityPostComment[];
+  
+  // Extended properties
+  reactionCounts?: Record<string, number>; // For emoji reactions
 }
 
-// For creating post comments
+/**
+ * Community Post Comment Insert Model
+ * Used when creating a new comment on a post
+ */
 export interface InsertCommunityPostComment {
   postId: number;
   userId: number;
   content: string;
   parentCommentId?: number | null;
+  mediaUrls?: PostMedia[];
 }
 
-// Community join request model
+/**
+ * Community Join Request Model
+ * Represents a request to join a community
+ */
 export interface CommunityJoinRequest {
   id: number;
   communityId: number;
   userId: number;
   message: string | null;
-  status: string;
+  status: CommunityJoinRequestStatus;
   reviewedByUserId: number | null;
   reviewedAt: Date | null;
   createdAt: Date | null;
@@ -369,9 +434,18 @@ export interface CommunityJoinRequest {
     displayName: string;
     username: string;
     avatarUrl: string | null;
+    email?: string;
+    bio?: string | null;
+    skillLevel?: string | null;
+    playerRating?: number;
   };
   reviewedBy?: {
     displayName: string;
     username: string;
+    avatarUrl?: string | null;
+  };
+  community?: {
+    name: string;
+    memberCount: number;
   };
 }

@@ -1,8 +1,20 @@
 /**
- * PKL-278651-COMM-0006-HUB-SDK
- * Community Hub Query Hooks
+ * PKL-278651-COMM-0013-SDK
+ * Enhanced Community Hub Query Hooks
  * 
- * This file provides React Query hooks for the Community Hub functionality.
+ * This file provides React Query hooks for the Community Hub functionality
+ * with enhanced filtering, sorting, and type safety.
+ * 
+ * @version 2.0.0
+ * @lastModified 2025-04-17
+ * @changes
+ * - Added support for advanced filtering and sorting options
+ * - Improved typings with new enums and interfaces
+ * - Added support for community event types and statuses
+ * - Enhanced caching strategy for better performance
+ * @preserves
+ * - Core query key structure
+ * - Optimistic updates for mutations
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -15,13 +27,28 @@ import type {
   CommunityPost,
   CommunityEvent,
   CommunityPostComment,
+  CommunityMember,
+  CommunityEventAttendee,
+  CommunityJoinRequest,
+  CommunityFilterOptions,
+  CommunitySortOptions,
+  PaginationOptions,
+  PostMedia,
+  CommunityMemberRole,
+  CommunityEventStatus,
+  CommunityEventType,
+  EventAttendeeStatus,
+  CommunityJoinRequestStatus
 } from "@/types/community";
+import { filterCommunities, sortCommunities } from "../utils/communityUtils";
 
 // Query keys
 export const communityKeys = {
   all: ["communities"] as const,
   lists: () => [...communityKeys.all, "list"] as const,
   list: (filters: any) => [...communityKeys.lists(), filters] as const,
+  filtered: (filters: CommunityFilterOptions) => [...communityKeys.lists(), "filtered", filters] as const,
+  sorted: (sortOptions: CommunitySortOptions) => [...communityKeys.lists(), "sorted", sortOptions] as const,
   details: () => [...communityKeys.all, "detail"] as const,
   detail: (id: number) => [...communityKeys.details(), id] as const,
   members: (communityId: number) => [...communityKeys.detail(communityId), "members"] as const,
@@ -29,6 +56,10 @@ export const communityKeys = {
   post: (postId: number) => [...communityKeys.all, "posts", postId] as const,
   postComments: (postId: number) => [...communityKeys.post(postId), "comments"] as const,
   events: (communityId: number) => [...communityKeys.detail(communityId), "events"] as const,
+  eventsByType: (communityId: number, type: CommunityEventType) => 
+    [...communityKeys.events(communityId), "type", type] as const,
+  eventsByStatus: (communityId: number, status: CommunityEventStatus) => 
+    [...communityKeys.events(communityId), "status", status] as const,
   joinRequests: (communityId: number) => [...communityKeys.detail(communityId), "join-requests"] as const,
   myCommunityIds: () => [...communityKeys.all, "my-community-ids"] as const,
 };
@@ -321,8 +352,15 @@ export function useCreateCommunityPost() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ communityId, data }: { communityId: number; data: Omit<CommunityPost, "id" | "communityId" | "userId" | "createdAt" | "updatedAt"> }) => 
-      communityApi.createCommunityPost(communityId, data),
+    mutationFn: ({ communityId, data }: { 
+      communityId: number; 
+      data: { 
+        content: string; 
+        mediaUrls?: PostMedia[]; 
+        isPinned?: boolean; 
+        isAnnouncement?: boolean; 
+      }
+    }) => communityApi.createCommunityPost(communityId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: communityKeys.posts(variables.communityId) });
       toast({
@@ -508,7 +546,25 @@ export function useCreateCommunityEvent() {
   return useMutation({
     mutationFn: ({ communityId, data }: { 
       communityId: number; 
-      data: Omit<CommunityEvent, "id" | "communityId" | "createdByUserId" | "createdAt" | "updatedAt">;
+      data: {
+        title: string;
+        description?: string | null;
+        eventDate: Date;
+        endDate?: Date | null;
+        location?: string | null;
+        isVirtual?: boolean;
+        virtualMeetingUrl?: string | null;
+        maxAttendees?: number | null;
+        isPrivate?: boolean;
+        isRecurring?: boolean;
+        recurringPattern?: string | null;
+        repeatFrequency?: string | null;
+        status?: CommunityEventStatus;
+        eventType?: CommunityEventType;
+        skillLevelRequired?: string | null;
+        featuredImage?: string | null;
+        registrationDeadline?: Date | null;
+      }
     }) => communityApi.createCommunityEvent(communityId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: communityKeys.events(variables.communityId) });
