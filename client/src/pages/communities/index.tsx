@@ -1,363 +1,277 @@
 /**
- * PKL-278651-COMM-0007-ENGAGE-UI
- * Communities List Page
+ * PKL-278651-COMM-0006-HUB-UI
+ * Communities Discovery Page
  * 
- * This page displays a list of communities that users can browse and join.
+ * Ported directly from TestCommunityPage to provide the modern UI experience
+ * featuring improved visual elements and interactions.
  */
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
-import { Link } from 'wouter';
-import DashboardLayout from '@/components/layouts/DashboardLayout';
-import { Community } from '@/lib/api/community';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Search,
-  Users,
-  MessageSquare,
-  Calendar,
-  MapPin,
-  Filter,
-  Lock,
-  Plus
+
+import React, { useState, useEffect } from 'react';
+import { useLocation } from "wouter";
+import { CommunityProvider } from "../../lib/providers/CommunityProvider";
+import { useCommunities } from "../../lib/hooks/useCommunity";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from "@/hooks/use-toast";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { 
+  Search, Users, PlusCircle, Calendar, Megaphone,
+  Sparkles, TestTube, FlaskConical, Beaker, Zap,
+  Trophy, Activity, LayoutGrid, PartyPopper, ScrollText,
+  Bell, Target, Star, Repeat2
 } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
+
+// Import mockup components
+import CommunityDiscoveryMockup from '../../core/modules/community/components/mockups/CommunityDiscoveryMockup';
+import CommunityProfileMockup from '../../core/modules/community/components/mockups/CommunityProfileMockup';
+import CommunityCreationMockup from '../../core/modules/community/components/mockups/CommunityCreationMockup';
+import CommunityEventsMockup from '../../core/modules/community/components/mockups/CommunityEventsMockup';
+import CommunityAnnouncementsMockup from '../../core/modules/community/components/mockups/CommunityAnnouncementsMockup';
+
+// Pickleball SVG Icon
+const PickleballIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M12 2C13.3 2 14.6 2.3 15.8 2.7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M19.4 5.2C21.5 7.8 22.5 11.4 21.5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M17.7 19.8C15.1 21.9 11.5 22.5 8.2 21.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M3.3 16.5C2 13.3 2.3 9.6 4.3 6.7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M8 3.3C8.4 3.1 8.8 3 9.2 2.8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+
+// Custom Paddle SVG Icon
+const PaddleIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M15 4C19 7 20 13 17 17C15 19.5 12 20 9 19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M8.5 18.5L5 22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M4 20.6L5.1 19.5L3.9 18.3L3 19.2C2.8 19.4 2.8 19.8 3 20L4 21C4.2 21.2 4.6 21.2 4.8 21L5.7 20.1L4.5 18.9L3.4 20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M8 6L16 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+
+// Court Lines Background Component
+const CourtLinesBackground = () => (
+  <div className="absolute inset-0 z-0 opacity-[0.03]">
+    <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <pattern id="courtLines" width="100" height="100" patternUnits="userSpaceOnUse">
+        <line x1="0" y1="50" x2="100" y2="50" stroke="currentColor" strokeWidth="1" />
+        <line x1="50" y1="0" x2="50" y2="100" stroke="currentColor" strokeWidth="1" />
+        <rect x="10" y="10" width="80" height="80" stroke="currentColor" strokeWidth="0.5" fill="none" />
+      </pattern>
+      <rect width="100%" height="100%" fill="url(#courtLines)" />
+    </svg>
+  </div>
+);
+
+// Confetti Animation Component
+const ConfettiEffect = ({ active }: { active: boolean }) => {
+  return active ? (
+    <div className="confetti-container absolute inset-0 overflow-hidden pointer-events-none z-50">
+      {Array.from({ length: 50 }).map((_, i) => {
+        const size = Math.random() * 12 + 5;
+        const left = Math.random() * 100;
+        const animationDuration = Math.random() * 3 + 2;
+        const delay = Math.random() * 0.5;
+        const type = Math.floor(Math.random() * 3); // 0: square, 1: circle, 2: triangle
+        const colors = ['#F2D362', '#83C167', '#EC4C56', '#45C4E5', '#9683EC'];
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        
+        let shape;
+        if (type === 0) {
+          shape = <div style={{ width: `${size}px`, height: `${size}px`, backgroundColor: color }} className="rounded-sm" />;
+        } else if (type === 1) {
+          shape = <div style={{ width: `${size}px`, height: `${size}px`, backgroundColor: color }} className="rounded-full" />;
+        } else {
+          shape = (
+            <div 
+              style={{ 
+                width: `${size}px`, 
+                height: `${size}px`,
+                backgroundColor: 'transparent',
+                borderLeft: `${size/2}px solid transparent`,
+                borderRight: `${size/2}px solid transparent`,
+                borderBottom: `${size}px solid ${color}`
+              }} 
+            />
+          );
+        }
+        
+        return (
+          <div 
+            key={i}
+            className="confetti absolute top-0"
+            style={{
+              left: `${left}%`,
+              animation: `confetti-fall ${animationDuration}s ease-in ${delay}s forwards`,
+              opacity: active ? 1 : 0,
+            }}
+          >
+            {shape}
+          </div>
+        );
+      })}
+    </div>
+  ) : null;
+};
+
+// Navigation Icon Button Component
+interface NavIconProps {
+  icon: React.ReactNode;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}
+
+const NavIcon: React.FC<NavIconProps> = ({ icon, label, active, onClick }) => {
+  return (
+    <button 
+      onClick={onClick}
+      className={`
+        relative group flex flex-col items-center justify-center p-3
+        transition-all duration-300 ease-spring
+        ${active 
+          ? 'bg-primary text-primary-foreground scale-110 shadow-lg rounded-xl' 
+          : 'hover:bg-primary/10 text-muted-foreground hover:text-foreground rounded-lg'
+        }
+      `}
+    >
+      <div className={`
+        mb-1 p-2 rounded-full 
+        ${active ? 'bg-primary-foreground/20' : 'bg-transparent group-hover:bg-background/10'}
+      `}>
+        {icon}
+      </div>
+      <span className="text-xs font-medium">{label}</span>
+      
+      {active && (
+        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-primary-foreground/50 rounded-t-full" />
+      )}
+    </button>
+  );
+};
 
 export default function CommunitiesPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('newest');
-  const [filters, setFilters] = useState({
-    showPrivate: true,
-    locationNearby: false,
-    requiresApproval: true,
+  const [, navigate] = useLocation();
+  const [activeTab, setActiveTab] = useState('discover');
+  const [showConfetti, setShowConfetti] = useState(false);
+  const { toast } = useToast();
+  
+  // For data integration
+  const { data: communities, isLoading } = useCommunities({
+    enabled: true,
   });
   
-  // Fetch communities
-  const { data: communities = [], isLoading } = useQuery({
-    queryKey: ['/api/communities'],
-    queryFn: async () => {
-      const response = await apiRequest('/api/communities');
-      return response as Community[];
-    },
-  });
+  // Show confetti on initial load
+  useEffect(() => {
+    setShowConfetti(true);
+    const timer = setTimeout(() => {
+      setShowConfetti(false);
+    }, 3000);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Navigation items with icons
+  const navItems = [
+    { id: 'discover', label: 'Discover', icon: <Search className="w-5 h-5" /> },
+    { id: 'profile', label: 'Profile', icon: <Users className="w-5 h-5" /> },
+    { id: 'create', label: 'Create', icon: <PlusCircle className="w-5 h-5" /> },
+    { id: 'events', label: 'Events', icon: <Calendar className="w-5 h-5" /> },
+    { id: 'announcements', label: 'News', icon: <Megaphone className="w-5 h-5" /> }
+  ];
   
-  // Filter and sort communities
-  const filteredCommunities = communities
-    .filter(community => {
-      // Filter by search query
-      if (searchQuery && !community.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-          !community.description.toLowerCase().includes(searchQuery.toLowerCase())) {
-        return false;
-      }
-      
-      // Filter by private status
-      if (!filters.showPrivate && community.isPrivate) {
-        return false;
-      }
-      
-      // Filter by approval requirement
-      if (!filters.requiresApproval && community.requiresApproval) {
-        return false;
-      }
-      
-      return true;
-    })
-    .sort((a, b) => {
-      // Sort communities
-      switch (sortBy) {
-        case 'newest':
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        case 'oldest':
-          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-        case 'members':
-          return b.memberCount - a.memberCount;
-        case 'activity':
-          return (b.postCount + b.eventCount) - (a.postCount + a.eventCount);
-        default:
-          return 0;
-      }
-    });
-  
-  // Handle search input change
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+  // Handle navigation click with real navigation
+  const handleNavClick = (tab: string) => {
+    if (tab === 'create') {
+      navigate('/communities/create');
+      return;
+    }
+    
+    setActiveTab(tab);
+    setShowConfetti(true);
+    setTimeout(() => setShowConfetti(false), 2000);
   };
-  
-  // Handle filter changes
-  const handleFilterChange = (key: keyof typeof filters) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
-  };
-  
+
   return (
     <DashboardLayout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Communities</h1>
-            <p className="text-muted-foreground mt-1">
-              Browse and join communities to connect with other players.
-            </p>
-          </div>
+      <CommunityProvider>
+        <div className="relative overflow-x-hidden">
+          {/* Background Elements */}
+          <CourtLinesBackground />
           
-          <div className="flex gap-2">
-            <Link href="/communities/create">
-              <Button className="flex items-center gap-1">
-                <Plus className="h-4 w-4" />
-                Create Community
-              </Button>
-            </Link>
-          </div>
-        </div>
-        
-        <div className="flex flex-col md:flex-row gap-6 mb-8">
-          {/* Search and filters */}
-          <div className="w-full md:w-3/4">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-5 w-5 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search communities..."
-                className="pl-10"
-                value={searchQuery}
-                onChange={handleSearchChange}
-              />
-            </div>
-          </div>
+          {/* Confetti Effect */}
+          <ConfettiEffect active={showConfetti} />
           
-          <div className="flex gap-2 w-full md:w-1/4">
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Newest</SelectItem>
-                <SelectItem value="oldest">Oldest</SelectItem>
-                <SelectItem value="members">Most Members</SelectItem>
-                <SelectItem value="activity">Most Active</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Floating Decoration Elements */}
+          <div className="hidden lg:block absolute top-40 -left-6 w-12 h-12 rounded-full bg-yellow-300/30 backdrop-blur-xl animate-pulse-slow"></div>
+          <div className="hidden lg:block absolute bottom-20 right-10 w-20 h-20 rounded-full bg-green-300/20 backdrop-blur-xl animate-float"></div>
+          <div className="hidden lg:block absolute top-1/4 right-16 w-8 h-8 rounded-full bg-blue-300/20 backdrop-blur-md animate-float-delay"></div>
+          
+          <div className="container mx-auto py-8 px-4 relative z-10">
             
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <Filter className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Filters</SheetTitle>
-                  <SheetDescription>
-                    Refine your community search results.
-                  </SheetDescription>
-                </SheetHeader>
+            {/* Simple Title */}
+            <div className="flex items-center gap-5 mb-8">
+              <div className="relative h-16 w-16 rotate-12 flex items-center justify-center text-green-600 bg-green-100 dark:bg-green-900/40 dark:text-green-400 rounded-xl shadow-lg">
+                <PickleballIcon />
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full animate-ping-slow opacity-70"></div>
+              </div>
+              
+              <div>
+                <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-primary">
+                  Find Your Community
+                </h1>
+              </div>
+            </div>
+            
+            <Tabs value={activeTab} onValueChange={(value) => {
+              setActiveTab(value);
+              setShowConfetti(true);
+              setTimeout(() => setShowConfetti(false), 2000);
+            }}>
+              {/* Icon-based Navigation */}
+              <div className="relative">
                 
-                <div className="py-6 space-y-6">
-                  <div className="space-y-4">
-                    <h4 className="font-medium">Privacy</h4>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="showPrivate" 
-                        checked={filters.showPrivate}
-                        onCheckedChange={() => handleFilterChange('showPrivate')}
+                <div className="mb-8 p-2 bg-muted/30 rounded-xl border border-muted/80 overflow-hidden shadow-inner">
+                  <div className="w-full flex items-center justify-center gap-1 sm:gap-3 lg:gap-6">
+                    {navItems.map((item) => (
+                      <NavIcon 
+                        key={item.id}
+                        icon={item.icon}
+                        label={item.label}
+                        active={activeTab === item.id}
+                        onClick={() => handleNavClick(item.id)}
                       />
-                      <Label htmlFor="showPrivate">Show private communities</Label>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <h4 className="font-medium">Location</h4>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="locationNearby" 
-                        checked={filters.locationNearby}
-                        onCheckedChange={() => handleFilterChange('locationNearby')}
-                      />
-                      <Label htmlFor="locationNearby">Only show nearby communities</Label>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <h4 className="font-medium">Approval</h4>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="requiresApproval" 
-                        checked={filters.requiresApproval}
-                        onCheckedChange={() => handleFilterChange('requiresApproval')}
-                      />
-                      <Label htmlFor="requiresApproval">Include communities requiring approval</Label>
-                    </div>
+                    ))}
                   </div>
                 </div>
-              </SheetContent>
-            </Sheet>
+
+
+              </div>
+              
+              {/* Tab Content */}
+              <TabsContent value="discover" className="pt-4">
+                <CommunityDiscoveryMockup />
+              </TabsContent>
+              
+              <TabsContent value="profile" className="pt-4">
+                <CommunityProfileMockup />
+              </TabsContent>
+              
+              <TabsContent value="create" className="pt-4">
+                <CommunityCreationMockup />
+              </TabsContent>
+              
+              <TabsContent value="events" className="pt-4">
+                <CommunityEventsMockup />
+              </TabsContent>
+              
+              <TabsContent value="announcements" className="pt-4">
+                <CommunityAnnouncementsMockup />
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
-        
-        {/* Communities Grid */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i} className="overflow-hidden">
-                <Skeleton className="h-32 w-full" />
-                <CardHeader className="pb-2">
-                  <Skeleton className="h-6 w-3/4 mb-2" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-2/3" />
-                </CardHeader>
-                <CardContent className="pb-2">
-                  <div className="flex gap-3">
-                    <Skeleton className="h-5 w-16" />
-                    <Skeleton className="h-5 w-16" />
-                    <Skeleton className="h-5 w-16" />
-                  </div>
-                </CardContent>
-                <CardFooter className="pb-4">
-                  <Skeleton className="h-9 w-28" />
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <>
-            {filteredCommunities.length === 0 ? (
-              <div className="text-center py-12">
-                <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-xl font-semibold mb-2">No communities found</h3>
-                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                  {searchQuery 
-                    ? `No communities match your search for "${searchQuery}"`
-                    : "There are no communities that match your filters"
-                  }
-                </p>
-                {searchQuery && (
-                  <Button onClick={() => setSearchQuery('')}>Clear Search</Button>
-                )}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredCommunities.map((community) => (
-                  <Link key={community.id} href={`/communities/${community.id}`}>
-                    <Card className="overflow-hidden h-full flex flex-col hover:shadow-md transition-shadow">
-                      <div className="h-32 bg-gradient-to-r from-primary/20 to-primary/10 relative">
-                        {community.bannerUrl && (
-                          <img 
-                            src={community.bannerUrl} 
-                            alt={`${community.name} banner`} 
-                            className="w-full h-full object-cover absolute inset-0"
-                          />
-                        )}
-                        {community.isPrivate && (
-                          <div className="absolute top-2 right-2">
-                            <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm">
-                              <Lock className="h-3 w-3 mr-1" />
-                              Private
-                            </Badge>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <CardHeader className="pb-2 flex-none">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <CardTitle className="mb-1 flex items-center gap-2">
-                              <span className="line-clamp-1">{community.name}</span>
-                            </CardTitle>
-                            <CardDescription className="line-clamp-2">
-                              {community.description}
-                            </CardDescription>
-                          </div>
-                          <Avatar className="h-10 w-10 -mt-10 border-2 border-background">
-                            <AvatarImage src={community.avatarUrl || ""} />
-                            <AvatarFallback>{community.name[0]?.toUpperCase()}</AvatarFallback>
-                          </Avatar>
-                        </div>
-                      </CardHeader>
-                      
-                      <CardContent className="pb-2 flex-none">
-                        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                          <div className="flex items-center">
-                            <Users className="h-4 w-4 mr-1" />
-                            <span>{community.memberCount}</span>
-                          </div>
-                          
-                          <div className="flex items-center">
-                            <MessageSquare className="h-4 w-4 mr-1" />
-                            <span>{community.postCount}</span>
-                          </div>
-                          
-                          <div className="flex items-center">
-                            <Calendar className="h-4 w-4 mr-1" />
-                            <span>{community.eventCount}</span>
-                          </div>
-                        </div>
-                        
-                        {community.location && (
-                          <div className="mt-2 flex items-center text-sm text-muted-foreground">
-                            <MapPin className="h-4 w-4 mr-1" />
-                            <span className="truncate">{community.location}</span>
-                          </div>
-                        )}
-                        
-                        {community.tags && (
-                          <div className="flex flex-wrap gap-1 mt-3">
-                            {community.tags.split(',').slice(0, 3).map((tag, index) => (
-                              <Badge key={index} variant="outline" className="text-xs">
-                                {tag.trim()}
-                              </Badge>
-                            ))}
-                            {community.tags.split(',').length > 3 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{community.tags.split(',').length - 3} more
-                              </Badge>
-                            )}
-                          </div>
-                        )}
-                      </CardContent>
-                      
-                      <CardFooter className="mt-auto pt-4">
-                        <Button variant="secondary" size="sm" className="w-full">
-                          View Community
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-      </div>
+      </CommunityProvider>
     </DashboardLayout>
   );
 }
