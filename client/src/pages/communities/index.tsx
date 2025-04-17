@@ -1,9 +1,43 @@
 /**
- * PKL-278651-COMM-0006-HUB-UI
- * Communities Discovery Page
+ * @component CommunitiesPage
+ * @layer UI
+ * @module Community
+ * @sprint PKL-278651-COMM-0006-HUB-UI
+ * @version 2.1.0
+ * @lastModified 2025-04-17
  * 
- * Ported directly from TestCommunityPage to provide the modern UI experience
- * featuring improved visual elements and interactions.
+ * @description
+ * Main container component for the Community Hub feature.
+ * Serves as the entry point for all community-related functionality.
+ * 
+ * @parent App.tsx > RouteHandler
+ * @children
+ * - CommunityDiscoveryMockup
+ * - CommunityProfileMockup
+ * - CommunityCreationMockup
+ * - CommunityEventsMockup
+ * - CommunityAnnouncementsMockup
+ * 
+ * @dependsOn
+ * - DashboardLayout
+ * - CommunityProvider
+ * - useCommunities hook
+ * 
+ * @visual
+ * - Orange "COMMUNITY" logo at the top (h-16 size)
+ * - Tab-based navigation with icon buttons
+ * - Confetti animation on tab changes
+ * - Content area with tab-specific components
+ * 
+ * @changes
+ * - Replaced text header with COMMUNITY logo
+ * - Removed decorative elements for cleaner UI
+ * - Enhanced tab navigation with better visual feedback
+ * 
+ * @preserves
+ * - Tab navigation system
+ * - Community provider context
+ * - Dashboard layout integration
  */
 
 import React, { useState, useEffect } from 'react';
@@ -209,9 +243,19 @@ export default function CommunitiesPage() {
           
           <div className="container mx-auto py-8 px-4 relative z-10">
             
-            {/* Simple Title */}
-            <div className="flex items-center mb-8">
-              <img src="/src/assets/community-logo-new.png" alt="COMMUNITY" className="h-16" />
+            {/* Community Logo Header */}
+            <div 
+              className="flex items-center mb-8" 
+              id="community-logo-container"
+              data-testid="community-header"
+              aria-label="Community Hub Header"
+            >
+              <img 
+                src="/src/assets/community-logo-new.png" 
+                alt="COMMUNITY" 
+                className="h-16" 
+                data-component="community-logo" 
+              />
             </div>
             
             <Tabs value={activeTab} onValueChange={(value) => {
@@ -222,7 +266,12 @@ export default function CommunitiesPage() {
               {/* Icon-based Navigation */}
               <div className="relative">
                 
-                <div className="mb-8 p-2 bg-muted/30 rounded-xl border border-muted/80 overflow-hidden shadow-inner">
+                <div 
+                  className="mb-8 p-2 bg-muted/30 rounded-xl border border-muted/80 overflow-hidden shadow-inner"
+                  id="community-tab-navigation"
+                  data-testid="community-tabs"
+                  aria-label="Community Navigation Tabs"
+                >
                   <div className="w-full flex items-center justify-center gap-1 sm:gap-3 lg:gap-6">
                     {navItems.map((item) => (
                       <NavIcon 
@@ -231,11 +280,12 @@ export default function CommunitiesPage() {
                         label={item.label}
                         active={activeTab === item.id}
                         onClick={() => handleNavClick(item.id)}
+                        data-testid={`tab-${item.id}`}
+                        data-component={`community-tab-${item.id}`}
                       />
                     ))}
                   </div>
                 </div>
-
 
               </div>
               
