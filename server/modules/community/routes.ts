@@ -812,10 +812,17 @@ router.get('/my-community-ids', isAuthenticated, async (req: Request, res: Respo
     }
     
     console.log(`[Community API] Getting memberships for user ${userId}`);
-    // Get all communities where user is a member
-    const memberships = await storage.getCommunityMembershipsByUserId(userId);
     
-    console.log(`[Community API] Retrieved memberships:`, JSON.stringify(memberships));
+    // Validate the userId is a number
+    const userIdNum = Number(userId);
+    if (isNaN(userIdNum) || userIdNum <= 0) {
+      return res.status(400).json({ message: 'Invalid user ID' });
+    }
+    
+    // Get all communities where user is a member
+    const memberships = await storage.getCommunityMembershipsByUserId(userIdNum);
+    
+    console.log(`[Community API] Retrieved memberships for user ${userIdNum}:`, JSON.stringify(memberships));
     
     // Even if no memberships, return an empty array
     const communityIds = Array.isArray(memberships) 

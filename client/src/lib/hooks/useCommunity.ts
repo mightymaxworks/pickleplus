@@ -214,7 +214,7 @@ export function useJoinCommunity() {
           ));
         } 
         // For single community objects
-        else if (data && typeof data === 'object' && data.id === variables.communityId) {
+        else if (data && typeof data === 'object' && 'id' in data && data.id === variables.communityId) {
           queryClient.setQueryData(query.queryKey, { ...data, isMember: true });
         }
       });
