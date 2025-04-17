@@ -9,7 +9,12 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { CommunityProvider, useCommunityWithData } from "../../lib/providers/CommunityProvider";
-import { useCommunityMembers, useCommunityPosts, useCommunityEvents } from "../../lib/hooks/useCommunity";
+import { 
+  useCommunityMembers, 
+  useCommunityPosts, 
+  useCommunityEvents, 
+  useCreateCommunityPost 
+} from "../../lib/hooks/useCommunity";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +23,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EventFormModal } from "@/components/community/EventFormModal";
+import RichTextEditor from "@/components/community/RichTextEditor";
 import { 
   ArrowLeft, 
   Users, 
@@ -67,6 +73,49 @@ function CommunityDetail() {
   const [activeTab, setActiveTab] = useState("posts");
   // State for confetti animation
   const [showConfetti, setShowConfetti] = useState(false);
+  
+  // Add CSS for rich text content
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .rich-text-content {
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+      }
+      .rich-text-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 0.375rem;
+        margin: 0.5rem 0;
+      }
+      .rich-text-content ul, .rich-text-content ol {
+        padding-left: 1.5rem;
+        margin: 0.5rem 0;
+      }
+      .rich-text-content ul {
+        list-style-type: disc;
+      }
+      .rich-text-content ol {
+        list-style-type: decimal;
+      }
+      .rich-text-content a {
+        color: var(--primary);
+        text-decoration: underline;
+      }
+      .rich-text-content blockquote {
+        border-left: 3px solid var(--muted);
+        padding-left: 1rem;
+        color: var(--muted-foreground);
+        font-style: italic;
+        margin: 0.5rem 0;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
   
   // Get community data and actions from context
   const { 
@@ -510,6 +559,28 @@ function CommunityDetail() {
 // Placeholder components for tabs
 function CommunityPosts({ communityId, isMember }: { communityId: number; isMember: boolean }) {
   const { data: posts, isLoading } = useCommunityPosts(communityId);
+  const createPostMutation = useCreateCommunityPost();
+  const [postContent, setPostContent] = useState('');
+  
+  // Handle creating a new post
+  const handleCreatePost = () => {
+    if (!postContent.trim()) {
+      return; // Don't submit empty posts
+    }
+    
+    createPostMutation.mutate({
+      communityId,
+      data: {
+        content: postContent,
+        mediaUrls: []
+      }
+    }, {
+      onSuccess: () => {
+        // Clear the editor after successful post
+        setPostContent('');
+      }
+    });
+  };
   
   if (isLoading) {
     return <div>Loading posts...</div>;
@@ -522,12 +593,28 @@ function CommunityPosts({ communityId, isMember }: { communityId: number; isMemb
           <CardContent className="pt-6">
             <div className="flex flex-col gap-4">
               <h3 className="text-lg font-medium">Create a Post</h3>
-              <textarea 
-                className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              <RichTextEditor 
+                value={postContent}
+                onChange={setPostContent}
                 placeholder="Share something with the community..."
+                minHeight="150px"
+                onSubmit={handleCreatePost}
               />
-              <div className="flex justify-end">
-                <Button>Post</Button>
+              <div className="flex justify-between items-center">
+                <div className="text-xs text-muted-foreground">
+                  {createPostMutation.isPending ? (
+                    <span className="flex items-center">
+                      <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                      Submitting...
+                    </span>
+                  ) : null}
+                </div>
+                <Button 
+                  onClick={handleCreatePost} 
+                  disabled={createPostMutation.isPending || !postContent.trim()}
+                >
+                  {createPostMutation.isPending ? 'Posting...' : 'Post'}
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -559,7 +646,10 @@ function CommunityPosts({ communityId, isMember }: { communityId: number; isMemb
                     )}
                   </div>
                   
-                  <p>{post.content}</p>
+                  <div 
+                    className="rich-text-content"
+                    dangerouslySetInnerHTML={{ __html: post.content }} 
+                  />
                   
                   <div className="flex items-center gap-4 pt-2">
                     <Button variant="ghost" size="sm" className="h-8 gap-1">
