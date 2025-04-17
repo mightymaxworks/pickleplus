@@ -612,7 +612,10 @@ export function EventList({
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Main content area */}
-        <div className={cn("space-y-4", showFilter ? "md:col-span-2" : "md:col-span-3")}>
+        <div className={cn(
+          "space-y-4", 
+          (showFilter && showSidebar) ? "md:col-span-2" : "md:col-span-3"
+        )}>
           {/* CALENDAR VIEW */}
           {layout === "calendar" && (
             <Card>
@@ -640,13 +643,7 @@ export function EventList({
                     onSelect={setSelectedDate}
                     defaultMonth={calendarMonth}
                     onMonthChange={setCalendarMonth}
-                    className="rounded-md border mx-auto"
-                    modifiersStyles={{
-                      today: { fontWeight: 'bold' },
-                    }}
-                    modifiers={{
-                      event: Object.keys(eventsForCalendarView).map(dateStr => new Date(dateStr)),
-                    }}
+                    className="event-calendar rounded-md border mx-auto"
                     classNames={{
                       day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
                       day_today: "bg-accent text-accent-foreground",
@@ -662,7 +659,6 @@ export function EventList({
                       nav_button_next: "absolute right-1",
                       head_cell: "text-muted-foreground rounded-md w-8 font-normal text-[0.8rem]",
                       cell: "text-center text-sm relative p-0 focus-within:relative focus-within:z-20",
-                      day_event: "relative bg-primary/10 font-medium text-primary hover:bg-primary/20",
                     }}
                   />
                   
