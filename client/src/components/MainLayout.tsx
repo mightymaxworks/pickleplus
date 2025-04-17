@@ -11,7 +11,8 @@ import {
   LogOut,
   Menu,
   Shield,
-  CheckCircle2
+  CheckCircle2,
+  Palette
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -40,7 +41,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     { name: 'Achievements', path: '/achievements', icon: <Award className="h-5 w-5" /> },
     { name: 'Connections', path: '/connections', icon: <Users className="h-5 w-5" /> },
     { name: 'Coaching', path: '/coaching', icon: <BookOpen className="h-5 w-5" /> },
+    { name: 'Communities', path: '/communities', icon: <Users className="h-5 w-5" /> },
     { name: 'Profile', path: '/profile', icon: <UserCircle className="h-5 w-5" /> },
+    { name: 'Icons', path: '/icons', icon: <Palette className="h-5 w-5 text-orange-500" /> },
     { name: 'Preferences', path: '/preferences', icon: <Settings className="h-5 w-5" /> },
   ];
 
@@ -97,7 +100,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                   >
                     {item.icon}
                     <span className="ml-3">{item.name}</span>
-                    {item.name === 'Tournaments' && (
+                    {(item.name === 'Tournaments' || item.name === 'Icons') && (
                       <Badge className="ml-auto bg-primary/90 text-white text-xs">New</Badge>
                     )}
                   </a>
