@@ -73,6 +73,17 @@ export function useMyCommunitiesList(options?: {
 }
 
 /**
+ * Hook to fetch the IDs of communities where the current user is a member
+ */
+export function useMyCommunityIds(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: communityKeys.myCommunityIds(),
+    queryFn: () => communityApi.getMyCommunityIds(),
+    enabled: options?.enabled !== false,
+  });
+}
+
+/**
  * Hook to fetch a single community by ID
  */
 export function useCommunity(id: number, options?: { enabled?: boolean }) {
@@ -217,6 +228,8 @@ export function useJoinCommunity() {
     onSuccess: (_, variables, context) => {
       // Invalidate to get fresh data
       queryClient.invalidateQueries({ queryKey: communityKeys.all });
+      // Specifically invalidate the community IDs query
+      queryClient.invalidateQueries({ queryKey: communityKeys.myCommunityIds() });
       toast({
         title: "Community joined",
         description: "You have successfully joined the community.",
@@ -254,6 +267,8 @@ export function useLeaveCommunity() {
     onSuccess: (_, communityId) => {
       queryClient.invalidateQueries({ queryKey: communityKeys.members(communityId) });
       queryClient.invalidateQueries({ queryKey: communityKeys.detail(communityId) });
+      // Specifically invalidate the community IDs query
+      queryClient.invalidateQueries({ queryKey: communityKeys.myCommunityIds() });
       toast({
         title: "Community left",
         description: "You have left the community.",
