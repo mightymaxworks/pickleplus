@@ -320,6 +320,45 @@ export function useUnlikePost() {
   });
 }
 
+/**
+ * Hook to delete a post
+ */
+export function useDeletePost() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (postId: number) => communityApi.deleteCommunityPost(postId),
+    onSuccess: (_, postId) => {
+      // Find the post to get its communityId before it's deleted
+      const communityId = queryClient
+        .getQueryData<CommunityPost>(communityKeys.post(postId))
+        ?.communityId;
+      
+      // Invalidate post
+      queryClient.invalidateQueries({ queryKey: communityKeys.post(postId) });
+      
+      // If we have the communityId, invalidate the community's posts list
+      if (communityId) {
+        queryClient.invalidateQueries({ queryKey: communityKeys.posts(communityId) });
+        // Also refresh the community detail to update post count
+        queryClient.invalidateQueries({ queryKey: communityKeys.detail(communityId) });
+      }
+      
+      toast({
+        title: "Post deleted",
+        description: "Your post has been deleted successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to delete post",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+}
+
 // === Post Comments ===
 
 /**

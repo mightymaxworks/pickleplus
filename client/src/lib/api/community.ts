@@ -244,6 +244,19 @@ export async function unlikeCommunityPost(postId: number) {
   return response.json();
 }
 
+/**
+ * Delete a community post
+ */
+export async function deleteCommunityPost(postId: number) {
+  const response = await apiRequest("DELETE", `${BASE_URL}/posts/${postId}`);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to delete post: ${response.statusText}`);
+  }
+  
+  return response.json();
+}
+
 // === Post Comments ===
 
 /**

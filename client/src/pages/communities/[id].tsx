@@ -13,7 +13,10 @@ import {
   useCommunityMembers, 
   useCommunityPosts, 
   useCommunityEvents, 
-  useCreateCommunityPost 
+  useCreateCommunityPost,
+  useLikePost,
+  useUnlikePost,
+  useCreateComment
 } from "../../lib/hooks/useCommunity";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -587,29 +590,27 @@ function CommunityPosts({ communityId, isMember }: { communityId: number; isMemb
     });
   };
   
+  // Use hooks for like and unlike
+  const likePostMutation = useLikePost();
+  const unlikePostMutation = useUnlikePost();
+  
   // Handle post liking/unliking
   const handleLikePost = async (postId: number, isLiked: boolean) => {
     try {
-      // Simulated API call for liking/unliking
-      // Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      if (isLiked) {
+        await unlikePostMutation.mutateAsync(postId);
+      } else {
+        await likePostMutation.mutateAsync(postId);
+      }
       
-      toast({
-        title: isLiked ? "Post unliked" : "Post liked",
-        description: isLiked ? "You have unliked this post" : "You have liked this post",
-      });
-      
-      // Refresh posts to get updated like count
-      refetch();
+      // Posts will refresh automatically due to invalidation in the mutation hooks
     } catch (error) {
-      console.error("Error liking/unliking post:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update post. Please try again.",
-        variant: "destructive",
-      });
+      console.error(`Error ${isLiked ? 'unliking' : 'liking'} post:`, error);
     }
   };
+  
+  // Use hook for creating comments
+  const createCommentMutation = useCreateComment();
   
   // Handle adding a comment to a post
   const handleAddComment = async (postId: number) => {
@@ -618,28 +619,18 @@ function CommunityPosts({ communityId, isMember }: { communityId: number; isMemb
     setIsSubmittingComment(true);
     
     try {
-      // Simulated API call for adding a comment
-      // Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await createCommentMutation.mutateAsync({
+        postId,
+        content: commentContent
+      });
       
       // Reset comment form
       setCommentContent("");
       
-      // Show success toast
-      toast({
-        title: "Comment added!",
-        description: "Your comment has been added to the post.",
-      });
-      
-      // Refresh posts to get updated comments
-      refetch();
+      // Comments will be refreshed automatically due to invalidation in the mutation hook
     } catch (error) {
       console.error("Error adding comment:", error);
-      toast({
-        title: "Error",
-        description: "Failed to add comment. Please try again.",
-        variant: "destructive",
-      });
+      // Error handling is already in the mutation hook
     } finally {
       setIsSubmittingComment(false);
     }
