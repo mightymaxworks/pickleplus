@@ -38,8 +38,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   onSubmit
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   
   // Initialize the editor content once
   useEffect(() => {
@@ -54,6 +56,19 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     if (editorRef.current) {
       const newValue = editorRef.current.innerHTML;
       onChange(newValue);
+      
+      // If user is typing, set isTyping to true and set a timeout to turn it off
+      setIsTyping(true);
+      
+      // Clear previous timeout (if any)
+      if (typingTimerRef.current) {
+        clearTimeout(typingTimerRef.current);
+      }
+      
+      // Set a new timeout - will turn off the orange highlight after 1.5 seconds of no typing
+      typingTimerRef.current = setTimeout(() => {
+        setIsTyping(false);
+      }, 1500);
     }
   };
 
@@ -87,12 +102,13 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       formatText('createLink', url);
     }
   };
-
+  
   return (
     <div 
       className={cn(
         "rich-text-editor-container space-y-2",
-        isFocused && "ring-2 ring-primary/50"
+        isFocused && "ring-2 ring-primary/50",
+        isTyping && "ring-2 ring-orange-500/70" // Add orange highlight when typing
       )}
     >
       <div className="flex flex-wrap gap-1 p-1 bg-muted/20 rounded-t-md border border-input">
