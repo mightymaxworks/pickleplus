@@ -27,6 +27,13 @@ export interface Community {
   guidelines: string | null;
   createdAt: Date | null;
   updatedAt: Date | null;
+  // Extended properties for UI display
+  isMember?: boolean;
+  featuredTag?: string;
+  skill?: string;
+  rating?: number;
+  events?: number;
+  founded?: string;
 }
 
 // For creating communities

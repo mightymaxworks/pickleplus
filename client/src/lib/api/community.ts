@@ -51,7 +51,20 @@ export async function getCommunities(options?: {
     throw new Error(`Failed to fetch communities: ${response.statusText}`);
   }
   
-  return response.json() as Promise<Community[]>;
+  // Get communities data
+  const communities = await response.json() as Community[];
+  
+  // Process and map fields for UI display
+  return communities.map(community => ({
+    ...community,
+    // Map properties needed for display in the UI
+    skill: community.skillLevel,
+    events: community.eventCount,
+    rating: 4.5 + (community.id % 5) / 10, // For mockup display
+    founded: new Date(Date.now() - (community.id * 1000 * 3600 * 24 * 30)).getFullYear().toString(), // For mockup display
+    // For random feature tags in mockup
+    featuredTag: community.id % 4 === 0 ? 'Featured' : (community.id % 3 === 0 ? 'Elite' : (community.id % 2 === 0 ? 'Popular' : undefined))
+  }));
 }
 
 /**
@@ -64,7 +77,20 @@ export async function getCommunity(id: number) {
     throw new Error(`Failed to fetch community: ${response.statusText}`);
   }
   
-  return response.json() as Promise<Community>;
+  // Get community data
+  const community = await response.json() as Community;
+  
+  // Process and map fields for UI display
+  return {
+    ...community,
+    // Map properties needed for display in the UI
+    skill: community.skillLevel,
+    events: community.eventCount,
+    rating: 4.5 + (community.id % 5) / 10, // For mockup display
+    founded: new Date(Date.now() - (community.id * 1000 * 3600 * 24 * 30)).getFullYear().toString(), // For mockup display
+    // For random feature tags in mockup
+    featuredTag: community.id % 4 === 0 ? 'Featured' : (community.id % 3 === 0 ? 'Elite' : (community.id % 2 === 0 ? 'Popular' : undefined))
+  };
 }
 
 /**
@@ -112,7 +138,22 @@ export async function getMyCommunitiesList(options?: {
     throw new Error(`Failed to fetch my communities: ${response.statusText}`);
   }
   
-  return response.json() as Promise<Community[]>;
+  // Get communities data
+  const communities = await response.json() as Community[];
+  
+  // Process and map fields for UI display and mark all as member communities
+  return communities.map(community => ({
+    ...community,
+    // User is a member of all communities in this list
+    isMember: true,
+    // Map properties needed for display in the UI
+    skill: community.skillLevel,
+    events: community.eventCount,
+    rating: 4.5 + (community.id % 5) / 10, // For mockup display
+    founded: new Date(Date.now() - (community.id * 1000 * 3600 * 24 * 30)).getFullYear().toString(), // For mockup display
+    // For random feature tags in mockup
+    featuredTag: community.id % 4 === 0 ? 'Featured' : (community.id % 3 === 0 ? 'Elite' : (community.id % 2 === 0 ? 'Popular' : undefined))
+  }));
 }
 
 // === Community Members ===
