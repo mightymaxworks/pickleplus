@@ -38,6 +38,7 @@
  * - Grid/List view toggle
  */
 import React, { useState } from 'react';
+import { useLocation } from 'wouter';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -159,6 +160,7 @@ const EXAMPLE_COMMUNITIES = [
 const CommunityDiscoveryMockup: React.FC = () => {
   const [viewType, setViewType] = useState('grid');
   const [searchTerm, setSearchTerm] = useState('');
+  const [, navigate] = useLocation();
   
   // Use the real API data instead of mock data
   const { data: communities = [], isLoading } = useCommunities({
