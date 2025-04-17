@@ -6,7 +6,7 @@
  * for testing and debugging.
  */
 import React from 'react';
-import { IconProps } from './PickleballIcon';
+import { IconProps } from './index';
 
 /**
  * A custom player rating icon component
