@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useCommunityEvents, useCommunityEventsByType, useCommunityEventsByStatus } from "@/lib/hooks/useCommunity";
 import { EventCard } from "./EventCard";
 import { EventFilterCard, EventFilters } from "./EventFilterCard";
+import { EventCreationModal } from "./EventCreationModal";
 import { 
   CommunityEventStatus, 
   CommunityEventType, 
@@ -354,7 +355,10 @@ export function EventList({
           </div>
         </CardContent>
         <CardFooter className="justify-center">
-          <Button variant="default">Create Event</Button>
+          <EventCreationModal 
+            communityId={communityId}
+            onEventCreated={refetch}
+          />
         </CardFooter>
       </Card>
     );
@@ -484,6 +488,12 @@ export function EventList({
                 </Tooltip>
               </div>
             </TooltipProvider>
+            
+            {/* Create Event button */}
+            <EventCreationModal
+              communityId={communityId}
+              onEventCreated={refetch}
+            />
             
             {/* Sort dropdown */}
             <DropdownMenu>
