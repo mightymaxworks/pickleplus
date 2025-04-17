@@ -288,16 +288,24 @@ export async function getCommunityPosts(communityId: number, options?: {
  * @module Community
  * @description Create a post in a community
  * @dependsOn Server Layer (/api/communities/:id/posts endpoint)
- * @version 2.1.0
+ * @version 2.2.0
  * @lastModified 2025-04-17
  * @changes
+ * - Fixed sending explicit userId and communityId in the post data
  * - Added Framework 5.1 annotations
  * - Added better error handling with detailed messages
  */
 export async function createCommunityPost(communityId: number, data: Omit<InsertCommunityPost, "communityId" | "userId">) {
   console.log(`[PKL-278651-COMM-0007-ENGAGE] Creating post in community ${communityId}`, data);
   
-  const response = await apiRequest("POST", `${BASE_URL}/${communityId}/posts`, data);
+  // Add communityId to data explicitly for validation
+  const postData = {
+    ...data,
+    communityId, // Include communityId explicitly
+    userId: -1 // Include a placeholder userId - will be set properly by server based on auth
+  };
+  
+  const response = await apiRequest("POST", `${BASE_URL}/${communityId}/posts`, postData);
   
   if (!response.ok) {
     let errorMessage = `Failed to create post: ${response.statusText}`;

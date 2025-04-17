@@ -483,8 +483,22 @@ router.post('/:id/posts', isAuthenticated, async (req: Request, res: Response) =
       return res.status(403).json({ message: 'You must be a member to post in this community' });
     }
     
+    // Extract only the content and mediaUrls from the request
+    // and ensure communityId and userId are set correctly from route and auth
+    const { content, mediaUrls, isPinned, isAnnouncement } = req.body;
+    
+    // Create a clean post data object with required fields
+    const postData = {
+      content,
+      mediaUrls,
+      isPinned: isPinned || false,
+      isAnnouncement: isAnnouncement || false,
+      communityId, // From route params
+      userId // From authenticated user
+    };
+    
     // Validate post data
-    const validationResult = insertCommunityPostSchema.safeParse(req.body);
+    const validationResult = insertCommunityPostSchema.safeParse(postData);
     
     if (!validationResult.success) {
       console.error(`[PKL-278651-COMM-0007-ENGAGE] Validation error:`, validationResult.error.errors);
@@ -493,13 +507,6 @@ router.post('/:id/posts', isAuthenticated, async (req: Request, res: Response) =
         errors: validationResult.error.errors 
       });
     }
-    
-    // Create the post
-    const postData = {
-      ...validationResult.data,
-      communityId,
-      userId
-    };
     
     console.log(`[PKL-278651-COMM-0007-ENGAGE] Creating post with data:`, {
       ...postData,
