@@ -244,7 +244,24 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
                         <Calendar
                           mode="single"
                           selected={field.value}
-                          onSelect={field.onChange}
+                          onSelect={(date) => {
+                            // When a date is selected, preserve the current time or set a default
+                            if (date) {
+                              const newDate = new Date(date);
+                              // If there's already a selected date/time, preserve the time
+                              if (field.value) {
+                                newDate.setHours(field.value.getHours());
+                                newDate.setMinutes(field.value.getMinutes());
+                              } else {
+                                // Default to noon
+                                newDate.setHours(12);
+                                newDate.setMinutes(0);
+                              }
+                              field.onChange(newDate);
+                            } else {
+                              field.onChange(date);
+                            }
+                          }}
                           initialFocus
                         />
                         <div className="p-3 border-t border-border">
@@ -339,7 +356,24 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
                         <Calendar
                           mode="single"
                           selected={field.value || undefined}
-                          onSelect={field.onChange}
+                          onSelect={(date) => {
+                            // When a date is selected, preserve the current time or set a default
+                            if (date) {
+                              const newDate = new Date(date);
+                              // If there's already a selected date/time, preserve the time
+                              if (field.value) {
+                                newDate.setHours(field.value.getHours());
+                                newDate.setMinutes(field.value.getMinutes());
+                              } else {
+                                // Default to noon
+                                newDate.setHours(12);
+                                newDate.setMinutes(0);
+                              }
+                              field.onChange(newDate);
+                            } else {
+                              field.onChange(date);
+                            }
+                          }}
                           initialFocus
                         />
                         <div className="p-3 border-t border-border">
@@ -643,7 +677,24 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
                           <Calendar
                             mode="single"
                             selected={field.value || undefined}
-                            onSelect={field.onChange}
+                            onSelect={(date) => {
+                              // When a date is selected, preserve the current time or set a default
+                              if (date) {
+                                const newDate = new Date(date);
+                                // If there's already a selected date/time, preserve the time
+                                if (field.value) {
+                                  newDate.setHours(field.value.getHours());
+                                  newDate.setMinutes(field.value.getMinutes());
+                                } else {
+                                  // Default to noon
+                                  newDate.setHours(12);
+                                  newDate.setMinutes(0);
+                                }
+                                field.onChange(newDate);
+                              } else {
+                                field.onChange(date);
+                              }
+                            }}
                             initialFocus
                           />
                           <div className="p-3 border-t border-border">
