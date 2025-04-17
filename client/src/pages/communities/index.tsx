@@ -210,17 +210,8 @@ export default function CommunitiesPage() {
           <div className="container mx-auto py-8 px-4 relative z-10">
             
             {/* Simple Title */}
-            <div className="flex items-center gap-5 mb-8">
-              <div className="relative h-16 w-16 rotate-12 flex items-center justify-center text-green-600 bg-green-100 dark:bg-green-900/40 dark:text-green-400 rounded-xl shadow-lg">
-                <PickleballIcon />
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full animate-ping-slow opacity-70"></div>
-              </div>
-              
-              <div>
-                <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-primary">
-                  Find Your Community
-                </h1>
-              </div>
+            <div className="flex items-center mb-8">
+              <img src="/src/assets/community-logo.png" alt="COMMUNITY" className="h-10" />
             </div>
             
             <Tabs value={activeTab} onValueChange={(value) => {
