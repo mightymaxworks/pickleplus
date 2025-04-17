@@ -6,7 +6,7 @@
  */
 import { z } from "zod";
 import { createInsertSchema } from "drizzle-zod";
-import { pgTable, serial, text, varchar, timestamp, integer, boolean, json } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, varchar, timestamp, integer, boolean, json, numeric } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 import { users } from "../schema";
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -86,6 +86,8 @@ export async function pushSchema() {
         created_by_user_id INTEGER NOT NULL REFERENCES users(id),
         title VARCHAR(255) NOT NULL,
         description TEXT,
+        event_type VARCHAR(50) NOT NULL DEFAULT 'match_play',
+        event_type VARCHAR(50) NOT NULL DEFAULT 'match_play',
         event_date TIMESTAMP NOT NULL,
         end_date TIMESTAMP,
         location TEXT,
@@ -97,6 +99,10 @@ export async function pushSchema() {
         is_recurring BOOLEAN DEFAULT FALSE,
         recurring_pattern VARCHAR(50),
         repeat_frequency VARCHAR(50),
+        min_skill_level VARCHAR(10),
+        max_skill_level VARCHAR(10),
+        image_url TEXT,
+        status VARCHAR(50) NOT NULL DEFAULT 'active',
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       );
@@ -253,13 +259,23 @@ export const communityPosts = pgTable("community_posts", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
-// Community events
+/**
+ * PKL-278651-COMM-0007-DB-EVT
+ * Enhanced Community Events Table
+ * 
+ * This schema extends the community events table with additional fields for
+ * event types, skill level requirements, and event status.
+ * 
+ * @version 2.0.0
+ * @lastModified 2025-04-17
+ */
 export const communityEvents = pgTable("community_events", {
   id: serial("id").primaryKey(),
   communityId: integer("community_id").notNull().references(() => communities.id),
   createdByUserId: integer("created_by_user_id").notNull().references(() => users.id),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
+  eventType: varchar("event_type", { length: 50 }).notNull().default("match_play"), // match_play, league, training, tournament, social, other
   eventDate: timestamp("event_date").notNull(),
   endDate: timestamp("end_date"),
   location: text("location"),
@@ -271,6 +287,10 @@ export const communityEvents = pgTable("community_events", {
   isRecurring: boolean("is_recurring").default(false),
   recurringPattern: varchar("recurring_pattern", { length: 50 }),
   repeatFrequency: varchar("repeat_frequency", { length: 50 }),
+  minSkillLevel: varchar("min_skill_level", { length: 10 }), // Minimum skill level required for this event (optional)
+  maxSkillLevel: varchar("max_skill_level", { length: 10 }), // Maximum skill level for this event (optional)
+  imageUrl: text("image_url"), // Optional image for the event
+  status: varchar("status", { length: 50 }).notNull().default("active"), // active, cancelled, completed
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
