@@ -268,7 +268,7 @@ export function EventFilterCard({
                     size="sm"
                     onClick={() => {
                       const today = new Date();
-                      handleDateRangeChange({ 
+                      handleDateChange({ 
                         from: today, 
                         to: undefined 
                       });
@@ -282,7 +282,7 @@ export function EventFilterCard({
                     onClick={() => {
                       const today = new Date();
                       const nextWeek = addDays(today, 7);
-                      handleDateRangeChange({ 
+                      handleDateChange({ 
                         from: today, 
                         to: nextWeek 
                       });
@@ -296,7 +296,7 @@ export function EventFilterCard({
                     onClick={() => {
                       const today = new Date();
                       const nextMonth = addDays(today, 30);
-                      handleDateRangeChange({ 
+                      handleDateChange({ 
                         from: today, 
                         to: nextMonth 
                       });
