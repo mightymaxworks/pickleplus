@@ -652,16 +652,116 @@ function CommunityPosts({ communityId, isMember }: { communityId: number; isMemb
                   />
                   
                   <div className="flex items-center gap-4 pt-2">
-                    <Button variant="ghost" size="sm" className="h-8 gap-1">
-                      <span>Like</span>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 gap-1"
+                      onClick={() => handleLikePost(post.id, post.isLikedByCurrentUser)}
+                    >
+                      {post.isLikedByCurrentUser ? (
+                        <Heart className="h-4 w-4 fill-red-500 text-red-500 mr-1" />
+                      ) : (
+                        <Heart className="h-4 w-4 mr-1" />
+                      )}
+                      <span>{post.isLikedByCurrentUser ? 'Liked' : 'Like'}</span>
                       <span>({post.likes})</span>
                     </Button>
                     
-                    <Button variant="ghost" size="sm" className="h-8 gap-1">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 gap-1"
+                      onClick={() => setActiveCommentPostId(activeCommentPostId === post.id ? null : post.id)}
+                    >
+                      <MessageSquare className="h-4 w-4 mr-1" />
                       <span>Comment</span>
                       <span>({post.comments})</span>
                     </Button>
+                    
+                    {post.userId === currentUserId && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 gap-1 ml-auto"
+                        onClick={() => handleDeletePost(post.id)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-1 text-red-500" />
+                        <span className="text-red-500">Delete</span>
+                      </Button>
+                    )}
                   </div>
+                  
+                  {activeCommentPostId === post.id && (
+                    <div className="mt-4 space-y-4">
+                      <div className="flex gap-3">
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback>
+                            {currentUserId.toString().charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <textarea
+                            className="min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder="Write a comment..."
+                            value={commentContent}
+                            onChange={(e) => setCommentContent(e.target.value)}
+                          />
+                          <div className="flex justify-end mt-2">
+                            <Button 
+                              size="sm"
+                              disabled={!commentContent.trim() || isSubmittingComment}
+                              onClick={() => handleAddComment(post.id)}
+                            >
+                              {isSubmittingComment ? (
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              ) : null}
+                              Add Comment
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {post.recentComments && post.recentComments.length > 0 ? (
+                        <div className="space-y-3 mt-4">
+                          {post.recentComments.map((comment) => (
+                            <div key={comment.id} className="flex gap-3">
+                              <Avatar className="h-8 w-8">
+                                <AvatarFallback>
+                                  {comment.userId.toString().charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1">
+                                <div className="bg-muted/50 rounded-md p-3">
+                                  <div className="flex justify-between">
+                                    <span className="font-medium">User #{comment.userId}</span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {new Date(comment.createdAt).toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                  <p className="mt-1">{comment.content}</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          
+                          {post.commentCount > post.recentComments.length && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-xs text-muted-foreground"
+                              onClick={() => handleViewAllComments(post.id)}
+                            >
+                              View all {post.commentCount} comments
+                            </Button>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground text-center">
+                          No comments yet. Be the first to comment!
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>
