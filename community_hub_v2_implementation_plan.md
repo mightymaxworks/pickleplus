@@ -1,25 +1,25 @@
-# Community Hub v2 Implementation Plan
+# Community Hub v2 Implementation Plan [REVISED]
 
 ## Overview
 
-This document outlines the implementation plan for the Community Hub v2, a complete redesign of the Pickle+ community features using a modular, open-source approach with NodeBB integration. This implementation aligns with our Framework v5.2's open-source-first philosophy.
+This document outlines the implementation plan for the Community Hub v2, a significant enhancement of the Pickle+ community features using our custom development approach. This implementation aligns with our Framework v5.1 architecture.
 
 ## Objectives
 
-1. Rebuild community features using NodeBB as the foundation
+1. Enhance existing community features with improved functionality
 2. Maintain full integration with Pickle+ user accounts and features
 3. Provide enhanced community management tools
-4. Reduce development time through leveraging existing open-source solutions
-5. Facilitate A/B testing against current implementation
+4. Improve user experience through optimized UI/UX design
+5. Maintain consistent development patterns across the platform
 
 ## Technical Architecture
 
-The implementation uses a multi-tiered approach:
+The implementation follows our established four-layer approach:
 
-1. **NodeBB Core**: Provides the forum functionality, user management, and content storage
-2. **Integration Layer**: Connects NodeBB with Pickle+ authentication and data
-3. **UI Layer**: Custom React components that maintain Pickle+ design language
-4. **Extension Layer**: Custom NodeBB plugins for pickleball-specific features
+1. **Database Layer**: Schema definitions for community entities
+2. **Server Layer**: API endpoints for community features
+3. **SDK Layer**: Type-safe API clients for community data
+4. **UI Layer**: Custom React components with Pickle+ design language
 
 ## Implementation Sprints
 
