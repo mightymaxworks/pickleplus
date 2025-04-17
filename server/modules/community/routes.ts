@@ -811,16 +811,16 @@ router.get('/my-community-ids', isAuthenticated, async (req: Request, res: Respo
       return res.status(401).json({ message: 'Authentication required' });
     }
     
+    console.log(`[Community API] Getting memberships for user ${userId}`);
     // Get all communities where user is a member
     const memberships = await storage.getCommunityMembershipsByUserId(userId);
     
-    if (!memberships || !Array.isArray(memberships)) {
-      console.error('Invalid response from getCommunityMembershipsByUserId:', memberships);
-      return res.status(500).json({ message: 'Invalid response from database' });
-    }
+    console.log(`[Community API] Retrieved memberships:`, JSON.stringify(memberships));
     
-    // Extract just the IDs
-    const communityIds = memberships.map(membership => membership.communityId);
+    // Even if no memberships, return an empty array
+    const communityIds = Array.isArray(memberships) 
+      ? memberships.map(membership => membership.communityId)
+      : [];
     
     return res.status(200).json(communityIds);
   } catch (error) {
