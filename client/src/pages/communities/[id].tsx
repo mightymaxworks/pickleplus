@@ -3,9 +3,10 @@
  * Community Detail Page
  * 
  * This page displays detailed information about a specific community.
+ * Redesigned to match the modern UI pattern from the test/community page.
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { CommunityProvider, useCommunityWithData } from "../../lib/providers/CommunityProvider";
 import { useCommunityMembers, useCommunityPosts, useCommunityEvents } from "../../lib/hooks/useCommunity";
@@ -26,8 +27,28 @@ import {
   MapPin, 
   Activity, 
   FileText,
-  Loader2
+  Loader2,
+  Mail,
+  ExternalLink,
+  Star,
+  BarChart,
+  Trophy,
+  Hash,
+  Target,
+  Sparkles,
+  Megaphone
 } from "lucide-react";
+
+// Import modern UI components
+import CommunityMenu from "@/components/community/CommunityMenu";
+import { 
+  PickleballIcon, 
+  CourtLinesBackground, 
+  ConfettiEffect, 
+  FeatureBadge,
+  DecorativeElements,
+  CommunityHeader
+} from "@/components/community/CommunityUIComponents";
 
 export default function CommunityDetailPage() {
   // Wrap the component with the provider to ensure context is available
@@ -122,299 +143,363 @@ function CommunityDetail() {
     );
   }
   
-  // Community header with info and actions
+  // State for confetti animation
+  const [showConfetti, setShowConfetti] = useState(false);
+  
+  // Trigger confetti when tab changes
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    setShowConfetti(true);
+    setTimeout(() => setShowConfetti(false), 2000);
+  };
+  
+  // Community header with modern design and improved UI
   return (
-    <div className="container py-8 max-w-7xl">
-      <Button variant="ghost" className="mb-6" onClick={handleBack}>
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Communities
-      </Button>
+    <div className="relative min-h-screen overflow-x-hidden">
+      {/* Background Elements */}
+      <div className="fixed inset-0 bg-gradient-to-br from-[#f5f8ff] via-[#f0f9ff] to-[#edfff1] dark:from-[#121826] dark:via-[#111a22] dark:to-[#0f1c11] -z-10"></div>
+      <CourtLinesBackground />
       
-      <div className="relative mb-8">
-        {/* Community Banner */}
-        <div className="h-48 bg-primary/10 rounded-t-lg relative">
-          {community.bannerUrl && (
-            <img
-              src={community.bannerUrl}
-              alt={`${community.name} banner`}
-              className="w-full h-full object-cover rounded-t-lg"
-            />
-          )}
+      {/* Confetti Effect */}
+      <ConfettiEffect active={showConfetti} />
+      
+      {/* Decorative Elements */}
+      <DecorativeElements />
+      
+      <div className="container mx-auto py-8 px-4 relative z-10">
+        {/* Back Navigation */}
+        <Button variant="ghost" className="mb-6 hover:bg-background/80" onClick={handleBack}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Communities
+        </Button>
+        
+        {/* Community Header Banner */}
+        <CommunityHeader 
+          title={`Community: ${community.name}`}
+          subtitle="View community details, join events, and connect with members"
+        />
+        
+        {/* Community Navigation */}
+        <div className="mb-8">
+          <CommunityMenu activeTab="profile" />
+        </div>
+        
+        {/* Main Content with Modern Styling */}
+        <div className="relative bg-card/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-muted/60 mb-8">
+          {/* Corner Decorations */}
+          <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-br-xl rounded-tl-xl transform rotate-45 shadow-sm"></div>
+          <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-green-400 rounded-br-xl rounded-tl-xl transform rotate-45 shadow-sm"></div>
           
-          <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/60 to-transparent">
-            <div className="flex items-center gap-4">
-              <Avatar className="h-24 w-24 border-4 border-background">
+          {/* Subtle Pattern */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-white/0 dark:from-white/10 dark:to-white/0 rounded-2xl"></div>
+          
+          {/* Community Profile Header */}
+          <div className="relative">
+            <div className="h-48 bg-gradient-to-r from-primary/40 to-primary rounded-t-lg overflow-hidden">
+              {community.bannerUrl && (
+                <img
+                  src={community.bannerUrl}
+                  alt={`${community.name} banner`}
+                  className="w-full h-full object-cover rounded-t-lg opacity-90"
+                />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+            </div>
+            
+            <div className="absolute -bottom-12 left-8 ring-4 ring-background p-1 rounded-2xl bg-background shadow-lg">
+              <Avatar className="h-24 w-24">
                 <AvatarImage src={community.avatarUrl || undefined} alt={community.name} />
-                <AvatarFallback className="text-3xl">
+                <AvatarFallback className="text-3xl bg-primary/10 text-primary">
                   {community.name.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h1 className="text-3xl font-bold text-white">{community.name}</h1>
-                  
-                  {community.isPrivate && (
-                    <Lock className="h-5 w-5 text-white" />
-                  )}
-                  
-                  {community.requiresApproval && (
-                    <Shield className="h-5 w-5 text-white" />
-                  )}
-                </div>
-                
-                {community.skillLevel && (
-                  <Badge variant="secondary" className="mt-1">
-                    {community.skillLevel}
-                  </Badge>
-                )}
-              </div>
-              
-              <div className="hidden sm:flex gap-2">
-                {isAdmin && (
-                  <Button variant="secondary" onClick={handleSettings}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    Settings
-                  </Button>
-                )}
-                
-                {isMember ? (
-                  <Button variant="outline" onClick={handleLeave} disabled={isLeaving}>
-                    {isLeaving ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : null}
-                    Leave Community
-                  </Button>
-                ) : (
-                  <Button onClick={handleJoin} disabled={isJoining}>
-                    {isJoining ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : null}
-                    Join Community
-                  </Button>
-                )}
-              </div>
             </div>
           </div>
-        </div>
-        
-        {/* Mobile action buttons */}
-        <div className="sm:hidden flex gap-2 mt-4">
-          {isAdmin && (
-            <Button variant="secondary" onClick={handleSettings} className="flex-1">
-              <Settings className="mr-2 h-4 w-4" />
-              Settings
-            </Button>
-          )}
           
-          {isMember ? (
-            <Button variant="outline" onClick={handleLeave} disabled={isLeaving} className="flex-1">
-              {isLeaving ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : null}
-              Leave Community
-            </Button>
-          ) : (
-            <Button onClick={handleJoin} disabled={isJoining} className="flex-1">
-              {isJoining ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : null}
-              Join Community
-            </Button>
-          )}
-        </div>
-        
-        {/* Community details */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-          <div className="md:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>About</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {community.description ? (
-                  <p>{community.description}</p>
-                ) : (
-                  <p className="text-muted-foreground italic">
-                    No description provided.
-                  </p>
+          {/* Community Info Section */}
+          <div className="pt-14 px-4 flex flex-col lg:flex-row justify-between items-start">
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-3xl font-bold">{community.name}</h1>
+                
+                {community.isPrivate && (
+                  <Lock className="h-5 w-5 text-muted-foreground" />
                 )}
                 
-                <div className="flex flex-wrap gap-2">
-                  {community.location && (
-                    <Badge variant="outline" className="flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      <span>{community.location}</span>
+                {community.requiresApproval && (
+                  <Shield className="h-5 w-5 text-muted-foreground" />
+                )}
+              </div>
+              
+              <div className="flex items-center text-muted-foreground mt-1">
+                {community.location && (
+                  <>
+                    <MapPin className="h-4 w-4 mr-1" />
+                    <span>{community.location}</span>
+                    <span className="mx-2">•</span>
+                  </>
+                )}
+                <Users className="h-4 w-4 mr-1" />
+                <span>{community.memberCount} members</span>
+                <span className="mx-2">•</span>
+                <Activity className="h-4 w-4 mr-1" />
+                <span>{community.postCount} posts</span>
+              </div>
+              
+              <div className="flex flex-wrap gap-2 mt-3">
+                {community.skillLevel && (
+                  <Badge variant="secondary">{community.skillLevel}</Badge>
+                )}
+                
+                {community.tags && 
+                  community.tags.split(',').map((tag) => (
+                    <Badge key={tag} variant="secondary" className="max-w-[150px] truncate">
+                      {tag.trim()}
                     </Badge>
-                  )}
-                  
-                  {community.tags && 
-                    community.tags.split(',').map((tag) => (
-                      <Badge key={tag} variant="secondary" className="max-w-[150px] truncate">
-                        {tag.trim()}
-                      </Badge>
-                    ))
-                  }
-                </div>
-                
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Users className="h-4 w-4" />
-                    <span>{community.memberCount} members</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-1">
-                    <Activity className="h-4 w-4" />
-                    <span>{community.postCount} posts</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    <span>{community.eventCount} events</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                  ))
+                }
+              </div>
+            </div>
             
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList>
-                <TabsTrigger value="posts">Posts</TabsTrigger>
-                <TabsTrigger value="events">Events</TabsTrigger>
-                <TabsTrigger value="members">Members</TabsTrigger>
-                <TabsTrigger value="about">Rules & Guidelines</TabsTrigger>
-              </TabsList>
+            <div className="flex gap-2 mt-4 lg:mt-0">
+              {isAdmin && (
+                <Button variant="secondary" onClick={handleSettings}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </Button>
+              )}
               
-              <TabsContent value="posts" className="mt-6">
-                <CommunityPosts communityId={communityId} isMember={isMember} />
-              </TabsContent>
-              
-              <TabsContent value="events" className="mt-6">
-                <CommunityEvents communityId={communityId} isMember={isMember} />
-              </TabsContent>
-              
-              <TabsContent value="members" className="mt-6">
-                <CommunityMembers communityId={communityId} />
-              </TabsContent>
-              
-              <TabsContent value="about" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Rules</CardTitle>
-                    <CardDescription>
-                      Community rules that all members should follow
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {community.rules ? (
-                      <div className="whitespace-pre-line">{community.rules}</div>
-                    ) : (
-                      <p className="text-muted-foreground italic">
-                        No community rules have been defined.
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-                
-                <Card className="mt-6">
-                  <CardHeader>
-                    <CardTitle>Guidelines</CardTitle>
-                    <CardDescription>
-                      Additional guidelines for community participation
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {community.guidelines ? (
-                      <div className="whitespace-pre-line">{community.guidelines}</div>
-                    ) : (
-                      <p className="text-muted-foreground italic">
-                        No community guidelines have been defined.
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+              {isMember ? (
+                <Button variant="outline" onClick={handleLeave} disabled={isLeaving}>
+                  {isLeaving ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : null}
+                  Leave Community
+                </Button>
+              ) : (
+                <Button onClick={handleJoin} disabled={isJoining}>
+                  {isJoining ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : null}
+                  Join Community
+                </Button>
+              )}
+            </div>
           </div>
           
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Users className="mr-2 h-5 w-5" />
-                  Members
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isLoadingMembers ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="flex items-center gap-2">
-                        <Skeleton className="h-8 w-8 rounded-full" />
-                        <Skeleton className="h-4 w-28" />
-                      </div>
-                    ))}
-                  </div>
-                ) : members && members.length > 0 ? (
-                  <div className="space-y-3">
-                    {members.slice(0, 5).map((member) => (
-                      <div key={member.id} className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback>
-                            {member.userId.toString().charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="text-sm">User #{member.userId}</p>
-                          {member.role !== 'member' && (
-                            <Badge variant="outline" className="text-xs">
-                              {member.role}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                    
-                    {community.memberCount > 5 && (
-                      <Button
-                        variant="ghost"
-                        className="w-full text-xs"
-                        onClick={() => setActiveTab("members")}
-                      >
-                        View all {community.memberCount} members
-                      </Button>
+          {/* Feature Badge Pills */}
+          <div className="my-6 px-4 flex flex-wrap gap-2">
+            <FeatureBadge icon={<Target className="h-3 w-3" />} label="Community Goals" color="green" />
+            <FeatureBadge icon={<Trophy className="h-3 w-3" />} label="Achievements" color="blue" />
+            <FeatureBadge icon={<Activity className="h-3 w-3" />} label="Activity Feed" color="purple" />
+            <FeatureBadge icon={<Calendar className="h-3 w-3" />} label="Events" color="amber" />
+            <FeatureBadge icon={<Users className="h-3 w-3" />} label="Members" color="rose" />
+          </div>
+        
+          {/* Community details */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+            <div className="md:col-span-2 space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>About</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {community.description ? (
+                    <p>{community.description}</p>
+                  ) : (
+                    <p className="text-muted-foreground italic">
+                      No description provided.
+                    </p>
+                  )}
+                  
+                  <div className="flex flex-wrap gap-2">
+                    {community.location && (
+                      <Badge variant="outline" className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        <span>{community.location}</span>
+                      </Badge>
                     )}
+                    
+                    {community.tags && 
+                      community.tags.split(',').map((tag) => (
+                        <Badge key={tag} variant="secondary" className="max-w-[150px] truncate">
+                          {tag.trim()}
+                        </Badge>
+                      ))
+                    }
                   </div>
-                ) : (
-                  <p className="text-muted-foreground text-sm">
-                    No members in this community yet.
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Calendar className="mr-2 h-5 w-5" />
-                  Upcoming Events
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-sm">
-                  No upcoming events. Check back soon!
-                </p>
+                  
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Users className="h-4 w-4" />
+                      <span>{community.memberCount} members</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-1">
+                      <Activity className="h-4 w-4" />
+                      <span>{community.postCount} posts</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      <span>{community.eventCount} events</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Tabs value={activeTab} onValueChange={handleTabChange}>
+                <TabsList className="grid grid-cols-4 max-w-xl">
+                  <TabsTrigger value="posts" className="flex items-center gap-1.5">
+                    <FileText className="h-4 w-4" />
+                    <span>Posts</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="events" className="flex items-center gap-1.5">
+                    <Calendar className="h-4 w-4" />
+                    <span>Events</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="members" className="flex items-center gap-1.5">
+                    <Users className="h-4 w-4" />
+                    <span>Members</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="about" className="flex items-center gap-1.5">
+                    <FileText className="h-4 w-4" />
+                    <span>Rules</span>
+                  </TabsTrigger>
+                </TabsList>
                 
-                {isMember && (
-                  <Button
-                    className="w-full mt-4"
-                    variant="outline"
-                    onClick={() => setActiveTab("events")}
-                  >
-                    Create Event
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
+                <TabsContent value="posts" className="mt-6">
+                  <CommunityPosts communityId={communityId} isMember={isMember} />
+                </TabsContent>
+                
+                <TabsContent value="events" className="mt-6">
+                  <CommunityEvents communityId={communityId} isMember={isMember} />
+                </TabsContent>
+                
+                <TabsContent value="members" className="mt-6">
+                  <CommunityMembers communityId={communityId} />
+                </TabsContent>
+                
+                <TabsContent value="about" className="mt-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Rules</CardTitle>
+                      <CardDescription>
+                        Community rules that all members should follow
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {community.rules ? (
+                        <div className="whitespace-pre-line">{community.rules}</div>
+                      ) : (
+                        <p className="text-muted-foreground italic">
+                          No community rules have been defined.
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="mt-6">
+                    <CardHeader>
+                      <CardTitle>Guidelines</CardTitle>
+                      <CardDescription>
+                        Additional guidelines for community participation
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {community.guidelines ? (
+                        <div className="whitespace-pre-line">{community.guidelines}</div>
+                      ) : (
+                        <p className="text-muted-foreground italic">
+                          No community guidelines have been defined.
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </div>
+            
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Users className="mr-2 h-5 w-5" />
+                    Members
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {isLoadingMembers ? (
+                    <div className="space-y-4">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <Skeleton className="h-8 w-8 rounded-full" />
+                          <Skeleton className="h-4 w-28" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : members && members.length > 0 ? (
+                    <div className="space-y-3">
+                      {members.slice(0, 5).map((member) => (
+                        <div key={member.id} className="flex items-center gap-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback>
+                              {member.userId.toString().charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="text-sm">User #{member.userId}</p>
+                            {member.role !== 'member' && (
+                              <Badge variant="outline" className="text-xs">
+                                {member.role}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {community.memberCount > 5 && (
+                        <Button
+                          variant="ghost"
+                          className="w-full text-xs"
+                          onClick={() => handleTabChange("members")}
+                        >
+                          View all {community.memberCount} members
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-sm">
+                      No members in this community yet.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Calendar className="mr-2 h-5 w-5" />
+                    Upcoming Events
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground text-sm">
+                    No upcoming events. Check back soon!
+                  </p>
+                  
+                  {isMember && (
+                    <Button
+                      className="w-full mt-4"
+                      variant="outline"
+                      onClick={() => handleTabChange("events")}
+                    >
+                      Create Event
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
@@ -698,93 +783,57 @@ function CommunityDetailSkeleton() {
         Back to Communities
       </Button>
       
-      <div className="relative mb-8">
-        <Skeleton className="h-48 w-full rounded-t-lg" />
-        
-        <div className="absolute bottom-0 left-0 w-full p-4">
-          <div className="flex items-center gap-4">
-            <Skeleton className="h-24 w-24 rounded-full" />
-            
-            <div className="flex-1">
-              <Skeleton className="h-8 w-48 mb-2" />
-              <Skeleton className="h-5 w-24" />
-            </div>
-            
-            <div className="hidden sm:flex gap-2">
-              <Skeleton className="h-10 w-28" />
-              <Skeleton className="h-10 w-28" />
-            </div>
-          </div>
-        </div>
-        
-        <div className="sm:hidden flex gap-2 mt-4">
-          <Skeleton className="h-10 flex-1" />
-          <Skeleton className="h-10 flex-1" />
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-          <div className="md:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <Skeleton className="h-6 w-24" />
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-                
-                <div className="flex flex-wrap gap-2">
-                  <Skeleton className="h-5 w-20" />
-                  <Skeleton className="h-5 w-24" />
-                  <Skeleton className="h-5 w-16" />
-                </div>
-                
-                <div className="flex items-center gap-4">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-4 w-24" />
-                </div>
-              </CardContent>
-            </Card>
-            
-            <div>
-              <Skeleton className="h-10 w-96 mb-6" />
-              <Card>
-                <CardContent className="pt-6">
-                  <Skeleton className="h-40 w-full" />
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2 space-y-6">
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-8 w-40" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+              
+              <div className="flex gap-2">
+                <Skeleton className="h-6 w-20" />
+                <Skeleton className="h-6 w-20" />
+                <Skeleton className="h-6 w-20" />
+              </div>
+            </CardContent>
+          </Card>
           
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <Skeleton className="h-6 w-24" />
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <Skeleton className="h-8 w-8 rounded-full" />
-                      <Skeleton className="h-4 w-28" />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <Skeleton className="h-6 w-36" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-full mt-2" />
-                <Skeleton className="h-10 w-full mt-4" />
-              </CardContent>
-            </Card>
-          </div>
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-8 w-40" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-40 w-full" />
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-8 w-40" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <Skeleton className="h-4 w-28" />
+              </div>
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <Skeleton className="h-4 w-28" />
+              </div>
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <Skeleton className="h-4 w-28" />
+              </div>
+              <Skeleton className="h-4 w-full mt-2" />
+              <Skeleton className="h-10 w-full mt-4" />
+            </CardContent>
+          </Card>
         </div>
       </div>
     </>
