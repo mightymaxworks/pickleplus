@@ -1,8 +1,41 @@
 /**
- * PKL-278651-COMM-0001-UIMOCK
- * Community Discovery Mockup
+ * @component CommunityDiscoveryMockup
+ * @layer UI
+ * @module Community
+ * @sprint PKL-278651-COMM-0001-UIMOCK
+ * @version 2.1.0
+ * @lastModified 2025-04-17
  * 
- * This component displays a mockup of the community discovery interface.
+ * @description
+ * Displays a mockup of the community discovery interface with grid and list views.
+ * Rendered as content inside the "discover" tab of the Community Hub.
+ * 
+ * @parent CommunitiesPage (Tab Content)
+ * @children
+ * - SearchAndFilter (inline component)
+ * - FilterPills (inline component)
+ * - CommunityGrid/List (inline component)
+ * - CommunityCard (inline component)
+ * 
+ * @visual
+ * - Search bar with filters at the top
+ * - Filter pills below search bar
+ * - Grid/List view toggle
+ * - Community cards with:
+ *   - Gradient header with community name and location
+ *   - Feature badges for special communities
+ *   - Statistics (members, events, founding date)
+ *   - Tags and quick actions
+ * 
+ * @changes
+ * - Removed decorative header section
+ * - Simplified component structure
+ * - Added semantic identifiers for testing
+ * 
+ * @preserves
+ * - Card design and layout
+ * - Search and filter functionality
+ * - Grid/List view toggle
  */
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
@@ -134,9 +167,18 @@ const CommunityDiscoveryMockup: React.FC = () => {
   );
 
   return (
-    <div className="space-y-6">
+    <div 
+      className="space-y-6"
+      id="community-discovery-container"
+      data-testid="community-discovery"
+      data-component="community-discovery-mockup"
+    >
       {/* Search and filter bar */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+      <div 
+        className="flex flex-col sm:flex-row gap-4 mb-6"
+        id="community-search-filter"
+        data-testid="community-search-filter"
+      >
         <div className="relative flex-grow">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
@@ -144,17 +186,30 @@ const CommunityDiscoveryMockup: React.FC = () => {
             className="pl-10"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            id="community-search-input"
+            data-testid="community-search-input"
+            aria-label="Search communities"
           />
         </div>
-        <Button variant="outline" className="sm:w-auto w-full">
+        <Button 
+          variant="outline" 
+          className="sm:w-auto w-full"
+          id="community-filter-button"
+          data-testid="community-filter-button"
+        >
           <SlidersHorizontal className="h-4 w-4 mr-2" />
           Filters
         </Button>
-        <div className="flex border rounded-md">
+        <div 
+          className="flex border rounded-md"
+          id="community-view-toggle"
+          data-testid="community-view-toggle"
+        >
           <Button 
             variant={viewType === 'grid' ? "secondary" : "ghost"} 
             className="rounded-r-none" 
             onClick={() => setViewType('grid')}
+            data-testid="community-grid-button"
           >
             <Grid3X3 className="h-4 w-4 mr-1.5" />
             Grid
@@ -163,6 +218,7 @@ const CommunityDiscoveryMockup: React.FC = () => {
             variant={viewType === 'list' ? "secondary" : "ghost"} 
             className="rounded-l-none border-l"
             onClick={() => setViewType('list')}
+            data-testid="community-list-button"
           >
             <List className="h-4 w-4 mr-1.5" />
             List
@@ -171,7 +227,11 @@ const CommunityDiscoveryMockup: React.FC = () => {
       </div>
 
       {/* Filter pills */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div 
+        className="flex flex-wrap gap-2 mb-6"
+        id="community-filter-pills"
+        data-testid="community-filter-pills"
+      >
         <Badge variant="outline" className="px-3 py-1 cursor-pointer hover:bg-accent">
           Near Me
         </Badge>
@@ -190,8 +250,19 @@ const CommunityDiscoveryMockup: React.FC = () => {
       </div>
 
       {/* View types */}
-      <Tabs value={viewType} onValueChange={setViewType} className="w-full">
-        <TabsContent value="grid" className="mt-0">
+      <Tabs 
+        value={viewType} 
+        onValueChange={setViewType} 
+        className="w-full"
+        id="community-view-tabs"
+        data-testid="community-view-tabs"
+      >
+        <TabsContent 
+          value="grid" 
+          className="mt-0"
+          id="community-grid-view"
+          data-testid="community-grid"
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCommunities.map(community => {
               // Generate different gradients based on community id
@@ -211,6 +282,9 @@ const CommunityDiscoveryMockup: React.FC = () => {
                 <Card 
                   key={community.id} 
                   className="group overflow-hidden rounded-xl border-muted/50 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl"
+                  id={`community-card-${community.id}`}
+                  data-testid={`community-card-${community.id}`}
+                  data-component="community-card"
                 >
                   {/* Card Header with Gradient Background */}
                   <div className={`relative h-52 ${gradientClass}`}>
@@ -360,6 +434,9 @@ const CommunityDiscoveryMockup: React.FC = () => {
                 <Card 
                   key={community.id} 
                   className="group overflow-hidden rounded-xl border-muted/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                  id={`community-list-card-${community.id}`}
+                  data-testid={`community-list-card-${community.id}`}
+                  data-component="community-list-card"
                 >
                   <div className="flex flex-col md:flex-row">
                     {/* Left column with gradient background */}
