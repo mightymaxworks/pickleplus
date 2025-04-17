@@ -17,7 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Grid3X3, List, SlidersHorizontal, ArrowUpDown, X } from "lucide-react";
+import { Grid3X3, List, SlidersHorizontal, ArrowUpDown, X, Search } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -467,7 +467,7 @@ export function CommunityList({
       )}
       
       {/* No results message */}
-      {communities.length === 0 && (
+      {communities && communities.length === 0 && (
         <Card className="border-dashed">
           <CardHeader>
             <CardTitle>No Communities Found</CardTitle>
@@ -488,7 +488,7 @@ export function CommunityList({
       )}
       
       {/* Communities grid/list view */}
-      {communities.length > 0 && (
+      {communities && communities.length > 0 && (
         <div className={`
           grid gap-6 
           ${viewType === 'grid' 
@@ -499,7 +499,10 @@ export function CommunityList({
           {communities.map((community) => (
             <CommunityCard 
               key={community.id} 
-              community={community} 
+              community={{
+                ...community,
+                skill: community.skill || undefined // Fix type compatibility
+              }} 
               compact={isCompact || viewType === 'list'}
             />
           ))}
@@ -507,7 +510,7 @@ export function CommunityList({
       )}
       
       {/* Load more button */}
-      {communities.length > 0 && communities.length % (paginationOptions.limit || 12) === 0 && (
+      {communities && communities.length > 0 && communities.length % (paginationOptions.limit || 12) === 0 && (
         <div className="flex justify-center mt-8">
           <Button 
             variant="outline" 
