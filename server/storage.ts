@@ -231,6 +231,8 @@ export interface IStorage {
   
   getCommunityMembership(communityId: number, userId: number): Promise<CommunityMember | undefined>;
   
+  getCommunityMembershipsByUserId(userId: number): Promise<CommunityMember[]>;
+  
   createCommunityMember(memberData: InsertCommunityMember): Promise<CommunityMember>;
   
   updateCommunityMembership(communityId: number, userId: number, updates: Partial<InsertCommunityMember>): Promise<CommunityMember | undefined>;

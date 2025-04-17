@@ -75,6 +75,8 @@ export interface CommunityStorage {
   
   getCommunityMembership(communityId: number, userId: number): Promise<CommunityMember | undefined>;
   
+  getCommunityMembershipsByUserId(userId: number): Promise<CommunityMember[]>;
+  
   createCommunityMember(memberData: InsertCommunityMember): Promise<CommunityMember>;
   
   updateCommunityMembership(communityId: number, userId: number, updates: Partial<InsertCommunityMember>): Promise<CommunityMember | undefined>;
@@ -337,6 +339,16 @@ export const communityStorageImplementation: CommunityStorage = {
       .limit(1);
     
     return result[0];
+  },
+  
+  async getCommunityMembershipsByUserId(userId: number): Promise<CommunityMember[]> {
+    const db = this.getDb();
+    const result = await db
+      .select()
+      .from(communityMembers)
+      .where(eq(communityMembers.userId, userId));
+    
+    return result;
   },
   
   async createCommunityMember(memberData: InsertCommunityMember): Promise<CommunityMember> {
