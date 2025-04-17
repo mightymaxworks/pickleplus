@@ -799,6 +799,31 @@ router.patch('/join-requests/:requestId', isAuthenticated, async (req: Request, 
   }
 });
 
+/**
+ * Get IDs of communities the current user is a member of
+ * GET /api/communities/my-community-ids
+ */
+router.get('/my-community-ids', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    
+    // Get all communities where user is a member
+    const memberships = await storage.getCommunityMembershipsByUserId(userId);
+    
+    // Extract just the IDs
+    const communityIds = memberships.map(membership => membership.communityId);
+    
+    res.json(communityIds);
+  } catch (error) {
+    console.error('Error getting user community IDs:', error);
+    res.status(500).json({ message: 'Failed to fetch user community IDs' });
+  }
+});
+
 // Export the router
 export function registerCommunityRoutes(app: any) {
   console.log('[API] Registering community hub routes (PKL-278651-COMM-0006-HUB-API)');
