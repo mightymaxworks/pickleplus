@@ -162,11 +162,25 @@ const CommunityDiscoveryMockup: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [, navigate] = useLocation();
   
-  // Use the join community mutation
+  // Use the join community mutation with optimistic UI update
   const joinCommunityMutation = useJoinCommunity();
   
   // Handle join community action
   const handleJoinCommunity = (communityId: number) => {
+    // Find the community to update
+    const communityIndex = communities.findIndex(c => c.id === communityId);
+    
+    if (communityIndex !== -1) {
+      // Create a copy of communities
+      const updatedCommunities = [...communities];
+      // Set isMember to true in the community at that index
+      updatedCommunities[communityIndex] = {
+        ...updatedCommunities[communityIndex],
+        isMember: true
+      };
+    }
+    
+    // Call the mutation
     joinCommunityMutation.mutate({ communityId });
   };
   
