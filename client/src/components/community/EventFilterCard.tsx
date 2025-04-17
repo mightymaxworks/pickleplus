@@ -32,6 +32,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format, formatRelative, isToday, isYesterday, isTomorrow, addDays, isAfter, isBefore, isSameDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import { CommunityEventStatus, CommunityEventType } from "@/types/community";
+import { useDateRangePicker, SimpleDateRange } from "@/lib/hooks/useDateRangePicker";
 
 interface EventFilterCardProps {
   onFilterChange: (filters: EventFilters) => void;
@@ -58,10 +59,9 @@ export function EventFilterCard({
   
   // Local state for filters
   const [filters, setFilters] = useState<EventFilters>(initialFilters || {});
-  const [date, setDate] = useState<{
-    from: Date | undefined;
-    to: Date | undefined;
-  }>({
+  
+  // Use our custom date range picker hook
+  const { dateRange: date, handleRangeChange, setDateRange } = useDateRangePicker({
     from: filters.dateRange?.from,
     to: filters.dateRange?.to
   });
@@ -122,15 +122,15 @@ export function EventFilterCard({
     });
   };
   
-  // Handle date range selection
-  const handleDateRangeChange = (range: { from: Date | undefined; to: Date | undefined; }) => {
-    setDate(range);
+  // Custom date range change handler that updates filters
+  const handleDateChange = (range: any) => {
+    const newRange = handleRangeChange(range);
     
     // Only update filters if there's a real selection
-    if (range.from) {
+    if (newRange.from) {
       setFilters(prev => ({
         ...prev,
-        dateRange: range
+        dateRange: newRange
       }));
     } else {
       // Remove date range if it's cleared
@@ -152,7 +152,7 @@ export function EventFilterCard({
   // Reset all filters
   const resetFilters = () => {
     setFilters({});
-    setDate({ from: undefined, to: undefined });
+    setDateRange({ from: undefined, to: undefined });
     onFilterChange({});
   };
   
@@ -254,7 +254,7 @@ export function EventFilterCard({
                         mode="range"
                         defaultMonth={date.from}
                         selected={date}
-                        onSelect={handleDateRangeChange}
+                        onSelect={handleDateChange}
                         numberOfMonths={2}
                       />
                     </PopoverContent>
