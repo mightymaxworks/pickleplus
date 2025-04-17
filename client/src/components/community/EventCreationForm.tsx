@@ -87,12 +87,22 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const createEvent = useCreateCommunityEvent();
   
+  // Create date objects for defaults
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  
+  // Set time to noon by default
+  today.setHours(12, 0, 0, 0);
+  tomorrow.setHours(14, 0, 0, 0);
+  
   // Default values 
   const defaultValues: Partial<EventFormValues> = {
     title: "",
     description: "",
     eventType: CommunityEventType.MATCH_PLAY,
-    eventDate: new Date(),
+    eventDate: today,
+    endDate: tomorrow,
     status: CommunityEventStatus.UPCOMING, // Always start with Upcoming
     isVirtual: false,
     isPrivate: false,
@@ -267,57 +277,51 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
                         <div className="p-3 border-t border-border">
                           <div className="flex items-center space-x-2">
                             <span className="text-sm text-muted-foreground">Time:</span>
+                            {/* Simplified time selection */}
                             <Select
                               onValueChange={(value) => {
-                                if (!field.value) {
-                                  // If no date selected yet, create one for today
-                                  const date = new Date();
-                                  date.setHours(parseInt(value, 10));
-                                  field.onChange(date);
-                                  return;
-                                }
-                                const date = new Date(field.value);
-                                date.setHours(parseInt(value, 10));
+                                // Always work with a valid date object
+                                const date = field.value ? new Date(field.value) : new Date();
+                                const [hours, minutes] = value.split(':').map(str => parseInt(str, 10));
+                                date.setHours(hours);
+                                date.setMinutes(minutes);
                                 field.onChange(date);
                               }}
-                              defaultValue={field.value ? format(field.value, "HH") : "12"}
+                              value={field.value ? `${format(field.value, "HH")}:${format(field.value, "mm")}` : "12:00"}
                             >
-                              <SelectTrigger className="w-[70px]">
-                                <SelectValue placeholder="Hour" />
+                              <SelectTrigger className="w-[120px]">
+                                <SelectValue placeholder="Select time" />
                               </SelectTrigger>
                               <SelectContent>
-                                {Array.from({length: 24}, (_, i) => (
-                                  <SelectItem key={i} value={i.toString().padStart(2, '0')}>
-                                    {i.toString().padStart(2, '0')}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <span>:</span>
-                            <Select
-                              onValueChange={(value) => {
-                                if (!field.value) {
-                                  // If no date selected yet, create one for today
-                                  const date = new Date();
-                                  date.setMinutes(parseInt(value, 10));
-                                  field.onChange(date);
-                                  return;
-                                }
-                                const date = new Date(field.value);
-                                date.setMinutes(parseInt(value, 10));
-                                field.onChange(date);
-                              }}
-                              defaultValue={field.value ? format(field.value, "mm") : "00"}
-                            >
-                              <SelectTrigger className="w-[70px]">
-                                <SelectValue placeholder="Min" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {['00', '15', '30', '45'].map((minute) => (
-                                  <SelectItem key={minute} value={minute}>
-                                    {minute}
-                                  </SelectItem>
-                                ))}
+                                {/* Morning hours */}
+                                <SelectItem value="08:00">08:00 AM</SelectItem>
+                                <SelectItem value="08:30">08:30 AM</SelectItem>
+                                <SelectItem value="09:00">09:00 AM</SelectItem>
+                                <SelectItem value="09:30">09:30 AM</SelectItem>
+                                <SelectItem value="10:00">10:00 AM</SelectItem>
+                                <SelectItem value="10:30">10:30 AM</SelectItem>
+                                <SelectItem value="11:00">11:00 AM</SelectItem>
+                                <SelectItem value="11:30">11:30 AM</SelectItem>
+                                {/* Afternoon hours */}
+                                <SelectItem value="12:00">12:00 PM</SelectItem>
+                                <SelectItem value="12:30">12:30 PM</SelectItem>
+                                <SelectItem value="13:00">01:00 PM</SelectItem>
+                                <SelectItem value="13:30">01:30 PM</SelectItem>
+                                <SelectItem value="14:00">02:00 PM</SelectItem>
+                                <SelectItem value="14:30">02:30 PM</SelectItem>
+                                <SelectItem value="15:00">03:00 PM</SelectItem>
+                                <SelectItem value="15:30">03:30 PM</SelectItem>
+                                <SelectItem value="16:00">04:00 PM</SelectItem>
+                                <SelectItem value="16:30">04:30 PM</SelectItem>
+                                <SelectItem value="17:00">05:00 PM</SelectItem>
+                                <SelectItem value="17:30">05:30 PM</SelectItem>
+                                {/* Evening hours */}
+                                <SelectItem value="18:00">06:00 PM</SelectItem>
+                                <SelectItem value="18:30">06:30 PM</SelectItem>
+                                <SelectItem value="19:00">07:00 PM</SelectItem>
+                                <SelectItem value="19:30">07:30 PM</SelectItem>
+                                <SelectItem value="20:00">08:00 PM</SelectItem>
+                                <SelectItem value="20:30">08:30 PM</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -379,57 +383,51 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
                         <div className="p-3 border-t border-border">
                           <div className="flex items-center space-x-2">
                             <span className="text-sm text-muted-foreground">Time:</span>
+                            {/* Simplified time selection */}
                             <Select
                               onValueChange={(value) => {
-                                if (!field.value) {
-                                  // If no date selected yet, create one for today
-                                  const today = new Date();
-                                  today.setHours(parseInt(value, 10));
-                                  field.onChange(today);
-                                  return;
-                                }
-                                const date = new Date(field.value);
-                                date.setHours(parseInt(value, 10));
+                                // Always work with a valid date object
+                                const date = field.value ? new Date(field.value) : new Date();
+                                const [hours, minutes] = value.split(':').map(str => parseInt(str, 10));
+                                date.setHours(hours);
+                                date.setMinutes(minutes);
                                 field.onChange(date);
                               }}
-                              defaultValue={field.value ? format(field.value, "HH") : "12"}
+                              value={field.value ? `${format(field.value, "HH")}:${format(field.value, "mm")}` : "14:00"}
                             >
-                              <SelectTrigger className="w-[70px]">
-                                <SelectValue placeholder="Hour" />
+                              <SelectTrigger className="w-[120px]">
+                                <SelectValue placeholder="Select time" />
                               </SelectTrigger>
                               <SelectContent>
-                                {Array.from({length: 24}, (_, i) => (
-                                  <SelectItem key={i} value={i.toString().padStart(2, '0')}>
-                                    {i.toString().padStart(2, '0')}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <span>:</span>
-                            <Select
-                              onValueChange={(value) => {
-                                if (!field.value) {
-                                  // If no date selected yet, create one for today
-                                  const today = new Date();
-                                  today.setMinutes(parseInt(value, 10));
-                                  field.onChange(today);
-                                  return;
-                                }
-                                const date = new Date(field.value);
-                                date.setMinutes(parseInt(value, 10));
-                                field.onChange(date);
-                              }}
-                              defaultValue={field.value ? format(field.value, "mm") : "00"}
-                            >
-                              <SelectTrigger className="w-[70px]">
-                                <SelectValue placeholder="Min" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {['00', '15', '30', '45'].map((minute) => (
-                                  <SelectItem key={minute} value={minute}>
-                                    {minute}
-                                  </SelectItem>
-                                ))}
+                                {/* Morning hours */}
+                                <SelectItem value="08:00">08:00 AM</SelectItem>
+                                <SelectItem value="08:30">08:30 AM</SelectItem>
+                                <SelectItem value="09:00">09:00 AM</SelectItem>
+                                <SelectItem value="09:30">09:30 AM</SelectItem>
+                                <SelectItem value="10:00">10:00 AM</SelectItem>
+                                <SelectItem value="10:30">10:30 AM</SelectItem>
+                                <SelectItem value="11:00">11:00 AM</SelectItem>
+                                <SelectItem value="11:30">11:30 AM</SelectItem>
+                                {/* Afternoon hours */}
+                                <SelectItem value="12:00">12:00 PM</SelectItem>
+                                <SelectItem value="12:30">12:30 PM</SelectItem>
+                                <SelectItem value="13:00">01:00 PM</SelectItem>
+                                <SelectItem value="13:30">01:30 PM</SelectItem>
+                                <SelectItem value="14:00">02:00 PM</SelectItem>
+                                <SelectItem value="14:30">02:30 PM</SelectItem>
+                                <SelectItem value="15:00">03:00 PM</SelectItem>
+                                <SelectItem value="15:30">03:30 PM</SelectItem>
+                                <SelectItem value="16:00">04:00 PM</SelectItem>
+                                <SelectItem value="16:30">04:30 PM</SelectItem>
+                                <SelectItem value="17:00">05:00 PM</SelectItem>
+                                <SelectItem value="17:30">05:30 PM</SelectItem>
+                                {/* Evening hours */}
+                                <SelectItem value="18:00">06:00 PM</SelectItem>
+                                <SelectItem value="18:30">06:30 PM</SelectItem>
+                                <SelectItem value="19:00">07:00 PM</SelectItem>
+                                <SelectItem value="19:30">07:30 PM</SelectItem>
+                                <SelectItem value="20:00">08:00 PM</SelectItem>
+                                <SelectItem value="20:30">08:30 PM</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -700,57 +698,51 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
                           <div className="p-3 border-t border-border">
                             <div className="flex items-center space-x-2">
                               <span className="text-sm text-muted-foreground">Time:</span>
+                              {/* Simplified time selection */}
                               <Select
                                 onValueChange={(value) => {
-                                  if (!field.value) {
-                                    // If no date selected yet, create one for today
-                                    const date = new Date();
-                                    date.setHours(parseInt(value, 10));
-                                    field.onChange(date);
-                                    return;
-                                  }
-                                  const date = new Date(field.value);
-                                  date.setHours(parseInt(value, 10));
+                                  // Always work with a valid date object
+                                  const date = field.value ? new Date(field.value) : new Date();
+                                  const [hours, minutes] = value.split(':').map(str => parseInt(str, 10));
+                                  date.setHours(hours);
+                                  date.setMinutes(minutes);
                                   field.onChange(date);
                                 }}
-                                defaultValue={field.value ? format(field.value, "HH") : "12"}
+                                value={field.value ? `${format(field.value, "HH")}:${format(field.value, "mm")}` : "18:00"}
                               >
-                                <SelectTrigger className="w-[70px]">
-                                  <SelectValue placeholder="Hour" />
+                                <SelectTrigger className="w-[120px]">
+                                  <SelectValue placeholder="Select time" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {Array.from({length: 24}, (_, i) => (
-                                    <SelectItem key={i} value={i.toString().padStart(2, '0')}>
-                                      {i.toString().padStart(2, '0')}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <span>:</span>
-                              <Select
-                                onValueChange={(value) => {
-                                  if (!field.value) {
-                                    // If no date selected yet, create one for today
-                                    const date = new Date();
-                                    date.setMinutes(parseInt(value, 10));
-                                    field.onChange(date);
-                                    return;
-                                  }
-                                  const date = new Date(field.value);
-                                  date.setMinutes(parseInt(value, 10));
-                                  field.onChange(date);
-                                }}
-                                defaultValue={field.value ? format(field.value, "mm") : "00"}
-                              >
-                                <SelectTrigger className="w-[70px]">
-                                  <SelectValue placeholder="Min" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {['00', '15', '30', '45'].map((minute) => (
-                                    <SelectItem key={minute} value={minute}>
-                                      {minute}
-                                    </SelectItem>
-                                  ))}
+                                  {/* Morning hours */}
+                                  <SelectItem value="08:00">08:00 AM</SelectItem>
+                                  <SelectItem value="08:30">08:30 AM</SelectItem>
+                                  <SelectItem value="09:00">09:00 AM</SelectItem>
+                                  <SelectItem value="09:30">09:30 AM</SelectItem>
+                                  <SelectItem value="10:00">10:00 AM</SelectItem>
+                                  <SelectItem value="10:30">10:30 AM</SelectItem>
+                                  <SelectItem value="11:00">11:00 AM</SelectItem>
+                                  <SelectItem value="11:30">11:30 AM</SelectItem>
+                                  {/* Afternoon hours */}
+                                  <SelectItem value="12:00">12:00 PM</SelectItem>
+                                  <SelectItem value="12:30">12:30 PM</SelectItem>
+                                  <SelectItem value="13:00">01:00 PM</SelectItem>
+                                  <SelectItem value="13:30">01:30 PM</SelectItem>
+                                  <SelectItem value="14:00">02:00 PM</SelectItem>
+                                  <SelectItem value="14:30">02:30 PM</SelectItem>
+                                  <SelectItem value="15:00">03:00 PM</SelectItem>
+                                  <SelectItem value="15:30">03:30 PM</SelectItem>
+                                  <SelectItem value="16:00">04:00 PM</SelectItem>
+                                  <SelectItem value="16:30">04:30 PM</SelectItem>
+                                  <SelectItem value="17:00">05:00 PM</SelectItem>
+                                  <SelectItem value="17:30">05:30 PM</SelectItem>
+                                  {/* Evening hours */}
+                                  <SelectItem value="18:00">06:00 PM</SelectItem>
+                                  <SelectItem value="18:30">06:30 PM</SelectItem>
+                                  <SelectItem value="19:00">07:00 PM</SelectItem>
+                                  <SelectItem value="19:30">07:30 PM</SelectItem>
+                                  <SelectItem value="20:00">08:00 PM</SelectItem>
+                                  <SelectItem value="20:30">08:30 PM</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
