@@ -43,6 +43,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useCommunities } from '@/lib/hooks/useCommunity';
 import { 
   Search, MapPin, Users, Calendar, Trophy, Grid3X3, 
   List, Map, SlidersHorizontal, Filter, Award,
@@ -159,12 +160,22 @@ const CommunityDiscoveryMockup: React.FC = () => {
   const [viewType, setViewType] = useState('grid');
   const [searchTerm, setSearchTerm] = useState('');
   
-  const filteredCommunities = EXAMPLE_COMMUNITIES.filter(community => 
-    community.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    community.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    community.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    community.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Use the real API data instead of mock data
+  const { data: communities = [], isLoading } = useCommunities({
+    enabled: true,
+  });
+  
+  // Filter communities based on search term
+  const filteredCommunities = communities.filter(community => {
+    if (!searchTerm) return true;
+    
+    return (
+      community.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (community.location && community.location.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (community.tags && community.tags.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (community.description && community.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  });
 
   return (
     <div 
