@@ -209,7 +209,7 @@ export default function CommunitiesPage() {
           
           <div className="container mx-auto py-8 px-4 relative z-10">
             
-            {/* Modern Title with Animation */}
+            {/* Simple Title */}
             <div className="flex items-center gap-5 mb-8">
               <div className="relative h-16 w-16 rotate-12 flex items-center justify-center text-green-600 bg-green-100 dark:bg-green-900/40 dark:text-green-400 rounded-xl shadow-lg">
                 <PickleballIcon />
@@ -217,35 +217,9 @@ export default function CommunitiesPage() {
               </div>
               
               <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-primary">
-                    Find Your Community
-                  </h1>
-                  <PartyPopper className="h-6 w-6 text-yellow-500 animate-wiggle" />
-                </div>
-                
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-3 py-1 gap-1.5">
-                    <Users className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                    <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
-                      {communities?.length || '1,000+'} Communities
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-3 py-1 gap-1.5">
-                    <Target className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-                    <span className="text-xs font-medium text-green-600 dark:text-green-400">
-                      Find Your Match
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center rounded-full bg-amber-100 dark:bg-amber-900/30 px-3 py-1 gap-1.5">
-                    <Zap className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                    <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
-                      Grow Your Network
-                    </span>
-                  </div>
-                </div>
+                <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-primary">
+                  Find Your Community
+                </h1>
               </div>
             </div>
             
