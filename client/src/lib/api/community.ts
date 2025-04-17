@@ -78,7 +78,16 @@ export async function getCommunities(options?: {
 }
 
 /**
- * Fetch a single community by ID
+ * @layer SDK
+ * @module Community
+ * @description Fetch a single community by ID
+ * @dependsOn Server Layer (/api/communities/:id endpoint)
+ * @version 2.1.0
+ * @lastModified 2025-04-17
+ * @changes
+ * - Added support for isCreator flag from API
+ * @preserves
+ * - Additional UI display properties (skill, events, rating, etc.)
  */
 export async function getCommunity(id: number) {
   const response = await apiRequest("GET", `${BASE_URL}/${id}`);
@@ -88,7 +97,7 @@ export async function getCommunity(id: number) {
   }
   
   // Get community data
-  const community = await response.json() as Community;
+  const communityData = await response.json();
   
   // Get the current user
   let currentUserId: number | null = null;
@@ -102,21 +111,26 @@ export async function getCommunity(id: number) {
     console.error("Error fetching current user:", error);
   }
   
-  // Check if the user is the creator of this community
-  const isCreator = currentUserId != null && community.createdByUserId === currentUserId;
+  // If the API didn't set isCreator flag, determine it manually
+  const isCreator = communityData.isCreator !== undefined 
+    ? communityData.isCreator 
+    : (currentUserId != null && communityData.createdByUserId === currentUserId);
+  
+  console.log('Community data from API:', communityData);
+  console.log('Is creator calculated:', isCreator, 'Current user ID:', currentUserId, 'Creator ID:', communityData.createdByUserId);
   
   // Process and map fields for UI display
   return {
-    ...community,
-    // Add creator status to the community data
+    ...communityData,
+    // Ensure creator status is set on the community data
     isCreator,
     // Map properties needed for display in the UI
-    skill: community.skillLevel,
-    events: community.eventCount,
-    rating: 4.5 + (community.id % 5) / 10, // For mockup display
-    founded: new Date(Date.now() - (community.id * 1000 * 3600 * 24 * 30)).getFullYear().toString(), // For mockup display
+    skill: communityData.skillLevel,
+    events: communityData.eventCount,
+    rating: 4.5 + (communityData.id % 5) / 10, // For mockup display
+    founded: new Date(Date.now() - (communityData.id * 1000 * 3600 * 24 * 30)).getFullYear().toString(), // For mockup display
     // For random feature tags in mockup
-    featuredTag: community.id % 4 === 0 ? 'Featured' : (community.id % 3 === 0 ? 'Elite' : (community.id % 2 === 0 ? 'Popular' : undefined))
+    featuredTag: communityData.id % 4 === 0 ? 'Featured' : (communityData.id % 3 === 0 ? 'Elite' : (communityData.id % 2 === 0 ? 'Popular' : undefined))
   };
 }
 

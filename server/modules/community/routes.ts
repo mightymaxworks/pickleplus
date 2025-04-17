@@ -144,8 +144,17 @@ router.get('/my-community-ids', isAuthenticated, async (req: Request, res: Respo
 });
 
 /**
- * Get a single community by ID
- * GET /api/communities/:id
+ * @layer Server
+ * @module Community
+ * @description Get a single community by ID
+ * @dependsOn Database Layer (communityTable)
+ * @endpoint GET /api/communities/:id
+ * @version 2.1.0
+ * @lastModified 2025-04-17
+ * @changes
+ * - Added isCreator flag to indicate if current user is the creator
+ * @preserves
+ * - Basic community data retrieval
  */
 router.get('/:id', communityAuth, async (req: Request, res: Response) => {
   try {
@@ -166,6 +175,8 @@ router.get('/:id', communityAuth, async (req: Request, res: Response) => {
     
     // If user is authenticated, determine if they are the creator of this community
     const isCreator = userId !== null && community.createdByUserId === userId;
+    
+    console.log(`[PKL-278651-COMM-0007-ENGAGE] Community ID: ${communityId}, User ID: ${userId}, Is Creator: ${isCreator}, Creator ID: ${community.createdByUserId}`);
     
     // Add a flag to indicate if the current user is the creator
     const responseData = {
