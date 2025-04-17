@@ -164,31 +164,54 @@ export function useJoinCommunity() {
       communityApi.joinCommunity(communityId, message),
     onMutate: async (variables) => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: communityKeys.lists() });
-      await queryClient.cancelQueries({ queryKey: communityKeys.detail(variables.communityId) });
+      await queryClient.cancelQueries({ queryKey: communityKeys.all });
       
-      // Snapshot the previous value
-      const previousCommunities = queryClient.getQueryData(communityKeys.lists());
-      const previousCommunity = queryClient.getQueryData(communityKeys.detail(variables.communityId));
+      // Get all query keys that might have communities data
+      const listQueryKey = communityKeys.lists();
+      const detailQueryKey = communityKeys.detail(variables.communityId);
       
-      // Optimistically update communities list
-      queryClient.setQueryData(communityKeys.lists(), (old: any) => {
-        if (!old) return old;
-        return old.map((community: Community) => 
-          community.id === variables.communityId 
-            ? { ...community, isMember: true } 
-            : community
-        );
+      // Find all queries in the cache that might need updating
+      const queryCache = queryClient.getQueryCache();
+      const communityQueries = queryCache.findAll({ 
+        queryKey: communityKeys.all,
+        exact: false 
       });
       
-      // Optimistically update the single community
-      if (previousCommunity) {
-        queryClient.setQueryData(communityKeys.detail(variables.communityId), 
-          { ...previousCommunity, isMember: true }
-        );
-      }
+      // Store previous values for all community-related queries
+      const previousQueryData = new Map();
       
-      return { previousCommunities, previousCommunity };
+      // Save previous states
+      communityQueries.forEach(query => {
+        previousQueryData.set(query.queryKey, queryClient.getQueryData(query.queryKey));
+      });
+      
+      // Direct references to the specific queries we'll update
+      const previousCommunities = queryClient.getQueryData(listQueryKey);
+      const previousCommunity = queryClient.getQueryData(detailQueryKey);
+      
+      // Update all list queries that contain communities
+      communityQueries.forEach(query => {
+        const data = queryClient.getQueryData(query.queryKey);
+        
+        // Only update if it's an array (likely a communities list)
+        if (Array.isArray(data)) {
+          queryClient.setQueryData(query.queryKey, data.map((community: any) => 
+            community.id === variables.communityId 
+              ? { ...community, isMember: true } 
+              : community
+          ));
+        } 
+        // For single community objects
+        else if (data && typeof data === 'object' && data.id === variables.communityId) {
+          queryClient.setQueryData(query.queryKey, { ...data, isMember: true });
+        }
+      });
+      
+      return { 
+        previousQueryData,
+        previousCommunities, 
+        previousCommunity 
+      };
     },
     onSuccess: (_, variables, context) => {
       // Invalidate to get fresh data
