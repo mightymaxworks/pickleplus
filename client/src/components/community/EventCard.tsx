@@ -115,18 +115,21 @@ export function EventCard({
     )}>
       <div className="relative">
         {/* Status badge */}
-        <div className="absolute top-3 right-3 z-10">
+        <div className="absolute top-2 right-2 z-10">
           <StatusBadge status={event.status} />
         </div>
         
         {/* Header content */}
-        <CardHeader className={compact ? "p-4" : "p-6"}>
+        <CardHeader className={cn(
+          compact ? "px-3 py-2 sm:p-4" : "p-4 sm:p-6",
+          "md:min-h-[90px] md:flex md:flex-col md:justify-between"
+        )}>
           <div className="space-y-1">
             {/* Event type badge */}
             <Badge 
               variant="secondary" 
               className={cn(
-                "mb-1",
+                "mb-1 text-xs",
                 getEventTypeBadgeClass(event.eventType)
               )}
             >
@@ -134,24 +137,30 @@ export function EventCard({
             </Badge>
             
             {/* Event title */}
-            <CardTitle className={`${compact ? "text-lg" : "text-xl"}`}>
+            <CardTitle className={cn(
+              "line-clamp-1 sm:line-clamp-2",
+              compact ? "text-sm sm:text-lg" : "text-base sm:text-xl"
+            )}>
               {event.title}
               {isCancelled && <span className="text-destructive"> (Cancelled)</span>}
             </CardTitle>
             
             {/* Event date and countdown */}
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Calendar className="h-4 w-4" />
-              <span>{formattedDate}</span>
-              {!compact && <span className="text-sm">({timeUntilEvent})</span>}
+            <div className="flex items-center gap-1 sm:gap-2 text-muted-foreground text-xs sm:text-sm">
+              <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="truncate">{formattedDate}</span>
+              {!compact && <span className="hidden sm:inline text-xs">({timeUntilEvent})</span>}
             </div>
           </div>
         </CardHeader>
         
-        <CardContent className={compact ? "p-4 pt-0" : "p-6 pt-0"}>
+        <CardContent className={cn(
+          compact ? "px-3 py-1 sm:p-4 sm:pt-0" : "p-4 pt-0 sm:p-6 sm:pt-0",
+          "min-h-[80px]"
+        )}>
           {/* Event time */}
-          <div className="flex items-center mb-3 text-sm">
-            <Clock className="h-4 w-4 mr-2" />
+          <div className="flex items-center mb-2 text-xs sm:text-sm">
+            <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
             <span>
               {formattedTime}
               {formattedEndTime && ` - ${formattedEndTime}`}
@@ -160,39 +169,39 @@ export function EventCard({
           
           {/* Short description (if not compact) */}
           {!compact && event.description && (
-            <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+            <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-4 line-clamp-1 sm:line-clamp-2">
               {event.description}
             </p>
           )}
           
-          {/* Location info */}
-          <div className="flex flex-wrap gap-y-2 gap-x-4 text-sm">
+          {/* Location info - more compact layout */}
+          <div className="flex flex-wrap gap-y-1 gap-x-2 sm:gap-y-2 sm:gap-x-4 text-xs sm:text-sm">
             {event.isVirtual ? (
               <div className="flex items-center">
-                <Video className="h-4 w-4 mr-2 text-blue-500" />
-                <span>Virtual Event</span>
+                <Video className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-blue-500" />
+                <span className="truncate">Virtual</span>
               </div>
             ) : event.location ? (
               <div className="flex items-center">
-                <MapPin className="h-4 w-4 mr-2 text-red-500" />
-                <span>{event.location}</span>
+                <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-red-500" />
+                <span className="truncate">{event.location}</span>
               </div>
             ) : null}
             
             {/* Attendee count */}
             <div className="flex items-center">
-              <Users className="h-4 w-4 mr-2 text-violet-500" />
+              <Users className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-violet-500" />
               <span>
                 {event.currentAttendees} 
-                {event.maxAttendees !== null && ` / ${event.maxAttendees}`} attendees
+                {event.maxAttendees !== null && ` / ${event.maxAttendees}`}
               </span>
             </div>
             
             {/* Skill level if specified */}
             {event.skillLevelRequired && (
               <div className="flex items-center">
-                <Trophy className="h-4 w-4 mr-2 text-amber-500" />
-                <span>{event.skillLevelRequired}</span>
+                <Trophy className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-amber-500" />
+                <span className="truncate">{event.skillLevelRequired}</span>
               </div>
             )}
           </div>
@@ -240,17 +249,18 @@ export function EventCard({
         {showActions && (
           <CardFooter className={cn(
             "flex justify-between gap-2",
-            compact ? "p-4 pt-0" : "p-6 pt-0"
+            compact ? "px-3 py-2 sm:p-4 sm:pt-0" : "p-4 pt-0 sm:p-6 sm:pt-0"
           )}>
             <Button
               variant="outline"
-              size={compact ? "sm" : "default"}
+              size="sm"
+              className="text-xs sm:text-sm h-8 sm:h-10"
               asChild
             >
               <Link href={`/communities/${communityId || event.communityId}/events/${event.id}`}>
                 <span className="flex items-center">
-                  View Details
-                  <ChevronRight className="h-4 w-4 ml-1" />
+                  <span className="sm:inline">View</span> Details
+                  <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1" />
                 </span>
               </Link>
             </Button>
@@ -258,16 +268,21 @@ export function EventCard({
             {isRegistered ? (
               <Button
                 variant="destructive"
-                size={compact ? "sm" : "default"}
+                size="sm"
+                className="text-xs sm:text-sm h-8 sm:h-10"
                 onClick={handleCancelRegistration}
                 disabled={cancelMutation.isPending || isCompleted || isCancelled}
               >
-                {cancelMutation.isPending ? "Cancelling..." : "Cancel Registration"}
+                {cancelMutation.isPending ? "Cancelling..." : 
+                 <span className="flex items-center whitespace-nowrap">
+                   <span className="hidden sm:inline">Cancel </span>Unregister
+                 </span>}
               </Button>
             ) : canRegister ? (
               <Button
                 variant={eventIsFull ? "outline" : "default"}
-                size={compact ? "sm" : "default"}
+                size="sm"
+                className="text-xs sm:text-sm h-8 sm:h-10"
                 onClick={handleRegister}
                 disabled={registerMutation.isPending || (eventIsFull && !event.isPrivate)}
               >
@@ -275,8 +290,7 @@ export function EventCard({
                   ? "Registering..." 
                   : eventIsFull 
                     ? "Join Waitlist" 
-                    : "Register"
-                }
+                    : "Register"}
               </Button>
             ) : null}
           </CardFooter>
@@ -291,26 +305,26 @@ function StatusBadge({ status }: { status: CommunityEventStatus }) {
   switch (status) {
     case CommunityEventStatus.UPCOMING:
       return (
-        <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">
+        <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200 text-xs py-0 px-2 h-5">
           Upcoming
         </Badge>
       );
     case CommunityEventStatus.ONGOING:
       return (
-        <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
+        <Badge className="bg-green-100 text-green-800 hover:bg-green-200 text-xs py-0 px-2 h-5">
           <Sparkles className="h-3 w-3 mr-1" />
-          Happening Now
+          <span className="hidden sm:inline">Happening </span>Now
         </Badge>
       );
     case CommunityEventStatus.COMPLETED:
       return (
-        <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200">
+        <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200 text-xs py-0 px-2 h-5">
           Completed
         </Badge>
       );
     case CommunityEventStatus.CANCELLED:
       return (
-        <Badge className="bg-red-100 text-red-800 hover:bg-red-200">
+        <Badge className="bg-red-100 text-red-800 hover:bg-red-200 text-xs py-0 px-2 h-5">
           <XCircle className="h-3 w-3 mr-1" />
           Cancelled
         </Badge>
