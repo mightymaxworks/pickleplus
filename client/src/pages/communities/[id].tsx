@@ -156,15 +156,40 @@ function CommunityDetail() {
   const currentUserId = userData?.id || null;
   console.log("Current user ID:", currentUserId);
   
-  // Check if current user is a member, including if they created the community
-  const isMember = currentUserId && (
-    // Check membership in the members list
-    (members && members.some(member => member.userId === currentUserId)) ||
-    // Check if user is the creator from the community object
-    (community && community.createdByUserId === currentUserId) ||
-    // Check the isCreator flag from the API
-    (community && community.isCreator === true)
-  );
+  /**
+   * @layer UI
+   * @module Community
+   * @component CommunityDetail
+   * @description Determine if the current user is a member or creator of this community
+   * @version 2.1.0
+   * @lastModified 2025-04-17
+   * @changes
+   * - Separated creator check from membership check
+   * - Added direct isCreator flag check
+   */
+  
+  // First determine if the user is the creator (regardless of currentUserId)
+  const isCreator = community?.isCreator === true;
+  console.log("Is creator flag from API:", isCreator);
+  
+  // Then check if the user is a member through other means
+  const isMemberByList = currentUserId && members && 
+    members.some(member => member.userId === currentUserId);
+  
+  // Check if user is the creator by ID comparison
+  const isCreatorById = currentUserId && community && 
+    community.createdByUserId === currentUserId;
+    
+  console.log("Membership checks:", { 
+    isCreator, 
+    isMemberByList, 
+    isCreatorById, 
+    currentUserId,
+    creatorId: community?.createdByUserId
+  });
+  
+  // Combined check for UI rendering
+  const isMember = isCreator || isMemberByList || isCreatorById;
   
   // Determine if user is an admin/moderator
   const userRole = members?.find(member => member.userId === currentUserId)?.role || 
@@ -336,6 +361,17 @@ function CommunityDetail() {
               </div>
             </div>
             
+            {/* 
+              @layer UI
+              @module Community
+              @component CommunityMembershipActions
+              @description Displays appropriate membership actions based on user status
+              @version 2.1.0
+              @lastModified 2025-04-17
+              @changes
+              - Added special handling for creator status
+              - Fixed button display logic
+            */}
             <div className="flex gap-2 mt-4 lg:mt-0">
               {isAdmin && (
                 <Button variant="secondary" onClick={handleSettings}>
@@ -344,7 +380,15 @@ function CommunityDetail() {
                 </Button>
               )}
               
-              {isMember ? (
+              {/* Membership Status UI - show different UI for creator vs regular member */}
+              {isCreator ? (
+                <div className="flex gap-2">
+                  <Button variant="ghost" className="bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800">
+                    <Shield className="mr-2 h-4 w-4" />
+                    Creator
+                  </Button>
+                </div>
+              ) : isMember ? (
                 <div className="flex gap-2">
                   <Button variant="ghost" className="bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800">
                     <span className="mr-2">✓</span> Joined
