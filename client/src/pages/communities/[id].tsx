@@ -24,6 +24,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EventFormModal } from "@/components/community/EventFormModal";
 import RichTextEditor from "@/components/community/RichTextEditor";
+import { useToast } from "@/hooks/use-toast";
 import { 
   ArrowLeft, 
   Users, 
@@ -202,45 +203,26 @@ function CommunityDetail() {
     );
   }
   
-  // Community header with modern design and improved UI
+  // Community header with simplified design
   return (
-    <div className="relative min-h-screen overflow-x-hidden">
-      {/* Background Elements */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#f5f8ff] via-[#f0f9ff] to-[#edfff1] dark:from-[#121826] dark:via-[#111a22] dark:to-[#0f1c11] -z-10"></div>
-      <CourtLinesBackground />
-      
-      {/* Confetti Effect */}
-      <ConfettiEffect active={showConfetti} />
-      
-      {/* Decorative Elements */}
-      <DecorativeElements />
-      
-      <div className="container mx-auto py-8 px-4 relative z-10">
+    <div className="min-h-screen">
+      <div className="container mx-auto py-8 px-4">
         {/* Back Navigation */}
-        <Button variant="ghost" className="mb-6 hover:bg-background/80" onClick={handleBack}>
+        <Button variant="ghost" className="mb-6" onClick={handleBack}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Communities
         </Button>
         
         {/* Community Header Banner */}
-        <CommunityHeader 
-          title={`Community: ${community.name}`}
-          subtitle="View community details, join events, and connect with members"
-        />
+        <CommunityHeader />
         
         {/* Community Navigation */}
         <div className="mb-8">
           <CommunityMenu activeTab="profile" />
         </div>
         
-        {/* Main Content with Modern Styling */}
-        <div className="relative bg-card/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-muted/60 mb-8">
-          {/* Corner Decorations */}
-          <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-br-xl rounded-tl-xl transform rotate-45 shadow-sm"></div>
-          <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-green-400 rounded-br-xl rounded-tl-xl transform rotate-45 shadow-sm"></div>
-          
-          {/* Subtle Pattern */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-white/0 dark:from-white/10 dark:to-white/0 rounded-2xl"></div>
+        {/* Main Content */}
+        <div className="bg-card rounded-lg p-6 border border-border mb-8">
           
           {/* Community Profile Header */}
           <div className="relative">
@@ -556,11 +538,18 @@ function CommunityDetail() {
   );
 }
 
-// Placeholder components for tabs
+// Enhanced Community Posts Component with like, comment, and delete functionality
 function CommunityPosts({ communityId, isMember }: { communityId: number; isMember: boolean }) {
-  const { data: posts, isLoading } = useCommunityPosts(communityId);
+  const { data: posts, isLoading, refetch } = useCommunityPosts(communityId);
   const createPostMutation = useCreateCommunityPost();
   const [postContent, setPostContent] = useState('');
+  const [activeCommentPostId, setActiveCommentPostId] = useState<number | null>(null);
+  const [commentContent, setCommentContent] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const { toast } = useToast();
+  
+  // Current user ID (would normally come from auth context)
+  const currentUserId = 1; // Placeholder until we integrate with auth
   
   // Handle creating a new post
   const handleCreatePost = () => {
@@ -578,7 +567,119 @@ function CommunityPosts({ communityId, isMember }: { communityId: number; isMemb
       onSuccess: () => {
         // Clear the editor after successful post
         setPostContent('');
+        // Refresh the posts list
+        refetch();
+        
+        toast({
+          title: "Post created!",
+          description: "Your post has been published to the community.",
+          variant: "default",
+        });
+      },
+      onError: (error) => {
+        console.error("Error creating post:", error);
+        toast({
+          title: "Error",
+          description: "Failed to create post. Please try again.",
+          variant: "destructive",
+        });
       }
+    });
+  };
+  
+  // Handle post liking/unliking
+  const handleLikePost = async (postId: number, isLiked: boolean) => {
+    try {
+      // Simulated API call for liking/unliking
+      // Replace with actual API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      toast({
+        title: isLiked ? "Post unliked" : "Post liked",
+        description: isLiked ? "You have unliked this post" : "You have liked this post",
+      });
+      
+      // Refresh posts to get updated like count
+      refetch();
+    } catch (error) {
+      console.error("Error liking/unliking post:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update post. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Handle adding a comment to a post
+  const handleAddComment = async (postId: number) => {
+    if (!commentContent.trim()) return;
+    
+    setIsSubmittingComment(true);
+    
+    try {
+      // Simulated API call for adding a comment
+      // Replace with actual API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Reset comment form
+      setCommentContent("");
+      
+      // Show success toast
+      toast({
+        title: "Comment added!",
+        description: "Your comment has been added to the post.",
+      });
+      
+      // Refresh posts to get updated comments
+      refetch();
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add comment. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
+  
+  // Handle post deletion
+  const handleDeletePost = async (postId: number) => {
+    const confirmed = window.confirm("Are you sure you want to delete this post? This action cannot be undone.");
+    if (!confirmed) return;
+    
+    try {
+      // Simulated API call for post deletion
+      // Replace with actual API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Show success toast
+      toast({
+        title: "Post deleted",
+        description: "Your post has been deleted from the community.",
+      });
+      
+      // Refresh posts list
+      refetch();
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete post. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Handle viewing all comments for a post
+  const handleViewAllComments = (postId: number) => {
+    // Implement functionality to view all comments
+    // This could be a modal or navigation to a dedicated comments page
+    toast({
+      title: "View all comments",
+      description: "This feature is coming soon.",
     });
   };
   

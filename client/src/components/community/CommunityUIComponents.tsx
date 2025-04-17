@@ -215,18 +215,8 @@ export const DecorativeElements = () => (
   </>
 );
 
-export const CommunityHeader = ({ 
-  title, 
-  subtitle
-}: { 
-  title: string; 
-  subtitle: string;
-}) => (
+export const CommunityHeader = () => (
   <div className="flex items-center gap-4 mb-8">
     <img src={communityLogoImage} alt="Community Logo" className="h-12 w-auto" />
-    <div>
-      <h2 className="text-lg font-semibold">{title}</h2>
-      <p className="text-sm text-muted-foreground">{subtitle}</p>
-    </div>
   </div>
 );
