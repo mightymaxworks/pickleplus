@@ -38,6 +38,9 @@ import { CommunityEventType, CommunityEventStatus } from "@/types/community";
 // API Hooks
 import { useCreateCommunityEvent } from "@/lib/hooks/useCommunity";
 
+// Debug imports
+console.log("EventCreationForm: Successfully imported types and hooks");
+
 // Form validation schema
 const eventFormSchema = z.object({
   title: z.string().min(3, {
