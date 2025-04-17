@@ -7,6 +7,8 @@
  */
 
 import React from 'react';
+// @ts-ignore
+import communityLogoImage from '@/assets/community-logo-new.png';
 
 // Pickleball SVG Icon
 export const PickleballIcon = () => (
@@ -229,9 +231,7 @@ export const CommunityHeader = ({
     <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-yellow-300/20 rounded-full blur-2xl"></div>
     
     <div className="flex items-center gap-3 mb-2">
-      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15">
-        {icon}
-      </div>
+      <img src={communityLogoImage} alt="Community Logo" className="h-9 w-auto" />
       <h2 className="text-sm font-semibold text-primary">{title}</h2>
     </div>
     
