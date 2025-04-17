@@ -208,25 +208,6 @@ export default function CommunitiesPage() {
           <div className="hidden lg:block absolute top-1/4 right-16 w-8 h-8 rounded-full bg-blue-300/20 backdrop-blur-md animate-float-delay"></div>
           
           <div className="container mx-auto py-8 px-4 relative z-10">
-            {/* Header Banner */}
-            <div className="relative overflow-hidden bg-primary/5 p-5 mb-8 rounded-2xl border border-primary/20 shadow-sm backdrop-blur-sm">
-              <div className="absolute -right-6 -top-6 w-24 h-24 bg-primary/10 rounded-full blur-2xl"></div>
-              <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-yellow-300/20 rounded-full blur-2xl"></div>
-              
-              <div className="flex items-center gap-3 mb-2">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15">
-                  <FlaskConical className="h-5 w-5 text-primary" />
-                </div>
-                <h2 className="text-sm font-semibold text-primary">PKL-278651-COMM-0006-HUB-UI</h2>
-              </div>
-              
-              <div className="flex items-start gap-2 pl-12">
-                <Beaker className="h-4 w-4 text-muted-foreground mt-0.5" />
-                <p className="text-sm text-muted-foreground">
-                  Discover pickleball communities, connect with players, and participate in local events.
-                </p>
-              </div>
-            </div>
             
             {/* Modern Title with Animation */}
             <div className="flex items-center gap-5 mb-8">
@@ -294,86 +275,7 @@ export default function CommunitiesPage() {
                   </div>
                 </div>
 
-                {/* Feature Badge Pills */}
-                <div className="mb-6 flex flex-wrap gap-2 px-2">
-                  <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm border border-primary/30">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="mr-1.5" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" />
-                      <path d="M16.5 16.5L21 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
-                    <span>Find Communities</span>
-                  </div>
-                  
-                  <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-sm">
-                    <Activity className="h-3.5 w-3.5 mr-1.5" />
-                    <span>All Skill Levels</span>
-                  </div>
-                  
-                  <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 text-sm">
-                    <PickleballIcon />
-                    <span className="ml-1.5">Connect With Players</span>
-                  </div>
-                  
-                  <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400 text-sm">
-                    <Trophy className="h-3.5 w-3.5 mr-1.5" />
-                    <span>Community Events</span>
-                  </div>
-                </div>
-                
-                <div className="relative mb-6 p-6 bg-card/80 backdrop-blur-sm shadow-lg rounded-xl border border-muted/50">
-                  {/* Corner Decorations */}
-                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-br-xl rounded-tl-xl transform rotate-45 shadow-sm"></div>
-                  <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-green-400 rounded-br-xl rounded-tl-xl transform rotate-45 shadow-sm"></div>
-                  
-                  <div className="relative p-4 bg-muted/20 rounded-lg mb-6">
-                    <h3 className="text-xl font-semibold mb-2">Welcome to Community Hub</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Discover and join local pickleball communities, participate in events, and connect with players near you. Our community features help you grow your pickleball network and improve your game.
-                    </p>
-                    
-                    <div className="flex flex-wrap gap-3">
-                      <div className="flex items-center">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 mr-2 text-primary">
-                          <Search className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium">Discover</div>
-                          <div className="text-xs text-muted-foreground">Find communities</div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/40 mr-2 text-green-600 dark:text-green-400">
-                          <Calendar className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium">Events</div>
-                          <div className="text-xs text-muted-foreground">Join local games</div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 mr-2 text-blue-600 dark:text-blue-400">
-                          <Users className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium">Connect</div>
-                          <div className="text-xs text-muted-foreground">Meet players</div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/40 mr-2 text-amber-600 dark:text-amber-400">
-                          <Trophy className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium">Compete</div>
-                          <div className="text-xs text-muted-foreground">Join tournaments</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+
               </div>
               
               {/* Tab Content */}
