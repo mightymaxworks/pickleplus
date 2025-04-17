@@ -21,6 +21,7 @@ import {
   useRegisterForEvent,
   useCancelEventRegistration
 } from "../../lib/hooks/useCommunity";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -144,12 +145,20 @@ function CommunityDetail() {
     isLoading: isLoadingMembers
   } = useCommunityMembers(communityId);
   
-  // Get current user ID from the data available in the community context
-  const { data: userData } = useQuery({ queryKey: ['auth', 'current-user'] });
-  const currentUserId = userData?.id;
+  // Get current user ID from the data available in the auth API
+  const { data: userData, isLoading: isLoadingUser, isError: isUserError } = useQuery({ 
+    queryKey: ['auth', 'current-user'],
+    // Don't throw an error if the user isn't authenticated
+    retry: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
   
-  // Check if current user is a member - this will work properly once we have the correct user ID
-  const isMember = currentUserId ? members?.some(member => member.userId === currentUserId) || false : false;
+  const currentUserId = userData?.id || null;
+  console.log("Current user ID:", currentUserId);
+  
+  // Check if current user is a member - handle both authenticated and unauthenticated states
+  const isMember = currentUserId && members ? 
+    members.some(member => member.userId === currentUserId) : false;
   
   // Determine if user is an admin/moderator
   const userRole = members?.find(member => member.userId === currentUserId)?.role || 'none';
@@ -162,10 +171,27 @@ function CommunityDetail() {
   
   // Handle joining and leaving
   const handleJoin = () => {
+    if (!currentUserId) {
+      // Show a toast message or redirect to login if the user is not logged in
+      toast({
+        title: "Authentication required",
+        description: "Please log in to join this community",
+        variant: "destructive"
+      });
+      return;
+    }
     joinCommunity(communityId);
   };
   
   const handleLeave = () => {
+    if (!currentUserId) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to leave this community",
+        variant: "destructive"
+      });
+      return;
+    }
     leaveCommunity(communityId);
   };
   
