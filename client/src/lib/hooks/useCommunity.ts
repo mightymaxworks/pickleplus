@@ -30,6 +30,7 @@ export const communityKeys = {
   postComments: (postId: number) => [...communityKeys.post(postId), "comments"] as const,
   events: (communityId: number) => [...communityKeys.detail(communityId), "events"] as const,
   joinRequests: (communityId: number) => [...communityKeys.detail(communityId), "join-requests"] as const,
+  myCommunityIds: () => [...communityKeys.all, "my-community-ids"] as const,
 };
 
 // === Community List ===

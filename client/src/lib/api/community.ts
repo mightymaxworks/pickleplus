@@ -412,6 +412,21 @@ export async function cancelEventRegistration(eventId: number) {
   return response.json();
 }
 
+// === User Community Memberships ===
+
+/**
+ * Fetch the IDs of communities the current user is a member of
+ */
+export async function getMyCommunityIds() {
+  const response = await apiRequest("GET", `${BASE_URL}/my-community-ids`);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch my community IDs: ${response.statusText}`);
+  }
+  
+  return response.json() as Promise<number[]>;
+}
+
 // === Community Join Requests ===
 
 /**

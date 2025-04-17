@@ -2990,6 +2990,10 @@ export class DatabaseStorage implements IStorage {
     return communityStorageImplementation.getCommunityMembership(communityId, userId);
   }
   
+  async getCommunityMembershipsByUserId(userId: number): Promise<CommunityMember[]> {
+    return communityStorageImplementation.getCommunityMembershipsByUserId(userId);
+  }
+  
   async createCommunityMember(memberData: InsertCommunityMember): Promise<CommunityMember> {
     return communityStorageImplementation.createCommunityMember(memberData);
   }
