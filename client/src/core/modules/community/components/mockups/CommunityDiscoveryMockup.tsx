@@ -151,17 +151,12 @@ const CommunityDiscoveryMockup: React.FC = () => {
         {/* Header content */}
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-3">
-            <div className="mb-2 mr-4">
-              <img src="/src/assets/community-logo.png" alt="Community" className="h-8" />
-            </div>
-            <div>
-              <h2 className="text-3xl font-bold mb-1 text-[#679153]">
-                Find Your Community
-              </h2>
-              {/* Badges removed for cleaner UI */}
-            </div>
+            <h2 className="text-3xl font-bold mb-1 text-[#FF5722]">
+              Find Your Community
+            </h2>
+            {/* Badges removed for cleaner UI */}
           </div>
-          <p className="text-muted-foreground ml-[60px] max-w-2xl">
+          <p className="text-muted-foreground max-w-2xl">
             Find and join pickleball communities based on your location, interests, and skill level.
             Connect with local players, participate in events, and grow your pickleball network.
           </p>
