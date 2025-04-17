@@ -666,6 +666,16 @@ function CommunityPosts({ communityId, isMember }: { communityId: number; isMemb
       return; // Don't submit empty posts
     }
     
+    // Validate current user is logged in
+    if (!currentUserId) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to create a post.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     createPostMutation.mutate({
       communityId,
       data: {
@@ -675,7 +685,17 @@ function CommunityPosts({ communityId, isMember }: { communityId: number; isMemb
     }, {
       onSuccess: () => {
         // Clear the editor after successful post
-        setPostContent('');
+        setPostContent(''); // This updates the state but does not clear the editor's HTML directly
+        
+        // Force empty string into the RichTextEditor (which will update the editorRef.innerHTML)
+        setTimeout(() => {
+          // We use setTimeout to ensure state has been updated
+          const editorElement = document.querySelector('.rich-text-editor-container [contenteditable]');
+          if (editorElement) {
+            editorElement.innerHTML = '';
+          }
+        }, 0);
+        
         // Refresh the posts list
         refetch();
         
