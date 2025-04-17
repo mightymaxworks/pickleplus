@@ -56,7 +56,8 @@ import {
   Target,
   Sparkles,
   Megaphone,
-  Heart
+  Heart,
+  MessageSquare
 } from "lucide-react";
 
 // Import modern UI components
