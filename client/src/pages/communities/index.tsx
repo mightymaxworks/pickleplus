@@ -219,7 +219,7 @@ export default function CommunitiesPage() {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-primary">
-                    Pickleball Communities
+                    Find Your Community
                   </h1>
                   <PartyPopper className="h-6 w-6 text-yellow-500 animate-wiggle" />
                 </div>
