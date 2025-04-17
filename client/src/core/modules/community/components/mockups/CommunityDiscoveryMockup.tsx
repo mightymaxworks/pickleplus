@@ -44,7 +44,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useCommunities } from '@/lib/hooks/useCommunity';
+import { useCommunities, useJoinCommunity } from '@/lib/hooks/useCommunity';
 import { 
   Search, MapPin, Users, Calendar, Trophy, Grid3X3, 
   List, Map, SlidersHorizontal, Filter, Award,
@@ -161,6 +161,14 @@ const CommunityDiscoveryMockup: React.FC = () => {
   const [viewType, setViewType] = useState('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [, navigate] = useLocation();
+  
+  // Use the join community mutation
+  const joinCommunityMutation = useJoinCommunity();
+  
+  // Handle join community action
+  const handleJoinCommunity = (communityId: number) => {
+    joinCommunityMutation.mutate({ communityId });
+  };
   
   // Use the real API data instead of mock data
   const { data: communities = [], isLoading } = useCommunities({
@@ -423,10 +431,16 @@ const CommunityDiscoveryMockup: React.FC = () => {
                       <Search className="h-3.5 w-3.5" />
                       View Details
                     </Button>
-                    <Button size="sm" className="rounded-full gap-1.5 font-medium shadow-md">
-                      <Users className="h-3.5 w-3.5" />
-                      Join
-                    </Button>
+                    {community.isMember ? (
+                      <Button size="sm" variant="ghost" className="rounded-full gap-1.5 font-medium bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800">
+                        <span className="mr-1">✓</span> Joined
+                      </Button>
+                    ) : (
+                      <Button size="sm" className="rounded-full gap-1.5 font-medium shadow-md" onClick={() => handleJoinCommunity(community.id)}>
+                        <Users className="h-3.5 w-3.5" />
+                        Join
+                      </Button>
+                    )}
                   </CardFooter>
                 </Card>
               );
@@ -596,10 +610,16 @@ const CommunityDiscoveryMockup: React.FC = () => {
                             <Search className="h-3.5 w-3.5" />
                             View Details
                           </Button>
-                          <Button size="sm" className="rounded-full gap-1.5 font-medium shadow-md">
-                            <Users className="h-3.5 w-3.5" />
-                            Join
-                          </Button>
+                          {community.isMember ? (
+                            <Button size="sm" variant="ghost" className="rounded-full gap-1.5 font-medium bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800">
+                              <span className="mr-1">✓</span> Joined
+                            </Button>
+                          ) : (
+                            <Button size="sm" className="rounded-full gap-1.5 font-medium shadow-md" onClick={() => handleJoinCommunity(community.id)}>
+                              <Users className="h-3.5 w-3.5" />
+                              Join
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>
