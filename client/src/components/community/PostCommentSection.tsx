@@ -4,209 +4,247 @@
  * 
  * This component displays and manages comments for a community post.
  */
-import { useState } from "react";
-import { usePostComments, useCreateComment } from "@/lib/hooks/useCommunity";
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from 'date-fns';
+import { ReplyIcon, ThumbsUp } from 'lucide-react';
 
 interface PostCommentSectionProps {
   postId: number;
   isMember: boolean;
 }
 
+interface Comment {
+  id: number;
+  userId: number;
+  postId: number;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  user?: {
+    id: number;
+    username: string;
+    avatarUrl?: string;
+  };
+  likeCount: number;
+  replies?: Comment[];
+}
+
 export const PostCommentSection = ({ postId, isMember }: PostCommentSectionProps) => {
-  const [comment, setComment] = useState("");
-  const [isReplying, setIsReplying] = useState(false);
+  const [commentText, setCommentText] = useState('');
   const [replyToId, setReplyToId] = useState<number | null>(null);
+  const [replyText, setReplyText] = useState('');
   const { toast } = useToast();
-  
-  const { 
-    data: comments = [], 
-    isLoading: isLoadingComments 
-  } = usePostComments(postId);
-  
-  const createComment = useCreateComment();
-  
-  const handleSubmitComment = async () => {
-    if (!comment.trim()) return;
-    
-    try {
-      await createComment.mutateAsync({
-        postId,
-        content: comment,
-        parentCommentId: replyToId || undefined
-      });
-      
-      setComment("");
-      setIsReplying(false);
-      setReplyToId(null);
-      
-      // Success toast is handled in the mutation
-    } catch (error) {
-      console.error("Failed to post comment", error);
-    }
-  };
-  
-  const startReply = (commentId: number, authorName: string) => {
-    setIsReplying(true);
-    setReplyToId(commentId);
-    setComment(`@${authorName} `);
-  };
-  
-  const cancelReply = () => {
-    setIsReplying(false);
-    setReplyToId(null);
-    setComment("");
-  };
-  
-  // Group comments by parent
-  const parentComments = comments.filter(c => !c.parentCommentId);
-  const childComments = comments.filter(c => c.parentCommentId);
-  
-  // Create a map of parent ID to child comments
-  const commentReplies = new Map();
-  childComments.forEach(comment => {
-    const parentId = comment.parentCommentId!;
-    if (!commentReplies.has(parentId)) {
-      commentReplies.set(parentId, []);
-    }
-    commentReplies.get(parentId).push(comment);
+  const queryClient = useQueryClient();
+
+  // Fetch comments
+  const { data: comments = [], isLoading } = useQuery({
+    queryKey: ['/api/communities/posts/' + postId + '/comments'],
+    queryFn: async () => {
+      const response = await apiRequest('/api/communities/posts/' + postId + '/comments');
+      return response as Comment[];
+    },
+    enabled: !!postId,
   });
-  
-  const renderComment = (comment, isReply = false) => {
-    const replies = commentReplies.get(comment.id) || [];
-    const authorName = comment.author?.displayName || comment.author?.username;
-    
+
+  // Add comment mutation
+  const addComment = useMutation({
+    mutationFn: async (content: string) => {
+      return apiRequest('/api/communities/posts/' + postId + '/comments', {
+        method: 'POST',
+        body: { content },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/communities/posts/' + postId + '/comments'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/communities'] });
+      setCommentText('');
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'Failed to add comment. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Add reply mutation
+  const addReply = useMutation({
+    mutationFn: async ({ commentId, content }: { commentId: number; content: string }) => {
+      return apiRequest('/api/communities/posts/' + postId + '/comments/' + commentId + '/replies', {
+        method: 'POST',
+        body: { content },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/communities/posts/' + postId + '/comments'] });
+      setReplyToId(null);
+      setReplyText('');
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'Failed to add reply. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleAddComment = () => {
+    if (!commentText.trim()) return;
+    addComment.mutate(commentText);
+  };
+
+  const handleAddReply = (commentId: number) => {
+    if (!replyText.trim()) return;
+    addReply.mutate({ commentId, content: replyText });
+  };
+
+  // Render each comment
+  const renderComment = (comment: Comment) => {
     return (
-      <div key={comment.id} className={`${isReply ? 'ml-10 border-l-2 border-muted pl-4' : 'mb-4'}`}>
+      <div key={comment.id} className="mb-4 last:mb-0">
         <div className="flex gap-3">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={comment.author?.avatarUrl || ""} />
-            <AvatarFallback>
-              {comment.author?.username?.[0]?.toUpperCase() || "U"}
-            </AvatarFallback>
+            <AvatarImage src={comment.user?.avatarUrl || ""} />
+            <AvatarFallback>{comment.user?.username?.[0]?.toUpperCase() || "U"}</AvatarFallback>
           </Avatar>
-          
           <div className="flex-1">
-            <div className="text-sm font-semibold">
-              {authorName}
-              <span className="font-normal text-xs text-muted-foreground ml-2">
-                {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
-              </span>
+            <div className="bg-muted p-3 rounded-lg">
+              <div className="font-medium text-sm">{comment.user?.username}</div>
+              <div className="text-sm mt-1">{comment.content}</div>
             </div>
-            
-            <div className="text-sm mt-1">{comment.content}</div>
-            
-            {isMember && (
+            <div className="flex gap-4 mt-1 text-xs text-muted-foreground">
+              <span>{formatDistanceToNow(new Date(comment.createdAt))} ago</span>
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
-                onClick={() => startReply(comment.id, authorName)}
+                className="h-auto p-0 text-xs"
+                onClick={() => setReplyToId(replyToId === comment.id ? null : comment.id)}
               >
+                <ReplyIcon className="h-3 w-3 mr-1" />
                 Reply
               </Button>
+              <Button variant="ghost" size="sm" className="h-auto p-0 text-xs">
+                <ThumbsUp className="h-3 w-3 mr-1" />
+                {comment.likeCount || 0}
+              </Button>
+            </div>
+
+            {/* Reply form */}
+            {replyToId === comment.id && isMember && (
+              <div className="mt-2">
+                <Textarea
+                  placeholder="Write a reply..."
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  className="min-h-0 h-20 text-sm"
+                />
+                <div className="flex justify-end gap-2 mt-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setReplyToId(null);
+                      setReplyText('');
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    size="sm"
+                    onClick={() => handleAddReply(comment.id)}
+                    disabled={addReply.isPending || !replyText.trim()}
+                  >
+                    {addReply.isPending ? 'Posting...' : 'Post Reply'}
+                  </Button>
+                </div>
+              </div>
             )}
-          </div>
-        </div>
-        
-        {replies.length > 0 && (
-          <div className="mt-2 space-y-3">
-            {replies.map(reply => renderComment(reply, true))}
-          </div>
-        )}
-      </div>
-    );
-  };
-  
-  return (
-    <div className="p-4">
-      <h4 className="text-sm font-medium mb-4">Comments</h4>
-      
-      {isMember && (
-        <div className="mb-4">
-          <div className="flex gap-2 mb-2">
-            {isReplying && (
-              <div className="text-xs bg-muted text-muted-foreground py-1 px-2 rounded-md flex items-center gap-1">
-                Replying
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-5 w-5 p-0 ml-1" 
-                  onClick={cancelReply}
-                >
-                  ✕
-                </Button>
+
+            {/* Replies */}
+            {comment.replies && comment.replies.length > 0 && (
+              <div className="ml-6 mt-2 space-y-3">
+                {comment.replies.map(reply => (
+                  <div key={reply.id} className="flex gap-2">
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage src={reply.user?.avatarUrl || ""} />
+                      <AvatarFallback>{reply.user?.username?.[0]?.toUpperCase() || "U"}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="bg-muted p-2 rounded-lg">
+                        <div className="font-medium text-xs">{reply.user?.username}</div>
+                        <div className="text-xs mt-0.5">{reply.content}</div>
+                      </div>
+                      <div className="flex gap-4 mt-0.5 text-xs text-muted-foreground">
+                        <span>{formatDistanceToNow(new Date(reply.createdAt))} ago</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
-          
-          <div className="flex gap-2">
-            <Textarea
-              value={comment}
-              onChange={e => setComment(e.target.value)}
-              placeholder="Write a comment..."
-              className="min-h-[60px]"
-            />
+        </div>
+      </div>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        {[1, 2].map((i) => (
+          <div key={i} className="flex gap-3">
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <div className="flex-1">
+              <Skeleton className="h-20 w-full rounded-lg" />
+              <div className="flex gap-2 mt-1">
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-4 w-12" />
+              </div>
+            </div>
           </div>
-          
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Comment input */}
+      {isMember && (
+        <div className="mb-4">
+          <Textarea
+            placeholder="Write a comment..."
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            className="min-h-0 h-24"
+          />
           <div className="flex justify-end mt-2">
-            {isReplying && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="mr-2" 
-                onClick={cancelReply}
-              >
-                Cancel
-              </Button>
-            )}
-            
             <Button 
-              size="sm" 
-              onClick={handleSubmitComment}
-              disabled={!comment.trim() || createComment.isPending}
+              onClick={handleAddComment}
+              disabled={addComment.isPending || !commentText.trim()}
             >
-              {createComment.isPending ? "Posting..." : "Post"}
+              {addComment.isPending ? 'Posting...' : 'Post Comment'}
             </Button>
           </div>
         </div>
       )}
-      
-      {!isMember && (
-        <div className="bg-muted/50 rounded-md p-3 mb-4 text-sm text-center">
-          Join this community to participate in discussions.
-        </div>
-      )}
-      
-      {isLoadingComments ? (
-        <div className="space-y-4">
-          {Array(3).fill(0).map((_, i) => (
-            <div key={i} className="flex gap-3">
-              <Skeleton className="h-8 w-8 rounded-full" />
-              <div className="flex-1">
-                <Skeleton className="h-4 w-24 mb-1" />
-                <Skeleton className="h-3 w-full mb-1" />
-                <Skeleton className="h-3 w-3/4" />
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : comments.length === 0 ? (
-        <div className="text-center py-6 text-sm text-muted-foreground">
-          No comments yet. Be the first to join the conversation!
-        </div>
+
+      {/* Comments list */}
+      {comments.length === 0 ? (
+        <p className="text-center text-muted-foreground py-4">No comments yet. Be the first to comment!</p>
       ) : (
-        <ScrollArea className="max-h-[300px] pr-4">
-          <div className="space-y-4">
-            {parentComments.map(comment => renderComment(comment))}
-          </div>
-        </ScrollArea>
+        <div className="space-y-4">
+          {comments.map(renderComment)}
+        </div>
       )}
     </div>
   );

@@ -5,21 +5,26 @@
  * This component provides a form for creating posts in a community.
  */
 import { useState } from "react";
-import { useCreateCommunityPost } from "@/lib/hooks/useCommunity";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { 
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
-import { ImagePlus, X } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { ImagePlus, Loader2, X } from "lucide-react";
 
 interface CreatePostFormProps {
   communityId: number;
@@ -28,87 +33,85 @@ interface CreatePostFormProps {
 }
 
 const postSchema = z.object({
-  content: z.string().min(1, "Post content is required").max(5000, "Post content must be less than 5000 characters"),
+  content: z.string().min(1, "Post content is required").max(2000, "Post content must be less than 2000 characters"),
+  isPinned: z.boolean().optional().default(false),
+  imageUrls: z.array(z.string()).optional(),
 });
 
 type PostFormData = z.infer<typeof postSchema>;
 
 export const CreatePostForm = ({ communityId, onSuccess, onCancel }: CreatePostFormProps) => {
-  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
-  const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [imageInput, setImageInput] = useState("");
   const { toast } = useToast();
-  
-  const createPost = useCreateCommunityPost();
+  const queryClient = useQueryClient();
   
   const form = useForm<PostFormData>({
     resolver: zodResolver(postSchema),
     defaultValues: {
       content: "",
+      isPinned: false,
+      imageUrls: [],
+    }
+  });
+  
+  // Create post mutation
+  const createPost = useMutation({
+    mutationFn: async (data: PostFormData) => {
+      return apiRequest('/api/communities/' + communityId + '/posts', {
+        method: 'POST',
+        body: {
+          content: data.content,
+          isPinned: data.isPinned,
+          imageUrls: data.imageUrls,
+        },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/communities/${communityId}/posts`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/communities'] });
+      onSuccess();
+      
+      toast({
+        title: "Post Created",
+        description: "Your post has been successfully created.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create the post. Please try again.",
+        variant: "destructive",
+      });
     },
   });
   
   const onSubmit = async (data: PostFormData) => {
-    try {
-      // Handle media upload (in a real implementation)
-      const mediaUrls: string[] = [];
-      
-      if (mediaFiles.length > 0) {
-        // In a real implementation, you would upload the files to a storage service
-        // and get back the URLs
-        
-        // For now, we'll just simulate this with the previews
-        mediaUrls.push(...mediaPreviews);
-      }
-      
-      await createPost.mutateAsync({
-        communityId,
-        content: data.content,
-        mediaUrls
-      });
-      
-      form.reset();
-      setMediaFiles([]);
-      setMediaPreviews([]);
-      onSuccess();
-      
-    } catch (error) {
-      console.error("Failed to create post", error);
+    data.imageUrls = imageUrls;
+    createPost.mutate(data);
+  };
+  
+  const addImageUrl = () => {
+    if (!imageInput.trim()) return;
+    
+    // Basic URL validation
+    if (!imageInput.match(/^(https?:\/\/)/i)) {
       toast({
-        title: "Failed to Create Post",
-        description: "There was an error creating your post. Please try again.",
+        title: "Invalid URL",
+        description: "Please enter a valid URL starting with http:// or https://",
         variant: "destructive",
       });
+      return;
     }
-  };
-  
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const newFiles = Array.from(e.target.files);
-      
-      // Limit to 4 images max
-      if (mediaFiles.length + newFiles.length > 4) {
-        toast({
-          title: "Too Many Images",
-          description: "You can only add up to 4 images per post.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Create preview URLs
-      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
-      
-      setMediaFiles(prev => [...prev, ...newFiles]);
-      setMediaPreviews(prev => [...prev, ...newPreviews]);
-    }
-  };
-  
-  const removeMedia = (index: number) => {
-    // Revoke the object URL to avoid memory leaks
-    URL.revokeObjectURL(mediaPreviews[index]);
     
-    setMediaFiles(prev => prev.filter((_, i) => i !== index));
-    setMediaPreviews(prev => prev.filter((_, i) => i !== index));
+    setImageUrls([...imageUrls, imageInput]);
+    setImageInput("");
+  };
+  
+  const removeImageUrl = (index: number) => {
+    const newUrls = [...imageUrls];
+    newUrls.splice(index, 1);
+    setImageUrls(newUrls);
   };
   
   return (
@@ -119,82 +122,108 @@ export const CreatePostForm = ({ communityId, onSuccess, onCancel }: CreatePostF
           name="content"
           render={({ field }) => (
             <FormItem>
+              <FormLabel>Post Content</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="What would you like to share with the community?"
-                  className="min-h-[120px] resize-none"
+                  placeholder="Share something with the community..."
+                  className="min-h-[150px]"
                   {...field}
                 />
               </FormControl>
+              <FormDescription>
+                Create a post to share with the community. Max 2000 characters.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
         
-        {/* Media previews */}
-        {mediaPreviews.length > 0 && (
-          <div className="grid grid-cols-2 gap-2">
-            {mediaPreviews.map((preview, index) => (
-              <div key={index} className="relative">
-                <img 
-                  src={preview} 
-                  alt={`Preview ${index}`} 
-                  className="w-full h-32 object-cover rounded-md" 
-                />
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="icon"
-                  className="w-6 h-6 absolute top-1 right-1 rounded-full"
-                  onClick={() => removeMedia(index)}
-                >
-                  <X size={12} />
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
-        
-        <div className="flex justify-between items-center">
-          <div>
+        {/* Image URLs */}
+        <div className="space-y-2">
+          <FormLabel>Add Images (Optional)</FormLabel>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Enter image URL"
+              value={imageInput}
+              onChange={(e) => setImageInput(e.target.value)}
+              className="flex-1"
+            />
             <Button
               type="button"
               variant="outline"
-              size="sm"
-              className="flex items-center gap-1"
-              onClick={() => document.getElementById('media-upload')?.click()}
-              disabled={mediaFiles.length >= 4}
+              onClick={addImageUrl}
+              className="gap-1"
             >
-              <ImagePlus size={16} />
-              <span>Add Image</span>
+              <ImagePlus className="h-4 w-4" />
+              Add
             </Button>
-            <input 
-              type="file" 
-              id="media-upload" 
-              accept="image/*" 
-              multiple 
-              className="hidden" 
-              onChange={handleFileChange}
-              disabled={mediaFiles.length >= 4}
-            />
-            {mediaFiles.length > 0 && (
-              <span className="text-xs text-muted-foreground ml-2">
-                {mediaFiles.length}/4 images
-              </span>
-            )}
           </div>
+          <FormDescription>
+            Add images to your post by entering their URLs.
+          </FormDescription>
           
-          <div className="flex gap-2">
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={createPost.isPending || !form.formState.isValid}
-            >
-              {createPost.isPending ? "Posting..." : "Post"}
-            </Button>
-          </div>
+          {/* Image URL list */}
+          {imageUrls.length > 0 && (
+            <div className="space-y-2 mt-2">
+              {imageUrls.map((url, index) => (
+                <div key={index} className="flex items-center gap-2 bg-muted/50 p-2 rounded-md">
+                  <div className="flex-1 text-sm truncate">{url}</div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeImageUrl(index)}
+                    className="h-8 w-8 p-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        
+        {/* Pin Post (Advanced option or admin) */}
+        <FormField
+          control={form.control}
+          name="isPinned"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+              <div className="space-y-0.5">
+                <FormLabel>Pin Post</FormLabel>
+                <FormDescription>
+                  Pinned posts appear at the top of the community feed.
+                </FormDescription>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        
+        <div className="flex justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={createPost.isPending || !form.formState.isValid}
+          >
+            {createPost.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Posting...
+              </>
+            ) : "Post"}
+          </Button>
         </div>
       </form>
     </Form>

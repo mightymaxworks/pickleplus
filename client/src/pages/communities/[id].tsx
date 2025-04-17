@@ -1,60 +1,27 @@
 /**
- * PKL-278651-COMM-0006-HUB-UI
+ * PKL-278651-COMM-0007-ENGAGE-UI
  * Community Detail Page
  * 
- * This page displays detailed information about a specific community.
- * Redesigned to match the modern UI pattern from the test/community page.
+ * Enhanced version with community engagement features including:
+ * - Join/leave community functionality
+ * - Posts and comments system
+ * - Member listing with role designations
+ * - Events with registration capabilities
  */
 
-import React, { useState, useEffect } from "react";
-import { useParams, useLocation } from "wouter";
-import { CommunityProvider, useCommunityWithData } from "../../lib/providers/CommunityProvider";
-import { useCommunityMembers, useCommunityPosts, useCommunityEvents } from "../../lib/hooks/useCommunity";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  ArrowLeft, 
-  Users, 
-  Calendar, 
-  Settings, 
-  Lock, 
-  Shield, 
-  MapPin, 
-  Activity, 
-  FileText,
-  Loader2,
-  Mail,
-  ExternalLink,
-  Star,
-  BarChart,
-  Trophy,
-  Hash,
-  Target,
-  Sparkles,
-  Megaphone
-} from "lucide-react";
-
-// Import modern UI components
-import CommunityMenu from "@/components/community/CommunityMenu";
-import { 
-  PickleballIcon, 
-  CourtLinesBackground, 
-  ConfettiEffect, 
-  FeatureBadge,
-  DecorativeElements,
-  CommunityHeader
-} from "@/components/community/CommunityUIComponents";
+import { useParams } from "wouter";
+import { CommunityProvider } from "../../lib/providers/CommunityProvider";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import CommunityPage from "./community";
 
 export default function CommunityDetailPage() {
   // Wrap the component with the provider to ensure context is available
+  // and render our new implementation
   return (
     <CommunityProvider>
-      <CommunityDetail />
+      <DashboardLayout>
+        <CommunityPage />
+      </DashboardLayout>
     </CommunityProvider>
   );
 }
