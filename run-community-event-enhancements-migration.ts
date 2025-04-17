@@ -32,26 +32,26 @@ async function migrateEventEnhancements() {
     `);
 
     const columns = tableInfo.map((row: any) => row.column_name);
-    const columnsToAdd = [];
+    const columnsToAdd: string[] = [];
 
     if (!columns.includes('event_type')) {
-      columnsToAdd.push(sql`ALTER TABLE community_events ADD COLUMN event_type VARCHAR(50) NOT NULL DEFAULT 'match_play'`);
+      columnsToAdd.push("ALTER TABLE community_events ADD COLUMN event_type VARCHAR(50) NOT NULL DEFAULT 'match_play'");
     }
     
     if (!columns.includes('min_skill_level')) {
-      columnsToAdd.push(sql`ALTER TABLE community_events ADD COLUMN min_skill_level VARCHAR(10)`);
+      columnsToAdd.push("ALTER TABLE community_events ADD COLUMN min_skill_level VARCHAR(10)");
     }
     
     if (!columns.includes('max_skill_level')) {
-      columnsToAdd.push(sql`ALTER TABLE community_events ADD COLUMN max_skill_level VARCHAR(10)`);
+      columnsToAdd.push("ALTER TABLE community_events ADD COLUMN max_skill_level VARCHAR(10)");
     }
     
     if (!columns.includes('image_url')) {
-      columnsToAdd.push(sql`ALTER TABLE community_events ADD COLUMN image_url TEXT`);
+      columnsToAdd.push("ALTER TABLE community_events ADD COLUMN image_url TEXT");
     }
     
     if (!columns.includes('status')) {
-      columnsToAdd.push(sql`ALTER TABLE community_events ADD COLUMN status VARCHAR(50) NOT NULL DEFAULT 'active'`);
+      columnsToAdd.push("ALTER TABLE community_events ADD COLUMN status VARCHAR(50) NOT NULL DEFAULT 'active'");
     }
 
     if (columnsToAdd.length > 0) {

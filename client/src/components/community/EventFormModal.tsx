@@ -63,6 +63,10 @@ export function EventFormModal({
         ...existingEvent,
         eventDate: existingEvent.eventDate ? new Date(existingEvent.eventDate) : new Date(),
         endDate: existingEvent.endDate ? new Date(existingEvent.endDate) : undefined,
+        // Ensure null values are converted to undefined to avoid type issues
+        maxAttendees: existingEvent.maxAttendees || undefined,
+        minSkillLevel: existingEvent.minSkillLevel || undefined,
+        maxSkillLevel: existingEvent.maxSkillLevel || undefined,
       }
     : undefined;
 

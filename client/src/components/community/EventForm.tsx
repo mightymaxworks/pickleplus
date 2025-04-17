@@ -143,7 +143,7 @@ export function EventForm({
               <FormItem>
                 <FormLabel>Event Title</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter event title" {...field} />
+                  <Input placeholder="Enter event title" {...field} value={field.value || ""} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -158,7 +158,7 @@ export function EventForm({
                 <FormLabel>Event Type</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  value={field.value || "match_play"}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -192,6 +192,7 @@ export function EventForm({
                 <Textarea
                   placeholder="Enter event details, rules, and other important information"
                   {...field}
+                  value={field.value || ""}
                   rows={5}
                 />
               </FormControl>
@@ -291,7 +292,7 @@ export function EventForm({
               <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                 <FormControl>
                   <Checkbox
-                    checked={field.value}
+                    checked={field.value || false}
                     onCheckedChange={field.onChange}
                   />
                 </FormControl>
@@ -313,7 +314,7 @@ export function EventForm({
                 <FormLabel>Event Status</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  value={field.value || "active"}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -346,6 +347,7 @@ export function EventForm({
                   <Input
                     placeholder="Enter meeting link (Zoom, Teams, etc.)"
                     {...field}
+                    value={field.value || ""}
                   />
                 </FormControl>
                 <FormMessage />
@@ -363,6 +365,7 @@ export function EventForm({
                   <Input
                     placeholder="Enter physical location of the event"
                     {...field}
+                    value={field.value || ""}
                   />
                 </FormControl>
                 <FormMessage />
@@ -383,6 +386,7 @@ export function EventForm({
                     type="number"
                     placeholder="Maximum participants"
                     {...field}
+                    value={field.value || ""}
                   />
                 </FormControl>
                 <FormDescription>
@@ -466,7 +470,7 @@ export function EventForm({
               <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                 <FormControl>
                   <Checkbox
-                    checked={field.value}
+                    checked={field.value || false}
                     onCheckedChange={field.onChange}
                   />
                 </FormControl>
@@ -487,7 +491,7 @@ export function EventForm({
               <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                 <FormControl>
                   <Checkbox
-                    checked={field.value}
+                    checked={field.value || false}
                     onCheckedChange={field.onChange}
                   />
                 </FormControl>
@@ -512,7 +516,7 @@ export function EventForm({
                   <FormLabel>Recurring Pattern</FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    value={field.value || ""}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -541,6 +545,7 @@ export function EventForm({
                     <Input
                       placeholder="Frequency details (e.g., 'Every Monday')"
                       {...field}
+                      value={field.value || ""}
                     />
                   </FormControl>
                   <FormDescription>
