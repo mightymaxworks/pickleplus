@@ -93,7 +93,7 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
     description: "",
     eventType: CommunityEventType.MATCH_PLAY,
     eventDate: new Date(),
-    status: CommunityEventStatus.UPCOMING,
+    status: CommunityEventStatus.UPCOMING, // Always start with Upcoming
     isVirtual: false,
     isPrivate: false,
     isRecurring: false,
@@ -215,33 +215,7 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
                 )}
               />
               
-              {/* Event Status */}
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Event Status</FormLabel>
-                    <Select 
-                      onValueChange={(value) => field.onChange(value as CommunityEventStatus)}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value={CommunityEventStatus.UPCOMING}>Upcoming</SelectItem>
-                        <SelectItem value={CommunityEventStatus.ONGOING}>Ongoing</SelectItem>
-                        <SelectItem value={CommunityEventStatus.COMPLETED}>Completed</SelectItem>
-                        <SelectItem value={CommunityEventStatus.CANCELLED}>Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Event Status field removed - all new events automatically have UPCOMING status */}
               
               {/* Event Date */}
               <FormField
@@ -274,17 +248,48 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
                           initialFocus
                         />
                         <div className="p-3 border-t border-border">
-                          <Input
-                            type="time"
-                            onChange={(e) => {
-                              const date = new Date(field.value);
-                              const [hours, minutes] = e.target.value.split(':');
-                              date.setHours(parseInt(hours, 10));
-                              date.setMinutes(parseInt(minutes, 10));
-                              field.onChange(date);
-                            }}
-                            defaultValue={format(field.value, "HH:mm")}
-                          />
+                          <div className="flex items-center space-x-2">
+                            <span className="text-sm text-muted-foreground">Time:</span>
+                            <Select
+                              onValueChange={(value) => {
+                                const date = new Date(field.value);
+                                date.setHours(parseInt(value, 10));
+                                field.onChange(date);
+                              }}
+                              defaultValue={format(field.value, "HH")}
+                            >
+                              <SelectTrigger className="w-[70px]">
+                                <SelectValue placeholder="Hour" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Array.from({length: 24}, (_, i) => (
+                                  <SelectItem key={i} value={i.toString().padStart(2, '0')}>
+                                    {i.toString().padStart(2, '0')}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <span>:</span>
+                            <Select
+                              onValueChange={(value) => {
+                                const date = new Date(field.value);
+                                date.setMinutes(parseInt(value, 10));
+                                field.onChange(date);
+                              }}
+                              defaultValue={format(field.value, "mm")}
+                            >
+                              <SelectTrigger className="w-[70px]">
+                                <SelectValue placeholder="Min" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {['00', '15', '30', '45'].map((minute) => (
+                                  <SelectItem key={minute} value={minute}>
+                                    {minute}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
                       </PopoverContent>
                     </Popover>
@@ -324,17 +329,48 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
                           initialFocus
                         />
                         <div className="p-3 border-t border-border">
-                          <Input
-                            type="time"
-                            onChange={(e) => {
-                              const date = new Date(field.value || form.getValues("eventDate"));
-                              const [hours, minutes] = e.target.value.split(':');
-                              date.setHours(parseInt(hours, 10));
-                              date.setMinutes(parseInt(minutes, 10));
-                              field.onChange(date);
-                            }}
-                            defaultValue={field.value ? format(field.value, "HH:mm") : ""}
-                          />
+                          <div className="flex items-center space-x-2">
+                            <span className="text-sm text-muted-foreground">Time:</span>
+                            <Select
+                              onValueChange={(value) => {
+                                const date = new Date(field.value || form.getValues("eventDate"));
+                                date.setHours(parseInt(value, 10));
+                                field.onChange(date);
+                              }}
+                              defaultValue={field.value ? format(field.value, "HH") : "12"}
+                            >
+                              <SelectTrigger className="w-[70px]">
+                                <SelectValue placeholder="Hour" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Array.from({length: 24}, (_, i) => (
+                                  <SelectItem key={i} value={i.toString().padStart(2, '0')}>
+                                    {i.toString().padStart(2, '0')}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <span>:</span>
+                            <Select
+                              onValueChange={(value) => {
+                                const date = new Date(field.value || form.getValues("eventDate"));
+                                date.setMinutes(parseInt(value, 10));
+                                field.onChange(date);
+                              }}
+                              defaultValue={field.value ? format(field.value, "mm") : "00"}
+                            >
+                              <SelectTrigger className="w-[70px]">
+                                <SelectValue placeholder="Min" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {['00', '15', '30', '45'].map((minute) => (
+                                  <SelectItem key={minute} value={minute}>
+                                    {minute}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
                       </PopoverContent>
                     </Popover>
@@ -487,7 +523,7 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
                     <FormLabel>Skill Level Required (Optional)</FormLabel>
                     <Select 
                       onValueChange={field.onChange}
-                      value={field.value || ""}
+                      value={field.value || "all"}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -583,18 +619,62 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
                             initialFocus
                           />
                           <div className="p-3 border-t border-border">
-                            <Input
-                              type="time"
-                              onChange={(e) => {
-                                if (!field.value) return;
-                                const date = new Date(field.value);
-                                const [hours, minutes] = e.target.value.split(':');
-                                date.setHours(parseInt(hours, 10));
-                                date.setMinutes(parseInt(minutes, 10));
-                                field.onChange(date);
-                              }}
-                              defaultValue={field.value ? format(field.value, "HH:mm") : ""}
-                            />
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm text-muted-foreground">Time:</span>
+                              <Select
+                                onValueChange={(value) => {
+                                  if (!field.value) {
+                                    // If no date selected yet, create one for today
+                                    const date = new Date();
+                                    date.setHours(parseInt(value, 10));
+                                    field.onChange(date);
+                                    return;
+                                  }
+                                  const date = new Date(field.value);
+                                  date.setHours(parseInt(value, 10));
+                                  field.onChange(date);
+                                }}
+                                defaultValue={field.value ? format(field.value, "HH") : "12"}
+                              >
+                                <SelectTrigger className="w-[70px]">
+                                  <SelectValue placeholder="Hour" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Array.from({length: 24}, (_, i) => (
+                                    <SelectItem key={i} value={i.toString().padStart(2, '0')}>
+                                      {i.toString().padStart(2, '0')}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <span>:</span>
+                              <Select
+                                onValueChange={(value) => {
+                                  if (!field.value) {
+                                    // If no date selected yet, create one for today
+                                    const date = new Date();
+                                    date.setMinutes(parseInt(value, 10));
+                                    field.onChange(date);
+                                    return;
+                                  }
+                                  const date = new Date(field.value);
+                                  date.setMinutes(parseInt(value, 10));
+                                  field.onChange(date);
+                                }}
+                                defaultValue={field.value ? format(field.value, "mm") : "00"}
+                              >
+                                <SelectTrigger className="w-[70px]">
+                                  <SelectValue placeholder="Min" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {['00', '15', '30', '45'].map((minute) => (
+                                    <SelectItem key={minute} value={minute}>
+                                      {minute}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
                           </div>
                         </PopoverContent>
                       </Popover>
@@ -639,7 +719,7 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
                           <FormLabel>Repeat Pattern</FormLabel>
                           <Select 
                             onValueChange={field.onChange}
-                            value={field.value || ""}
+                            value={field.value || "weekly"}
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -666,7 +746,7 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
                           <FormLabel>Repeat Frequency</FormLabel>
                           <Select 
                             onValueChange={field.onChange}
-                            value={field.value || ""}
+                            value={field.value || "4times"}
                           >
                             <FormControl>
                               <SelectTrigger>
