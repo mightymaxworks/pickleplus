@@ -35,6 +35,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { EventFormModal } from "@/components/community/EventFormModal";
 import RichTextEditor from "@/components/community/RichTextEditor";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { 
   ArrowLeft, 
   Users, 
