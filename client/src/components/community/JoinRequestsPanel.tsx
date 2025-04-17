@@ -95,18 +95,32 @@ function getMockJoinRequests(status: string): CommunityJoinRequest[] {
     }
   ];
   
+  // Sort requests with pending first, then by created date (newest first)
+  const sortedRequests = [...baseRequests].sort((a, b) => {
+    // First sort by pending status
+    if (a.status === CommunityJoinRequestStatus.PENDING && b.status !== CommunityJoinRequestStatus.PENDING) {
+      return -1;
+    }
+    if (a.status !== CommunityJoinRequestStatus.PENDING && b.status === CommunityJoinRequestStatus.PENDING) {
+      return 1;
+    }
+    
+    // Then sort by created date (newest first)
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+  
   // Filter the data based on status
   if (status === "all") {
-    return baseRequests;
+    return sortedRequests;
   } else if (status === "pending") {
-    return baseRequests.filter(r => r.status === CommunityJoinRequestStatus.PENDING);
+    return sortedRequests.filter(r => r.status === CommunityJoinRequestStatus.PENDING);
   } else if (status === "approved") {
-    return baseRequests.filter(r => r.status === CommunityJoinRequestStatus.APPROVED);
+    return sortedRequests.filter(r => r.status === CommunityJoinRequestStatus.APPROVED);
   } else if (status === "rejected") {
-    return baseRequests.filter(r => r.status === CommunityJoinRequestStatus.REJECTED);
+    return sortedRequests.filter(r => r.status === CommunityJoinRequestStatus.REJECTED);
   }
   
-  return baseRequests;
+  return sortedRequests;
 }
 
 import {
@@ -260,6 +274,10 @@ export function JoinRequestsPanel({ communityId, statusFilter: initialStatusFilt
   // Handle filter change
   const handleFilterChange = (value: string) => {
     setStatusFilter(value);
+    // Reset search term when changing filters
+    setSearchTerm("");
+    // Execute the search with the new filter
+    setTimeout(() => refetch(), 0);
   };
 
   // Handle approve action
@@ -489,6 +507,7 @@ export function JoinRequestsPanel({ communityId, statusFilter: initialStatusFilt
               onClick={() => {
                 setSearchTerm("");
                 setStatusFilter("pending");
+                setTimeout(() => refetch(), 0);
               }}
             >
               Reset Filters
