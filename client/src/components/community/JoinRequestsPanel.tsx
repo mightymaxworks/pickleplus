@@ -152,13 +152,21 @@ import { cn } from "@/lib/utils";
 
 interface JoinRequestsPanelProps {
   communityId: number;
+  statusFilter?: string;
 }
 
-export function JoinRequestsPanel({ communityId }: JoinRequestsPanelProps) {
+export function JoinRequestsPanel({ communityId, statusFilter: initialStatusFilter = "pending" }: JoinRequestsPanelProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("pending");
+  const [statusFilter, setStatusFilter] = useState<string>(initialStatusFilter);
+  
+  // Sync with parent component's statusFilter prop when it changes
+  useEffect(() => {
+    if (initialStatusFilter !== statusFilter) {
+      setStatusFilter(initialStatusFilter);
+    }
+  }, [initialStatusFilter]);
   
   // Fetch join requests
   const { 

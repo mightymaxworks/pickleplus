@@ -132,19 +132,19 @@ export function JoinRequestManagement({ communityId }: JoinRequestManagementProp
         </TabsList>
         
         <TabsContent value="pending" className="mt-0">
-          <JoinRequestsPanel communityId={communityId} />
+          <JoinRequestsPanel communityId={communityId} statusFilter="pending" />
         </TabsContent>
         
         <TabsContent value="approved" className="mt-0">
-          <JoinRequestsPanel communityId={communityId} />
+          <JoinRequestsPanel communityId={communityId} statusFilter="approved" />
         </TabsContent>
         
         <TabsContent value="rejected" className="mt-0">
-          <JoinRequestsPanel communityId={communityId} />
+          <JoinRequestsPanel communityId={communityId} statusFilter="rejected" />
         </TabsContent>
         
         <TabsContent value="all" className="mt-0">
-          <JoinRequestsPanel communityId={communityId} />
+          <JoinRequestsPanel communityId={communityId} statusFilter="all" />
         </TabsContent>
       </Tabs>
     </div>
