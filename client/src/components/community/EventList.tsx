@@ -1,12 +1,16 @@
 /**
- * PKL-278651-COMM-0014-UI
- * Event List Component
+ * PKL-278651-COMM-0014-EVLIST
+ * Enhanced Event List Component
  * 
- * This component displays a filterable list of community events with the ability
- * to filter by event type, status, and date range.
+ * This component displays a filterable list of community events with advanced 
+ * filtering, calendar view, responsive design, and optimized UX.
+ * 
+ * @version 2.0.0
+ * @lastModified 2025-04-17
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useCommunityEvents, useCommunityEventsByType, useCommunityEventsByStatus } from "@/lib/hooks/useCommunity";
 import { EventCard } from "./EventCard";
 import { EventFilterCard, EventFilters } from "./EventFilterCard";
@@ -27,16 +31,71 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Calendar, 
-  Clock, 
-  CalendarDays, 
-  CalendarClock, 
-  Users, 
+import {
+  Filter,
+  CalendarDays,
+  CalendarClock,
+  List,
+  LayoutGrid,
   Calendar as CalendarIcon,
-  ChevronDown
+  Clock,
+  Users,
+  ChevronDown,
+  RefreshCw,
+  Search,
+  SlidersHorizontal
 } from "lucide-react";
-import { compareAsc, parseISO, isBefore, isAfter, isSameDay } from "date-fns";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { 
+  format, 
+  addDays, 
+  startOfWeek, 
+  endOfWeek,
+  eachDayOfInterval, 
+  isSameMonth, 
+  compareAsc, 
+  parseISO, 
+  isBefore, 
+  isAfter, 
+  isSameDay,
+  isToday,
+  isWithinInterval,
+  startOfDay,
+  endOfDay,
+  formatISO
+} from "date-fns";
 
 interface EventListProps {
   communityId: number;
