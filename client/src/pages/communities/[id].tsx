@@ -144,10 +144,12 @@ function CommunityDetail() {
     isLoading: isLoadingMembers
   } = useCommunityMembers(communityId);
   
-  // Check if current user is a member
-  // This would typically use the authenticated user ID from a context
-  const currentUserId = 1; // Placeholder until we integrate with auth
-  const isMember = members?.some(member => member.userId === currentUserId) || false;
+  // Get current user ID from the data available in the community context
+  const { data: userData } = useQuery({ queryKey: ['auth', 'current-user'] });
+  const currentUserId = userData?.id;
+  
+  // Check if current user is a member - this will work properly once we have the correct user ID
+  const isMember = currentUserId ? members?.some(member => member.userId === currentUserId) || false : false;
   
   // Determine if user is an admin/moderator
   const userRole = members?.find(member => member.userId === currentUserId)?.role || 'none';
