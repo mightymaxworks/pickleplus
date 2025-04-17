@@ -631,7 +631,18 @@ function CommunityDetail() {
   );
 }
 
-// Enhanced Community Posts Component with like, comment, and delete functionality
+/**
+ * @layer UI
+ * @module Community
+ * @component CommunityPosts
+ * @description Enhanced Community Posts Component with like, comment, and delete functionality
+ * @dependsOn SDK Layer (useCommunityPosts, useCreateCommunityPost)
+ * @version 2.1.0
+ * @lastModified 2025-04-17
+ * @changes
+ * - Added Framework 5.1 annotations
+ * - Fixed hardcoded user ID by using auth context
+ */
 function CommunityPosts({ communityId, isMember }: { communityId: number; isMember: boolean }) {
   const { data: posts, isLoading, refetch } = useCommunityPosts(communityId);
   const createPostMutation = useCreateCommunityPost();
@@ -640,9 +651,10 @@ function CommunityPosts({ communityId, isMember }: { communityId: number; isMemb
   const [commentContent, setCommentContent] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
   
-  // Current user ID (would normally come from auth context)
-  const currentUserId = 1; // Placeholder until we integrate with auth
+  // Get current user ID from auth context
+  const currentUserId = user?.id;
   
   // Handle creating a new post
   const handleCreatePost = () => {

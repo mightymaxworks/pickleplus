@@ -284,13 +284,38 @@ export async function getCommunityPosts(communityId: number, options?: {
 }
 
 /**
- * Create a post in a community
+ * @layer SDK
+ * @module Community
+ * @description Create a post in a community
+ * @dependsOn Server Layer (/api/communities/:id/posts endpoint)
+ * @version 2.1.0
+ * @lastModified 2025-04-17
+ * @changes
+ * - Added Framework 5.1 annotations
+ * - Added better error handling with detailed messages
  */
 export async function createCommunityPost(communityId: number, data: Omit<InsertCommunityPost, "communityId" | "userId">) {
+  console.log(`[PKL-278651-COMM-0007-ENGAGE] Creating post in community ${communityId}`, data);
+  
   const response = await apiRequest("POST", `${BASE_URL}/${communityId}/posts`, data);
   
   if (!response.ok) {
-    throw new Error(`Failed to create post: ${response.statusText}`);
+    let errorMessage = `Failed to create post: ${response.statusText}`;
+    
+    // Try to get more detailed error information
+    try {
+      const errorData = await response.json();
+      if (errorData.message) {
+        errorMessage = errorData.message;
+      }
+      if (errorData.errors) {
+        console.error('Validation errors:', errorData.errors);
+      }
+    } catch (e) {
+      // If we can't parse the error response, use the default message
+    }
+    
+    throw new Error(errorMessage);
   }
   
   return response.json() as Promise<CommunityPost>;

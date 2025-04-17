@@ -439,13 +439,24 @@ router.get('/:id/posts', communityAuth, async (req: Request, res: Response) => {
 });
 
 /**
- * Create a post in a community
- * POST /api/communities/:id/posts
+ * @layer Server
+ * @module Community
+ * @description Create a post in a community
+ * @dependsOn Database Layer (communityPostsTable)
+ * @endpoint POST /api/communities/:id/posts
+ * @version 2.1.0
+ * @lastModified 2025-04-17
+ * @changes
+ * - Added Framework 5.1 annotations
+ * - Added detailed error logging
+ * - Added support for creator role in membership checks
  */
 router.post('/:id/posts', isAuthenticated, async (req: Request, res: Response) => {
   try {
     const communityId = parseInt(req.params.id);
     const userId = req.user?.id;
+    
+    console.log(`[PKL-278651-COMM-0007-ENGAGE] Post creation request for community ${communityId} by user ${userId}`);
     
     if (isNaN(communityId)) {
       return res.status(400).json({ message: 'Invalid community ID' });
@@ -455,10 +466,20 @@ router.post('/:id/posts', isAuthenticated, async (req: Request, res: Response) =
       return res.status(401).json({ message: 'Authentication required' });
     }
     
-    // Check if user is a member
+    // Get the community to check if user is creator
+    const community = await storage.getCommunityById(communityId);
+    
+    if (!community) {
+      return res.status(404).json({ message: 'Community not found' });
+    }
+    
+    // Check if user is a member or creator
+    const isCreator = community.createdByUserId === userId;
     const membership = await storage.getCommunityMembership(communityId, userId);
     
-    if (!membership) {
+    console.log(`[PKL-278651-COMM-0007-ENGAGE] User ${userId} membership check: isCreator=${isCreator}, hasMembership=${!!membership}`);
+    
+    if (!membership && !isCreator) {
       return res.status(403).json({ message: 'You must be a member to post in this community' });
     }
     
@@ -466,6 +487,7 @@ router.post('/:id/posts', isAuthenticated, async (req: Request, res: Response) =
     const validationResult = insertCommunityPostSchema.safeParse(req.body);
     
     if (!validationResult.success) {
+      console.error(`[PKL-278651-COMM-0007-ENGAGE] Validation error:`, validationResult.error.errors);
       return res.status(400).json({ 
         message: 'Invalid post data',
         errors: validationResult.error.errors 
@@ -479,11 +501,18 @@ router.post('/:id/posts', isAuthenticated, async (req: Request, res: Response) =
       userId
     };
     
+    console.log(`[PKL-278651-COMM-0007-ENGAGE] Creating post with data:`, {
+      ...postData,
+      content: postData.content.substring(0, 50) + (postData.content.length > 50 ? '...' : '')
+    });
+    
     const newPost = await storage.createCommunityPost(postData);
+    
+    console.log(`[PKL-278651-COMM-0007-ENGAGE] Post created successfully with ID: ${newPost.id}`);
     
     res.status(201).json(newPost);
   } catch (error) {
-    console.error('Error creating community post:', error);
+    console.error('[PKL-278651-COMM-0007-ENGAGE] Error creating community post:', error);
     res.status(500).json({ message: 'Failed to create post' });
   }
 });
