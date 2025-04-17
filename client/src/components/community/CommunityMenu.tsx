@@ -130,45 +130,41 @@ function CommunityMenu({
       return () => clearTimeout(timer);
     }
   }, [showConfettiEffect]);
-
-  // Navigation items with icons
-  const navItems = [
-    { id: 'discover', label: 'Discover', icon: <Search className="w-5 h-5" />, href: "/communities" },
-    { id: 'my', label: 'My Communities', icon: <LayoutGrid className="w-5 h-5" />, href: "/communities/my" },
-    { id: 'profile', label: 'Profile', icon: <Users className="w-5 h-5" />, href: "/communities/profile" },
-    { id: 'create', label: 'Create', icon: <PlusCircle className="w-5 h-5" />, href: "/communities/create" },
-    { id: 'events', label: 'Events', icon: <Calendar className="w-5 h-5" />, href: "/communities/events" },
-    { id: 'news', label: 'News', icon: <Megaphone className="w-5 h-5" />, href: "/communities/news" }
-  ];
-
-  const handleTabClick = (item: { id: string; href: string }) => {
+  
+  // Animation trigger for tab changes
+  const handleClick = (tabId: string) => {
     if (onChange) {
-      onChange(item.id);
-    } else {
-      navigate(item.href);
+      onChange(tabId);
     }
     
+    // Show confetti animation on tab change
     setShowConfetti(true);
     setTimeout(() => setShowConfetti(false), 2000);
   };
   
+  const tabs = [
+    { id: 'discover', label: 'Discover', icon: <Search className="w-5 h-5" /> },
+    { id: 'profile', label: 'Profile', icon: <Users className="w-5 h-5" /> },
+    { id: 'create', label: 'Create', icon: <PlusCircle className="w-5 h-5" /> },
+    { id: 'events', label: 'Events', icon: <Calendar className="w-5 h-5" /> },
+    { id: 'news', label: 'News', icon: <Megaphone className="w-5 h-5" /> }
+  ];
+
   return (
-    <div className={cn(
-      "relative", 
-      className
-    )}>
+    <div className={cn("relative w-full overflow-x-auto pb-4", className)}>
       {/* Confetti Effect */}
       <ConfettiEffect active={showConfetti} />
       
-      <div className="mb-8 p-2 bg-muted/30 rounded-xl border border-muted/80 overflow-hidden shadow-inner">
-        <div className="w-full flex items-center justify-center gap-1 sm:gap-3 lg:gap-6 overflow-x-auto snap-x snap-mandatory md:snap-none pb-2 md:pb-0">
-          {navItems.map((item) => (
+      {/* Modern Menu UI */}
+      <div className="flex items-center max-w-screen-lg mx-auto overflow-x-auto no-scrollbar">
+        <div className="flex flex-nowrap space-x-2 md:space-x-6 px-4">
+          {tabs.map((tab) => (
             <NavIcon 
-              key={item.id}
-              icon={item.icon}
-              label={item.label}
-              active={activeTab === item.id}
-              onClick={() => handleTabClick(item)}
+              key={tab.id}
+              icon={tab.icon}
+              label={tab.label}
+              active={activeTab === tab.id}
+              onClick={() => handleClick(tab.id)}
             />
           ))}
         </div>
@@ -177,74 +173,6 @@ function CommunityMenu({
       {/* Shadow indicators for scroll */}
       <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-background to-transparent pointer-events-none md:hidden" />
       <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-background to-transparent pointer-events-none md:hidden" />
-      
-      {/* Add CSS animations */}
-      <style jsx global>{`
-        @keyframes confetti-fall {
-          0% {
-            transform: translateY(-10vh) rotate(0deg);
-          }
-          100% {
-            transform: translateY(100vh) rotate(720deg);
-          }
-        }
-        
-        @keyframes ping-slow {
-          0% {
-            transform: scale(1);
-            opacity: 0.8;
-          }
-          50% {
-            transform: scale(1.8);
-            opacity: 0.3;
-          }
-          100% {
-            transform: scale(1);
-            opacity: 0.8;
-          }
-        }
-        
-        .animate-ping-slow {
-          animation: ping-slow 3s cubic-bezier(0, 0, 0.2, 1) infinite;
-        }
-        
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-        
-        .animate-float-delay {
-          animation: float 6s ease-in-out 2s infinite;
-        }
-        
-        @keyframes float {
-          0% {
-            transform: translateY(0px);
-          }
-          50% {
-            transform: translateY(-20px);
-          }
-          100% {
-            transform: translateY(0px);
-          }
-        }
-        
-        @keyframes wiggle {
-          0%, 100% {
-            transform: rotate(-5deg);
-          }
-          50% {
-            transform: rotate(5deg);
-          }
-        }
-        
-        .animate-wiggle {
-          animation: wiggle 1s ease-in-out infinite;
-        }
-        
-        .ease-spring {
-          transition-timing-function: cubic-bezier(0.5, 1.5, 0.5, 1);
-        }
-      `}</style>
     </div>
   );
 }

@@ -95,8 +95,17 @@ This framework defines the core principles and practices for developing the Pick
    - Use existing shadcn components wherever possible
    - When extending components, maintain accessibility
    - Follow consistent styling patterns using theme variables
+   - **CRITICAL**: Prioritize reusing and extending existing components over rebuilding new ones
+   - **NEW**: Create sharable UI utility components for common patterns to ensure consistency
+
+3. **Component Reuse Strategy**
+   - **CRITICAL**: Port existing well-designed components rather than rebuilding them from scratch
+   - **NEW**: Test components can and should be migrated to production when they demonstrate superior design
+   - **NEW**: Maintain a component library of reusable UI patterns (backgrounds, decorative elements, etc.)
+   - **NEW**: For asset-heavy UI components (animations, gradients, SVGs), always prioritize reuse
+   - **NEW**: Document successful UI patterns for reuse across the application
    
-3. **Component Communication Strategy**
+4. **Component Communication Strategy**
    - Use explicit callback props for critical operations (onCreated, onUpdated, etc.)
    - For components with complex state requirements, implement React Context
    - Implement error boundaries or try-catch when consuming context
@@ -104,7 +113,7 @@ This framework defines the core principles and practices for developing the Pick
    - For lists requiring immediate updates after CRUD operations, implement multiple data refresh mechanisms
    - Include timestamps or force refresh keys in component state to trigger re-renders
 
-4. **UI Refresh Strategy**
+5. **UI Refresh Strategy**
    - For critical UI updates, implement multiple independent refresh mechanisms
    - Never rely solely on React Query cache invalidation for critical UI updates
    - Consider combining these approaches for maximum reliability:
@@ -181,12 +190,20 @@ This framework defines the core principles and practices for developing the Pick
    - **NEW**: Keep route handlers thin and delegate data operations to storage interfaces
    - **NEW**: If storage interface doesn't support a specific operation, extend it rather than creating workarounds
 
-5. **Component Integration Testing**:
+5. **Component Reuse Over Rebuilding**:
+   - **CRITICAL**: Always port and reuse existing well-designed components rather than rebuilding them
+   - **NEW**: Prioritize reuse especially for UI components with complex visual elements and animations
+   - **NEW**: When a test/prototype component has superior design or UX, port it to production
+   - **NEW**: Extract common UI patterns into reusable components located in shared directories
+   - **NEW**: Create and maintain a shared library of visual components for backgrounds, decorations, and animations
+   - **NEW**: Prefer extending existing component functionality over creating entirely new implementations
+
+6. **Component Integration Testing**:
    - Test complete user flows, not just API calls
    - Verify data appears correctly in the UI before considering a feature complete
    - Use React Query's built-in devtools to inspect query states during development
 
-6. **Enhanced Logging Strategy**:
+7. **Enhanced Logging Strategy**:
    - Implement structured logging at key points in the data flow
    - Log both request and response details in development mode
    - Create dedicated debugging tools that don't modify the core data flow
@@ -291,3 +308,20 @@ When dealing with field mapping issues:
 3. **Use standard interfaces**:
    - Always prefer using the established storage interface over direct SQL operations
    - If special handling is needed, extend the interface rather than bypassing it
+
+### Component Reuse Case Study
+
+The Community Hub UI implementation demonstrates proper application of the component reuse principle:
+
+1. **Problem Identified**: The production community page had basic functionality but lacked modern design elements.
+2. **Test Implementation**: A `TestCommunityPage` was created with advanced UI features including:
+   - Interactive navigation with animated transitions
+   - Decorative elements and gradients
+   - Confetti animations and floating elements
+   - Court pattern backgrounds and corner decorations
+3. **Reuse Solution**: Rather than rebuilding these features again, the entire `TestCommunityPage` was ported to the main `/communities` route:
+   - All visual assets were preserved (SVG icons, animations, etc.)
+   - The UI component hierarchy was maintained
+   - Only minimal adjustments were made for integration
+   - Real API data connections were preserved
+4. **Result**: Significant development time saved, consistent design achieved, and enhanced user experience delivered without duplication of effort

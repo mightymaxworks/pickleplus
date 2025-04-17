@@ -399,7 +399,8 @@ export default function CommunitiesPage() {
         </div>
         
         {/* Add CSS animations */}
-        <style jsx global>{`
+        <style dangerouslySetInnerHTML={{
+          __html: `
           @keyframes confetti-fall {
             0% {
               transform: translateY(-10vh) rotate(0deg);
@@ -464,7 +465,8 @@ export default function CommunitiesPage() {
           .ease-spring {
             transition-timing-function: cubic-bezier(0.5, 1.5, 0.5, 1);
           }
-        `}</style>
+          `
+        }} />
       </div>
     </CommunityProvider>
   );
