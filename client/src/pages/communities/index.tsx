@@ -230,10 +230,6 @@ export default function CommunitiesPage() {
             }}>
               {/* Icon-based Navigation */}
               <div className="relative">
-                <div className="absolute -top-5 right-0 flex items-center gap-2 text-xs bg-background/70 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm border border-muted/30">
-                  <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                  <span className="text-muted-foreground">Integrated community features</span>
-                </div>
                 
                 <div className="mb-8 p-2 bg-muted/30 rounded-xl border border-muted/80 overflow-hidden shadow-inner">
                   <div className="w-full flex items-center justify-center gap-1 sm:gap-3 lg:gap-6">
