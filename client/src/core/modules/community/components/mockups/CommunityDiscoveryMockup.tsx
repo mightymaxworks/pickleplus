@@ -135,34 +135,6 @@ const CommunityDiscoveryMockup: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="relative mb-10 overflow-hidden bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl p-6 border border-primary/20 shadow-sm">
-        {/* Visual elements */}
-        <div className="absolute -right-6 -top-6 w-24 h-24 bg-primary/10 rounded-full blur-xl opacity-70"></div>
-        <div className="absolute -left-10 bottom-0 w-32 h-32 bg-yellow-400/10 rounded-full blur-xl"></div>
-        <div className="absolute right-1/4 bottom-0 w-16 h-16 bg-blue-400/10 rounded-full blur-xl"></div>
-        
-        {/* Pattern elements */}
-        <div className="absolute top-10 right-10 opacity-20">
-          <div className="w-[150px] h-[150px] rotate-12">
-            <CourtPatternIcon />
-          </div>
-        </div>
-        
-        {/* Header content */}
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-3">
-            <h2 className="text-3xl font-bold mb-1 text-[#FF5722]">
-              Find Your Community
-            </h2>
-            {/* Badges removed for cleaner UI */}
-          </div>
-          <p className="text-muted-foreground max-w-2xl">
-            Find and join pickleball communities based on your location, interests, and skill level.
-            Connect with local players, participate in events, and grow your pickleball network.
-          </p>
-        </div>
-      </div>
-
       {/* Search and filter bar */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <div className="relative flex-grow">
