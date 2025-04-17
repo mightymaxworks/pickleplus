@@ -90,6 +90,60 @@ router.get('/', communityAuth, async (req: Request, res: Response) => {
 });
 
 /**
+ * Get IDs of communities the current user is a member of
+ * GET /api/communities/my-community-ids
+ * 
+ * IMPORTANT: This route must come BEFORE the /:id route to avoid conflicts!
+ */
+router.get('/my-community-ids', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    
+    console.log(`[Community API] Getting memberships for user ${userId}`);
+    
+    // Validate the userId is a number
+    const userIdNum = Number(userId);
+    if (isNaN(userIdNum) || userIdNum <= 0) {
+      return res.status(400).json({ message: 'Invalid user ID' });
+    }
+    
+    // Get all communities where user is a member
+    const memberships = await storage.getCommunityMembershipsByUserId(userIdNum);
+    
+    // Get all communities created by this user
+    const createdCommunities = await storage.getCommunitiesByCreator(userIdNum);
+    
+    console.log(`[Community API] Retrieved memberships for user ${userIdNum}:`, JSON.stringify(memberships));
+    console.log(`[Community API] Retrieved created communities for user ${userIdNum}:`, JSON.stringify(createdCommunities));
+    
+    // Combine both memberships and communities created by the user
+    let communityIds = Array.isArray(memberships) 
+      ? memberships.map(membership => membership.communityId)
+      : [];
+    
+    // Add IDs of communities created by the user (if not already in the list)
+    if (Array.isArray(createdCommunities)) {
+      const createdCommunityIds = createdCommunities.map(community => community.id);
+      // Add only unique community IDs
+      for (const id of createdCommunityIds) {
+        if (!communityIds.includes(id)) {
+          communityIds.push(id);
+        }
+      }
+    }
+    
+    return res.status(200).json(communityIds);
+  } catch (error) {
+    console.error('Error getting user community IDs:', error);
+    return res.status(500).json({ message: 'Failed to fetch user community IDs' });
+  }
+});
+
+/**
  * Get a single community by ID
  * GET /api/communities/:id
  */
