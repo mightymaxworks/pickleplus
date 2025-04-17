@@ -184,8 +184,14 @@ export default function App() {
                   <Route path="/training">
                     {(params) => <ProtectedRoute component={LazyDashboardPage} path="/training" />}
                   </Route>
+                  {/* Redirect old /community route to /communities */}
                   <Route path="/community">
-                    {(params) => <ProtectedRoute component={CommunityPage} path="/community" />}
+                    {() => {
+                      if (typeof window !== 'undefined') {
+                        window.location.href = '/communities';
+                      }
+                      return null;
+                    }}
                   </Route>
                   <Route path="/passport">
                     {(params) => <ProtectedRoute component={LazyDashboardPage} path="/passport" />}

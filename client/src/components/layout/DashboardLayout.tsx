@@ -177,7 +177,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   { label: 'Dashboard', icon: <Home size={18} />, path: '/dashboard' },
                   { label: 'Matches', icon: <Calendar size={18} />, path: '/matches' },
                   { label: 'Tournaments', icon: <Award size={18} />, path: '/tournaments' },
-                  { label: 'Community', icon: <Users size={18} />, path: '/community' },
+                  { label: 'Communities', icon: <Users size={18} />, path: '/communities' },
                   { label: 'Mastery Paths', icon: <Award size={18} />, path: '/mastery-paths' },
                   { label: 'PicklePass™', icon: <Ticket size={18} />, path: '/events' },
                   { label: 'Profile', icon: <UserIcon size={18} />, path: '/profile' },

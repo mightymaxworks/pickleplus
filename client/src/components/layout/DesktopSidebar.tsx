@@ -102,10 +102,10 @@ export default function DesktopSidebar({ user }: DesktopSidebarProps) {
           />
           
           <NavItem 
-            href="/community" 
+            href="/communities" 
             icon={<Users size={20} />} 
-            label="Community" 
-            active={location.startsWith("/community")} 
+            label="Communities" 
+            active={location.startsWith("/communities")} 
             collapsed={collapsed}
           />
           
