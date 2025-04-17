@@ -127,7 +127,7 @@ export default function CreateCommunityPage() {
       {/* Add the new Community Menu */}
       <CommunityMenu 
         activeTab="create" 
-        onChange={(tab) => {
+        onChange={(tab: string) => {
           if (tab === 'discover') {
             handleBack();
           }
