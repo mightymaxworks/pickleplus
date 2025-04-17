@@ -6,7 +6,7 @@
  * manage pending join requests for communities that require approval.
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, X, User, Search, RefreshCw, Filter } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
@@ -166,7 +166,7 @@ export function JoinRequestsPanel({ communityId, statusFilter: initialStatusFilt
     if (initialStatusFilter !== statusFilter) {
       setStatusFilter(initialStatusFilter);
     }
-  }, [initialStatusFilter]);
+  }, [initialStatusFilter, statusFilter]);
   
   // Fetch join requests
   const { 
@@ -192,9 +192,13 @@ export function JoinRequestsPanel({ communityId, statusFilter: initialStatusFilt
       return { success: true };
     },
     onSuccess: () => {
-      // Invalidate queries to refresh the data
+      // Invalidate all join request related queries to refresh the data
       queryClient.invalidateQueries({
         queryKey: ["/api/communities", communityId, "join-requests"]
+      });
+      // Also invalidate the counts
+      queryClient.invalidateQueries({
+        queryKey: ["/api/communities", communityId, "join-requests-count"]
       });
       toast({
         title: "Request approved",
@@ -219,9 +223,13 @@ export function JoinRequestsPanel({ communityId, statusFilter: initialStatusFilt
       return { success: true };
     },
     onSuccess: () => {
-      // Invalidate queries to refresh the data
+      // Invalidate all join request related queries to refresh the data
       queryClient.invalidateQueries({
         queryKey: ["/api/communities", communityId, "join-requests"]
+      });
+      // Also invalidate the counts
+      queryClient.invalidateQueries({
+        queryKey: ["/api/communities", communityId, "join-requests-count"]
       });
       toast({
         title: "Request rejected",

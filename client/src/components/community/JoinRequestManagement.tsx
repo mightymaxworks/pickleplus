@@ -21,8 +21,14 @@ interface JoinRequestManagementProps {
 }
 
 export function JoinRequestManagement({ communityId }: JoinRequestManagementProps) {
-  // Active tab state
+  // Active tab state - defaults to pending tab
   const [activeTab, setActiveTab] = useState<string>("pending");
+  
+  // Handle tab change
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    // You could also add analytics tracking here
+  };
   
   // Fetch request counts - using mock data until API is implemented
   const { data: requestCounts, isLoading } = useQuery({
@@ -113,7 +119,7 @@ export function JoinRequestManagement({ communityId }: JoinRequestManagementProp
       </div>
       
       {/* Requests Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="grid grid-cols-4 mb-6">
           <TabsTrigger value="pending" className="relative">
             Pending
