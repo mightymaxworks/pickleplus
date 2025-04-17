@@ -160,8 +160,10 @@ function CommunityDetail() {
   const isMember = currentUserId && (
     // Check membership in the members list
     (members && members.some(member => member.userId === currentUserId)) ||
-    // Also consider the creator as a member
-    (community && community.createdByUserId === currentUserId)
+    // Check if user is the creator from the community object
+    (community && community.createdByUserId === currentUserId) ||
+    // Check the isCreator flag from the API
+    (community && community.isCreator === true)
   );
   
   // Determine if user is an admin/moderator

@@ -90,9 +90,26 @@ export async function getCommunity(id: number) {
   // Get community data
   const community = await response.json() as Community;
   
+  // Get the current user
+  let currentUserId: number | null = null;
+  try {
+    const userResponse = await apiRequest("GET", `/api/auth/current-user`);
+    if (userResponse.ok) {
+      const userData = await userResponse.json();
+      currentUserId = userData?.id || null;
+    }
+  } catch (error) {
+    console.error("Error fetching current user:", error);
+  }
+  
+  // Check if the user is the creator of this community
+  const isCreator = currentUserId != null && community.createdByUserId === currentUserId;
+  
   // Process and map fields for UI display
   return {
     ...community,
+    // Add creator status to the community data
+    isCreator,
     // Map properties needed for display in the UI
     skill: community.skillLevel,
     events: community.eventCount,

@@ -161,7 +161,19 @@ router.get('/:id', communityAuth, async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Community not found' });
     }
     
-    res.json(community);
+    // Get current user ID if authenticated
+    const userId = req.user?.id || null;
+    
+    // If user is authenticated, determine if they are the creator of this community
+    const isCreator = userId !== null && community.createdByUserId === userId;
+    
+    // Add a flag to indicate if the current user is the creator
+    const responseData = {
+      ...community,
+      isCreator
+    };
+    
+    res.json(responseData);
   } catch (error) {
     console.error('Error getting community:', error);
     res.status(500).json({ message: 'Failed to fetch community' });
