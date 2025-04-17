@@ -16,7 +16,10 @@ import {
   useCreateCommunityPost,
   useLikePost,
   useUnlikePost,
-  useCreateComment
+  useCreateComment,
+  useDeletePost,
+  useRegisterForEvent,
+  useCancelEventRegistration
 } from "../../lib/hooks/useCommunity";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,6 +28,9 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { EventFormModal } from "@/components/community/EventFormModal";
 import RichTextEditor from "@/components/community/RichTextEditor";
 import { useToast } from "@/hooks/use-toast";
@@ -636,31 +642,20 @@ function CommunityPosts({ communityId, isMember }: { communityId: number; isMemb
     }
   };
   
+  // Use delete post hook
+  const deletePostMutation = useDeletePost();
+  
   // Handle post deletion
   const handleDeletePost = async (postId: number) => {
     const confirmed = window.confirm("Are you sure you want to delete this post? This action cannot be undone.");
     if (!confirmed) return;
     
     try {
-      // Simulated API call for post deletion
-      // Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Show success toast
-      toast({
-        title: "Post deleted",
-        description: "Your post has been deleted from the community.",
-      });
-      
-      // Refresh posts list
-      refetch();
+      await deletePostMutation.mutateAsync(postId);
+      // Toast and updates are handled in the mutation
     } catch (error) {
       console.error("Error deleting post:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete post. Please try again.",
-        variant: "destructive",
-      });
+      // Error handling is already in the mutation
     }
   };
   
@@ -885,8 +880,48 @@ function CommunityPosts({ communityId, isMember }: { communityId: number; isMemb
  * @lastModified 2025-04-17
  */
 function CommunityEvents({ communityId, isMember }: { communityId: number; isMember: boolean }) {
-  const { data: events, isLoading } = useCommunityEvents(communityId);
+  const { data: events, isLoading, refetch } = useCommunityEvents(communityId);
   const [openEventModal, setOpenEventModal] = React.useState(false);
+  const [registrationEventId, setRegistrationEventId] = React.useState<number | null>(null);
+  const [registrationNotes, setRegistrationNotes] = React.useState('');
+  const [registrationDialogOpen, setRegistrationDialogOpen] = React.useState(false);
+  const { toast } = useToast();
+  
+  // Use registration hooks
+  const registerMutation = useRegisterForEvent();
+  const cancelRegistrationMutation = useCancelEventRegistration();
+  
+  const handleRegister = async (eventId: number) => {
+    setRegistrationEventId(eventId);
+    setRegistrationDialogOpen(true);
+  };
+  
+  const handleCancelRegistration = async (eventId: number) => {
+    try {
+      await cancelRegistrationMutation.mutateAsync(eventId);
+      refetch(); // Refresh the events list
+    } catch (error) {
+      console.error("Error canceling registration:", error);
+    }
+  };
+  
+  const submitRegistration = async () => {
+    if (!registrationEventId) return;
+    
+    try {
+      await registerMutation.mutateAsync({
+        eventId: registrationEventId,
+        notes: registrationNotes.trim() || undefined
+      });
+      
+      // Close dialog and reset
+      setRegistrationDialogOpen(false);
+      setRegistrationNotes('');
+      refetch(); // Refresh the events list
+    } catch (error) {
+      console.error("Error registering for event:", error);
+    }
+  };
   
   if (isLoading) {
     return <div>Loading events...</div>;
@@ -927,16 +962,63 @@ function CommunityEvents({ communityId, isMember }: { communityId: number; isMem
     };
     return colors[status as keyof typeof colors] || colors.active;
   };
+
+  // Skill level formatting
+  const formatSkillLevel = (event: any) => {
+    if (event.minSkillLevel && event.maxSkillLevel) {
+      return `${event.minSkillLevel} - ${event.maxSkillLevel}`;
+    } else if (event.minSkillLevel) {
+      return `${event.minSkillLevel}+`;
+    } else if (event.maxSkillLevel) {
+      return `Up to ${event.maxSkillLevel}`;
+    }
+    return null;
+  };
   
   return (
     <div className="space-y-6">
-      {/* Import EventFormModal at the top of the file */}
-      {/* import { EventFormModal } from "@/components/community/EventFormModal"; */}
       <EventFormModal
         open={openEventModal}
         onOpenChange={setOpenEventModal}
         communityId={communityId}
+        onSuccess={() => refetch()}
       />
+      
+      {/* Registration Dialog */}
+      <Dialog open={registrationDialogOpen} onOpenChange={setRegistrationDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Register for Event</DialogTitle>
+            <DialogDescription>
+              Provide any additional information for the event organizers.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes (optional)</Label>
+              <Textarea
+                id="notes"
+                placeholder="Any specific needs or requirements..."
+                value={registrationNotes}
+                onChange={(e) => setRegistrationNotes(e.target.value)}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRegistrationDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={submitRegistration} disabled={registerMutation.isPending}>
+              {registerMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
+              Register
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       {isMember && (
         <div className="flex justify-end">
@@ -951,60 +1033,96 @@ function CommunityEvents({ communityId, isMember }: { communityId: number; isMem
       )}
       
       {events && events.length > 0 ? (
-        events.map((event) => (
-          <Card key={event.id} className="overflow-hidden">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="mb-1">{event.title}</CardTitle>
-                  <CardDescription>
-                    {new Date(event.eventDate).toLocaleDateString()} at{" "}
-                    {new Date(event.eventDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </CardDescription>
+        events.map((event) => {
+          const isRegistered = event.isAttending;
+          const isFull = event.maxAttendees && event.currentAttendees >= event.maxAttendees;
+          const skillLevel = formatSkillLevel(event);
+          
+          return (
+            <Card key={event.id} className="overflow-hidden">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="mb-1">{event.title}</CardTitle>
+                    <CardDescription>
+                      {new Date(event.eventDate).toLocaleDateString()} at{" "}
+                      {new Date(event.eventDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Badge className={getEventTypeBadgeColor(event.eventType)}>
+                      {getEventTypeLabel(event.eventType)}
+                    </Badge>
+                    {event.status && event.status !== "active" && (
+                      <Badge className={getStatusBadgeColor(event.status)}>
+                        {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <Badge className={getEventTypeBadgeColor(event.eventType)}>
-                    {getEventTypeLabel(event.eventType)}
+              </CardHeader>
+              <CardContent>
+                <p className="mb-4">{event.description}</p>
+                
+                <div className="flex flex-wrap gap-2">
+                  {event.location && (
+                    <Badge variant="outline" className="flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      <span>{event.location}</span>
+                    </Badge>
+                  )}
+                  
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <Users className="h-3 w-3" />
+                    <span>
+                      {event.currentAttendees}/{event.maxAttendees || '∞'} attendees
+                    </span>
                   </Badge>
-                  {event.status && event.status !== "active" && (
-                    <Badge className={getStatusBadgeColor(event.status)}>
-                      {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                  
+                  {skillLevel && (
+                    <Badge variant="outline" className="flex items-center gap-1">
+                      <Activity className="h-3 w-3" />
+                      <span>Skill level: {skillLevel}</span>
+                    </Badge>
+                  )}
+                  
+                  {event.isVirtual && (
+                    <Badge variant="secondary">Virtual</Badge>
+                  )}
+                  
+                  {isRegistered && (
+                    <Badge variant="success" className="bg-green-100 text-green-800">
+                      Registered
                     </Badge>
                   )}
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="mb-4">{event.description}</p>
-              
-              <div className="flex flex-wrap gap-2">
-                {event.location && (
-                  <Badge variant="outline" className="flex items-center gap-1">
-                    <MapPin className="h-3 w-3" />
-                    <span>{event.location}</span>
-                  </Badge>
-                )}
                 
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <Users className="h-3 w-3" />
-                  <span>
-                    {event.currentAttendees}/{event.maxAttendees || '∞'} attendees
-                  </span>
-                </Badge>
-                
-                {event.isVirtual && (
-                  <Badge>Virtual</Badge>
-                )}
-              </div>
-              
-              <div className="mt-4 flex justify-end">
-                <Button variant="outline">
-                  Register
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))
+                <div className="mt-4 flex justify-end">
+                  {isRegistered ? (
+                    <Button 
+                      variant="outline" 
+                      onClick={() => handleCancelRegistration(event.id)}
+                      disabled={cancelRegistrationMutation.isPending}
+                    >
+                      {cancelRegistrationMutation.isPending && cancelRegistrationMutation.variables === event.id ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : null}
+                      Cancel Registration
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant="outline" 
+                      onClick={() => handleRegister(event.id)}
+                      disabled={isFull || event.status !== 'active' || !isMember}
+                    >
+                      {isFull ? 'Fully Booked' : 'Register'}
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })
       ) : (
         <Card>
           <CardContent className="py-8 text-center">
@@ -1015,7 +1133,12 @@ function CommunityEvents({ communityId, isMember }: { communityId: number; isMem
             </p>
             
             {isMember && (
-              <Button className="mt-4">Create Event</Button>
+              <Button 
+                className="mt-4"
+                onClick={() => setOpenEventModal(true)}
+              >
+                Create Event
+              </Button>
             )}
           </CardContent>
         </Card>
