@@ -167,20 +167,7 @@ const CommunityDiscoveryMockup: React.FC = () => {
   
   // Handle join community action
   const handleJoinCommunity = (communityId: number) => {
-    // Find the community to update
-    const communityIndex = communities.findIndex(c => c.id === communityId);
-    
-    if (communityIndex !== -1) {
-      // Create a copy of communities
-      const updatedCommunities = [...communities];
-      // Set isMember to true in the community at that index
-      updatedCommunities[communityIndex] = {
-        ...updatedCommunities[communityIndex],
-        isMember: true
-      };
-    }
-    
-    // Call the mutation
+    // Call the mutation - optimistic updates are handled within the hook
     joinCommunityMutation.mutate({ communityId });
   };
   

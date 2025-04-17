@@ -162,15 +162,54 @@ export function useJoinCommunity() {
   return useMutation({
     mutationFn: ({ communityId, message }: { communityId: number; message?: string }) => 
       communityApi.joinCommunity(communityId, message),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: communityKeys.members(variables.communityId) });
-      queryClient.invalidateQueries({ queryKey: communityKeys.detail(variables.communityId) });
+    onMutate: async (variables) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: communityKeys.lists() });
+      await queryClient.cancelQueries({ queryKey: communityKeys.detail(variables.communityId) });
+      
+      // Snapshot the previous value
+      const previousCommunities = queryClient.getQueryData(communityKeys.lists());
+      const previousCommunity = queryClient.getQueryData(communityKeys.detail(variables.communityId));
+      
+      // Optimistically update communities list
+      queryClient.setQueryData(communityKeys.lists(), (old: any) => {
+        if (!old) return old;
+        return old.map((community: Community) => 
+          community.id === variables.communityId 
+            ? { ...community, isMember: true } 
+            : community
+        );
+      });
+      
+      // Optimistically update the single community
+      if (previousCommunity) {
+        queryClient.setQueryData(communityKeys.detail(variables.communityId), 
+          { ...previousCommunity, isMember: true }
+        );
+      }
+      
+      return { previousCommunities, previousCommunity };
+    },
+    onSuccess: (_, variables, context) => {
+      // Invalidate to get fresh data
+      queryClient.invalidateQueries({ queryKey: communityKeys.all });
       toast({
         title: "Community joined",
         description: "You have successfully joined the community.",
       });
     },
-    onError: (error: Error) => {
+    onError: (error: Error, variables, context) => {
+      // Revert optimistic updates
+      if (context?.previousCommunities) {
+        queryClient.setQueryData(communityKeys.lists(), context.previousCommunities);
+      }
+      if (context?.previousCommunity) {
+        queryClient.setQueryData(
+          communityKeys.detail(variables.communityId),
+          context.previousCommunity
+        );
+      }
+      
       toast({
         title: "Failed to join community",
         description: error.message,
