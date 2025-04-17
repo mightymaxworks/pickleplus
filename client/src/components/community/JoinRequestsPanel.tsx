@@ -6,7 +6,7 @@
  * manage pending join requests for communities that require approval.
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, X, User, Search, RefreshCw, Filter } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
@@ -106,7 +106,9 @@ function getMockJoinRequests(status: string): CommunityJoinRequest[] {
     }
     
     // Then sort by created date (newest first)
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    const bDate = b.createdAt ? new Date(b.createdAt) : new Date();
+    const aDate = a.createdAt ? new Date(a.createdAt) : new Date();
+    return bDate.getTime() - aDate.getTime();
   });
   
   // Filter the data based on status
@@ -270,6 +272,21 @@ export function JoinRequestsPanel({ communityId, statusFilter: initialStatusFilt
     e.preventDefault();
     refetch();
   };
+  
+  // Filter requests by search term
+  const filteredRequests = useMemo(() => {
+    if (!joinRequests || !searchTerm.trim()) {
+      return joinRequests;
+    }
+    
+    const term = searchTerm.toLowerCase().trim();
+    return joinRequests.filter(request => 
+      request.user?.username?.toLowerCase().includes(term) ||
+      request.user?.displayName?.toLowerCase().includes(term) ||
+      request.user?.email?.toLowerCase().includes(term) ||
+      request.message?.toLowerCase().includes(term)
+    );
+  }, [joinRequests, searchTerm]);
 
   // Handle filter change
   const handleFilterChange = (value: string) => {
@@ -376,7 +393,7 @@ export function JoinRequestsPanel({ communityId, statusFilter: initialStatusFilt
               Retry
             </Button>
           </div>
-        ) : joinRequests && joinRequests.length > 0 ? (
+        ) : joinRequests && joinRequests.length > 0 && filteredRequests && filteredRequests.length > 0 ? (
           <div className="rounded-md border">
             <Table>
               <TableHeader>
@@ -388,7 +405,7 @@ export function JoinRequestsPanel({ communityId, statusFilter: initialStatusFilt
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {joinRequests.map((request) => (
+                {filteredRequests.map((request) => (
                   <TableRow key={request.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
@@ -492,13 +509,15 @@ export function JoinRequestsPanel({ communityId, statusFilter: initialStatusFilt
             </div>
             <h3 className="text-lg font-semibold mb-2">No join requests found</h3>
             <p className="text-muted-foreground mb-6 max-w-md">
-              {statusFilter === "pending" 
-                ? "There are no pending join requests for your community at the moment."
-                : statusFilter === "approved"
-                ? "No approved join requests match your search criteria."
-                : statusFilter === "rejected"
-                ? "No rejected join requests match your search criteria."
-                : "No join requests match your search criteria."
+              {searchTerm
+                ? `No ${statusFilter !== 'all' ? statusFilter : ''} join requests match your search term "${searchTerm}".`
+                : statusFilter === "pending" 
+                  ? "There are no pending join requests for your community at the moment."
+                  : statusFilter === "approved"
+                  ? "No approved join requests found."
+                  : statusFilter === "rejected"
+                  ? "No rejected join requests found."
+                  : "No join requests found matching your criteria."
               }
             </p>
             <Button 
@@ -515,10 +534,15 @@ export function JoinRequestsPanel({ communityId, statusFilter: initialStatusFilt
           </div>
         )}
       </CardContent>
-      {joinRequests && joinRequests.length > 0 && (
+      {filteredRequests && filteredRequests.length > 0 && (
         <CardFooter className="flex justify-between border-t py-3 px-6">
           <div className="text-sm text-muted-foreground">
-            Showing {joinRequests.length} {joinRequests.length === 1 ? "request" : "requests"}
+            Showing {filteredRequests.length} {filteredRequests.length === 1 ? "request" : "requests"}
+            {searchTerm && joinRequests && filteredRequests.length !== joinRequests.length && (
+              <span className="ml-1">
+                (filtered from {joinRequests.length} total)
+              </span>
+            )}
           </div>
         </CardFooter>
       )}
