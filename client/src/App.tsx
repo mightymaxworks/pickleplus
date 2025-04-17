@@ -7,6 +7,7 @@ import { AuthProvider } from '@/hooks/useAuth'
 import { TournamentChangeProvider } from './core/modules/tournament/context/TournamentChangeContext'
 import { UserDataProvider } from '@/contexts/UserDataContext' // PKL-278651-PERF-0001.1-CACHE
 import { TutorialProvider } from '@/components/onboarding' // PKL-278651-GAME-0002-TUT
+import { CommunityProvider } from '@/lib/providers/CommunityProvider' // PKL-278651-COMM-0014-CONT
 import { LazyLoadingFallback, lazyLoad } from '@/utils/lazyLoad' // PKL-278651-PERF-0001.2-SPLIT
 import { moduleRegistry } from '@/core/modules/moduleRegistry' // For feedback module
 import { SimpleBugReportButton } from '@/components/bug-report/BugReportButton' // Simplified bug report button
@@ -136,11 +137,12 @@ export default function App() {
           <UserDataProvider>
             <TournamentChangeProvider>
               <TutorialProvider>
-                <Suspense fallback={<LazyLoadingFallback />}>
-                  {/* Add Simplified Bug Report Button (PKL-278651-FEED-0001-BUG) */}
-                  <SimpleBugReportButton position="bottom-right" />
-                  
-                  <Switch>
+                <CommunityProvider>
+                  <Suspense fallback={<LazyLoadingFallback />}>
+                    {/* Add Simplified Bug Report Button (PKL-278651-FEED-0001-BUG) */}
+                    <SimpleBugReportButton position="bottom-right" />
+                    
+                    <Switch>
                     {/* Public Routes */}
                   <Route path="/" component={LazyLandingPage} />
                   <Route path="/login" component={LazyAuthPage} />
@@ -371,6 +373,7 @@ export default function App() {
                   <Route component={LazyNotFoundPage} />
                 </Switch>
               </Suspense>
+                </CommunityProvider>
               </TutorialProvider>
             </TournamentChangeProvider>
           </UserDataProvider>
