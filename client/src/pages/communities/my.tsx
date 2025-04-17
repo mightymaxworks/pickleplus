@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { useCommunities } from "@/lib/hooks/useCommunity";
 import { CommunityMenu } from "@/components/community/CommunityMenu";
+import { CommunityProvider } from "@/lib/providers/CommunityProvider";
 import { 
   CourtLinesBackground, 
   DecorativeElements,
@@ -86,25 +87,26 @@ export default function MyCommunitiesPage() {
   };
   
   return (
-    <div className="relative min-h-screen overflow-x-hidden">
-      {/* Background Elements */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#f5f8ff] via-[#f0f9ff] to-[#edfff1] dark:from-[#121826] dark:via-[#111a22] dark:to-[#0f1c11] -z-10"></div>
-      <CourtLinesBackground />
-      
-      {/* Decorative Elements */}
-      <DecorativeElements />
-      
-      <div className="container mx-auto py-8 px-4 relative z-10">
-        {/* Community Header Banner */}
-        <CommunityHeader 
-          title="My Communities"
-          subtitle="Explore communities you've joined and manage those you administer"
-        />
+    <CommunityProvider>
+      <div className="relative min-h-screen overflow-x-hidden">
+        {/* Background Elements */}
+        <div className="fixed inset-0 bg-gradient-to-br from-[#f5f8ff] via-[#f0f9ff] to-[#edfff1] dark:from-[#121826] dark:via-[#111a22] dark:to-[#0f1c11] -z-10"></div>
+        <CourtLinesBackground />
         
-        {/* Community Navigation */}
-        <div className="mb-8">
-          <CommunityMenu activeTab="my" />
-        </div>
+        {/* Decorative Elements */}
+        <DecorativeElements />
+        
+        <div className="container mx-auto py-8 px-4 relative z-10">
+          {/* Community Header Banner */}
+          <CommunityHeader 
+            title="My Communities"
+            subtitle="Explore communities you've joined and manage those you administer"
+          />
+          
+          {/* Community Navigation */}
+          <div className="mb-8">
+            <CommunityMenu activeTab="my" />
+          </div>
         
         {/* Main Content */}
         <div className="mb-8 flex flex-col md:flex-row md:items-center gap-4">
@@ -271,6 +273,7 @@ export default function MyCommunitiesPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+      </div>
+    </CommunityProvider>
   );
 }

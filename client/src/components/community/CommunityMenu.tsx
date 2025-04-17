@@ -9,17 +9,17 @@ import React from "react";
 import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 
-type MenuTab = "discover" | "profile" | "create" | "events" | "news" | "my";
+export type MenuTab = "discover" | "profile" | "create" | "events" | "news" | "my";
 
-interface CommunityMenuProps {
+export interface CommunityMenuProps {
   activeTab?: MenuTab;
   className?: string;
 }
 
-const CommunityMenu: React.FC<CommunityMenuProps> = ({ 
+function CommunityMenu({ 
   activeTab, 
   className 
-}) => {
+}: CommunityMenuProps) {
   const [, navigate] = useLocation();
   
   const tabs = [
@@ -57,7 +57,7 @@ const CommunityMenu: React.FC<CommunityMenuProps> = ({
       <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-background to-transparent pointer-events-none md:hidden" />
     </div>
   );
-};
+}
 
 export { CommunityMenu };
 export default CommunityMenu;
