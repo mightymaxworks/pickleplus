@@ -252,11 +252,18 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
                             <span className="text-sm text-muted-foreground">Time:</span>
                             <Select
                               onValueChange={(value) => {
+                                if (!field.value) {
+                                  // If no date selected yet, create one for today
+                                  const date = new Date();
+                                  date.setHours(parseInt(value, 10));
+                                  field.onChange(date);
+                                  return;
+                                }
                                 const date = new Date(field.value);
                                 date.setHours(parseInt(value, 10));
                                 field.onChange(date);
                               }}
-                              defaultValue={format(field.value, "HH")}
+                              defaultValue={field.value ? format(field.value, "HH") : "12"}
                             >
                               <SelectTrigger className="w-[70px]">
                                 <SelectValue placeholder="Hour" />
@@ -272,11 +279,18 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
                             <span>:</span>
                             <Select
                               onValueChange={(value) => {
+                                if (!field.value) {
+                                  // If no date selected yet, create one for today
+                                  const date = new Date();
+                                  date.setMinutes(parseInt(value, 10));
+                                  field.onChange(date);
+                                  return;
+                                }
                                 const date = new Date(field.value);
                                 date.setMinutes(parseInt(value, 10));
                                 field.onChange(date);
                               }}
-                              defaultValue={format(field.value, "mm")}
+                              defaultValue={field.value ? format(field.value, "mm") : "00"}
                             >
                               <SelectTrigger className="w-[70px]">
                                 <SelectValue placeholder="Min" />
@@ -333,7 +347,14 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
                             <span className="text-sm text-muted-foreground">Time:</span>
                             <Select
                               onValueChange={(value) => {
-                                const date = new Date(field.value || form.getValues("eventDate"));
+                                if (!field.value) {
+                                  // If no date selected yet, create one for today
+                                  const today = new Date();
+                                  today.setHours(parseInt(value, 10));
+                                  field.onChange(today);
+                                  return;
+                                }
+                                const date = new Date(field.value);
                                 date.setHours(parseInt(value, 10));
                                 field.onChange(date);
                               }}
@@ -353,7 +374,14 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
                             <span>:</span>
                             <Select
                               onValueChange={(value) => {
-                                const date = new Date(field.value || form.getValues("eventDate"));
+                                if (!field.value) {
+                                  // If no date selected yet, create one for today
+                                  const today = new Date();
+                                  today.setMinutes(parseInt(value, 10));
+                                  field.onChange(today);
+                                  return;
+                                }
+                                const date = new Date(field.value);
                                 date.setMinutes(parseInt(value, 10));
                                 field.onChange(date);
                               }}

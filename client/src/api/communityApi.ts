@@ -9,7 +9,60 @@
  * @lastModified 2025-04-17
  */
 
-import { apiRequest } from '@/lib/queryClient';
+import { queryClient } from '@/lib/queryClient';
+
+// Define a type-safe wrapper around fetch for our API
+async function apiRequest<T>(options: {
+  url: string;
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  data?: any;
+  params?: Record<string, any>;
+}): Promise<T> {
+  const { url, method, data, params } = options;
+  
+  // Build URL with params if provided
+  let fetchUrl = url;
+  if (params) {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        searchParams.append(key, String(value));
+      }
+    });
+    const queryString = searchParams.toString();
+    if (queryString) {
+      fetchUrl = `${url}?${queryString}`;
+    }
+  }
+  
+  // Create request options
+  const requestOptions: RequestInit = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  };
+  
+  // Add body for non-GET requests
+  if (method !== 'GET' && data) {
+    requestOptions.body = JSON.stringify(data);
+  }
+  
+  const response = await fetch(fetchUrl, requestOptions);
+  
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
+  }
+  
+  // Handle empty responses
+  const text = await response.text();
+  if (!text) {
+    return {} as T;
+  }
+  
+  return JSON.parse(text) as T;
+}
 import { 
   Community, 
   CommunityEvent, 
