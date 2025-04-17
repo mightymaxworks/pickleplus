@@ -42,6 +42,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     { name: 'Connections', path: '/connections', icon: <Users className="h-5 w-5" /> },
     { name: 'Coaching', path: '/coaching', icon: <BookOpen className="h-5 w-5" /> },
     { name: 'Communities', path: '/communities', icon: <Users className="h-5 w-5" /> },
+    // New NodeBB-based Community Hub
+    { 
+      name: 'Community Beta', 
+      path: '/community/v2', 
+      icon: <Users className="h-5 w-5" />,
+      badge: { text: 'New', variant: 'outline' }
+    },
     { name: 'Profile', path: '/profile', icon: <UserCircle className="h-5 w-5" /> },
     { name: 'Preferences', path: '/preferences', icon: <Settings className="h-5 w-5" /> },
   ];

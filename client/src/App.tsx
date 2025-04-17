@@ -355,6 +355,14 @@ export default function App() {
                     {(params) => <ProtectedRoute component={CommunitiesPage} path="/communities" />}
                   </Route>
                   
+                  {/* PKL-278651-COMM-0011-OSI - NodeBB Community Hub v2 */}
+                  <Route path="/community/v2">
+                    {(params) => <ProtectedRoute component={(props) => {
+                      const CommunityHubV2 = lazyLoad(() => import('./pages/community/v2'));
+                      return <CommunityHubV2 {...props} />;
+                    }} path="/community/v2" />}
+                  </Route>
+                  
                   {/* PKL-278651-COMM-0007-ICONS - Custom Icons Showcase */}
                   <Route path="/icons">
                     {(params) => <ProtectedRoute component={IconsPage} path="/icons" />}
