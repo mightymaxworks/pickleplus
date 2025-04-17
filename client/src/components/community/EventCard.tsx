@@ -90,11 +90,15 @@ export function EventCard({
   const eventIsFull = event.maxAttendees !== null && event.currentAttendees >= event.maxAttendees;
   const canRegister = isUpcoming && !isRegistered && !isPast(new Date(event.registrationDeadline || event.eventDate));
   
+  // Check if we're on a mobile device for ultra-compact view
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+  
   // Get formatted dates and times
-  const formattedDate = format(new Date(event.eventDate), 'EEEE, MMMM d, yyyy');
+  const formattedDate = format(new Date(event.eventDate), isMobile ? 'MMM d' : 'EEEE, MMMM d, yyyy');
   const formattedTime = format(new Date(event.eventDate), 'h:mm a');
   const formattedEndTime = event.endDate ? format(new Date(event.endDate), 'h:mm a') : '';
   const timeUntilEvent = formatDistanceToNow(new Date(event.eventDate), { addSuffix: true });
+  const shortMonthDate = format(new Date(event.eventDate), 'MMM d');
   
   // Handle registration and cancellation
   const handleRegister = () => {
@@ -105,6 +109,87 @@ export function EventCard({
     cancelMutation.mutate(event.id);
   };
 
+  // For mobile devices, use a completely different horizontal card layout
+  if (isMobile && compact) {
+    return (
+      <Card className={cn(
+        "overflow-hidden transition-all hover:shadow-md border-l-4 mb-2 max-h-24",
+        isUpcoming && "border-l-blue-500",
+        isOngoing && "border-l-green-500",
+        isCompleted && "border-l-gray-500",
+        isCancelled && "border-l-red-500 opacity-75"
+      )}>
+        <div className="flex h-full">
+          {/* Left date column */}
+          <div className={cn(
+            "w-16 flex-shrink-0 flex flex-col items-center justify-center",
+            isUpcoming && "bg-blue-50",
+            isOngoing && "bg-green-50",
+            isCompleted && "bg-gray-50",
+            isCancelled && "bg-red-50 opacity-75"
+          )}>
+            <div className="text-xs uppercase">{format(new Date(event.eventDate), 'MMM')}</div>
+            <div className="text-xl font-bold">{format(new Date(event.eventDate), 'd')}</div>
+            <div className="text-xs">{format(new Date(event.eventDate), 'h:mm a')}</div>
+          </div>
+          
+          {/* Middle content */}
+          <div className="flex-1 py-2 px-2 flex flex-col justify-between min-w-0">
+            <div>
+              {/* Status and type badges on one line */}
+              <div className="flex justify-between items-center gap-1 mb-1">
+                <Badge 
+                  variant="secondary" 
+                  className={cn(
+                    "text-xs h-5 py-0 px-1.5",
+                    getEventTypeBadgeClass(event.eventType)
+                  )}
+                >
+                  {formatEventType(event.eventType)}
+                </Badge>
+                <StatusBadge status={event.status} />
+              </div>
+              
+              {/* Event title */}
+              <h4 className="text-xs font-semibold line-clamp-1 mb-1">{event.title}</h4>
+            </div>
+            
+            {/* Bottom info row */}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              {event.location ? (
+                <div className="flex items-center">
+                  <MapPin className="h-3 w-3 mr-0.5 text-red-500" />
+                  <span className="truncate max-w-[80px]">{event.location}</span>
+                </div>
+              ) : event.isVirtual ? (
+                <div className="flex items-center">
+                  <Video className="h-3 w-3 mr-0.5 text-blue-500" />
+                  <span>Virtual</span>
+                </div>
+              ) : null}
+              
+              <div className="flex items-center">
+                <Users className="h-3 w-3 mr-0.5 text-violet-500" />
+                <span>{event.currentAttendees}{event.maxAttendees && `/${event.maxAttendees}`}</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Right action column */}
+          <div className="w-10 flex flex-col items-center justify-center border-l">
+            <Link 
+              href={`/communities/${communityId || event.communityId}/events/${event.id}`}
+              className="p-2 text-muted-foreground hover:text-primary rounded-full"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  // Regular card layout for non-mobile or when not in compact mode
   return (
     <Card className={cn(
       "overflow-hidden transition-all hover:shadow-md border-l-4",
