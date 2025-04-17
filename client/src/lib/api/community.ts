@@ -54,9 +54,19 @@ export async function getCommunities(options?: {
   // Get communities data
   const communities = await response.json() as Community[];
   
+  // Check for membership status by making an additional request
+  const myCommunitiesResponse = await apiRequest("GET", `${BASE_URL}/my-community-ids`);
+  let membershipIds: number[] = [];
+  
+  if (myCommunitiesResponse.ok) {
+    membershipIds = await myCommunitiesResponse.json() as number[];
+  }
+  
   // Process and map fields for UI display
   return communities.map(community => ({
     ...community,
+    // Set isMember based on membership data
+    isMember: membershipIds.includes(community.id),
     // Map properties needed for display in the UI
     skill: community.skillLevel,
     events: community.eventCount,
@@ -188,6 +198,15 @@ export async function getCommunityMembers(communityId: number, options?: {
 export async function joinCommunity(communityId: number, message?: string) {
   const data = message ? { message } : {};
   const response = await apiRequest("POST", `${BASE_URL}/${communityId}/join`, data);
+  
+  // Special handling for "already a member" response (400 status code)
+  if (response.status === 400) {
+    const errorData = await response.json();
+    if (errorData.message && errorData.message.includes("already a member")) {
+      // This is actually a "success" case for our UI since the user is already a member
+      return { communityId, userId: -1, role: "member" } as CommunityMember;
+    }
+  }
   
   if (!response.ok) {
     throw new Error(`Failed to join community: ${response.statusText}`);

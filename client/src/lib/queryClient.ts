@@ -118,6 +118,8 @@ export async function apiRequest(
   // For non-GET requests, add CSRF token
   if (method !== "GET") {
     try {
+      // Always get a fresh CSRF token for mutation requests
+      csrfToken = null; // Reset to force fetch
       const token = await fetchCSRFToken();
       if (token) {
         // Cast to string to satisfy TypeScript
@@ -133,13 +135,16 @@ export async function apiRequest(
     }
   }
 
-  if (data) {
-    options.body = JSON.stringify(data);
+  // Prepare body data with token
+  if (data || method !== "GET") {
+    const dataWithToken = data ? { ...data } : {};
     
-    // Also include the CSRF token in the request body for form submissions
-    if (method !== "GET" && typeof data === "object" && csrfToken) {
-      data._csrf = csrfToken;
+    // Always include CSRF token if this is a non-GET request
+    if (method !== "GET" && csrfToken) {
+      dataWithToken._csrf = csrfToken;
     }
+    
+    options.body = JSON.stringify(dataWithToken);
   }
 
   console.log(`Making ${method} request to ${url} with credentials included`);
