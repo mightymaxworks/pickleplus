@@ -214,6 +214,8 @@ export interface IStorage {
   
   getCommunityById(id: number): Promise<Community | undefined>;
   
+  getCommunitiesByCreator(userId: number): Promise<Community[]>;
+  
   createCommunity(communityData: InsertCommunity): Promise<Community>;
   
   updateCommunity(id: number, updates: Partial<InsertCommunity>): Promise<Community | undefined>;
@@ -2955,6 +2957,10 @@ export class DatabaseStorage implements IStorage {
   
   async getCommunityById(id: number): Promise<Community | undefined> {
     return communityStorageImplementation.getCommunityById(id);
+  }
+  
+  async getCommunitiesByCreator(userId: number): Promise<Community[]> {
+    return communityStorageImplementation.getCommunitiesByCreator(userId);
   }
   
   async createCommunity(communityData: InsertCommunity): Promise<Community> {
