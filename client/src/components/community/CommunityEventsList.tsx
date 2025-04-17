@@ -70,9 +70,9 @@ export const CommunityEventsList = ({ communityId, isMember }: CommunityEventsLi
     data: events = [], 
     isLoading 
   } = useQuery({
-    queryKey: [`/api/communities/${communityId}/events`],
+    queryKey: ['/api/communities/' + communityId + '/events'],
     queryFn: async () => {
-      const response = await apiRequest(`/api/communities/${communityId}/events`);
+      const response = await apiRequest('/api/communities/' + communityId + '/events');
       return response as CommunityEvent[];
     },
     enabled: !!communityId,
@@ -81,7 +81,7 @@ export const CommunityEventsList = ({ communityId, isMember }: CommunityEventsLi
   // Register for event mutation
   const registerForEvent = useMutation({
     mutationFn: async (eventId: number) => {
-      return apiRequest(`/api/communities/events/${eventId}/register`, {
+      return apiRequest('/api/communities/events/' + eventId + '/register', {
         method: 'POST',
         body: { 
           notes: registrationNotes 
@@ -89,7 +89,7 @@ export const CommunityEventsList = ({ communityId, isMember }: CommunityEventsLi
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/communities/${communityId}/events`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/communities/' + communityId + '/events'] });
       setRegistrationNotes('');
       setSelectedEventId(null);
       
@@ -110,12 +110,12 @@ export const CommunityEventsList = ({ communityId, isMember }: CommunityEventsLi
   // Unregister from event mutation
   const unregisterFromEvent = useMutation({
     mutationFn: async (eventId: number) => {
-      return apiRequest(`/api/communities/events/${eventId}/unregister`, {
+      return apiRequest('/api/communities/events/' + eventId + '/unregister', {
         method: 'POST',
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/communities/${communityId}/events`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/communities/' + communityId + '/events'] });
       
       toast({
         title: "Unregistered",
