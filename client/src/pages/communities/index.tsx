@@ -211,7 +211,7 @@ export default function CommunitiesPage() {
             
             {/* Simple Title */}
             <div className="flex items-center mb-8">
-              <img src="/src/assets/community-logo.png" alt="COMMUNITY" className="h-10" />
+              <img src="/src/assets/community-logo-new.png" alt="COMMUNITY" className="h-16" />
             </div>
             
             <Tabs value={activeTab} onValueChange={(value) => {
