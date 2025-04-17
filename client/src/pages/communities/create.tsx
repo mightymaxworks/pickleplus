@@ -13,6 +13,7 @@ import { z } from "zod";
 import { useCreateCommunity } from "../../lib/hooks/useCommunity";
 import { insertCommunitySchema } from "@shared/schema/community";
 import { CommunityProvider } from "../../lib/providers/CommunityProvider";
+import { CommunityMenu } from "../../components/community/CommunityMenu";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -123,7 +124,17 @@ export default function CreateCommunityPage() {
   
   return (
     <CommunityProvider>
-      <div className="container py-8 max-w-3xl">
+      {/* Add the new Community Menu */}
+      <CommunityMenu 
+        activeTab="create" 
+        onChange={(tab) => {
+          if (tab === 'discover') {
+            handleBack();
+          }
+        }}
+      />
+      
+      <div className="container py-6 max-w-3xl">
         <Button
           variant="ghost"
           className="mb-6"

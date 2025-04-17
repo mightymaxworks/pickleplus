@@ -3,6 +3,7 @@
  * Communities Discovery Page
  * 
  * This page allows users to discover and browse communities.
+ * Enhanced with the new horizontal menu navigation system.
  */
 
 import React, { useState } from "react";
@@ -10,13 +11,16 @@ import { useLocation } from "wouter";
 import { useCommunities } from "../../lib/hooks/useCommunity";
 import { CommunityProvider } from "../../lib/providers/CommunityProvider";
 import { CommunityGrid } from "../../components/community/CommunityGrid";
+import { CommunityMenu } from "../../components/community/CommunityMenu";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Search, Plus, Users, Filter } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Search, Plus, Users, Filter, MapPin, Activity } from "lucide-react";
 import { useDebounce } from "../../hooks/use-debounce";
+import { useToast } from "@/hooks/use-toast";
 
 // Skill level options for filtering
 const SKILL_LEVELS = [
@@ -37,12 +41,22 @@ const LOCATIONS = [
   { value: "South", label: "South" },
 ];
 
+// Court Pattern SVG for backgrounds (inspired by mockup)
+const CourtPatternIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="2" y="2" width="20" height="20" rx="2" stroke="currentColor" strokeWidth="1" strokeDasharray="2 2" />
+    <line x1="12" y1="2" x2="12" y2="22" stroke="currentColor" strokeWidth="1" strokeDasharray="2 2" />
+    <line x1="2" y1="12" x2="22" y2="12" stroke="currentColor" strokeWidth="1" strokeDasharray="2 2" />
+  </svg>
+);
+
 export default function CommunitiesPage() {
   const [, navigate] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [skillLevel, setSkillLevel] = useState("all");
   const [location, setLocation] = useState("all");
   const [activeTab, setActiveTab] = useState("all");
+  const { toast } = useToast();
   
   // Debounce search to prevent too many API calls
   const debouncedQuery = useDebounce(searchQuery, 500);
@@ -63,21 +77,78 @@ export default function CommunitiesPage() {
   // This would typically come from a user context or API call
   const userMemberships: number[] = []; // Example: [1, 3, 5];
   
+  // Handle menu tab change
+  const handleMenuChange = (tabId: string) => {
+    if (tabId === 'discover') {
+      // We're already on the discover page
+    } else if (tabId === 'create') {
+      handleCreateCommunity();
+    } else if (tabId === 'events' || tabId === 'news' || tabId === 'profile') {
+      toast({
+        title: "Coming Soon",
+        description: `The ${tabId} feature will be available in an upcoming update.`,
+        duration: 3000,
+      });
+    }
+  };
+  
   return (
     <CommunityProvider>
-      <div className="container py-8 max-w-7xl">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Communities</h1>
-            <p className="text-muted-foreground mt-1">
-              Connect with other pickleball players and join communities.
-            </p>
+      {/* Add the new Community Menu */}
+      <CommunityMenu 
+        activeTab="discover" 
+        onChange={handleMenuChange}
+      />
+      
+      <div className="container py-6 max-w-7xl">
+        {/* Visual Hero Section inspired by the mockup */}
+        <div className="relative mb-10 overflow-hidden bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl p-6 border border-primary/20 shadow-sm">
+          {/* Visual elements */}
+          <div className="absolute -right-6 -top-6 w-24 h-24 bg-primary/10 rounded-full blur-xl opacity-70"></div>
+          <div className="absolute -left-10 bottom-0 w-32 h-32 bg-yellow-400/10 rounded-full blur-xl"></div>
+          <div className="absolute right-1/4 bottom-0 w-16 h-16 bg-blue-400/10 rounded-full blur-xl"></div>
+          
+          {/* Pattern elements */}
+          <div className="absolute top-10 right-10 opacity-20">
+            <div className="w-[150px] h-[150px] rotate-12">
+              <CourtPatternIcon />
+            </div>
           </div>
           
-          <Button onClick={handleCreateCommunity} className="md:self-start">
-            <Plus className="mr-2 h-4 w-4" />
-            Create Community
-          </Button>
+          {/* Header content */}
+          <div className="relative z-10">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">
+                  Discover Communities
+                </h1>
+                <p className="text-muted-foreground mt-2 max-w-2xl">
+                  Connect with other pickleball players, join communities based on your interests,
+                  and participate in local events.
+                </p>
+                
+                <div className="flex flex-wrap gap-2 mt-3">
+                  <Badge variant="secondary" className="bg-primary/10 hover:bg-primary/15 transition-colors text-xs text-primary border-none">
+                    <Users className="h-3 w-3 mr-1" />
+                    {communities?.length || 0}+ Communities
+                  </Badge>
+                  <Badge variant="secondary" className="bg-amber-500/10 hover:bg-amber-500/15 transition-colors text-xs text-amber-600 dark:text-amber-400 border-none">
+                    <MapPin className="h-3 w-3 mr-1" />
+                    {LOCATIONS.length - 1}+ Locations
+                  </Badge>
+                  <Badge variant="secondary" className="bg-emerald-500/10 hover:bg-emerald-500/15 transition-colors text-xs text-emerald-600 dark:text-emerald-400 border-none">
+                    <Activity className="h-3 w-3 mr-1" />
+                    All Skill Levels
+                  </Badge>
+                </div>
+              </div>
+              
+              <Button onClick={handleCreateCommunity} className="md:self-start bg-primary">
+                <Plus className="mr-2 h-4 w-4" />
+                Create Community
+              </Button>
+            </div>
+          </div>
         </div>
         
         <Card className="mb-8">
