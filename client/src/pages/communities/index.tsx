@@ -195,15 +195,7 @@ export default function CommunitiesPage() {
     enabled: true,
   });
   
-  // Show confetti on initial load
-  useEffect(() => {
-    setShowConfetti(true);
-    const timer = setTimeout(() => {
-      setShowConfetti(false);
-    }, 3000);
-    
-    return () => clearTimeout(timer);
-  }, []);
+  // Removed confetti on initial load as requested
 
   // Navigation items with icons
   const navItems = [
@@ -222,8 +214,7 @@ export default function CommunitiesPage() {
     }
     
     setActiveTab(tab);
-    setShowConfetti(true);
-    setTimeout(() => setShowConfetti(false), 2000);
+    // No confetti effect anymore
   };
 
   return (
@@ -260,8 +251,7 @@ export default function CommunitiesPage() {
             
             <Tabs value={activeTab} onValueChange={(value) => {
               setActiveTab(value);
-              setShowConfetti(true);
-              setTimeout(() => setShowConfetti(false), 2000);
+              // No confetti effect on tab change
             }}>
               {/* Icon-based Navigation */}
               <div className="relative">
