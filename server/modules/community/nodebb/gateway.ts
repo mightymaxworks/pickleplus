@@ -11,7 +11,7 @@
 
 import express from 'express';
 import { Request, Response, NextFunction } from 'express';
-import { isAuthenticated } from '../../../middleware/auth';
+import { isAuthenticated } from '../../../auth';
 
 const router = express.Router();
 

@@ -30,10 +30,13 @@ import {
 
 export default function CommunityHubV2() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth(); // useAuth provides the user object
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('discussions');
   const [isIntegrationReady, setIsIntegrationReady] = useState(false);
+  
+  // Check if user is authenticated
+  const isAuthenticated = !!user;
   
   // Placeholder for a future API endpoint that will check NodeBB status
   const { data: nodebbStatus, isLoading: isStatusLoading } = useQuery({

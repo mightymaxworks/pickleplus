@@ -9,5 +9,6 @@
  */
 
 import gateway from './gateway';
+import webhooks from './webhooks';
 
-export { gateway };
+export { gateway, webhooks };
