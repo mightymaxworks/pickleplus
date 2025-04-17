@@ -372,7 +372,7 @@ export default function App() {
                   
                   <Route component={LazyNotFoundPage} />
                 </Switch>
-              </Suspense>
+                  </Suspense>
                 </CommunityProvider>
               </TutorialProvider>
             </TournamentChangeProvider>

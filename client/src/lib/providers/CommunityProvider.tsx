@@ -1,62 +1,198 @@
 /**
- * PKL-278651-COMM-0006-HUB-SDK
- * Community Context Provider
+ * PKL-278651-COMM-0014-CONT
+ * Enhanced Community Context Provider
  * 
- * This file provides the context provider for community-related state and operations.
+ * This file provides the enhanced context provider for community-related state and operations.
+ * It implements caching, error handling, and improved type safety for the Community Hub module.
  */
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Community } from "@/types/community";
+import { Community, CommunityEvent, CommunityMember } from "@/types/community";
 import { toast } from "@/hooks/use-toast";
-import { useJoinCommunity, useLeaveCommunity, useCommunity } from "../hooks/useCommunity";
+import { 
+  useJoinCommunity, 
+  useLeaveCommunity, 
+  useCommunity, 
+  useCommunityEvents,
+  useCommunityMembers,
+  useCommunityPosts
+} from "../hooks/useCommunity";
+import { queryClient } from "@/lib/queryClient";
 
+/**
+ * Community context interface with enhanced type safety and additional properties
+ */
 interface CommunityContextType {
+  // Core state
   currentCommunityId: number | null;
   setCurrentCommunityId: (id: number | null) => void;
   
-  // Actions
+  // Navigation actions
   viewCommunity: (id: number) => void;
+  viewCommunityEvents: (id: number) => void;
+  viewCommunityMembers: (id: number) => void;
+  
+  // Community membership actions
   joinCommunity: (id: number, message?: string) => void;
   leaveCommunity: (id: number) => void;
   
-  // State
+  // Loading states
   isJoining: boolean;
   isLeaving: boolean;
+  
+  // Error handling
+  error: Error | null;
+  setError: (error: Error | null) => void;
+  clearError: () => void;
+  
+  // Cache management
+  invalidateCommunityCache: (communityId?: number) => Promise<void>;
+  prefetchCommunityData: (communityId: number) => Promise<void>;
 }
 
+// Create context with undefined default value
 const CommunityContext = createContext<CommunityContextType | undefined>(undefined);
 
+/**
+ * Enhanced Community Provider component
+ */
 export function CommunityProvider({ children }: { children: React.ReactNode }) {
+  // Community state
   const [currentCommunityId, setCurrentCommunityId] = useState<number | null>(null);
+  const [error, setError] = useState<Error | null>(null);
   const [, navigate] = useLocation();
   
-  // Mutations
-  const joinMutation = useJoinCommunity();
-  const leaveMutation = useLeaveCommunity();
+  // Mutations for community interactions
+  const joinMutation = useJoinCommunity({
+    onSuccess: () => {
+      toast({
+        title: "Success!",
+        description: "You have joined the community",
+        variant: "default",
+      });
+      // Invalidate cache to refetch community data
+      invalidateCommunityCache(currentCommunityId);
+    },
+    onError: (error) => {
+      setError(error);
+      toast({
+        title: "Error",
+        description: "Failed to join community. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
   
-  // Actions
-  const viewCommunity = (id: number) => {
+  const leaveMutation = useLeaveCommunity({
+    onSuccess: () => {
+      toast({
+        title: "Success!",
+        description: "You have left the community",
+        variant: "default",
+      });
+      // Invalidate cache to refetch community data
+      invalidateCommunityCache(currentCommunityId);
+    },
+    onError: (error) => {
+      setError(error);
+      toast({
+        title: "Error",
+        description: "Failed to leave community. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Clear error helper
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+  
+  // Navigation actions
+  const viewCommunity = useCallback((id: number) => {
     setCurrentCommunityId(id);
     navigate(`/communities/${id}`);
-  };
+  }, [navigate]);
   
-  const joinCommunity = (communityId: number, message?: string) => {
+  const viewCommunityEvents = useCallback((id: number) => {
+    setCurrentCommunityId(id);
+    navigate(`/communities/${id}?tab=events`);
+  }, [navigate]);
+  
+  const viewCommunityMembers = useCallback((id: number) => {
+    setCurrentCommunityId(id);
+    navigate(`/communities/${id}?tab=members`);
+  }, [navigate]);
+  
+  // Community actions
+  const joinCommunity = useCallback((communityId: number, message?: string) => {
     joinMutation.mutate({ communityId, message });
-  };
+  }, [joinMutation]);
   
-  const leaveCommunity = (communityId: number) => {
+  const leaveCommunity = useCallback((communityId: number) => {
     leaveMutation.mutate(communityId);
-  };
+  }, [leaveMutation]);
   
+  // Cache management
+  const invalidateCommunityCache = useCallback(async (communityId?: number) => {
+    if (communityId) {
+      // Invalidate specific community data
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: [`/api/communities/${communityId}`] }),
+        queryClient.invalidateQueries({ queryKey: [`/api/communities/${communityId}/events`] }),
+        queryClient.invalidateQueries({ queryKey: [`/api/communities/${communityId}/members`] }),
+        queryClient.invalidateQueries({ queryKey: [`/api/communities/${communityId}/posts`] })
+      ]);
+    } else {
+      // Invalidate all community data
+      await queryClient.invalidateQueries({ queryKey: ['/api/communities'] });
+    }
+  }, []);
+  
+  // Prefetch community data for smoother UX
+  const prefetchCommunityData = useCallback(async (communityId: number) => {
+    if (!communityId) return;
+    
+    try {
+      await Promise.all([
+        // Prefetch basic community info
+        queryClient.prefetchQuery({
+          queryKey: [`/api/communities/${communityId}`],
+          queryFn: () => fetch(`/api/communities/${communityId}`).then(res => res.json())
+        }),
+        // Prefetch community events
+        queryClient.prefetchQuery({
+          queryKey: [`/api/communities/${communityId}/events`],
+          queryFn: () => fetch(`/api/communities/${communityId}/events`).then(res => res.json())
+        }),
+        // Prefetch community members
+        queryClient.prefetchQuery({
+          queryKey: [`/api/communities/${communityId}/members`],
+          queryFn: () => fetch(`/api/communities/${communityId}/members?limit=5`).then(res => res.json())
+        })
+      ]);
+    } catch (error) {
+      console.error("Error prefetching community data:", error);
+    }
+  }, []);
+  
+  // Context value
   const value = {
     currentCommunityId,
     setCurrentCommunityId,
     viewCommunity,
+    viewCommunityEvents,
+    viewCommunityMembers,
     joinCommunity,
     leaveCommunity,
     isJoining: joinMutation.isPending,
     isLeaving: leaveMutation.isPending,
+    error,
+    setError,
+    clearError,
+    invalidateCommunityCache,
+    prefetchCommunityData
   };
   
   return (
@@ -66,6 +202,10 @@ export function CommunityProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * Hook to use the community context
+ * Ensures the context is used within a provider
+ */
 export function useCommunityContext() {
   const context = useContext(CommunityContext);
   if (context === undefined) {
@@ -75,23 +215,46 @@ export function useCommunityContext() {
 }
 
 /**
- * Hook that combines community context with data from the API
+ * Enhanced hook that combines community context with data from the API
+ * Provides automatic error handling and seamless data access
  */
 export function useCommunityWithData(id: number) {
   const context = useCommunityContext();
-  const { data: community, isLoading, error } = useCommunity(id);
+  const { 
+    data: community, 
+    isLoading, 
+    error,
+    isError
+  } = useCommunity(id);
   
   // Set the current community ID in the context when this hook is used
-  React.useEffect(() => {
+  useEffect(() => {
     if (id && id !== context.currentCommunityId) {
       context.setCurrentCommunityId(id);
     }
-  }, [id, context]);
+    
+    // Prefetch data for smoother experience
+    context.prefetchCommunityData(id);
+    
+    // Handle errors
+    if (isError && error) {
+      context.setError(error as Error);
+    }
+    
+    return () => {
+      // Clean up error when unmounting
+      context.clearError();
+    };
+  }, [id, context, error, isError]);
   
   return {
     ...context,
     community,
     isLoading,
     error,
+    // Additional convenience fields
+    isMember: community?.isMember || false,
+    isAdmin: community?.role === 'admin',
+    isModerator: community?.role === 'moderator',
   };
 }
