@@ -1,129 +1,84 @@
 /**
- * @component PlayerRatingIcon
- * @layer UI
- * @version 1.0.0
- * @description Dynamic player rating visualization that can show different rating levels
+ * PKL-278651-COMM-0007-ICONS
+ * PlayerRatingIcon Component
+ * 
+ * Custom SVG icon of a player rating indicator with Framework 5.1 semantic identifiers
+ * for testing and debugging.
  */
 import React from 'react';
+import { IconProps } from './PickleballIcon';
 
-interface PlayerRatingIconProps {
-  size?: number;
-  color?: string;
-  className?: string;
-  rating?: number;
-  maxRating?: number;
-  showValue?: boolean;
-  fillColor?: string;
-}
-
-export const PlayerRatingIcon: React.FC<PlayerRatingIconProps> = ({
+/**
+ * A custom player rating icon component
+ */
+export const PlayerRatingIcon: React.FC<IconProps> = ({
   size = 24,
-  color = "currentColor",
-  className = "",
-  rating = 3.5,
-  maxRating = 5.0,
-  showValue = false,
-  fillColor
+  color = 'currentColor',
+  className = '',
+  strokeWidth = 1.5,
+  fill = false,
+  ...props
 }) => {
-  // Use primary color if fillColor is not provided
-  const fill = fillColor || "#FF6600";
-  
-  // Normalize rating between 0 and 1 for calculations
-  const normalizedRating = Math.min(Math.max(rating, 0), maxRating) / maxRating;
-  
-  // Calculate which segments to fill based on normalized rating
-  // We'll use 5 segments for the visualization
-  const segmentFills = [];
-  for (let i = 0; i < 5; i++) {
-    // Each segment represents 20% of the max rating
-    const segmentThreshold = (i + 1) / 5;
-    if (normalizedRating >= segmentThreshold) {
-      // Full segment
-      segmentFills.push(1);
-    } else if (normalizedRating > (i / 5) && normalizedRating < segmentThreshold) {
-      // Partial segment
-      segmentFills.push((normalizedRating - (i / 5)) * 5);
-    } else {
-      // Empty segment
-      segmentFills.push(0);
-    }
-  }
+  // Fill style based on fill prop
+  const fillStyle = fill ? color : 'none';
   
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
+    <svg 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill={fillStyle}
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round" 
+      strokeLinejoin="round"
       className={className}
-      data-component="player-rating-icon"
+      data-testid="player-rating-icon"
+      data-component="PlayerRatingIcon"
+      {...props}
     >
-      {/* Background Circle */}
-      <circle cx="12" cy="12" r="10" fill="none" stroke={color} strokeWidth="1" strokeOpacity="0.2" />
+      {/* Rating star */}
+      <polygon 
+        points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" 
+        fill={fill ? color + '20' : 'none'} 
+        stroke={color}
+      />
       
-      {/* Rating Segments */}
-      <g transform="translate(12, 12)">
-        {/* First segment (0-20%) */}
-        <path
-          d="M0,0 L10,0 A10,10 0 0 1 5,8.66 z"
-          fill={segmentFills[0] > 0 ? fill : "none"}
-          fillOpacity={segmentFills[0]}
-          stroke={color}
-          strokeWidth="1"
-        />
-        
-        {/* Second segment (20-40%) */}
-        <path
-          d="M0,0 L5,8.66 A10,10 0 0 1 -5,8.66 z"
-          fill={segmentFills[1] > 0 ? fill : "none"}
-          fillOpacity={segmentFills[1]}
-          stroke={color}
-          strokeWidth="1"
-        />
-        
-        {/* Third segment (40-60%) */}
-        <path
-          d="M0,0 L-5,8.66 A10,10 0 0 1 -10,0 z"
-          fill={segmentFills[2] > 0 ? fill : "none"}
-          fillOpacity={segmentFills[2]}
-          stroke={color}
-          strokeWidth="1"
-        />
-        
-        {/* Fourth segment (60-80%) */}
-        <path
-          d="M0,0 L-10,0 A10,10 0 0 1 -5,-8.66 z"
-          fill={segmentFills[3] > 0 ? fill : "none"}
-          fillOpacity={segmentFills[3]}
-          stroke={color}
-          strokeWidth="1"
-        />
-        
-        {/* Fifth segment (80-100%) */}
-        <path
-          d="M0,0 L-5,-8.66 A10,10 0 0 1 10,0 z"
-          fill={segmentFills[4] > 0 ? fill : "none"}
-          fillOpacity={segmentFills[4]}
-          stroke={color}
-          strokeWidth="1"
-        />
-      </g>
+      {/* Rating number */}
+      <circle 
+        cx="12" 
+        cy="12" 
+        r="5" 
+        fill={fill ? 'white' : 'none'} 
+        stroke={color}
+      />
       
-      {/* Rating Value */}
-      {showValue && (
-        <text
-          x="12"
-          y="13"
-          textAnchor="middle"
-          dominantBaseline="middle"
-          fill={color}
-          fontSize={size * 0.25}
-          fontWeight="bold"
-        >
-          {rating.toFixed(1)}
-        </text>
-      )}
+      {/* Rating decoration - for competitive visual */}
+      <path 
+        d="M12,7 L12,17 M9,10 L15,10 M9,14 L15,14" 
+        stroke={color} 
+        strokeWidth={strokeWidth * 0.8}
+      />
+      
+      {/* Rating level indicators */}
+      <path 
+        d="M4,12 C4,7.58 7.58,4 12,4" 
+        stroke={color} 
+        strokeDasharray="0.5,1.5" 
+        strokeWidth={strokeWidth * 0.6}
+      />
+      <path 
+        d="M20,12 C20,16.42 16.42,20 12,20" 
+        stroke={color} 
+        strokeDasharray="0.5,1.5" 
+        strokeWidth={strokeWidth * 0.6}
+      />
+      
+      {/* Level indicators at corners */}
+      <circle cx="4" cy="4" r="0.7" fill={color} />
+      <circle cx="20" cy="4" r="0.7" fill={color} />
+      <circle cx="4" cy="20" r="0.7" fill={color} />
+      <circle cx="20" cy="20" r="0.7" fill={color} />
     </svg>
   );
 };

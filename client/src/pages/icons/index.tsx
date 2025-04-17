@@ -15,6 +15,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeftIcon, Download, Copy, Twitter, Instagram, Facebook, ArrowRight } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -22,7 +23,13 @@ import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 
 // Import our custom icons
-// Placeholder comment - we'll replace this with actual icon imports
+import { 
+  PickleballIcon, 
+  PaddleIcon, 
+  CourtIcon, 
+  TournamentBracketIcon, 
+  PlayerRatingIcon 
+} from '@/assets/icons';
 
 const IconsPage: React.FC = () => {
   const [location, navigate] = useLocation();
@@ -33,7 +40,7 @@ const IconsPage: React.FC = () => {
   const [color, setColor] = useState('#FF5722');
   const [strokeWidth, setStrokeWidth] = useState(1.5);
   const [fill, setFill] = useState(false);
-  const [selectedTab, setSelectedTab] = useState('customize');
+  const [selectedIcon, setSelectedIcon] = useState<'pickle' | 'paddle' | 'court' | 'tournament' | 'rating'>('pickle');
 
   // Copy SVG to clipboard function
   const copySvgToClipboard = (iconName: string) => {
@@ -86,50 +93,35 @@ const IconsPage: React.FC = () => {
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
                     <div className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white dark:bg-gray-800">
                       <div className="w-16 h-16 flex items-center justify-center text-[#FF5722]">
-                        {/* PickleballIcon will go here */}
-                        <div className="w-16 h-16 rounded-full bg-[#FF5722]/20 flex items-center justify-center">
-                          P
-                        </div>
+                        <PickleballIcon size={48} color="#FF5722" />
                       </div>
                       <span className="mt-2 text-sm font-medium">PickleballIcon</span>
                     </div>
                     
                     <div className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white dark:bg-gray-800">
                       <div className="w-16 h-16 flex items-center justify-center text-[#FF5722]">
-                        {/* PaddleIcon will go here */}
-                        <div className="w-16 h-16 rounded-full bg-[#FF5722]/20 flex items-center justify-center">
-                          P
-                        </div>
+                        <PaddleIcon size={48} color="#FF5722" />
                       </div>
                       <span className="mt-2 text-sm font-medium">PaddleIcon</span>
                     </div>
                     
                     <div className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white dark:bg-gray-800">
                       <div className="w-16 h-16 flex items-center justify-center text-[#FF5722]">
-                        {/* TournamentBracketIcon will go here */}
-                        <div className="w-16 h-16 rounded-full bg-[#FF5722]/20 flex items-center justify-center">
-                          T
-                        </div>
+                        <TournamentBracketIcon size={48} color="#FF5722" />
                       </div>
                       <span className="mt-2 text-sm font-medium">TournamentBracketIcon</span>
                     </div>
                     
                     <div className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white dark:bg-gray-800">
                       <div className="w-16 h-16 flex items-center justify-center text-[#FF5722]">
-                        {/* PlayerRatingIcon will go here */}
-                        <div className="w-16 h-16 rounded-full bg-[#FF5722]/20 flex items-center justify-center">
-                          R
-                        </div>
+                        <PlayerRatingIcon size={48} color="#FF5722" />
                       </div>
                       <span className="mt-2 text-sm font-medium">PlayerRatingIcon</span>
                     </div>
                     
                     <div className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white dark:bg-gray-800">
                       <div className="w-16 h-16 flex items-center justify-center text-[#FF5722]">
-                        {/* CourtIcon will go here */}
-                        <div className="w-16 h-16 rounded-full bg-[#FF5722]/20 flex items-center justify-center">
-                          C
-                        </div>
+                        <CourtIcon size={48} color="#FF5722" />
                       </div>
                       <span className="mt-2 text-sm font-medium">CourtIcon</span>
                     </div>
@@ -221,6 +213,25 @@ const IconsPage: React.FC = () => {
                       />
                       <Label htmlFor="fill">Fill Shape</Label>
                     </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="iconType">Icon Type</Label>
+                      <Select
+                        value={selectedIcon}
+                        onValueChange={(value: any) => setSelectedIcon(value)}
+                      >
+                        <SelectTrigger id="iconType">
+                          <SelectValue placeholder="Select Icon Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pickle">Pickleball</SelectItem>
+                          <SelectItem value="paddle">Paddle</SelectItem>
+                          <SelectItem value="court">Court</SelectItem>
+                          <SelectItem value="tournament">Tournament Bracket</SelectItem>
+                          <SelectItem value="rating">Player Rating</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                     
                     <div className="pt-4">
                       <Button className="mr-2">
@@ -242,18 +253,47 @@ const IconsPage: React.FC = () => {
                       className="p-8 flex items-center justify-center" 
                       style={{ minHeight: '256px' }}
                     >
-                      <div className="w-full h-full flex items-center justify-center" style={{ color }}>
-                        {/* Dynamic icon will go here */}
-                        <div 
-                          className="rounded-full flex items-center justify-center"
-                          style={{ 
-                            width: `${size}px`, 
-                            height: `${size}px`,
-                            backgroundColor: `${color}20`,
-                          }}
-                        >
-                          <span className="text-3xl">🏓</span>
-                        </div>
+                      <div className="w-full h-full flex items-center justify-center">
+                        {selectedIcon === 'pickle' && (
+                          <PickleballIcon 
+                            size={size} 
+                            color={color} 
+                            strokeWidth={strokeWidth} 
+                            fill={fill} 
+                          />
+                        )}
+                        {selectedIcon === 'paddle' && (
+                          <PaddleIcon 
+                            size={size} 
+                            color={color} 
+                            strokeWidth={strokeWidth} 
+                            fill={fill} 
+                          />
+                        )}
+                        {selectedIcon === 'court' && (
+                          <CourtIcon 
+                            size={size} 
+                            color={color} 
+                            strokeWidth={strokeWidth} 
+                            fill={fill} 
+                          />
+                        )}
+                        {selectedIcon === 'tournament' && (
+                          <TournamentBracketIcon 
+                            size={size} 
+                            color={color} 
+                            strokeWidth={strokeWidth} 
+                            fill={fill} 
+                          />
+                        )}
+                        {selectedIcon === 'rating' && (
+                          <PlayerRatingIcon 
+                            size={size} 
+                            color={color} 
+                            strokeWidth={strokeWidth} 
+                            fill={fill} 
+                          />
+                        )}
                       </div>
                     </div>
                     <div className="w-full mt-4 grid grid-cols-5 gap-2">
@@ -262,7 +302,15 @@ const IconsPage: React.FC = () => {
                         size="sm" 
                         className="p-2 h-auto"
                         title="Copy SVG"
-                        onClick={() => copySvgToClipboard('PickleballIcon')}
+                        onClick={() => {
+                          let iconName = 'PickleballIcon';
+                          if (selectedIcon === 'pickle') iconName = 'PickleballIcon';
+                          if (selectedIcon === 'paddle') iconName = 'PaddleIcon';
+                          if (selectedIcon === 'court') iconName = 'CourtIcon';
+                          if (selectedIcon === 'tournament') iconName = 'TournamentBracketIcon';
+                          if (selectedIcon === 'rating') iconName = 'PlayerRatingIcon';
+                          copySvgToClipboard(iconName);
+                        }}
                       >
                         <Copy className="h-4 w-4" />
                       </Button>
