@@ -12,6 +12,7 @@ import { CommunityProvider } from "../../lib/providers/CommunityProvider";
 import { useCommunities } from "../../lib/hooks/useCommunity";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from "@/hooks/use-toast";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { 
   Search, Users, PlusCircle, Calendar, Megaphone,
   Sparkles, TestTube, FlaskConical, Beaker, Zap,
@@ -192,282 +193,213 @@ export default function CommunitiesPage() {
   };
 
   return (
-    <CommunityProvider>
-      <div className="relative min-h-screen overflow-x-hidden">
-        {/* Background Elements */}
-        <div className="fixed inset-0 bg-gradient-to-br from-[#f5f8ff] via-[#f0f9ff] to-[#edfff1] dark:from-[#121826] dark:via-[#111a22] dark:to-[#0f1c11] -z-10"></div>
-        <CourtLinesBackground />
-        
-        {/* Confetti Effect */}
-        <ConfettiEffect active={showConfetti} />
-        
-        {/* Floating Decoration Elements */}
-        <div className="hidden lg:block absolute top-40 -left-6 w-12 h-12 rounded-full bg-yellow-300/30 backdrop-blur-xl animate-pulse-slow"></div>
-        <div className="hidden lg:block absolute bottom-20 right-10 w-20 h-20 rounded-full bg-green-300/20 backdrop-blur-xl animate-float"></div>
-        <div className="hidden lg:block absolute top-1/4 right-16 w-8 h-8 rounded-full bg-blue-300/20 backdrop-blur-md animate-float-delay"></div>
-        
-        <div className="container mx-auto py-8 px-4 relative z-10">
-          {/* Header Banner */}
-          <div className="relative overflow-hidden bg-primary/5 p-5 mb-8 rounded-2xl border border-primary/20 shadow-sm backdrop-blur-sm">
-            <div className="absolute -right-6 -top-6 w-24 h-24 bg-primary/10 rounded-full blur-2xl"></div>
-            <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-yellow-300/20 rounded-full blur-2xl"></div>
-            
-            <div className="flex items-center gap-3 mb-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15">
-                <FlaskConical className="h-5 w-5 text-primary" />
-              </div>
-              <h2 className="text-sm font-semibold text-primary">PKL-278651-COMM-0006-HUB-UI</h2>
-            </div>
-            
-            <div className="flex items-start gap-2 pl-12">
-              <Beaker className="h-4 w-4 text-muted-foreground mt-0.5" />
-              <p className="text-sm text-muted-foreground">
-                Discover pickleball communities, connect with players, and participate in local events.
-              </p>
-            </div>
-          </div>
+    <DashboardLayout>
+      <CommunityProvider>
+        <div className="relative overflow-x-hidden">
+          {/* Background Elements */}
+          <CourtLinesBackground />
           
-          {/* Modern Title with Animation */}
-          <div className="flex items-center gap-5 mb-8">
-            <div className="relative h-16 w-16 rotate-12 flex items-center justify-center text-green-600 bg-green-100 dark:bg-green-900/40 dark:text-green-400 rounded-xl shadow-lg">
-              <PickleballIcon />
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full animate-ping-slow opacity-70"></div>
+          {/* Confetti Effect */}
+          <ConfettiEffect active={showConfetti} />
+          
+          {/* Floating Decoration Elements */}
+          <div className="hidden lg:block absolute top-40 -left-6 w-12 h-12 rounded-full bg-yellow-300/30 backdrop-blur-xl animate-pulse-slow"></div>
+          <div className="hidden lg:block absolute bottom-20 right-10 w-20 h-20 rounded-full bg-green-300/20 backdrop-blur-xl animate-float"></div>
+          <div className="hidden lg:block absolute top-1/4 right-16 w-8 h-8 rounded-full bg-blue-300/20 backdrop-blur-md animate-float-delay"></div>
+          
+          <div className="container mx-auto py-8 px-4 relative z-10">
+            {/* Header Banner */}
+            <div className="relative overflow-hidden bg-primary/5 p-5 mb-8 rounded-2xl border border-primary/20 shadow-sm backdrop-blur-sm">
+              <div className="absolute -right-6 -top-6 w-24 h-24 bg-primary/10 rounded-full blur-2xl"></div>
+              <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-yellow-300/20 rounded-full blur-2xl"></div>
+              
+              <div className="flex items-center gap-3 mb-2">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15">
+                  <FlaskConical className="h-5 w-5 text-primary" />
+                </div>
+                <h2 className="text-sm font-semibold text-primary">PKL-278651-COMM-0006-HUB-UI</h2>
+              </div>
+              
+              <div className="flex items-start gap-2 pl-12">
+                <Beaker className="h-4 w-4 text-muted-foreground mt-0.5" />
+                <p className="text-sm text-muted-foreground">
+                  Discover pickleball communities, connect with players, and participate in local events.
+                </p>
+              </div>
             </div>
             
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-primary">
-                  Pickleball Communities
-                </h1>
-                <PartyPopper className="h-6 w-6 text-yellow-500 animate-wiggle" />
+            {/* Modern Title with Animation */}
+            <div className="flex items-center gap-5 mb-8">
+              <div className="relative h-16 w-16 rotate-12 flex items-center justify-center text-green-600 bg-green-100 dark:bg-green-900/40 dark:text-green-400 rounded-xl shadow-lg">
+                <PickleballIcon />
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full animate-ping-slow opacity-70"></div>
               </div>
               
-              <div className="flex items-center gap-4">
-                <div className="flex items-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-3 py-1 gap-1.5">
-                  <Users className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                  <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
-                    {communities?.length || '1,000+'} Communities
-                  </span>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-primary">
+                    Pickleball Communities
+                  </h1>
+                  <PartyPopper className="h-6 w-6 text-yellow-500 animate-wiggle" />
                 </div>
                 
-                <div className="flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-3 py-1 gap-1.5">
-                  <Target className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-                  <span className="text-xs font-medium text-green-600 dark:text-green-400">
-                    Find Your Match
-                  </span>
-                </div>
-                
-                <div className="flex items-center rounded-full bg-amber-100 dark:bg-amber-900/30 px-3 py-1 gap-1.5">
-                  <Zap className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                  <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
-                    Grow Your Network
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <Tabs value={activeTab} onValueChange={(value) => {
-            setActiveTab(value);
-            setShowConfetti(true);
-            setTimeout(() => setShowConfetti(false), 2000);
-          }}>
-            {/* Icon-based Navigation */}
-            <div className="relative">
-              <div className="absolute -top-5 right-0 flex items-center gap-2 text-xs bg-background/70 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm border border-muted/30">
-                <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                <span className="text-muted-foreground">Integrated community features</span>
-              </div>
-              
-              <div className="mb-8 p-2 bg-muted/30 rounded-xl border border-muted/80 overflow-hidden shadow-inner">
-                <div className="w-full flex items-center justify-center gap-1 sm:gap-3 lg:gap-6">
-                  {navItems.map((item) => (
-                    <NavIcon 
-                      key={item.id}
-                      icon={item.icon}
-                      label={item.label}
-                      active={activeTab === item.id}
-                      onClick={() => handleNavClick(item.id)}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Feature Badge Pills */}
-              <div className="mb-6 flex flex-wrap gap-2 px-2">
-                <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm border border-primary/30">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="mr-1.5" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" />
-                    <path d="M16.5 16.5L21 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  </svg>
-                  <span>Find Communities</span>
-                </div>
-                
-                <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-sm">
-                  <Activity className="h-3.5 w-3.5 mr-1.5" />
-                  <span>All Skill Levels</span>
-                </div>
-                
-                <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 text-sm">
-                  <PickleballIcon />
-                  <span className="ml-1.5">Connect With Players</span>
-                </div>
-                
-                <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400 text-sm">
-                  <Trophy className="h-3.5 w-3.5 mr-1.5" />
-                  <span>Community Events</span>
-                </div>
-              </div>
-              
-              <div className="relative mb-6 p-6 bg-card/80 backdrop-blur-sm shadow-lg rounded-xl border border-muted/50">
-                {/* Corner Decorations */}
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-br-xl rounded-tl-xl transform rotate-45 shadow-sm"></div>
-                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-green-400 rounded-br-xl rounded-tl-xl transform rotate-45 shadow-sm"></div>
-                
-                <div className="relative p-4 bg-muted/20 rounded-lg mb-6">
-                  <h3 className="text-xl font-semibold mb-2">Welcome to Community Hub</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Discover and join local pickleball communities, participate in events, and connect with players near you. Our community features help you grow your pickleball network and improve your game.
-                  </p>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-3 py-1 gap-1.5">
+                    <Users className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                    <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                      {communities?.length || '1,000+'} Communities
+                    </span>
+                  </div>
                   
-                  <div className="flex flex-wrap gap-3">
-                    <div className="flex items-center">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 mr-2 text-primary">
-                        <Search className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium">Discover</div>
-                        <div className="text-xs text-muted-foreground">Find communities</div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/40 mr-2 text-green-600 dark:text-green-400">
-                        <Calendar className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium">Events</div>
-                        <div className="text-xs text-muted-foreground">Join local games</div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 mr-2 text-blue-600 dark:text-blue-400">
-                        <Users className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium">Connect</div>
-                        <div className="text-xs text-muted-foreground">Meet players</div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/40 mr-2 text-amber-600 dark:text-amber-400">
-                        <Trophy className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium">Compete</div>
-                        <div className="text-xs text-muted-foreground">Join tournaments</div>
-                      </div>
-                    </div>
+                  <div className="flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-3 py-1 gap-1.5">
+                    <Target className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                    <span className="text-xs font-medium text-green-600 dark:text-green-400">
+                      Find Your Match
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center rounded-full bg-amber-100 dark:bg-amber-900/30 px-3 py-1 gap-1.5">
+                    <Zap className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                    <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                      Grow Your Network
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
             
-            {/* Tab Content */}
-            <TabsContent value="discover" className="pt-4">
-              <CommunityDiscoveryMockup />
-            </TabsContent>
-            
-            <TabsContent value="profile" className="pt-4">
-              <CommunityProfileMockup />
-            </TabsContent>
-            
-            <TabsContent value="create" className="pt-4">
-              <CommunityCreationMockup />
-            </TabsContent>
-            
-            <TabsContent value="events" className="pt-4">
-              <CommunityEventsMockup />
-            </TabsContent>
-            
-            <TabsContent value="announcements" className="pt-4">
-              <CommunityAnnouncementsMockup />
-            </TabsContent>
-          </Tabs>
+            <Tabs value={activeTab} onValueChange={(value) => {
+              setActiveTab(value);
+              setShowConfetti(true);
+              setTimeout(() => setShowConfetti(false), 2000);
+            }}>
+              {/* Icon-based Navigation */}
+              <div className="relative">
+                <div className="absolute -top-5 right-0 flex items-center gap-2 text-xs bg-background/70 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm border border-muted/30">
+                  <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                  <span className="text-muted-foreground">Integrated community features</span>
+                </div>
+                
+                <div className="mb-8 p-2 bg-muted/30 rounded-xl border border-muted/80 overflow-hidden shadow-inner">
+                  <div className="w-full flex items-center justify-center gap-1 sm:gap-3 lg:gap-6">
+                    {navItems.map((item) => (
+                      <NavIcon 
+                        key={item.id}
+                        icon={item.icon}
+                        label={item.label}
+                        active={activeTab === item.id}
+                        onClick={() => handleNavClick(item.id)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Feature Badge Pills */}
+                <div className="mb-6 flex flex-wrap gap-2 px-2">
+                  <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm border border-primary/30">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="mr-1.5" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" />
+                      <path d="M16.5 16.5L21 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                    <span>Find Communities</span>
+                  </div>
+                  
+                  <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-sm">
+                    <Activity className="h-3.5 w-3.5 mr-1.5" />
+                    <span>All Skill Levels</span>
+                  </div>
+                  
+                  <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 text-sm">
+                    <PickleballIcon />
+                    <span className="ml-1.5">Connect With Players</span>
+                  </div>
+                  
+                  <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400 text-sm">
+                    <Trophy className="h-3.5 w-3.5 mr-1.5" />
+                    <span>Community Events</span>
+                  </div>
+                </div>
+                
+                <div className="relative mb-6 p-6 bg-card/80 backdrop-blur-sm shadow-lg rounded-xl border border-muted/50">
+                  {/* Corner Decorations */}
+                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-br-xl rounded-tl-xl transform rotate-45 shadow-sm"></div>
+                  <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-green-400 rounded-br-xl rounded-tl-xl transform rotate-45 shadow-sm"></div>
+                  
+                  <div className="relative p-4 bg-muted/20 rounded-lg mb-6">
+                    <h3 className="text-xl font-semibold mb-2">Welcome to Community Hub</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Discover and join local pickleball communities, participate in events, and connect with players near you. Our community features help you grow your pickleball network and improve your game.
+                    </p>
+                    
+                    <div className="flex flex-wrap gap-3">
+                      <div className="flex items-center">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 mr-2 text-primary">
+                          <Search className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium">Discover</div>
+                          <div className="text-xs text-muted-foreground">Find communities</div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/40 mr-2 text-green-600 dark:text-green-400">
+                          <Calendar className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium">Events</div>
+                          <div className="text-xs text-muted-foreground">Join local games</div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 mr-2 text-blue-600 dark:text-blue-400">
+                          <Users className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium">Connect</div>
+                          <div className="text-xs text-muted-foreground">Meet players</div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/40 mr-2 text-amber-600 dark:text-amber-400">
+                          <Trophy className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium">Compete</div>
+                          <div className="text-xs text-muted-foreground">Join tournaments</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Tab Content */}
+              <TabsContent value="discover" className="pt-4">
+                <CommunityDiscoveryMockup />
+              </TabsContent>
+              
+              <TabsContent value="profile" className="pt-4">
+                <CommunityProfileMockup />
+              </TabsContent>
+              
+              <TabsContent value="create" className="pt-4">
+                <CommunityCreationMockup />
+              </TabsContent>
+              
+              <TabsContent value="events" className="pt-4">
+                <CommunityEventsMockup />
+              </TabsContent>
+              
+              <TabsContent value="announcements" className="pt-4">
+                <CommunityAnnouncementsMockup />
+              </TabsContent>
+            </Tabs>
+          </div>
         </div>
-        
-        {/* Add CSS animations */}
-        <style dangerouslySetInnerHTML={{
-          __html: `
-          @keyframes confetti-fall {
-            0% {
-              transform: translateY(-10vh) rotate(0deg);
-            }
-            100% {
-              transform: translateY(100vh) rotate(720deg);
-            }
-          }
-          
-          @keyframes ping-slow {
-            0% {
-              transform: scale(1);
-              opacity: 0.8;
-            }
-            50% {
-              transform: scale(1.8);
-              opacity: 0.3;
-            }
-            100% {
-              transform: scale(1);
-              opacity: 0.8;
-            }
-          }
-          
-          .animate-ping-slow {
-            animation: ping-slow 3s cubic-bezier(0, 0, 0.2, 1) infinite;
-          }
-          
-          .animate-float {
-            animation: float 6s ease-in-out infinite;
-          }
-          
-          .animate-float-delay {
-            animation: float 6s ease-in-out 2s infinite;
-          }
-          
-          @keyframes float {
-            0% {
-              transform: translateY(0px);
-            }
-            50% {
-              transform: translateY(-20px);
-            }
-            100% {
-              transform: translateY(0px);
-            }
-          }
-          
-          @keyframes wiggle {
-            0%, 100% {
-              transform: rotate(-5deg);
-            }
-            50% {
-              transform: rotate(5deg);
-            }
-          }
-          
-          .animate-wiggle {
-            animation: wiggle 1s ease-in-out infinite;
-          }
-          
-          .ease-spring {
-            transition-timing-function: cubic-bezier(0.5, 1.5, 0.5, 1);
-          }
-          `
-        }} />
-      </div>
-    </CommunityProvider>
+      </CommunityProvider>
+    </DashboardLayout>
   );
 }
