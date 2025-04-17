@@ -55,6 +55,23 @@ export function useCommunities(options?: {
 }
 
 /**
+ * Hook to fetch communities where the current user is a member
+ */
+export function useMyCommunitiesList(options?: {
+  limit?: number;
+  offset?: number;
+  enabled?: boolean;
+}) {
+  const { limit, offset, enabled = true } = options || {};
+  
+  return useQuery({
+    queryKey: [...communityKeys.lists(), 'my', { limit, offset }],
+    queryFn: () => communityApi.getMyCommunitiesList({ limit, offset }),
+    enabled,
+  });
+}
+
+/**
  * Hook to fetch a single community by ID
  */
 export function useCommunity(id: number, options?: { enabled?: boolean }) {

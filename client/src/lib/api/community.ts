@@ -93,6 +93,28 @@ export async function updateCommunity(id: number, data: Partial<InsertCommunity>
   return response.json() as Promise<Community>;
 }
 
+/**
+ * Get communities where the current user is a member
+ */
+export async function getMyCommunitiesList(options?: {
+  limit?: number;
+  offset?: number;
+}) {
+  const params = new URLSearchParams();
+  
+  if (options?.limit) params.append("limit", options.limit.toString());
+  if (options?.offset) params.append("offset", options.offset.toString());
+  
+  const queryString = params.toString() ? `?${params.toString()}` : "";
+  const response = await apiRequest("GET", `${BASE_URL}/my${queryString}`);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch my communities: ${response.statusText}`);
+  }
+  
+  return response.json() as Promise<Community[]>;
+}
+
 // === Community Members ===
 
 /**
