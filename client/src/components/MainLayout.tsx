@@ -43,7 +43,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     { name: 'Coaching', path: '/coaching', icon: <BookOpen className="h-5 w-5" /> },
     { name: 'Communities', path: '/communities', icon: <Users className="h-5 w-5" /> },
     { name: 'Profile', path: '/profile', icon: <UserCircle className="h-5 w-5" /> },
-    { name: 'Icons', path: '/icons', icon: <Palette className="h-5 w-5 text-orange-500" /> },
     { name: 'Preferences', path: '/preferences', icon: <Settings className="h-5 w-5" /> },
   ];
 
@@ -100,7 +99,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                   >
                     {item.icon}
                     <span className="ml-3">{item.name}</span>
-                    {(item.name === 'Tournaments' || item.name === 'Icons') && (
+                    {item.name === 'Tournaments' && (
                       <Badge className="ml-auto bg-primary/90 text-white text-xs">New</Badge>
                     )}
                   </a>
@@ -174,7 +173,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                       >
                         {item.icon}
                         <span className="ml-3">{item.name}</span>
-                        {(item.name === 'Tournaments' || item.name === 'Icons') && (
+                        {item.name === 'Tournaments' && (
                           <Badge className="ml-auto bg-primary/90 text-white text-xs">New</Badge>
                         )}
                       </a>
