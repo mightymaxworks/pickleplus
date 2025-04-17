@@ -217,33 +217,16 @@ export const DecorativeElements = () => (
 
 export const CommunityHeader = ({ 
   title, 
-  subtitle, 
-  icon = <PickleballIcon />,
-  cornerDecorations = true
+  subtitle
 }: { 
   title: string; 
   subtitle: string;
-  icon?: React.ReactNode;
-  cornerDecorations?: boolean;
 }) => (
-  <div className="relative bg-primary/5 p-5 mb-8 rounded-2xl border border-primary/20 shadow-sm backdrop-blur-sm">
-    <div className="absolute -right-6 -top-6 w-24 h-24 bg-primary/10 rounded-full blur-2xl"></div>
-    <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-yellow-300/20 rounded-full blur-2xl"></div>
-    
-    <div className="flex items-center gap-3 mb-2">
-      <img src={communityLogoImage} alt="Community Logo" className="h-9 w-auto" />
-      <h2 className="text-sm font-semibold text-primary">{title}</h2>
-    </div>
-    
-    <div className="flex items-start gap-2 pl-12">
+  <div className="flex items-center gap-4 mb-8">
+    <img src={communityLogoImage} alt="Community Logo" className="h-12 w-auto" />
+    <div>
+      <h2 className="text-lg font-semibold">{title}</h2>
       <p className="text-sm text-muted-foreground">{subtitle}</p>
     </div>
-    
-    {cornerDecorations && (
-      <>
-        <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-br-xl rounded-tl-xl transform rotate-45 shadow-sm"></div>
-        <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-green-400 rounded-br-xl rounded-tl-xl transform rotate-45 shadow-sm"></div>
-      </>
-    )}
   </div>
 );
