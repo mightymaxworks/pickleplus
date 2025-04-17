@@ -235,20 +235,19 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
                   <FormItem className="flex flex-col">
                     <FormLabel>Event Date & Time</FormLabel>
                     <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className="w-full pl-3 text-left font-normal"
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {field.value ? (
-                              format(field.value, "PPP p")
-                            ) : (
-                              <span>Pick a date and time</span>
-                            )}
-                          </Button>
-                        </FormControl>
+                      <PopoverTrigger>
+                        <Button
+                          type="button"
+                          variant={"outline"}
+                          className="w-full pl-3 text-left font-normal"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {field.value ? (
+                            format(field.value, "PPP p")
+                          ) : (
+                            <span>Pick a date and time</span>
+                          )}
+                        </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
@@ -341,20 +340,19 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
                   <FormItem className="flex flex-col">
                     <FormLabel>End Date & Time (Optional)</FormLabel>
                     <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className="w-full pl-3 text-left font-normal"
-                          >
-                            <Clock className="mr-2 h-4 w-4" />
-                            {field.value ? (
-                              format(field.value, "PPP p")
-                            ) : (
-                              <span>Select end date/time</span>
-                            )}
-                          </Button>
-                        </FormControl>
+                      <PopoverTrigger>
+                        <Button
+                          type="button"
+                          variant={"outline"}
+                          className="w-full pl-3 text-left font-normal"
+                        >
+                          <Clock className="mr-2 h-4 w-4" />
+                          {field.value ? (
+                            format(field.value, "PPP p")
+                          ) : (
+                            <span>Select end date/time</span>
+                          )}
+                        </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
@@ -656,20 +654,19 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
                     <FormItem className="flex flex-col">
                       <FormLabel>Registration Deadline (Optional)</FormLabel>
                       <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className="w-full pl-3 text-left font-normal"
-                            >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {field.value ? (
-                                format(field.value, "PPP p")
-                              ) : (
-                                <span>Set deadline for registration</span>
-                              )}
-                            </Button>
-                          </FormControl>
+                        <PopoverTrigger>
+                          <Button
+                            type="button"
+                            variant={"outline"}
+                            className="w-full pl-3 text-left font-normal"
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {field.value ? (
+                              format(field.value, "PPP p")
+                            ) : (
+                              <span>Set deadline for registration</span>
+                            )}
+                          </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
                           <Calendar
