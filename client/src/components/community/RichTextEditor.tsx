@@ -43,11 +43,15 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const [isInitialized, setIsInitialized] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   
-  // Initialize the editor content once
+  // Initialize the editor content when the value changes
   useEffect(() => {
-    if (editorRef.current && !isInitialized) {
+    if (editorRef.current) {
+      // Always update HTML when value is changed from outside
       editorRef.current.innerHTML = value;
-      setIsInitialized(true);
+      
+      if (!isInitialized) {
+        setIsInitialized(true);
+      }
     }
   }, [value, isInitialized]);
 

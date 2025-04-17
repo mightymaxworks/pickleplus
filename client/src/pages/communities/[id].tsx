@@ -844,13 +844,14 @@ function CommunityPosts({ communityId, isMember }: { communityId: number; isMemb
                       size="sm" 
                       className="h-8 gap-1"
                       onClick={() => handleLikePost(post.id, post.isLikedByCurrentUser)}
+                      title={post.isLikedByCurrentUser ? 'Unlike' : 'Like'}
                     >
                       {post.isLikedByCurrentUser ? (
                         <Heart className="h-4 w-4 fill-red-500 text-red-500 mr-1" />
                       ) : (
                         <Heart className="h-4 w-4 mr-1" />
                       )}
-                      <span>{post.isLikedByCurrentUser ? 'Liked' : 'Like'}</span>
+                      <span className="hidden sm:inline">{post.isLikedByCurrentUser ? 'Liked' : 'Like'}</span>
                       <span>({post.likes})</span>
                     </Button>
                     
@@ -859,9 +860,10 @@ function CommunityPosts({ communityId, isMember }: { communityId: number; isMemb
                       size="sm" 
                       className="h-8 gap-1"
                       onClick={() => setActiveCommentPostId(activeCommentPostId === post.id ? null : post.id)}
+                      title="Comment"
                     >
                       <MessageSquare className="h-4 w-4 mr-1" />
-                      <span>Comment</span>
+                      <span className="hidden sm:inline">Comment</span>
                       <span>({post.comments})</span>
                     </Button>
                     
@@ -871,9 +873,10 @@ function CommunityPosts({ communityId, isMember }: { communityId: number; isMemb
                         size="sm" 
                         className="h-8 gap-1 ml-auto"
                         onClick={() => handleDeletePost(post.id)}
+                        title="Delete post"
                       >
                         <Trash2 className="h-4 w-4 mr-1 text-red-500" />
-                        <span className="text-red-500">Delete</span>
+                        <span className="hidden sm:inline text-red-500">Delete</span>
                       </Button>
                     )}
                   </div>
