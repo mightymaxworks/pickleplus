@@ -20,6 +20,17 @@ import pickleLogoPath from "../assets/Pickle (2).png";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from '@/components/ui/badge';
 
+// Navigation item type definition
+type NavigationItem = {
+  name: string;
+  path: string;
+  icon: React.ReactNode;
+  badge?: {
+    text: string;
+    variant: 'default' | 'secondary' | 'destructive' | 'outline' | 'success';
+  };
+};
+
 interface MainLayoutProps {
   children: React.ReactNode;
 }
@@ -34,7 +45,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   };
 
   // Create the base navigation items
-  const baseNavigationItems = [
+  const baseNavigationItems: NavigationItem[] = [
     { name: 'Dashboard', path: '/', icon: <Home className="h-5 w-5" /> },
     { name: 'Tournaments', path: '/tournaments', icon: <Trophy className="h-5 w-5" /> },
     { name: 'Matches', path: '/matches', icon: <CheckCircle2 className="h-5 w-5" /> },
@@ -56,7 +67,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   // Add admin dashboard item for admin users
   console.log("User admin status:", user?.isAdmin);
   
-  const navigationItems = user?.isAdmin 
+  const navigationItems: NavigationItem[] = user?.isAdmin 
     ? [
         ...baseNavigationItems,
         { 
@@ -108,6 +119,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                     <span className="ml-3">{item.name}</span>
                     {item.name === 'Tournaments' && (
                       <Badge className="ml-auto bg-primary/90 text-white text-xs">New</Badge>
+                    )}
+                    {item.badge && (
+                      <Badge className="ml-auto text-xs" variant={item.badge.variant}>
+                        {item.badge.text}
+                      </Badge>
                     )}
                   </a>
                 </Link>
@@ -182,6 +198,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                         <span className="ml-3">{item.name}</span>
                         {item.name === 'Tournaments' && (
                           <Badge className="ml-auto bg-primary/90 text-white text-xs">New</Badge>
+                        )}
+                        {item.badge && (
+                          <Badge className="ml-auto text-xs" variant={item.badge.variant}>
+                            {item.badge.text}
+                          </Badge>
                         )}
                       </a>
                     </Link>
