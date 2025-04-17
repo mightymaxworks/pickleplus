@@ -158,16 +158,21 @@ export function EventList({
       );
     }
     
-    // Filter by tab view
-    if (currentView === "upcoming") {
-      events = events.filter(event => event.status === CommunityEventStatus.UPCOMING);
-    } else if (currentView === "ongoing") {
-      events = events.filter(event => event.status === CommunityEventStatus.ONGOING);
-    } else if (currentView === "past") {
-      events = events.filter(event => 
-        event.status === CommunityEventStatus.COMPLETED || 
-        event.status === CommunityEventStatus.CANCELLED
-      );
+    // Filter by tab view using switch for better performance
+    switch (currentView) {
+      case "upcoming":
+        events = events.filter(event => event.status === CommunityEventStatus.UPCOMING);
+        break;
+      case "ongoing":
+        events = events.filter(event => event.status === CommunityEventStatus.ONGOING);
+        break;
+      case "past":
+        events = events.filter(event => 
+          event.status === CommunityEventStatus.COMPLETED || 
+          event.status === CommunityEventStatus.CANCELLED
+        );
+        break;
+      // "all" view - no filtering needed
     }
     
     // Filter for calendar view - if we have a selected date in calendar view
@@ -284,7 +289,7 @@ export function EventList({
     e.status === CommunityEventStatus.CANCELLED
   ).length;
 
-  // Render loading skeleton
+  // Render lightweight loading skeleton
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -294,16 +299,13 @@ export function EventList({
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2">
-            <div className="space-y-4">
-              {Array(3).fill(0).map((_, i) => (
-                <Skeleton key={i} className="h-40 w-full" />
-              ))}
-            </div>
+          <div className={cn("space-y-4", showFilter ? "md:col-span-2" : "md:col-span-3")}>
+            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-40 w-full" />
           </div>
           
           {showFilter && (
-            <div className="md:col-span-1">
+            <div className="hidden md:block md:col-span-1">
               <Skeleton className="h-96 w-full" />
             </div>
           )}
