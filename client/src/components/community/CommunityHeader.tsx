@@ -1,15 +1,23 @@
 /**
- * PKL-278651-COMM-0014-UI
- * Community Header Component
+ * PKL-278651-COMM-0014-HEAD
+ * Enhanced Community Header Component
  * 
  * This component displays the header section of a community detail page,
  * including the community name, description, statistics, and quick action buttons.
+ * 
+ * Enhancements:
+ * - Added Creator badge for community creators
+ * - Improved navigation with back button to communities listing
+ * - Fixed display logic for join/leave actions based on membership status
+ * - Enhanced mobile responsiveness
  */
 
 import React from "react";
+import { useLocation } from "wouter";
 import { Community, CommunityMemberRole } from "@/types/community";
 import { useCommunityContext } from "@/lib/providers/CommunityProvider";
 import { useJoinCommunity, useLeaveCommunity } from "@/lib/hooks/useCommunity";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -51,7 +59,9 @@ import {
   Lock,
   Share2,
   Flag,
-  Edit
+  Edit,
+  ChevronLeft,
+  Star
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format, formatDistance } from "date-fns";
@@ -75,11 +85,17 @@ export function CommunityHeader({
   onTabChange,
   currentTab = "about"
 }: CommunityHeaderProps) {
+  const [, setLocation] = useLocation();
+  const { user } = useAuth();
   const { joinCommunity, leaveCommunity } = useCommunityContext();
   
   // Determine user's relationship with community
   const isMember = community.isMember || userRole !== null;
   const hasManagePermissions = isAdmin || isModerator || userRole === CommunityMemberRole.ADMIN || userRole === CommunityMemberRole.MODERATOR;
+  
+  // Check if the user is the creator of the community
+  const isCreator = user?.id === community.createdByUserId;
+  console.log("Is creator calculated:", isCreator, "Current user ID:", user?.id, "Creator ID:", community.createdByUserId);
   
   // Format dates
   const formattedCreatedAt = community.createdAt 
@@ -90,6 +106,11 @@ export function CommunityHeader({
   const memberCountDisplay = community.memberCount.toLocaleString();
   const eventCountDisplay = community.eventCount.toLocaleString(); 
   const postCountDisplay = community.postCount.toLocaleString();
+  
+  // Handle navigation
+  const handleBackToList = () => {
+    setLocation('/communities');
+  };
   
   // Handle join/leave
   const handleJoin = () => {
@@ -104,6 +125,15 @@ export function CommunityHeader({
   
   // Role badge component
   const RoleBadge = () => {
+    if (isCreator) {
+      return (
+        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">
+          <Star className="h-3.5 w-3.5 mr-1" />
+          Creator
+        </Badge>
+      );
+    }
+    
     if (!userRole) return null;
     
     switch (userRole) {
@@ -133,6 +163,17 @@ export function CommunityHeader({
 
   return (
     <div className="space-y-4">
+      {/* Back button */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={handleBackToList}
+        className="mb-2 -ml-2 text-muted-foreground hover:text-foreground"
+      >
+        <ChevronLeft className="h-4 w-4 mr-1" />
+        Back to Communities
+      </Button>
+      
       {/* Hero section */}
       <div className={cn(
         "relative rounded-xl p-6 text-white overflow-hidden",
@@ -177,7 +218,15 @@ export function CommunityHeader({
                 </Badge>
               )}
               
-              {isMember && <RoleBadge />}
+              {/* Always show the creator badge if isCreator is true, otherwise show role badge for members */}
+              {isCreator ? (
+                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">
+                  <Star className="h-3.5 w-3.5 mr-1" />
+                  Creator
+                </Badge>
+              ) : (
+                isMember && <RoleBadge />
+              )}
             </div>
             
             {/* Location and founding date */}
@@ -223,7 +272,7 @@ export function CommunityHeader({
           
           {/* Action buttons */}
           <div className="flex gap-2 mt-2 md:mt-0 md:self-start">
-            {isMember ? (
+            {isMember || isCreator ? (
               <>
                 <Button 
                   variant="secondary" 
@@ -265,15 +314,18 @@ export function CommunityHeader({
                       Report Community
                     </DropdownMenuItem>
                     
-                    <DropdownMenuSeparator />
-                    
-                    <DropdownMenuItem 
-                      onClick={handleLeave}
-                      className="text-destructive focus:text-destructive"
-                    >
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Leave Community
-                    </DropdownMenuItem>
+                    {!isCreator && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          onClick={handleLeave}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <LogOut className="h-4 w-4 mr-2" />
+                          Leave Community
+                        </DropdownMenuItem>
+                      </>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </>
