@@ -822,12 +822,27 @@ router.get('/my-community-ids', isAuthenticated, async (req: Request, res: Respo
     // Get all communities where user is a member
     const memberships = await storage.getCommunityMembershipsByUserId(userIdNum);
     
-    console.log(`[Community API] Retrieved memberships for user ${userIdNum}:`, JSON.stringify(memberships));
+    // Get all communities created by this user
+    const createdCommunities = await storage.getCommunitiesByCreator(userIdNum);
     
-    // Even if no memberships, return an empty array
-    const communityIds = Array.isArray(memberships) 
+    console.log(`[Community API] Retrieved memberships for user ${userIdNum}:`, JSON.stringify(memberships));
+    console.log(`[Community API] Retrieved created communities for user ${userIdNum}:`, JSON.stringify(createdCommunities));
+    
+    // Combine both memberships and communities created by the user
+    let communityIds = Array.isArray(memberships) 
       ? memberships.map(membership => membership.communityId)
       : [];
+    
+    // Add IDs of communities created by the user (if not already in the list)
+    if (Array.isArray(createdCommunities)) {
+      const createdCommunityIds = createdCommunities.map(community => community.id);
+      // Add only unique community IDs
+      for (const id of createdCommunityIds) {
+        if (!communityIds.includes(id)) {
+          communityIds.push(id);
+        }
+      }
+    }
     
     return res.status(200).json(communityIds);
   } catch (error) {

@@ -54,6 +54,8 @@ export interface CommunityStorage {
   
   getCommunityById(id: number): Promise<Community | undefined>;
   
+  getCommunitiesByCreator(userId: number): Promise<Community[]>;
+  
   createCommunity(communityData: InsertCommunity): Promise<Community>;
   
   updateCommunity(id: number, updates: Partial<InsertCommunity>): Promise<Community | undefined>;
@@ -203,6 +205,31 @@ export const communityStorageImplementation: CommunityStorage = {
       .limit(1);
     
     return result[0];
+  },
+  
+  async getCommunitiesByCreator(userId: number): Promise<Community[]> {
+    try {
+      // Convert userId to a proper number and validate it
+      const userIdNum = Number(userId);
+      if (isNaN(userIdNum) || userIdNum <= 0) {
+        console.error(`[Storage] getCommunitiesByCreator called with invalid userId: ${userId} (converted to ${userIdNum})`);
+        return [];
+      }
+      
+      console.log(`[Storage] Fetching communities created by user ${userIdNum}`);
+      
+      const db = this.getDb();
+      const result = await db
+        .select()
+        .from(communities)
+        .where(eq(communities.createdByUserId, userIdNum));
+      
+      console.log(`[Storage] Found ${result?.length || 0} communities created by user ${userIdNum}`);
+      return result || [];
+    } catch (error) {
+      console.error('[Storage] Error in getCommunitiesByCreator:', error);
+      return [];
+    }
   },
   
   async createCommunity(communityData: InsertCommunity): Promise<Community> {
