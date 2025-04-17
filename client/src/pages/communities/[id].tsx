@@ -47,8 +47,10 @@ import {
   Info,
   Check,
   X,
-  Edit
+  Edit,
+  Bell
 } from "lucide-react";
+import { JoinRequestManagement } from "@/components/community/JoinRequestManagement";
 import { CommunityMemberRole } from "@/types/community";
 
 export default function CommunityDetailPage() {
@@ -316,29 +318,81 @@ export default function CommunityDetailPage() {
           
           {/* Manage Tab (visible only to admins/moderators) */}
           {activeTab === "manage" && (userRole === CommunityMemberRole.ADMIN || userRole === CommunityMemberRole.MODERATOR) && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Edit className="h-5 w-5" />
-                  Manage Community
-                </CardTitle>
-                <CardDescription>
-                  Administrative controls for this community
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-16">
-                  <Edit className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                  <p className="text-lg font-medium mb-2">
-                    Management tools coming soon
-                  </p>
-                  <p className="text-muted-foreground max-w-md mx-auto">
-                    We're working on building powerful administration tools for community managers.
-                    Check back soon!
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-8">
+              {/* Management Tabs */}
+              <Tabs defaultValue="join-requests" className="w-full">
+                <TabsList className="w-full sm:w-auto">
+                  <TabsTrigger value="join-requests" className="flex gap-1 items-center">
+                    <Users className="h-4 w-4" />
+                    Join Requests
+                  </TabsTrigger>
+                  <TabsTrigger value="settings" className="flex gap-1 items-center">
+                    <Edit className="h-4 w-4" />
+                    Settings
+                  </TabsTrigger>
+                </TabsList>
+                
+                {/* Join Requests Management Panel */}
+                <TabsContent value="join-requests" className="mt-6">
+                  {community.requiresApproval ? (
+                    <JoinRequestManagement communityId={communityId} />
+                  ) : (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Join Request Management</CardTitle>
+                        <CardDescription>
+                          This community doesn't require approval to join
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-center py-8">
+                          <Users className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                          <p className="text-lg font-medium mb-2">
+                            Open community
+                          </p>
+                          <p className="text-muted-foreground max-w-md mx-auto mb-6">
+                            This community is set to allow anyone to join without approval.
+                            To enable join request management, change the community settings
+                            to require approval for new members.
+                          </p>
+                          <Button variant="outline">
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Community Settings
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
+                
+                {/* Settings Panel */}
+                <TabsContent value="settings" className="mt-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Edit className="h-5 w-5" />
+                        Community Settings
+                      </CardTitle>
+                      <CardDescription>
+                        Manage your community settings and preferences
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-center py-16">
+                        <Edit className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                        <p className="text-lg font-medium mb-2">
+                          Settings management coming soon
+                        </p>
+                        <p className="text-muted-foreground max-w-md mx-auto">
+                          We're working on building powerful settings management for community administrators.
+                          Check back soon!
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </div>
           )}
         </div>
       </div>
