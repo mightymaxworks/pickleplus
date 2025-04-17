@@ -1,116 +1,150 @@
 /**
  * PKL-278651-COMM-0007-ENGAGE-UI
- * Community API Types and Utilities
+ * Community API Types
  * 
- * This file contains the types and utility functions for the community API.
+ * This file contains type definitions for the community module API.
  */
 
+// Community type
 export interface Community {
   id: number;
   name: string;
   description: string;
-  avatarUrl?: string;
-  bannerUrl?: string;
-  bannerPattern?: string;
-  location?: string;
-  tags?: string;
   isPrivate: boolean;
   requiresApproval: boolean;
+  createdAt: string;
+  updatedAt: string;
   memberCount: number;
   postCount: number;
   eventCount: number;
-  createdAt: string;
-  updatedAt: string;
+  avatarUrl?: string;
+  bannerUrl?: string;
+  location?: string;
+  tags?: string;
   rules?: string;
   guidelines?: string;
-}
-
-export interface CommunityMember {
-  id: number;
-  userId: number;
-  communityId: number;
-  role: 'member' | 'admin' | 'moderator';
-  joinedAt: string;
-  updatedAt: string;
-  user?: {
+  ownerId: number;
+  owner?: {
     id: number;
     username: string;
-    firstName?: string;
-    lastName?: string;
     avatarUrl?: string;
-    bio?: string;
   };
 }
 
+// Community post type
 export interface CommunityPost {
   id: number;
   communityId: number;
   userId: number;
+  title: string;
   content: string;
-  imageUrls?: string[];
+  createdAt: string;
+  updatedAt: string;
+  imageUrl?: string;
   likeCount: number;
   commentCount: number;
-  isPinned: boolean;
-  createdAt: string;
-  updatedAt: string;
-  userHasLiked?: boolean;
-  author?: {
-    id: number;
-    username: string;
-    avatarUrl?: string;
-  };
-}
-
-export interface CommunityEvent {
-  id: number;
-  communityId: number;
-  title: string;
-  description: string;
-  location: string;
-  startDate: string;
-  endDate: string;
-  startTime: string;
-  endTime: string;
-  maxAttendees: number;
-  currentAttendees: number;
-  createdAt: string;
-  updatedAt: string;
-  status: 'upcoming' | 'in-progress' | 'completed' | 'cancelled';
-  userIsAttending?: boolean;
-}
-
-export interface CommunityComment {
-  id: number;
-  postId: number;
-  userId: number;
-  parentId?: number;
-  content: string;
-  createdAt: string;
-  updatedAt: string;
-  likeCount: number;
+  isLiked?: boolean;
+  isPinned?: boolean;
   user?: {
     id: number;
     username: string;
     avatarUrl?: string;
   };
-  replies?: CommunityComment[];
 }
 
-// Use this type for a new post creation
-export type NewCommunityPost = {
-  content: string;
-  isPinned?: boolean;
-  imageUrls?: string[];
-};
+// Community member type
+export interface CommunityMember {
+  id: number;
+  communityId: number;
+  userId: number;
+  role: 'member' | 'moderator' | 'admin' | 'owner';
+  joinedAt: string;
+  status: 'active' | 'pending' | 'banned';
+  user?: {
+    id: number;
+    username: string;
+    avatarUrl?: string;
+    bio?: string;
+    location?: string;
+  };
+}
 
-// Join Community Request
-export type JoinCommunityRequest = {
+// Community event type
+export interface CommunityEvent {
+  id: number;
+  communityId: number;
+  createdByUserId: number;
+  title: string;
+  description: string;
+  status: 'upcoming' | 'in-progress' | 'completed' | 'cancelled';
+  startDate: string;
+  endDate?: string;
+  startTime?: string;
+  endTime?: string;
+  location?: string;
+  maxAttendees: number;
+  currentAttendees: number;
+  createdAt: string;
+  updatedAt: string;
+  userIsAttending?: boolean;
+  createdBy?: {
+    id: number;
+    username: string;
+    avatarUrl?: string;
+  };
+}
+
+// Join community request
+export interface JoinCommunityRequest {
   communityId: number;
   message?: string;
-};
+}
 
-// Register for event
-export type EventRegistrationRequest = {
-  eventId: number;
-  notes?: string;
-};
+// Create community request
+export interface CreateCommunityRequest {
+  name: string;
+  description: string;
+  isPrivate: boolean;
+  requiresApproval: boolean;
+  location?: string;
+  tags?: string;
+  rules?: string;
+  guidelines?: string;
+  avatarUrl?: string;
+  bannerUrl?: string;
+}
+
+// Create post request
+export interface CreatePostRequest {
+  communityId: number;
+  title: string;
+  content: string;
+  imageUrl?: string;
+}
+
+// Create event request
+export interface CreateEventRequest {
+  communityId: number;
+  title: string;
+  description: string;
+  startDate: string;
+  endDate?: string;
+  startTime?: string;
+  endTime?: string;
+  location?: string;
+  maxAttendees: number;
+}
+
+// Update community request
+export interface UpdateCommunityRequest {
+  name?: string;
+  description?: string;
+  isPrivate?: boolean;
+  requiresApproval?: boolean;
+  location?: string;
+  tags?: string;
+  rules?: string;
+  guidelines?: string;
+  avatarUrl?: string;
+  bannerUrl?: string;
+}

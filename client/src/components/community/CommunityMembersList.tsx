@@ -2,34 +2,32 @@
  * PKL-278651-COMM-0007-ENGAGE-UI
  * Community Members List Component
  * 
- * This component displays a list of members for a community with role indicators.
+ * This component displays a list of members in a community with search and role filtering capabilities.
  */
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Shield, Search, UserPlus } from "lucide-react";
+import { 
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  Users, 
+  Search,
+  Shield,
+  StarIcon,
+  MapPin,
+  Calendar
+} from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-
-export interface CommunityMember {
-  id: number;
-  userId: number;
-  communityId: number;
-  role: 'member' | 'admin' | 'moderator';
-  joinedAt: string;
-  updatedAt: string;
-  user?: {
-    id: number;
-    username: string;
-    firstName?: string;
-    lastName?: string;
-    avatarUrl?: string;
-    bio?: string;
-  };
-}
+import { CommunityMember } from '@/lib/api/community';
 
 interface CommunityMembersListProps {
   members: CommunityMember[];
@@ -39,82 +37,86 @@ interface CommunityMembersListProps {
 
 export const CommunityMembersList = ({ members, isLoading, communityId }: CommunityMembersListProps) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('all');
   
-  // Filter members based on search query
-  const filteredMembers = members.filter(member => 
-    member.user?.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    `${member.user?.firstName} ${member.user?.lastName}`
-      ?.toLowerCase()
-      .includes(searchQuery.toLowerCase())
-  );
+  // Filter members based on search query and active tab
+  const filteredMembers = members.filter(member => {
+    // Search filter
+    if (searchQuery && !member.user?.username.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false;
+    }
+    
+    // Tab filter
+    if (activeTab === 'admin' && member.role !== 'admin' && member.role !== 'owner') {
+      return false;
+    }
+    
+    if (activeTab === 'moderator' && member.role !== 'moderator') {
+      return false;
+    }
+    
+    if (activeTab === 'member' && (member.role === 'admin' || member.role === 'moderator' || member.role === 'owner')) {
+      return false;
+    }
+    
+    return true;
+  });
   
-  // Get admins and moderators
-  const admins = members.filter(member => member.role === 'admin');
-  const moderators = members.filter(member => member.role === 'moderator');
-  
-  const renderMemberItem = (member: CommunityMember) => {
-    return (
-      <div key={member.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
-        <div className="flex items-center gap-3">
-          <Avatar>
-            <AvatarImage src={member.user?.avatarUrl || ""} />
-            <AvatarFallback>
-              {member.user?.username?.[0]?.toUpperCase() || "U"}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <div className="font-medium flex items-center gap-2">
-              {member.user?.username}
-              {member.role === 'admin' && (
-                <Badge variant="default" className="text-xs">Admin</Badge>
-              )}
-              {member.role === 'moderator' && (
-                <Badge variant="secondary" className="text-xs">Mod</Badge>
-              )}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              Joined {member.joinedAt ? formatDistanceToNow(new Date(member.joinedAt)) + ' ago' : 'recently'}
-            </div>
-          </div>
-        </div>
-        
-        <Button variant="ghost" size="sm" className="text-xs gap-1">
-          <UserPlus className="h-3 w-3" />
-          <span>Follow</span>
-        </Button>
-      </div>
-    );
+  // Get badge for member role
+  const getRoleBadge = (role: string) => {
+    switch (role) {
+      case 'owner':
+        return <Badge variant="default" className="bg-orange-500">Owner</Badge>;
+      case 'admin':
+        return <Badge variant="default" className="bg-red-500">Admin</Badge>;
+      case 'moderator':
+        return <Badge variant="default" className="bg-blue-500">Moderator</Badge>;
+      default:
+        return <Badge variant="outline">Member</Badge>;
+    }
   };
+  
+  // Count members by role
+  const adminCount = members.filter(m => m.role === 'admin' || m.role === 'owner').length;
+  const moderatorCount = members.filter(m => m.role === 'moderator').length;
+  const memberCount = members.filter(m => m.role === 'member').length;
   
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="flex items-center border rounded-md px-3 mb-4">
-          <Search className="h-4 w-4 mr-2 opacity-50" />
-          <Skeleton className="h-9 w-full" />
+        <div className="flex justify-between mb-6">
+          <Skeleton className="h-10 w-56" />
+          <Skeleton className="h-10 w-72" />
         </div>
         
-        {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="flex items-center gap-4 p-3">
-            <Skeleton className="h-10 w-10 rounded-full" />
-            <div>
-              <Skeleton className="h-4 w-32 mb-2" />
-              <Skeleton className="h-3 w-24" />
-            </div>
-          </div>
-        ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <Skeleton className="h-12 w-12 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-5 w-28" />
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
   
   if (members.length === 0) {
     return (
-      <Card>
-        <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-          <Shield className="h-12 w-12 mb-4 text-muted-foreground" />
+      <Card className="py-12">
+        <CardContent className="flex flex-col items-center justify-center text-center">
+          <Users className="h-16 w-16 mb-4 text-muted-foreground" />
           <h3 className="text-xl font-semibold mb-2">No Members Yet</h3>
-          <p className="text-muted-foreground mb-2 max-w-md">
-            This community doesn't have any members yet. Share the community link to invite others!
+          <p className="text-muted-foreground mb-6 max-w-md">
+            This community doesn't have any members yet.
           </p>
         </CardContent>
       </Card>
@@ -123,60 +125,93 @@ export const CommunityMembersList = ({ members, isLoading, communityId }: Commun
   
   return (
     <div className="space-y-6">
-      {/* Search Input */}
-      <div className="flex items-center border rounded-md px-3">
-        <Search className="h-4 w-4 mr-2 opacity-50" />
-        <Input 
-          placeholder="Search members..." 
-          className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+        <div className="w-full md:w-1/2 relative">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search members..."
+            className="pl-9"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        
+        <Tabs 
+          value={activeTab} 
+          onValueChange={setActiveTab}
+          className="w-full md:w-auto"
+        >
+          <TabsList className="grid grid-cols-4 w-full md:w-auto">
+            <TabsTrigger value="all">
+              All ({members.length})
+            </TabsTrigger>
+            <TabsTrigger value="admin">
+              Admins ({adminCount})
+            </TabsTrigger>
+            <TabsTrigger value="moderator">
+              Mods ({moderatorCount})
+            </TabsTrigger>
+            <TabsTrigger value="member">
+              Members ({memberCount})
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
       
-      {/* Community Leaders */}
-      {(admins.length > 0 || moderators.length > 0) && (
+      {filteredMembers.length === 0 ? (
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Shield className="h-4 w-4" />
-              Community Leaders
-            </CardTitle>
-            <CardDescription>
-              Admins and moderators who manage this community
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-1">
-              {admins.map(renderMemberItem)}
-              {moderators.map(renderMemberItem)}
-            </div>
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <Search className="h-12 w-12 mb-4 text-muted-foreground" />
+            <h3 className="text-xl font-semibold mb-2">No Results Found</h3>
+            <p className="text-muted-foreground mb-6 max-w-md">
+              No members match your search for "{searchQuery}".
+            </p>
+            <Button variant="outline" onClick={() => setSearchQuery('')}>
+              Clear Search
+            </Button>
           </CardContent>
         </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredMembers.map((member) => (
+            <Card key={member.id}>
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <Avatar className="h-12 w-12">
+                    <AvatarImage src={member.user?.avatarUrl || ""} />
+                    <AvatarFallback>
+                      {member.user?.username?.[0]?.toUpperCase() || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-medium">{member.user?.username}</h3>
+                      {getRoleBadge(member.role)}
+                    </div>
+                    
+                    <p className="text-sm text-muted-foreground">
+                      Joined {formatDistanceToNow(new Date(member.joinedAt))} ago
+                    </p>
+                    
+                    {member.user?.location && (
+                      <div className="flex items-center mt-2 text-sm text-muted-foreground">
+                        <MapPin className="h-3 w-3 mr-1" />
+                        <span>{member.user.location}</span>
+                      </div>
+                    )}
+                    
+                    {member.user?.bio && (
+                      <p className="text-sm mt-2 line-clamp-2">{member.user.bio}</p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       )}
-      
-      {/* All Members */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">
-            All Members ({filteredMembers.length})
-          </CardTitle>
-          <CardDescription>
-            {searchQuery ? `Showing ${filteredMembers.length} members matching "${searchQuery}"` : `${members.length} people in this community`}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {filteredMembers.length === 0 ? (
-            <p className="text-center text-muted-foreground py-4">
-              No members found matching your search.
-            </p>
-          ) : (
-            <div className="space-y-1">
-              {filteredMembers.map(renderMemberItem)}
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 };
