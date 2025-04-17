@@ -1,167 +1,181 @@
-# Community Hub V2 Implementation Plan
+# Community Hub v2 Implementation Plan
 
 ## Overview
 
-This document outlines the implementation plan for an alternative Community Hub using open source integration as the primary approach. This implementation will be deployed at `/community/v2` for A/B testing against the current custom-built solution.
+This document outlines the implementation plan for the Community Hub v2, a complete redesign of the Pickle+ community features using a modular, open-source approach with NodeBB integration. This implementation aligns with our Framework v5.2's open-source-first philosophy.
 
-## Architecture
+## Objectives
 
-The Community Hub V2 will use a hybrid approach:
-- NodeBB as the core community engine (discussions, profiles, notifications)
-- Custom UI wrapper for consistent Pickle+ branding and navigation
-- API gateway for data synchronization between systems
+1. Rebuild community features using NodeBB as the foundation
+2. Maintain full integration with Pickle+ user accounts and features
+3. Provide enhanced community management tools
+4. Reduce development time through leveraging existing open-source solutions
+5. Facilitate A/B testing against current implementation
 
-## Sprint Structure
+## Technical Architecture
 
-### PKL-278651-COMM-0011-OSI: Community Open Source Evaluation and Setup
+The implementation uses a multi-tiered approach:
 
-**Description**: Evaluate and set up the core open source community platform (NodeBB) with initial configuration and branding.
+1. **NodeBB Core**: Provides the forum functionality, user management, and content storage
+2. **Integration Layer**: Connects NodeBB with Pickle+ authentication and data
+3. **UI Layer**: Custom React components that maintain Pickle+ design language
+4. **Extension Layer**: Custom NodeBB plugins for pickleball-specific features
 
+## Implementation Sprints
+
+### Sprint 1: PKL-278651-COMM-0011-OSI - Community Open Source Evaluation and Setup
+**Duration**: 1 week
+**Objective**: Set up NodeBB in development environment and create POC
 **Tasks**:
-1. Set up NodeBB instance and configure database connection
-2. Create initial admin accounts and permission structure
-3. Apply Pickle+ branding elements (colors, logos)
-4. Configure basic community categories for pickleball discussions
+- Install NodeBB in development environment
+- Configure NodeBB to use PostgreSQL database
+- Create basic NodeBB plugin for pickleball features
+- Document NodeBB architecture and API endpoints
+- Create proof of concept integration
 
-**Prompt for Development**:
-```
-Implement the NodeBB community platform integration for Pickle+. Set up the core instance with PostgreSQL database connection, implement initial user roles (Admin, Moderator, Community Leader, Member), and apply the Pickle+ branding guidelines (primary color: #3B7A57, secondary: #F8F9FA). Create dedicated categories for "Technique Discussion", "Equipment", "Local Courts", "Tournaments", and "General Discussion". Configure the API key for external integration.
-```
-
-### PKL-278651-COMM-0012-API: Authentication and API Integration
-
-**Description**: Implement authentication bridge between Pickle+ and the community platform, and create API gateway for data exchange.
-
+### Sprint 2: PKL-278651-COMM-0012-API - Authentication and API Integration
+**Duration**: 1 week
+**Objective**: Enable seamless authentication between Pickle+ and NodeBB
 **Tasks**:
-1. Create SSO integration between Pickle+ and NodeBB
-2. Implement user profile synchronization
-3. Develop API gateway for bi-directional data flow
-4. Set up webhooks for real-time updates
+- Implement OAuth2 provider in Pickle+ backend
+- Configure NodeBB to use Pickle+ OAuth2 for authentication
+- Create user profile sync mechanism
+- Build API gateway for proxying NodeBB requests
+- Implement webhook handler for receiving NodeBB events
 
-**Prompt for Development**:
-```
-Create an authentication bridge between the Pickle+ platform and NodeBB. Implement OAuth2 flow for single sign-on, ensuring users maintain a single identity across both systems. Develop an API gateway that synchronizes user profiles, membership status, and activity metrics. Set up webhook listeners for real-time notifications when community events occur. Follow the Framework 5.2 guidelines for API Gateway implementation with proper error handling and logging.
-```
-
-### PKL-278651-COMM-0013-SDK: Community API Client and Hooks
-
-**Description**: Create SDK layer components to interact with the community platform.
-
+### Sprint 3: PKL-278651-COMM-0013-SDK - Community API Client and Hooks
+**Duration**: 1 week
+**Objective**: Create reusable SDK for interacting with Community Hub
 **Tasks**:
-1. Implement hooks for fetching community data
-2. Create mutations for posting, liking, and commenting
-3. Develop hooks for event management
-4. Build notification and activity feed hooks
+- Build React hooks for community data (useCommunity, useThread, usePost)
+- Create TypeScript interfaces for NodeBB data models
+- Implement client-side caching strategy
+- Build translation layer for mapping between systems
+- Create utilities for common community operations
 
-**Prompt for Development**:
-```
-Following Framework 5.2 SDK layer principles, create a comprehensive set of React hooks for interacting with the NodeBB community API. Implement `useCommunityDiscussions`, `useCommunityPost`, `useCreatePost`, `useLikePost`, `useCommentOnPost`, `useCommunityNotifications`, and `useCommunityEvents` hooks. Each hook should handle loading states, error handling, and data caching using TanStack Query. Ensure proper TypeScript typing for all API responses. Include integration with the authentication context to handle API permissions.
-```
-
-### PKL-278651-COMM-0014-UI: Community Integration UI Layer
-
-**Description**: Build UI components that integrate the NodeBB functionality with the Pickle+ design system.
-
+### Sprint 4: PKL-278651-COMM-0014-UI - Community Integration UI Layer
+**Duration**: 2 weeks
+**Objective**: Create React components that embed NodeBB within Pickle+ UI
 **Tasks**:
-1. Create community navigation shell
-2. Implement discussion list and detail views
-3. Build post editor with Pickle+ theming
-4. Develop unified notification component
+- Create Community Hub main page layout
+- Build thread listing component
+- Implement thread detail and reply components
+- Create user profile integration components
+- Build community management UI components
+- Implement notification components
+- Create responsive mobile views
 
-**Prompt for Development**:
-```
-Create UI components that integrate NodeBB community functionality with the Pickle+ design system. Implement a responsive layout following mobile-first principles. Components should include CommunityNavigation, DiscussionList, DiscussionDetail, PostEditor, CommentList, and NotificationPanel. Use Tailwind CSS for styling with the Pickle+ color scheme. Ensure accessibility compliance with proper ARIA attributes and keyboard navigation. Add the pickleball-specific iconography and terminology throughout the interface. Each component should include proper Framework 5.2 annotations.
-```
-
-### PKL-278651-COMM-0015-ADAPT: Pickleball-Specific Community Extensions
-
-**Description**: Extend the community platform with Pickle+ specific features.
-
+### Sprint 5: PKL-278651-COMM-0015-ADAPT - Pickleball-Specific Community Extensions
+**Duration**: 2 weeks
+**Objective**: Extend NodeBB with pickleball-specific functionality
 **Tasks**:
-1. Create custom fields for pickleball skill level and preferences
-2. Implement rating display integration
-3. Develop match result sharing templates
-4. Build tournament discussion integration
+- Create NodeBB plugin for displaying skill ratings
+- Implement match result sharing templates
+- Build skill level filtering functionality
+- Create community event integration
+- Implement achievement and progression display
+- Build leaderboard integration
 
-**Prompt for Development**:
-```
-Extend the NodeBB community platform with pickleball-specific features following Framework 5.2 OSI patterns. Create custom user profile fields for skill level (using CourtIQ™ Rating), preferred play style, and equipment details. Implement a Rating Badge component that displays a user's current rating alongside their posts. Develop specialized templates for sharing match results in community discussions. Create a Tournament Discussion integration that automatically creates discussion threads for upcoming tournaments and links them to the tournament detail pages. All extensions should maintain consistent Pickle+ branding and terminology.
-```
-
-### PKL-278651-COMM-0016-TEST: Integration Testing and Performance Optimization
-
-**Description**: Thoroughly test the integrated solution and optimize for performance.
-
+### Sprint 6: PKL-278651-COMM-0016-TEST - Integration Testing and Performance Optimization
+**Duration**: 1 week
+**Objective**: Ensure system reliability and performance
 **Tasks**:
-1. Implement end-to-end tests for community workflows
-2. Perform load testing with simulated users
-3. Optimize API caching and request patterns
-4. Implement performance monitoring
+- Create end-to-end tests for community features
+- Implement load testing for concurrent users
+- Optimize performance for mobile devices
+- Create monitoring dashboard for community metrics
+- Document testing results and optimizations
 
-**Prompt for Development**:
-```
-Create a comprehensive test suite for the integrated community platform following Framework 5.2 testing guidelines. Implement end-to-end tests using Cypress that verify key user journeys: registering, creating posts, commenting, liking, navigating between discussions, and receiving notifications. Perform load testing with k6 to simulate 1,000 concurrent users, measuring response times and resource utilization. Implement performance optimizations including API response caching, lazy-loading of content, virtualized lists for long discussion threads, and image optimization. Add Prometheus metrics for real-time performance monitoring. Document all test results and optimizations applied.
-```
-
-### PKL-278651-COMM-0017-AB: A/B Testing Implementation
-
-**Description**: Set up infrastructure for comparing the new community implementation against the original.
-
+### Sprint 7: PKL-278651-COMM-0017-AB - A/B Testing Implementation
+**Duration**: 1 week
+**Objective**: Enable comparative testing between old and new community implementations
 **Tasks**:
-1. Implement routing for the new community at `/community/v2`
-2. Create analytics tracking for both community versions
-3. Define success metrics and tracking
-4. Build admin dashboard for comparing metrics
+- Implement feature flag system for A/B testing
+- Create analytics tracking for both implementations
+- Build comparison dashboard for metrics
+- Develop migration path for community data
+- Create rollback plan if issues arise
 
-**Prompt for Development**:
-```
-Implement A/B testing infrastructure for comparing the original community implementation with the NodeBB-integrated version. Create a routing system that allows users to access both versions, with the new implementation at `/community/v2`. Implement analytics tracking that measures key metrics: user engagement (time spent, posts created, likes given), feature usage (which components are used most), performance metrics (load time, interaction delays), and conversion metrics (event signups, match recordings). Create an admin dashboard that visualizes these metrics side-by-side with statistical significance indicators. Allow for cohort analysis to compare adoption between different user segments. Document the testing methodology and success criteria.
-```
+## Technical Details
 
-## Technical Stack
+### Database Structure
 
-- **Core Platform**: NodeBB (Node.js, MongoDB/PostgreSQL)
-- **Authentication**: OAuth2, JWT tokens
-- **API Gateway**: Express.js middleware with rate limiting and caching
-- **Frontend Integration**: React components with Tailwind CSS
-- **Testing**: Cypress (E2E), k6 (load testing), Jest (unit tests)
-- **Analytics**: Custom event tracking with Prometheus/Grafana
+NodeBB will use its own tables within our PostgreSQL database:
 
-## Route Structure
+- **categories**: Community groups/forums
+- **topics**: Discussion threads
+- **posts**: Individual messages
+- **users**: User profiles (synced with Pickle+)
+- **groups**: User permissions groups
 
-The new community hub will be available at the following routes:
+### Integration Points
 
-- `/community/v2` - Main community landing page
-- `/community/v2/discussions/:categoryId` - Category discussions  
-- `/community/v2/discussion/:id` - Individual discussion thread
-- `/community/v2/profile/:username` - User profile
-- `/community/v2/events` - Community events
-- `/community/v2/notifications` - User notifications
+1. **Authentication**: OAuth2 between systems
+2. **User Profiles**: Bi-directional sync of user data
+3. **Notifications**: NodeBB events published to Pickle+
+4. **Activity Feed**: Community activity included in user dashboard
+5. **Search**: Unified search across both systems
 
-## Data Migration Strategy
+### Hosting Configuration
 
-For the A/B test, we'll implement bi-directional synchronization:
+NodeBB will be hosted alongside our existing application:
 
-1. User accounts and profiles sync between systems
-2. New content created in either system is synced to the other
-3. Activity (likes, comments) is mirrored between implementations
-4. A unified notification system alerts users on both platforms
+1. **Development**: Run as separate process on same host
+2. **Production**: Deploy as separate service with API gateway
+
+## UI/UX Design Principles
+
+1. Maintain consistent design language with Pickle+
+2. Create a seamless experience between systems
+3. Optimize for mobile-first navigation
+4. Provide clear visual indicators for community features
+5. Implement progressive enhancement for optional features
 
 ## Success Metrics
 
-The A/B test will measure:
+The implementation will be considered successful if:
 
-1. **Engagement**: Time spent, posts created, return frequency
-2. **Performance**: Page load times, interaction responsiveness
-3. **User Satisfaction**: Feedback surveys, feature usage
-4. **Technical Metrics**: Server load, API response times
-5. **Business Impact**: Tournament registrations, match recordings, new user retention
+1. User engagement increases (posts, replies, time spent)
+2. Community creation and growth metrics improve
+3. Development velocity increases for new community features
+4. Bug reports decrease compared to current implementation
+5. Performance metrics meet or exceed targets (load time, responsiveness)
+
+## Resources Required
+
+- Frontend developer with React experience
+- Backend developer with OAuth2 knowledge
+- Designer for community UI components
+- QA engineer for integration testing
+- DevOps support for deployment configuration
 
 ## Timeline
 
-Total estimated duration: 8 weeks
+Total estimated duration: **9 weeks**
 
-- Week 1-2: Setup and Authentication (Sprints 0011, 0012)
-- Week 3-4: SDK and UI Implementation (Sprints 0013, 0014) 
-- Week 5-6: Pickleball Extensions and Testing (Sprints 0015, 0016)
-- Week 7-8: A/B Testing Setup and Initial Analysis (Sprint 0017)
+| Sprint | Duration | Dependencies |
+|--------|----------|-------------|
+| OSI Setup | 1 week | None |
+| API Integration | 1 week | OSI Setup |
+| SDK Development | 1 week | API Integration |
+| UI Layer | 2 weeks | SDK Development |
+| Extensions | 2 weeks | UI Layer |
+| Testing | 1 week | Extensions |
+| A/B Testing | 1 week | Testing |
+
+## Risk Assessment
+
+| Risk | Impact | Likelihood | Mitigation |
+|------|--------|------------|------------|
+| OAuth integration issues | High | Medium | Create fallback authentication mechanism |
+| Performance degradation | High | Low | Implement caching and CDN for static content |
+| Data synchronization errors | Medium | Medium | Create reconciliation process and validation |
+| Mobile responsiveness issues | Medium | Low | Prioritize mobile testing throughout development |
+| User adoption resistance | Medium | Medium | Provide easy access to both versions during transition |
+
+## Next Steps
+
+1. Complete the Proof of Concept (POC) to validate approach
+2. Assemble implementation team
+3. Begin Sprint 1 (OSI Setup)
+4. Create detailed technical specifications for each sprint
