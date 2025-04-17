@@ -12,6 +12,7 @@ import { LazyLoadingFallback, lazyLoad } from '@/utils/lazyLoad' // PKL-278651-P
 import { moduleRegistry } from '@/core/modules/moduleRegistry' // For feedback module
 import { SimpleBugReportButton } from '@/components/bug-report/BugReportButton' // Simplified bug report button
 
+
 // Import module initializations
 import '@/modules/admin/init'
 import '@/core/modules/tournament/init'
@@ -141,6 +142,8 @@ export default function App() {
                   <Suspense fallback={<LazyLoadingFallback />}>
                     {/* Add Simplified Bug Report Button (PKL-278651-FEED-0001-BUG) */}
                     <SimpleBugReportButton position="bottom-right" />
+                    
+                    {/* Community navigation commented out for now */}
                     
                     <Switch>
                     {/* Public Routes */}
