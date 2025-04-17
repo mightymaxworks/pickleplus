@@ -11,8 +11,103 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, X, User, Search, RefreshCw, Filter } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useCommunityContext } from "@/lib/providers/CommunityProvider";
-import { CommunityJoinRequest } from "@/types/community";
+import { CommunityJoinRequest, CommunityJoinRequestStatus } from "@/types/community";
 import { useToast } from "@/hooks/use-toast";
+
+// Mock data function for join requests
+function getMockJoinRequests(status: string): CommunityJoinRequest[] {
+  const baseRequests: CommunityJoinRequest[] = [
+    {
+      id: 1,
+      communityId: 2,
+      userId: 2,
+      message: "I'd love to join your community to improve my skills!",
+      status: CommunityJoinRequestStatus.PENDING,
+      reviewedByUserId: null,
+      reviewedAt: null,
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 1), // 1 day ago
+      updatedAt: null,
+      user: {
+        username: "pickleballpro",
+        displayName: "Pickleball Pro",
+        avatarUrl: null,
+        email: "pro@example.com",
+        skillLevel: "Advanced",
+        playerRating: 4.2
+      }
+    },
+    {
+      id: 2,
+      communityId: 2,
+      userId: 3,
+      message: "New to the area, looking for players!",
+      status: CommunityJoinRequestStatus.PENDING,
+      reviewedByUserId: null,
+      reviewedAt: null,
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 12), // 12 hours ago
+      updatedAt: null,
+      user: {
+        username: "newbie_player",
+        displayName: "Newbie Player",
+        avatarUrl: null,
+        email: "newbie@example.com",
+        skillLevel: "Beginner",
+        playerRating: 2.5
+      }
+    },
+    {
+      id: 3,
+      communityId: 2,
+      userId: 4,
+      message: "Tournament player looking for practice partners",
+      status: CommunityJoinRequestStatus.APPROVED,
+      reviewedByUserId: 1,
+      reviewedAt: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48), // 2 days ago
+      updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
+      user: {
+        username: "tournament_ace",
+        displayName: "Tournament Ace",
+        avatarUrl: null,
+        email: "ace@example.com",
+        skillLevel: "Expert",
+        playerRating: 4.8
+      }
+    },
+    {
+      id: 4,
+      communityId: 2,
+      userId: 5,
+      message: "Not a good fit for the community",
+      status: CommunityJoinRequestStatus.REJECTED,
+      reviewedByUserId: 1,
+      reviewedAt: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 72), // 3 days ago
+      updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
+      user: {
+        username: "random_player",
+        displayName: "Random Player",
+        avatarUrl: null,
+        email: "random@example.com",
+        skillLevel: "Intermediate",
+        playerRating: 3.1
+      }
+    }
+  ];
+  
+  // Filter the data based on status
+  if (status === "all") {
+    return baseRequests;
+  } else if (status === "pending") {
+    return baseRequests.filter(r => r.status === CommunityJoinRequestStatus.PENDING);
+  } else if (status === "approved") {
+    return baseRequests.filter(r => r.status === CommunityJoinRequestStatus.APPROVED);
+  } else if (status === "rejected") {
+    return baseRequests.filter(r => r.status === CommunityJoinRequestStatus.REJECTED);
+  }
+  
+  return baseRequests;
+}
 
 import {
   Card,
@@ -75,19 +170,18 @@ export function JoinRequestsPanel({ communityId }: JoinRequestsPanelProps) {
   } = useQuery({
     queryKey: ["/api/communities", communityId, "join-requests", statusFilter],
     queryFn: async () => {
-      const response = await apiRequest<CommunityJoinRequest[]>(
-        `/api/communities/${communityId}/join-requests?status=${statusFilter}${searchTerm ? `&search=${searchTerm}` : ""}`
-      );
-      return response;
+      // For now, since the API doesn't exist yet, return mock data
+      // This will be replaced with actual API call when endpoint is implemented
+      return getMockJoinRequests(statusFilter);
     }
   });
 
   // Approve request mutation
   const approveMutation = useMutation({
     mutationFn: async (requestId: number) => {
-      return apiRequest(`/api/communities/${communityId}/join-requests/${requestId}/approve`, {
-        method: "POST"
-      });
+      // Mock implementation until API endpoint is ready
+      console.log(`Approving request ${requestId}`);
+      return { success: true };
     },
     onSuccess: () => {
       // Invalidate queries to refresh the data
@@ -112,9 +206,9 @@ export function JoinRequestsPanel({ communityId }: JoinRequestsPanelProps) {
   // Reject request mutation
   const rejectMutation = useMutation({
     mutationFn: async (requestId: number) => {
-      return apiRequest(`/api/communities/${communityId}/join-requests/${requestId}/reject`, {
-        method: "POST"
-      });
+      // Mock implementation until API endpoint is ready
+      console.log(`Rejecting request ${requestId}`);
+      return { success: true };
     },
     onSuccess: () => {
       // Invalidate queries to refresh the data
@@ -265,21 +359,21 @@ export function JoinRequestsPanel({ communityId }: JoinRequestsPanelProps) {
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={request.user.avatarUrl || undefined} alt={request.user.username} />
+                          <AvatarImage src={request.user?.avatarUrl || undefined} alt={request.user?.username || 'User'} />
                           <AvatarFallback className="text-xs">
-                            {request.user.username?.charAt(0).toUpperCase() || 'U'}
+                            {request.user?.username?.charAt(0).toUpperCase() || 'U'}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
-                          <p className="font-medium">{request.user.username}</p>
+                          <p className="font-medium">{request.user?.username || 'Unknown User'}</p>
                           <p className="text-xs text-muted-foreground truncate max-w-[180px]">
-                            {request.user.email || `ID: ${request.user.id}`}
+                            {request.user?.email || `ID: ${request.userId}`}
                           </p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      {new Date(request.createdAt).toLocaleDateString()}
+                      {request.createdAt ? new Date(request.createdAt).toLocaleDateString() : 'N/A'}
                     </TableCell>
                     <TableCell>
                       <StatusBadge status={request.status} />

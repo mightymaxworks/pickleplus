@@ -24,17 +24,17 @@ export function JoinRequestManagement({ communityId }: JoinRequestManagementProp
   // Active tab state
   const [activeTab, setActiveTab] = useState<string>("pending");
   
-  // Fetch request counts
+  // Fetch request counts - using mock data until API is implemented
   const { data: requestCounts, isLoading } = useQuery({
     queryKey: ["/api/communities", communityId, "join-requests-count"],
     queryFn: async () => {
-      const response = await apiRequest<{
-        pending: number;
-        approved: number;
-        rejected: number;
-        total: number;
-      }>(`/api/communities/${communityId}/join-requests/counts`);
-      return response;
+      // Mock data until API endpoint is implemented
+      return {
+        pending: 2,
+        approved: 1,
+        rejected: 1,
+        total: 4
+      };
     },
     refetchInterval: 30000, // Refetch every 30 seconds for latest counts
   });
