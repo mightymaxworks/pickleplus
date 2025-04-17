@@ -346,6 +346,11 @@ export default function App() {
                     {(params) => <ProtectedRoute component={CommunitiesPage} path="/communities" />}
                   </Route>
                   
+                  {/* PKL-278651-COMM-0007-ICONS - Custom Icons Showcase */}
+                  <Route path="/icons">
+                    {(params) => <ProtectedRoute component={lazyLoad(() => import('./pages/icons'))} path="/icons" />}
+                  </Route>
+                  
                   <Route component={LazyNotFoundPage} />
                 </Switch>
               </Suspense>
