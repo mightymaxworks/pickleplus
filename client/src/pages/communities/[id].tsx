@@ -156,12 +156,17 @@ function CommunityDetail() {
   const currentUserId = userData?.id || null;
   console.log("Current user ID:", currentUserId);
   
-  // Check if current user is a member - handle both authenticated and unauthenticated states
-  const isMember = currentUserId && members ? 
-    members.some(member => member.userId === currentUserId) : false;
+  // Check if current user is a member, including if they created the community
+  const isMember = currentUserId && (
+    // Check membership in the members list
+    (members && members.some(member => member.userId === currentUserId)) ||
+    // Also consider the creator as a member
+    (community && community.createdByUserId === currentUserId)
+  );
   
   // Determine if user is an admin/moderator
-  const userRole = members?.find(member => member.userId === currentUserId)?.role || 'none';
+  const userRole = members?.find(member => member.userId === currentUserId)?.role || 
+                  (community?.createdByUserId === currentUserId ? 'admin' : 'none');
   const isAdmin = userRole === 'admin' || userRole === 'moderator';
   
   // Handle back navigation
