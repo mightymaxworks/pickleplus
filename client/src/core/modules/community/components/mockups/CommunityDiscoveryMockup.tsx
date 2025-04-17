@@ -158,20 +158,7 @@ const CommunityDiscoveryMockup: React.FC = () => {
               <h2 className="text-3xl font-bold mb-1 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">
                 Discover Communities
               </h2>
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary" className="bg-primary/10 hover:bg-primary/15 transition-colors text-xs text-primary border-none">
-                  <Users className="h-3 w-3 mr-1" />
-                  1,200+ Communities
-                </Badge>
-                <Badge variant="secondary" className="bg-amber-500/10 hover:bg-amber-500/15 transition-colors text-xs text-amber-600 dark:text-amber-400 border-none">
-                  <MapPin className="h-3 w-3 mr-1" />
-                  150+ Locations
-                </Badge>
-                <Badge variant="secondary" className="bg-emerald-500/10 hover:bg-emerald-500/15 transition-colors text-xs text-emerald-600 dark:text-emerald-400 border-none">
-                  <Activity className="h-3 w-3 mr-1" />
-                  All Skill Levels
-                </Badge>
-              </div>
+              {/* Badges removed for cleaner UI */}
             </div>
           </div>
           <p className="text-muted-foreground ml-[60px] max-w-2xl">
