@@ -583,12 +583,8 @@ function CommunityPosts({ communityId, isMember }: { communityId: number; isMemb
             <FileText className="mx-auto h-8 w-8 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">No Posts Yet</h3>
             <p className="text-muted-foreground">
-              Be the first to post in this community!
+              {isMember ? "Use the form above to be the first to post in this community!" : "Join this community to create posts!"}
             </p>
-            
-            {isMember && (
-              <Button className="mt-4">Create Post</Button>
-            )}
           </CardContent>
         </Card>
       )}
