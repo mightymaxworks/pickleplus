@@ -151,12 +151,12 @@ const CommunityDiscoveryMockup: React.FC = () => {
         {/* Header content */}
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-3">
-            <div className="flex h-12 w-12 items-center justify-center rotate-12 bg-primary/15 text-primary rounded-xl shadow-inner">
-              <PickleballIcon />
+            <div className="mb-2 mr-4">
+              <img src="/src/assets/community-logo.png" alt="Community" className="h-8" />
             </div>
             <div>
-              <h2 className="text-3xl font-bold mb-1 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">
-                Discover Communities
+              <h2 className="text-3xl font-bold mb-1 text-[#679153]">
+                Find Your Community
               </h2>
               {/* Badges removed for cleaner UI */}
             </div>
