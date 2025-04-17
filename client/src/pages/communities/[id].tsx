@@ -64,6 +64,8 @@ function CommunityDetail() {
   const [, navigate] = useLocation();
   const communityId = parseInt(params.id);
   const [activeTab, setActiveTab] = useState("posts");
+  // State for confetti animation
+  const [showConfetti, setShowConfetti] = useState(false);
   
   // Get community data and actions from context
   const { 
@@ -110,6 +112,13 @@ function CommunityDetail() {
     navigate(`/communities/${communityId}/settings`);
   };
   
+  // Trigger confetti when tab changes
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    setShowConfetti(true);
+    setTimeout(() => setShowConfetti(false), 2000);
+  };
+  
   // Show loading state
   if (isLoading) {
     return (
@@ -142,16 +151,6 @@ function CommunityDetail() {
       </div>
     );
   }
-  
-  // State for confetti animation
-  const [showConfetti, setShowConfetti] = useState(false);
-  
-  // Trigger confetti when tab changes
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    setShowConfetti(true);
-    setTimeout(() => setShowConfetti(false), 2000);
-  };
   
   // Community header with modern design and improved UI
   return (
