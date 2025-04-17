@@ -7,7 +7,7 @@
  */
 
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,7 +28,24 @@ export function JoinRequestManagement({ communityId }: JoinRequestManagementProp
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     // You could also add analytics tracking here
+    console.log(`Join request tab changed to: ${value}`);
   };
+  
+  // Get access to the query client for manual cache operations
+  const queryClient = useQueryClient();
+  
+  // Every time a tab change happens, we invalidate queries to refresh data
+  useEffect(() => {
+    // Invalidate the requests query for the current tab to ensure fresh data
+    queryClient.invalidateQueries({
+      queryKey: ["/api/communities", communityId, "join-requests", activeTab],
+    });
+    
+    // We could also refresh counts if needed
+    queryClient.invalidateQueries({
+      queryKey: ["/api/communities", communityId, "join-requests-count"],
+    });
+  }, [activeTab, communityId, queryClient]);
   
   // Fetch request counts - using mock data until API is implemented
   const { data: requestCounts, isLoading } = useQuery({
@@ -69,9 +86,12 @@ export function JoinRequestManagement({ communityId }: JoinRequestManagementProp
         )}
       </div>
       
-      {/* Stats Cards */}
+      {/* Stats Cards - Clickable to filter */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <Card>
+        <Card 
+          className={`cursor-pointer transition-all ${activeTab === "all" ? "ring-2 ring-primary ring-offset-2" : "hover:shadow-md"}`}
+          onClick={() => handleTabChange("all")}
+        >
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Total Requests</CardTitle>
           </CardHeader>
@@ -83,7 +103,10 @@ export function JoinRequestManagement({ communityId }: JoinRequestManagementProp
           </CardContent>
         </Card>
         
-        <Card>
+        <Card 
+          className={`cursor-pointer transition-all ${activeTab === "pending" ? "ring-2 ring-primary ring-offset-2" : "hover:shadow-md"}`}
+          onClick={() => handleTabChange("pending")}
+        >
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Pending</CardTitle>
           </CardHeader>
@@ -93,7 +116,10 @@ export function JoinRequestManagement({ communityId }: JoinRequestManagementProp
           </CardContent>
         </Card>
         
-        <Card>
+        <Card 
+          className={`cursor-pointer transition-all ${activeTab === "approved" ? "ring-2 ring-primary ring-offset-2" : "hover:shadow-md"}`}
+          onClick={() => handleTabChange("approved")}
+        >
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Approved</CardTitle>
           </CardHeader>
@@ -105,7 +131,10 @@ export function JoinRequestManagement({ communityId }: JoinRequestManagementProp
           </CardContent>
         </Card>
         
-        <Card>
+        <Card 
+          className={`cursor-pointer transition-all ${activeTab === "rejected" ? "ring-2 ring-primary ring-offset-2" : "hover:shadow-md"}`}
+          onClick={() => handleTabChange("rejected")}
+        >
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Rejected</CardTitle>
           </CardHeader>
