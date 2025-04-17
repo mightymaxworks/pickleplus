@@ -310,12 +310,17 @@ function CommunityDetail() {
               )}
               
               {isMember ? (
-                <Button variant="outline" onClick={handleLeave} disabled={isLeaving}>
-                  {isLeaving ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : null}
-                  Leave Community
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="ghost" className="bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800">
+                    <span className="mr-2">✓</span> Joined
+                  </Button>
+                  <Button variant="outline" onClick={handleLeave} disabled={isLeaving}>
+                    {isLeaving ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : null}
+                    Leave Community
+                  </Button>
+                </div>
               ) : (
                 <Button onClick={handleJoin} disabled={isJoining}>
                   {isJoining ? (

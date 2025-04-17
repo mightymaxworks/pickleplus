@@ -39,20 +39,21 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const [isFocused, setIsFocused] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   
-  // Sync the HTML content with the parent component
+  // Initialize the editor content once
   useEffect(() => {
-    if (editorRef.current) {
-      if (!editorRef.current.innerHTML && value) {
-        editorRef.current.innerHTML = value;
-      }
+    if (editorRef.current && !isInitialized) {
+      editorRef.current.innerHTML = value;
+      setIsInitialized(true);
     }
-  }, [value]);
+  }, [value, isInitialized]);
 
   // Handle manual changes to the editor content
   const handleContentChange = () => {
     if (editorRef.current) {
-      onChange(editorRef.current.innerHTML);
+      const newValue = editorRef.current.innerHTML;
+      onChange(newValue);
     }
   };
 
@@ -182,7 +183,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         onKeyDown={handleKeyDown}
-        dangerouslySetInnerHTML={{ __html: value }}
       />
 
       {onSubmit && (
