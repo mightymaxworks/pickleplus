@@ -174,6 +174,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                       >
                         {item.icon}
                         <span className="ml-3">{item.name}</span>
+                        {(item.name === 'Tournaments' || item.name === 'Icons') && (
+                          <Badge className="ml-auto bg-primary/90 text-white text-xs">New</Badge>
+                        )}
                       </a>
                     </Link>
                   </li>
