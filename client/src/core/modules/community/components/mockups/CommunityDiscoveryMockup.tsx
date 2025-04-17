@@ -172,7 +172,7 @@ const CommunityDiscoveryMockup: React.FC = () => {
     return (
       community.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (community.location && community.location.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (community.tags && community.tags.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (community.tags && typeof community.tags === 'string' && community.tags.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (community.description && community.description.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   });
@@ -396,15 +396,17 @@ const CommunityDiscoveryMockup: React.FC = () => {
                     
                     {/* Tags */}
                     <div className="flex flex-wrap gap-1 mb-1">
-                      {community.tags.map(tag => (
-                        <Badge 
-                          key={tag} 
-                          variant="outline" 
-                          className="text-xs px-2 py-0.5 bg-muted/30 hover:bg-primary/10 hover:text-primary transition-colors duration-200 cursor-pointer"
-                        >
-                          {tag}
-                        </Badge>
-                      ))}
+                      {community.tags && typeof community.tags === 'string' && 
+                        community.tags.split(',').map(tag => (
+                          <Badge 
+                            key={tag.trim()} 
+                            variant="outline" 
+                            className="text-xs px-2 py-0.5 bg-muted/30 hover:bg-primary/10 hover:text-primary transition-colors duration-200 cursor-pointer"
+                          >
+                            {tag.trim()}
+                          </Badge>
+                        ))
+                      }
                     </div>
                   </CardContent>
                   
@@ -564,15 +566,17 @@ const CommunityDiscoveryMockup: React.FC = () => {
                       {/* Tags and Actions */}
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex flex-wrap gap-1.5">
-                          {community.tags.map(tag => (
-                            <Badge 
-                              key={tag} 
-                              variant="outline" 
-                              className="text-xs px-2 py-0.5 bg-muted/30 hover:bg-primary/10 hover:text-primary transition-colors duration-200 cursor-pointer"
-                            >
-                              {tag}
-                            </Badge>
-                          ))}
+                          {community.tags && typeof community.tags === 'string' && 
+                            community.tags.split(',').map(tag => (
+                              <Badge 
+                                key={tag.trim()} 
+                                variant="outline" 
+                                className="text-xs px-2 py-0.5 bg-muted/30 hover:bg-primary/10 hover:text-primary transition-colors duration-200 cursor-pointer"
+                              >
+                                {tag.trim()}
+                              </Badge>
+                            ))
+                          }
                         </div>
                         
                         <div className="flex gap-3">
