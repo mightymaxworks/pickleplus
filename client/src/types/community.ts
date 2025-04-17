@@ -1,12 +1,109 @@
 /**
- * PKL-278651-COMM-0006-HUB-SDK
- * Client-side Community Types
+ * PKL-278651-COMM-0013-SDK
+ * Enhanced Client-side Community Types
  * 
  * This file provides TypeScript types for community-related data structures
  * to be used on the client side without importing server-specific dependencies.
+ * 
+ * @version 3.0.0
+ * @lastModified 2025-04-17
+ * @changes
+ * - Added better documentation for each interface
+ * - Enhanced type safety with stricter definitions
+ * - Added support for advanced filtering and sorting
+ * - Added status types for community events and members
+ * @preserves
+ * - Core data model compatibility
+ * - UI display properties
  */
 
-// Community model
+/**
+ * @enum
+ * Community Member Role Types
+ * Defines the possible roles a user can have in a community
+ */
+export enum CommunityMemberRole {
+  ADMIN = 'admin',
+  MODERATOR = 'moderator',
+  MEMBER = 'member'
+}
+
+/**
+ * @enum
+ * Community Event Status Types
+ * Defines the possible statuses for community events
+ */
+export enum CommunityEventStatus {
+  UPCOMING = 'upcoming',
+  ONGOING = 'ongoing',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled'
+}
+
+/**
+ * @enum
+ * Community Join Request Status Types
+ * Defines the possible statuses for join requests
+ */
+export enum CommunityJoinRequestStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected'
+}
+
+/**
+ * @enum
+ * Event Attendee Status Types
+ * Defines the possible statuses for event attendance
+ */
+export enum EventAttendeeStatus {
+  REGISTERED = 'registered',
+  WAITLISTED = 'waitlisted',
+  ATTENDED = 'attended', 
+  CANCELLED = 'cancelled'
+}
+
+/**
+ * Community Filtering Options
+ * Used for advanced filtering of communities
+ */
+export interface CommunityFilterOptions {
+  query?: string;
+  skillLevel?: string;
+  location?: string;
+  tags?: string[];
+  memberCountMin?: number;
+  memberCountMax?: number;
+  hasEvents?: boolean;
+  createdAfter?: Date;
+  createdBefore?: Date;
+  isMember?: boolean;
+}
+
+/**
+ * Community Sorting Options
+ * Used for sorting community lists
+ */
+export interface CommunitySortOptions {
+  sortBy: 'name' | 'memberCount' | 'eventCount' | 'postCount' | 'createdAt';
+  sortOrder: 'asc' | 'desc';
+}
+
+/**
+ * Pagination Options
+ * Used for paginating API results
+ */
+export interface PaginationOptions {
+  limit?: number;
+  offset?: number;
+  page?: number;
+  pageSize?: number;
+}
+
+/**
+ * Community Model
+ * Represents a community entity in the Pickle+ platform
+ */
 export interface Community {
   id: number;
   name: string;
@@ -53,12 +150,15 @@ export interface InsertCommunity {
   createdByUserId: number;
 }
 
-// Community member model
+/**
+ * Community Member Model
+ * Represents a member of a community with their role and status
+ */
 export interface CommunityMember {
   id: number;
   userId: number;
   communityId: number;
-  role: string;
+  role: CommunityMemberRole;
   joinedAt: Date | null;
   isActive: boolean;
   lastActive: Date | null;
@@ -70,24 +170,55 @@ export interface CommunityMember {
     displayName: string;
     username: string;
     avatarUrl: string | null;
+    email?: string;
+    bio?: string | null;
+    skillLevel?: string | null;
+  };
+  
+  // Extended properties
+  activeDays?: number;
+  contribution?: {
+    posts: number;
+    comments: number;
+    events: number;
   };
 }
 
-// For adding community members
+/**
+ * Community Member Insert Model
+ * Used when adding a new member to a community
+ */
 export interface InsertCommunityMember {
   userId: number;
   communityId: number;
-  role?: string;
+  role?: CommunityMemberRole;
   isActive?: boolean;
 }
 
-// Community post model
+/**
+ * Media Type
+ * Defines the structure for media attachments in posts
+ */
+export interface PostMedia {
+  url: string;
+  type: 'image' | 'video' | 'document';
+  thumbnailUrl?: string;
+  name?: string;
+  size?: number;
+  width?: number;
+  height?: number;
+}
+
+/**
+ * Community Post Model
+ * Represents a post in a community
+ */
 export interface CommunityPost {
   id: number;
   userId: number;
   communityId: number;
   content: string;
-  mediaUrls: any | null;
+  mediaUrls: PostMedia[] | null;
   likes: number;
   comments: number;
   isPinned: boolean;
@@ -104,12 +235,15 @@ export interface CommunityPost {
   liked?: boolean;
 }
 
-// For creating community posts
+/**
+ * Community Post Insert Model
+ * Used when creating a new post in a community
+ */
 export interface InsertCommunityPost {
   userId: number;
   communityId: number;
   content: string;
-  mediaUrls?: any;
+  mediaUrls?: PostMedia[];
   isPinned?: boolean;
   isAnnouncement?: boolean;
 }
