@@ -342,13 +342,23 @@ export const communityStorageImplementation: CommunityStorage = {
   },
   
   async getCommunityMembershipsByUserId(userId: number): Promise<CommunityMember[]> {
-    const db = this.getDb();
-    const result = await db
-      .select()
-      .from(communityMembers)
-      .where(eq(communityMembers.userId, userId));
-    
-    return result;
+    try {
+      if (!userId || isNaN(Number(userId)) || Number(userId) <= 0) {
+        console.error(`[Storage] getCommunityMembershipsByUserId called with invalid userId: ${userId}`);
+        return [];
+      }
+      
+      const db = this.getDb();
+      const result = await db
+        .select()
+        .from(communityMembers)
+        .where(eq(communityMembers.userId, userId));
+      
+      return result || [];
+    } catch (error) {
+      console.error('[Storage] Error in getCommunityMembershipsByUserId:', error);
+      return [];
+    }
   },
   
   async createCommunityMember(memberData: InsertCommunityMember): Promise<CommunityMember> {

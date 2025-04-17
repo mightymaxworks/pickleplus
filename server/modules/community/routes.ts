@@ -814,13 +814,18 @@ router.get('/my-community-ids', isAuthenticated, async (req: Request, res: Respo
     // Get all communities where user is a member
     const memberships = await storage.getCommunityMembershipsByUserId(userId);
     
+    if (!memberships || !Array.isArray(memberships)) {
+      console.error('Invalid response from getCommunityMembershipsByUserId:', memberships);
+      return res.status(500).json({ message: 'Invalid response from database' });
+    }
+    
     // Extract just the IDs
     const communityIds = memberships.map(membership => membership.communityId);
     
-    res.json(communityIds);
+    return res.status(200).json(communityIds);
   } catch (error) {
     console.error('Error getting user community IDs:', error);
-    res.status(500).json({ message: 'Failed to fetch user community IDs' });
+    return res.status(500).json({ message: 'Failed to fetch user community IDs' });
   }
 });
 
