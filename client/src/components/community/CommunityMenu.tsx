@@ -1,168 +1,63 @@
 /**
- * PKL-278651-COMM-0006-HUB-UI-MENU
+ * PKL-278651-COMM-0006-HUB-UI
  * Community Menu Component
  * 
- * A specialized horizontal menu for the Community section of the application.
- * Implements the enhanced HorizontalMenu component with community-specific options.
- * Styled to match the modern design from test/community page.
+ * A horizontal menu for navigating community-related pages.
  */
 
-import React, { useState } from 'react';
-import { useLocation } from 'wouter';
-import { HorizontalMenu, MenuItem } from '@/components/ui/horizontal-menu';
-import { Search, Users, PlusCircle, Calendar, Megaphone, Sparkles } from 'lucide-react';
+import React from "react";
+import { useLocation } from "wouter";
+import { cn } from "@/lib/utils";
 
-export interface CommunityMenuProps {
-  activeTab?: 'discover' | 'profile' | 'create' | 'events' | 'news';
-  onChange?: (tab: string) => void;
+type MenuTab = "discover" | "profile" | "create" | "events" | "news" | "my";
+
+interface CommunityMenuProps {
+  activeTab?: MenuTab;
   className?: string;
-  showConfettiEffect?: boolean;
 }
 
-// Confetti Animation Component (simplified version from TestCommunityPage)
-const ConfettiEffect = ({ active }: { active: boolean }) => {
-  if (!active) return null;
+const CommunityMenu: React.FC<CommunityMenuProps> = ({ 
+  activeTab, 
+  className 
+}) => {
+  const [, navigate] = useLocation();
+  
+  const tabs = [
+    { id: "discover", label: "Discover", href: "/communities" },
+    { id: "my", label: "My Communities", href: "/communities/my" },
+    { id: "create", label: "Create Community", href: "/communities/create" },
+    { id: "events", label: "Community Events", href: "/communities/events" },
+    { id: "news", label: "Community News", href: "/communities/news" },
+  ];
   
   return (
-    <div className="confetti-container absolute inset-0 overflow-hidden pointer-events-none z-50">
-      {Array.from({ length: 40 }).map((_, i) => {
-        const size = Math.random() * 10 + 5;
-        const left = Math.random() * 100;
-        const animationDuration = Math.random() * 3 + 2;
-        const delay = Math.random() * 0.5;
-        const type = Math.floor(Math.random() * 3); // 0: square, 1: circle, 2: triangle
-        const colors = ['#F2D362', '#83C167', '#EC4C56', '#45C4E5', '#9683EC'];
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        
-        let shape;
-        if (type === 0) {
-          shape = <div style={{ width: `${size}px`, height: `${size}px`, backgroundColor: color }} className="rounded-sm" />;
-        } else if (type === 1) {
-          shape = <div style={{ width: `${size}px`, height: `${size}px`, backgroundColor: color }} className="rounded-full" />;
-        } else {
-          shape = (
-            <div 
-              style={{ 
-                width: `${size}px`, 
-                height: `${size}px`,
-                backgroundColor: 'transparent',
-                borderLeft: `${size/2}px solid transparent`,
-                borderRight: `${size/2}px solid transparent`,
-                borderBottom: `${size}px solid ${color}`
-              }} 
-            />
-          );
-        }
-        
-        return (
-          <div 
-            key={i}
-            className="confetti absolute top-0"
-            style={{
-              left: `${left}%`,
-              animation: `confetti-fall ${animationDuration}s ease-in ${delay}s forwards`,
-              opacity: active ? 1 : 0,
-            }}
+    <div className={cn(
+      "relative overflow-auto md:overflow-visible w-full",
+      className
+    )}>
+      <div className="flex snap-x snap-mandatory md:snap-none overflow-x-auto pb-2 md:pb-0 gap-1 md:gap-2">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            className={cn(
+              "flex-shrink-0 inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 snap-start snap-always transition-all",
+              tab.id === activeTab
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+            onClick={() => navigate(tab.href)}
           >
-            {shape}
-          </div>
-        );
-      })}
+            {tab.label}
+          </button>
+        ))}
+      </div>
       
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          @keyframes confetti-fall {
-            0% {
-              transform: translateY(-10px) rotate(0deg);
-            }
-            100% {
-              transform: translateY(100vh) rotate(360deg);
-            }
-          }
-        `
-      }} />
+      {/* Shadow indicators for scroll */}
+      <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-background to-transparent pointer-events-none md:hidden" />
+      <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-background to-transparent pointer-events-none md:hidden" />
     </div>
   );
 };
 
-export function CommunityMenu({ 
-  activeTab = 'discover', 
-  onChange,
-  className,
-  showConfettiEffect = true
-}: CommunityMenuProps) {
-  const [, navigate] = useLocation();
-  const [showConfetti, setShowConfetti] = useState(false);
-  
-  // Define the menu items for the community section
-  const menuItems: MenuItem[] = [
-    {
-      id: 'discover',
-      icon: <Search className="h-full w-full" />,
-      label: 'Discover',
-      onClick: () => navigate('/communities')
-    },
-    {
-      id: 'profile',
-      icon: <Users className="h-full w-full" />,
-      label: 'Profile',
-      onClick: () => navigate('/communities/my')
-    },
-    {
-      id: 'create',
-      icon: <PlusCircle className="h-full w-full" />,
-      label: 'Create',
-      onClick: () => navigate('/communities/create')
-    },
-    {
-      id: 'events',
-      icon: <Calendar className="h-full w-full" />,
-      label: 'Events',
-      onClick: () => navigate('/communities/events')
-    },
-    {
-      id: 'news',
-      icon: <Megaphone className="h-full w-full" />,
-      label: 'News',
-      onClick: () => navigate('/communities/news')
-    }
-  ];
-
-  const handleTabChange = (tabId: string) => {
-    // Show confetti effect when changing tabs (if enabled)
-    if (showConfettiEffect) {
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 2000);
-    }
-    
-    if (onChange) {
-      onChange(tabId);
-    }
-  };
-
-  return (
-    <div className="relative">
-      {/* Confetti Effect */}
-      {showConfettiEffect && <ConfettiEffect active={showConfetti} />}
-      
-      {/* Visual Hint Box (matching TestCommunityPage style) */}
-      <div className="absolute -top-5 right-4 flex items-center gap-2 text-xs bg-background/70 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm border border-muted/30 z-10">
-        <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-        <span className="text-muted-foreground">Interactive community navigation</span>
-      </div>
-      
-      <HorizontalMenu
-        items={menuItems}
-        activeItemId={activeTab}
-        onChange={handleTabChange}
-        colorScheme="primary"
-        size="md"
-        className={className}
-        showIndicator={true}
-        enableActiveScale={true}
-      />
-    </div>
-  );
-}
-
+export { CommunityMenu };
 export default CommunityMenu;

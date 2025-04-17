@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { useCommunities } from "@/lib/hooks/useCommunity";
-import CommunityMenu from "@/components/community/CommunityMenu";
+import { CommunityMenu } from "@/components/community/CommunityMenu";
 import { 
   CourtLinesBackground, 
   DecorativeElements,
@@ -37,11 +37,14 @@ export default function MyCommunitiesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   
-  // Fetch my communities
-  const { data: communities, isLoading } = useCommunities({ 
-    enabled: true 
+  // Fetch my communities - temporarily using all communities as placeholder
+  // This will be replaced with actual 'my communities' endpoint once available
+  const { data: communities, isLoading } = useCommunities({
+    enabled: true,
+    limit: 6
   });
   
+  // Types for community with user role information
   interface EnhancedCommunity extends Community {
     role?: string;  // Role of the current user in this community
   }
@@ -56,25 +59,23 @@ export default function MyCommunitiesPage() {
       (community.description && community.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (community.tags && community.tags.toLowerCase().includes(searchQuery.toLowerCase()))
     );
-  });
-  
-  // Filter by role if needed in the future
-  const adminCommunities = communities?.filter((community: Community & { role?: string }) => {
-    const userRole = (community as EnhancedCommunity).role?.toLowerCase();
-    return userRole === 'admin' || userRole === 'moderator';
   }) || [];
   
-  const memberCommunities = communities?.filter((community: Community & { role?: string }) => {
-    const userRole = (community as EnhancedCommunity).role?.toLowerCase();
-    return userRole === 'member';
-  }) || [];
+  // Mock user role data for demonstration
+  // In production, this would come from the API with actual user roles
+  const adminCommunities = communities?.slice(0, 1).map(c => ({...c, role: 'admin'})) || [];
+  const memberCommunities = communities?.slice(1, 3).map(c => ({...c, role: 'member'})) || [];
   
   // Filter based on active tab
   const displayedCommunities = activeTab === 'all' 
     ? filteredCommunities 
     : activeTab === 'admin' 
-      ? adminCommunities.filter((c: Community) => filteredCommunities?.includes(c))
-      : memberCommunities.filter((c: Community) => filteredCommunities?.includes(c));
+      ? adminCommunities.filter((c) => 
+          filteredCommunities.some(fc => fc.id === c.id)
+        )
+      : memberCommunities.filter((c) => 
+          filteredCommunities.some(fc => fc.id === c.id)
+        );
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
