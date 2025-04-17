@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { MobileNavigation } from './MobileNavigation';
 import { User } from '@shared/schema';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, User as UserIcon, Menu, X, Search, Settings, Home, Calendar, Award, Users, LogOut, Shield, Ticket } from 'lucide-react';
+import { Bell, User as UserIcon, Menu, X, Search, Settings, Home, Calendar, Award, Users, LogOut, Shield, Ticket, Palette } from 'lucide-react';
 import { PicklePlusNewLogo } from '../icons/PicklePlusNewLogo';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 
@@ -182,6 +182,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   { label: 'PicklePass™', icon: <Ticket size={18} />, path: '/events' },
                   { label: 'Profile', icon: <UserIcon size={18} />, path: '/profile' },
                   { label: 'Settings', icon: <Settings size={18} />, path: '/settings' },
+                  /* PKL-278651-COMM-0007-ICONS - Custom Icons Test */
+                  { label: 'Icons Test', icon: <Palette size={18} />, path: '/icons' },
                   ...(user.isAdmin ? [{ label: 'Admin Panel', icon: <Shield size={18} />, path: '/admin' }] : [])
                 ].map((item, i) => {
                   const isActive = location === item.path;

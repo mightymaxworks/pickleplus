@@ -56,6 +56,9 @@ import CommunitiesPage from './pages/communities'
 import CommunityDetailPage from './pages/communities/[id]'
 import CreateCommunityPage from './pages/communities/create'
 
+// Import icons test page (PKL-278651-COMM-0007-ICONS)
+import IconsPage from './pages/icons'
+
 // Keep imports for non-lazy loaded pages
 import TestAuthPage from './pages/TestAuthPage'
 import TestRoutingPage from './pages/TestRoutingPage'
@@ -348,7 +351,7 @@ export default function App() {
                   
                   {/* PKL-278651-COMM-0007-ICONS - Custom Icons Showcase */}
                   <Route path="/icons">
-                    {(params) => <ProtectedRoute component={lazyLoad(() => import('./pages/icons'))} path="/icons" />}
+                    {(params) => <ProtectedRoute component={IconsPage} path="/icons" />}
                   </Route>
                   
                   <Route component={LazyNotFoundPage} />

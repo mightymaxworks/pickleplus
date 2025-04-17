@@ -1,73 +1,88 @@
 /**
- * @component PickleballIcon
- * @layer UI
- * @version 1.0.0
- * @description Custom pickleball icon with detailed hole pattern
+ * PKL-278651-COMM-0007-ICONS
+ * PickleballIcon Component
+ * 
+ * Custom SVG icon of a pickleball with Framework 5.1 semantic identifiers
+ * for testing and debugging.
  */
 import React from 'react';
 
-interface PickleballIconProps {
+export interface IconProps {
+  /** Size of the icon in pixels */
   size?: number;
+  /** Color of the icon */
   color?: string;
+  /** CSS class names */
   className?: string;
+  /** Stroke width for the icon lines */
+  strokeWidth?: number;
+  /** Whether to fill the icon shapes with color */
   fill?: boolean;
-  highlightColor?: string;
+  /** Additional props to pass to the SVG element */
+  [key: string]: any;
 }
 
-export const PickleballIcon: React.FC<PickleballIconProps> = ({
+/**
+ * A custom pickleball icon component
+ */
+export const PickleballIcon: React.FC<IconProps> = ({
   size = 24,
-  color = "currentColor",
-  className = "",
+  color = 'currentColor',
+  className = '',
+  strokeWidth = 1.5,
   fill = false,
-  highlightColor
+  ...props
 }) => {
-  // Use primary color if highlightColor is not provided
-  const highlight = highlightColor || "#FF6600";
+  // Fill style based on fill prop
+  const fillStyle = fill ? color : 'none';
   
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
+    <svg 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill={fillStyle}
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round" 
+      strokeLinejoin="round"
       className={className}
-      data-component="pickleball-icon"
+      data-testid="pickleball-icon"
+      data-component="PickleballIcon"
+      {...props}
     >
       {/* Main ball circle */}
       <circle 
         cx="12" 
         cy="12" 
         r="10" 
-        fill={fill ? highlight : "none"} 
-        stroke={color} 
-        strokeWidth="1.5" 
+        fill={fill ? color + '20' : 'none'} 
+        stroke={color}
       />
       
-      {/* Inner pattern */}
-      <g stroke={fill ? "#ffffff" : color} strokeWidth="1.2">
-        {/* Vertical line */}
-        <line x1="12" y1="2.5" x2="12" y2="21.5" />
-        
-        {/* Horizontal line */}
-        <line x1="2.5" y1="12" x2="21.5" y2="12" />
-        
-        {/* Diagonal lines */}
-        <line x1="5" y1="5" x2="19" y2="19" />
-        <line x1="19" y1="5" x2="5" y2="19" />
-      </g>
+      {/* Holes pattern */}
+      <circle cx="12" cy="7" r="0.8" fill={color} />
+      <circle cx="12" cy="17" r="0.8" fill={color} />
+      <circle cx="7" cy="12" r="0.8" fill={color} />
+      <circle cx="17" cy="12" r="0.8" fill={color} />
+      <circle cx="9" cy="9" r="0.8" fill={color} />
+      <circle cx="15" cy="15" r="0.8" fill={color} />
+      <circle cx="9" cy="15" r="0.8" fill={color} />
+      <circle cx="15" cy="9" r="0.8" fill={color} />
       
-      {/* Holes */}
-      <g fill={fill ? "#ffffff" : color}>
-        <circle cx="12" cy="6" r="1.2" />
-        <circle cx="12" cy="18" r="1.2" />
-        <circle cx="6" cy="12" r="1.2" />
-        <circle cx="18" cy="12" r="1.2" />
-        <circle cx="7.5" cy="7.5" r="1" />
-        <circle cx="16.5" cy="16.5" r="1" />
-        <circle cx="16.5" cy="7.5" r="1" />
-        <circle cx="7.5" cy="16.5" r="1" />
-      </g>
+      {/* Motion lines */}
+      <path 
+        d="M22,12 C22,6.5 17.5,2 12,2" 
+        stroke={color} 
+        strokeWidth={strokeWidth * 0.6} 
+        strokeDasharray="1,3" 
+      />
+      <path 
+        d="M12,22 C6.5,22 2,17.5 2,12" 
+        stroke={color} 
+        strokeWidth={strokeWidth * 0.6} 
+        strokeDasharray="1,3" 
+      />
     </svg>
   );
 };
