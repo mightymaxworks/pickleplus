@@ -21,6 +21,7 @@ import {
 } from "@/lib/hooks/useCommunity";
 import { CommunityHeader } from "@/components/community/CommunityHeader";
 import { EventList } from "@/components/community/EventList";
+import { MembersList } from "@/components/community/MembersList";
 import {
   Card,
   CardContent,
@@ -257,45 +258,14 @@ export default function CommunityDetailPage() {
                       </Button>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    {membersLoading ? (
-                      <div className="space-y-3">
-                        {Array(3).fill(0).map((_, i) => (
-                          <Skeleton key={i} className="h-14 w-full" />
-                        ))}
-                      </div>
-                    ) : members.length === 0 ? (
-                      <div className="text-center py-4">
-                        <Users className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                        <p className="text-muted-foreground">No members yet</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {members.slice(0, 5).map(member => (
-                          <div key={member.id} className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <Avatar>
-                                <AvatarImage src={member.user?.avatarUrl || undefined} />
-                                <AvatarFallback>
-                                  {(member.user?.displayName || 'User').charAt(0)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <p className="font-medium">{member.user?.displayName}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {member.role === CommunityMemberRole.ADMIN 
-                                    ? 'Admin' 
-                                    : member.role === CommunityMemberRole.MODERATOR 
-                                      ? 'Moderator' 
-                                      : 'Member'
-                                  }
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                  <CardContent className="p-0">
+                    <MembersList 
+                      communityId={communityId}
+                      layout="list"
+                      showFilter={false}
+                      compact={true}
+                      limit={5}
+                    />
                   </CardContent>
                 </Card>
               </div>
@@ -309,66 +279,12 @@ export default function CommunityDetailPage() {
           
           {/* Members Tab */}
           {activeTab === "members" && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Community Members
-                </CardTitle>
-                <CardDescription>
-                  {community.memberCount} members in this community
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {membersLoading ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {Array(8).fill(0).map((_, i) => (
-                      <Skeleton key={i} className="h-20 w-full" />
-                    ))}
-                  </div>
-                ) : members.length === 0 ? (
-                  <div className="text-center py-10">
-                    <Users className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                    <p className="text-muted-foreground">No members found</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {members.map(member => (
-                      <Card key={member.id} className="bg-muted/40">
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <Avatar>
-                                <AvatarImage src={member.user?.avatarUrl || undefined} />
-                                <AvatarFallback>
-                                  {(member.user?.displayName || 'User').charAt(0)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <p className="font-medium">{member.user?.displayName}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {member.role === CommunityMemberRole.ADMIN 
-                                    ? 'Admin' 
-                                    : member.role === CommunityMemberRole.MODERATOR 
-                                      ? 'Moderator' 
-                                      : 'Member'
-                                  }
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-              <CardFooter>
-                <Button variant="outline" className="w-full">
-                  Load More Members
-                </Button>
-              </CardFooter>
-            </Card>
+            <MembersList 
+              communityId={communityId}
+              isCurrentUserAdmin={community.role === CommunityMemberRole.ADMIN}
+              layout="grid"
+              showFilter={true}
+            />
           )}
           
           {/* Posts Tab */}

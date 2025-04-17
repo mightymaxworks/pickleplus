@@ -26,7 +26,8 @@ import {
   XCircle,
   Award,
   Star,
-  BadgeCheck
+  BadgeCheck,
+  List as ListIcon
 } from "lucide-react";
 import { useCommunityMembers } from "@/lib/hooks/useCommunity";
 import { 
@@ -107,9 +108,7 @@ export function MembersList({
     isFetching,
     isError, 
     error,
-    refetch,
-    fetchNextPage,
-    hasNextPage
+    refetch
   } = useCommunityMembers(communityId, {
     limit: pageSize,
     offset,
@@ -213,7 +212,7 @@ export function MembersList({
   };
   
   // Get creator badge if member is the creator
-  const getCreatorBadge = (isCreator: boolean) => {
+  const getCreatorBadge = (isCreator?: boolean) => {
     if (!isCreator) return null;
     
     return (
@@ -400,7 +399,6 @@ export function MembersList({
                 value={searchQuery}
                 onChange={handleSearchChange}
                 className="w-full md:w-60"
-                prefix={<Search className="h-4 w-4 text-muted-foreground" />}
               />
               
               <DropdownMenu>
@@ -477,7 +475,7 @@ export function MembersList({
                       </>
                     ) : (
                       <>
-                        <List className="h-4 w-4" />
+                        <ListIcon className="h-4 w-4" />
                         <span className="hidden md:inline">List</span>
                       </>
                     )}

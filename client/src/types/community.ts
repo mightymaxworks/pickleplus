@@ -29,6 +29,19 @@ export enum CommunityMemberRole {
 }
 
 /**
+ * Member Filter Options
+ * Used for filtering community members list
+ */
+export interface MemberFilterOptions {
+  query?: string;
+  role?: CommunityMemberRole;
+  sortBy?: 'newest' | 'oldest' | 'alphabetical';
+  isActive?: boolean;
+  joinedAfter?: Date;
+  joinedBefore?: Date;
+}
+
+/**
  * @enum
  * Community Event Status Types
  * Defines the possible statuses for community events
@@ -159,11 +172,11 @@ export interface CommunityMember {
   userId: number;
   communityId: number;
   role: CommunityMemberRole;
-  joinedAt: Date | null;
+  joinedAt: string;  // Changed to string for safer date handling
   isActive: boolean;
-  lastActive: Date | null;
-  createdAt: Date | null;
-  updatedAt: Date | null;
+  lastActive: string | null;  // Changed to string for safer date handling
+  createdAt: string | null;  // Changed to string for safer date handling
+  updatedAt: string | null;  // Changed to string for safer date handling
   
   // Joined data
   user?: {
@@ -176,6 +189,7 @@ export interface CommunityMember {
   };
   
   // Extended properties
+  isCreator?: boolean;  // Flag to identify community creator
   activeDays?: number;
   contribution?: {
     posts: number;
