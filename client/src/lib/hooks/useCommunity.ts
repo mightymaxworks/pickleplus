@@ -18,6 +18,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import React from "react";
 import { apiRequest } from "../queryClient";
 import * as communityApi from "../api/community";
 import { toast } from "@/hooks/use-toast";
@@ -84,6 +85,40 @@ export function useCommunities(options?: {
     queryFn: () => communityApi.getCommunities({ limit, offset, query, skillLevel, location }),
     enabled,
   });
+}
+
+/**
+ * Hook to fetch communities with advanced filtering and sorting
+ * @param filterOptions - Options for filtering communities
+ * @param sortOptions - Options for sorting communities
+ * @param paginationOptions - Options for paginating results
+ * @param queryOptions - Additional react-query options
+ */
+export function useFilteredCommunities(
+  filterOptions?: CommunityFilterOptions | null,
+  sortOptions?: CommunitySortOptions | null,
+  paginationOptions?: PaginationOptions | null,
+  queryOptions?: { enabled?: boolean }
+) {
+  const { enabled = true } = queryOptions || {};
+  const { limit, offset } = paginationOptions || {};
+  
+  // Get the base data without client-side filtering
+  const baseQuery = useQuery({
+    queryKey: communityKeys.filtered(filterOptions || {}),
+    queryFn: () => communityApi.getCommunities({ limit, offset }),
+    enabled,
+  });
+  
+  // Store the filtered state for debugging and UI purposes
+  const isFiltered = !!filterOptions && Object.keys(filterOptions).length > 0;
+  const isSorted = !!sortOptions && !!sortOptions.sortBy;
+  
+  return {
+    ...baseQuery,
+    isFiltered,
+    isSorted
+  };
 }
 
 /**
@@ -538,6 +573,72 @@ export function useCommunityEvents(communityId: number, options?: {
 }
 
 /**
+ * Hook to fetch community events by event type
+ */
+export function useCommunityEventsByType(
+  communityId: number, 
+  eventType: CommunityEventType,
+  options?: { 
+    limit?: number; 
+    offset?: number; 
+    enabled?: boolean 
+  }
+) {
+  const { limit, offset, enabled = true } = options || {};
+  
+  // Get all events first
+  const eventsQuery = useQuery({
+    queryKey: [...communityKeys.events(communityId), { limit, offset }],
+    queryFn: () => communityApi.getCommunityEvents(communityId, { limit, offset }),
+    enabled,
+  });
+  
+  // Filter by type client-side
+  const filteredEvents = React.useMemo(() => {
+    if (!eventsQuery.data || !Array.isArray(eventsQuery.data)) return [];
+    return eventsQuery.data.filter(event => event.eventType === eventType);
+  }, [eventsQuery.data, eventType]);
+  
+  return {
+    ...eventsQuery,
+    data: filteredEvents,
+  };
+}
+
+/**
+ * Hook to fetch community events by status
+ */
+export function useCommunityEventsByStatus(
+  communityId: number, 
+  status: CommunityEventStatus,
+  options?: { 
+    limit?: number; 
+    offset?: number; 
+    enabled?: boolean 
+  }
+) {
+  const { limit, offset, enabled = true } = options || {};
+  
+  // Get all events first
+  const eventsQuery = useQuery({
+    queryKey: [...communityKeys.events(communityId), { limit, offset }],
+    queryFn: () => communityApi.getCommunityEvents(communityId, { limit, offset }),
+    enabled,
+  });
+  
+  // Filter by status client-side
+  const filteredEvents = React.useMemo(() => {
+    if (!eventsQuery.data || !Array.isArray(eventsQuery.data)) return [];
+    return eventsQuery.data.filter(event => event.status === status);
+  }, [eventsQuery.data, status]);
+  
+  return {
+    ...eventsQuery,
+    data: filteredEvents,
+  };
+}
+
+/**
  * Hook to create an event in a community
  */
 export function useCreateCommunityEvent() {
@@ -567,7 +668,23 @@ export function useCreateCommunityEvent() {
       }
     }) => communityApi.createCommunityEvent(communityId, data),
     onSuccess: (_, variables) => {
+      // Invalidate all event-related queries
       queryClient.invalidateQueries({ queryKey: communityKeys.events(variables.communityId) });
+      
+      // Also invalidate type-specific queries if we know the event type
+      if (variables.data.eventType) {
+        queryClient.invalidateQueries({ 
+          queryKey: communityKeys.eventsByType(variables.communityId, variables.data.eventType) 
+        });
+      }
+      
+      // Also invalidate status-specific queries if we know the status
+      if (variables.data.status) {
+        queryClient.invalidateQueries({ 
+          queryKey: communityKeys.eventsByStatus(variables.communityId, variables.data.status) 
+        });
+      }
+      
       toast({
         title: "Event created",
         description: "Your event has been created successfully.",
