@@ -412,7 +412,12 @@ const CommunityDiscoveryMockup: React.FC = () => {
                   
                   {/* Card Footer */}
                   <CardFooter className="flex justify-between pt-0 pb-4">
-                    <Button variant="outline" size="sm" className="rounded-full gap-1.5">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="rounded-full gap-1.5"
+                      onClick={() => navigate(`/communities/${community.id}`)}
+                    >
                       <Search className="h-3.5 w-3.5" />
                       View Details
                     </Button>
@@ -580,7 +585,12 @@ const CommunityDiscoveryMockup: React.FC = () => {
                         </div>
                         
                         <div className="flex gap-3">
-                          <Button variant="outline" size="sm" className="rounded-full gap-1.5">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="rounded-full gap-1.5"
+                            onClick={() => navigate(`/communities/${community.id}`)}
+                          >
                             <Search className="h-3.5 w-3.5" />
                             View Details
                           </Button>
