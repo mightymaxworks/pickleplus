@@ -97,6 +97,9 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
     isVirtual: false,
     isPrivate: false,
     isRecurring: false,
+    skillLevelRequired: "all",      // Default skill level to avoid empty string issue
+    recurringPattern: "weekly",     // Default recurring pattern 
+    repeatFrequency: "4times",      // Default frequency
   };
   
   const form = useForm<EventFormValues>({
@@ -492,7 +495,7 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">All skill levels</SelectItem>
+                        <SelectItem value="all">All skill levels</SelectItem>
                         <SelectItem value="beginner">Beginner</SelectItem>
                         <SelectItem value="intermediate">Intermediate</SelectItem>
                         <SelectItem value="advanced">Advanced</SelectItem>
