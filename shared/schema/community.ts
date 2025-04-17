@@ -87,7 +87,6 @@ export async function pushSchema() {
         title VARCHAR(255) NOT NULL,
         description TEXT,
         event_type VARCHAR(50) NOT NULL DEFAULT 'match_play',
-        event_type VARCHAR(50) NOT NULL DEFAULT 'match_play',
         event_date TIMESTAMP NOT NULL,
         end_date TIMESTAMP,
         location TEXT,

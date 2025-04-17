@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EventFormModal } from "@/components/community/EventFormModal";
 import { 
   ArrowLeft, 
   Users, 
@@ -595,18 +596,77 @@ function CommunityPosts({ communityId, isMember }: { communityId: number; isMemb
   );
 }
 
+/**
+ * PKL-278651-COMM-0007-ENGAGE
+ * Enhanced Community Events Component
+ * 
+ * This component provides a view of community events with improved filtering
+ * and display of event types, skill level requirements, and status.
+ * 
+ * @version 2.0.0
+ * @lastModified 2025-04-17
+ */
 function CommunityEvents({ communityId, isMember }: { communityId: number; isMember: boolean }) {
   const { data: events, isLoading } = useCommunityEvents(communityId);
+  const [openEventModal, setOpenEventModal] = React.useState(false);
   
   if (isLoading) {
     return <div>Loading events...</div>;
   }
   
+  // Event type badge color mapping
+  const getEventTypeBadgeColor = (eventType: string) => {
+    const colors = {
+      match_play: "bg-green-100 text-green-800 border-green-300",
+      league: "bg-blue-100 text-blue-800 border-blue-300",
+      training: "bg-yellow-100 text-yellow-800 border-yellow-300",
+      tournament: "bg-purple-100 text-purple-800 border-purple-300",
+      social: "bg-pink-100 text-pink-800 border-pink-300",
+      other: "bg-gray-100 text-gray-800 border-gray-300"
+    };
+    return colors[eventType as keyof typeof colors] || colors.other;
+  };
+  
+  // Event type display name
+  const getEventTypeLabel = (eventType: string) => {
+    const labels = {
+      match_play: "Match Play",
+      league: "League",
+      training: "Training",
+      tournament: "Tournament",
+      social: "Social",
+      other: "Other"
+    };
+    return labels[eventType as keyof typeof labels] || "Event";
+  };
+  
+  // Status badge color mapping
+  const getStatusBadgeColor = (status: string) => {
+    const colors = {
+      active: "bg-green-100 text-green-800 border-green-300",
+      cancelled: "bg-red-100 text-red-800 border-red-300",
+      completed: "bg-gray-100 text-gray-800 border-gray-300"
+    };
+    return colors[status as keyof typeof colors] || colors.active;
+  };
+  
   return (
     <div className="space-y-6">
+      {/* Import EventFormModal at the top of the file */}
+      {/* import { EventFormModal } from "@/components/community/EventFormModal"; */}
+      <EventFormModal
+        open={openEventModal}
+        onOpenChange={setOpenEventModal}
+        communityId={communityId}
+      />
+      
       {isMember && (
         <div className="flex justify-end">
-          <Button>
+          <Button 
+            onClick={() => setOpenEventModal(true)}
+            className="bg-pickle-green hover:bg-pickle-green/90"
+          >
+            <Calendar className="mr-2 h-4 w-4" />
             Create Event
           </Button>
         </div>
@@ -614,13 +674,27 @@ function CommunityEvents({ communityId, isMember }: { communityId: number; isMem
       
       {events && events.length > 0 ? (
         events.map((event) => (
-          <Card key={event.id}>
-            <CardHeader>
-              <CardTitle>{event.title}</CardTitle>
-              <CardDescription>
-                {new Date(event.eventDate).toLocaleDateString()} at{" "}
-                {new Date(event.eventDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </CardDescription>
+          <Card key={event.id} className="overflow-hidden">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="mb-1">{event.title}</CardTitle>
+                  <CardDescription>
+                    {new Date(event.eventDate).toLocaleDateString()} at{" "}
+                    {new Date(event.eventDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <Badge className={getEventTypeBadgeColor(event.eventType)}>
+                    {getEventTypeLabel(event.eventType)}
+                  </Badge>
+                  {event.status && event.status !== "active" && (
+                    <Badge className={getStatusBadgeColor(event.status)}>
+                      {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                    </Badge>
+                  )}
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <p className="mb-4">{event.description}</p>
