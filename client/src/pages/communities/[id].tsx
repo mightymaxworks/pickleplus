@@ -861,7 +861,7 @@ function CommunityPosts({ communityId, isMember }: { communityId: number; isMemb
                       <span>({post.comments})</span>
                     </Button>
                     
-                    {post.userId === currentUserId && (
+                    {currentUserId && post.userId === currentUserId && (
                       <Button 
                         variant="ghost" 
                         size="sm" 
@@ -879,7 +879,7 @@ function CommunityPosts({ communityId, isMember }: { communityId: number; isMemb
                       <div className="flex gap-3">
                         <Avatar className="h-8 w-8">
                           <AvatarFallback>
-                            {currentUserId.toString().charAt(0).toUpperCase()}
+                            {currentUserId ? currentUserId.toString().charAt(0).toUpperCase() : '?'}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
