@@ -33,7 +33,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { EventFormModal } from "@/components/community/EventFormModal";
-import RichTextEditor from "@/components/community/RichTextEditor";
+import EnhancedRichTextEditor from "@/components/community/EnhancedRichTextEditor";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { 
@@ -800,7 +800,7 @@ function CommunityPosts({ communityId, isMember }: { communityId: number; isMemb
           <CardContent className="pt-6">
             <div className="flex flex-col gap-4">
               <h3 className="text-lg font-medium">Create a Post</h3>
-              <RichTextEditor 
+              <EnhancedRichTextEditor 
                 value={postContent}
                 onChange={setPostContent}
                 placeholder="Share something with the community..."
