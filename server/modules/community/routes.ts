@@ -9,6 +9,8 @@ import { z } from 'zod';
 import { createInsertSchema } from 'drizzle-zod';
 import { storage } from '../../storage';
 import { isAuthenticated } from '../../auth';
+import { upload, validateFile } from './visual-upload';
+import path from 'path';
 
 // Custom middleware for community module that allows public GET requests
 const communityAuth = (req: Request, res: Response, next: NextFunction) => {
@@ -1343,6 +1345,157 @@ router.get('/my-community-ids', isAuthenticated, async (req: Request, res: Respo
   } catch (error) {
     console.error('Error getting user community IDs:', error);
     return res.status(500).json({ message: 'Failed to fetch user community IDs' });
+  }
+});
+
+/**
+ * PKL-278651-COMM-0019-VISUALS
+ * Upload community avatar
+ * POST /api/communities/:id/avatar
+ */
+router.post('/:id/avatar', isAuthenticated, upload.single('file'), async (req: Request, res: Response) => {
+  try {
+    const communityId = parseInt(req.params.id);
+    const userId = req.user?.id;
+    
+    if (isNaN(communityId)) {
+      return res.status(400).json({ message: 'Invalid community ID' });
+    }
+    
+    if (!userId) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    
+    // Check if user is a community admin
+    const membership = await storage.getCommunityMembership(communityId, userId);
+    const community = await storage.getCommunityById(communityId);
+    
+    if (!(membership?.role === 'admin') && community?.createdByUserId !== userId) {
+      return res.status(403).json({ message: 'Only community admins can upload avatars' });
+    }
+    
+    // Validate the file
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+    
+    const validationError = validateFile(req.file);
+    if (validationError) {
+      return res.status(400).json({ message: validationError });
+    }
+    
+    // Get file path relative to server
+    const relativePath = req.file.path.replace(/^uploads\//, '/uploads/');
+    
+    // Update community with new avatar URL
+    await storage.updateCommunity(communityId, {
+      avatarUrl: relativePath
+    });
+    
+    res.json({ url: relativePath });
+  } catch (error) {
+    console.error('Error uploading community avatar:', error);
+    res.status(500).json({ message: 'Failed to upload avatar' });
+  }
+});
+
+/**
+ * PKL-278651-COMM-0019-VISUALS
+ * Upload community banner
+ * POST /api/communities/:id/banner
+ */
+router.post('/:id/banner', isAuthenticated, upload.single('file'), async (req: Request, res: Response) => {
+  try {
+    const communityId = parseInt(req.params.id);
+    const userId = req.user?.id;
+    
+    if (isNaN(communityId)) {
+      return res.status(400).json({ message: 'Invalid community ID' });
+    }
+    
+    if (!userId) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    
+    // Check if user is a community admin
+    const membership = await storage.getCommunityMembership(communityId, userId);
+    const community = await storage.getCommunityById(communityId);
+    
+    if (!(membership?.role === 'admin') && community?.createdByUserId !== userId) {
+      return res.status(403).json({ message: 'Only community admins can upload banners' });
+    }
+    
+    // Validate the file
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+    
+    const validationError = validateFile(req.file);
+    if (validationError) {
+      return res.status(400).json({ message: validationError });
+    }
+    
+    // Get file path relative to server
+    const relativePath = req.file.path.replace(/^uploads\//, '/uploads/');
+    
+    // Update community with new banner URL
+    await storage.updateCommunity(communityId, {
+      bannerUrl: relativePath
+    });
+    
+    res.json({ url: relativePath });
+  } catch (error) {
+    console.error('Error uploading community banner:', error);
+    res.status(500).json({ message: 'Failed to upload banner' });
+  }
+});
+
+/**
+ * PKL-278651-COMM-0019-VISUALS
+ * Update community theme color
+ * PATCH /api/communities/:id/theme
+ */
+router.patch('/:id/theme', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const communityId = parseInt(req.params.id);
+    const userId = req.user?.id;
+    const { themeColor } = req.body;
+    
+    if (isNaN(communityId)) {
+      return res.status(400).json({ message: 'Invalid community ID' });
+    }
+    
+    if (!userId) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    
+    if (!themeColor || typeof themeColor !== 'string') {
+      return res.status(400).json({ message: 'Theme color is required' });
+    }
+    
+    // Validate color format (hex code)
+    const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+    if (!hexColorRegex.test(themeColor)) {
+      return res.status(400).json({ message: 'Invalid color format. Use hex format (e.g., #FF5500)' });
+    }
+    
+    // Check if user is a community admin or creator
+    const membership = await storage.getCommunityMembership(communityId, userId);
+    const community = await storage.getCommunityById(communityId);
+    
+    if (!(membership?.role === 'admin') && community?.createdByUserId !== userId) {
+      return res.status(403).json({ message: 'Only community admins can update theme' });
+    }
+    
+    // Update community with new theme color
+    const updatedCommunity = await storage.updateCommunity(communityId, {
+      themeColor
+    });
+    
+    res.json(updatedCommunity);
+  } catch (error) {
+    console.error('Error updating community theme:', error);
+    res.status(500).json({ message: 'Failed to update theme' });
   }
 });
 

@@ -7,69 +7,56 @@
  * 
  * Run with: npx tsx run-community-visual-enhancements-migration.ts
  */
-import { Pool } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import { migrate } from 'drizzle-orm/neon-serverless/migrator';
-import { sql } from 'drizzle-orm';
-import dotenv from 'dotenv';
+
+import { drizzle } from "drizzle-orm/postgres-js";
+import { migrate } from "drizzle-orm/postgres-js/migrator";
+import postgres from "postgres";
+import * as dotenv from "dotenv";
+import { sql } from "drizzle-orm";
 
 dotenv.config();
 
+// Ensure database URL is available
+if (!process.env.DATABASE_URL) {
+  console.error("DATABASE_URL environment variable is not set");
+  process.exit(1);
+}
+
 async function main() {
-  console.log('Running community visual enhancements migration...');
-  
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-  const db = drizzle(pool);
+  console.log("Starting community visual enhancements migration...");
   
   try {
-    // Check if themeColor column already exists to avoid errors
-    const checkColumnExists = await db.execute(sql`
-      SELECT column_name 
-      FROM information_schema.columns 
-      WHERE table_name = 'communities' 
-        AND column_name = 'theme_color'
-    `);
+    // Connect to the database
+    const queryClient = postgres(process.env.DATABASE_URL!);
+    const db = drizzle(queryClient);
     
-    if (checkColumnExists.rows.length === 0) {
-      // Add themeColor column to communities table
-      await db.execute(sql`
-        ALTER TABLE communities
-        ADD COLUMN theme_color VARCHAR(50)
-      `);
-      console.log('Successfully added theme_color column to communities table');
-      
-      // Update existing communities with default theme colors based on name hash
-      await db.execute(sql`
-        UPDATE communities
-        SET theme_color = CASE 
-          WHEN id % 5 = 0 THEN '#22c55e' -- Green
-          WHEN id % 5 = 1 THEN '#3b82f6' -- Blue
-          WHEN id % 5 = 2 THEN '#f59e0b' -- Amber
-          WHEN id % 5 = 3 THEN '#ec4899' -- Pink
-          ELSE '#8b5cf6' -- Purple
+    // Add the themeColor column to the communities table
+    await db.execute(
+      sql`ALTER TABLE communities ADD COLUMN IF NOT EXISTS theme_color VARCHAR(50)`
+    );
+    
+    console.log("Successfully added themeColor to communities table");
+    
+    // Create the uploads directory for community visuals if it doesn't exist
+    await db.execute(
+      sql`DO $$
+        BEGIN
+          -- No SQL operation needed for creating directories
+          -- This is handled by the server code
+          RAISE NOTICE 'Ensuring file upload directories exist';
         END
-        WHERE theme_color IS NULL
-      `);
-      console.log('Updated existing communities with default theme colors');
-    } else {
-      console.log('theme_color column already exists in communities table');
-    }
+      $$;`
+    );
     
-    console.log('Migration completed successfully');
+    console.log("Migration completed successfully");
+    
+    // Close the database connection
+    await queryClient.end();
+    process.exit(0);
   } catch (error) {
-    console.error('Error during migration:', error);
-    throw error;
-  } finally {
-    await pool.end();
+    console.error("Migration failed:", error);
+    process.exit(1);
   }
 }
 
-main()
-  .then(() => {
-    console.log('Community visual enhancements migration completed successfully');
-    process.exit(0);
-  })
-  .catch((err) => {
-    console.error('Failed to run community visual enhancements migration:', err);
-    process.exit(1);
-  });
+main();
