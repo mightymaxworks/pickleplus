@@ -259,27 +259,14 @@ export function CommunityHeader({
             {/* Action buttons - simplified for reliable operation */}
             <div className="flex gap-2 flex-shrink-0">
               {hasManagePermissions ? (
-                /* Admin/Creator Button - direct navigation using a strong approach */
-                <Button 
-                  size="sm" 
-                  variant="default" 
-                  className="bg-white hover:bg-white/90 text-primary font-medium h-8 flex items-center gap-1"
-                  onClick={() => {
-                    console.log("Manage button clicked, changing tab to 'manage'");
-                    if (onTabChange) {
-                      onTabChange("manage");
-                    } else {
-                      // Fallback for mobile - force tab change by manipulating DOM directly
-                      const manageTab = document.querySelector('[value="manage"]') as HTMLElement;
-                      if (manageTab) {
-                        manageTab.click();
-                      }
-                    }
-                  }}
+                /* Replacing with a direct link to the current URL + ?tab=manage */
+                <a 
+                  href={`/communities/${community.id}?tab=manage`}
+                  className="inline-flex items-center justify-center h-8 px-4 py-2 rounded-md bg-white hover:bg-white/90 text-primary font-medium text-sm"
                 >
                   <Settings className="h-4 w-4 mr-1" />
                   <span>Manage</span>
-                </Button>
+                </a>
               ) : (
                 /* Regular User Button */
                 isMember ? (

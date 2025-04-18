@@ -59,10 +59,23 @@ export default function CommunityDetailPage() {
   // Get community ID from URL
   const [, params] = useRoute("/communities/:id");
   const communityId = params?.id ? parseInt(params.id) : 0;
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   
-  // Current active tab
-  const [activeTab, setActiveTab] = useState("about");
+  // Parse tab from URL query
+  const urlParams = new URLSearchParams(window.location.search);
+  const tabParam = urlParams.get('tab');
+  
+  // Current active tab - use URL parameter if present
+  const [activeTab, setActiveTab] = useState(tabParam || "about");
+  
+  // Update the URL when tab changes
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    // Update URL without reloading the page
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', tab);
+    window.history.pushState({}, '', url.toString());
+  };
   
   // Fetch community data
   const { 
@@ -149,7 +162,7 @@ export default function CommunityDetailPage() {
           community={community}
           userRole={userRole}
           currentTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={handleTabChange}
         />
         
         {/* Tab content */}
@@ -228,7 +241,7 @@ export default function CommunityDetailPage() {
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        onClick={() => setActiveTab("events")}
+                        onClick={() => handleTabChange("events")}
                         className="text-xs px-2"
                       >
                         See All
@@ -255,7 +268,7 @@ export default function CommunityDetailPage() {
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        onClick={() => setActiveTab("members")}
+                        onClick={() => handleTabChange("members")}
                         className="text-xs px-2"
                       >
                         See All
