@@ -332,9 +332,9 @@ export default function CommunityEventDetailPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {event.eventAttendees && event.eventAttendees.length > 0 ? (
+              {attendees && attendees.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {event.eventAttendees.map((attendee) => (
+                  {attendees.map((attendee) => (
                     <div key={attendee.userId} className="flex items-center space-x-3 p-2 border rounded-md">
                       <Avatar>
                         <AvatarImage src={attendee.user?.profileImageUrl} />
@@ -384,13 +384,13 @@ export default function CommunityEventDetailPage() {
                     {event.description || "No additional description provided."}
                   </p>
                 </div>
-                {event.notes && (
+                {event.description && (
                   <>
                     <Separator />
                     <div>
                       <h4 className="font-medium">Additional Information</h4>
                       <p className="text-muted-foreground whitespace-pre-wrap">
-                        {event.notes}
+                        {event.description}
                       </p>
                     </div>
                   </>
