@@ -369,29 +369,38 @@ export default function CommunityDetailPage() {
                 
                 {/* Settings Panel */}
                 <TabsContent value="settings" className="mt-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Edit className="h-5 w-5" />
-                        Community Settings
-                      </CardTitle>
-                      <CardDescription>
-                        Manage your community settings and preferences
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-center py-16">
-                        <Edit className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                        <p className="text-lg font-medium mb-2">
-                          Settings management coming soon
-                        </p>
-                        <p className="text-muted-foreground max-w-md mx-auto">
-                          We're working on building powerful settings management for community administrators.
-                          Check back soon!
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <div className="space-y-6">
+                    {/* Visual Settings */}
+                    <CommunityVisualSettings 
+                      community={community}
+                      isAdmin={community.role === CommunityMemberRole.ADMIN || community.createdByUserId === (community as any).currentUserId}
+                    />
+                    
+                    {/* General Settings */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Edit className="h-5 w-5" />
+                          General Settings
+                        </CardTitle>
+                        <CardDescription>
+                          Manage your community settings and preferences
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-center py-16">
+                          <Edit className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                          <p className="text-lg font-medium mb-2">
+                            General settings management coming soon
+                          </p>
+                          <p className="text-muted-foreground max-w-md mx-auto">
+                            We're working on building powerful settings management for community administrators.
+                            Check back soon!
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </TabsContent>
               </Tabs>
             </div>
