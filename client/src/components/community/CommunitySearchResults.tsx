@@ -174,16 +174,49 @@ export function CommunitySearchResults({
       ) : communities && communities.length > 0 ? (
         <div className="space-y-4">
           {communities.map((community) => (
-            <Card key={community.id} className="w-full transition-all hover:shadow-md">
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-12 w-12 border">
+            <Card key={community.id} className="w-full transition-all hover:shadow-md overflow-hidden">
+              {/* Add Banner Image Display - Enhanced */}
+              {community.bannerUrl && (
+                <div className="relative h-32 w-full overflow-hidden">
+                  <img 
+                    src={community.bannerUrl}
+                    alt={`${community.name} banner`}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60"></div>
+                  <div className="absolute bottom-2 left-3">
+                    <Avatar className="h-12 w-12 border-2 border-white shadow-md">
                       <AvatarImage src={community.avatarUrl || undefined} alt={community.name} />
-                      <AvatarFallback>
+                      <AvatarFallback className="bg-primary text-primary-foreground">
                         {community.name.substring(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
+                  </div>
+                  <div className="absolute top-2 right-2 flex gap-1.5">
+                    {getSkillLevelBadge(community.skillLevel)}
+                    {requiresApproval(community) && (
+                      <Badge variant="outline" className="bg-amber-100 text-amber-700 text-[10px] sm:text-xs py-0 h-5 px-1.5 sm:px-2 truncate max-w-[70px] sm:max-w-[120px] border-white/20 shadow-sm">
+                        <Shield className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1 flex-shrink-0" /> 
+                        <span className="hidden sm:inline">Approval Required</span>
+                        <span className="inline sm:hidden">Approval</span>
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              <CardHeader className={`pb-2 ${community.bannerUrl ? 'pt-3' : 'pt-4'}`}>
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-4">
+                    {/* Only show Avatar if no banner is present */}
+                    {!community.bannerUrl && (
+                      <Avatar className="h-12 w-12 border">
+                        <AvatarImage src={community.avatarUrl || undefined} alt={community.name} />
+                        <AvatarFallback className="bg-primary text-primary-foreground">
+                          {community.name.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
                     <div>
                       <CardTitle className="text-xl flex items-center gap-2">
                         <Link to={`/communities/${community.id}`}>
@@ -207,16 +240,19 @@ export function CommunitySearchResults({
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    {getSkillLevelBadge(community.skillLevel)}
-                    {requiresApproval(community) && (
-                      <Badge variant="outline" className="bg-amber-100 text-amber-700 text-[10px] sm:text-xs py-0 h-5 px-1.5 sm:px-2 truncate max-w-[70px] sm:max-w-[120px]">
-                        <Shield className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1 flex-shrink-0" /> 
-                        <span className="hidden sm:inline">Approval Required</span>
-                        <span className="inline sm:hidden">Approval</span>
-                      </Badge>
-                    )}
-                  </div>
+                  {/* Only show badges here if no banner is present */}
+                  {!community.bannerUrl && (
+                    <div className="flex gap-2">
+                      {getSkillLevelBadge(community.skillLevel)}
+                      {requiresApproval(community) && (
+                        <Badge variant="outline" className="bg-amber-100 text-amber-700 text-[10px] sm:text-xs py-0 h-5 px-1.5 sm:px-2 truncate max-w-[70px] sm:max-w-[120px]">
+                          <Shield className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1 flex-shrink-0" /> 
+                          <span className="hidden sm:inline">Approval Required</span>
+                          <span className="inline sm:hidden">Approval</span>
+                        </Badge>
+                      )}
+                    </div>
+                  )}
                 </div>
               </CardHeader>
               <CardContent className="pb-3">
