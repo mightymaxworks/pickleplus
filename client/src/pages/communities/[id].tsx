@@ -19,7 +19,7 @@ import {
   useCommunityEvents,
   useCommunityPosts
 } from "@/lib/hooks/useCommunity";
-import { CommunityEngagementMetrics } from "@/components/community/CommunityEngagementMetrics";
+import CommunityEngagementMetrics from "@/components/community/CommunityEngagementMetrics";
 import { CommunityHeader } from "@/components/community/CommunityHeader";
 import { EventList } from "@/components/community/EventList";
 import { MembersList } from "@/components/community/MembersList";
@@ -402,6 +402,11 @@ export default function CommunityDetailPage() {
                 </div>
               </CardContent>
             </Card>
+          )}
+          
+          {/* Engagement Tab */}
+          {activeTab === "engagement" && (
+            <CommunityEngagementMetrics communityId={communityId} />
           )}
           
           {/* Manage Tab (visible only to admins/moderators) */}
