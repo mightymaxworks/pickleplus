@@ -110,13 +110,78 @@ export const communityKeys = {
 
 const communityApi = {
   /**
-   * Get all communities
+   * PKL-278651-COMM-0017-SEARCH
+   * Get all communities with advanced search and filtering
+   * @param options Advanced search options including filters, sorting, and recommendation
    */
-  getCommunities: async (options?: PaginationOptions) => {
+  getCommunities: async (options?: {
+    // Basic filters
+    location?: string;
+    skillLevel?: string;
+    minSkillLevel?: string;
+    maxSkillLevel?: string;
+    tags?: string | string[];
+    search?: string;
+    isPrivate?: boolean;
+    
+    // Event filters
+    hasEvents?: boolean;
+    eventType?: string;
+    
+    // Member filters
+    memberCount?: string; // Format: "min-max" or just "min"
+    
+    // Date filters
+    createdAfter?: string | Date;
+    createdBefore?: string | Date;
+    
+    // ID filters
+    excludeIds?: number[] | string;
+    includeIds?: number[] | string;
+    
+    // Recommendation
+    recommendForUser?: number;
+    
+    // Popularity
+    popular?: boolean;
+    
+    // Sorting
+    sort?: 'newest' | 'oldest' | 'name_asc' | 'name_desc' | 'members_high' | 'members_low' | 'events_high' | 'events_low';
+    
+    // Pagination
+    limit?: number;
+    offset?: number;
+  }) => {
+    // Format dates if provided
+    const params: Record<string, any> = { ...options };
+    
+    if (params.createdAfter instanceof Date) {
+      params.createdAfter = params.createdAfter.toISOString();
+    }
+    
+    if (params.createdBefore instanceof Date) {
+      params.createdBefore = params.createdBefore.toISOString();
+    }
+    
+    // Handle array parameters
+    if (Array.isArray(params.tags)) {
+      params.tags = params.tags.join(',');
+    }
+    
+    if (Array.isArray(params.excludeIds)) {
+      params.excludeIds = params.excludeIds.join(',');
+    }
+    
+    if (Array.isArray(params.includeIds)) {
+      params.includeIds = params.includeIds.join(',');
+    }
+    
+    console.log('Advanced search params:', params);
+    
     const response = await apiRequest<Community[]>({
       url: '/api/communities',
       method: 'GET',
-      params: options,
+      params,
     });
     return response;
   },

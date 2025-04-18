@@ -77,33 +77,146 @@ const insertCommentSchema = createInsertSchema(communityPostComments, {
 }).omit({ id: true, createdAt: true, updatedAt: true, likes: true });
 
 /**
- * Get all communities with optional filtering
- * GET /api/communities
- * Public route - no authentication required
+ * @layer Server
+ * @module Community
+ * @description Advanced search for communities with filtering and recommendations
+ * @dependsOn Database Layer (communitiesTable)
+ * @endpoint GET /api/communities
+ * @version 2.2.0
+ * @lastModified 2025-04-18
+ * @framework Framework5.1
+ * @sprint PKL-278651-COMM-0017-SEARCH
+ * @changes
+ * - Enhanced search with full-text capability
+ * - Added multiple filtering options
+ * - Added recommendation algorithm
+ * - Added sorting options
+ * - Optimized query performance
+ * @preserves
+ * - Basic community fetching functionality
+ * - Public access (no authentication required)
  */
 router.get('/', communityAuth, async (req: Request, res: Response) => {
   try {
-    const { location, skillLevel, tags, search, limit, offset } = req.query;
+    const { 
+      location, 
+      skillLevel, 
+      minSkillLevel,
+      maxSkillLevel,
+      tags, 
+      search, 
+      limit, 
+      offset,
+      isPrivate,
+      hasEvents,
+      eventType,
+      sort,
+      memberCount,
+      createdAfter,
+      createdBefore,
+      excludeIds,
+      includeIds,
+      recommendForUser,
+      popular
+    } = req.query;
+    
+    console.log('[PKL-278651-COMM-0017-SEARCH] Search query:', JSON.stringify(req.query));
     
     const filters: any = {};
     
+    // Basic filters
     if (location) filters.location = String(location);
     if (skillLevel) filters.skillLevel = String(skillLevel);
+    
+    // Skill level range filters
+    if (minSkillLevel) filters.minSkillLevel = String(minSkillLevel);
+    if (maxSkillLevel) filters.maxSkillLevel = String(maxSkillLevel);
+    
+    // Tags filter with array support
     if (tags) {
       const tagsArray = Array.isArray(tags) 
         ? tags.map(tag => String(tag)) 
         : String(tags).split(',');
       filters.tags = tagsArray;
     }
+    
+    // Search query (full text search)
     if (search) filters.search = String(search);
+    
+    // Privacy filter
+    if (isPrivate !== undefined) {
+      filters.isPrivate = isPrivate === 'true';
+    }
+    
+    // Events filters
+    if (hasEvents !== undefined) {
+      filters.hasEvents = hasEvents === 'true';
+    }
+    
+    if (eventType) {
+      filters.eventType = String(eventType);
+    }
+    
+    // Member count filter
+    if (memberCount) {
+      const [min, max] = String(memberCount).split('-');
+      if (min) filters.minMemberCount = parseInt(min);
+      if (max) filters.maxMemberCount = parseInt(max);
+    }
+    
+    // Date range filters
+    if (createdAfter) {
+      filters.createdAfter = new Date(String(createdAfter));
+    }
+    
+    if (createdBefore) {
+      filters.createdBefore = new Date(String(createdBefore));
+    }
+    
+    // Include/exclude specific communities
+    if (excludeIds) {
+      const excludeIdsArray = Array.isArray(excludeIds) 
+        ? excludeIds.map(id => parseInt(String(id))) 
+        : String(excludeIds).split(',').map(id => parseInt(id));
+      filters.excludeIds = excludeIdsArray;
+    }
+    
+    if (includeIds) {
+      const includeIdsArray = Array.isArray(includeIds) 
+        ? includeIds.map(id => parseInt(String(id))) 
+        : String(includeIds).split(',').map(id => parseInt(id));
+      filters.includeIds = includeIdsArray;
+    }
+    
+    // Sorting
+    if (sort) {
+      filters.sort = String(sort);
+    }
+    
+    // Recommendation for specific user
+    if (recommendForUser) {
+      const userId = parseInt(String(recommendForUser));
+      if (!isNaN(userId)) {
+        filters.recommendForUser = userId;
+      }
+    }
+    
+    // Popular communities (by activity or member count)
+    if (popular !== undefined) {
+      filters.popular = popular === 'true';
+    }
+    
+    // Pagination
     if (limit) filters.limit = parseInt(String(limit));
     if (offset) filters.offset = parseInt(String(offset));
+    
+    console.log('[PKL-278651-COMM-0017-SEARCH] Processed filters:', JSON.stringify(filters));
     
     const communities = await storage.getCommunities(filters);
     
     res.json(communities);
   } catch (error) {
-    console.error('Error getting communities:', error);
+    console.error('[PKL-278651-COMM-0017-SEARCH] Error getting communities:', error);
     res.status(500).json({ message: 'Failed to fetch communities' });
   }
 });

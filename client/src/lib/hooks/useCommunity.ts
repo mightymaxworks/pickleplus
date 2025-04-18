@@ -73,25 +73,89 @@ export const communityKeys = {
 /**
  * Hook to fetch communities list with optional filtering
  */
+/**
+ * @component useCommunities
+ * @layer Hooks
+ * @module Community
+ * @sprint PKL-278651-COMM-0017-SEARCH
+ * @version 2.0.0
+ * @lastModified 2025-04-18
+ * 
+ * @description
+ * React hook for fetching and filtering communities with advanced search options.
+ * Uses TanStack Query for caching and state management.
+ * 
+ * @param options - Advanced search and filtering options
+ * @returns Query result with communities data, loading and error states
+ */
 export function useCommunities(options?: {
+  // Basic filters
+  location?: string;
+  skillLevel?: string;
+  minSkillLevel?: string;
+  maxSkillLevel?: string;
+  tags?: string | string[];
+  search?: string;
+  query?: string; // Backward compatibility
+  isPrivate?: boolean;
+  
+  // Event filters
+  hasEvents?: boolean;
+  eventType?: string;
+  
+  // Member filters
+  memberCount?: string; // Format: "min-max" or just "min"
+  
+  // Date filters
+  createdAfter?: string | Date;
+  createdBefore?: string | Date;
+  
+  // ID filters
+  excludeIds?: number[] | string;
+  includeIds?: number[] | string;
+  
+  // Recommendation
+  recommendForUser?: number;
+  
+  // Popularity
+  popular?: boolean;
+  
+  // Sorting
+  sort?: 'newest' | 'oldest' | 'name_asc' | 'name_desc' | 'members_high' | 'members_low' | 'events_high' | 'events_low';
+  
+  // Pagination and query options
   limit?: number;
   offset?: number;
-  query?: string;
-  skillLevel?: string;
-  location?: string;
   enabled?: boolean;
 }) {
-  const { limit, offset, query, skillLevel, location, enabled = true } = options || {};
+  const { enabled = true, query, ...searchOptions } = options || {};
+  
+  // For backward compatibility, map query to search
+  if (query && !searchOptions.search) {
+    searchOptions.search = query;
+  }
+  
+  console.log('[PKL-278651-COMM-0017-SEARCH] Search options:', searchOptions);
   
   return useQuery({
-    queryKey: communityKeys.list({ limit, offset, query, skillLevel, location }),
-    queryFn: () => communityApi.getCommunities({ limit, offset, query, skillLevel, location }),
+    queryKey: communityKeys.list(searchOptions),
+    queryFn: () => communityApi.getCommunities(searchOptions),
     enabled,
   });
 }
 
 /**
- * Hook to fetch communities with advanced filtering and sorting
+ * @component useFilteredCommunities
+ * @layer Hooks
+ * @module Community
+ * @sprint PKL-278651-COMM-0017-SEARCH
+ * @version 2.0.0
+ * @lastModified 2025-04-18
+ * 
+ * @description
+ * Enhanced hook to fetch communities with advanced filtering and sorting
+ * Now uses server-side filtering and sorting capabilities
+ * 
  * @param filterOptions - Options for filtering communities
  * @param sortOptions - Options for sorting communities
  * @param paginationOptions - Options for paginating results
@@ -106,10 +170,46 @@ export function useFilteredCommunities(
   const { enabled = true } = queryOptions || {};
   const { limit, offset } = paginationOptions || {};
   
-  // Get the base data without client-side filtering
+  // Convert filter options to API parameters
+  const searchOptions: Record<string, any> = { limit, offset };
+  
+  if (filterOptions) {
+    // Map filter options to search parameters
+    if (filterOptions.location) searchOptions.location = filterOptions.location;
+    if (filterOptions.skillLevel) searchOptions.skillLevel = filterOptions.skillLevel;
+    if (filterOptions.tags) searchOptions.tags = filterOptions.tags;
+    if (filterOptions.search) searchOptions.search = filterOptions.search;
+    if (filterOptions.hasEvents !== undefined) searchOptions.hasEvents = filterOptions.hasEvents;
+    if (filterOptions.eventType) searchOptions.eventType = filterOptions.eventType;
+    if (filterOptions.minSkillLevel) searchOptions.minSkillLevel = filterOptions.minSkillLevel;
+    if (filterOptions.maxSkillLevel) searchOptions.maxSkillLevel = filterOptions.maxSkillLevel;
+    if (filterOptions.isPrivate !== undefined) searchOptions.isPrivate = filterOptions.isPrivate;
+  }
+  
+  // Add sorting options
+  if (sortOptions?.sortBy) {
+    switch (sortOptions.sortBy) {
+      case 'name':
+        searchOptions.sort = sortOptions.sortDirection === 'asc' ? 'name_asc' : 'name_desc';
+        break;
+      case 'created':
+        searchOptions.sort = sortOptions.sortDirection === 'asc' ? 'oldest' : 'newest';
+        break;
+      case 'members':
+        searchOptions.sort = sortOptions.sortDirection === 'asc' ? 'members_low' : 'members_high';
+        break;
+      case 'events':
+        searchOptions.sort = sortOptions.sortDirection === 'asc' ? 'events_low' : 'events_high';
+        break;
+    }
+  }
+  
+  console.log('[PKL-278651-COMM-0017-SEARCH] Filtered search options:', searchOptions);
+  
+  // Get the data with server-side filtering
   const baseQuery = useQuery({
-    queryKey: communityKeys.filtered(filterOptions || {}),
-    queryFn: () => communityApi.getCommunities({ limit, offset }),
+    queryKey: communityKeys.filtered(searchOptions),
+    queryFn: () => communityApi.getCommunities(searchOptions),
     enabled,
   });
   
