@@ -188,7 +188,11 @@ export default function CommunityEventDetailPage() {
               </CardDescription>
             </div>
             <div className="mt-2 sm:mt-0">
-              {event.isRegistered ? (
+              {event.createdByUserId === community.createdByUserId ? (
+                <Button variant="outline" disabled>
+                  Event Creator
+                </Button>
+              ) : event.isRegistered ? (
                 <Button 
                   variant="destructive"
                   onClick={() => setIsCancelDialogOpen(true)}
@@ -206,7 +210,10 @@ export default function CommunityEventDetailPage() {
               ) : (
                 <Button 
                   onClick={() => setIsRegistrationFormOpen(true)}
-                  disabled={event.status !== "upcoming" || (!!event.maxAttendees && (event.currentAttendees || 0) >= event.maxAttendees)}
+                  disabled={
+                    event.status !== "upcoming" || 
+                    (!!event.maxAttendees && (event.currentAttendees || 0) >= event.maxAttendees)
+                  }
                 >
                   Register Now
                 </Button>

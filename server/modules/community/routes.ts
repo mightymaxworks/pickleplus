@@ -899,8 +899,12 @@ router.post('/:id/events', isAuthenticated, async (req: Request, res: Response) 
 });
 
 /**
+ * PKL-278651-COMM-0016-RSVP
  * Register for an event
  * POST /api/communities/events/:eventId/register
+ * @version 1.0.1
+ * @lastModified 2025-04-18
+ * @changes Added special handling for event creators
  */
 router.post('/events/:eventId/register', isAuthenticated, async (req: Request, res: Response) => {
   try {
@@ -922,11 +926,30 @@ router.post('/events/:eventId/register', isAuthenticated, async (req: Request, r
       return res.status(400).json({ message: 'You are already registered for this event' });
     }
     
-    // Get event to check if it's at capacity
+    // Get event to check if it's at capacity and if user is the creator
     const event = await storage.getCommunityEventById(eventId);
     
     if (!event) {
       return res.status(404).json({ message: 'Event not found' });
+    }
+    
+    // Check if user is the event creator
+    if (event.createdByUserId === userId) {
+      // Event creators are automatically considered registered
+      const attendance = await storage.createEventAttendance({
+        eventId,
+        userId,
+        status: 'registered',
+        notes: 'Event Creator'
+      });
+      
+      return res.status(201).json(attendance);
+    }
+    
+    // Get community details to verify membership
+    const community = await storage.getCommunityById(event.communityId);
+    if (!community) {
+      return res.status(404).json({ message: 'Community not found' });
     }
     
     // Framework 5.1 approach - safely handle nullable fields
@@ -951,8 +974,12 @@ router.post('/events/:eventId/register', isAuthenticated, async (req: Request, r
 });
 
 /**
+ * PKL-278651-COMM-0016-RSVP
  * Cancel event registration
  * DELETE /api/communities/events/:eventId/register
+ * @version 1.0.1
+ * @lastModified 2025-04-18
+ * @changes Added checks for event creator (cannot cancel if creator)
  */
 router.delete('/events/:eventId/register', isAuthenticated, async (req: Request, res: Response) => {
   try {
@@ -965,6 +992,18 @@ router.delete('/events/:eventId/register', isAuthenticated, async (req: Request,
     
     if (!userId) {
       return res.status(401).json({ message: 'Authentication required' });
+    }
+    
+    // Get event to check if user is the creator
+    const event = await storage.getCommunityEventById(eventId);
+    
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+    
+    // Event creators cannot cancel their registration
+    if (event.createdByUserId === userId) {
+      return res.status(403).json({ message: 'Event creators cannot cancel their registration' });
     }
     
     // Cancel registration
