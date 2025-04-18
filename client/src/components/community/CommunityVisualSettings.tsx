@@ -172,11 +172,27 @@ export function CommunityVisualSettings({ community, isAdmin }: CommunityVisualS
         title: "Banner uploaded",
         description: "Your community banner has been updated",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error uploading banner:", error);
+      
+      // Provide more specific error messages based on the error
+      let errorMessage = "There was an error uploading your banner.";
+      
+      if (error.message?.includes("CSRF token validation")) {
+        errorMessage = "Security token validation failed. Please refresh the page and try again.";
+      } else if (error.message?.includes("413") || error.message?.includes("entity too large")) {
+        errorMessage = "The image file is too large. Please try a smaller file.";
+      } else if (error.message?.includes("415") || error.message?.includes("media type")) {
+        errorMessage = "Invalid file type. Please upload a JPEG, PNG, or GIF image.";
+      } else if (error.message?.includes("401") || error.message?.includes("unauthorized")) {
+        errorMessage = "You don't have permission to update this community. Please try logging in again.";
+      } else if (error.message?.includes("Network Error") || error.message?.includes("timeout")) {
+        errorMessage = "Network error. Please check your connection and try again.";
+      }
+      
       toast({
         title: "Upload failed",
-        description: "There was an error uploading your banner",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -187,16 +203,42 @@ export function CommunityVisualSettings({ community, isAdmin }: CommunityVisualS
   const updateTheme = async () => {
     try {
       setIsThemeUpdating(true);
+      
+      // Validate the hex color format
+      const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+      if (!hexColorRegex.test(themeColor)) {
+        toast({
+          title: "Invalid color format",
+          description: "Please enter a valid hex color (e.g., #FF5733)",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       await communityApi.updateCommunityTheme(community.id, themeColor);
       toast({
         title: "Theme updated",
         description: "Your community theme color has been updated",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating theme:", error);
+      
+      // Provide more specific error messages based on the error
+      let errorMessage = "There was an error updating your theme color.";
+      
+      if (error.message?.includes("CSRF token validation")) {
+        errorMessage = "Security token validation failed. Please refresh the page and try again.";
+      } else if (error.message?.includes("401") || error.message?.includes("unauthorized")) {
+        errorMessage = "You don't have permission to update this community. Please try logging in again.";
+      } else if (error.message?.includes("Network Error") || error.message?.includes("timeout")) {
+        errorMessage = "Network error. Please check your connection and try again.";
+      } else if (error.message?.includes("Invalid color format")) {
+        errorMessage = "The color format is invalid. Please use a valid hex color (e.g., #FF5733).";
+      }
+      
       toast({
         title: "Update failed",
-        description: "There was an error updating your theme color",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
