@@ -123,26 +123,32 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
   // Handle form submission
   const onSubmit = async (data: EventFormValues) => {
     try {
+      console.log("Form data being submitted:", data);
+      
+      const eventData = {
+        title: data.title,
+        description: data.description || "",
+        eventDate: data.eventDate,
+        endDate: data.endDate,
+        location: data.location || "",
+        isVirtual: Boolean(data.isVirtual),
+        virtualMeetingUrl: data.isVirtual ? data.virtualMeetingUrl : null,
+        maxAttendees: data.maxAttendees,
+        isPrivate: Boolean(data.isPrivate),
+        isRecurring: Boolean(data.isRecurring),
+        recurringPattern: data.isRecurring ? data.recurringPattern : null,
+        repeatFrequency: data.isRecurring ? data.repeatFrequency : null,
+        status: data.status || CommunityEventStatus.UPCOMING,
+        eventType: data.eventType || CommunityEventType.MATCH_PLAY,
+        skillLevelRequired: data.skillLevelRequired || "all",
+        registrationDeadline: data.registrationDeadline,
+      };
+      
+      console.log("Processed event data:", eventData);
+      
       await createEvent.mutateAsync({
         communityId,
-        data: {
-          title: data.title,
-          description: data.description,
-          eventDate: data.eventDate,
-          endDate: data.endDate,
-          location: data.location,
-          isVirtual: data.isVirtual,
-          virtualMeetingUrl: data.isVirtual ? data.virtualMeetingUrl : null,
-          maxAttendees: data.maxAttendees,
-          isPrivate: data.isPrivate,
-          isRecurring: data.isRecurring,
-          recurringPattern: data.isRecurring ? data.recurringPattern : null,
-          repeatFrequency: data.isRecurring ? data.repeatFrequency : null,
-          status: data.status,
-          eventType: data.eventType,
-          skillLevelRequired: data.skillLevelRequired,
-          registrationDeadline: data.registrationDeadline,
-        }
+        data: eventData
       });
       
       toast({

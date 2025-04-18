@@ -52,7 +52,14 @@ async function apiRequest<T>(options: {
   const response = await fetch(fetchUrl, requestOptions);
   
   if (!response.ok) {
-    throw new Error(`API error: ${response.status}`);
+    // Try to get the error message from the response
+    try {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `API error: ${response.status}`);
+    } catch (jsonError) {
+      // If we can't parse the JSON, just throw a generic error
+      throw new Error(`API error: ${response.status}. Endpoint: ${fetchUrl}`);
+    }
   }
   
   // Handle empty responses
