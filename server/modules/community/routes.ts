@@ -48,9 +48,31 @@ const insertCommunityPostSchema = createInsertSchema(communityPosts, {
   content: z.string().min(1).max(5000)
 }).omit({ id: true, createdAt: true, updatedAt: true, likes: true, comments: true });
 
+/**
+ * PKL-278651-COMM-0015-EVENT
+ * Enhanced community event validation schema
+ * Using Framework 5.1 validation pattern
+ */
 const insertCommunityEventSchema = createInsertSchema(communityEvents, {
   title: z.string().min(3).max(255),
+  description: z.string().optional(),
   eventDate: z.coerce.date(),
+  endDate: z.coerce.date().optional(),
+  location: z.string().optional(),
+  isVirtual: z.boolean().optional().default(false),
+  virtualMeetingUrl: z.string().optional().nullable(),
+  maxAttendees: z.number().optional().nullable(),
+  isPrivate: z.boolean().optional().default(false),
+  isRecurring: z.boolean().optional().default(false),
+  recurringPattern: z.string().optional().nullable(),
+  repeatFrequency: z.string().optional().nullable(),
+  status: z.string().optional().default("upcoming"),
+  eventType: z.string().optional().default("match_play"),
+  minSkillLevel: z.string().optional().nullable(),
+  maxSkillLevel: z.string().optional().nullable(),
+  imageUrl: z.string().optional().nullable(),
+  // Registration deadline handled separately to avoid type errors
+  // registrationDeadline handled through database defaults
 }).omit({ id: true, createdAt: true, updatedAt: true, currentAttendees: true });
 
 const insertCommentSchema = createInsertSchema(communityPostComments, {
@@ -704,13 +726,29 @@ router.get('/:id/events', communityAuth, async (req: Request, res: Response) => 
 });
 
 /**
- * Create a community event
- * POST /api/communities/:id/events
+ * @layer Server
+ * @module Community
+ * @description Create a community event
+ * @dependsOn Database Layer (communityEventsTable)
+ * @endpoint POST /api/communities/:id/events
+ * @version 2.1.0
+ * @lastModified 2025-04-18
+ * @framework Framework5.1
+ * @changes
+ * - Enhanced schema validation for all possible event fields
+ * - Added comprehensive error handling
+ * - Added detailed logging for debugging
+ * @preserves
+ * - Basic event creation functionality
+ * - Membership checks
  */
 router.post('/:id/events', isAuthenticated, async (req: Request, res: Response) => {
   try {
     const communityId = parseInt(req.params.id);
     const userId = req.user?.id;
+    
+    console.log(`[PKL-278651-COMM-0015-EVENT] Event creation request for community ${communityId} by user ${userId}`);
+    console.log('[PKL-278651-COMM-0015-EVENT] Request body:', JSON.stringify(req.body));
     
     if (isNaN(communityId)) {
       return res.status(400).json({ message: 'Invalid community ID' });
@@ -720,31 +758,45 @@ router.post('/:id/events', isAuthenticated, async (req: Request, res: Response) 
       return res.status(401).json({ message: 'Authentication required' });
     }
     
-    // Check if user is a member
+    // Get the community to check if user is creator
+    const community = await storage.getCommunityById(communityId);
+    
+    if (!community) {
+      return res.status(404).json({ message: 'Community not found' });
+    }
+    
+    // Check if user is a member or creator
+    const isCreator = community.createdByUserId === userId;
     const membership = await storage.getCommunityMembership(communityId, userId);
     
-    if (!membership) {
+    console.log(`[PKL-278651-COMM-0015-EVENT] User ${userId} membership check: isCreator=${isCreator}, hasMembership=${!!membership}`);
+    
+    if (!membership && !isCreator) {
       return res.status(403).json({ message: 'You must be a member to create events in this community' });
     }
     
-    // Validate event data
+    // Validate event data using enhanced schema
     const validationResult = insertCommunityEventSchema.safeParse(req.body);
     
     if (!validationResult.success) {
+      console.error('[PKL-278651-COMM-0015-EVENT] Validation error:', validationResult.error);
       return res.status(400).json({ 
         message: 'Invalid event data',
         errors: validationResult.error.errors 
       });
     }
     
-    // Create the event
+    // Set community ID and creator ID explicitly to ensure security
     const eventData = {
       ...validationResult.data,
       communityId,
       createdByUserId: userId
     };
     
+    console.log('[PKL-278651-COMM-0015-EVENT] Processed event data:', JSON.stringify(eventData));
+    
     const newEvent = await storage.createCommunityEvent(eventData);
+    console.log('[PKL-278651-COMM-0015-EVENT] Event created with ID:', newEvent.id);
     
     res.status(201).json(newEvent);
   } catch (error) {
