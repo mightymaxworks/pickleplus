@@ -334,34 +334,7 @@ const communityApi = {
     return response;
   },
   
-  /**
-   * Register for an event
-   * @version 1.0.1
-   * @lastModified 2025-04-18
-   * @changes Aligned with server-side endpoint structure
-   */
-  registerForEvent: async (communityId: number, eventId: number, notes?: string) => {
-    const response = await apiRequest<import('@/types/community').CommunityEventAttendee>({
-      url: `/api/communities/events/${eventId}/register`,
-      method: 'POST',
-      data: { notes },
-    });
-    return response;
-  },
-  
-  /**
-   * Cancel event registration
-   * @version 1.0.1
-   * @lastModified 2025-04-18
-   * @changes Aligned with server-side endpoint structure
-   */
-  cancelEventRegistration: async (communityId: number, eventId: number) => {
-    const response = await apiRequest<{ message: string }>({
-      url: `/api/communities/events/${eventId}/register`,
-      method: 'DELETE',
-    });
-    return response;
-  },
+
 };
 
 export default communityApi;

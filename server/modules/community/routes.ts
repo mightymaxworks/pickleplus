@@ -888,8 +888,21 @@ router.post('/:id/events', isAuthenticated, async (req: Request, res: Response) 
     
     console.log('[PKL-278651-COMM-0015-EVENT] Processed event data:', JSON.stringify(eventData));
     
-    const newEvent = await storage.createCommunityEvent(eventData);
+    // Add currentAttendees = 1 to count the creator
+    const newEvent = await storage.createCommunityEvent({
+      ...eventData,
+      currentAttendees: 1 // Start with 1 for the creator
+    });
     console.log('[PKL-278651-COMM-0015-EVENT] Event created with ID:', newEvent.id);
+    
+    // Automatically register the creator as an attendee
+    await storage.createEventAttendance({
+      eventId: newEvent.id,
+      userId,
+      status: 'registered',
+      notes: 'Event Creator (Auto-registered)'
+    });
+    console.log('[PKL-278651-COMM-0015-EVENT] Creator automatically registered as attendee');
     
     res.status(201).json(newEvent);
   } catch (error) {
