@@ -18,7 +18,9 @@ async function apiRequest<T>(options: {
   data?: any;
   params?: Record<string, any>;
 }): Promise<T> {
-  const { url, method, data, params } = options;
+  const { url, method, params } = options;
+  // Create a mutable copy of data
+  let requestData = options.data ? { ...options.data } : undefined;
   
   // Build URL with params if provided
   let fetchUrl = url;
@@ -35,40 +37,72 @@ async function apiRequest<T>(options: {
     }
   }
   
-  // Create request options
-  const requestOptions: RequestInit = {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    credentials: 'include',
-  };
-  
-  // Add body for non-GET requests
-  if (method !== 'GET' && data) {
-    requestOptions.body = JSON.stringify(data);
-  }
-  
-  const response = await fetch(fetchUrl, requestOptions);
-  
-  if (!response.ok) {
-    // Try to get the error message from the response
-    try {
-      const errorData = await response.json();
-      throw new Error(errorData.message || `API error: ${response.status}`);
-    } catch (jsonError) {
-      // If we can't parse the JSON, just throw a generic error
-      throw new Error(`API error: ${response.status}. Endpoint: ${fetchUrl}`);
+  try {
+    // Create request options
+    const requestOptions: RequestInit = {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    };
+    
+    // For non-GET requests, get a CSRF token
+    if (method !== 'GET') {
+      try {
+        const csrfResponse = await fetch('/api/auth/csrf-token', {
+          method: 'GET',
+          credentials: 'include',
+        });
+        
+        if (csrfResponse.ok) {
+          const { token } = await csrfResponse.json();
+          // Add CSRF token to the headers
+          (requestOptions.headers as Record<string, string>)['X-CSRF-Token'] = token;
+          
+          // Include token in the data as well for backend flexibility
+          if (requestData) {
+            requestData = { ...requestData, _csrf: token };
+          } else {
+            requestData = { _csrf: token };
+          }
+        } else {
+          console.warn('Failed to get CSRF token, proceeding without it');
+        }
+      } catch (csrfError) {
+        console.warn('Error fetching CSRF token:', csrfError);
+      }
     }
+    
+    // Add body for non-GET requests
+    if (method !== 'GET' && requestData) {
+      requestOptions.body = JSON.stringify(requestData);
+    }
+    
+    const response = await fetch(fetchUrl, requestOptions);
+    
+    if (!response.ok) {
+      // Try to get the error message from the response
+      try {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `API error: ${response.status}`);
+      } catch (jsonError) {
+        // If we can't parse the JSON, just throw a generic error
+        throw new Error(`API error: ${response.status}. Endpoint: ${fetchUrl}`);
+      }
+    }
+    
+    // Handle empty responses
+    const text = await response.text();
+    if (!text) {
+      return {} as T;
+    }
+    
+    return JSON.parse(text) as T;
+  } catch (error) {
+    console.error(`API request failed for ${method} ${url}:`, error);
+    throw error;
   }
-  
-  // Handle empty responses
-  const text = await response.text();
-  if (!text) {
-    return {} as T;
-  }
-  
-  return JSON.parse(text) as T;
 }
 import { 
   Community, 
@@ -111,29 +145,55 @@ export const communityKeys = {
 /**
  * File upload function for community-related files
  * This uses FormData to upload files to the server
+ * Handles CSRF token integration
  */
 async function uploadFile(url: string, file: File, additionalData?: Record<string, any>): Promise<{ url: string }> {
-  const formData = new FormData();
-  formData.append('file', file);
-  
-  // Add any additional data to the form
-  if (additionalData) {
-    Object.entries(additionalData).forEach(([key, value]) => {
-      formData.append(key, String(value));
+  try {
+    // First, get the CSRF token
+    const csrfResponse = await fetch('/api/auth/csrf-token', {
+      method: 'GET',
+      credentials: 'include',
     });
+    
+    if (!csrfResponse.ok) {
+      throw new Error(`Failed to get CSRF token: ${csrfResponse.status}`);
+    }
+    
+    const { token } = await csrfResponse.json();
+    
+    // Create form data with file and CSRF token
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('_csrf', token);
+    
+    // Add any additional data to the form
+    if (additionalData) {
+      Object.entries(additionalData).forEach(([key, value]) => {
+        formData.append(key, String(value));
+      });
+    }
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData,
+      credentials: 'include'
+    });
+    
+    if (!response.ok) {
+      // Try to get more detailed error info
+      try {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Upload failed: ${response.status}`);
+      } catch (jsonError) {
+        throw new Error(`Upload failed: ${response.status}`);
+      }
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error("Error uploading file:", error);
+    throw error;
   }
-  
-  const response = await fetch(url, {
-    method: 'POST',
-    body: formData,
-    credentials: 'include'
-  });
-  
-  if (!response.ok) {
-    throw new Error(`Upload failed: ${response.status}`);
-  }
-  
-  return response.json();
 }
 
 const communityApi = {
@@ -438,7 +498,7 @@ const communityApi = {
     );
     
     // Invalidate community cache to reflect new avatar
-    queryClient.invalidateQueries(communityKeys.detail(communityId));
+    queryClient.invalidateQueries({ queryKey: communityKeys.detail(communityId) });
     
     return response;
   },
@@ -454,7 +514,7 @@ const communityApi = {
     );
     
     // Invalidate community cache to reflect new banner
-    queryClient.invalidateQueries(communityKeys.detail(communityId));
+    queryClient.invalidateQueries({ queryKey: communityKeys.detail(communityId) });
     
     return response;
   },
@@ -471,7 +531,7 @@ const communityApi = {
     });
     
     // Invalidate community cache to reflect new theme
-    queryClient.invalidateQueries(communityKeys.detail(communityId));
+    queryClient.invalidateQueries({ queryKey: communityKeys.detail(communityId) });
     
     return response;
   }

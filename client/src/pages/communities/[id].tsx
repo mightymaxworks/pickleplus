@@ -425,12 +425,11 @@ export default function CommunityDetailPage() {
                           role: community.role,
                           createdByUserId: community.createdByUserId,
                           currentUserId: (community as any).currentUserId,
-                          // Force isAdmin to true for testing
-                          isAdmin: true
+                          isAdmin: userRole === CommunityMemberRole.ADMIN
                         })}
                         <CommunityVisualSettings 
                           community={community}
-                          isAdmin={true} // Force true for testing
+                          isAdmin={userRole === CommunityMemberRole.ADMIN}
                         />
                         
                         {/* General Settings */}

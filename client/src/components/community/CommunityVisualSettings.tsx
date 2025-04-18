@@ -134,11 +134,27 @@ export function CommunityVisualSettings({ community, isAdmin }: CommunityVisualS
         title: "Avatar uploaded",
         description: "Your community avatar has been updated",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error uploading avatar:", error);
+      
+      // Provide more specific error messages based on the error
+      let errorMessage = "There was an error uploading your avatar.";
+      
+      if (error.message?.includes("CSRF token validation")) {
+        errorMessage = "Security token validation failed. Please refresh the page and try again.";
+      } else if (error.message?.includes("413") || error.message?.includes("entity too large")) {
+        errorMessage = "The image file is too large. Please try a smaller file.";
+      } else if (error.message?.includes("415") || error.message?.includes("media type")) {
+        errorMessage = "Invalid file type. Please upload a JPEG, PNG, or GIF image.";
+      } else if (error.message?.includes("401") || error.message?.includes("unauthorized")) {
+        errorMessage = "You don't have permission to update this community. Please try logging in again.";
+      } else if (error.message?.includes("Network Error") || error.message?.includes("timeout")) {
+        errorMessage = "Network error. Please check your connection and try again.";
+      }
+      
       toast({
         title: "Upload failed",
-        description: "There was an error uploading your avatar",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
