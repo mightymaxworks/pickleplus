@@ -299,7 +299,7 @@ export function CommunityCard({
             ) : (
               <div>
                 <div className="text-sm font-medium">Private</div>
-                <div className="text-xs text-muted-foreground">Members</div>
+                <div className="text-xs text-muted-foreground">Official Group</div>
               </div>
             )}
           </div>
