@@ -22,6 +22,7 @@ import {
 import { CommunityHeader } from "@/components/community/CommunityHeader";
 import { EventList } from "@/components/community/EventList";
 import { MembersList } from "@/components/community/MembersList";
+import { CommunityVisualSettings } from "@/components/community/CommunityVisualSettings";
 import {
   Card,
   CardContent,
@@ -48,7 +49,8 @@ import {
   Check,
   X,
   Edit,
-  Bell
+  Bell,
+  Palette
 } from "lucide-react";
 import { JoinRequestManagement } from "@/components/community/JoinRequestManagement";
 import { CommunityMemberRole } from "@/types/community";
