@@ -201,7 +201,7 @@ export interface Campaign {
     /** Whether to show in campaign list */
     showInList?: boolean;
     /** Featured image URL */
-    featuredImage?: string;
+    imageUrl?: string; // Changed from featuredImage for schema consistency
     /** Tags for the campaign */
     tags?: string[];
   };
