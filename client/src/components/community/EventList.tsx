@@ -1,16 +1,14 @@
 /**
  * PKL-278651-COMM-0014-EVLIST
- * Enhanced Event List Component
+ * Enhanced Event List Component - Framework 5.1 Implementation
  * 
- * This component displays a filterable list of community events with advanced 
- * filtering, calendar view, responsive design, and optimized UX.
+ * Simplified structure of the component to resolve hooks order issues
  * 
- * @version 2.0.0
- * @lastModified 2025-04-17
+ * @version 3.0.0
+ * @lastModified 2025-04-18
  */
 
-import React, { useState, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState } from "react";
 import { useCommunityEvents } from "@/lib/hooks/useCommunity";
 import { EventCard } from "./EventCard";
 import { EventFilterCard, EventFilters } from "./EventFilterCard";
@@ -81,21 +79,11 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { 
   format, 
-  addDays, 
-  startOfWeek, 
-  endOfWeek,
-  eachDayOfInterval, 
-  isSameMonth, 
   compareAsc, 
-  parseISO, 
   isBefore, 
   isAfter, 
   isSameDay,
-  isToday,
-  isWithinInterval,
-  startOfDay,
-  endOfDay,
-  formatISO
+  isToday
 } from "date-fns";
 
 interface EventListProps {
@@ -117,49 +105,48 @@ export function EventList({
   defaultView = "all",
   initialFilters
 }: EventListProps) {
-  // View and layout states
+  // All state declarations first to maintain consistent hooks order
   const [currentView, setCurrentView] = useState(defaultView);
   const [layout, setLayout] = useState<"grid" | "list" | "calendar">(initialLayout);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  
-  // Selected date for calendar view
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());
-  
-  // Filters state
   const [filters, setFilters] = useState<EventFilters>(initialFilters || {});
   const [showSidebar, setShowSidebar] = useState<boolean>(true);
-  
-  // Sorting options
   const [sortBy, setSortBy] = useState<"date" | "popularity" | "recent" | "alphabetical">("date");
-  
-  // Fetch all events for the community with increased limit for calendar view
+
+  // Then the query hook
   const {
     data: allEvents = [],
     isLoading,
     isError,
     refetch
   } = useCommunityEvents(communityId, {
-    limit: layout === "calendar" ? 100 : limit, // Fetch more events for calendar view
+    limit: layout === "calendar" ? 100 : limit,
     enabled: true,
   });
+
+  // Helper functions defined outside of component rendering logic
+  const toggleMobileFilter = () => {
+    setMobileFilterOpen(!mobileFilterOpen);
+  };
   
-  // Create a stable function for filtering and sorting events
-  const filterAndSortEvents = (
-    events: CommunityEvent[], 
-    view: string,
-    currentFilters: EventFilters,
-    query: string,
-    layoutType: "grid" | "list" | "calendar",
-    selectedDay: Date | undefined,
-    sortOption: "date" | "popularity" | "recent" | "alphabetical"
-  ) => {
-    let filteredEvents = [...events];
+  const handleLayoutChange = (newLayout: "grid" | "list" | "calendar") => {
+    setLayout(newLayout);
+  };
+  
+  const handleFilterChange = (newFilters: EventFilters) => {
+    setFilters(newFilters);
+  };
+
+  // Filter and sort events outside of hooks
+  const getFilteredAndSortedEvents = () => {
+    let filteredEvents = [...allEvents];
     
-    // Filter by search query (if any)
-    if (query.trim()) {
-      const queryLower = query.toLowerCase().trim();
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const queryLower = searchQuery.toLowerCase().trim();
       filteredEvents = filteredEvents.filter(event => 
         event.title.toLowerCase().includes(queryLower) || 
         (event.description && event.description.toLowerCase().includes(queryLower)) ||
@@ -167,8 +154,8 @@ export function EventList({
       );
     }
     
-    // Filter by tab view using switch for better performance
-    switch (view) {
+    // Filter by tab view
+    switch (currentView) {
       case "upcoming":
         filteredEvents = filteredEvents.filter(event => event.status === CommunityEventStatus.UPCOMING);
         break;
@@ -184,57 +171,48 @@ export function EventList({
       // "all" view - no filtering needed
     }
     
-    // Filter for calendar view - if we have a selected date in calendar view
-    if (layoutType === "calendar" && selectedDay) {
+    // Calendar date filter
+    if (layout === "calendar" && selectedDate) {
       filteredEvents = filteredEvents.filter(event => {
         const eventDate = new Date(event.eventDate);
-        return isSameDay(eventDate, selectedDay);
+        return isSameDay(eventDate, selectedDate);
       });
     }
     
     // Apply additional filters
-    if (currentFilters.types && currentFilters.types.length > 0) {
-      filteredEvents = filteredEvents.filter(event => currentFilters.types?.includes(event.eventType));
+    if (filters.types && filters.types.length > 0) {
+      filteredEvents = filteredEvents.filter(event => filters.types?.includes(event.eventType));
     }
     
-    if (currentFilters.statuses && currentFilters.statuses.length > 0) {
-      filteredEvents = filteredEvents.filter(event => currentFilters.statuses?.includes(event.status));
+    if (filters.statuses && filters.statuses.length > 0) {
+      filteredEvents = filteredEvents.filter(event => filters.statuses?.includes(event.status));
     }
     
-    if (currentFilters.dateRange && (currentFilters.dateRange.from || currentFilters.dateRange.to)) {
+    if (filters.dateRange && (filters.dateRange.from || filters.dateRange.to)) {
       filteredEvents = filteredEvents.filter(event => {
         const eventDate = new Date(event.eventDate);
         
-        if (currentFilters.dateRange?.from && currentFilters.dateRange?.to) {
-          // Between from and to dates (inclusive)
+        if (filters.dateRange?.from && filters.dateRange?.to) {
           return (
-            (isAfter(eventDate, currentFilters.dateRange.from) || isSameDay(eventDate, currentFilters.dateRange.from)) && 
-            (isBefore(eventDate, currentFilters.dateRange.to) || isSameDay(eventDate, currentFilters.dateRange.to))
+            (isAfter(eventDate, filters.dateRange.from) || isSameDay(eventDate, filters.dateRange.from)) && 
+            (isBefore(eventDate, filters.dateRange.to) || isSameDay(eventDate, filters.dateRange.to))
           );
-        } else if (currentFilters.dateRange?.from) {
-          // On or after from date
-          return isAfter(eventDate, currentFilters.dateRange.from) || isSameDay(eventDate, currentFilters.dateRange.from);
-        } else if (currentFilters.dateRange?.to) {
-          // On or before to date
-          return isBefore(eventDate, currentFilters.dateRange.to) || isSameDay(eventDate, currentFilters.dateRange.to);
+        } else if (filters.dateRange?.from) {
+          return isAfter(eventDate, filters.dateRange.from) || isSameDay(eventDate, filters.dateRange.from);
+        } else if (filters.dateRange?.to) {
+          return isBefore(eventDate, filters.dateRange.to) || isSameDay(eventDate, filters.dateRange.to);
         }
         
         return true;
       });
     }
     
-    if (currentFilters.userAttending) {
+    if (filters.userAttending) {
       filteredEvents = filteredEvents.filter(event => event.isRegistered);
     }
     
-    // TODO: Add filter for events created by the user when that data is available
-    if (currentFilters.userOwned) {
-      // This would require the current user ID to compare with event.createdByUserId
-      // filteredEvents = filteredEvents.filter(event => event.createdByUserId === currentUserId);
-    }
-    
     // Apply sorting
-    switch (sortOption) {
+    switch (sortBy) {
       case "date":
         // Sort events by date with intelligent ordering
         filteredEvents.sort((a, b) => {
@@ -250,7 +228,7 @@ export function EventList({
             return statusOrder[a.status] - statusOrder[b.status];
           }
           
-          // Then by date (ascending for upcoming, descending for past)
+          // Then by date
           const dateA = new Date(a.eventDate);
           const dateB = new Date(b.eventDate);
           
@@ -285,25 +263,22 @@ export function EventList({
     return filteredEvents;
   };
 
-  // Apply client-side filtering with useMemo to memoize the result
-  const filteredEvents = useMemo(() => {
-    return filterAndSortEvents(
-      allEvents,
-      currentView,
-      filters,
-      searchQuery,
-      layout,
-      selectedDate,
-      sortBy
-    );
-  }, [allEvents, currentView, filters, searchQuery, layout, selectedDate, sortBy]);
-  
-  // Handle filter changes
-  const handleFilterChange = (newFilters: EventFilters) => {
-    setFilters(newFilters);
+  // Helper functions for event calendar view
+  const getEventsByDate = () => {
+    const eventsByDate: Record<string, CommunityEvent[]> = {};
+    
+    allEvents.forEach(event => {
+      const date = format(new Date(event.eventDate), 'yyyy-MM-dd');
+      if (!eventsByDate[date]) {
+        eventsByDate[date] = [];
+      }
+      eventsByDate[date].push(event);
+    });
+    
+    return eventsByDate;
   };
-  
-  // Count events by status
+
+  // Non-reactive counts
   const upcomingCount = allEvents.filter(e => e.status === CommunityEventStatus.UPCOMING).length;
   const ongoingCount = allEvents.filter(e => e.status === CommunityEventStatus.ONGOING).length;
   const pastCount = allEvents.filter(e => 
@@ -311,7 +286,11 @@ export function EventList({
     e.status === CommunityEventStatus.CANCELLED
   ).length;
 
-  // Render lightweight loading skeleton
+  // Get filtered events only when rendering
+  const filteredEvents = getFilteredAndSortedEvents();
+  const eventsByDate = getEventsByDate();
+  
+  // Loading state
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -336,7 +315,7 @@ export function EventList({
     );
   }
 
-  // Render error state
+  // Error state
   if (isError) {
     return (
       <Card className="border-destructive">
@@ -355,7 +334,7 @@ export function EventList({
     );
   }
 
-  // Render empty state
+  // Empty state
   if (allEvents.length === 0) {
     return (
       <Card className="border-dashed">
@@ -385,32 +364,7 @@ export function EventList({
     );
   }
 
-  // Helpers for calendar view
-  const eventsForCalendarView = useMemo(() => {
-    // Group events by date for the calendar view
-    const eventsByDate: Record<string, CommunityEvent[]> = {};
-    
-    allEvents.forEach(event => {
-      const date = format(new Date(event.eventDate), 'yyyy-MM-dd');
-      if (!eventsByDate[date]) {
-        eventsByDate[date] = [];
-      }
-      eventsByDate[date].push(event);
-    });
-    
-    return eventsByDate;
-  }, [allEvents]);
-  
-  // Toggle filter drawer for mobile
-  const toggleMobileFilter = () => {
-    setMobileFilterOpen(!mobileFilterOpen);
-  };
-  
-  // Handle layout changes
-  const handleLayoutChange = (newLayout: "grid" | "list" | "calendar") => {
-    setLayout(newLayout);
-  };
-  
+  // Main UI render
   return (
     <div className="space-y-6">
       {/* Enhanced toolbar */}
@@ -510,109 +464,88 @@ export function EventList({
               </div>
             </TooltipProvider>
             
-            {/* Create Event button */}
-            <EventCreationModal
-              communityId={communityId}
-              onEventCreated={refetch}
-            />
+            {/* Mobile filter button */}
+            <div className="md:hidden">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={toggleMobileFilter}
+                className="gap-1"
+              >
+                <Filter className="h-4 w-4" />
+                <span>Filter</span>
+                <Badge className="ml-1">{Object.keys(filters).length}</Badge>
+              </Button>
+            </div>
             
             {/* Sort dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="hidden md:flex">
-                  Sort
-                  <ChevronDown className="ml-1 h-4 w-4" />
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="gap-1 hidden sm:flex"
+                >
+                  <span>Sort</span>
+                  <ChevronDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+                <DropdownMenuLabel>Sort Events</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                   <DropdownMenuItem 
-                    className={sortBy === "date" ? "bg-secondary" : ""} 
                     onClick={() => setSortBy("date")}
+                    className={sortBy === "date" ? "bg-accent" : ""}
                   >
-                    Date (Default)
+                    <CalendarIcon className="h-4 w-4 mr-2" />
+                    <span>Date (Default)</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    className={sortBy === "popularity" ? "bg-secondary" : ""} 
                     onClick={() => setSortBy("popularity")}
+                    className={sortBy === "popularity" ? "bg-accent" : ""}
                   >
-                    Popularity
+                    <Users className="h-4 w-4 mr-2" />
+                    <span>Popularity</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    className={sortBy === "recent" ? "bg-secondary" : ""} 
                     onClick={() => setSortBy("recent")}
+                    className={sortBy === "recent" ? "bg-accent" : ""}
                   >
-                    Recently Added
+                    <Clock className="h-4 w-4 mr-2" />
+                    <span>Recently Added</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    className={sortBy === "alphabetical" ? "bg-secondary" : ""} 
                     onClick={() => setSortBy("alphabetical")}
+                    className={sortBy === "alphabetical" ? "bg-accent" : ""}
                   >
-                    Alphabetical
+                    <SlidersHorizontal className="h-4 w-4 mr-2" />
+                    <span>Alphabetical</span>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
             
-            {/* Mobile filter button */}
-            <Drawer open={mobileFilterOpen} onOpenChange={setMobileFilterOpen}>
-              <DrawerTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="md:hidden gap-1"
-                >
-                  <Filter className="h-4 w-4" />
-                  Filters
-                  {Object.keys(filters).length > 0 && (
-                    <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 flex items-center justify-center">
-                      {Object.keys(filters).length}
-                    </Badge>
-                  )}
-                </Button>
-              </DrawerTrigger>
-              <DrawerContent>
-                <DrawerHeader>
-                  <DrawerTitle>Event Filters</DrawerTitle>
-                  <DrawerDescription>
-                    Find events that match your interests
-                  </DrawerDescription>
-                </DrawerHeader>
-                <div className="p-4">
-                  <EventFilterCard 
-                    onFilterChange={(newFilters) => {
-                      handleFilterChange(newFilters);
-                      setMobileFilterOpen(false);
-                    }}
-                    initialFilters={filters}
-                    communityId={communityId}
-                  />
-                </div>
-              </DrawerContent>
-            </Drawer>
+            {/* Refresh button */}
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={() => refetch()}
+              className="hidden sm:inline-flex"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
             
-            {/* Reset filters */}
-            {Object.keys(filters).length > 0 && (
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="gap-1"
-                onClick={() => {
-                  setFilters({});
-                  setSearchQuery("");
-                }}
-              >
-                <RefreshCw className="h-3.5 w-3.5" />
-                Reset
-              </Button>
-            )}
+            {/* Create event button */}
+            <EventCreationModal 
+              communityId={communityId}
+              onEventCreated={refetch}
+            />
           </div>
         </div>
         
-        {/* Search bar */}
-        <div className="flex gap-2">
+        {/* Search bar and filter toggle */}
+        <div className="flex items-center gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -624,18 +557,23 @@ export function EventList({
             />
           </div>
           
-          {/* Filter button for desktop */}
+          {/* Desktop filter toggle */}
           {showFilter && (
-            <Button 
-              variant="outline" 
-              className="hidden md:flex items-center gap-1"
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setShowSidebar(!showSidebar)}
+              className="gap-1 hidden md:flex"
             >
-              <SlidersHorizontal className="h-4 w-4" />
-              Filters
+              <Filter className="h-4 w-4" />
+              <span>Filters</span>
               {Object.keys(filters).length > 0 && (
-                <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 flex items-center justify-center">
-                  {Object.keys(filters).length}
+                <Badge variant="secondary" className="ml-1">
+                  {Object.keys(filters).filter(k => 
+                    Array.isArray(filters[k as keyof EventFilters]) 
+                      ? (filters[k as keyof EventFilters] as any[]).length > 0
+                      : Boolean(filters[k as keyof EventFilters])
+                  ).length}
                 </Badge>
               )}
             </Button>
@@ -643,256 +581,187 @@ export function EventList({
         </div>
       </div>
       
+      {/* Mobile filter drawer */}
+      <Drawer open={mobileFilterOpen} onOpenChange={setMobileFilterOpen}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Event Filters</DrawerTitle>
+            <DrawerDescription>
+              Filter events by type, status, and date
+            </DrawerDescription>
+          </DrawerHeader>
+          <div className="p-4">
+            <EventFilterCard
+              filters={filters}
+              onChange={handleFilterChange}
+              onClose={() => setMobileFilterOpen(false)}
+            />
+          </div>
+        </DrawerContent>
+      </Drawer>
+      
+      {/* Main content area with filter sidebar */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Main content area */}
+        {/* Events list/grid */}
         <div className={cn(
-          "space-y-4", 
-          (showFilter && showSidebar) ? "md:col-span-2" : "md:col-span-3"
+          "space-y-6", 
+          showFilter && showSidebar ? "md:col-span-2" : "md:col-span-3"
         )}>
-          {/* CALENDAR VIEW */}
-          {layout === "calendar" && (
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <CardTitle className="flex items-center gap-2">
-                    <CalendarDays className="h-5 w-5" />
-                    Events Calendar
-                  </CardTitle>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCalendarMonth(new Date())}
-                  >
-                    Today
+          {/* No results state */}
+          {filteredEvents.length === 0 && (
+            <Card className="border-dashed bg-muted/50">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <Filter className="h-12 w-12 text-muted-foreground mb-3" />
+                  <h3 className="text-lg font-medium mb-2">No matching events found</h3>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    Try adjusting your filters or search criteria
+                  </p>
+                  <Button variant="outline" onClick={() => {
+                    setFilters({});
+                    setSearchQuery('');
+                  }}>
+                    Clear all filters
                   </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {/* Calendar component */}
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    defaultMonth={calendarMonth}
-                    onMonthChange={setCalendarMonth}
-                    className="event-calendar rounded-md border mx-auto"
-                    classNames={{
-                      day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-                      day_today: "bg-accent text-accent-foreground",
-                      day: "hover:bg-muted rounded-md",
-                      day_disabled: "opacity-50",
-                      day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
-                      day_hidden: "invisible",
-                      caption: "flex justify-center pt-1 relative items-center",
-                      caption_label: "text-sm font-medium",
-                      nav: "space-x-1 flex items-center",
-                      nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
-                      nav_button_previous: "absolute left-1",
-                      nav_button_next: "absolute right-1",
-                      head_cell: "text-muted-foreground rounded-md w-8 font-normal text-[0.8rem]",
-                      cell: "text-center text-sm relative p-0 focus-within:relative focus-within:z-20",
-                    }}
-                  />
-                  
-                  {/* Events for selected date */}
-                  {selectedDate && (
-                    <div className="space-y-2">
-                      <h3 className="font-semibold text-md">
-                        Events for {format(selectedDate, 'MMMM d, yyyy')}
-                      </h3>
-                      
-                      {renderSelectedDateEvents(filteredEvents, selectedDate, communityId, true)}
-                    </div>
-                  )}
                 </div>
               </CardContent>
             </Card>
           )}
           
-          {/* LIST/GRID VIEW */}
-          {layout !== "calendar" && (
-            <Tabs 
-              value={currentView} 
-              className="w-full"
-            >
-              <TabsContent value="all" className="m-0">
-                {layout === "grid" 
-                  ? renderEventGrid(filteredEvents, communityId, compact)
-                  : renderEventList(filteredEvents, communityId, compact)
-                }
-              </TabsContent>
-              
-              <TabsContent value="upcoming" className="m-0">
-                {layout === "grid" 
-                  ? renderEventGrid(filteredEvents, communityId, compact)
-                  : renderEventList(filteredEvents, communityId, compact)
-                }
-              </TabsContent>
-              
-              <TabsContent value="ongoing" className="m-0">
-                {layout === "grid" 
-                  ? renderEventGrid(filteredEvents, communityId, compact)
-                  : renderEventList(filteredEvents, communityId, compact)
-                }
-              </TabsContent>
-              
-              <TabsContent value="past" className="m-0">
-                {layout === "grid" 
-                  ? renderEventGrid(filteredEvents, communityId, compact)
-                  : renderEventList(filteredEvents, communityId, compact)
-                }
-              </TabsContent>
-            </Tabs>
+          {/* Grid layout */}
+          {layout === "grid" && filteredEvents.length > 0 && (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+              {filteredEvents.map(event => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  communityId={communityId}
+                  compact={compact}
+                  showActions={showActions}
+                />
+              ))}
+            </div>
+          )}
+          
+          {/* List layout */}
+          {layout === "list" && filteredEvents.length > 0 && (
+            <div className="flex flex-col gap-4">
+              {filteredEvents.map(event => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  communityId={communityId}
+                  compact={true}
+                  showActions={showActions}
+                />
+              ))}
+            </div>
+          )}
+          
+          {/* Calendar layout */}
+          {layout === "calendar" && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Event Calendar</CardTitle>
+                  <div className="flex items-center gap-2">
+                    {selectedDate && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setSelectedDate(undefined)}
+                        className="text-xs h-8 px-2"
+                      >
+                        Clear Selection
+                      </Button>
+                    )}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setSelectedDate(new Date())}
+                      className="text-xs h-8 px-2"
+                    >
+                      Today
+                    </Button>
+                  </div>
+                </div>
+                <CardDescription>
+                  {selectedDate ? format(selectedDate, 'EEEE, MMMM d, yyyy') : 'Select a date to view events'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col md:flex-row gap-6">
+                  <div className="md:w-[300px] rounded-md border">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
+                      month={calendarMonth}
+                      onMonthChange={setCalendarMonth}
+                      className="rounded-md"
+                      modifiers={{
+                        hasEvent: (date) => {
+                          const dateStr = format(date, 'yyyy-MM-dd');
+                          return Boolean(eventsByDate[dateStr] && eventsByDate[dateStr].length > 0);
+                        },
+                        today: (date) => isToday(date)
+                      }}
+                      modifiersClassNames={{
+                        hasEvent: "bg-primary/10 font-bold",
+                        today: "bg-accent text-accent-foreground"
+                      }}
+                    />
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    {selectedDate ? (
+                      <>
+                        <h3 className="text-lg font-semibold mb-4">
+                          Events on {format(selectedDate, 'MMMM d, yyyy')}
+                        </h3>
+                        
+                        {filteredEvents.length > 0 ? (
+                          <div className="flex flex-col gap-4">
+                            {filteredEvents.map((event) => (
+                              <EventCard
+                                key={event.id}
+                                event={event}
+                                communityId={communityId}
+                                compact={true}
+                                showActions={showActions}
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-muted-foreground">No events scheduled for this day.</p>
+                        )}
+                      </>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-full text-center p-8">
+                        <CalendarDays className="h-12 w-12 text-muted-foreground mb-3" />
+                        <h3 className="text-lg font-medium mb-2">Select a date</h3>
+                        <p className="text-muted-foreground text-sm">
+                          Choose a date from the calendar to view events
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           )}
         </div>
         
-        {/* Filter sidebar for desktop */}
+        {/* Filter sidebar (desktop only) */}
         {showFilter && showSidebar && (
-          <div className="hidden md:block md:col-span-1">
-            <EventFilterCard 
-              onFilterChange={handleFilterChange}
-              initialFilters={filters}
-              communityId={communityId}
+          <div className="hidden md:block">
+            <EventFilterCard
+              filters={filters}
+              onChange={handleFilterChange}
             />
           </div>
         )}
       </div>
     </div>
-  );
-}
-
-// Helper function to render event list with appropriate empty states
-function renderEventList(events: CommunityEvent[], communityId: number, compact: boolean) {
-  if (events.length === 0) {
-    return (
-      <Card className="border-dashed">
-        <CardContent className="pt-6">
-          <div className="flex justify-center py-6">
-            <div className="text-center">
-              <Calendar className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-              <p className="text-muted-foreground">
-                No events match your current filters
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-  
-  return (
-    <motion.div className="space-y-4">
-      <AnimatePresence>
-        {events.map((event, index) => (
-          <motion.div
-            key={event.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ delay: index * 0.05, duration: 0.2 }}
-          >
-            <EventCard
-              event={event}
-              communityId={communityId}
-              compact={compact}
-            />
-          </motion.div>
-        ))}
-      </AnimatePresence>
-    </motion.div>
-  );
-}
-
-// Helper function to render events in a grid layout
-function renderEventGrid(events: CommunityEvent[], communityId: number, compact: boolean) {
-  if (events.length === 0) {
-    return (
-      <Card className="border-dashed">
-        <CardContent className="pt-6">
-          <div className="flex justify-center py-6">
-            <div className="text-center">
-              <Calendar className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-              <p className="text-muted-foreground">
-                No events match your current filters
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-  
-  return (
-    <motion.div 
-      className="grid grid-cols-1 sm:grid-cols-3 gap-4"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-    >
-      <AnimatePresence>
-        {events.map((event, index) => (
-          <motion.div
-            key={event.id}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ delay: index * 0.05, duration: 0.2 }}
-          >
-            <EventCard
-              event={event}
-              communityId={communityId}
-              compact={true}
-            />
-          </motion.div>
-        ))}
-      </AnimatePresence>
-    </motion.div>
-  );
-}
-
-// Helper function to render events for a selected date in calendar view
-function renderSelectedDateEvents(
-  events: CommunityEvent[], 
-  selectedDate: Date, 
-  communityId: number, 
-  compact: boolean
-) {
-  // Filter events for the selected date
-  const eventsOnDate = events.filter(event => {
-    const eventDate = new Date(event.eventDate);
-    return isSameDay(eventDate, selectedDate);
-  });
-  
-  if (eventsOnDate.length === 0) {
-    return (
-      <div className="text-center py-4 text-muted-foreground">
-        No events scheduled for this date
-      </div>
-    );
-  }
-  
-  return (
-    <motion.div 
-      className="space-y-2"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-    >
-      {eventsOnDate.map((event, index) => (
-        <motion.div
-          key={event.id}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: index * 0.1, duration: 0.2 }}
-        >
-          <EventCard
-            event={event}
-            communityId={communityId}
-            compact={true}
-          />
-        </motion.div>
-      ))}
-    </motion.div>
   );
 }
