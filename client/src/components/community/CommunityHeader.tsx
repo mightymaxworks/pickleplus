@@ -256,94 +256,44 @@ export function CommunityHeader({
               </div>
             </div>
             
-            {/* Action buttons - moved to top right for mobile */}
+            {/* Action buttons - simplified for reliable operation */}
             <div className="flex gap-2 flex-shrink-0">
               {hasManagePermissions ? (
-                /* Admin/Creator Menu Button */
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button 
-                      size="sm" 
-                      variant="default" 
-                      className="bg-white hover:bg-white/90 text-primary font-medium h-8 flex items-center gap-1"
-                    >
-                      <Settings className="h-4 w-4 mr-1" />
-                      <span>Manage</span>
-                      <ChevronDown className="h-3 w-3 ml-1" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Management Options</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => onTabChange && onTabChange("manage")}>
-                      <Settings className="h-4 w-4 mr-2" />
-                      Community Settings
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit Details
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Users className="h-4 w-4 mr-2" />
-                      Manage Members
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Manage Events
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem>
-                      <Share2 className="h-4 w-4 mr-2" />
-                      Share Community
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                /* Admin/Creator Button - direct navigation */
+                <Button 
+                  size="sm" 
+                  variant="default" 
+                  className="bg-white hover:bg-white/90 text-primary font-medium h-8 flex items-center gap-1"
+                  onClick={() => onTabChange && onTabChange("manage")}
+                >
+                  <Settings className="h-4 w-4 mr-1" />
+                  <span>Manage</span>
+                </Button>
               ) : (
-                /* Regular User Menu Button */
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="bg-white/10 border-white/20 hover:bg-white/20 text-white h-8 w-8 p-0"
-                    >
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Community Options</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {isMember ? (
-                      <>
-                        <DropdownMenuItem>
-                          <Bell className="h-4 w-4 mr-2" />
-                          Notifications
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Share2 className="h-4 w-4 mr-2" />
-                          Share
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Flag className="h-4 w-4 mr-2" />
-                          Report Community
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          onClick={handleLeave}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <LogOut className="h-4 w-4 mr-2" />
-                          Leave Community
-                        </DropdownMenuItem>
-                      </>
-                    ) : (
-                      <DropdownMenuItem onClick={handleJoin}>
-                        <Users className="h-4 w-4 mr-2" />
-                        Join Community
-                      </DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                /* Regular User Button */
+                isMember ? (
+                  /* Leave button for members */
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="bg-white/10 border-white/20 hover:bg-white/20 text-white h-8"
+                    onClick={handleLeave}
+                  >
+                    <LogOut className="h-4 w-4 mr-1" />
+                    <span>Leave</span>
+                  </Button>
+                ) : (
+                  /* Join button for non-members */
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="bg-white hover:bg-white/90 text-primary h-8"
+                    onClick={handleJoin}
+                  >
+                    <Users className="h-4 w-4 mr-1" />
+                    <span>Join</span>
+                  </Button>
+                )
               )}
             </div>
           </div>
