@@ -351,8 +351,17 @@ export function CommunityHeader({
                 <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
               </div>
               <div className="text-center sm:text-left">
-                <p className="text-lg sm:text-2xl font-bold">{memberCountDisplay}</p>
-                <p className="text-xs sm:text-sm text-muted-foreground">Members</p>
+                {!community.isDefault ? (
+                  <>
+                    <p className="text-lg sm:text-2xl font-bold">{memberCountDisplay}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Members</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-lg sm:text-2xl font-bold">Private</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Official Group</p>
+                  </>
+                )}
               </div>
             </div>
           </CardContent>
