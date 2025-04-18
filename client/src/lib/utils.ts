@@ -84,3 +84,22 @@ export function truncate(str: string, maxLength: number): string {
 export function formatPercent(value: number, decimalPlaces = 0): string {
   return value.toFixed(decimalPlaces) + "%";
 }
+
+/**
+ * Formats a time (from Date object) to a string
+ * @param date The date object containing the time to format
+ * @param options Optional Intl.DateTimeFormatOptions
+ * @returns A formatted time string
+ */
+export function formatTime(date?: Date | string | null, options?: Intl.DateTimeFormatOptions): string {
+  if (!date) return "—";
+  
+  const dateObj = typeof date === "string" ? new Date(date) : date;
+  
+  return dateObj.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    ...options
+  });
+}

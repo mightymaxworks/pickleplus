@@ -20,7 +20,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import { apiRequest } from "../queryClient";
-import * as communityApi from "../api/community";
+import communityApi from "@/api/communityApi";
 import { toast } from "@/hooks/use-toast";
 import type {
   Community,
@@ -57,6 +57,7 @@ export const communityKeys = {
   post: (postId: number) => [...communityKeys.all, "posts", postId] as const,
   postComments: (postId: number) => [...communityKeys.post(postId), "comments"] as const,
   events: (communityId: number) => [...communityKeys.detail(communityId), "events"] as const,
+  event: (communityId: number, eventId: number) => [...communityKeys.events(communityId), eventId] as const,
   eventsByType: (communityId: number, type: CommunityEventType) => 
     [...communityKeys.events(communityId), "type", type] as const,
   eventsByStatus: (communityId: number, status: CommunityEventStatus) => 
