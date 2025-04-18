@@ -314,21 +314,18 @@ export default function CommunityDetailPage() {
                   </Card>
                 )}
                 
-                {/* Member count for default communities */}
+                {/* Info card for default communities (no member count) */}
                 {community.isDefault && (
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Users className="h-5 w-5" />
-                        Members
+                        Official Group
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-center text-lg font-semibold">
-                        {community.memberCount || 0} members
-                      </p>
-                      <p className="text-center text-muted-foreground text-sm mt-1">
-                        All Pickle+ users automatically join this official group
+                      <p className="text-center text-muted-foreground mt-1">
+                        All Pickle+ users automatically join this official group. Member information is kept private for security and privacy reasons.
                       </p>
                     </CardContent>
                   </Card>
@@ -358,21 +355,21 @@ export default function CommunityDetailPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
-                  Members
+                  Privacy-Protected Members
                 </CardTitle>
                 <CardDescription>
-                  Member list is hidden for this official community
+                  Member information is hidden for this official community
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-16">
                   <Users className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
                   <p className="text-lg font-medium mb-2">
-                    {community.memberCount || 0} total members
+                    Protected Member Information
                   </p>
                   <p className="text-muted-foreground max-w-md mx-auto">
-                    All Pickle+ users automatically join this official group. 
-                    The member list is hidden to protect user privacy.
+                    All Pickle+ users automatically join this official community. 
+                    Member information is kept private to protect user privacy and security.
                   </p>
                 </div>
               </CardContent>
