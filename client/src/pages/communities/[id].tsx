@@ -53,6 +53,7 @@ import {
   Palette
 } from "lucide-react";
 import { JoinRequestManagement } from "@/components/community/JoinRequestManagement";
+import { CommunityAdminFAB } from "@/components/community/CommunityAdminFAB";
 import { CommunityMemberRole } from "@/types/community";
 
 export default function CommunityDetailPage() {
@@ -154,6 +155,10 @@ export default function CommunityDetailPage() {
     );
   }
 
+  // Determine if user has admin permissions
+  const hasAdminPermissions = community.role === CommunityMemberRole.ADMIN || 
+                            community.createdByUserId === (community as any).currentUserId;
+
   return (
     <DashboardLayout>
       <div className="container mx-auto py-8">
@@ -164,6 +169,11 @@ export default function CommunityDetailPage() {
           currentTab={activeTab}
           onTabChange={handleTabChange}
         />
+        
+        {/* Show FAB only for admins/creators */}
+        {hasAdminPermissions && (
+          <CommunityAdminFAB communityId={communityId} />
+        )}
         
         {/* Tab content */}
         <div className="mt-8">
