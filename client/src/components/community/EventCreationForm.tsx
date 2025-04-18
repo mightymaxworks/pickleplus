@@ -140,7 +140,8 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
         repeatFrequency: data.isRecurring ? data.repeatFrequency : null,
         status: data.status || CommunityEventStatus.UPCOMING,
         eventType: data.eventType || CommunityEventType.MATCH_PLAY,
-        skillLevelRequired: data.skillLevelRequired || "all",
+        // Change field name to match server schema
+        minSkillLevel: data.skillLevelRequired || "all",
         registrationDeadline: data.registrationDeadline,
       };
       
@@ -160,6 +161,11 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
       onSuccess?.();
     } catch (error) {
       console.error("Error creating event:", error);
+  // Log detailed error information if available
+  if (error instanceof Error) {
+    console.error("Error message:", error.message);
+    console.error("Error details:", error);
+  }
       toast({
         title: "Error Creating Event",
         description: error instanceof Error ? error.message : "Something went wrong. Please try again later.",

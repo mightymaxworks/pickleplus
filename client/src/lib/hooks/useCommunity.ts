@@ -662,7 +662,7 @@ export function useCreateCommunityEvent() {
         repeatFrequency?: string | null;
         status?: CommunityEventStatus;
         eventType?: CommunityEventType;
-        skillLevelRequired?: string | null;
+        minSkillLevel?: string | null; // Changed from skillLevelRequired to match server schema
         featuredImage?: string | null;
         registrationDeadline?: Date | null;
       }

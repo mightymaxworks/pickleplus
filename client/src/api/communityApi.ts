@@ -217,12 +217,18 @@ const communityApi = {
    * Create a community event
    */
   createCommunityEvent: async (communityId: number, data: Omit<InsertCommunityEvent, 'communityId' | 'createdByUserId'>) => {
-    const response = await apiRequest<CommunityEvent>({
-      url: `/api/communities/${communityId}/events`,
-      method: 'POST',
-      data,
-    });
-    return response;
+    try {
+      console.log('API Request data:', data);
+      const response = await apiRequest<CommunityEvent>({
+        url: `/api/communities/${communityId}/events`,
+        method: 'POST',
+        data,
+      });
+      return response;
+    } catch (error) {
+      console.error('Error in createCommunityEvent API call:', error);
+      throw error;
+    }
   },
 
   /**
