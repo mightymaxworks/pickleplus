@@ -83,37 +83,37 @@ const CommunityDiscoveryMockupV2: React.FC = () => {
           className="w-full"
         >
           <TabsList className="grid w-full grid-cols-3 mb-8">
-            <TabsTrigger value="all" className="flex flex-col items-center sm:flex-row sm:gap-2 p-2">
-              <Search className="h-5 w-5" />
+            <TabsTrigger value="all" className="flex flex-col items-center sm:flex-row sm:gap-2 p-1 sm:p-2">
+              <Search className="h-4 w-4 sm:h-5 sm:w-5" />
               <span className="hidden sm:inline">All</span>
-              <span className="text-xs font-normal mt-1 sm:hidden">All</span>
+              <span className="text-[10px] leading-tight font-normal mt-0.5 sm:hidden">All</span>
             </TabsTrigger>
             
             <TabsTrigger 
               value="my-communities" 
-              className="flex flex-col items-center sm:flex-row sm:gap-2 p-2"
+              className="flex flex-col items-center sm:flex-row sm:gap-2 p-1 sm:p-2"
               disabled={!user}
             >
               <div className="relative">
-                <Users className="h-5 w-5" />
+                <Users className="h-4 w-4 sm:h-5 sm:w-5" />
                 {myCommunityIds && myCommunityIds.length > 0 && (
-                  <Badge variant="secondary" className="absolute -top-2 -right-2 h-4 w-4 p-0 flex items-center justify-center text-xs">
+                  <Badge variant="secondary" className="absolute -top-1.5 -right-1.5 h-3 w-3 p-0 flex items-center justify-center text-[8px]">
                     {myCommunityIds.length}
                   </Badge>
                 )}
               </div>
               <span className="hidden sm:inline">My Communities</span>
-              <span className="text-xs font-normal mt-1 sm:hidden">Mine</span>
+              <span className="text-[10px] leading-tight font-normal mt-0.5 sm:hidden">Mine</span>
             </TabsTrigger>
             
             <TabsTrigger 
               value="recommended" 
-              className="flex flex-col items-center sm:flex-row sm:gap-2 p-2"
+              className="flex flex-col items-center sm:flex-row sm:gap-2 p-1 sm:p-2"
               disabled={!user}
             >
-              <Star className="h-5 w-5" />
+              <Star className="h-4 w-4 sm:h-5 sm:w-5" />
               <span className="hidden sm:inline">Recommended</span>
-              <span className="text-xs font-normal mt-1 sm:hidden">For You</span>
+              <span className="text-[10px] leading-tight font-normal mt-0.5 sm:hidden">For You</span>
             </TabsTrigger>
           </TabsList>
           
@@ -171,16 +171,16 @@ const CommunityDiscoveryMockupV2: React.FC = () => {
           <div>
             <h4 className="text-xs text-muted-foreground mb-2">Popular Skill Levels</h4>
             <div className="flex flex-wrap gap-1 sm:gap-2">
-              <Badge variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground text-xs truncate max-w-[120px]">
+              <Badge variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground text-[10px] sm:text-xs py-0 h-5 truncate max-w-[80px] sm:max-w-[120px]">
                 Beginner
               </Badge>
-              <Badge variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground text-xs truncate max-w-[120px]">
+              <Badge variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground text-[10px] sm:text-xs py-0 h-5 truncate max-w-[80px] sm:max-w-[120px]">
                 Intermediate
               </Badge>
-              <Badge variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground text-xs truncate max-w-[120px]">
+              <Badge variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground text-[10px] sm:text-xs py-0 h-5 truncate max-w-[80px] sm:max-w-[120px]">
                 Advanced
               </Badge>
-              <Badge variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground text-xs truncate max-w-[120px]">
+              <Badge variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground text-[10px] sm:text-xs py-0 h-5 truncate max-w-[80px] sm:max-w-[120px]">
                 All Levels
               </Badge>
             </div>
@@ -189,20 +189,20 @@ const CommunityDiscoveryMockupV2: React.FC = () => {
           <div>
             <h4 className="text-xs text-muted-foreground mb-2">Popular Locations</h4>
             <div className="flex flex-wrap gap-1 sm:gap-2">
-              <Badge variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground flex items-center text-xs truncate max-w-[120px]">
-                <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+              <Badge variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground flex items-center text-[10px] sm:text-xs py-0 h-5 truncate max-w-[80px] sm:max-w-[120px]">
+                <MapPin className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1 flex-shrink-0" />
                 <span className="truncate">Seattle</span>
               </Badge>
-              <Badge variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground flex items-center text-xs truncate max-w-[120px]">
-                <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+              <Badge variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground flex items-center text-[10px] sm:text-xs py-0 h-5 truncate max-w-[80px] sm:max-w-[120px]">
+                <MapPin className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1 flex-shrink-0" />
                 <span className="truncate">New York</span>
               </Badge>
-              <Badge variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground flex items-center text-xs truncate max-w-[120px]">
-                <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+              <Badge variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground flex items-center text-[10px] sm:text-xs py-0 h-5 truncate max-w-[80px] sm:max-w-[120px]">
+                <MapPin className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1 flex-shrink-0" />
                 <span className="truncate">Los Angeles</span>
               </Badge>
-              <Badge variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground flex items-center text-xs truncate max-w-[120px]">
-                <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+              <Badge variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground flex items-center text-[10px] sm:text-xs py-0 h-5 truncate max-w-[80px] sm:max-w-[120px]">
+                <MapPin className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1 flex-shrink-0" />
                 <span className="truncate">Chicago</span>
               </Badge>
             </div>

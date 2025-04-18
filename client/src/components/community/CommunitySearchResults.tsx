@@ -80,14 +80,16 @@ export function CommunitySearchResults({
       beginner: 'bg-green-100 text-green-700',
       intermediate: 'bg-blue-100 text-blue-700',
       advanced: 'bg-purple-100 text-purple-700',
-      pro: 'bg-red-100 text-red-700'
+      pro: 'bg-red-100 text-red-700',
+      all: 'bg-gray-100 text-gray-700' // For "All Levels"
     };
     
     const levelDisplay: Record<string, string> = {
       beginner: 'Beginner',
       intermediate: 'Intermediate',
       advanced: 'Advanced',
-      pro: 'Pro'
+      pro: 'Pro',
+      all: 'All Levels'
     };
     
     // Short display for mobile
@@ -95,13 +97,22 @@ export function CommunitySearchResults({
       beginner: 'Beg',
       intermediate: 'Int',
       advanced: 'Adv',
-      pro: 'Pro'
+      pro: 'Pro',
+      all: 'All'
     };
     
+    // Normalize the level key
+    const normalizedLevel = level.toLowerCase();
+    const isAllLevels = normalizedLevel === 'all levels' || normalizedLevel === 'all';
+    const keyToUse = isAllLevels ? 'all' : normalizedLevel;
+    
     return (
-      <Badge variant="outline" className={`${levelColors[level] || ''} text-xs px-2 truncate max-w-[90px] sm:max-w-full`}>
-        <span className="hidden sm:inline">{levelDisplay[level] || level}</span>
-        <span className="inline sm:hidden">{shortDisplay[level] || level}</span>
+      <Badge 
+        variant="outline" 
+        className={`${levelColors[keyToUse] || 'bg-gray-100 text-gray-700'} text-[10px] sm:text-xs py-0 h-5 px-1.5 sm:px-2 truncate max-w-[70px] sm:max-w-[120px]`}
+      >
+        <span className="hidden sm:inline">{levelDisplay[keyToUse] || level}</span>
+        <span className="inline sm:hidden">{shortDisplay[keyToUse] || (isAllLevels ? 'All' : level.slice(0, 3))}</span>
       </Badge>
     );
   };
@@ -199,8 +210,8 @@ export function CommunitySearchResults({
                   <div className="flex gap-2">
                     {getSkillLevelBadge(community.skillLevel)}
                     {requiresApproval(community) && (
-                      <Badge variant="outline" className="bg-amber-100 text-amber-700 text-xs px-2 truncate max-w-[90px] sm:max-w-full">
-                        <Shield className="h-3 w-3 mr-1" /> 
+                      <Badge variant="outline" className="bg-amber-100 text-amber-700 text-[10px] sm:text-xs py-0 h-5 px-1.5 sm:px-2 truncate max-w-[70px] sm:max-w-[120px]">
+                        <Shield className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1 flex-shrink-0" /> 
                         <span className="hidden sm:inline">Approval Required</span>
                         <span className="inline sm:hidden">Approval</span>
                       </Badge>
