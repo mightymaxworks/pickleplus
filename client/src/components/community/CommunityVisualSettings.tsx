@@ -297,8 +297,8 @@ export function CommunityVisualSettings({ community, isAdmin }: CommunityVisualS
               <div className="flex flex-col space-y-4">
                 <Label htmlFor="themeColor">Theme Color</Label>
                 <div className="flex gap-4 flex-col sm:flex-row items-start">
-                  <div className="grid grid-cols-5 gap-2 mx-auto sm:mx-0">
-                    {/* Predefined colors palette */}
+                  <div className="grid grid-cols-5 gap-3 w-full sm:w-auto">
+                    {/* Predefined colors palette - improved for touch */}
                     {[
                       "#FF5733", "#FFC300", "#36D7B7", "#3498DB", "#9B59B6",
                       "#6366F1", "#F472B6", "#10B981", "#FF6B6B", "#4C51BF",
@@ -307,8 +307,8 @@ export function CommunityVisualSettings({ community, isAdmin }: CommunityVisualS
                       <button
                         key={color}
                         type="button"
-                        className={`w-10 h-10 rounded-md border-2 ${
-                          themeColor === color ? "border-black dark:border-white" : "border-transparent"
+                        className={`w-12 h-12 sm:w-10 sm:h-10 rounded-md border-2 ${
+                          themeColor === color ? "border-black dark:border-white shadow-md" : "border-transparent"
                         }`}
                         style={{ backgroundColor: color }}
                         onClick={() => setThemeColor(color)}
