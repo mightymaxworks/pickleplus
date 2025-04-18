@@ -98,12 +98,29 @@ export function CommunityCard({
         onClick={handleViewCommunity}
       >
         <div className="flex items-center p-4">
-          <Avatar className="h-12 w-12 mr-4">
-            <AvatarImage src={community.avatarUrl || undefined} alt={community.name} />
-            <AvatarFallback className={`${gradientClass} text-white`}>
-              {community.name.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          {community.bannerUrl ? (
+            <div className="h-12 w-12 mr-4 relative rounded-full overflow-hidden border border-muted">
+              <img
+                src={community.bannerUrl}
+                alt={`${community.name} banner`}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black/30"></div>
+              <Avatar className="h-6 w-6 absolute bottom-0 right-0 border-2 border-white">
+                <AvatarImage src={community.avatarUrl || undefined} alt={community.name} />
+                <AvatarFallback className={`${gradientClass} text-white text-xs`}>
+                  {community.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+          ) : (
+            <Avatar className="h-12 w-12 mr-4">
+              <AvatarImage src={community.avatarUrl || undefined} alt={community.name} />
+              <AvatarFallback className={`${gradientClass} text-white`}>
+                {community.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          )}
           
           <div className="flex-1 min-w-0">
             <div className="flex items-center">
@@ -164,8 +181,20 @@ export function CommunityCard({
       className="group overflow-hidden rounded-xl border-muted/50 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl cursor-pointer"
       onClick={handleViewCommunity}
     >
-      {/* Card Header with Gradient Background */}
-      <div className={`relative h-48 ${gradientClass}`}>
+      {/* Card Header with Banner Image or Gradient Background */}
+      <div className={`relative h-48 ${!community.bannerUrl ? gradientClass : ''}`}>
+        {/* Banner Image (if available) */}
+        {community.bannerUrl && (
+          <div className="absolute inset-0 z-0">
+            <img 
+              src={community.bannerUrl}
+              alt={`${community.name} banner`}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-black/20" />
+          </div>
+        )}
+        
         {/* Pattern overlay */}
         <div className="absolute inset-0 opacity-10 flex items-center justify-center">
           <div className="w-full h-full flex items-center justify-center">
