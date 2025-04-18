@@ -251,7 +251,19 @@ export function CommunityHeader({
             </div>
             
             {/* Action buttons - moved to top right for mobile */}
-            <div className="flex-shrink-0">
+            <div className="flex gap-2 flex-shrink-0">
+              {/* Management shortcut - visible only to admins/moderators */}
+              {hasManagePermissions && (
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="bg-primary border-primary hover:bg-primary/80 text-white h-8 flex items-center gap-1 px-2 sm:px-3"
+                  onClick={() => onTabChange && onTabChange("manage")}
+                >
+                  <Settings className="h-3.5 w-3.5" />
+                  <span className="text-xs sm:text-sm">Manage</span>
+                </Button>
+              )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button size="sm" variant="outline" className="bg-white/10 border-white/20 hover:bg-white/20 text-white h-8 w-8 p-0">
