@@ -50,10 +50,9 @@ const insertCommunityPostSchema = createInsertSchema(communityPosts, {
 
 /**
  * PKL-278651-COMM-0015-EVENT
- * Enhanced community event validation schema
- * Using Framework 5.1 validation pattern
+ * Enhanced community event validation schema using simplified Framework 5.1 approach
  */
-const insertCommunityEventSchema = createInsertSchema(communityEvents, {
+const insertCommunityEventSchema = z.object({
   title: z.string().min(3).max(255),
   description: z.string().optional(),
   eventDate: z.coerce.date(),
@@ -71,9 +70,7 @@ const insertCommunityEventSchema = createInsertSchema(communityEvents, {
   minSkillLevel: z.string().optional().nullable(),
   maxSkillLevel: z.string().optional().nullable(),
   imageUrl: z.string().optional().nullable(),
-  // Registration deadline handled separately to avoid type errors
-  // registrationDeadline handled through database defaults
-}).omit({ id: true, createdAt: true, updatedAt: true, currentAttendees: true });
+});
 
 const insertCommentSchema = createInsertSchema(communityPostComments, {
   content: z.string().min(1).max(1000),
@@ -786,9 +783,26 @@ router.post('/:id/events', isAuthenticated, async (req: Request, res: Response) 
       });
     }
     
-    // Set community ID and creator ID explicitly to ensure security
+    // Build full event data with community ID and creator ID
+    // Framework 5.1 direct approach
     const eventData = {
-      ...validationResult.data,
+      title: validationResult.data.title,
+      description: validationResult.data.description || null,
+      eventDate: validationResult.data.eventDate,
+      endDate: validationResult.data.endDate || null,
+      location: validationResult.data.location || null,
+      isVirtual: validationResult.data.isVirtual || false,
+      virtualMeetingUrl: validationResult.data.virtualMeetingUrl || null,
+      maxAttendees: validationResult.data.maxAttendees || null,
+      isPrivate: validationResult.data.isPrivate || false,
+      isRecurring: validationResult.data.isRecurring || false,
+      recurringPattern: validationResult.data.recurringPattern || null,
+      repeatFrequency: validationResult.data.repeatFrequency || null,
+      status: validationResult.data.status || 'upcoming',
+      eventType: validationResult.data.eventType || 'match_play',
+      minSkillLevel: validationResult.data.minSkillLevel || null,
+      maxSkillLevel: validationResult.data.maxSkillLevel || null,
+      imageUrl: validationResult.data.imageUrl || null,
       communityId,
       createdByUserId: userId
     };
@@ -836,7 +850,9 @@ router.post('/events/:eventId/register', isAuthenticated, async (req: Request, r
       return res.status(404).json({ message: 'Event not found' });
     }
     
-    if (event.maxAttendees && event.currentAttendees >= event.maxAttendees) {
+    // Framework 5.1 approach - safely handle nullable fields
+    const currentAttendees = event.currentAttendees ?? 0;
+    if (event.maxAttendees && currentAttendees >= event.maxAttendees) {
       return res.status(400).json({ message: 'This event has reached maximum capacity' });
     }
     
