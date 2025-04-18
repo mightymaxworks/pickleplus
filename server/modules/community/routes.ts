@@ -1353,10 +1353,17 @@ router.get('/my-community-ids', isAuthenticated, async (req: Request, res: Respo
  * Upload community avatar
  * POST /api/communities/:id/avatar
  */
-router.post('/:id/avatar', isAuthenticated, upload.single('file'), async (req: Request, res: Response) => {
+router.post('/:id/avatar', isAuthenticated, (req, res, next) => {
+  console.log('Avatar upload - Request body fields:', Object.keys(req.body || {}));
+  console.log('Avatar upload - Files in request:', req.files);
+  next();
+}, upload.single('file'), async (req: Request, res: Response) => {
   try {
     const communityId = parseInt(req.params.id);
     const userId = req.user?.id;
+    
+    console.log('Processing avatar upload for community:', communityId);
+    console.log('Request file:', req.file);
     
     if (isNaN(communityId)) {
       return res.status(400).json({ message: 'Invalid community ID' });
@@ -1376,6 +1383,7 @@ router.post('/:id/avatar', isAuthenticated, upload.single('file'), async (req: R
     
     // Validate the file
     if (!req.file) {
+      console.error('No file in request for avatar upload');
       return res.status(400).json({ message: 'No file uploaded' });
     }
     
@@ -1386,12 +1394,15 @@ router.post('/:id/avatar', isAuthenticated, upload.single('file'), async (req: R
     
     // Get file path relative to server
     const relativePath = req.file.path.replace(/^uploads\//, '/uploads/');
+    console.log('Avatar saved to path:', req.file.path);
+    console.log('Relative path for database:', relativePath);
     
     // Update community with new avatar URL
     await storage.updateCommunity(communityId, {
       avatarUrl: relativePath
     });
     
+    console.log('Community avatar URL updated in database');
     res.json({ url: relativePath });
   } catch (error) {
     console.error('Error uploading community avatar:', error);
@@ -1404,10 +1415,17 @@ router.post('/:id/avatar', isAuthenticated, upload.single('file'), async (req: R
  * Upload community banner
  * POST /api/communities/:id/banner
  */
-router.post('/:id/banner', isAuthenticated, upload.single('file'), async (req: Request, res: Response) => {
+router.post('/:id/banner', isAuthenticated, (req, res, next) => {
+  console.log('Banner upload - Request body fields:', Object.keys(req.body || {}));
+  console.log('Banner upload - Files in request:', req.files);
+  next();
+}, upload.single('file'), async (req: Request, res: Response) => {
   try {
     const communityId = parseInt(req.params.id);
     const userId = req.user?.id;
+    
+    console.log('Processing banner upload for community:', communityId);
+    console.log('Request file:', req.file);
     
     if (isNaN(communityId)) {
       return res.status(400).json({ message: 'Invalid community ID' });
@@ -1427,6 +1445,7 @@ router.post('/:id/banner', isAuthenticated, upload.single('file'), async (req: R
     
     // Validate the file
     if (!req.file) {
+      console.error('No file in request for banner upload');
       return res.status(400).json({ message: 'No file uploaded' });
     }
     
@@ -1437,12 +1456,15 @@ router.post('/:id/banner', isAuthenticated, upload.single('file'), async (req: R
     
     // Get file path relative to server
     const relativePath = req.file.path.replace(/^uploads\//, '/uploads/');
+    console.log('Banner saved to path:', req.file.path);
+    console.log('Relative path for database:', relativePath);
     
     // Update community with new banner URL
     await storage.updateCommunity(communityId, {
       bannerUrl: relativePath
     });
     
+    console.log('Community banner URL updated in database');
     res.json({ url: relativePath });
   } catch (error) {
     console.error('Error uploading community banner:', error);
