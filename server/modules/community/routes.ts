@@ -739,7 +739,7 @@ router.get('/:id/events/:eventId', communityAuth, async (req: Request, res: Resp
     }
     
     // Get the event
-    const event = await storage.getCommunityEventById(communityId, eventId);
+    const event = await storage.getCommunityEventById(eventId);
     
     if (!event) {
       return res.status(404).json({ message: 'Event not found' });
@@ -751,7 +751,7 @@ router.get('/:id/events/:eventId', communityAuth, async (req: Request, res: Resp
     const userId = req.user?.id;
     
     if (userId) {
-      const attendee = await storage.getEventAttendee(eventId, userId);
+      const attendee = await storage.getEventAttendance(eventId, userId);
       isRegistered = !!attendee;
       registrationStatus = attendee?.status || null;
     }
@@ -785,7 +785,7 @@ router.get('/:id/events/:eventId/attendees', communityAuth, async (req: Request,
     }
     
     // Verify the event exists and belongs to this community
-    const event = await storage.getCommunityEventById(communityId, eventId);
+    const event = await storage.getCommunityEventById(eventId);
     
     if (!event) {
       return res.status(404).json({ message: 'Event not found' });

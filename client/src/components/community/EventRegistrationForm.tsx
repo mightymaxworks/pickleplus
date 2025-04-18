@@ -9,102 +9,150 @@
  */
 
 import React from "react";
+import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useRegisterForEvent } from "@/lib/hooks/useCommunity";
+import { Loader2 } from "lucide-react";
 
-// Define the form schema with Zod
-const registrationFormSchema = z.object({
-  notes: z.string().max(500, "Notes must be less than 500 characters").optional(),
+// Define form schema using zod
+const formSchema = z.object({
+  notes: z.string().optional(),
+  agreeToTerms: z.boolean().default(false)
+    .refine(val => val === true, {
+      message: "You must agree to the terms to register"
+    })
 });
 
-type RegistrationFormValues = z.infer<typeof registrationFormSchema>;
+type FormValues = z.infer<typeof formSchema>;
 
 interface EventRegistrationFormProps {
   communityId: number;
   eventId: number;
-  onSuccess: (notes?: string) => void;
-  onCancel: () => void;
+  onSuccess?: (notes?: string) => void;
+  onCancel?: () => void;
 }
 
-export default function EventRegistrationForm({
-  communityId,
-  eventId,
-  onSuccess,
-  onCancel,
+export default function EventRegistrationForm({ 
+  communityId, 
+  eventId, 
+  onSuccess, 
+  onCancel 
 }: EventRegistrationFormProps) {
-  // Initialize the registration mutation
-  const registerEvent = useRegisterForEvent();
-
-  // Initialize form with react-hook-form and zod validation
-  const form = useForm<RegistrationFormValues>({
-    resolver: zodResolver(registrationFormSchema),
+  // Initialize form with zod resolver
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       notes: "",
-    },
+      agreeToTerms: false
+    }
   });
-
+  
+  // Set up mutation for event registration
+  const registerMutation = useRegisterForEvent();
+  
   // Handle form submission
-  const onSubmit = (values: RegistrationFormValues) => {
-    registerEvent.mutate(
-      {
+  const onSubmit = async (values: FormValues) => {
+    registerMutation.mutate(
+      { 
         communityId,
         eventId,
-        notes: values.notes,
+        notes: values.notes
       },
       {
         onSuccess: () => {
-          onSuccess(values.notes);
-        },
+          if (onSuccess) {
+            onSuccess(values.notes);
+          }
+        }
       }
     );
   };
-
+  
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {/* Display error message if registration fails */}
+        {registerMutation.isError && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {registerMutation.error instanceof Error 
+                ? registerMutation.error.message 
+                : "Failed to register for event. Please try again."}
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {/* Notes field */}
         <FormField
           control={form.control}
           name="notes"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Special Requests or Notes (Optional)</FormLabel>
+              <FormLabel>Special requests or notes (optional)</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Add any notes for the event organizer (e.g., dietary restrictions, accessibility needs, etc.)"
-                  className="resize-none"
+                  placeholder="Any special requirements, questions, or comments?"
                   {...field}
                 />
               </FormControl>
               <FormDescription>
-                This information will be shared with the event organizer.
+                Include any dietary restrictions, accessibility needs, or other requests.
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-
-        <div className="flex justify-end gap-2 pt-4">
+        
+        {/* Terms agreement checkbox */}
+        <FormField
+          control={form.control}
+          name="agreeToTerms"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+              <FormControl>
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+              <div className="space-y-1 leading-none">
+                <FormLabel>
+                  I agree to the event terms and conditions
+                </FormLabel>
+                <FormDescription>
+                  By registering, you confirm you'll follow community guidelines and attend the event.
+                </FormDescription>
+              </div>
+            </FormItem>
+          )}
+        />
+        
+        {/* Form actions */}
+        <div className="flex justify-end space-x-2 pt-2">
           <Button
             type="button"
             variant="outline"
             onClick={onCancel}
-            disabled={registerEvent.isPending}
+            disabled={registerMutation.isPending}
           >
             Cancel
           </Button>
-          <Button
+          <Button 
             type="submit"
-            disabled={registerEvent.isPending}
+            disabled={registerMutation.isPending}
           >
-            {registerEvent.isPending ? (
+            {registerMutation.isPending ? (
               <>
-                <span className="mr-2">Registering...</span>
-                <span className="animate-spin">⋯</span>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Registering...
               </>
             ) : (
               "Register"
