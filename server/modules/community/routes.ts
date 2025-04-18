@@ -1411,8 +1411,8 @@ router.post('/:id/avatar', isAuthenticated, upload.single('file'), async (req: R
       return res.status(400).json({ message: validationError });
     }
     
-    // Process file path for database storage
-    const relativePath = req.file.path.replace(/^uploads\//, '/uploads/');
+    // Process file path for database storage - ensure it starts with /uploads
+    const relativePath = '/' + req.file.path;
     console.log(`[Avatar Upload] File saved to: ${req.file.path}`);
     console.log(`[Avatar Upload] Database path: ${relativePath}`);
     
@@ -1490,8 +1490,8 @@ router.post('/:id/banner', isAuthenticated, upload.single('file'), async (req: R
       return res.status(400).json({ message: validationError });
     }
     
-    // Process file path for database storage
-    const relativePath = req.file.path.replace(/^uploads\//, '/uploads/');
+    // Process file path for database storage - ensure it starts with /uploads
+    const relativePath = '/' + req.file.path;
     console.log(`[Banner Upload] File saved to: ${req.file.path}`);
     console.log(`[Banner Upload] Database path: ${relativePath}`);
     
@@ -1563,16 +1563,6 @@ router.patch('/:id/theme', isAuthenticated, async (req: Request, res: Response) 
 // Export the router
 export function registerCommunityRoutes(app: any) {
   console.log('[API] Registering community hub routes (PKL-278651-COMM-0006-HUB-API)');
-  
-  // Serve static files from uploads directory
-  console.log('[PKL-278651-COMM-0019-VISUALS] Setting up static file serving for community images');
-  // Use path.join to ensure the correct path to uploads directory
-  const uploadsPath = path.join(process.cwd(), 'uploads');
-  console.log(`[PKL-278651-COMM-0019-VISUALS] Uploads directory path: ${uploadsPath}`);
-  app.use('/uploads', (req, res, next) => {
-    console.log(`[PKL-278651-COMM-0019-VISUALS] Serving: ${req.url}`);
-    next();
-  });
   
   // Register API routes
   app.use('/api/communities', router);
