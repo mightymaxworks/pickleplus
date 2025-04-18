@@ -235,7 +235,11 @@ export function CommunitySearchResults({
                         )}
                         <div className="flex items-center">
                           <Users className="h-3.5 w-3.5 mr-1" />
-                          <span>{community.memberCount} {community.memberCount === 1 ? 'member' : 'members'}</span>
+                          {!community.isDefault ? (
+                            <span>{community.memberCount} {community.memberCount === 1 ? 'member' : 'members'}</span>
+                          ) : (
+                            <span>Official Group</span>
+                          )}
                         </div>
                       </div>
                     </div>
