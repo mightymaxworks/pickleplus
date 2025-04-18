@@ -110,7 +110,7 @@ export function CommunityHeader({
     : 'Unknown';
   
   // Format statistics
-  const memberCountDisplay = community.memberCount.toLocaleString();
+  const memberCountDisplay = community.isDefault ? "Private" : community.memberCount.toLocaleString();
   const eventCountDisplay = community.eventCount.toLocaleString(); 
   const postCountDisplay = community.postCount.toLocaleString();
   
