@@ -29,7 +29,7 @@ import {
   BadgeCheck,
   List as ListIcon
 } from "lucide-react";
-import { useCommunityMembers } from "@/lib/hooks/useCommunity";
+import { useCommunityMembers, useCommunity } from "@/lib/hooks/useCommunity";
 import { 
   Card, 
   CardContent, 
@@ -377,6 +377,10 @@ export function MembersList({
     </div>
   );
   
+  // Get community data to check if it's a default community
+  const { data: community } = useCommunity(communityId);
+  const isDefaultCommunity = community?.isDefault || false;
+
   return (
     <Card className="overflow-hidden">
       <CardHeader>
@@ -387,7 +391,8 @@ export function MembersList({
               Community Members
             </CardTitle>
             <CardDescription>
-              {!isLoading && `${filteredMembers.length} members shown`}
+              {!isLoading && !isDefaultCommunity && `${filteredMembers.length} members shown`}
+              {!isLoading && isDefaultCommunity && `Privacy protected members list`}
               {activeRole && ` • Filtered by ${activeRole} role`}
             </CardDescription>
           </div>
