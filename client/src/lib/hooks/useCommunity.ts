@@ -662,8 +662,9 @@ export function useCreateCommunityEvent() {
         repeatFrequency?: string | null;
         status?: CommunityEventStatus;
         eventType?: CommunityEventType;
-        minSkillLevel?: string | null; // Changed from skillLevelRequired to match server schema
-        featuredImage?: string | null;
+        minSkillLevel?: string | null;
+        maxSkillLevel?: string | null;
+        imageUrl?: string | null; // Changed from featuredImage to match server schema
         registrationDeadline?: Date | null;
       }
     }) => communityApi.createCommunityEvent(communityId, data),
