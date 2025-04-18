@@ -369,14 +369,14 @@ export default function CommunityDetailPage() {
                   {/* Management Tabs */}
                   <Tabs defaultValue="settings" className="w-full">
                     <TabsList className="w-full sm:w-auto grid grid-cols-2 sm:flex overflow-hidden">
-                      <TabsTrigger value="join-requests" className="flex gap-1 items-center justify-center">
-                        <Users className="h-4 w-4" />
-                        <span className="hidden sm:inline">Join Requests</span>
-                        <span className="sm:hidden">Requests</span>
+                      <TabsTrigger value="join-requests" className="flex gap-2 items-center justify-center py-3">
+                        <Users className="h-5 w-5" />
+                        <span className="hidden sm:inline font-medium">Join Requests</span>
+                        <span className="sm:hidden font-medium">Requests</span>
                       </TabsTrigger>
-                      <TabsTrigger value="settings" className="flex gap-1 items-center justify-center bg-primary/5">
-                        <Edit className="h-4 w-4" />
-                        <span>Settings</span>
+                      <TabsTrigger value="settings" className="flex gap-2 items-center justify-center py-3">
+                        <Edit className="h-5 w-5" />
+                        <span className="font-medium">Settings</span>
                       </TabsTrigger>
                     </TabsList>
                     
@@ -417,6 +417,23 @@ export default function CommunityDetailPage() {
                     {/* Settings Panel */}
                     <TabsContent value="settings" className="mt-6">
                       {console.log("Settings tab selected, rendering settings components")}
+                      <Card className="w-full mb-6 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-yellow-700 dark:text-yellow-400">Settings Debug Panel</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-sm space-y-2">
+                            <p><strong>Tab selected:</strong> settings</p>
+                            <p><strong>Community ID:</strong> {community.id}</p>
+                            <p><strong>Role:</strong> {community.role || 'none'}</p>
+                            <p><strong>Created by:</strong> {community.createdByUserId}</p>
+                            <p><strong>Current user:</strong> {(community as any).currentUserId}</p>
+                            <p><strong>Is creator:</strong> {community.createdByUserId === (community as any).currentUserId ? 'Yes' : 'No'}</p>
+                            <p><strong>Has admin permissions:</strong> forced to TRUE for testing</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+
                       <div className="space-y-6">
                         {/* Visual Settings */}
                         {console.log("Rendering CommunityVisualSettings with props:", {

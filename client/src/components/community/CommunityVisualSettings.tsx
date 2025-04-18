@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Upload, Image, Palette } from "lucide-react";
+import { Upload, Image, Palette, Check } from "lucide-react";
 import { Community } from "@/types/community";
 import communityApi from "@/api/communityApi";
 import { useToast } from "@/hooks/use-toast";
@@ -199,17 +199,17 @@ export function CommunityVisualSettings({ community, isAdmin }: CommunityVisualS
       <CardContent>
         <Tabs defaultValue="avatar">
           <TabsList className="mb-4 grid grid-cols-3 w-full">
-            <TabsTrigger value="avatar" className="flex items-center gap-2 justify-center">
-              <Image className="w-4 h-4" />
-              <span>Avatar</span>
+            <TabsTrigger value="avatar" className="flex items-center gap-2 justify-center py-3">
+              <Image className="w-5 h-5" />
+              <span className="font-medium">Avatar</span>
             </TabsTrigger>
-            <TabsTrigger value="banner" className="flex items-center gap-2 justify-center">
-              <Image className="w-4 h-4" />
-              <span>Banner</span>
+            <TabsTrigger value="banner" className="flex items-center gap-2 justify-center py-3">
+              <Image className="w-5 h-5" />
+              <span className="font-medium">Banner</span>
             </TabsTrigger>
-            <TabsTrigger value="theme" className="flex items-center gap-2 justify-center">
-              <Palette className="w-4 h-4" />
-              <span>Theme</span>
+            <TabsTrigger value="theme" className="flex items-center gap-2 justify-center py-3">
+              <Palette className="w-5 h-5" />
+              <span className="font-medium">Theme</span>
             </TabsTrigger>
           </TabsList>
           
@@ -251,9 +251,20 @@ export function CommunityVisualSettings({ community, isAdmin }: CommunityVisualS
               <Button
                 onClick={uploadAvatar}
                 disabled={!avatarFile || isAvatarUploading}
-                className="w-full sm:w-auto"
+                className="w-full py-6 text-lg"
+                size="lg"
               >
-                {isAvatarUploading ? "Uploading..." : "Save Avatar"}
+                {isAvatarUploading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+                    Uploading...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Check className="h-5 w-5" />
+                    Save Avatar
+                  </span>
+                )}
               </Button>
             </div>
           </TabsContent>
@@ -296,9 +307,20 @@ export function CommunityVisualSettings({ community, isAdmin }: CommunityVisualS
               <Button
                 onClick={uploadBanner}
                 disabled={!bannerFile || isBannerUploading}
-                className="w-full sm:w-auto"
+                className="w-full py-6 text-lg"
+                size="lg"
               >
-                {isBannerUploading ? "Uploading..." : "Save Banner"}
+                {isBannerUploading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+                    Uploading...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Check className="h-5 w-5" />
+                    Save Banner
+                  </span>
+                )}
               </Button>
             </div>
           </TabsContent>
@@ -319,7 +341,7 @@ export function CommunityVisualSettings({ community, isAdmin }: CommunityVisualS
                       <button
                         key={color}
                         type="button"
-                        className={`w-12 h-12 sm:w-10 sm:h-10 rounded-md border-2 ${
+                        className={`w-12 h-12 rounded-md border-2 ${
                           themeColor === color ? "border-black dark:border-white shadow-md" : "border-transparent"
                         }`}
                         style={{ backgroundColor: color }}
