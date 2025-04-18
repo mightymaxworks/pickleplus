@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Community Image Upload Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1, h2 {
+      color: #333;
+    }
+    form {
+      margin-bottom: 30px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input[type="file"] {
+      margin-bottom: 15px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: #f9f9f9;
+      min-height: 100px;
+    }
+    .error {
+      color: red;
+    }
+    .success {
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <h1>Community Image Upload Test</h1>
+  <p>This page tests the upload functionality for community avatar and banner images.</p>
+  
+  <h2>Avatar Upload</h2>
+  <form id="avatarForm">
+    <label for="communityId">Community ID:</label>
+    <input type="number" id="communityId" value="1" required>
+    <br>
+    <label for="avatarFile">Select Avatar Image:</label>
+    <input type="file" id="avatarFile" name="file" required>
+    <br>
+    <button type="submit">Upload Avatar</button>
+  </form>
+  <div id="avatarResult" class="result">
+    <p>Results will appear here...</p>
+  </div>
+  
+  <h2>Banner Upload</h2>
+  <form id="bannerForm">
+    <label for="communityIdBanner">Community ID:</label>
+    <input type="number" id="communityIdBanner" value="1" required>
+    <br>
+    <label for="bannerFile">Select Banner Image:</label>
+    <input type="file" id="bannerFile" name="file" required>
+    <br>
+    <button type="submit">Upload Banner</button>
+  </form>
+  <div id="bannerResult" class="result">
+    <p>Results will appear here...</p>
+  </div>
+
+  <script>
+    // Function to get the session cookie
+    function getSessionCookie() {
+      const cookies = document.cookie.split(';');
+      for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'connect.sid') {
+          return value;
+        }
+      }
+      return null;
+    }
+
+    // Function to handle avatar upload
+    document.getElementById('avatarForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const resultDiv = document.getElementById('avatarResult');
+      resultDiv.innerHTML = '<p>Uploading...</p>';
+      
+      try {
+        const communityId = document.getElementById('communityId').value;
+        const fileInput = document.getElementById('avatarFile');
+        const file = fileInput.files[0];
+        
+        if (!file) {
+          resultDiv.innerHTML = '<p class="error">Please select a file</p>';
+          return;
+        }
+        
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const response = await fetch(`/api/communities/${communityId}/avatar`, {
+          method: 'POST',
+          body: formData,
+          credentials: 'include' // Important: include credentials for session cookie
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          resultDiv.innerHTML = `
+            <p class="success">Upload successful!</p>
+            <p>URL: ${data.url}</p>
+            <img src="${data.url}" style="max-width: 100%; max-height: 200px;">
+          `;
+        } else {
+          resultDiv.innerHTML = `
+            <p class="error">Upload failed: ${data.message || response.statusText}</p>
+            <p>Status: ${response.status}</p>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+          `;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `
+          <p class="error">Error: ${error.message}</p>
+        `;
+        console.error('Upload error:', error);
+      }
+    });
+
+    // Function to handle banner upload
+    document.getElementById('bannerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const resultDiv = document.getElementById('bannerResult');
+      resultDiv.innerHTML = '<p>Uploading...</p>';
+      
+      try {
+        const communityId = document.getElementById('communityIdBanner').value;
+        const fileInput = document.getElementById('bannerFile');
+        const file = fileInput.files[0];
+        
+        if (!file) {
+          resultDiv.innerHTML = '<p class="error">Please select a file</p>';
+          return;
+        }
+        
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const response = await fetch(`/api/communities/${communityId}/banner`, {
+          method: 'POST',
+          body: formData,
+          credentials: 'include' // Important: include credentials for session cookie
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          resultDiv.innerHTML = `
+            <p class="success">Upload successful!</p>
+            <p>URL: ${data.url}</p>
+            <img src="${data.url}" style="max-width: 100%; max-height: 200px;">
+          `;
+        } else {
+          resultDiv.innerHTML = `
+            <p class="error">Upload failed: ${data.message || response.statusText}</p>
+            <p>Status: ${response.status}</p>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+          `;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `
+          <p class="error">Error: ${error.message}</p>
+        `;
+        console.error('Upload error:', error);
+      }
+    });
+
+    // Check for session cookie on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      const sessionCookie = getSessionCookie();
+      if (!sessionCookie) {
+        document.body.insertAdjacentHTML('afterbegin', `
+          <div class="error" style="padding: 10px; margin-bottom: 20px; background-color: #ffdddd; border: 1px solid #ff0000;">
+            <p><strong>Warning:</strong> No session cookie found. You need to be logged in for this test to work.</p>
+            <p>Try logging in with curl first:</p>
+            <pre>curl -X POST -d "username=mightymax&password=67661189D@rren" http://localhost:5000/api/auth/login -c cookies.txt</pre>
+            <p>Then open this page in the same browser session.</p>
+          </div>
+        `);
+      } else {
+        document.body.insertAdjacentHTML('afterbegin', `
+          <div class="success" style="padding: 10px; margin-bottom: 20px; background-color: #ddffdd; border: 1px solid #00ff00;">
+            <p><strong>Success:</strong> Session cookie found. You're logged in and ready to test uploads.</p>
+          </div>
+        `);
+      }
+    });
+  </script>
+</body>
+</html>

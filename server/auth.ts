@@ -58,23 +58,15 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
 
 // Middleware to check if a user is authenticated
 export function isAuthenticated(req: Request, res: Response, next: any) {
-  console.log(`isAuthenticated check for ${req.path} - Session ID: ${req.sessionID}`);
-  console.log(`Authentication status: ${req.isAuthenticated()}`);
-  
-  // TEMPORARY DEBUG CODE FOR COMMUNITY IMAGE UPLOAD
-  // Allow community image upload endpoints to bypass authentication
-  if (req.path.includes('/communities') && 
-      (req.path.includes('/avatar') || req.path.includes('/banner'))) {
-    console.log(`BYPASS AUTH: Special debug case for ${req.path}`);
-    return next();
-  }
-  
   // For all protected routes, enforce authentication
   if (req.isAuthenticated()) {
     return next();
   }
   
-  console.log(`Access denied to ${req.path} - Not authenticated`);
+  // Log authentication failure for debugging
+  console.log(`Authentication failed for ${req.path} - Session ID: ${req.sessionID}`);
+  
+  // Return standard 401 Unauthorized response
   res.status(401).json({ message: "Unauthorized" });
 }
 
