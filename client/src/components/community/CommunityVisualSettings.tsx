@@ -129,11 +129,25 @@ export function CommunityVisualSettings({ community, isAdmin }: CommunityVisualS
     
     try {
       setIsAvatarUploading(true);
-      await communityApi.uploadCommunityAvatar(community.id, avatarFile);
-      toast({
-        title: "Avatar uploaded",
-        description: "Your community avatar has been updated",
-      });
+      const response = await communityApi.uploadCommunityAvatar(community.id, avatarFile);
+      
+      // If we got a response with the updated URL, update the local state
+      if (response && response.url) {
+        // Force reload of the page to get updated image
+        window.location.reload();
+      } else {
+        // On our current implementation, we might not get a response with the updated URL
+        // We'll still display a success message and rely on the cache invalidation
+        toast({
+          title: "Avatar uploaded",
+          description: "Your community avatar has been updated. Refresh to see changes.",
+        });
+        
+        // After a short delay, reload the page to show the updated image
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      }
     } catch (error: any) {
       console.error("Error uploading avatar:", error);
       
@@ -167,11 +181,25 @@ export function CommunityVisualSettings({ community, isAdmin }: CommunityVisualS
     
     try {
       setIsBannerUploading(true);
-      await communityApi.uploadCommunityBanner(community.id, bannerFile);
-      toast({
-        title: "Banner uploaded",
-        description: "Your community banner has been updated",
-      });
+      const response = await communityApi.uploadCommunityBanner(community.id, bannerFile);
+      
+      // If we got a response with the updated URL, update the local state
+      if (response && response.bannerUrl) {
+        // Force reload of the page to get updated image
+        window.location.reload();
+      } else {
+        // On our current implementation, we might not get a response with the updated URL
+        // We'll still display a success message and rely on the cache invalidation
+        toast({
+          title: "Banner uploaded",
+          description: "Your community banner has been updated. Refresh to see changes.",
+        });
+        
+        // After a short delay, reload the page to show the updated image
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      }
     } catch (error: any) {
       console.error("Error uploading banner:", error);
       
