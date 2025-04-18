@@ -698,8 +698,13 @@ router.post('/posts/:postId/comments', isAuthenticated, async (req: Request, res
 });
 
 /**
+ * PKL-278651-COMM-0016-RSVP
  * Get community events
  * GET /api/communities/:id/events
+ * @version 1.0.1
+ * @lastModified 2025-04-18
+ * @changes
+ * - Ensure event creators are counted in attendee numbers
  */
 router.get('/:id/events', communityAuth, async (req: Request, res: Response) => {
   try {
@@ -715,7 +720,26 @@ router.get('/:id/events', communityAuth, async (req: Request, res: Response) => 
     
     const events = await storage.getCommunityEvents(communityId, { limit, offset });
     
-    res.json(events);
+    // Process each event to ensure creator is counted in attendance
+    const processedEvents = await Promise.all(events.map(async event => {
+      // Get attendees to check if creator is registered
+      const eventAttendees = await storage.getEventAttendees(event.id);
+      
+      // Check if creator is registered
+      const creatorInAttendees = eventAttendees.some(a => a.userId === event.createdByUserId);
+      
+      // Update the currentAttendees count to include creator if not already counted
+      if (!creatorInAttendees) {
+        return {
+          ...event,
+          currentAttendees: (event.currentAttendees || 0) + 1
+        };
+      }
+      
+      return event;
+    }));
+    
+    res.json(processedEvents);
   } catch (error) {
     console.error('Error getting community events:', error);
     res.status(500).json({ message: 'Failed to fetch community events' });
