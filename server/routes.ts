@@ -28,6 +28,9 @@ import batchApiRoutes from "./routes/batch-api-routes"; // PKL-278651-PERF-0001.
 import { registerFeedbackRoutes } from "./modules/feedback/routes"; // PKL-278651-FEED-0001-BUG
 import { initApiGateway } from "./modules/api-gateway"; // PKL-278651-API-0001-GATEWAY
 import { initializeAdminModule } from "./modules/admin"; // PKL-278651-ADMIN-0015-USER
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import { initializeCommunityModule } from "./modules/community"; // PKL-278651-COMM-0006-HUB
 
 // Import necessary schema
@@ -48,9 +51,46 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // API Routes
   console.log("[API] Setting up API routes...");
   
-  // Create a simple test endpoint without authentication
+  // Create simple test endpoints without authentication
   app.get('/test-route', (req, res) => {
     res.json({ message: 'Test route works!' });
+  });
+  
+  // Configure a simple storage engine for testing
+  const testStorage = multer.diskStorage({
+    destination: (req: any, file: any, cb: any) => {
+      const uploadPath = 'uploads/test';
+      if (!fs.existsSync(uploadPath)) {
+        fs.mkdirSync(uploadPath, { recursive: true });
+      }
+      cb(null, uploadPath);
+    },
+    filename: (req: any, file: any, cb: any) => {
+      const fileExt = path.extname(file.originalname);
+      const fileName = `test_${Date.now()}${fileExt}`;
+      cb(null, fileName);
+    }
+  });
+  
+  // Create multer upload instance
+  const testUpload = multer({ storage: testStorage });
+  
+  // Create a dedicated test upload endpoint with minimal complexity
+  app.post('/test-upload-endpoint', testUpload.single('file'), (req: Request, res: Response) => {
+    console.log('Test upload endpoint called');
+    console.log('Request file:', req.file);
+    
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+    
+    const relativePath = req.file.path.replace(/^uploads\//, '/uploads/');
+    res.json({ 
+      success: true, 
+      message: 'File uploaded successfully',
+      url: relativePath,
+      file: req.file
+    });
   });
   
   // Register API route modules
