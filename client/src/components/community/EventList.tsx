@@ -11,7 +11,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useCommunityEvents, useCommunityEventsByType, useCommunityEventsByStatus } from "@/lib/hooks/useCommunity";
+import { useCommunityEvents } from "@/lib/hooks/useCommunity";
 import { EventCard } from "./EventCard";
 import { EventFilterCard, EventFilters } from "./EventFilterCard";
 import { EventCreationModal } from "./EventCreationModal";
