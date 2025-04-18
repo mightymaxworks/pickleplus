@@ -102,11 +102,16 @@ export function EventCard({
   
   // Handle registration and cancellation
   const handleRegister = () => {
-    registerMutation.mutate({ eventId: event.id });
+    // Redirect to the event detail page for registration
+    navigate(`/communities/${event.communityId}/events/${event.id}`);
   };
   
   const handleCancelRegistration = () => {
-    cancelMutation.mutate(event.id);
+    // Cancel registration with communityId
+    cancelMutation.mutate({ 
+      communityId: event.communityId,
+      eventId: event.id 
+    });
   };
 
   // For mobile devices, use a completely different horizontal card layout

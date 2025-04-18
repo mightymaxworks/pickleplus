@@ -57,6 +57,7 @@ import {
 import CommunitiesPage from './pages/communities'
 import CommunityDetailPage from './pages/communities/[id]'
 import CreateCommunityPage from './pages/communities/create'
+import CommunityEventDetailPage from './pages/CommunityEventDetailPage' // PKL-278651-COMM-0016-RSVP
 
 // Import icons test page (PKL-278651-COMM-0007-ICONS)
 import IconsPage from './pages/icons'
@@ -355,6 +356,11 @@ export default function App() {
                   </Route>
                   <Route path="/communities/:id">
                     {(params) => <ProtectedRoute component={CommunityDetailPage} path="/communities/:id" />}
+                  </Route>
+                  
+                  {/* PKL-278651-COMM-0016-RSVP - Community Event Detail Page with RSVP */}
+                  <Route path="/communities/:communityId/events/:eventId">
+                    {(params) => <ProtectedRoute component={CommunityEventDetailPage} path="/communities/:communityId/events/:eventId" />}
                   </Route>
                   <Route path="/communities">
                     {(params) => <ProtectedRoute component={CommunitiesPage} path="/communities" />}
