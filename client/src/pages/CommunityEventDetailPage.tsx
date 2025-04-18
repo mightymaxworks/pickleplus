@@ -30,6 +30,7 @@ import { MapPin, Calendar, Users, Clock, ArrowLeft, Loader2 } from "lucide-react
 import EventRegistrationForm from "@/components/community/EventRegistrationForm";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/lib/auth";
 
 export default function CommunityEventDetailPage() {
   const [, setLocation] = useLocation();
@@ -41,10 +42,16 @@ export default function CommunityEventDetailPage() {
   const [isRegistrationFormOpen, setIsRegistrationFormOpen] = useState(false);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   
+  // Get current user
+  const { user } = useAuth();
+
   // Fetch event and community data
   const { data: community, isLoading: isLoadingCommunity } = useCommunity(parsedCommunityId);
   const { data: event, isLoading: isLoadingEvent, refetch: refetchEvent } = useCommunityEvent(parsedCommunityId, parsedEventId);
   const { data: attendees, isLoading: isLoadingAttendees } = useEventAttendees(parsedCommunityId, parsedEventId);
+  
+  // Determine if current user is the event creator
+  const isEventCreator = user?.id === event?.createdByUserId;
   
   // Registration cancellation mutation
   const cancelRegistration = useCancelEventRegistration();
@@ -188,7 +195,7 @@ export default function CommunityEventDetailPage() {
               </CardDescription>
             </div>
             <div className="mt-2 sm:mt-0">
-              {event.createdByUserId === community.createdByUserId ? (
+              {isEventCreator ? (
                 <Button variant="outline" disabled>
                   Event Creator
                 </Button>
