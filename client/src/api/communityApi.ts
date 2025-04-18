@@ -258,8 +258,8 @@ const communityApi = {
    * Register for an event
    */
   registerForEvent: async (communityId: number, eventId: number, notes?: string) => {
-    const response = await apiRequest<void>({
-      url: `/api/communities/${communityId}/events/${eventId}/register`,
+    const response = await apiRequest<import('@/types/community').CommunityEventAttendee>({
+      url: `/api/communities/events/${eventId}/register`,
       method: 'POST',
       data: { notes },
     });
@@ -270,9 +270,9 @@ const communityApi = {
    * Cancel event registration
    */
   cancelEventRegistration: async (communityId: number, eventId: number) => {
-    const response = await apiRequest<void>({
-      url: `/api/communities/${communityId}/events/${eventId}/cancel-registration`,
-      method: 'POST',
+    const response = await apiRequest<{ message: string }>({
+      url: `/api/communities/events/${eventId}/register`,
+      method: 'DELETE',
     });
     return response;
   },

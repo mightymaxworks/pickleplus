@@ -736,9 +736,12 @@ export function useRegisterForEvent() {
     mutationFn: ({ communityId, eventId, notes }: { communityId: number; eventId: number; notes?: string }) => 
       communityApi.registerForEvent(communityId, eventId, notes),
     onSuccess: (_, variables) => {
-      // Invalidate specific event and events list
+      // Invalidate specific event, events list, and attendees
       queryClient.invalidateQueries({ queryKey: communityKeys.event(variables.communityId, variables.eventId) });
       queryClient.invalidateQueries({ queryKey: communityKeys.events(variables.communityId) });
+      queryClient.invalidateQueries({ 
+        queryKey: [...communityKeys.events(variables.communityId), variables.eventId, 'attendees'] 
+      });
       toast({
         title: "Registration successful",
         description: "You have been registered for the event.",
@@ -747,7 +750,7 @@ export function useRegisterForEvent() {
     onError: (error: Error) => {
       toast({
         title: "Failed to register for event",
-        description: error.message,
+        description: error.message || "An error occurred while registering for the event",
         variant: "destructive",
       });
     },
@@ -764,9 +767,12 @@ export function useCancelEventRegistration() {
     mutationFn: ({ communityId, eventId }: { communityId: number; eventId: number }) => 
       communityApi.cancelEventRegistration(communityId, eventId),
     onSuccess: (_, variables) => {
-      // Invalidate specific event and events list
+      // Invalidate specific event, events list, and attendees
       queryClient.invalidateQueries({ queryKey: communityKeys.event(variables.communityId, variables.eventId) });
       queryClient.invalidateQueries({ queryKey: communityKeys.events(variables.communityId) });
+      queryClient.invalidateQueries({ 
+        queryKey: [...communityKeys.events(variables.communityId), variables.eventId, 'attendees'] 
+      });
       toast({
         title: "Registration cancelled",
         description: "Your event registration has been cancelled.",
@@ -775,7 +781,7 @@ export function useCancelEventRegistration() {
     onError: (error: Error) => {
       toast({
         title: "Failed to cancel registration",
-        description: error.message,
+        description: error.message || "An error occurred while cancelling your registration",
         variant: "destructive",
       });
     },
