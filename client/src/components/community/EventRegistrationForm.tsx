@@ -9,51 +9,37 @@
  */
 
 import React from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { useRegisterForEvent } from "@/lib/hooks/useCommunity";
 
-// Form schema for event registration with optional notes
+// Define the form schema with Zod
 const registrationFormSchema = z.object({
-  notes: z.string().optional(),
+  notes: z.string().max(500, "Notes must be less than 500 characters").optional(),
 });
 
-// The type of form values based on the schema
 type RegistrationFormValues = z.infer<typeof registrationFormSchema>;
 
-// Props for the registration form component
 interface EventRegistrationFormProps {
-  // Callback function when form is submitted
-  onSubmit: (notes?: string) => void;
-  // Callback function when registration is cancelled
-  onCancel: () => void;
-  // Boolean flag for showing loading state
-  isPending?: boolean;
-  // Identifiers for the event and community
   communityId: number;
   eventId: number;
+  onSuccess: (notes?: string) => void;
+  onCancel: () => void;
 }
 
-/**
- * Event Registration Form Component
- * 
- * This component renders a form for registering to events with an optional
- * notes field for special requests or accommodations.
- */
 export default function EventRegistrationForm({
-  onSubmit,
-  onCancel,
-  isPending = false,
   communityId,
-  eventId
+  eventId,
+  onSuccess,
+  onCancel,
 }: EventRegistrationFormProps) {
   // Initialize the registration mutation
-  const registerMutation = useRegisterForEvent();
-  
+  const registerEvent = useRegisterForEvent();
+
   // Initialize form with react-hook-form and zod validation
   const form = useForm<RegistrationFormValues>({
     resolver: zodResolver(registrationFormSchema),
@@ -62,63 +48,67 @@ export default function EventRegistrationForm({
     },
   });
 
-  // Handler for form submission
-  const handleSubmit = (values: RegistrationFormValues) => {
-    // Submit registration via mutation
-    registerMutation.mutate({
-      communityId,
-      eventId,
-      notes: values.notes
-    }, {
-      onSuccess: () => {
-        // Call the passed onSubmit callback on success
-        onSubmit(values.notes);
+  // Handle form submission
+  const onSubmit = (values: RegistrationFormValues) => {
+    registerEvent.mutate(
+      {
+        communityId,
+        eventId,
+        notes: values.notes,
+      },
+      {
+        onSuccess: () => {
+          onSuccess(values.notes);
+        },
       }
-    });
+    );
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold">Register for Event</h3>
-          <p className="text-sm text-muted-foreground">
-            Secure your spot at this event. You can include any special requests or accommodations needed.
-          </p>
-        </div>
-
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="notes"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Special Requests (Optional)</FormLabel>
+              <FormLabel>Special Requests or Notes (Optional)</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Include any special requests, dietary restrictions, or accommodations needed"
+                  placeholder="Add any notes for the event organizer (e.g., dietary restrictions, accessibility needs, etc.)"
                   className="resize-none"
                   {...field}
                 />
               </FormControl>
+              <FormDescription>
+                This information will be shared with the event organizer.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="flex justify-end space-x-2 pt-4">
+        <div className="flex justify-end gap-2 pt-4">
           <Button
             type="button"
             variant="outline"
             onClick={onCancel}
-            disabled={isPending || registerMutation.isPending}
+            disabled={registerEvent.isPending}
           >
             Cancel
           </Button>
-          <Button 
+          <Button
             type="submit"
-            disabled={isPending || registerMutation.isPending}
+            disabled={registerEvent.isPending}
           >
-            {isPending || registerMutation.isPending ? "Registering..." : "Register Now"}
+            {registerEvent.isPending ? (
+              <>
+                <span className="mr-2">Registering...</span>
+                <span className="animate-spin">⋯</span>
+              </>
+            ) : (
+              "Register"
+            )}
           </Button>
         </div>
       </form>

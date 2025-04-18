@@ -327,32 +327,9 @@ const communityApi = {
    * Get event attendees
    */
   getEventAttendees: async (communityId: number, eventId: number) => {
-    const response = await apiRequest<CommunityEventAttendee[]>({
+    const response = await apiRequest<import('@/types/community').CommunityEventAttendee[]>({
       url: `/api/communities/${communityId}/events/${eventId}/attendees`,
       method: 'GET',
-    });
-    return response;
-  },
-  
-  /**
-   * Register for an event
-   */
-  registerForEvent: async (communityId: number, eventId: number, notes?: string) => {
-    const response = await apiRequest<void>({
-      url: `/api/communities/${communityId}/events/${eventId}/register`,
-      method: 'POST',
-      data: { notes },
-    });
-    return response;
-  },
-  
-  /**
-   * Cancel registration for an event
-   */
-  cancelEventRegistration: async (communityId: number, eventId: number) => {
-    const response = await apiRequest<void>({
-      url: `/api/communities/${communityId}/events/${eventId}/cancel-registration`,
-      method: 'POST',
     });
     return response;
   },

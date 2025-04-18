@@ -642,6 +642,17 @@ export function useCommunityEventsByStatus(
 }
 
 /**
+ * Hook to fetch event attendees
+ */
+export function useEventAttendees(communityId: number, eventId: number, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: communityKeys.eventAttendees(communityId, eventId),
+    queryFn: () => communityApi.getEventAttendees(communityId, eventId),
+    enabled: options?.enabled !== false,
+  });
+}
+
+/**
  * Hook to create an event in a community
  */
 export function useCreateCommunityEvent() {
