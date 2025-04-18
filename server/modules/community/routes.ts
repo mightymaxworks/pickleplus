@@ -12,15 +12,13 @@ import { isAuthenticated } from '../../auth';
 import { upload, validateFile } from './visual-upload';
 import path from 'path';
 
-// Custom middleware for community module that allows public GET requests
-// Temporarily allowing all requests for testing
+/**
+ * Custom middleware for community module that allows public GET requests
+ * PKL-278651-COMM-0019-VISUALS: Updated to properly handle public access
+ */
 const communityAuth = (req: Request, res: Response, next: NextFunction) => {
-  // For testing, allow all requests without authentication
-  console.log('Auth check bypassed for testing:', req.method, req.path);
-  return next();
+  console.log('[PKL-278651-COMM-0019-VISUALS] Auth check for:', req.method, req.path);
   
-  // Normal implementation (commented out for testing)
-  /*
   // Allow all GET requests to proceed without authentication
   if (req.method === 'GET') {
     return next();
@@ -28,7 +26,6 @@ const communityAuth = (req: Request, res: Response, next: NextFunction) => {
   
   // For all other methods (POST, PUT, DELETE, etc.), require authentication
   return isAuthenticated(req, res, next);
-  */
 };
 import {
   communities,
