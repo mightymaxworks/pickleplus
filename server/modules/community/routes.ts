@@ -4,7 +4,7 @@
  * 
  * This file implements the API routes for community features.
  */
-import { Router, Request, Response, NextFunction } from 'express';
+import express, { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { createInsertSchema } from 'drizzle-zod';
 import { storage } from '../../storage';
@@ -1563,5 +1563,17 @@ router.patch('/:id/theme', isAuthenticated, async (req: Request, res: Response) 
 // Export the router
 export function registerCommunityRoutes(app: any) {
   console.log('[API] Registering community hub routes (PKL-278651-COMM-0006-HUB-API)');
+  
+  // Serve static files from uploads directory
+  console.log('[PKL-278651-COMM-0019-VISUALS] Setting up static file serving for community images');
+  // Use path.join to ensure the correct path to uploads directory
+  const uploadsPath = path.join(process.cwd(), 'uploads');
+  console.log(`[PKL-278651-COMM-0019-VISUALS] Uploads directory path: ${uploadsPath}`);
+  app.use('/uploads', (req, res, next) => {
+    console.log(`[PKL-278651-COMM-0019-VISUALS] Serving: ${req.url}`);
+    next();
+  });
+  
+  // Register API routes
   app.use('/api/communities', router);
 }
