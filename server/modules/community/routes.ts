@@ -1579,10 +1579,17 @@ router.patch('/:id/theme', isAuthenticated, async (req: Request, res: Response) 
   }
 });
 
+// Import community engagement routes
+import { communityEngagementRoutes } from './engagement-routes';
+
 // Export the router
 export function registerCommunityRoutes(app: any) {
   console.log('[API] Registering community hub routes (PKL-278651-COMM-0006-HUB-API)');
   
   // Register API routes
   app.use('/api/communities', router);
+  
+  // Register community engagement routes
+  console.log('[API] Registering community engagement routes (PKL-278651-COMM-0021-ENGAGE)');
+  app.use('/api/communities', communityEngagementRoutes);
 }
