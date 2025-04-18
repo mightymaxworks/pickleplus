@@ -723,6 +723,85 @@ router.get('/:id/events', communityAuth, async (req: Request, res: Response) => 
 });
 
 /**
+ * PKL-278651-COMM-0016-RSVP
+ * Get a single community event by ID
+ * GET /api/communities/:id/events/:eventId
+ * @version 1.0.0
+ * @lastModified 2025-04-18
+ */
+router.get('/:id/events/:eventId', communityAuth, async (req: Request, res: Response) => {
+  try {
+    const communityId = parseInt(req.params.id);
+    const eventId = parseInt(req.params.eventId);
+    
+    if (isNaN(communityId) || isNaN(eventId)) {
+      return res.status(400).json({ message: 'Invalid ID provided' });
+    }
+    
+    // Get the event
+    const event = await storage.getCommunityEventById(communityId, eventId);
+    
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+    
+    // If user is authenticated, check if they're registered for this event
+    let isRegistered = false;
+    let registrationStatus = null;
+    const userId = req.user?.id;
+    
+    if (userId) {
+      const attendee = await storage.getEventAttendee(eventId, userId);
+      isRegistered = !!attendee;
+      registrationStatus = attendee?.status || null;
+    }
+    
+    // Return event with registration status
+    res.json({
+      ...event,
+      isRegistered,
+      registrationStatus
+    });
+  } catch (error) {
+    console.error('Error getting community event:', error);
+    res.status(500).json({ message: 'Failed to fetch community event' });
+  }
+});
+
+/**
+ * PKL-278651-COMM-0016-RSVP
+ * Get attendees for a community event
+ * GET /api/communities/:id/events/:eventId/attendees
+ * @version 1.0.0
+ * @lastModified 2025-04-18
+ */
+router.get('/:id/events/:eventId/attendees', communityAuth, async (req: Request, res: Response) => {
+  try {
+    const communityId = parseInt(req.params.id);
+    const eventId = parseInt(req.params.eventId);
+    
+    if (isNaN(communityId) || isNaN(eventId)) {
+      return res.status(400).json({ message: 'Invalid ID provided' });
+    }
+    
+    // Verify the event exists and belongs to this community
+    const event = await storage.getCommunityEventById(communityId, eventId);
+    
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+    
+    // Get all attendees
+    const attendees = await storage.getEventAttendees(eventId);
+    
+    res.json(attendees);
+  } catch (error) {
+    console.error('Error getting event attendees:', error);
+    res.status(500).json({ message: 'Failed to fetch event attendees' });
+  }
+});
+
+/**
  * @layer Server
  * @module Community
  * @description Create a community event
