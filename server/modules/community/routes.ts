@@ -1360,72 +1360,77 @@ router.get('/my-community-ids', isAuthenticated, async (req: Request, res: Respo
  * PKL-278651-COMM-0019-VISUALS
  * Upload community avatar
  * POST /api/communities/:id/avatar
+ * 
+ * Note: This route follows Framework 5.1 principles with proper authentication,
+ * file validation, and role-based permission checks.
  */
-router.post('/:id/avatar', (req, res, next) => {
-  console.log('Avatar upload - Received request');
-  console.log('Avatar upload - Session ID:', req.sessionID);
-  console.log('Avatar upload - Authentication:', req.isAuthenticated ? req.isAuthenticated() : 'Unknown');
-  console.log('Avatar upload - Request body fields:', Object.keys(req.body || {}));
-  console.log('Avatar upload - Files in request:', req.files);
-  // For debugging, bypass all authentication
-  next();
-}, upload.single('file'), async (req: Request, res: Response) => {
+router.post('/:id/avatar', isAuthenticated, upload.single('file'), async (req: Request, res: Response) => {
   try {
+    console.log('[Avatar Upload] Starting avatar upload process');
+    
+    // Parse and validate community ID
     const communityId = parseInt(req.params.id);
-    // For testing, use a fake user ID
-    const userId = req.user?.id || 1;
-    
-    console.log('Processing avatar upload for community:', communityId);
-    console.log('Request file:', req.file);
-    
     if (isNaN(communityId)) {
       return res.status(400).json({ message: 'Invalid community ID' });
     }
     
-    // Commented out for testing
-    // if (!userId) {
-    //   return res.status(401).json({ message: 'Authentication required' });
-    // }
+    // Get authenticated user ID
+    const userId = req.user?.id;
+    if (!userId) {
+      console.error('[Avatar Upload] No user ID in authenticated request');
+      return res.status(401).json({ message: 'Authentication required' });
+    }
     
-    // For testing, commenting out admin check
+    console.log(`[Avatar Upload] Request by user ${userId} for community ${communityId}`);
+    
+    // Get community information
     const community = await storage.getCommunityById(communityId);
+    if (!community) {
+      console.error(`[Avatar Upload] Community ${communityId} not found`);
+      return res.status(404).json({ message: 'Community not found' });
+    }
     
-    console.log('Community found:', community ? 'Yes' : 'No');
-    
-    /*
-    // Check if user is a community admin
+    // Check if user is authorized (community admin or creator)
     const membership = await storage.getCommunityMembership(communityId, userId);
+    const isAdmin = membership?.role === 'admin';
+    const isCreator = community.createdByUserId === userId;
     
-    if (!(membership?.role === 'admin') && community?.createdByUserId !== userId) {
+    console.log(`[Avatar Upload] User is admin: ${isAdmin}, User is creator: ${isCreator}`);
+    
+    if (!isAdmin && !isCreator) {
+      console.error(`[Avatar Upload] User ${userId} not authorized to modify community ${communityId}`);
       return res.status(403).json({ message: 'Only community admins can upload avatars' });
     }
-    */
     
     // Validate the file
     if (!req.file) {
-      console.error('No file in request for avatar upload');
+      console.error('[Avatar Upload] No file in request');
       return res.status(400).json({ message: 'No file uploaded' });
     }
     
     const validationError = validateFile(req.file);
     if (validationError) {
+      console.error(`[Avatar Upload] File validation error: ${validationError}`);
       return res.status(400).json({ message: validationError });
     }
     
-    // Get file path relative to server
+    // Process file path for database storage
     const relativePath = req.file.path.replace(/^uploads\//, '/uploads/');
-    console.log('Avatar saved to path:', req.file.path);
-    console.log('Relative path for database:', relativePath);
+    console.log(`[Avatar Upload] File saved to: ${req.file.path}`);
+    console.log(`[Avatar Upload] Database path: ${relativePath}`);
     
     // Update community with new avatar URL
     await storage.updateCommunity(communityId, {
       avatarUrl: relativePath
     });
     
-    console.log('Community avatar URL updated in database');
-    res.json({ url: relativePath });
+    console.log(`[Avatar Upload] Successfully updated avatar for community ${communityId}`);
+    res.json({ 
+      success: true,
+      url: relativePath 
+    });
   } catch (error) {
-    console.error('Error uploading community avatar:', error);
+    console.error('[Avatar Upload] Error processing upload:', error);
     res.status(500).json({ message: 'Failed to upload avatar' });
   }
 });
@@ -1434,72 +1439,77 @@ router.post('/:id/avatar', (req, res, next) => {
  * PKL-278651-COMM-0019-VISUALS
  * Upload community banner
  * POST /api/communities/:id/banner
+ * 
+ * Note: This route follows Framework 5.1 principles with proper authentication,
+ * file validation, and role-based permission checks.
  */
-router.post('/:id/banner', (req, res, next) => {
-  console.log('Banner upload - Received request');
-  console.log('Banner upload - Session ID:', req.sessionID);
-  console.log('Banner upload - Authentication:', req.isAuthenticated ? req.isAuthenticated() : 'Unknown');
-  console.log('Banner upload - Request body fields:', Object.keys(req.body || {}));
-  console.log('Banner upload - Files in request:', req.files);
-  // For debugging, bypass all authentication
-  next();
-}, upload.single('file'), async (req: Request, res: Response) => {
+router.post('/:id/banner', isAuthenticated, upload.single('file'), async (req: Request, res: Response) => {
   try {
+    console.log('[Banner Upload] Starting banner upload process');
+    
+    // Parse and validate community ID
     const communityId = parseInt(req.params.id);
-    // For testing, use a fake user ID
-    const userId = req.user?.id || 1;
-    
-    console.log('Processing banner upload for community:', communityId);
-    console.log('Request file:', req.file);
-    
     if (isNaN(communityId)) {
       return res.status(400).json({ message: 'Invalid community ID' });
     }
     
-    // Commented out for testing
-    // if (!userId) {
-    //   return res.status(401).json({ message: 'Authentication required' });
-    // }
+    // Get authenticated user ID
+    const userId = req.user?.id;
+    if (!userId) {
+      console.error('[Banner Upload] No user ID in authenticated request');
+      return res.status(401).json({ message: 'Authentication required' });
+    }
     
-    // For testing, commenting out admin check
+    console.log(`[Banner Upload] Request by user ${userId} for community ${communityId}`);
+    
+    // Get community information
     const community = await storage.getCommunityById(communityId);
+    if (!community) {
+      console.error(`[Banner Upload] Community ${communityId} not found`);
+      return res.status(404).json({ message: 'Community not found' });
+    }
     
-    console.log('Community found:', community ? 'Yes' : 'No');
-    
-    /*
-    // Check if user is a community admin
+    // Check if user is authorized (community admin or creator)
     const membership = await storage.getCommunityMembership(communityId, userId);
+    const isAdmin = membership?.role === 'admin';
+    const isCreator = community.createdByUserId === userId;
     
-    if (!(membership?.role === 'admin') && community?.createdByUserId !== userId) {
+    console.log(`[Banner Upload] User is admin: ${isAdmin}, User is creator: ${isCreator}`);
+    
+    if (!isAdmin && !isCreator) {
+      console.error(`[Banner Upload] User ${userId} not authorized to modify community ${communityId}`);
       return res.status(403).json({ message: 'Only community admins can upload banners' });
     }
-    */
     
     // Validate the file
     if (!req.file) {
-      console.error('No file in request for banner upload');
+      console.error('[Banner Upload] No file in request');
       return res.status(400).json({ message: 'No file uploaded' });
     }
     
     const validationError = validateFile(req.file);
     if (validationError) {
+      console.error(`[Banner Upload] File validation error: ${validationError}`);
       return res.status(400).json({ message: validationError });
     }
     
-    // Get file path relative to server
+    // Process file path for database storage
     const relativePath = req.file.path.replace(/^uploads\//, '/uploads/');
-    console.log('Banner saved to path:', req.file.path);
-    console.log('Relative path for database:', relativePath);
+    console.log(`[Banner Upload] File saved to: ${req.file.path}`);
+    console.log(`[Banner Upload] Database path: ${relativePath}`);
     
     // Update community with new banner URL
     await storage.updateCommunity(communityId, {
       bannerUrl: relativePath
     });
     
-    console.log('Community banner URL updated in database');
-    res.json({ url: relativePath });
+    console.log(`[Banner Upload] Successfully updated banner for community ${communityId}`);
+    res.json({ 
+      success: true,
+      url: relativePath 
+    });
   } catch (error) {
-    console.error('Error uploading community banner:', error);
+    console.error('[Banner Upload] Error processing upload:', error);
     res.status(500).json({ message: 'Failed to upload banner' });
   }
 });
