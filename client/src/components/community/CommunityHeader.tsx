@@ -432,6 +432,13 @@ export function CommunityHeader({
             >
               <MessageSquare className="h-5 w-5" />
             </TabsTrigger>
+            <TabsTrigger
+              value="engagement"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none py-2 px-3 text-xs flex-shrink-0"
+              title="Engagement"
+            >
+              <Star className="h-5 w-5" />
+            </TabsTrigger>
             {hasManagePermissions && (
               <TabsTrigger
                 value="manage"

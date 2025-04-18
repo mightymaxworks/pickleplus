@@ -19,6 +19,7 @@ import {
   useCommunityEvents,
   useCommunityPosts
 } from "@/lib/hooks/useCommunity";
+import { CommunityEngagementMetrics } from "@/components/community/CommunityEngagementMetrics";
 import { CommunityHeader } from "@/components/community/CommunityHeader";
 import { EventList } from "@/components/community/EventList";
 import { MembersList } from "@/components/community/MembersList";
