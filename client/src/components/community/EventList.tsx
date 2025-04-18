@@ -145,30 +145,38 @@ export function EventList({
     enabled: true,
   });
   
-  // Apply client-side filtering
-  const filteredEvents = useMemo(() => {
-    let events = [...allEvents];
+  // Create a stable function for filtering and sorting events
+  const filterAndSortEvents = (
+    events: CommunityEvent[], 
+    view: string,
+    currentFilters: EventFilters,
+    query: string,
+    layoutType: "grid" | "list" | "calendar",
+    selectedDay: Date | undefined,
+    sortOption: "date" | "popularity" | "recent" | "alphabetical"
+  ) => {
+    let filteredEvents = [...events];
     
     // Filter by search query (if any)
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      events = events.filter(event => 
-        event.title.toLowerCase().includes(query) || 
-        (event.description && event.description.toLowerCase().includes(query)) ||
-        (event.location && event.location.toLowerCase().includes(query))
+    if (query.trim()) {
+      const queryLower = query.toLowerCase().trim();
+      filteredEvents = filteredEvents.filter(event => 
+        event.title.toLowerCase().includes(queryLower) || 
+        (event.description && event.description.toLowerCase().includes(queryLower)) ||
+        (event.location && event.location.toLowerCase().includes(queryLower))
       );
     }
     
     // Filter by tab view using switch for better performance
-    switch (currentView) {
+    switch (view) {
       case "upcoming":
-        events = events.filter(event => event.status === CommunityEventStatus.UPCOMING);
+        filteredEvents = filteredEvents.filter(event => event.status === CommunityEventStatus.UPCOMING);
         break;
       case "ongoing":
-        events = events.filter(event => event.status === CommunityEventStatus.ONGOING);
+        filteredEvents = filteredEvents.filter(event => event.status === CommunityEventStatus.ONGOING);
         break;
       case "past":
-        events = events.filter(event => 
+        filteredEvents = filteredEvents.filter(event => 
           event.status === CommunityEventStatus.COMPLETED || 
           event.status === CommunityEventStatus.CANCELLED
         );
@@ -177,59 +185,59 @@ export function EventList({
     }
     
     // Filter for calendar view - if we have a selected date in calendar view
-    if (layout === "calendar" && selectedDate) {
-      events = events.filter(event => {
+    if (layoutType === "calendar" && selectedDay) {
+      filteredEvents = filteredEvents.filter(event => {
         const eventDate = new Date(event.eventDate);
-        return isSameDay(eventDate, selectedDate);
+        return isSameDay(eventDate, selectedDay);
       });
     }
     
     // Apply additional filters
-    if (filters.types && filters.types.length > 0) {
-      events = events.filter(event => filters.types?.includes(event.eventType));
+    if (currentFilters.types && currentFilters.types.length > 0) {
+      filteredEvents = filteredEvents.filter(event => currentFilters.types?.includes(event.eventType));
     }
     
-    if (filters.statuses && filters.statuses.length > 0) {
-      events = events.filter(event => filters.statuses?.includes(event.status));
+    if (currentFilters.statuses && currentFilters.statuses.length > 0) {
+      filteredEvents = filteredEvents.filter(event => currentFilters.statuses?.includes(event.status));
     }
     
-    if (filters.dateRange && (filters.dateRange.from || filters.dateRange.to)) {
-      events = events.filter(event => {
+    if (currentFilters.dateRange && (currentFilters.dateRange.from || currentFilters.dateRange.to)) {
+      filteredEvents = filteredEvents.filter(event => {
         const eventDate = new Date(event.eventDate);
         
-        if (filters.dateRange?.from && filters.dateRange?.to) {
+        if (currentFilters.dateRange?.from && currentFilters.dateRange?.to) {
           // Between from and to dates (inclusive)
           return (
-            (isAfter(eventDate, filters.dateRange.from) || isSameDay(eventDate, filters.dateRange.from)) && 
-            (isBefore(eventDate, filters.dateRange.to) || isSameDay(eventDate, filters.dateRange.to))
+            (isAfter(eventDate, currentFilters.dateRange.from) || isSameDay(eventDate, currentFilters.dateRange.from)) && 
+            (isBefore(eventDate, currentFilters.dateRange.to) || isSameDay(eventDate, currentFilters.dateRange.to))
           );
-        } else if (filters.dateRange?.from) {
+        } else if (currentFilters.dateRange?.from) {
           // On or after from date
-          return isAfter(eventDate, filters.dateRange.from) || isSameDay(eventDate, filters.dateRange.from);
-        } else if (filters.dateRange?.to) {
+          return isAfter(eventDate, currentFilters.dateRange.from) || isSameDay(eventDate, currentFilters.dateRange.from);
+        } else if (currentFilters.dateRange?.to) {
           // On or before to date
-          return isBefore(eventDate, filters.dateRange.to) || isSameDay(eventDate, filters.dateRange.to);
+          return isBefore(eventDate, currentFilters.dateRange.to) || isSameDay(eventDate, currentFilters.dateRange.to);
         }
         
         return true;
       });
     }
     
-    if (filters.userAttending) {
-      events = events.filter(event => event.isRegistered);
+    if (currentFilters.userAttending) {
+      filteredEvents = filteredEvents.filter(event => event.isRegistered);
     }
     
     // TODO: Add filter for events created by the user when that data is available
-    if (filters.userOwned) {
+    if (currentFilters.userOwned) {
       // This would require the current user ID to compare with event.createdByUserId
-      // events = events.filter(event => event.createdByUserId === currentUserId);
+      // filteredEvents = filteredEvents.filter(event => event.createdByUserId === currentUserId);
     }
     
     // Apply sorting
-    switch (sortBy) {
+    switch (sortOption) {
       case "date":
         // Sort events by date with intelligent ordering
-        events.sort((a, b) => {
+        filteredEvents.sort((a, b) => {
           // First by status (upcoming > ongoing > completed > cancelled)
           const statusOrder = {
             [CommunityEventStatus.ONGOING]: 0,
@@ -256,12 +264,12 @@ export function EventList({
         
       case "popularity":
         // Sort by attendance count (highest first)
-        events.sort((a, b) => (b.currentAttendees || 0) - (a.currentAttendees || 0));
+        filteredEvents.sort((a, b) => (b.currentAttendees || 0) - (a.currentAttendees || 0));
         break;
         
       case "recent":
         // Sort by created date (newest first)
-        events.sort((a, b) => {
+        filteredEvents.sort((a, b) => {
           const dateA = new Date(a.createdAt || 0);
           const dateB = new Date(b.createdAt || 0);
           return compareAsc(dateB, dateA);
@@ -270,11 +278,24 @@ export function EventList({
         
       case "alphabetical":
         // Sort alphabetically by title
-        events.sort((a, b) => a.title.localeCompare(b.title));
+        filteredEvents.sort((a, b) => a.title.localeCompare(b.title));
         break;
     }
     
-    return events;
+    return filteredEvents;
+  };
+
+  // Apply client-side filtering with useMemo to memoize the result
+  const filteredEvents = useMemo(() => {
+    return filterAndSortEvents(
+      allEvents,
+      currentView,
+      filters,
+      searchQuery,
+      layout,
+      selectedDate,
+      sortBy
+    );
   }, [allEvents, currentView, filters, searchQuery, layout, selectedDate, sortBy]);
   
   // Handle filter changes
