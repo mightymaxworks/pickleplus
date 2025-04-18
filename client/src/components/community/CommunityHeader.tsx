@@ -60,6 +60,7 @@ import {
   Share2,
   Flag,
   Edit,
+  ChevronDown,
   ChevronLeft,
   Star,
   Info
@@ -257,23 +258,27 @@ export function CommunityHeader({
             
             {/* Action buttons - moved to top right for mobile */}
             <div className="flex gap-2 flex-shrink-0">
-              {/* Show Manage button if user has permissions */}
-              {hasManagePermissions && (
-                <Button 
-                  size="sm" 
-                  variant="default" 
-                  className="bg-white hover:bg-white/90 text-primary font-medium h-8 flex items-center gap-1"
-                  onClick={() => onTabChange && onTabChange("manage")}
-                >
-                  <Settings className="h-4 w-4" />
-                  <span>Manage</span>
-                </Button>
-              )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button size="sm" variant="outline" className="bg-white/10 border-white/20 hover:bg-white/20 text-white h-8 w-8 p-0">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
+                  {hasManagePermissions ? (
+                    <Button 
+                      size="sm" 
+                      variant="default" 
+                      className="bg-white hover:bg-white/90 text-primary font-medium h-8 flex items-center gap-1"
+                    >
+                      <Settings className="h-4 w-4 mr-1" />
+                      <span>Manage</span>
+                      <ChevronDown className="h-3 w-3 ml-1" />
+                    </Button>
+                  ) : (
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="bg-white/10 border-white/20 hover:bg-white/20 text-white h-8 w-8 p-0"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  )}
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Community Options</DropdownMenuLabel>
