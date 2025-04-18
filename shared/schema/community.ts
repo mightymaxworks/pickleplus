@@ -43,6 +43,7 @@ export async function pushSchema() {
         banner_pattern VARCHAR(50),
         is_private BOOLEAN DEFAULT FALSE,
         requires_approval BOOLEAN DEFAULT FALSE,
+        is_default BOOLEAN DEFAULT FALSE,
         tags VARCHAR(255),
         member_count INTEGER DEFAULT 0,
         event_count INTEGER DEFAULT 0,
@@ -207,7 +208,13 @@ export async function pushSchema() {
   }
 }
 
-// Communities table
+/**
+ * PKL-278651-COMM-0020-DEFGRP
+ * Communities table with enhanced features
+ * 
+ * Added isDefault field to support automatic membership for all users
+ * Default communities are groups that users are automatically joined to on registration
+ */
 export const communities = pgTable("communities", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 100 }).notNull(),
@@ -220,6 +227,7 @@ export const communities = pgTable("communities", {
   themeColor: varchar("theme_color", { length: 50 }),
   isPrivate: boolean("is_private").default(false),
   requiresApproval: boolean("requires_approval").default(false),
+  isDefault: boolean("is_default").default(false), // New field: marks communities that users automatically join
   tags: varchar("tags", { length: 255 }),
   memberCount: integer("member_count").default(0),
   eventCount: integer("event_count").default(0),
