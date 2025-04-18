@@ -298,8 +298,9 @@ export interface CommunityEvent {
   repeatFrequency: string | null;
   status: CommunityEventStatus;
   eventType: CommunityEventType;
-  skillLevelRequired: string | null;
-  featuredImage: string | null;
+  minSkillLevel: string | null;  // Changed from skillLevelRequired
+  maxSkillLevel: string | null;  // Added from server schema
+  imageUrl: string | null;  // Changed from featuredImage
   registrationDeadline: Date | null;
   createdAt: Date | null;
   updatedAt: Date | null;
@@ -335,8 +336,9 @@ export interface InsertCommunityEvent {
   repeatFrequency?: string | null;
   status?: CommunityEventStatus;
   eventType?: CommunityEventType;
-  skillLevelRequired?: string | null;
-  featuredImage?: string | null;
+  minSkillLevel?: string | null; // Changed from skillLevelRequired to match server schema
+  maxSkillLevel?: string | null; // Added from server schema
+  imageUrl?: string | null; // Changed from featuredImage to match server schema
   registrationDeadline?: Date | null;
 }
 

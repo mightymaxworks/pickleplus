@@ -66,7 +66,8 @@ const eventFormSchema = z.object({
   maxAttendees: z.number().int().positive().nullable().optional(),
   isPrivate: z.boolean().default(false),
   status: z.nativeEnum(CommunityEventStatus).default(CommunityEventStatus.UPCOMING),
-  skillLevelRequired: z.string().nullable().optional(),
+  minSkillLevel: z.string().nullable().optional(),
+  maxSkillLevel: z.string().nullable().optional(),
   registrationDeadline: z.date().nullable().optional(),
   isRecurring: z.boolean().default(false),
   recurringPattern: z.string().nullable().optional(),
@@ -107,9 +108,10 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
     isVirtual: false,
     isPrivate: false,
     isRecurring: false,
-    skillLevelRequired: "all",      // Default skill level to avoid empty string issue
-    recurringPattern: "weekly",     // Default recurring pattern 
-    repeatFrequency: "4times",      // Default frequency
+    minSkillLevel: "all",      // Default skill level to avoid empty string issue
+    maxSkillLevel: "all",      // Default max skill level
+    recurringPattern: "weekly", // Default recurring pattern 
+    repeatFrequency: "4times",  // Default frequency
   };
   
   const form = useForm<EventFormValues>({
@@ -140,8 +142,9 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
         repeatFrequency: data.isRecurring ? data.repeatFrequency : null,
         status: data.status || CommunityEventStatus.UPCOMING,
         eventType: data.eventType || CommunityEventType.MATCH_PLAY,
-        // Change field name to match server schema
-        minSkillLevel: data.skillLevelRequired || "all",
+        minSkillLevel: data.minSkillLevel || "all",
+        maxSkillLevel: data.maxSkillLevel || "all",
+        imageUrl: null, // No image upload functionality yet
         registrationDeadline: data.registrationDeadline,
       };
       
@@ -584,13 +587,13 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
                 )}
               />
               
-              {/* Skill Level Required */}
+              {/* Minimum Skill Level */}
               <FormField
                 control={form.control}
-                name="skillLevelRequired"
+                name="minSkillLevel"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Skill Level Required (Optional)</FormLabel>
+                    <FormLabel>Minimum Skill Level</FormLabel>
                     <Select 
                       onValueChange={field.onChange}
                       value={field.value || "all"}
@@ -608,6 +611,41 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
                         <SelectItem value="professional">Professional</SelectItem>
                       </SelectContent>
                     </Select>
+                    <FormDescription>
+                      Specify the minimum skill level for participants
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              {/* Maximum Skill Level */}
+              <FormField
+                control={form.control}
+                name="maxSkillLevel"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Maximum Skill Level</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange}
+                      value={field.value || "all"}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="All skill levels" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="all">All skill levels</SelectItem>
+                        <SelectItem value="beginner">Beginner</SelectItem>
+                        <SelectItem value="intermediate">Intermediate</SelectItem>
+                        <SelectItem value="advanced">Advanced</SelectItem>
+                        <SelectItem value="professional">Professional</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Specify the maximum skill level for participants
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
