@@ -39,42 +39,44 @@ export function CommunityAdminFAB({ communityId }: CommunityAdminFABProps) {
       {isOpen && (
         <div className="bg-card p-4 rounded-lg shadow-lg border border-border mb-2">
           <div className="space-y-2">
-            <Button 
-              variant="outline"
-              size="sm" 
-              className="w-full justify-start"
-              onClick={() => handleOptionClick('visual')}
-            >
-              <Image size={16} className="mr-2" />
-              Visual Settings
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="w-full justify-start"
-              onClick={() => handleOptionClick('general')}
-            >
-              <Settings size={16} className="mr-2" />
-              General Settings
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="w-full justify-start"
-              onClick={() => handleOptionClick('members')}
-            >
-              <Users size={16} className="mr-2" />
-              Manage Members
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="w-full justify-start"
-              onClick={() => handleOptionClick('events')}
-            >
-              <Calendar size={16} className="mr-2" />
-              Manage Events
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline"
+                size="icon" 
+                className="h-12 w-12"
+                onClick={() => handleOptionClick('visual')}
+                title="Visual Settings"
+              >
+                <Image size={20} />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-12 w-12"
+                onClick={() => handleOptionClick('general')}
+                title="General Settings"
+              >
+                <Settings size={20} />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-12 w-12"
+                onClick={() => handleOptionClick('members')}
+                title="Manage Members"
+              >
+                <Users size={20} />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-12 w-12"
+                onClick={() => handleOptionClick('events')}
+                title="Manage Events"
+              >
+                <Calendar size={20} />
+              </Button>
+            </div>
           </div>
         </div>
       )}
@@ -82,8 +84,8 @@ export function CommunityAdminFAB({ communityId }: CommunityAdminFABProps) {
       {/* Main FAB button - always shown */}
       <Button
         size="icon"
-        variant={isOpen ? "destructive" : "primary"}
-        className="h-14 w-14 rounded-full shadow-xl border-2 border-primary/30"
+        variant={isOpen ? "destructive" : "default"}
+        className="h-14 w-14 rounded-full shadow-xl border-2 border-primary/30 bg-primary text-primary-foreground"
         onClick={toggleMenu}
         aria-label={isOpen ? "Close admin menu" : "Open admin menu"}
       >
