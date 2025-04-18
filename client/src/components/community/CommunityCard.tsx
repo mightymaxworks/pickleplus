@@ -161,10 +161,18 @@ export function CommunityCard({
                 </div>
               )}
               
-              <div className="flex items-center">
-                <Users className="h-3.5 w-3.5 mr-1" />
-                <span>{community.memberCount} members</span>
-              </div>
+              {/* Show member count only for non-default communities */}
+              {!community.isDefault ? (
+                <div className="flex items-center">
+                  <Users className="h-3.5 w-3.5 mr-1" />
+                  <span>{community.memberCount} members</span>
+                </div>
+              ) : (
+                <div className="flex items-center">
+                  <Users className="h-3.5 w-3.5 mr-1" />
+                  <span>Official Group</span>
+                </div>
+              )}
             </div>
           </div>
           
@@ -278,14 +286,22 @@ export function CommunityCard({
       <CardContent className="pt-5 pb-3">
         {/* Stats row */}
         <div className="flex gap-4 mb-3">
+          {/* Members stat - Only show count for non-default communities */}
           <div className="flex items-center">
             <div className="bg-primary/10 rounded-full p-1.5 mr-2 text-primary">
               <Users className="h-4 w-4" />
             </div>
-            <div>
-              <div className="text-sm font-medium">{community.memberCount}</div>
-              <div className="text-xs text-muted-foreground">Members</div>
-            </div>
+            {!community.isDefault ? (
+              <div>
+                <div className="text-sm font-medium">{community.memberCount}</div>
+                <div className="text-xs text-muted-foreground">Members</div>
+              </div>
+            ) : (
+              <div>
+                <div className="text-sm font-medium">Private</div>
+                <div className="text-xs text-muted-foreground">Members</div>
+              </div>
+            )}
           </div>
           
           <div className="flex items-center">
