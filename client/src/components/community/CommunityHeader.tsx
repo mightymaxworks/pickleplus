@@ -444,10 +444,10 @@ export function CommunityHeader({
             {hasManagePermissions && (
               <TabsTrigger
                 value="manage"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none py-2 px-3 sm:py-3 sm:px-4 text-xs sm:text-sm flex-shrink-0"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none py-2 px-3 sm:py-3 sm:px-4 text-xs sm:text-sm flex-shrink-0 bg-primary/10 text-primary"
               >
                 <Settings className="h-3.5 w-3.5 mr-1" />
-                <span className="hidden sm:inline">Manage</span>
+                <span>Manage</span>
               </TabsTrigger>
             )}
           </TabsList>

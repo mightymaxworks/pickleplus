@@ -186,18 +186,18 @@ export function CommunityVisualSettings({ community, isAdmin }: CommunityVisualS
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="avatar">
-          <TabsList className="mb-4">
-            <TabsTrigger value="avatar" className="flex items-center gap-2">
+          <TabsList className="mb-4 grid grid-cols-3 w-full">
+            <TabsTrigger value="avatar" className="flex items-center gap-2 justify-center">
               <Image className="w-4 h-4" />
-              <span className="hidden sm:inline">Avatar</span>
+              <span>Avatar</span>
             </TabsTrigger>
-            <TabsTrigger value="banner" className="flex items-center gap-2">
+            <TabsTrigger value="banner" className="flex items-center gap-2 justify-center">
               <Image className="w-4 h-4" />
-              <span className="hidden sm:inline">Banner</span>
+              <span>Banner</span>
             </TabsTrigger>
-            <TabsTrigger value="theme" className="flex items-center gap-2">
+            <TabsTrigger value="theme" className="flex items-center gap-2 justify-center">
               <Palette className="w-4 h-4" />
-              <span className="hidden sm:inline">Theme</span>
+              <span>Theme</span>
             </TabsTrigger>
           </TabsList>
           

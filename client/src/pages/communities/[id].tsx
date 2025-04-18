@@ -322,15 +322,16 @@ export default function CommunityDetailPage() {
           {activeTab === "manage" && (userRole === CommunityMemberRole.ADMIN || userRole === CommunityMemberRole.MODERATOR) && (
             <div className="space-y-8">
               {/* Management Tabs */}
-              <Tabs defaultValue="join-requests" className="w-full">
-                <TabsList className="w-full sm:w-auto">
-                  <TabsTrigger value="join-requests" className="flex gap-1 items-center">
+              <Tabs defaultValue="settings" className="w-full">
+                <TabsList className="w-full sm:w-auto grid grid-cols-2 sm:flex overflow-hidden">
+                  <TabsTrigger value="join-requests" className="flex gap-1 items-center justify-center">
                     <Users className="h-4 w-4" />
-                    Join Requests
+                    <span className="hidden sm:inline">Join Requests</span>
+                    <span className="sm:hidden">Requests</span>
                   </TabsTrigger>
-                  <TabsTrigger value="settings" className="flex gap-1 items-center">
+                  <TabsTrigger value="settings" className="flex gap-1 items-center justify-center bg-primary/5">
                     <Edit className="h-4 w-4" />
-                    Settings
+                    <span>Settings</span>
                   </TabsTrigger>
                 </TabsList>
                 
