@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import cors from 'cors';
 import * as http from 'http';
+import * as path from 'path';
 import { setupAuth } from './auth';
 import { setupSecurity } from './security';
 
@@ -69,6 +70,10 @@ app.use((req, res, next) => {
   app.get("/api/health", (req: Request, res: Response) => {
     res.json({ status: "ok", time: new Date().toISOString() });
   });
+  
+  // Serve static files from uploads directory
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+  console.log("[Static Files] Serving uploads directory from:", path.join(process.cwd(), 'uploads'));
   
   // Set up authentication
   setupAuth(app);
