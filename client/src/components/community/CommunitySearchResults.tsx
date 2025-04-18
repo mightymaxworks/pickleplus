@@ -22,7 +22,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Users, Calendar, MapPin, Star, Lock, Shield, Eye } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { Pagination } from '@/components/ui/pagination';
 
 interface CommunitySearchResultsProps {
   initialSearch?: Record<string, any>;
@@ -231,83 +231,13 @@ export function CommunitySearchResults({
           
           {/* Pagination */}
           {(currentPage > 1 || hasMore) && (
-            <Pagination className="mt-6">
-              <PaginationContent>
-                {currentPage > 1 && (
-                  <PaginationItem>
-                    <PaginationPrevious
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePageChange(currentPage - 1);
-                      }}
-                    />
-                  </PaginationItem>
-                )}
-                
-                {currentPage > 2 && (
-                  <PaginationItem>
-                    <PaginationLink
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePageChange(1);
-                      }}
-                    >
-                      1
-                    </PaginationLink>
-                  </PaginationItem>
-                )}
-                
-                {currentPage > 3 && <PaginationItem>...</PaginationItem>}
-                
-                {currentPage > 1 && (
-                  <PaginationItem>
-                    <PaginationLink
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePageChange(currentPage - 1);
-                      }}
-                    >
-                      {currentPage - 1}
-                    </PaginationLink>
-                  </PaginationItem>
-                )}
-                
-                <PaginationItem>
-                  <PaginationLink isActive>{currentPage}</PaginationLink>
-                </PaginationItem>
-                
-                {hasMore && (
-                  <PaginationItem>
-                    <PaginationLink
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePageChange(currentPage + 1);
-                      }}
-                    >
-                      {currentPage + 1}
-                    </PaginationLink>
-                  </PaginationItem>
-                )}
-                
-                {hasMore && <PaginationItem>...</PaginationItem>}
-                
-                {hasMore && (
-                  <PaginationItem>
-                    <PaginationNext
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handlePageChange(currentPage + 1);
-                      }}
-                    />
-                  </PaginationItem>
-                )}
-              </PaginationContent>
-            </Pagination>
+            <div className="mt-6">
+              <Pagination 
+                currentPage={currentPage} 
+                totalPages={hasMore ? currentPage + 1 : currentPage} 
+                onPageChange={handlePageChange} 
+              />
+            </div>
           )}
         </div>
       ) : (

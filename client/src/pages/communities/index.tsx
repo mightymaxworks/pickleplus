@@ -56,6 +56,7 @@ import {
 
 // Import mockup components
 import CommunityDiscoveryMockup from '../../core/modules/community/components/mockups/CommunityDiscoveryMockup';
+import CommunityDiscoveryMockupV2 from '../../core/modules/community/components/mockups/CommunityDiscoveryMockupV2';
 import CommunityProfileMockup from '../../core/modules/community/components/mockups/CommunityProfileMockup';
 import CommunityCreationMockup from '../../core/modules/community/components/mockups/CommunityCreationMockup';
 import CommunityEventsMockup from '../../core/modules/community/components/mockups/CommunityEventsMockup';
@@ -281,7 +282,8 @@ export default function CommunitiesPage() {
               
               {/* Tab Content */}
               <TabsContent value="discover" className="pt-4">
-                <CommunityDiscoveryMockup />
+                {/* PKL-278651-COMM-0017-SEARCH: Use new advanced search component */}
+                <CommunityDiscoveryMockupV2 />
               </TabsContent>
               
               <TabsContent value="profile" className="pt-4">
