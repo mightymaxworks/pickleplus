@@ -726,8 +726,10 @@ router.get('/:id/events', communityAuth, async (req: Request, res: Response) => 
  * PKL-278651-COMM-0016-RSVP
  * Get a single community event by ID
  * GET /api/communities/:id/events/:eventId
- * @version 1.0.0
+ * @version 1.0.1
  * @lastModified 2025-04-18
+ * @changes
+ * - Fixed currentAttendees count to include event creator
  */
 router.get('/:id/events/:eventId', communityAuth, async (req: Request, res: Response) => {
   try {
@@ -751,16 +753,33 @@ router.get('/:id/events/:eventId', communityAuth, async (req: Request, res: Resp
     const userId = req.user?.id;
     
     if (userId) {
-      const attendee = await storage.getEventAttendance(eventId, userId);
-      isRegistered = !!attendee;
-      registrationStatus = attendee?.status || null;
+      // Event creator is always considered registered
+      if (userId === event.createdByUserId) {
+        isRegistered = true;
+        registrationStatus = 'REGISTERED';
+      } else {
+        const attendee = await storage.getEventAttendance(eventId, userId);
+        isRegistered = !!attendee;
+        registrationStatus = attendee?.status || null;
+      }
     }
     
-    // Return event with registration status
+    // Count registered attendees (including creator if not already counted)
+    const eventAttendees = await storage.getEventAttendees(eventId);
+    let currentAttendees = eventAttendees.length;
+    
+    // Make sure creator is counted in attendance even if not explicitly registered
+    const creatorIsRegistered = eventAttendees.some(attendee => attendee.userId === event.createdByUserId);
+    if (!creatorIsRegistered) {
+      currentAttendees += 1;
+    }
+    
+    // Return event with registration status and updated attendance count
     res.json({
       ...event,
       isRegistered,
-      registrationStatus
+      registrationStatus,
+      currentAttendees
     });
   } catch (error) {
     console.error('Error getting community event:', error);
@@ -772,8 +791,10 @@ router.get('/:id/events/:eventId', communityAuth, async (req: Request, res: Resp
  * PKL-278651-COMM-0016-RSVP
  * Get attendees for a community event
  * GET /api/communities/:id/events/:eventId/attendees
- * @version 1.0.0
+ * @version 1.0.1
  * @lastModified 2025-04-18
+ * @changes
+ * - Added special handling to include event creator in attendance list
  */
 router.get('/:id/events/:eventId/attendees', communityAuth, async (req: Request, res: Response) => {
   try {
@@ -793,6 +814,31 @@ router.get('/:id/events/:eventId/attendees', communityAuth, async (req: Request,
     
     // Get all attendees
     const attendees = await storage.getEventAttendees(eventId);
+    
+    // Check if the creator is already in the attendees list
+    const creatorInAttendees = attendees.some(a => a.userId === event.createdByUserId);
+    
+    // If the creator is not in the attendees list, add them
+    if (!creatorInAttendees && event.createdByUserId) {
+      // Get the creator's user data
+      const creatorUser = await storage.getUser(event.createdByUserId);
+      
+      if (creatorUser) {
+        // Create a virtual attendance record for the creator
+        const creatorAttendance = {
+          id: -1, // Using negative ID to indicate this is a virtual record
+          eventId,
+          userId: event.createdByUserId,
+          status: 'REGISTERED',
+          registeredAt: event.createdAt, // Use event creation date
+          notes: 'Event Creator',
+          user: creatorUser
+        };
+        
+        // Add the creator to the beginning of the attendees list
+        attendees.unshift(creatorAttendance);
+      }
+    }
     
     res.json(attendees);
   } catch (error) {
