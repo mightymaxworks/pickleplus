@@ -702,17 +702,29 @@ export function useCreateCommunityEvent() {
 }
 
 /**
+ * Hook to fetch a single community event
+ */
+export function useCommunityEvent(communityId: number, eventId: number, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: communityKeys.event(communityId, eventId),
+    queryFn: () => communityApi.getCommunityEvent(communityId, eventId),
+    enabled: options?.enabled !== false,
+  });
+}
+
+/**
  * Hook to register for an event
  */
 export function useRegisterForEvent() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ eventId, notes }: { eventId: number; notes?: string }) => 
-      communityApi.registerForEvent(eventId, notes),
-    onSuccess: () => {
-      // We don't know the communityId here, so invalidate all events
-      queryClient.invalidateQueries({ queryKey: communityKeys.all });
+    mutationFn: ({ communityId, eventId, notes }: { communityId: number; eventId: number; notes?: string }) => 
+      communityApi.registerForEvent(communityId, eventId, notes),
+    onSuccess: (_, variables) => {
+      // Invalidate specific event and events list
+      queryClient.invalidateQueries({ queryKey: communityKeys.event(variables.communityId, variables.eventId) });
+      queryClient.invalidateQueries({ queryKey: communityKeys.events(variables.communityId) });
       toast({
         title: "Registration successful",
         description: "You have been registered for the event.",
@@ -735,10 +747,12 @@ export function useCancelEventRegistration() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (eventId: number) => communityApi.cancelEventRegistration(eventId),
-    onSuccess: () => {
-      // We don't know the communityId here, so invalidate all events
-      queryClient.invalidateQueries({ queryKey: communityKeys.all });
+    mutationFn: ({ communityId, eventId }: { communityId: number; eventId: number }) => 
+      communityApi.cancelEventRegistration(communityId, eventId),
+    onSuccess: (_, variables) => {
+      // Invalidate specific event and events list
+      queryClient.invalidateQueries({ queryKey: communityKeys.event(variables.communityId, variables.eventId) });
+      queryClient.invalidateQueries({ queryKey: communityKeys.events(variables.communityId) });
       toast({
         title: "Registration cancelled",
         description: "Your event registration has been cancelled.",
