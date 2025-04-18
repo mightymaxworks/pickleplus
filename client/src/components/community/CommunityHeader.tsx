@@ -125,6 +125,12 @@ export function CommunityHeader({
   };
   
   const handleLeave = () => {
+    // Prevent leaving default communities
+    if (community.isDefault) {
+      alert("You cannot leave official groups as they're automatically joined by all users.");
+      return;
+    }
+    
     if (confirm("Are you sure you want to leave this community?")) {
       leaveCommunity(community.id);
     }
