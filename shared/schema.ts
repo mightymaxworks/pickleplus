@@ -20,6 +20,27 @@ import {
   type InsertContactPreference
 } from "./schema/privacy";
 
+// Community engagement tables are defined in ./schema/community-engagement.ts
+import {
+  communityActivities,
+  communityEngagementMetrics,
+  communityEngagementLevels,
+  communityLeaderboards,
+  insertCommunityActivitySchema,
+  insertCommunityEngagementMetricSchema,
+  insertCommunityEngagementLevelSchema,
+  insertCommunityLeaderboardSchema,
+  type CommunityActivity,
+  type InsertCommunityActivity,
+  type CommunityEngagementMetric,
+  type InsertCommunityEngagementMetric, 
+  type CommunityEngagementLevel,
+  type InsertCommunityEngagementLevel,
+  type CommunityLeaderboard,
+  type InsertCommunityLeaderboard,
+  CommunityActivityType
+} from "./schema/community-engagement";
+
 // Import match statistics schema (PKL-278651-MATCH-0002-XR - Enhanced Match Recording System)
 import './match-statistics-schema';
 
@@ -897,5 +918,26 @@ export const contactPreferencesRelations = relations(contactPreferences, ({ one 
     references: [users.id]
   })
 }));
+
+// Export community engagement tables and schemas
+export {
+  communityActivities,
+  communityEngagementMetrics,
+  communityEngagementLevels,
+  communityLeaderboards,
+  insertCommunityActivitySchema,
+  insertCommunityEngagementMetricSchema,
+  insertCommunityEngagementLevelSchema,
+  insertCommunityLeaderboardSchema,
+  CommunityActivityType,
+  CommunityActivity,
+  InsertCommunityActivity,
+  CommunityEngagementMetric,
+  InsertCommunityEngagementMetric,
+  CommunityEngagementLevel, 
+  InsertCommunityEngagementLevel,
+  CommunityLeaderboard,
+  InsertCommunityLeaderboard
+};
 
 // Add additional core schema exports here as the system grows
