@@ -286,31 +286,53 @@ export default function CommunityDetailPage() {
                   </CardContent>
                 </Card>
                 
-                {/* Recent members preview */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-center">
-                      <CardTitle>Members</CardTitle>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleTabChange("members")}
-                        className="text-xs px-2"
-                      >
-                        See All
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <MembersList 
-                      communityId={communityId}
-                      layout="list"
-                      showFilter={false}
-                      compact={true}
-                      limit={5}
-                    />
-                  </CardContent>
-                </Card>
+                {/* Recent members preview - hidden for default communities */}
+                {!community.isDefault && (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-center">
+                        <CardTitle>Members</CardTitle>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleTabChange("members")}
+                          className="text-xs px-2"
+                        >
+                          See All
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <MembersList 
+                        communityId={communityId}
+                        layout="list"
+                        showFilter={false}
+                        compact={true}
+                        limit={5}
+                      />
+                    </CardContent>
+                  </Card>
+                )}
+                
+                {/* Member count for default communities */}
+                {community.isDefault && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Users className="h-5 w-5" />
+                        Members
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-center text-lg font-semibold">
+                        {community.memberCount || 0} members
+                      </p>
+                      <p className="text-center text-muted-foreground text-sm mt-1">
+                        All Pickle+ users automatically join this official group
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
           )}
@@ -320,14 +342,41 @@ export default function CommunityDetailPage() {
             <EventList communityId={communityId} />
           )}
           
-          {/* Members Tab */}
-          {activeTab === "members" && (
+          {/* Members Tab - hidden for default communities */}
+          {activeTab === "members" && !community.isDefault && (
             <MembersList 
               communityId={communityId}
               isCurrentUserAdmin={community.role === CommunityMemberRole.ADMIN}
               layout="grid"
               showFilter={true}
             />
+          )}
+          
+          {/* Members Tab (restricted view for default communities) */}
+          {activeTab === "members" && community.isDefault && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Members
+                </CardTitle>
+                <CardDescription>
+                  Member list is hidden for this official community
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-16">
+                  <Users className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-lg font-medium mb-2">
+                    {community.memberCount || 0} total members
+                  </p>
+                  <p className="text-muted-foreground max-w-md mx-auto">
+                    All Pickle+ users automatically join this official group. 
+                    The member list is hidden to protect user privacy.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           )}
           
           {/* Posts Tab */}
