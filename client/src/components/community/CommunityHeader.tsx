@@ -259,12 +259,23 @@ export function CommunityHeader({
             {/* Action buttons - simplified for reliable operation */}
             <div className="flex gap-2 flex-shrink-0">
               {hasManagePermissions ? (
-                /* Admin/Creator Button - direct navigation */
+                /* Admin/Creator Button - direct navigation using a strong approach */
                 <Button 
                   size="sm" 
                   variant="default" 
                   className="bg-white hover:bg-white/90 text-primary font-medium h-8 flex items-center gap-1"
-                  onClick={() => onTabChange && onTabChange("manage")}
+                  onClick={() => {
+                    console.log("Manage button clicked, changing tab to 'manage'");
+                    if (onTabChange) {
+                      onTabChange("manage");
+                    } else {
+                      // Fallback for mobile - force tab change by manipulating DOM directly
+                      const manageTab = document.querySelector('[value="manage"]') as HTMLElement;
+                      if (manageTab) {
+                        manageTab.click();
+                      }
+                    }
+                  }}
                 >
                   <Settings className="h-4 w-4 mr-1" />
                   <span>Manage</span>
@@ -329,17 +340,7 @@ export function CommunityHeader({
             </div>
           )}
           
-          {/* Join button for non-members - moved to bottom */}
-          {!isMember && !isCreator && (
-            <Button 
-              size="sm"
-              variant="secondary" 
-              onClick={handleJoin}
-              className="bg-white hover:bg-white/90 text-primary mt-2"
-            >
-              Join Community
-            </Button>
-          )}
+          {/* No duplicate join button needed anymore - the top button is sufficient */}
         </div>
       </div>
       
