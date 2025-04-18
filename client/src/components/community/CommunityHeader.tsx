@@ -256,19 +256,10 @@ export function CommunityHeader({
               </div>
             </div>
             
-            {/* Action buttons - simplified for reliable operation */}
+            {/* Action buttons - icons only for better mobile experience */}
             <div className="flex gap-2 flex-shrink-0">
-              {hasManagePermissions ? (
-                /* Replacing with a direct link to the current URL + ?tab=manage */
-                <a 
-                  href={`/communities/${community.id}?tab=manage`}
-                  className="inline-flex items-center justify-center h-8 px-4 py-2 rounded-md bg-white hover:bg-white/90 text-primary font-medium text-sm"
-                >
-                  <Settings className="h-4 w-4 mr-1" />
-                  <span>Manage</span>
-                </a>
-              ) : (
-                /* Regular User Button */
+              {/* Only show Join/Leave buttons - no Manage button */}
+              {!hasManagePermissions && (
                 isMember ? (
                   /* Leave button for members */
                   <Button 
@@ -278,7 +269,7 @@ export function CommunityHeader({
                     onClick={handleLeave}
                   >
                     <LogOut className="h-4 w-4 mr-1" />
-                    <span>Leave</span>
+                    <span className="sm:inline hidden">Leave</span>
                   </Button>
                 ) : (
                   /* Join button for non-members */
@@ -289,7 +280,7 @@ export function CommunityHeader({
                     onClick={handleJoin}
                   >
                     <Users className="h-4 w-4 mr-1" />
-                    <span>Join</span>
+                    <span className="sm:inline hidden">Join</span>
                   </Button>
                 )
               )}
@@ -386,39 +377,39 @@ export function CommunityHeader({
           <TabsList className="w-full justify-start h-auto p-0 bg-transparent border-b-0 flex-nowrap">
             <TabsTrigger
               value="about"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none py-2 px-3 sm:py-3 sm:px-4 text-xs sm:text-sm flex-shrink-0"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none py-2 px-3 text-xs flex-shrink-0"
+              title="About"
             >
-              <Info className="h-3.5 w-3.5 sm:hidden mr-1" />
-              About
+              <Info className="h-5 w-5" />
             </TabsTrigger>
             <TabsTrigger
               value="events"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none py-2 px-3 sm:py-3 sm:px-4 text-xs sm:text-sm flex-shrink-0"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none py-2 px-3 text-xs flex-shrink-0"
+              title="Events"
             >
-              <Calendar className="h-3.5 w-3.5 sm:hidden mr-1" />
-              Events
+              <Calendar className="h-5 w-5" />
             </TabsTrigger>
             <TabsTrigger
               value="members"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none py-2 px-3 sm:py-3 sm:px-4 text-xs sm:text-sm flex-shrink-0"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none py-2 px-3 text-xs flex-shrink-0"
+              title="Members"
             >
-              <Users className="h-3.5 w-3.5 sm:hidden mr-1" />
-              Members
+              <Users className="h-5 w-5" />
             </TabsTrigger>
             <TabsTrigger
               value="posts"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none py-2 px-3 sm:py-3 sm:px-4 text-xs sm:text-sm flex-shrink-0"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none py-2 px-3 text-xs flex-shrink-0"
+              title="Posts"
             >
-              <MessageSquare className="h-3.5 w-3.5 sm:hidden mr-1" />
-              Posts
+              <MessageSquare className="h-5 w-5" />
             </TabsTrigger>
             {hasManagePermissions && (
               <TabsTrigger
                 value="manage"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none py-2 px-3 sm:py-3 sm:px-4 text-xs sm:text-sm flex-shrink-0 bg-primary/10 text-primary"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none py-2 px-3 text-xs flex-shrink-0 bg-primary/10 text-primary"
+                title="Manage Community"
               >
-                <Settings className="h-3.5 w-3.5 mr-1" />
-                <span>Manage</span>
+                <Settings className="h-5 w-5" />
               </TabsTrigger>
             )}
           </TabsList>

@@ -177,10 +177,7 @@ export default function CommunityDetailPage() {
           onTabChange={handleTabChange}
         />
         
-        {/* Show FAB only for admins/creators */}
-        {hasAdminPermissions && (
-          <CommunityAdminFAB communityId={communityId} />
-        )}
+        {/* Don't show FAB since we have a manage tab */}
         
         {/* Tab content */}
         <div className="mt-8">
