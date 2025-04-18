@@ -90,9 +90,18 @@ export function CommunitySearchResults({
       pro: 'Pro'
     };
     
+    // Short display for mobile
+    const shortDisplay: Record<string, string> = {
+      beginner: 'Beg',
+      intermediate: 'Int',
+      advanced: 'Adv',
+      pro: 'Pro'
+    };
+    
     return (
-      <Badge variant="outline" className={`${levelColors[level] || ''}`}>
-        {levelDisplay[level] || level}
+      <Badge variant="outline" className={`${levelColors[level] || ''} text-xs px-2 truncate max-w-[90px] sm:max-w-full`}>
+        <span className="hidden sm:inline">{levelDisplay[level] || level}</span>
+        <span className="inline sm:hidden">{shortDisplay[level] || level}</span>
       </Badge>
     );
   };
@@ -190,8 +199,10 @@ export function CommunitySearchResults({
                   <div className="flex gap-2">
                     {getSkillLevelBadge(community.skillLevel)}
                     {requiresApproval(community) && (
-                      <Badge variant="outline" className="bg-amber-100 text-amber-700">
-                        <Shield className="h-3 w-3 mr-1" /> Approval Required
+                      <Badge variant="outline" className="bg-amber-100 text-amber-700 text-xs px-2 truncate max-w-[90px] sm:max-w-full">
+                        <Shield className="h-3 w-3 mr-1" /> 
+                        <span className="hidden sm:inline">Approval Required</span>
+                        <span className="inline sm:hidden">Approval</span>
                       </Badge>
                     )}
                   </div>
@@ -203,9 +214,13 @@ export function CommunitySearchResults({
                 </p>
                 
                 {community.tags && (
-                  <div className="flex flex-wrap gap-2 mt-3">
+                  <div className="flex flex-wrap gap-1 sm:gap-2 mt-3">
                     {community.tags.split(',').map((tag, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs px-2 py-0">
+                      <Badge 
+                        key={index} 
+                        variant="secondary" 
+                        className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0 truncate max-w-[80px] sm:max-w-[120px]"
+                      >
                         {tag.trim()}
                       </Badge>
                     ))}
@@ -220,9 +235,10 @@ export function CommunitySearchResults({
                   </span>
                 </div>
                 <Link to={`/communities/${community.id}`}>
-                  <Button size="sm" variant="outline">
-                    <Eye className="h-3.5 w-3.5 mr-1.5" />
-                    View Community
+                  <Button size="sm" variant="outline" className="h-8 px-2 sm:px-3">
+                    <Eye className="h-3.5 w-3.5 sm:mr-1.5" />
+                    <span className="hidden sm:inline">View Community</span>
+                    <span className="inline sm:hidden ml-1 text-xs">View</span>
                   </Button>
                 </Link>
               </CardFooter>
