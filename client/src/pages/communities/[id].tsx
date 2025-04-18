@@ -50,7 +50,10 @@ import {
   X,
   Edit,
   Bell,
-  Palette
+  Palette,
+  MessageSquare,
+  Settings,
+  ShieldAlert
 } from "lucide-react";
 import { JoinRequestManagement } from "@/components/community/JoinRequestManagement";
 import { CommunityAdminFAB } from "@/components/community/CommunityAdminFAB";
@@ -103,9 +106,21 @@ export default function CommunityDetailPage() {
     enabled: activeTab === "members" 
   });
   
-  // Determine user role (for demonstration)
-  // In a real app, this would come from the community data
-  const userRole = community?.isMember ? CommunityMemberRole.MEMBER : null;
+  // Get user role from community data
+  // If the user is the creator or has the role of ADMIN, set it to ADMIN
+  // Otherwise use the role from the community data
+  const userRole = community.role || (
+    community.createdByUserId === (community as any).currentUserId 
+    ? CommunityMemberRole.ADMIN 
+    : (community.isMember ? CommunityMemberRole.MEMBER : null)
+  );
+  
+  console.log("Is creator calculated:", 
+    community.createdByUserId === (community as any).currentUserId,
+    "Current user ID:", (community as any).currentUserId,
+    "Creator ID:", community.createdByUserId,
+    "hasManagePermissions:", userRole === CommunityMemberRole.ADMIN || userRole === CommunityMemberRole.MODERATOR
+  );
   
   // Loading state
   if (isLoading) {
@@ -346,91 +361,129 @@ export default function CommunityDetailPage() {
           )}
           
           {/* Manage Tab (visible only to admins/moderators) */}
-          {activeTab === "manage" && (userRole === CommunityMemberRole.ADMIN || userRole === CommunityMemberRole.MODERATOR) && (
+          {activeTab === "manage" && (
             <div className="space-y-8">
-              {/* Management Tabs */}
-              <Tabs defaultValue="settings" className="w-full">
-                <TabsList className="w-full sm:w-auto grid grid-cols-2 sm:flex overflow-hidden">
-                  <TabsTrigger value="join-requests" className="flex gap-1 items-center justify-center">
-                    <Users className="h-4 w-4" />
-                    <span className="hidden sm:inline">Join Requests</span>
-                    <span className="sm:hidden">Requests</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="settings" className="flex gap-1 items-center justify-center bg-primary/5">
-                    <Edit className="h-4 w-4" />
-                    <span>Settings</span>
-                  </TabsTrigger>
-                </TabsList>
-                
-                {/* Join Requests Management Panel */}
-                <TabsContent value="join-requests" className="mt-6">
-                  {community.requiresApproval ? (
-                    <JoinRequestManagement communityId={communityId} />
-                  ) : (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Join Request Management</CardTitle>
-                        <CardDescription>
-                          This community doesn't require approval to join
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-center py-8">
-                          <Users className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                          <p className="text-lg font-medium mb-2">
-                            Open community
-                          </p>
-                          <p className="text-muted-foreground max-w-md mx-auto mb-6">
-                            This community is set to allow anyone to join without approval.
-                            To enable join request management, change the community settings
-                            to require approval for new members.
-                          </p>
-                          <Button variant="outline">
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit Community Settings
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                </TabsContent>
-                
-                {/* Settings Panel */}
-                <TabsContent value="settings" className="mt-6">
-                  <div className="space-y-6">
-                    {/* Visual Settings */}
-                    <CommunityVisualSettings 
-                      community={community}
-                      isAdmin={community.role === CommunityMemberRole.ADMIN || community.createdByUserId === (community as any).currentUserId}
-                    />
+              {console.log("Manage tab active, userRole:", userRole, "Admin:", CommunityMemberRole.ADMIN, "Moderator:", CommunityMemberRole.MODERATOR)}
+              
+              {/* Check if user has management permissions, and log if not */}
+              {(userRole === CommunityMemberRole.ADMIN || userRole === CommunityMemberRole.MODERATOR) ? (
+                <>
+                  {console.log("User has admin/mod permissions - showing management UI")}
+                  {/* Management Tabs */}
+                  <Tabs defaultValue="settings" className="w-full">
+                    <TabsList className="w-full sm:w-auto grid grid-cols-2 sm:flex overflow-hidden">
+                      <TabsTrigger value="join-requests" className="flex gap-1 items-center justify-center">
+                        <Users className="h-4 w-4" />
+                        <span className="hidden sm:inline">Join Requests</span>
+                        <span className="sm:hidden">Requests</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="settings" className="flex gap-1 items-center justify-center bg-primary/5">
+                        <Edit className="h-4 w-4" />
+                        <span>Settings</span>
+                      </TabsTrigger>
+                    </TabsList>
                     
-                    {/* General Settings */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Edit className="h-5 w-5" />
-                          General Settings
-                        </CardTitle>
-                        <CardDescription>
-                          Manage your community settings and preferences
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-center py-16">
-                          <Edit className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                          <p className="text-lg font-medium mb-2">
-                            General settings management coming soon
-                          </p>
-                          <p className="text-muted-foreground max-w-md mx-auto">
-                            We're working on building powerful settings management for community administrators.
-                            Check back soon!
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </TabsContent>
-              </Tabs>
+                    {/* Join Requests Management Panel */}
+                    <TabsContent value="join-requests" className="mt-6">
+                      {console.log("Join requests tab selected, requiresApproval:", community.requiresApproval)}
+                      {community.requiresApproval ? (
+                        <JoinRequestManagement communityId={communityId} />
+                      ) : (
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>Join Request Management</CardTitle>
+                            <CardDescription>
+                              This community doesn't require approval to join
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-center py-8">
+                              <Users className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                              <p className="text-lg font-medium mb-2">
+                                Open community
+                              </p>
+                              <p className="text-muted-foreground max-w-md mx-auto mb-6">
+                                This community is set to allow anyone to join without approval.
+                                To enable join request management, change the community settings
+                                to require approval for new members.
+                              </p>
+                              <Button variant="outline">
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit Community Settings
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </TabsContent>
+                    
+                    {/* Settings Panel */}
+                    <TabsContent value="settings" className="mt-6">
+                      {console.log("Settings tab selected, rendering settings components")}
+                      <div className="space-y-6">
+                        {/* Visual Settings */}
+                        {console.log("Rendering CommunityVisualSettings with props:", {
+                          communityId: community.id,
+                          isAdmin: community.role === CommunityMemberRole.ADMIN || community.createdByUserId === (community as any).currentUserId
+                        })}
+                        <CommunityVisualSettings 
+                          community={community}
+                          isAdmin={community.role === CommunityMemberRole.ADMIN || community.createdByUserId === (community as any).currentUserId}
+                        />
+                        
+                        {/* General Settings */}
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                              <Edit className="h-5 w-5" />
+                              General Settings
+                            </CardTitle>
+                            <CardDescription>
+                              Manage your community settings and preferences
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-center py-16">
+                              <Edit className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                              <p className="text-lg font-medium mb-2">
+                                General settings management coming soon
+                              </p>
+                              <p className="text-muted-foreground max-w-md mx-auto">
+                                We're working on building powerful settings management for community administrators.
+                                Check back soon!
+                              </p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                </>
+              ) : (
+                // Show an error message if user tries to access management without permissions
+                <div>
+                  {console.log("User lacks permission - showing error")}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-destructive">Access Denied</CardTitle>
+                      <CardDescription>
+                        You don't have permission to manage this community
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-center py-8">
+                        <ShieldAlert className="h-12 w-12 mx-auto text-destructive mb-3" />
+                        <p className="text-lg font-medium mb-2">
+                          Permission Required
+                        </p>
+                        <p className="text-muted-foreground max-w-md mx-auto">
+                          Only community administrators and moderators can access management features.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
             </div>
           )}
         </div>
