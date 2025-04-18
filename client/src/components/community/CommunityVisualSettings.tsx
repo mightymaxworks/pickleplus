@@ -375,9 +375,20 @@ export function CommunityVisualSettings({ community, isAdmin }: CommunityVisualS
               <Button
                 onClick={updateTheme}
                 disabled={isThemeUpdating}
-                className="w-full sm:w-auto"
+                className="w-full py-6 text-lg"
+                size="lg"
               >
-                {isThemeUpdating ? "Updating..." : "Save Theme"}
+                {isThemeUpdating ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+                    Updating...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Check className="h-5 w-5" />
+                    Save Theme
+                  </span>
+                )}
               </Button>
             </div>
           </TabsContent>
