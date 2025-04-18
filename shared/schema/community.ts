@@ -217,6 +217,7 @@ export const communities = pgTable("communities", {
   avatarUrl: text("avatar_url"),
   bannerUrl: text("banner_url"),
   bannerPattern: varchar("banner_pattern", { length: 50 }),
+  themeColor: varchar("theme_color", { length: 50 }),
   isPrivate: boolean("is_private").default(false),
   requiresApproval: boolean("requires_approval").default(false),
   tags: varchar("tags", { length: 255 }),

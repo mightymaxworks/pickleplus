@@ -108,9 +108,37 @@ export const communityKeys = {
   post: (communityId: number, postId: number) => [...communityKeys.posts(communityId), postId] as const,
 };
 
+/**
+ * File upload function for community-related files
+ * This uses FormData to upload files to the server
+ */
+async function uploadFile(url: string, file: File, additionalData?: Record<string, any>): Promise<{ url: string }> {
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  // Add any additional data to the form
+  if (additionalData) {
+    Object.entries(additionalData).forEach(([key, value]) => {
+      formData.append(key, String(value));
+    });
+  }
+  
+  const response = await fetch(url, {
+    method: 'POST',
+    body: formData,
+    credentials: 'include'
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Upload failed: ${response.status}`);
+  }
+  
+  return response.json();
+}
+
 const communityApi = {
   /**
-   * PKL-278651-COMM-0017-SEARCH
+   * PKL-278651-COMM-0019-VISUALS
    * Get all communities with advanced search and filtering
    * @param options Advanced search options including filters, sorting, and recommendation
    */
@@ -399,6 +427,54 @@ const communityApi = {
     return response;
   },
   
+  /**
+   * PKL-278651-COMM-0019-VISUALS
+   * Upload community avatar image
+   */
+  uploadCommunityAvatar: async (communityId: number, file: File) => {
+    const response = await uploadFile(
+      `/api/communities/${communityId}/avatar`, 
+      file
+    );
+    
+    // Invalidate community cache to reflect new avatar
+    queryClient.invalidateQueries(communityKeys.detail(communityId));
+    
+    return response;
+  },
+  
+  /**
+   * PKL-278651-COMM-0019-VISUALS
+   * Upload community banner image
+   */
+  uploadCommunityBanner: async (communityId: number, file: File) => {
+    const response = await uploadFile(
+      `/api/communities/${communityId}/banner`, 
+      file
+    );
+    
+    // Invalidate community cache to reflect new banner
+    queryClient.invalidateQueries(communityKeys.detail(communityId));
+    
+    return response;
+  },
+  
+  /**
+   * PKL-278651-COMM-0019-VISUALS
+   * Update community theme color
+   */
+  updateCommunityTheme: async (communityId: number, themeColor: string) => {
+    const response = await apiRequest<Community>({
+      url: `/api/communities/${communityId}/theme`,
+      method: 'PATCH',
+      data: { themeColor },
+    });
+    
+    // Invalidate community cache to reflect new theme
+    queryClient.invalidateQueries(communityKeys.detail(communityId));
+    
+    return response;
+  }
 
 };
 
