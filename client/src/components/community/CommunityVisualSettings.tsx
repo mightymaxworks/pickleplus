@@ -25,6 +25,8 @@ interface CommunityVisualSettingsProps {
 }
 
 export function CommunityVisualSettings({ community, isAdmin }: CommunityVisualSettingsProps) {
+  console.log("CommunityVisualSettings component rendering with props:", { communityId: community.id, isAdmin });
+  
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(community.avatarUrl || null);
@@ -37,10 +39,20 @@ export function CommunityVisualSettings({ community, isAdmin }: CommunityVisualS
 
   const form = useForm();
 
-  // If user is not an admin, don't render the component
+  // If user is not an admin, log and show an error message
   if (!isAdmin) {
-    return null;
+    console.log("CommunityVisualSettings: User is not an admin, will not render settings");
+    return (
+      <div className="text-center py-8">
+        <div className="text-red-500 font-medium mb-2">Access Denied</div>
+        <p className="text-muted-foreground">
+          You don't have permission to modify community settings.
+        </p>
+      </div>
+    );
   }
+  
+  console.log("CommunityVisualSettings: User is an admin, will render settings UI");
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
