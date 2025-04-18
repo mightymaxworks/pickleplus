@@ -184,8 +184,22 @@ export function CommunityHeader({
       {/* Hero section - optimized for mobile */}
       <div className={cn(
         "relative rounded-xl p-4 sm:p-6 text-white overflow-hidden",
-        "bg-gradient-to-r from-primary/90 to-primary/70",
+        community.bannerUrl 
+          ? "bg-gradient-to-r from-black/50 to-black/30" 
+          : "bg-gradient-to-r from-primary/90 to-primary/70",
       )}>
+        {/* Banner Image (if available) */}
+        {community.bannerUrl && (
+          <div className="absolute inset-0 z-0">
+            <img 
+              src={community.bannerUrl}
+              alt={`${community.name} banner`}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-black/30" />
+          </div>
+        )}
+        
         {/* Pattern Overlay */}
         <div className="absolute inset-0 opacity-10 bg-repeat">
           <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
