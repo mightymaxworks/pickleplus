@@ -10,66 +10,43 @@
 
 import React, { useState } from "react";
 import { useParams, useLocation } from "wouter";
-import {
-  useCommunityEvent,
+import { format, formatDistanceToNow } from "date-fns";
+import { Calendar, Clock, MapPin, Users, Video, User, ArrowLeft, ExternalLink } from "lucide-react";
+import { 
+  useCommunity, 
+  useCommunityEvent, 
   useCancelEventRegistration,
-  useCommunity,
   useEventAttendees,
 } from "@/lib/hooks/useCommunity";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  CommunityEventType, 
+  CommunityEventStatus, 
+  EventAttendeeStatus 
+} from "@/types/community";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "@/hooks/use-toast";
-import { Calendar } from "lucide-react";
-import { MapPin } from "lucide-react";
-import { Users } from "lucide-react";
-import { Info } from "lucide-react";
-import { Clock } from "lucide-react";
-import { Loader2 } from "lucide-react";
-import { formatDate, formatTime } from "@/lib/utils";
-import {
-  CommunityEvent,
-  CommunityEventStatus,
-  CommunityEventType,
-  EventAttendeeStatus,
-} from "@/types/community";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import EventRegistrationForm from "@/components/community/EventRegistrationForm";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "@/hooks/use-toast";
+import EventRegistrationForm from "@/components/community/EventRegistrationForm";
 
-// Function to get human-readable event type display name
+// Helper functions for displaying event data
 function getEventTypeDisplay(type: CommunityEventType): string {
   const displayMap: Record<string, string> = {
     [CommunityEventType.MATCH_PLAY]: "Match Play",
-    [CommunityEventType.CLINIC]: "Training Clinic",
+    [CommunityEventType.CLINIC]: "Clinic",
     [CommunityEventType.TOURNAMENT]: "Tournament",
     [CommunityEventType.SOCIAL]: "Social Event",
     [CommunityEventType.WORKSHOP]: "Workshop",
-    [CommunityEventType.LEAGUE]: "League Play",
+    [CommunityEventType.LEAGUE]: "League",
   };
-  return displayMap[type] || type;
+  return displayMap[type] || "Event";
 }
 
-// Function to get status badge variant based on event status
 function getStatusBadgeVariant(status: CommunityEventStatus): "default" | "secondary" | "destructive" | "outline" {
   const variantMap: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
     [CommunityEventStatus.UPCOMING]: "default",
@@ -99,6 +76,12 @@ export default function CommunityEventDetailPage() {
     refetch: refetchEvent,
   } = useCommunityEvent(communityId, eventId);
 
+  // Fetch attendees for the event
+  const { 
+    data: attendeesList, 
+    isLoading: isLoadingAttendees 
+  } = useEventAttendees(communityId, eventId);
+
   // Initialize cancellation mutation
   const cancelRegistrationMutation = useCancelEventRegistration();
 
@@ -106,7 +89,7 @@ export default function CommunityEventDetailPage() {
   const isUserRegistered = event?.isRegistered || false;
 
   // Determine if registration is possible based on capacity and event status
-  const isEventFull = event?.maxAttendees !== null && event?.currentAttendees >= (event?.maxAttendees || 0);
+  const isEventFull = event?.maxAttendees !== null && (event?.currentAttendees || 0) >= (event?.maxAttendees || 0);
   const isRegistrationOpen = 
     event?.status === CommunityEventStatus.UPCOMING && 
     !isEventFull &&
@@ -156,286 +139,348 @@ export default function CommunityEventDetailPage() {
   // Loading state
   if (isLoadingEvent || isLoadingCommunity) {
     return (
-      <div className="container max-w-4xl py-8">
-        <div className="flex items-center mb-6 space-x-2">
-          <Button variant="outline" onClick={handleBackToCommunity} className="mb-4">
-            ← Back to Community
+      <div className="container mx-auto py-6 px-4 md:px-6">
+        <div className="flex items-center mb-6">
+          <Button variant="ghost" onClick={handleBackToCommunity} className="mr-2">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
           </Button>
+          <Skeleton className="h-8 w-64" />
         </div>
-        <Card>
-          <CardHeader className="pb-4">
-            <Skeleton className="h-8 w-3/4 mb-2" />
-            <Skeleton className="h-4 w-1/2" />
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4">
-              <Skeleton className="h-24 w-full" />
-              <div className="flex flex-wrap gap-4">
-                <Skeleton className="h-10 w-24" />
-                <Skeleton className="h-10 w-32" />
-              </div>
-              <Skeleton className="h-40 w-full" />
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Skeleton className="h-10 w-32" />
-          </CardFooter>
-        </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-8 w-full mb-2" />
+                <Skeleton className="h-4 w-32" />
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+              </CardContent>
+            </Card>
+          </div>
+          <div>
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+              </CardContent>
+              <CardFooter>
+                <Skeleton className="h-10 w-full" />
+              </CardFooter>
+            </Card>
+          </div>
+        </div>
       </div>
     );
   }
 
-  // Error state if event not found
-  if (!event) {
+  // Error state
+  if (!event || !community) {
     return (
-      <div className="container max-w-4xl py-8">
-        <Button variant="outline" onClick={handleBackToCommunity} className="mb-4">
-          ← Back to Community
-        </Button>
+      <div className="container mx-auto py-6 px-4 md:px-6">
         <Alert variant="destructive">
-          <Info className="h-4 w-4" />
-          <AlertTitle>Event not found</AlertTitle>
+          <AlertTitle>Error</AlertTitle>
           <AlertDescription>
-            The event you're looking for doesn't exist or you don't have permission to view it.
+            Failed to load event details. The event may have been removed or you don't have permission to view it.
+            <Button variant="link" onClick={handleBackToCommunity} className="ml-2 p-0">
+              Return to community
+            </Button>
           </AlertDescription>
         </Alert>
       </div>
     );
   }
 
-  // Main render
+  // Format dates
+  const eventDate = new Date(event.eventDate);
+  const formattedDate = format(eventDate, "EEEE, MMMM d, yyyy");
+  const formattedTime = format(eventDate, "h:mm a");
+  const timeFromNow = formatDistanceToNow(eventDate, { addSuffix: true });
+  
+  // Format end date if available
+  let endTimeDisplay = "";
+  if (event.endDate) {
+    const endDate = new Date(event.endDate);
+    endTimeDisplay = ` - ${format(endDate, "h:mm a")}`;
+  }
+
   return (
-    <div className="container max-w-4xl py-8">
-      <Button variant="outline" onClick={handleBackToCommunity} className="mb-4">
-        ← Back to {community?.name || "Community"}
-      </Button>
+    <div className="container mx-auto py-6 px-4 md:px-6">
+      {/* Back button and header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
+        <div className="flex items-center mb-4 md:mb-0">
+          <Button variant="ghost" onClick={handleBackToCommunity} className="mr-2">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to {community.name}
+          </Button>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Badge variant={getStatusBadgeVariant(event.status)}>
+            {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+          </Badge>
+          <Badge variant="outline">{getEventTypeDisplay(event.eventType)}</Badge>
+        </div>
+      </div>
 
-      <Card className="mb-6">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-2xl">{event.title}</CardTitle>
-              <CardDescription className="text-base mt-1">
-                {event.description}
-              </CardDescription>
-            </div>
-            <Badge variant={getStatusBadgeVariant(event.status)}>
-              {event.status}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="pb-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Event Details */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Event Details</h3>
-              <div className="space-y-3">
-                <div className="flex items-center">
-                  <Calendar className="h-5 w-5 mr-2 text-muted-foreground" />
-                  <span>{formatDate(event.eventDate)}</span>
-                </div>
-                <div className="flex items-center">
-                  <Clock className="h-5 w-5 mr-2 text-muted-foreground" />
-                  <span>
-                    {formatTime(event.eventDate)} 
-                    {event.endDate && ` - ${formatTime(event.endDate)}`}
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <MapPin className="h-5 w-5 mr-2 text-muted-foreground" />
-                  <span>{event.location || (event.isVirtual ? "Virtual Meeting" : "Location TBD")}</span>
-                </div>
-                <div className="flex items-center">
-                  <Users className="h-5 w-5 mr-2 text-muted-foreground" />
-                  <span>{event.currentAttendees || 0} / {event.maxAttendees || "Unlimited"} Participants</span>
-                </div>
-                <div className="flex items-center">
-                  <Info className="h-5 w-5 mr-2 text-muted-foreground" />
-                  <span>Type: {getEventTypeDisplay(event.eventType)}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Registration Status */}
-            <div className="border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-6">
-              <h3 className="text-lg font-semibold mb-4">Registration Status</h3>
-              {isUserRegistered ? (
-                <>
-                  <Alert className="bg-primary/10 border-primary mb-4">
-                    <AlertTitle>You're Registered!</AlertTitle>
-                    <AlertDescription>
-                      You have successfully registered for this event.
-                    </AlertDescription>
-                  </Alert>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => setIsCancellationDialogOpen(true)}
-                    disabled={event.status !== CommunityEventStatus.UPCOMING}
-                  >
-                    Cancel Registration
-                  </Button>
-                </>
-              ) : event.status === CommunityEventStatus.CANCELLED ? (
-                <Alert variant="destructive" className="mb-4">
-                  <AlertTitle>Event Cancelled</AlertTitle>
-                  <AlertDescription>
-                    This event has been cancelled and is no longer accepting registrations.
-                  </AlertDescription>
-                </Alert>
-              ) : event.status === CommunityEventStatus.COMPLETED ? (
-                <Alert variant="default" className="mb-4">
-                  <AlertTitle>Event Completed</AlertTitle>
-                  <AlertDescription>
-                    This event has already taken place.
-                  </AlertDescription>
-                </Alert>
-              ) : isEventFull ? (
-                <Alert variant="default" className="mb-4">
-                  <AlertTitle>Event Full</AlertTitle>
-                  <AlertDescription>
-                    This event has reached its capacity. Please check back later as spots may open up.
-                  </AlertDescription>
-                </Alert>
-              ) : (
-                <>
-                  <Alert className="mb-4">
-                    <AlertTitle>Registration Open</AlertTitle>
-                    <AlertDescription>
-                      Spots are available! Register now to secure your place.
-                    </AlertDescription>
-                  </Alert>
-                  <Button
-                    className="w-full"
-                    onClick={() => setIsRegistrationDialogOpen(true)}
-                  >
-                    Register Now
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Additional Information - Tabs */}
-      <Tabs defaultValue="attendees" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="attendees">Attendees</TabsTrigger>
-          <TabsTrigger value="details">Additional Details</TabsTrigger>
-        </TabsList>
-        <TabsContent value="attendees" className="mt-4">
+      {/* Main content grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Event details */}
+        <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>Attendees ({event.currentAttendees || 0})</CardTitle>
-              <CardDescription>
-                People who have registered for this event
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {attendees && attendees.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {attendees.map((attendee) => (
-                    <div key={attendee.userId} className="flex items-center space-x-3 p-2 border rounded-md">
-                      <Avatar>
-                        <AvatarImage src={attendee.user?.profileImageUrl} />
-                        <AvatarFallback>
-                          {attendee.user?.username?.substring(0, 2).toUpperCase() || "U"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="font-medium">{attendee.user?.username || "Anonymous User"}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {attendee.status === EventAttendeeStatus.REGISTERED ? "Registered" : 
-                           attendee.status === EventAttendeeStatus.WAITLISTED ? "Waitlisted" : 
-                           attendee.status === EventAttendeeStatus.ATTENDED ? "Attended" : "Cancelled"}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+              <div className="flex flex-col md:flex-row md:items-center justify-between">
+                <div>
+                  <CardTitle className="text-2xl">{event.title}</CardTitle>
+                  <CardDescription>
+                    Hosted by {event.createdBy?.displayName || "Community Admin"}
+                  </CardDescription>
                 </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  No attendees yet. Be the first to register!
+                {event.imageUrl && (
+                  <div className="mt-4 md:mt-0">
+                    <img
+                      src={event.imageUrl}
+                      alt={event.title}
+                      className="w-full md:w-32 h-auto rounded-md object-cover"
+                    />
+                  </div>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Event description */}
+              <div>
+                <h3 className="text-lg font-semibold mb-2">About this event</h3>
+                <p className="text-muted-foreground">
+                  {event.description || "No description provided."}
+                </p>
+              </div>
+
+              {/* Event details */}
+              <div className="space-y-4">
+                <div className="flex items-start">
+                  <Calendar className="h-5 w-5 mr-3 mt-0.5 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium">{formattedDate}</p>
+                    <p className="text-sm text-muted-foreground">{timeFromNow}</p>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <Clock className="h-5 w-5 mr-3 mt-0.5 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium">{formattedTime}{endTimeDisplay}</p>
+                    {event.isRecurring && (
+                      <p className="text-sm text-muted-foreground">
+                        Recurring: {event.recurringPattern || "Weekly"}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {event.location && (
+                  <div className="flex items-start">
+                    <MapPin className="h-5 w-5 mr-3 mt-0.5 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">{event.location}</p>
+                    </div>
+                  </div>
+                )}
+                {event.isVirtual && event.virtualMeetingUrl && (
+                  <div className="flex items-start">
+                    <Video className="h-5 w-5 mr-3 mt-0.5 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">Virtual Meeting</p>
+                      <a
+                        href={event.virtualMeetingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary flex items-center"
+                      >
+                        Join meeting <ExternalLink className="h-3 w-3 ml-1" />
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Skill level requirements if defined */}
+              {(event.minSkillLevel || event.maxSkillLevel) && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Skill Level</h3>
+                  <p className="text-muted-foreground">
+                    {event.minSkillLevel && event.maxSkillLevel
+                      ? `${event.minSkillLevel} to ${event.maxSkillLevel}`
+                      : event.minSkillLevel
+                      ? `Minimum: ${event.minSkillLevel}`
+                      : `Maximum: ${event.maxSkillLevel}`}
+                  </p>
                 </div>
               )}
             </CardContent>
           </Card>
-        </TabsContent>
-        <TabsContent value="details" className="mt-4">
-          <Card>
+        </div>
+
+        {/* Sidebar */}
+        <div>
+          {/* Registration card */}
+          <Card className="mb-6">
             <CardHeader>
-              <CardTitle>Event Details</CardTitle>
-              <CardDescription>
-                Additional information about this event
-              </CardDescription>
+              <CardTitle>Registration</CardTitle>
+              {event.registrationDeadline && (
+                <CardDescription>
+                  Register by{" "}
+                  {format(new Date(event.registrationDeadline), "MMMM d, yyyy")}
+                </CardDescription>
+              )}
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div>
-                  <h4 className="font-medium">Organizer</h4>
-                  <p className="text-muted-foreground">
-                    {community?.name || "Unknown"}
-                  </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Capacity</span>
+                  <span>
+                    {event.maxAttendees
+                      ? `${event.currentAttendees || 0} / ${event.maxAttendees}`
+                      : "Unlimited"}
+                  </span>
                 </div>
-                <Separator />
-                <div>
-                  <h4 className="font-medium">Full Description</h4>
-                  <p className="text-muted-foreground whitespace-pre-wrap">
-                    {event.description || "No additional description provided."}
-                  </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Status</span>
+                  <Badge variant={isEventFull ? "destructive" : "outline"}>
+                    {isEventFull ? "Full" : "Open"}
+                  </Badge>
                 </div>
-                {event.description && (
-                  <>
-                    <Separator />
-                    <div>
-                      <h4 className="font-medium">Additional Information</h4>
-                      <p className="text-muted-foreground whitespace-pre-wrap">
-                        {event.description}
-                      </p>
+                {isUserRegistered && (
+                  <Alert className="bg-secondary/50 border-secondary text-secondary-foreground">
+                    <AlertTitle>You're registered!</AlertTitle>
+                    <AlertDescription>
+                      You've already registered for this event.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            </CardContent>
+            <CardFooter>
+              {isRegistrationOpen ? (
+                <Button
+                  className="w-full"
+                  onClick={() => setIsRegistrationDialogOpen(true)}
+                >
+                  Register Now
+                </Button>
+              ) : isUserRegistered ? (
+                <Button
+                  variant="outline"
+                  className="w-full text-destructive"
+                  onClick={() => setIsCancellationDialogOpen(true)}
+                >
+                  Cancel Registration
+                </Button>
+              ) : (
+                <Button disabled className="w-full">
+                  {event.status === CommunityEventStatus.CANCELLED
+                    ? "Event Cancelled"
+                    : event.status === CommunityEventStatus.COMPLETED
+                    ? "Event Completed"
+                    : "Registration Closed"}
+                </Button>
+              )}
+            </CardFooter>
+          </Card>
+
+          {/* Attendees list */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Attendees</CardTitle>
+                <Badge variant="outline">
+                  {event.currentAttendees || 0}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {isLoadingAttendees ? (
+                  // Loading state for attendees
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="flex items-center space-x-3">
+                      <Skeleton className="h-10 w-10 rounded-full" />
+                      <div className="space-y-1">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-3 w-16" />
+                      </div>
                     </div>
-                  </>
+                  ))
+                ) : attendeesList && attendeesList.length > 0 ? (
+                  // Render attendees list
+                  attendeesList.map((attendee) => (
+                    <div key={attendee.id} className="flex items-center space-x-3">
+                      <Avatar>
+                        <AvatarImage
+                          src={attendee.user?.avatarUrl || undefined}
+                          alt={attendee.user?.displayName || "Attendee"}
+                        />
+                        <AvatarFallback>
+                          {attendee.user?.displayName?.[0] || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium">{attendee.user?.displayName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {attendee.user?.skillLevel || "Skill level not specified"}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-center text-muted-foreground py-2">
+                    No attendees yet. Be the first to register!
+                  </p>
                 )}
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
 
-      {/* Registration Dialog */}
+      {/* Registration dialog */}
       <Dialog open={isRegistrationDialogOpen} onOpenChange={setIsRegistrationDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Register for {event.title}</DialogTitle>
             <DialogDescription>
-              Complete your registration for this event
+              Fill out the form below to register for this event.
             </DialogDescription>
           </DialogHeader>
           <EventRegistrationForm
-            onSubmit={handleRegistrationSubmit}
-            onCancel={() => setIsRegistrationDialogOpen(false)}
             communityId={communityId}
             eventId={eventId}
+            onSuccess={handleRegistrationSubmit}
+            onCancel={() => setIsRegistrationDialogOpen(false)}
           />
         </DialogContent>
       </Dialog>
 
-      {/* Cancellation Dialog */}
+      {/* Cancellation confirmation dialog */}
       <Dialog open={isCancellationDialogOpen} onOpenChange={setIsCancellationDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Cancel Registration</DialogTitle>
             <DialogDescription>
               Are you sure you want to cancel your registration for this event?
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="flex space-x-2 justify-end">
+          <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setIsCancellationDialogOpen(false)}
               disabled={cancelRegistrationMutation.isPending}
             >
-              Keep Registration
+              No, Keep Registration
             </Button>
             <Button
               variant="destructive"
@@ -444,11 +489,11 @@ export default function CommunityEventDetailPage() {
             >
               {cancelRegistrationMutation.isPending ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Cancelling...
+                  <span className="mr-2">Cancelling...</span>
+                  <span className="animate-spin">⋯</span>
                 </>
               ) : (
-                "Cancel Registration"
+                "Yes, Cancel Registration"
               )}
             </Button>
           </DialogFooter>
