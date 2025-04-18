@@ -92,11 +92,16 @@ export function CommunityHeader({
   
   // Determine user's relationship with community
   const isMember = community.isMember || userRole !== null;
-  const hasManagePermissions = isAdmin || isModerator || userRole === CommunityMemberRole.ADMIN || userRole === CommunityMemberRole.MODERATOR;
   
-  // Check if the user is the creator of the community
+  // NOTE: Force showing the manage button if user is creator, regardless of role
   const isCreator = user?.id === community.createdByUserId;
-  console.log("Is creator calculated:", isCreator, "Current user ID:", user?.id, "Creator ID:", community.createdByUserId);
+  // Force hasManagePermissions to true if user is creator
+  const hasManagePermissions = isAdmin || isModerator || 
+                              userRole === CommunityMemberRole.ADMIN || 
+                              userRole === CommunityMemberRole.MODERATOR || 
+                              isCreator;
+  
+  console.log("Is creator calculated:", isCreator, "Current user ID:", user?.id, "Creator ID:", community.createdByUserId, "hasManagePermissions:", hasManagePermissions);
   
   // Format dates
   const formattedCreatedAt = community.createdAt 
@@ -252,16 +257,16 @@ export function CommunityHeader({
             
             {/* Action buttons - moved to top right for mobile */}
             <div className="flex gap-2 flex-shrink-0">
-              {/* Management shortcut - visible only to admins/moderators */}
+              {/* Show Manage button if user has permissions */}
               {hasManagePermissions && (
                 <Button 
                   size="sm" 
-                  variant="outline" 
-                  className="bg-primary border-primary hover:bg-primary/80 text-white h-8 flex items-center gap-1 px-2 sm:px-3"
+                  variant="default" 
+                  className="bg-white hover:bg-white/90 text-primary font-medium h-8 flex items-center gap-1"
                   onClick={() => onTabChange && onTabChange("manage")}
                 >
-                  <Settings className="h-3.5 w-3.5" />
-                  <span className="text-xs sm:text-sm">Manage</span>
+                  <Settings className="h-4 w-4" />
+                  <span>Manage</span>
                 </Button>
               )}
               <DropdownMenu>
@@ -287,10 +292,16 @@ export function CommunityHeader({
                       </DropdownMenuItem>
                       
                       {hasManagePermissions && (
-                        <DropdownMenuItem>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit Community
-                        </DropdownMenuItem>
+                        <>
+                          <DropdownMenuItem onClick={() => onTabChange && onTabChange("manage")}>
+                            <Settings className="h-4 w-4 mr-2" />
+                            Manage Community
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Community
+                          </DropdownMenuItem>
+                        </>
                       )}
                       
                       <DropdownMenuItem>
