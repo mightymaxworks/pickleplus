@@ -83,32 +83,37 @@ const CommunityDiscoveryMockupV2: React.FC = () => {
           className="w-full"
         >
           <TabsList className="grid w-full grid-cols-3 mb-8">
-            <TabsTrigger value="all" className="flex items-center gap-2">
-              <Search className="h-4 w-4" />
-              <span>All Communities</span>
+            <TabsTrigger value="all" className="flex flex-col items-center sm:flex-row sm:gap-2 p-2">
+              <Search className="h-5 w-5" />
+              <span className="hidden sm:inline">All</span>
+              <span className="text-xs font-normal mt-1 sm:hidden">All</span>
             </TabsTrigger>
             
             <TabsTrigger 
               value="my-communities" 
-              className="flex items-center gap-2"
+              className="flex flex-col items-center sm:flex-row sm:gap-2 p-2"
               disabled={!user}
             >
-              <Users className="h-4 w-4" />
-              <span>My Communities</span>
-              {myCommunityIds && myCommunityIds.length > 0 && (
-                <Badge variant="secondary" className="ml-1">
-                  {myCommunityIds.length}
-                </Badge>
-              )}
+              <div className="relative">
+                <Users className="h-5 w-5" />
+                {myCommunityIds && myCommunityIds.length > 0 && (
+                  <Badge variant="secondary" className="absolute -top-2 -right-2 h-4 w-4 p-0 flex items-center justify-center text-xs">
+                    {myCommunityIds.length}
+                  </Badge>
+                )}
+              </div>
+              <span className="hidden sm:inline">My Communities</span>
+              <span className="text-xs font-normal mt-1 sm:hidden">Mine</span>
             </TabsTrigger>
             
             <TabsTrigger 
               value="recommended" 
-              className="flex items-center gap-2"
+              className="flex flex-col items-center sm:flex-row sm:gap-2 p-2"
               disabled={!user}
             >
-              <Star className="h-4 w-4" />
-              <span>Recommended</span>
+              <Star className="h-5 w-5" />
+              <span className="hidden sm:inline">Recommended</span>
+              <span className="text-xs font-normal mt-1 sm:hidden">For You</span>
             </TabsTrigger>
           </TabsList>
           
