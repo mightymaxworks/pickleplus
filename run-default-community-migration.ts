@@ -10,7 +10,8 @@
 
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { communities, communityMembers, users } from "./shared/schema";
+import { users } from "./shared/schema";
+import { communities, communityMembers } from "./shared/schema/community";
 import { eq } from "drizzle-orm";
 import dotenv from "dotenv";
 

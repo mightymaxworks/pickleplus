@@ -28,7 +28,9 @@ import {
   Trophy, 
   ChevronRight,
   Lock,
-  Shield
+  Shield,
+  Award,
+  UserPlus
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -78,6 +80,7 @@ export function CommunityCard({
   
   const gradientClass = bgGradients[community.id % bgGradients.length];
   const isFeatured = community.featuredTag;
+  const isDefaultCommunity = community.isDefault;
   
   // Handle view community
   const handleViewCommunity = () => {
@@ -136,6 +139,16 @@ export function CommunityCard({
                   className="ml-2 py-0 h-5 px-1.5 text-xs"
                 >
                   {community.featuredTag}
+                </Badge>
+              )}
+              
+              {isDefaultCommunity && (
+                <Badge 
+                  variant="outline" 
+                  className="ml-2 py-0 h-5 px-1.5 text-xs border-green-500 text-green-600 bg-green-50"
+                >
+                  <UserPlus className="h-3 w-3 mr-1" />
+                  Auto-Join
                 </Badge>
               )}
             </div>

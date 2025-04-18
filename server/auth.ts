@@ -242,6 +242,42 @@ export function setupAuth(app: Express) {
         }
         
         console.log("[DEBUG AUTH] User created successfully with ID:", user.id);
+        
+        // PKL-278651-COMM-0020-DEFGRP - Auto-join default communities
+        try {
+          const { db } = require('./db');
+          const { communities, communityMembers } = require('@shared/schema/community');
+          const { eq } = require('drizzle-orm');
+          
+          // Find all default communities
+          const defaultCommunities = await db.select().from(communities).where(eq(communities.isDefault, true));
+          
+          if (defaultCommunities.length > 0) {
+            console.log(`[PKL-278651-COMM-0020-DEFGRP] Adding user ${user.id} to ${defaultCommunities.length} default communities`);
+            
+            // Create membership records for each default community
+            for (const community of defaultCommunities) {
+              await db.insert(communityMembers).values({
+                userId: user.id,
+                communityId: community.id,
+                role: 'member',
+                joinedAt: new Date(),
+              });
+              
+              // Update member count for the community
+              await db.update(communities)
+                .set({ memberCount: community.memberCount + 1 })
+                .where(eq(communities.id, community.id));
+                
+              console.log(`[PKL-278651-COMM-0020-DEFGRP] User ${user.id} added to default community: ${community.name} (ID: ${community.id})`);
+            }
+          } else {
+            console.log(`[PKL-278651-COMM-0020-DEFGRP] No default communities found for auto-join`);
+          }
+        } catch (error) {
+          // Don't block registration if adding to default communities fails
+          console.error("[PKL-278651-COMM-0020-DEFGRP] Error adding user to default communities:", error);
+        }
 
         // Log the user in automatically after registration
         req.login(user, (err) => {
