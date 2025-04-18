@@ -7,7 +7,7 @@
  */
 
 import React from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { 
   Card, 
   CardContent, 
@@ -74,6 +74,7 @@ export function EventCard({
   showActions = true 
 }: EventCardProps) {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   
   // Mutations for event registration
   const registerMutation = useRegisterForEvent();
@@ -288,10 +289,10 @@ export function EventCard({
             </div>
             
             {/* Skill level if specified */}
-            {event.skillLevelRequired && (
+            {event.minSkillLevel && (
               <div className="flex items-center">
                 <Trophy className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-amber-500" />
-                <span className="truncate">{event.skillLevelRequired}</span>
+                <span className="truncate">{event.minSkillLevel}</span>
               </div>
             )}
           </div>

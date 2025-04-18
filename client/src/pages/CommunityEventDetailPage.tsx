@@ -102,12 +102,10 @@ export default function CommunityEventDetailPage() {
   const cancelRegistrationMutation = useCancelEventRegistration();
 
   // Check if the current user is registered for this event
-  const isUserRegistered = event?.attendees?.some(
-    (attendee) => attendee.status === EventAttendeeStatus.REGISTERED
-  );
+  const isUserRegistered = event?.isRegistered || false;
 
   // Determine if registration is possible based on capacity and event status
-  const isEventFull = event?.attendeeCount >= (event?.capacity || 0);
+  const isEventFull = event?.maxAttendees !== null && event?.currentAttendees >= (event?.maxAttendees || 0);
   const isRegistrationOpen = 
     event?.status === CommunityEventStatus.UPCOMING && 
     !isEventFull &&
@@ -237,15 +235,18 @@ export default function CommunityEventDetailPage() {
                 </div>
                 <div className="flex items-center">
                   <Clock className="h-5 w-5 mr-2 text-muted-foreground" />
-                  <span>{formatTime(event.eventDate)} - {event.duration ? `${event.duration} minutes` : "TBD"}</span>
+                  <span>
+                    {formatTime(event.eventDate)} 
+                    {event.endDate && ` - ${formatTime(event.endDate)}`}
+                  </span>
                 </div>
                 <div className="flex items-center">
                   <MapPin className="h-5 w-5 mr-2 text-muted-foreground" />
-                  <span>{event.location || "Location TBD"}</span>
+                  <span>{event.location || (event.isVirtual ? "Virtual Meeting" : "Location TBD")}</span>
                 </div>
                 <div className="flex items-center">
                   <Users className="h-5 w-5 mr-2 text-muted-foreground" />
-                  <span>{event.attendeeCount || 0} / {event.capacity || "Unlimited"} Participants</span>
+                  <span>{event.currentAttendees || 0} / {event.maxAttendees || "Unlimited"} Participants</span>
                 </div>
                 <div className="flex items-center">
                   <Info className="h-5 w-5 mr-2 text-muted-foreground" />
@@ -325,20 +326,20 @@ export default function CommunityEventDetailPage() {
         <TabsContent value="attendees" className="mt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Attendees ({event.attendeeCount || 0})</CardTitle>
+              <CardTitle>Attendees ({event.currentAttendees || 0})</CardTitle>
               <CardDescription>
                 People who have registered for this event
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {event.attendees && event.attendees.length > 0 ? (
+              {event.eventAttendees && event.eventAttendees.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {event.attendees.map((attendee) => (
+                  {event.eventAttendees.map((attendee) => (
                     <div key={attendee.userId} className="flex items-center space-x-3 p-2 border rounded-md">
                       <Avatar>
                         <AvatarImage src={attendee.user?.profileImageUrl} />
                         <AvatarFallback>
-                          {attendee.user?.username.substring(0, 2).toUpperCase() || "U"}
+                          {attendee.user?.username?.substring(0, 2).toUpperCase() || "U"}
                         </AvatarFallback>
                       </Avatar>
                       <div>
@@ -373,7 +374,7 @@ export default function CommunityEventDetailPage() {
                 <div>
                   <h4 className="font-medium">Organizer</h4>
                   <p className="text-muted-foreground">
-                    {event.createdByUser?.username || community?.name || "Unknown"}
+                    {community?.name || "Unknown"}
                   </p>
                 </div>
                 <Separator />
@@ -383,13 +384,13 @@ export default function CommunityEventDetailPage() {
                     {event.description || "No additional description provided."}
                   </p>
                 </div>
-                {event.additionalInformation && (
+                {event.notes && (
                   <>
                     <Separator />
                     <div>
                       <h4 className="font-medium">Additional Information</h4>
                       <p className="text-muted-foreground whitespace-pre-wrap">
-                        {event.additionalInformation}
+                        {event.notes}
                       </p>
                     </div>
                   </>
