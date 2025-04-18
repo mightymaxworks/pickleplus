@@ -184,7 +184,7 @@ export function CommunityVisualSettings({ community, isAdmin }: CommunityVisualS
       const response = await communityApi.uploadCommunityBanner(community.id, bannerFile);
       
       // If we got a response with the updated URL, update the local state
-      if (response && response.bannerUrl) {
+      if (response && response.url) {
         // Force reload of the page to get updated image
         window.location.reload();
       } else {
