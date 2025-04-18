@@ -48,6 +48,11 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // API Routes
   console.log("[API] Setting up API routes...");
   
+  // Create a simple test endpoint without authentication
+  app.get('/test-route', (req, res) => {
+    res.json({ message: 'Test route works!' });
+  });
+  
   // Register API route modules
   app.use("/api/match", matchRoutes);
   app.use("/api/ranking", rankingRoutes);
