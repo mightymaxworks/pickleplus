@@ -128,6 +128,7 @@ export interface Community {
   bannerPattern: string | null;
   isPrivate: boolean | null;
   requiresApproval: boolean | null;
+  isDefault: boolean | null;
   tags: string | null;
   memberCount: number;
   eventCount: number;
@@ -157,6 +158,7 @@ export interface InsertCommunity {
   bannerPattern?: string | null;
   isPrivate?: boolean;
   requiresApproval?: boolean;
+  isDefault?: boolean;
   tags?: string | null;
   rules?: string | null;
   guidelines?: string | null;

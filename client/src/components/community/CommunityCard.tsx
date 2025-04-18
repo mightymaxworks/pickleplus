@@ -217,9 +217,9 @@ export function CommunityCard({
           </div>
         </div>
         
-        {/* Featured tag */}
-        {isFeatured && (
-          <div className="absolute top-3 right-3 z-10">
+        {/* Featured tag and Default indicator */}
+        <div className="absolute top-3 right-3 z-10 flex flex-col gap-2 items-end">
+          {isFeatured && (
             <Badge 
               className={cn(
                 "px-3 py-1.5 rounded-full font-medium shadow-md",
@@ -236,8 +236,16 @@ export function CommunityCard({
                 <>{community.featuredTag}</>
               )}
             </Badge>
-          </div>
-        )}
+          )}
+          
+          {isDefaultCommunity && (
+            <Badge 
+              className="px-3 py-1.5 rounded-full font-medium shadow-md bg-green-400 text-green-950"
+            >
+              <Award className="h-3.5 w-3.5 mr-1.5" /> Official Group
+            </Badge>
+          )}
+        </div>
         
         {/* Logo and Name Container */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex flex-col justify-end p-4">
@@ -349,9 +357,18 @@ export function CommunityCard({
               )}
             </Button>
           ) : (
-            <Badge variant="outline" className="bg-primary/10 text-primary">
-              Member
-            </Badge>
+            <>
+              {isDefaultCommunity ? (
+                <Badge variant="outline" className="bg-green-50 border-green-300 text-green-700 flex gap-1.5 items-center">
+                  <UserPlus className="h-3.5 w-3.5" />
+                  Auto-Joined
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="bg-primary/10 text-primary">
+                  Member
+                </Badge>
+              )}
+            </>
           )}
         </CardFooter>
       )}
