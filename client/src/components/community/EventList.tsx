@@ -94,6 +94,7 @@ interface EventListProps {
   compact?: boolean;
   defaultView?: string;
   initialFilters?: EventFilters;
+  showActions?: boolean;
 }
 
 export function EventList({ 
@@ -103,7 +104,8 @@ export function EventList({
   limit = 20,
   compact = false,
   defaultView = "all",
-  initialFilters
+  initialFilters,
+  showActions = true
 }: EventListProps) {
   // All state declarations first to maintain consistent hooks order
   const [currentView, setCurrentView] = useState(defaultView);
@@ -363,6 +365,9 @@ export function EventList({
       </Card>
     );
   }
+
+  // This is now redundant since we added a default value in the function parameter
+  // const showEventActions = showActions;
 
   // Main UI render
   return (
