@@ -14,6 +14,7 @@ import {
   useCommunityEvent,
   useCancelEventRegistration,
   useCommunity,
+  useEventAttendees,
 } from "@/lib/hooks/useCommunity";
 import {
   Card,

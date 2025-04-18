@@ -62,6 +62,8 @@ export const communityKeys = {
     [...communityKeys.events(communityId), "type", type] as const,
   eventsByStatus: (communityId: number, status: CommunityEventStatus) => 
     [...communityKeys.events(communityId), "status", status] as const,
+  eventAttendees: (communityId: number, eventId: number) => 
+    [...communityKeys.event(communityId, eventId), "attendees"] as const,
   joinRequests: (communityId: number) => [...communityKeys.detail(communityId), "join-requests"] as const,
   myCommunityIds: () => [...communityKeys.all, "my-community-ids"] as const,
 };
