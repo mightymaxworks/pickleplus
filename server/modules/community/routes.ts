@@ -506,6 +506,9 @@ router.post('/:id/join', isAuthenticated, async (req: Request, res: Response) =>
 /**
  * Leave a community
  * POST /api/communities/:id/leave
+ * 
+ * PKL-278651-COMM-0020-DEFGRP: Added protection for default communities
+ * Users cannot leave default communities as they're automatically joined
  */
 router.post('/:id/leave', isAuthenticated, async (req: Request, res: Response) => {
   try {
@@ -518,6 +521,21 @@ router.post('/:id/leave', isAuthenticated, async (req: Request, res: Response) =
     
     if (!userId) {
       return res.status(401).json({ message: 'Authentication required' });
+    }
+    
+    // Check if community exists and if it's a default community
+    const community = await storage.getCommunityById(communityId);
+    
+    if (!community) {
+      return res.status(404).json({ message: 'Community not found' });
+    }
+    
+    // Prevent leaving default communities
+    if (community.isDefault) {
+      console.log(`[PKL-278651-COMM-0020-DEFGRP] Prevented user ${userId} from leaving default community ${communityId}`);
+      return res.status(403).json({ 
+        message: 'You cannot leave official groups as they are automatically joined by all users.'
+      });
     }
     
     // Check if user is a member
@@ -545,6 +563,7 @@ router.post('/:id/leave', isAuthenticated, async (req: Request, res: Response) =
       return res.status(404).json({ message: 'Community membership not found' });
     }
     
+    console.log(`[PKL-278651-COMM-0020-DEFGRP] User ${userId} left community ${communityId}`);
     res.json({ message: 'You have left the community' });
   } catch (error) {
     console.error('Error leaving community:', error);
