@@ -34,7 +34,7 @@ export function CommunityAdminFAB({ communityId }: CommunityAdminFABProps) {
   };
 
   return (
-    <div className="fixed bottom-16 right-6 flex flex-col gap-2 items-end z-50">
+    <div className="fixed left-6 bottom-20 flex flex-col gap-2 items-start z-50">
       {/* Menu items only shown when open */}
       {isOpen && (
         <div className="bg-card p-4 rounded-lg shadow-lg border border-border mb-2">
@@ -82,12 +82,12 @@ export function CommunityAdminFAB({ communityId }: CommunityAdminFABProps) {
       {/* Main FAB button - always shown */}
       <Button
         size="icon"
-        variant={isOpen ? "destructive" : "default"}
-        className="h-12 w-12 rounded-full shadow-lg"
+        variant={isOpen ? "destructive" : "primary"}
+        className="h-14 w-14 rounded-full shadow-xl border-2 border-primary/30"
         onClick={toggleMenu}
         aria-label={isOpen ? "Close admin menu" : "Open admin menu"}
       >
-        {isOpen ? <X size={20} /> : <Settings size={20} />}
+        {isOpen ? <X size={24} /> : <Settings size={24} />}
       </Button>
     </div>
   );
