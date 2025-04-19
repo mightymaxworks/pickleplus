@@ -17,9 +17,15 @@ import {
   insertUserNotificationSchema,
   insertNotificationPreferenceSchema
 } from '../../shared/schema';
-import { isAuthenticated } from '../middleware/auth-middleware';
+import { isAuthenticated } from '../auth';
 
 const router = express.Router();
+
+export function registerCommunityNotificationsRoutes(app: express.Express) {
+  console.log('[ROUTES] Registering Community Notifications Routes (PKL-278651-COMM-0028-NOTIF)');
+  app.use('/api', router);
+  return router;
+}
 
 /**
  * Get all notifications for the authenticated user

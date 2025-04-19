@@ -19,10 +19,16 @@ import {
   insertModerationActionSchema,
   insertCommunityRoleSchema
 } from '../../shared/schema';
-import { isAuthenticated } from '../middleware/auth-middleware';
+import { isAuthenticated } from '../auth';
 import { isCommunityModerator } from '../middleware/community-middleware';
 
 const router = express.Router();
+
+export function registerCommunityModerationRoutes(app: express.Express) {
+  console.log('[ROUTES] Registering Community Moderation Routes (PKL-278651-COMM-0027-MOD)');
+  app.use('/api', router);
+  return router;
+}
 
 /**
  * Get all content reports for a community
