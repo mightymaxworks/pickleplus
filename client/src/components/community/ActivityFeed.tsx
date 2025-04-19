@@ -63,19 +63,47 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({
   const feedRef = useRef<HTMLDivElement>(null);
   
   // WebSocket subscription for real-time updates
-  const { lastMessage, isConnected } = useWebSocket({
-    onConnected: () => console.log('WebSocket connected for activity feed'),
-    onDisconnected: () => console.log('WebSocket disconnected from activity feed'),
-    subscribeToEvents: (subscribe) => {
+  const websocket = useWebSocket({
+    autoConnect: true,
+    reconnectInterval: 3000,
+    maxReconnectAttempts: 5
+  });
+  
+  const [lastMessage, setLastMessage] = useState<any>(null);
+  const isConnected = websocket.connectionState === websocket.WebSocketState.OPEN;
+  
+  // Set up event subscriptions when connected
+  useEffect(() => {
+    if (isConnected) {
       // Subscribe to global activity feed
-      subscribe('community:activities');
+      websocket.subscribe(['community:activities']);
       
       // Subscribe to community-specific activity feed if communityId is provided
       if (communityId) {
-        subscribe(`community:${communityId}:activities`);
+        websocket.subscribe([`community:${communityId}:activities`]);
       }
+      
+      // Add topic listeners
+      const removeGlobalListener = websocket.addTopicListener('community:activities', (message) => {
+        setLastMessage(message);
+      });
+      
+      let removeCommunityListener: (() => void) | null = null;
+      if (communityId) {
+        removeCommunityListener = websocket.addTopicListener(`community:${communityId}:activities`, (message) => {
+          setLastMessage(message);
+        });
+      }
+      
+      // Clean up listeners when component unmounts or dependencies change
+      return () => {
+        removeGlobalListener();
+        if (removeCommunityListener) {
+          removeCommunityListener();
+        }
+      };
     }
-  });
+  }, [isConnected, communityId, websocket]);
   
   // Fetch activities from the API
   const { data, isLoading, isError, error, refetch } = useQuery({

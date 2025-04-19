@@ -353,7 +353,10 @@ export default function App() {
                     {(params) => <ProtectedRoute component={XpDashboardPage} path="/xp-dashboard" />}
                   </Route>
                   
-                  {/* PKL-278651-COMM-0022-FEED - Activity Feed Page */}
+                  {/* PKL-278651-COMM-0022-FEED - Activity Feed Pages */}
+                  <Route path="/activities">
+                    {(params) => <ProtectedRoute component={ActivityFeedPage} path="/activities" />}
+                  </Route>
                   <Route path="/activity-feed">
                     {(params) => <ProtectedRoute component={ActivityFeedPage} path="/activity-feed" />}
                   </Route>
