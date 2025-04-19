@@ -1,10 +1,20 @@
+/**
+ * PKL-278651-COMM-0028-NOTIF - Updated AppHeader Component
+ * Implementation timestamp: 2025-04-19 15:05 ET
+ * 
+ * AppHeader updated to include new NotificationBell component
+ * 
+ * Framework 5.2 compliant implementation
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
-import { Bell, Menu, X, User, Home, LogOut, Settings, Calendar, Shield, Activity, Trophy, Award } from 'lucide-react';
+import { Menu, X, User, Home, LogOut, Settings, Calendar, Shield, Activity, Trophy, Award } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PicklePlusNewLogo } from '../icons/PicklePlusNewLogo';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,16 +22,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useToast } from "@/hooks/use-toast";
 
 export function AppHeader() {
   const { user, logoutMutation } = useAuth();
   const [location, navigate] = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [notificationCount] = useState(3);
   const isExtraSmallScreen = useMediaQuery('(max-width: 480px)');
-  const { toast } = useToast();
   
   // Handle scroll detection for header styling
   useEffect(() => {
@@ -36,15 +43,6 @@ export function AppHeader() {
   const handleLogout = async () => {
     await logoutMutation.mutateAsync();
     navigate("/login");
-  };
-  
-  const handleNotificationClick = () => {
-    toast({
-      title: "Coming April 15th!",
-      description: "Stay tuned! Our personalized notification system is launching soon with match alerts, tournament invites, and achievement updates.",
-      variant: "default",
-      duration: 5000,
-    });
   };
   
   if (!user) {
@@ -85,24 +83,7 @@ export function AppHeader() {
         {/* Right side actions */}
         <div className="flex items-center justify-end gap-1 sm:gap-3">
           {/* Notification Bell */}
-          <motion.button 
-            className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleNotificationClick}
-          >
-            <Bell size={22} className="text-gray-600 dark:text-gray-300" />
-            {notificationCount > 0 && (
-              <motion.div 
-                className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#FF5722] flex items-center justify-center text-white text-[10px] font-medium"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring', damping: 10 }}
-              >
-                {notificationCount}
-              </motion.div>
-            )}
-          </motion.button>
+          <NotificationBell />
           
           {/* User Profile Dropdown */}
           <DropdownMenu>

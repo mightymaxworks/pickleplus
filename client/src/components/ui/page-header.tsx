@@ -1,15 +1,40 @@
-import { cn } from "@/lib/utils";
+/**
+ * PKL-278651-COMM-0028-NOTIF - Page Header Component
+ * Implementation timestamp: 2025-04-19 15:10 ET
+ * 
+ * Reusable page header component with title and optional description
+ * 
+ * Framework 5.2 compliant implementation
+ */
 
-interface PageHeaderProps extends React.HTMLAttributes<HTMLDivElement> {}
+import React from 'react';
+import { cn } from '@/lib/utils';
 
-export function PageHeader({ className, ...props }: PageHeaderProps) {
+export interface PageHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
+  title?: string;
+  description?: string;
+  children?: React.ReactNode;
+}
+
+export function PageHeader({
+  title,
+  description,
+  children,
+  className,
+  ...props
+}: PageHeaderProps) {
   return (
-    <div className={cn("grid gap-1", className)} {...props} />
+    <div className={cn('space-y-2', className)} {...props}>
+      {title && <h1 className="text-3xl font-bold tracking-tight">{title}</h1>}
+      {description && (
+        <p className="text-muted-foreground">{description}</p>
+      )}
+      {children}
+    </div>
   );
 }
 
-interface PageHeaderHeadingProps
-  extends React.HTMLAttributes<HTMLHeadingElement> {}
+export interface PageHeaderHeadingProps extends React.HTMLAttributes<HTMLHeadingElement> {}
 
 export function PageHeaderHeading({
   className,
@@ -17,17 +42,13 @@ export function PageHeaderHeading({
 }: PageHeaderHeadingProps) {
   return (
     <h1
-      className={cn(
-        "text-3xl font-bold tracking-tight text-primary md:text-4xl",
-        className
-      )}
+      className={cn("text-3xl font-bold tracking-tight", className)}
       {...props}
     />
   );
 }
 
-interface PageHeaderDescriptionProps
-  extends React.HTMLAttributes<HTMLParagraphElement> {}
+export interface PageHeaderDescriptionProps extends React.HTMLAttributes<HTMLParagraphElement> {}
 
 export function PageHeaderDescription({
   className,
@@ -35,7 +56,7 @@ export function PageHeaderDescription({
 }: PageHeaderDescriptionProps) {
   return (
     <p
-      className={cn("text-muted-foreground text-lg", className)}
+      className={cn("text-muted-foreground", className)}
       {...props}
     />
   );

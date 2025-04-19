@@ -1,16 +1,14 @@
 /**
- * PKL-278651-COMM-0028-NOTIF - Community Notifications SDK
- * Implementation timestamp: 2025-04-19 14:45 ET
+ * PKL-278651-COMM-0028-NOTIF - Notifications SDK Service
+ * Implementation timestamp: 2025-04-19 15:25 ET
  * 
- * SDK for interacting with notification API endpoints
+ * SDK for notifications API interactions
  * 
  * Framework 5.2 compliant implementation
  */
 
-import { apiRequest } from '../queryClient';
-import { z } from 'zod';
+import { apiRequest } from '@/lib/queryClient';
 
-// Notification types from schema
 export interface UserNotification {
   id: number;
   userId: number;
@@ -18,80 +16,91 @@ export interface UserNotification {
   title: string;
   message: string;
   isRead: boolean;
-  referenceType?: string;
-  referenceId?: number;
-  communityId?: number;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string;
-}
-
-export interface NotificationPreference {
-  id: number;
-  userId: number;
-  communityId?: number;
-  notificationType: string;
-  channel: string;
-  enabled: boolean;
+  referenceType: string | null;
+  referenceId: number | null;
+  communityId: number | null;
   createdAt: string;
   updatedAt: string;
 }
 
-// SDK Functions
+export interface NotificationUnreadCount {
+  count: number;
+}
+
+export interface GetNotificationsParams {
+  limit?: number;
+  offset?: number;
+  filterType?: string;
+  includeRead?: boolean;
+}
+
+export interface GetNotificationResponse {
+  notifications: UserNotification[];
+  total: number;
+}
+
+/**
+ * Notifications SDK service for API interactions
+ */
 export const notificationsSDK = {
   /**
-   * Get all notifications for the current user
+   * Get notifications with optional filtering
    */
-  getNotifications: async (params?: { limit?: number; offset?: number }): Promise<UserNotification[]> => {
+  async getNotifications(params: GetNotificationsParams = {}): Promise<UserNotification[]> {
     const queryParams = new URLSearchParams();
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.offset) queryParams.append('offset', params.offset.toString());
     
-    const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
-    const res = await apiRequest('GET', `/api/notifications${query}`);
-    return await res.json();
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.offset) queryParams.append('offset', params.offset.toString());
+    if (params.filterType) queryParams.append('type', params.filterType);
+    if (params.includeRead !== undefined) queryParams.append('includeRead', params.includeRead.toString());
+    
+    const url = `/api/notifications${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const res = await apiRequest('GET', url);
+    const data = await res.json();
+    return data.notifications;
   },
-
+  
   /**
-   * Get count of unread notifications
+   * Get unread notification count
    */
-  getUnreadCount: async (): Promise<{ count: number }> => {
+  async getUnreadCount(): Promise<NotificationUnreadCount> {
     const res = await apiRequest('GET', '/api/notifications/unread-count');
     return await res.json();
   },
-
+  
   /**
    * Mark a notification as read
    */
-  markAsRead: async (notificationId: number): Promise<void> => {
-    await apiRequest('POST', `/api/notifications/${notificationId}/read`);
+  async markAsRead(notificationId: number): Promise<void> {
+    await apiRequest('PATCH', `/api/notifications/${notificationId}/read`);
   },
-
+  
   /**
    * Mark all notifications as read
    */
-  markAllAsRead: async (): Promise<void> => {
-    await apiRequest('POST', '/api/notifications/read-all');
+  async markAllAsRead(): Promise<void> {
+    await apiRequest('PATCH', '/api/notifications/mark-all-read');
   },
-
+  
   /**
-   * Get notification preferences
+   * Get notification by ID
    */
-  getPreferences: async (communityId?: number): Promise<NotificationPreference[]> => {
-    const query = communityId ? `?communityId=${communityId}` : '';
-    const res = await apiRequest('GET', `/api/notifications/preferences${query}`);
+  async getNotification(notificationId: number): Promise<UserNotification> {
+    const res = await apiRequest('GET', `/api/notifications/${notificationId}`);
     return await res.json();
   },
-
+  
   /**
-   * Update notification preference
+   * Delete a notification
    */
-  updatePreference: async (data: {
-    notificationType: string;
-    channel: string;
-    enabled: boolean;
-    communityId?: number;
-  }): Promise<void> => {
-    await apiRequest('POST', '/api/notifications/preferences', data);
-  }
+  async deleteNotification(notificationId: number): Promise<void> {
+    await apiRequest('DELETE', `/api/notifications/${notificationId}`);
+  },
+  
+  /**
+   * Clear all notifications
+   */
+  async clearAllNotifications(): Promise<void> {
+    await apiRequest('DELETE', '/api/notifications');
+  },
 };

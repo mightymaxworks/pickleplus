@@ -1,8 +1,8 @@
 /**
  * PKL-278651-COMM-0028-NOTIF - Notification Bell Component
- * Implementation timestamp: 2025-04-19 14:50 ET
+ * Implementation timestamp: 2025-04-19 15:20 ET
  * 
- * Notification bell with badge showing unread count
+ * Bell icon component with notification counter showing unread notifications
  * 
  * Framework 5.2 compliant implementation
  */
@@ -12,7 +12,7 @@ import { Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { notificationsSDK } from '@/lib/sdk/notificationsSDK';
-import { NotificationsDropdown } from './NotificationsDropdown';
+import { NotificationsDropdown } from '@/components/notifications/NotificationsDropdown';
 import { cn } from '@/lib/utils';
 
 interface NotificationBellProps {

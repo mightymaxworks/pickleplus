@@ -60,6 +60,9 @@ import CreateCommunityPage from './pages/communities/create'
 import CommunityEventDetailPage from './pages/CommunityEventDetailPage' // PKL-278651-COMM-0016-RSVP
 import CommunityDiscoveryPage from './pages/community-discover' // PKL-278651-COMM-0022-DISC
 
+// Import notification page (PKL-278651-COMM-0028-NOTIF)
+import NotificationsPage from './pages/notifications-page'
+
 // Import icons test page (PKL-278651-COMM-0007-ICONS)
 import IconsPage from './pages/icons'
 
@@ -315,6 +318,11 @@ export default function App() {
                   </Route>
                   <Route path="/mastery-paths">
                     {(params) => <ProtectedRoute component={LazyMasteryPathsPage} path="/mastery-paths" />}
+                  </Route>
+                  
+                  {/* PKL-278651-COMM-0028-NOTIF - Notifications Page */}
+                  <Route path="/notifications">
+                    {(params) => <ProtectedRoute component={NotificationsPage} path="/notifications" />}
                   </Route>
                   <Route path="/demo/match-reward" component={MatchRewardDemo} />
                   <Route path="/dev/qr-test" component={QRTestPage} />
