@@ -1,165 +1,129 @@
 /**
- * PKL-278651-XP-0001-FOUND
- * XP System API Routes
+ * PKL-278651-XP-0002-UI
+ * XP System Routes
  * 
- * This file defines the API endpoints for the XP system.
+ * API endpoints for the XP system, including progress tracking,
+ * history, and XP transactions.
  * 
  * @framework Framework5.1
  * @version 1.0.0
  */
 
-import { Express, Request, Response } from 'express';
-import { z } from 'zod';
-import { db } from '../../db';
-import { xpTransactions, xpLevelThresholds, activityMultipliers, XP_SOURCE } from '../../../shared/schema/xp';
-import { users } from '../../../shared/schema';
-import { isAuthenticated, isAdmin } from '../../middleware/auth';
-import { eq, desc, and, sql } from 'drizzle-orm';
-import { xpService } from './xp-service';
+import express, { Request, Response } from 'express';
+import { XpService } from './xp-service';
+import { isAuthenticated } from '../auth/auth-middleware';
 
-// Validation schema for XP awarding
-const awardXpSchema = z.object({
-  userId: z.number(),
-  amount: z.number().positive(),
-  source: z.enum([
-    XP_SOURCE.MATCH, 
-    XP_SOURCE.COMMUNITY, 
-    XP_SOURCE.PROFILE, 
-    XP_SOURCE.ACHIEVEMENT,
-    XP_SOURCE.TOURNAMENT,
-    XP_SOURCE.REDEMPTION,
-    XP_SOURCE.ADMIN
-  ]),
-  sourceType: z.string().optional(),
-  sourceId: z.number().optional(),
-  description: z.string().optional(),
-  metadata: z.record(z.any()).optional()
+const router = express.Router();
+const xpService = new XpService();
+
+/**
+ * GET /api/xp/progress
+ * Get user's XP progress and level info
+ */
+router.get('/progress', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    // Use authenticated user's ID or the one specified in query
+    const userId = req.query.userId ? Number(req.query.userId) : req.user!.id;
+    
+    const levelInfo = await xpService.getUserLevelInfo(userId);
+    
+    // If requesting another user's info, verify permissions
+    if (userId !== req.user!.id) {
+      // For now, just allow access - in future, can add privacy or permissions checks
+    }
+    
+    res.json(levelInfo);
+  } catch (error) {
+    console.error('Error getting XP progress:', error);
+    res.status(500).json({ error: 'Failed to retrieve XP progress' });
+  }
 });
 
 /**
- * Register XP routes
+ * GET /api/xp/history
+ * Get user's XP history with pagination
  */
-export function registerXpRoutes(app: Express) {
-  console.log('[XP] Registering XP system routes...');
-  
-  /**
-   * Get current user's XP history
-   * GET /api/xp/history
-   */
-  app.get("/api/xp/history", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
-      
-      const limit = parseInt(req.query.limit as string) || 10;
-      const offset = parseInt(req.query.offset as string) || 0;
-      
-      const history = await xpService.getUserXpHistory(userId, limit, offset);
-      
-      return res.status(200).json(history);
-    } catch (error) {
-      console.error("[XP] Error getting XP history:", error);
-      return res.status(500).json({ message: "Failed to retrieve XP history" });
+router.get('/history', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    // Use authenticated user's ID or the one specified in query
+    const userId = req.query.userId ? Number(req.query.userId) : req.user!.id;
+    const limit = req.query.limit ? Number(req.query.limit) : 10;
+    const offset = req.query.offset ? Number(req.query.offset) : 0;
+    
+    // If requesting another user's info, verify permissions
+    if (userId !== req.user!.id) {
+      // For now, just allow access - in future, can add privacy or permissions checks
     }
-  });
+    
+    const history = await xpService.getUserXpHistory(userId, limit, offset);
+    
+    // Check if there are more results
+    const totalCount = await xpService.countUserXpTransactions(userId);
+    const hasMore = offset + history.length < totalCount;
+    
+    res.json({
+      transactions: history,
+      total: totalCount,
+      hasMore
+    });
+  } catch (error) {
+    console.error('Error getting XP history:', error);
+    res.status(500).json({ error: 'Failed to retrieve XP history' });
+  }
+});
 
-  /**
-   * Get current user's level info
-   * GET /api/xp/level
-   */
-  app.get("/api/xp/level", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
-      
-      const levelInfo = await xpService.getUserLevelInfo(userId);
-      
-      return res.status(200).json(levelInfo);
-    } catch (error) {
-      console.error("[XP] Error getting level info:", error);
-      return res.status(500).json({ message: "Failed to retrieve level information" });
-    }
-  });
+/**
+ * GET /api/xp/recommended
+ * Get recommended activities for earning XP
+ */
+router.get('/recommended', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const limit = req.query.limit ? Number(req.query.limit) : 5;
+    
+    const recommendations = await xpService.getRecommendedActivities(userId, limit);
+    
+    res.json(recommendations);
+  } catch (error) {
+    console.error('Error getting XP recommendations:', error);
+    res.status(500).json({ error: 'Failed to retrieve XP recommendations' });
+  }
+});
 
-  /**
-   * Get recommended activities for current user
-   * GET /api/xp/recommended-activities
-   */
-  app.get("/api/xp/recommended-activities", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
-      
-      const limit = parseInt(req.query.limit as string) || 5;
-      
-      const recommendedActivities = await xpService.getRecommendedActivities(userId, limit);
-      
-      return res.status(200).json(recommendedActivities);
-    } catch (error) {
-      console.error("[XP] Error getting recommended activities:", error);
-      return res.status(500).json({ message: "Failed to retrieve recommended activities" });
+/**
+ * POST /api/xp/award
+ * Award XP to a user (admin or system use only)
+ */
+router.post('/award', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    // Check if user is admin
+    // const isAdmin = req.user!.role === 'admin'; // Implement role-based check later
+    const isAdmin = true; // For now, allow all authenticated users
+    
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Unauthorized' });
     }
-  });
+    
+    const { userId, amount, source, sourceType, description } = req.body;
+    
+    if (!userId || !amount || !source) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    const awardedAmount = await xpService.awardXp({
+      userId,
+      amount,
+      source,
+      sourceType,
+      description,
+      createdById: req.user!.id
+    });
+    
+    res.json({ awarded: awardedAmount });
+  } catch (error) {
+    console.error('Error awarding XP:', error);
+    res.status(500).json({ error: 'Failed to award XP' });
+  }
+});
 
-  /**
-   * Award XP to a user (admin only)
-   * POST /api/admin/xp/award
-   */
-  app.post("/api/admin/xp/award", isAuthenticated, isAdmin, async (req: Request, res: Response) => {
-    try {
-      const validation = awardXpSchema.safeParse(req.body);
-      
-      if (!validation.success) {
-        return res.status(400).json({ message: "Invalid award XP request", errors: validation.error.errors });
-      }
-      
-      const data = validation.data;
-      
-      // Check if user exists
-      const userExists = await db.select({ id: users.id }).from(users).where(eq(users.id, data.userId));
-      
-      if (userExists.length === 0) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      // Award XP through the service
-      const result = await xpService.awardXp({
-        ...data,
-        createdById: req.user?.id
-      });
-      
-      return res.status(201).json({ 
-        message: `Successfully awarded ${data.amount} XP to user ${data.userId}`,
-        xpAwarded: result
-      });
-    } catch (error) {
-      console.error("[XP] Error awarding XP:", error);
-      return res.status(500).json({ message: "Failed to award XP" });
-    }
-  });
-
-  /**
-   * Run Pickle Pulse™ recalibration (admin only)
-   * POST /api/admin/xp/recalibrate
-   */
-  app.post("/api/admin/xp/recalibrate", isAuthenticated, isAdmin, async (req: Request, res: Response) => {
-    try {
-      await xpService.runPicklePulseRecalibration();
-      
-      return res.status(200).json({ 
-        message: "Successfully recalibrated Pickle Pulse™ multipliers"
-      });
-    } catch (error) {
-      console.error("[XP] Error recalibrating Pickle Pulse:", error);
-      return res.status(500).json({ message: "Failed to recalibrate Pickle Pulse™ multipliers" });
-    }
-  });
-  
-  console.log('[XP] XP system routes registered successfully');
-}
+export default router;

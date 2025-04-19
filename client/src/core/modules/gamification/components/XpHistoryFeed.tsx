@@ -2,278 +2,215 @@
  * PKL-278651-XP-0002-UI
  * XP History Feed Component
  * 
- * Displays a chronological feed of XP transactions with source indicators and animations.
+ * This component displays a feed of recent XP transactions.
  * 
  * @framework Framework5.1
  * @version 1.0.0
  */
 
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
-import { format } from 'date-fns';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { formatDistanceToNow } from 'date-fns';
 import { 
-  Award, 
-  Zap, 
-  Timer, 
-  Users, 
-  User, 
-  Trophy, 
-  Gift,
-  Shield,
-  Calendar
+  Trophy, Users, Target, Calendar, MapPin, 
+  MessageSquare, ThumbsUp, Zap, Award
 } from 'lucide-react';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
 
-// XP Transaction type from schema
+// Define XP transaction type
 interface XpTransaction {
   id: number;
-  userId: number;
   amount: number;
   source: string;
-  sourceType?: string;
-  sourceId?: number;
-  description?: string;
-  runningTotal: number;
-  isHidden?: boolean;
-  createdById?: number;
-  matchId?: number;
-  communityId?: number;
-  achievementId?: number;
-  tournamentId?: number;
-  createdAt: string;
+  timestamp: string;
+  details?: string;
+  multiplier?: number;
 }
 
-// XP history response with pagination
-interface XpHistoryResponse {
-  transactions: XpTransaction[];
-  total: number;
-  hasMore: boolean;
-}
+// Demo data - In a real implementation, this would come from the useXpProgress hook
+const demoTransactions: XpTransaction[] = [
+  {
+    id: 1,
+    amount: 5,
+    source: 'match_played',
+    timestamp: '2025-04-18T14:35:00Z',
+    details: 'Match against David Johnson',
+    multiplier: 1
+  },
+  {
+    id: 2,
+    amount: 3,
+    source: 'first_daily_match',
+    timestamp: '2025-04-18T14:35:10Z',
+    details: 'First match of the day bonus'
+  },
+  {
+    id: 3,
+    amount: 2,
+    source: 'match_win',
+    timestamp: '2025-04-18T14:35:20Z',
+    details: 'Victory bonus'
+  },
+  {
+    id: 4,
+    amount: 1,
+    source: 'community_post',
+    timestamp: '2025-04-17T10:22:00Z',
+    details: 'Posted in Chicago Picklers'
+  },
+  {
+    id: 5,
+    amount: 10,
+    source: 'tournament_completion',
+    timestamp: '2025-04-15T16:45:00Z',
+    details: 'Completed Spring Tournament',
+    multiplier: 1.5
+  },
+  {
+    id: 6,
+    amount: 3,
+    source: 'event_created',
+    timestamp: '2025-04-14T09:12:00Z',
+    details: 'Created Weekly Meet-up event'
+  },
+  {
+    id: 7,
+    amount: 2,
+    source: 'event_attendance',
+    timestamp: '2025-04-10T18:30:00Z',
+    details: 'Attended Training Session'
+  },
+  {
+    id: 8,
+    amount: 5,
+    source: 'discovery',
+    timestamp: '2025-04-08T11:20:00Z',
+    details: 'Discovered Tournament Builder'
+  }
+];
 
 interface XpHistoryFeedProps {
-  userId?: number; // If not provided, uses current user
   limit?: number;
-  compact?: boolean; // Show a more compact version
 }
 
-/**
- * XpHistoryFeed Component
- * 
- * Displays a chronological feed of XP transactions
- */
-const XpHistoryFeed: React.FC<XpHistoryFeedProps> = ({
-  userId,
-  limit = 5,
-  compact = false
-}) => {
-  // Fetch XP history from API
-  const { data, isLoading, error } = useQuery<XpHistoryResponse>({
-    queryKey: ['/api/xp/history', userId, limit],
-    enabled: true,
-  });
-  
-  // Animation variants for the list
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-  
-  const itemVariants = {
-    hidden: { opacity: 0, x: -20 },
-    visible: {
-      opacity: 1,
-      x: 0,
-      transition: { duration: 0.3 }
-    }
-  };
-  
-  // Get icon based on source type
-  const getSourceIcon = (source: string, sourceType?: string) => {
+const XpHistoryFeed: React.FC<XpHistoryFeedProps> = ({ limit = 5 }) => {
+  // Get source icon based on transaction source
+  const getSourceIcon = (source: string) => {
     switch (source) {
-      case 'match':
-        return <Trophy className="h-5 w-5 text-amber-500" />;
-      case 'community':
-        return <Users className="h-5 w-5 text-blue-500" />;
-      case 'profile':
-        return <User className="h-5 w-5 text-green-500" />;
-      case 'achievement':
-        return <Award className="h-5 w-5 text-purple-500" />;
-      case 'tournament':
-        return <Calendar className="h-5 w-5 text-indigo-500" />;
-      case 'redemption':
-        return <Gift className="h-5 w-5 text-pink-500" />;
-      case 'admin':
-        return <Shield className="h-5 w-5 text-red-500" />;
+      case 'match_played':
+      case 'match_win':
+        return <Trophy className="h-4 w-4" />;
+      case 'tournament_completion':
+        return <Award className="h-4 w-4" />;
+      case 'community_post':
+        return <MessageSquare className="h-4 w-4" />;
+      case 'first_daily_match':
+        return <Zap className="h-4 w-4" />;
+      case 'event_created':
+        return <Calendar className="h-4 w-4" />;
+      case 'event_attendance':
+        return <MapPin className="h-4 w-4" />;
+      case 'discovery':
+        return <Target className="h-4 w-4" />;
       default:
-        return <Zap className="h-5 w-5 text-amber-500" />;
+        return <Users className="h-4 w-4" />;
     }
   };
-  
-  // Loading state
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">XP History</CardTitle>
-          <CardDescription>Loading your XP transactions...</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="flex items-start space-x-4 mb-4">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <div className="space-y-2 flex-1">
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-    );
-  }
-  
-  // Error state
-  if (error || !data) {
-    return (
-      <Card className="bg-gray-50">
-        <CardHeader>
-          <CardTitle className="text-base">XP History</CardTitle>
-          <CardDescription>Unable to load XP history</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-gray-500">
-            There was a problem loading your XP transactions. Please try again later.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-  
-  // Empty state
-  if (data.transactions.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">XP History</CardTitle>
-          <CardDescription>No XP transactions yet</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-gray-500">
-            Get started by playing matches, participating in communities, or completing your profile!
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-  
-  // Render compact version
-  if (compact) {
-    return (
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Recent XP Activity</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <motion.ul 
-            className="space-y-2"
-            initial="hidden"
-            animate="visible"
-            variants={containerVariants}
-          >
-            {data.transactions.slice(0, limit).map(transaction => (
-              <motion.li 
-                key={transaction.id}
-                variants={itemVariants}
-                className="flex items-center justify-between text-sm"
-              >
-                <div className="flex items-center">
-                  <div className="mr-3">
-                    {getSourceIcon(transaction.source, transaction.sourceType)}
-                  </div>
-                  <span className="text-gray-700 truncate max-w-[180px]">
-                    {transaction.description || `Earned from ${transaction.source}`}
-                  </span>
-                </div>
-                <Badge variant="outline" className="bg-amber-50 text-amber-700">
-                  +{transaction.amount} XP
-                </Badge>
-              </motion.li>
-            ))}
-          </motion.ul>
-        </CardContent>
-      </Card>
-    );
-  }
-  
-  // Render full version
+
+  // Get color based on transaction source
+  const getSourceColor = (source: string) => {
+    switch (source) {
+      case 'match_played':
+      case 'match_win':
+        return 'bg-green-100 text-green-600';
+      case 'tournament_completion':
+        return 'bg-purple-100 text-purple-600';
+      case 'community_post':
+        return 'bg-blue-100 text-blue-600';
+      case 'first_daily_match':
+        return 'bg-amber-100 text-amber-600';
+      case 'event_created':
+      case 'event_attendance':
+        return 'bg-indigo-100 text-indigo-600';
+      case 'discovery':
+        return 'bg-emerald-100 text-emerald-600';
+      default:
+        return 'bg-gray-100 text-gray-600';
+    }
+  };
+
+  // Format source name for display
+  const formatSourceName = (source: string) => {
+    return source
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  // Format time to relative format
+  const formatTime = (timestamp: string) => {
+    try {
+      return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
+    } catch (error) {
+      return 'recently';
+    }
+  };
+
+  // Get display transactions respecting the limit
+  const displayTransactions = limit 
+    ? demoTransactions.slice(0, limit) 
+    : demoTransactions;
+
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-2">
         <CardTitle className="text-base">XP History</CardTitle>
-        <CardDescription>Your XP earning activity</CardDescription>
+        <CardDescription>Recent XP earning activity</CardDescription>
       </CardHeader>
       <CardContent>
-        <motion.ul 
-          className="space-y-4"
-          initial="hidden"
-          animate="visible"
-          variants={containerVariants}
-        >
-          {data.transactions.slice(0, limit).map(transaction => (
-            <motion.li 
-              key={transaction.id}
-              variants={itemVariants}
-              className="flex items-start"
-            >
-              <div className="mr-4 mt-1">
-                {getSourceIcon(transaction.source, transaction.sourceType)}
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <p className="font-medium text-gray-900">
-                    {transaction.description || `Earned from ${transaction.source}`}
-                  </p>
-                  <Badge variant="outline" className="bg-amber-50 text-amber-700 ml-2">
-                    +{transaction.amount} XP
-                  </Badge>
+        {displayTransactions.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-6">
+            No XP activity yet. Play matches and engage to earn XP!
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {displayTransactions.map((transaction) => (
+              <div key={transaction.id} className="flex items-start space-x-3">
+                {/* Icon */}
+                <div className={`flex-shrink-0 rounded-full p-1.5 ${getSourceColor(transaction.source)}`}>
+                  {getSourceIcon(transaction.source)}
                 </div>
-                <div className="flex items-center mt-1 text-xs text-gray-500">
-                  <Timer className="h-3 w-3 mr-1" />
-                  {format(new Date(transaction.createdAt), 'MMM d, h:mm a')}
+                
+                {/* Content */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex justify-between">
+                    <h4 className="text-sm font-medium text-gray-900">
+                      {formatSourceName(transaction.source)}
+                    </h4>
+                    <p className="text-sm font-medium text-green-600">
+                      +{transaction.amount} XP
+                      {transaction.multiplier && transaction.multiplier > 1 && (
+                        <span className="text-xs ml-1">(×{transaction.multiplier})</span>
+                      )}
+                    </p>
+                  </div>
                   
-                  {transaction.sourceType && (
-                    <Badge variant="secondary" className="ml-2 text-xs">
-                      {transaction.sourceType.replace('_', ' ')}
-                    </Badge>
+                  {transaction.details && (
+                    <p className="mt-0.5 text-xs text-muted-foreground truncate">{transaction.details}</p>
                   )}
+                  
+                  <time className="mt-0.5 text-xs text-muted-foreground">
+                    {formatTime(transaction.timestamp)}
+                  </time>
                 </div>
               </div>
-            </motion.li>
-          ))}
-        </motion.ul>
-        
-        {data.hasMore && (
-          <div className="mt-4 text-center">
-            <a 
-              href="#" 
-              className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
-            >
-              View more activity
-            </a>
+            ))}
+            
+            {/* View More Link */}
+            {limit && demoTransactions.length > limit && (
+              <button className="text-xs text-primary font-medium hover:underline w-full text-center mt-2">
+                View all XP history
+              </button>
+            )}
           </div>
         )}
       </CardContent>

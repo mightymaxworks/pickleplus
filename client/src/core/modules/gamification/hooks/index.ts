@@ -1,11 +1,25 @@
 /**
- * PKL-278651-GAME-0001-MOD
- * Gamification Hooks
+ * PKL-278651-XP-0002-UI
+ * Gamification Hooks Index
  * 
- * This file exports all hooks for the gamification module.
+ * @framework Framework5.1
+ * @version 1.0.0
  */
 
-// Export all hooks
-export { default as useKonamiCode } from './useKonamiCode';
-export { default as useDiscoveryTrigger } from './useDiscoveryTrigger';
-export { default as useDiscoveryTracking } from './useDiscoveryTracking';
+import useXpProgress from './useXpProgress';
+import useKonamiCode from './useKonamiCode';
+import useDiscoveryTracking, { 
+  Discovery, 
+  DiscoveryCampaign 
+} from './useDiscoveryTracking';
+
+// Export types from files
+export type { Discovery, DiscoveryCampaign } from './useDiscoveryTracking';
+export type { XpProgressData, XpTransaction } from './useXpProgress';
+
+// Export hooks
+export {
+  useXpProgress,
+  useKonamiCode,
+  useDiscoveryTracking
+};

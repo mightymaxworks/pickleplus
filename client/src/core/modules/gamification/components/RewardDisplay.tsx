@@ -1,164 +1,125 @@
 /**
- * PKL-278651-GAME-0001-MOD
- * RewardDisplay Component
+ * PKL-278651-XP-0002-UI
+ * Reward Display Component
  * 
- * This component displays reward information with animations and styling based on rarity.
+ * This component displays a list of user rewards.
+ * 
+ * @framework Framework5.1
+ * @version 1.0.0
  */
 
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Gift, Award, Shield, Coins } from 'lucide-react';
-import { Reward } from './DiscoveryAlert';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { formatDistanceToNow } from 'date-fns';
+import { Trophy, Users, Medal, Gift, Star } from 'lucide-react';
 
-export interface RewardDisplayProps {
-  reward: Reward;
-  animate?: boolean;
-  size?: 'sm' | 'md' | 'lg';
+// Reward types
+export type RewardType = 'achievement' | 'badge' | 'title' | 'item';
+export type RewardRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+
+export interface Reward {
+  id: number;
+  title: string;
+  description: string;
+  type: RewardType;
+  rarity: RewardRarity;
+  icon: string;
+  dateEarned: string;
 }
 
-/**
- * RewardDisplay Component
- * 
- * Displays a reward with appropriate styling based on its rarity
- */
+interface RewardDisplayProps {
+  rewards: Reward[];
+  title?: string;
+  description?: string;
+}
+
 const RewardDisplay: React.FC<RewardDisplayProps> = ({
-  reward,
-  animate = true,
-  size = 'md'
+  rewards,
+  title = 'Rewards',
+  description = 'Your earned rewards and achievements'
 }) => {
   // Get icon based on reward type
-  const getRewardIcon = () => {
-    switch (reward.type) {
-      case 'badge':
-        return <Award />;
-      case 'item':
-        return <Shield />;
-      case 'currency':
-        return <Coins />;
-      case 'xp':
+  const getRewardIcon = (iconName: string) => {
+    switch (iconName) {
+      case 'TrophyIcon':
+        return <Trophy className="h-5 w-5" />;
+      case 'UsersIcon':
+        return <Users className="h-5 w-5" />;
+      case 'MedalIcon':
+        return <Medal className="h-5 w-5" />;
+      case 'GiftIcon':
+        return <Gift className="h-5 w-5" />;
       default:
-        return <Gift />;
+        return <Star className="h-5 w-5" />;
     }
   };
-  
-  // Get the reward rarity color
-  const getRarityColor = (rarity: string) => {
+
+  // Get badge color based on rarity
+  const getRarityColor = (rarity: RewardRarity) => {
     switch (rarity) {
       case 'common':
-        return 'from-gray-200 to-gray-300 text-gray-700 border-gray-300';
+        return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
       case 'uncommon':
-        return 'from-green-200 to-green-300 text-green-700 border-green-300';
+        return 'bg-green-100 text-green-800 hover:bg-green-200';
       case 'rare':
-        return 'from-blue-200 to-blue-300 text-blue-700 border-blue-300';
+        return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
       case 'epic':
-        return 'from-purple-200 to-purple-300 text-purple-700 border-purple-300';
+        return 'bg-purple-100 text-purple-800 hover:bg-purple-200';
       case 'legendary':
-        return 'from-orange-200 to-orange-300 text-orange-700 border-orange-300';
-      default:
-        return 'from-gray-200 to-gray-300 text-gray-700 border-gray-300';
+        return 'bg-amber-100 text-amber-800 hover:bg-amber-200';
     }
   };
-  
-  // Get size classes
-  const getSizeClasses = () => {
-    switch (size) {
-      case 'sm':
-        return 'p-2 text-xs';
-      case 'lg':
-        return 'p-5 text-base';
-      case 'md':
-      default:
-        return 'p-3 text-sm';
+
+  // Format date to relative time
+  const formatDate = (dateString: string) => {
+    try {
+      return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+    } catch (err) {
+      return 'recently';
     }
   };
-  
-  // Get icon size
-  const getIconSize = () => {
-    switch (size) {
-      case 'sm':
-        return 16;
-      case 'lg':
-        return 24;
-      case 'md':
-      default:
-        return 20;
-    }
-  };
-  
-  // Animation variants
-  const cardVariants = {
-    hidden: { opacity: 0, scale: 0.8 },
-    visible: { 
-      opacity: 1, 
-      scale: 1,
-      transition: { duration: 0.4, ease: 'easeOut' }
-    }
-  };
-  
-  const iconVariants = {
-    hidden: { opacity: 0, rotate: -20, scale: 0.8 },
-    visible: { 
-      opacity: 1, 
-      rotate: 0,
-      scale: 1,
-      transition: { duration: 0.4, delay: 0.2, ease: 'easeOut' }
-    }
-  };
-  
-  const textVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 0.4, delay: 0.3, ease: 'easeOut' }
-    }
-  };
-  
-  // Wrapper component - either motion.div or regular div based on animate prop
-  const Wrapper = animate ? motion.div : 'div';
-  const IconWrapper = animate ? motion.div : 'div';
-  const TextWrapper = animate ? motion.div : 'div';
-  
+
   return (
-    <Wrapper
-      className={`rounded-lg border ${getSizeClasses()} bg-gradient-to-br ${getRarityColor(reward.rarity)} relative overflow-hidden`}
-      initial={animate ? 'hidden' : undefined}
-      animate={animate ? 'visible' : undefined}
-      variants={cardVariants}
-    >
-      <div className="flex items-start">
-        <IconWrapper
-          className="mr-3 flex-shrink-0"
-          initial={animate ? 'hidden' : undefined}
-          animate={animate ? 'visible' : undefined}
-          variants={iconVariants}
-        >
-          {React.cloneElement(getRewardIcon() as React.ReactElement, { size: getIconSize() })}
-        </IconWrapper>
-        
-        <TextWrapper
-          className="flex-1"
-          initial={animate ? 'hidden' : undefined}
-          animate={animate ? 'visible' : undefined}
-          variants={textVariants}
-        >
-          <h4 className="font-bold">{reward.name}</h4>
-          <p className="opacity-80 text-xs">{reward.description}</p>
-          
-          {reward.type === 'xp' && reward.value.xpAmount && (
-            <div className="mt-1 font-medium text-xs">
-              +{reward.value.xpAmount} XP
-            </div>
-          )}
-        </TextWrapper>
-      </div>
-      
-      {reward.rarity === 'legendary' && (
-        <div className="absolute inset-0 opacity-20 pointer-events-none">
-          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white to-transparent animate-pulse"></div>
-        </div>
-      )}
-    </Wrapper>
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base">{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {rewards.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-6">
+            No rewards earned yet. Keep playing to earn rewards!
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {rewards.map((reward) => (
+              <div key={reward.id} className="flex items-start space-x-3">
+                <div className={`flex-shrink-0 p-2 rounded-md ${getRarityColor(reward.rarity)}`}>
+                  {getRewardIcon(reward.icon)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center mb-1">
+                    <h4 className="text-sm font-medium truncate mr-2">
+                      {reward.title}
+                    </h4>
+                    <Badge variant="outline" className="ml-auto text-xs font-normal">
+                      {reward.type}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {reward.description}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Earned {formatDate(reward.dateEarned)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

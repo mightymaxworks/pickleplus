@@ -1,181 +1,186 @@
 /**
- * PKL-278651-GAME-0001-MOD
- * DiscoveryAlert Component
+ * PKL-278651-XP-0002-UI
+ * Discovery Alert Component
  * 
- * This component displays an alert when a user discovers a hidden feature or achievement.
- * It includes animations, reward information, and can automatically hide after a delay.
+ * This component displays an alert when a user discovers a new feature or Easter egg.
+ * 
+ * @framework Framework5.1
+ * @version 1.0.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Award, X, Gift, Star, Info, AlertTriangle } from 'lucide-react';
+import { Lightbulb, X } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
-// Types for the component props
-export interface Reward {
+type AlertLevel = 'info' | 'success' | 'warning';
+type RewardType = 'badge' | 'xp' | 'item' | 'currency';
+type RewardRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+
+interface RewardValue {
+  xpAmount?: number;
+  itemId?: number;
+  currencyAmount?: number;
+}
+
+interface DiscoveryReward {
   id: number;
   name: string;
   description: string;
-  type: 'xp' | 'badge' | 'item' | 'currency';
-  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
-  value: {
-    xpAmount?: number;
-    badgeId?: string;
-    itemId?: string;
-    currencyAmount?: number;
-  };
+  type: RewardType;
+  rarity: RewardRarity;
+  value: RewardValue;
 }
 
-export interface DiscoveryAlertProps {
+interface DiscoveryAlertProps {
   title: string;
   message: string;
-  level?: 'info' | 'success' | 'warning' | 'special';
-  open?: boolean;
+  level: AlertLevel;
+  open: boolean;
+  onClose: () => void;
   autoHide?: boolean;
-  hideDelay?: number;
-  reward?: Reward;
-  onClose?: () => void;
+  autoHideDelay?: number;
+  reward?: DiscoveryReward;
 }
 
-/**
- * DiscoveryAlert Component
- * 
- * Displays an animated alert when a discovery is made in the gamification system.
- */
 const DiscoveryAlert: React.FC<DiscoveryAlertProps> = ({
   title,
   message,
   level = 'info',
-  open = true,
-  autoHide = false,
-  hideDelay = 5000,
-  reward,
-  onClose
+  open,
+  onClose,
+  autoHide = true,
+  autoHideDelay = 5000,
+  reward
 }) => {
-  // State for controlling the visibility
-  const [isVisible, setIsVisible] = useState(open);
-  
-  // Auto hide logic
+  // Auto-hide functionality
   useEffect(() => {
-    setIsVisible(open);
+    let timer: NodeJS.Timeout;
     
     if (open && autoHide) {
-      const timer = setTimeout(() => {
-        setIsVisible(false);
-        if (onClose) onClose();
-      }, hideDelay);
-      
-      return () => clearTimeout(timer);
+      timer = setTimeout(() => {
+        onClose();
+      }, autoHideDelay);
     }
-  }, [open, autoHide, hideDelay, onClose]);
-  
-  // Handle close button click
-  const handleClose = () => {
-    setIsVisible(false);
-    if (onClose) onClose();
-  };
-  
-  // Get the appropriate icon based on the level
-  const getLevelIcon = () => {
-    switch (level) {
-      case 'success':
-        return <Award className="text-green-500" size={24} />;
-      case 'warning':
-        return <AlertTriangle className="text-amber-500" size={24} />;
-      case 'special':
-        return <Star className="text-purple-500" size={24} />;
-      case 'info':
-      default:
-        return <Info className="text-blue-500" size={24} />;
-    }
-  };
-  
-  // Get the appropriate colors based on the level
-  const getLevelColors = () => {
+    
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [open, autoHide, autoHideDelay, onClose]);
+
+  // Get background color based on level
+  const getBgColor = () => {
     switch (level) {
       case 'success':
         return 'bg-green-50 border-green-200';
       case 'warning':
         return 'bg-amber-50 border-amber-200';
-      case 'special':
-        return 'bg-purple-50 border-purple-200';
       case 'info':
       default:
         return 'bg-blue-50 border-blue-200';
     }
   };
-  
-  // Get the reward rarity color
-  const getRarityColor = (rarity: string) => {
-    switch (rarity) {
-      case 'common':
-        return 'text-gray-600';
-      case 'uncommon':
+
+  // Get icon color based on level
+  const getIconColor = () => {
+    switch (level) {
+      case 'success':
         return 'text-green-600';
-      case 'rare':
-        return 'text-blue-600';
-      case 'epic':
-        return 'text-purple-600';
-      case 'legendary':
-        return 'text-orange-500';
+      case 'warning':
+        return 'text-amber-600';
+      case 'info':
       default:
-        return 'text-gray-600';
+        return 'text-blue-600';
     }
   };
-  
+
+  // Get reward color based on rarity
+  const getRarityColor = (rarity: RewardRarity) => {
+    switch (rarity) {
+      case 'common':
+        return 'bg-gray-100 text-gray-800';
+      case 'uncommon':
+        return 'bg-green-100 text-green-800';
+      case 'rare':
+        return 'bg-blue-100 text-blue-800';
+      case 'epic':
+        return 'bg-purple-100 text-purple-800';
+      case 'legendary':
+        return 'bg-amber-100 text-amber-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
     <AnimatePresence>
-      {isVisible && (
-        <motion.div
-          initial={{ opacity: 0, y: 50, scale: 0.9 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 20, scale: 0.95 }}
-          transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-          className="fixed bottom-4 right-4 z-50 max-w-sm"
-        >
-          <div className={`rounded-lg shadow-lg border p-4 ${getLevelColors()}`}>
-            <div className="flex justify-between items-start mb-2">
-              <div className="flex items-center">
-                {getLevelIcon()}
-                <h3 className="ml-2 font-bold text-gray-900">{title}</h3>
+      {open && (
+        <div className="fixed bottom-4 right-4 z-50 max-w-sm">
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            transition={{ duration: 0.2 }}
+            className={`rounded-lg border shadow-md p-4 ${getBgColor()}`}
+          >
+            <div className="flex items-start">
+              <div className={`mt-0.5 rounded-full p-2 ${getIconColor()} bg-white/80`}>
+                <Lightbulb className="h-4 w-4" />
               </div>
-              <button 
-                onClick={handleClose}
-                className="text-gray-400 hover:text-gray-600 focus:outline-none"
-                aria-label="Close"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            
-            <p className="text-sm text-gray-600 mb-3">{message}</p>
-            
-            {reward && (
-              <motion.div 
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                transition={{ delay: 0.2 }}
-                className="mt-2 p-3 bg-white rounded-md border border-gray-100"
-              >
-                <div className="flex items-center">
-                  <Gift className="text-[#FF5722]" size={18} />
-                  <span className="ml-2 font-medium">Reward Earned</span>
+              
+              <div className="ml-3 flex-1">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-medium text-gray-900">{title}</h3>
+                  <button
+                    onClick={onClose}
+                    className="ml-4 inline-flex text-gray-400 hover:text-gray-500"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
-                <div className="mt-2">
-                  <h4 className={`font-bold ${getRarityColor(reward.rarity)}`}>
-                    {reward.name}
-                  </h4>
-                  <p className="text-xs text-gray-500">{reward.description}</p>
-                  
-                  {reward.type === 'xp' && reward.value.xpAmount && (
-                    <div className="mt-1 text-xs font-medium text-[#4CAF50]">
-                      +{reward.value.xpAmount} XP
+                
+                <p className="mt-1 text-sm text-gray-700">{message}</p>
+                
+                {reward && (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-semibold text-gray-900">Reward Earned</h4>
+                      <Badge className={getRarityColor(reward.rarity)} variant="secondary">
+                        {reward.rarity}
+                      </Badge>
                     </div>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </div>
-        </motion.div>
+                    
+                    <div className="mt-1.5">
+                      <h5 className="text-sm font-medium">{reward.name}</h5>
+                      <p className="text-xs text-gray-600">{reward.description}</p>
+                      
+                      {reward.type === 'xp' && reward.value.xpAmount && (
+                        <p className="mt-1 text-sm font-medium text-green-600">
+                          +{reward.value.xpAmount} XP
+                        </p>
+                      )}
+                      
+                      {reward.type === 'currency' && reward.value.currencyAmount && (
+                        <p className="mt-1 text-sm font-medium text-amber-600">
+                          +{reward.value.currencyAmount} Coins
+                        </p>
+                      )}
+                    </div>
+                    
+                    <Button
+                      onClick={onClose}
+                      variant="outline"
+                      className="mt-2 w-full text-xs h-8"
+                    >
+                      Claim Reward
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        </div>
       )}
     </AnimatePresence>
   );

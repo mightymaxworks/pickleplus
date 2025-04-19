@@ -1,27 +1,24 @@
 /**
- * PKL-278651-XP-0001-FOUND
- * XP System Module
+ * PKL-278651-XP-0002-UI
+ * XP Module Entry Point
  * 
- * This module exports the XP service and routes for use in the application.
+ * Exports and registers XP system routes and components.
  * 
  * @framework Framework5.1
  * @version 1.0.0
  */
 
-import { Express } from 'express';
-import { registerXpRoutes } from './xp-routes';
-import { xpService } from './xp-service';
+import express from 'express';
+import xpRoutes from './xp-routes';
+import { XpService } from './xp-service';
 
-/**
- * Initialize the XP system module
- */
-export function initializeXpModule(app: Express): void {
-  console.log('[XP] Initializing XP system module...');
+// Initialize the module and register routes
+export function initializeXpModule(app: express.Express): void {
+  // Register routes with '/api/xp' prefix
+  app.use('/api/xp', xpRoutes);
   
-  // Register XP routes
-  registerXpRoutes(app);
-  
-  console.log('[XP] XP system module initialized successfully');
+  console.log('[XP] Module initialized successfully');
 }
 
-export { xpService };
+// Export service for use in other modules
+export { XpService };

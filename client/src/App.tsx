@@ -83,6 +83,7 @@ import ModernCommunityDashboard from './pages/ModernCommunityDashboard' // PKL-2
 import FixedTwitterDashboard from './pages/FixedTwitterDashboard' // PKL-278651-COMM-0004-DASH-TWITTER
 import UnifiedActivityDashboard from './pages/UnifiedActivityDashboard' // PKL-278651-COMM-0005-DASH-UNIFIED
 import SimpleUnifiedDashboard from './pages/SimpleUnifiedDashboard' // PKL-278651-COMM-0005-DASH-SIMPLE
+import XpDashboardPage from './pages/xp-dashboard' // PKL-278651-XP-0002-UI
 
 import { useAuth } from './hooks/useAuth'
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute'
@@ -343,6 +344,11 @@ export default function App() {
                   
                   {/* PKL-278651-COMM-0004-DASH-TWITTER - Twitter/X-Inspired Dashboard Route */}
                   <Route path="/test/twitter-style" component={FixedTwitterDashboard} />
+                  
+                  {/* PKL-278651-XP-0002-UI - XP System Dashboard */}
+                  <Route path="/xp-dashboard">
+                    {(params) => <ProtectedRoute component={XpDashboardPage} path="/xp-dashboard" />}
+                  </Route>
                   
                   {/* PKL-278651-COMM-0005-DASH-UNIFIED - Unified Activity-Centric Dashboard Route */}
                   <Route path="/test/unified-activity" component={UnifiedActivityDashboard} />
