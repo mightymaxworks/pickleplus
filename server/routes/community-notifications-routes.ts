@@ -421,7 +421,7 @@ export async function createNotification(notificationData: any) {
     });
     
     // If preference exists and is disabled, don't create notification
-    if (preference && !preference.isEnabled) {
+    if (preference && !preference.enabled) {
       return null;
     }
     

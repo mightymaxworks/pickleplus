@@ -34,6 +34,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { initializeCommunityModule } from "./modules/community"; // PKL-278651-COMM-0006-HUB
+import communityNotificationsRoutes from "./routes/community-notifications-routes"; // PKL-278651-COMM-0028-NOTIF
 
 // Import necessary schema
 import { 
@@ -169,6 +170,10 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Initialize PicklePulse System (PKL-278651-XP-0003-PULSE)
   const pickleScheduler = registerPicklePulseRoutes(app, storage);
   activeSchedulers.push(pickleScheduler);
+  
+  // Register Community Notifications Routes (PKL-278651-COMM-0028-NOTIF)
+  console.log("[API] Setting up community notifications routes...");
+  app.use(communityNotificationsRoutes);
   
   // Register Batch API routes (PKL-278651-PERF-0001.4-API)
   app.use("/api", batchApiRoutes);
