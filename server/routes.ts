@@ -62,6 +62,49 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     res.json({ message: 'Test route works!' });
   });
   
+  // Special test login endpoint for development
+  app.post('/api/auth/test-login', async (req: Request, res: Response) => {
+    try {
+      // Default to mightymax/67661189D@rren credentials if none provided
+      const username = req.body.username || 'mightymax';
+      const password = req.body.password || '67661189D@rren';
+      
+      console.log(`[API] Test login with username: ${username}`);
+      
+      // Find user by username
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        console.error(`[API] Test login failed: User ${username} not found`);
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
+      
+      // In real authentication this would verify the password
+      // For test login we're just checking if the username exists
+      
+      // Set the user in session
+      if (req.login) {
+        req.login(user, (err) => {
+          if (err) {
+            console.error('[API] Test login session error:', err);
+            return res.status(500).json({ message: 'Session error', error: err.message });
+          }
+          
+          console.log(`[API] Test login successful for user ${username}`);
+          // Return user info without password
+          const { password: _, ...userInfo } = user;
+          
+          return res.status(200).json(userInfo);
+        });
+      } else {
+        console.error('[API] Test login failed: req.login not available');
+        return res.status(500).json({ message: 'Authentication system not available' });
+      }
+    } catch (error) {
+      console.error('[API] Test login error:', error);
+      res.status(500).json({ message: 'Server error during test login' });
+    }
+  });
+  
   // Configure a simple storage engine for testing
   const testStorage = multer.diskStorage({
     destination: (req: any, file: any, cb: any) => {

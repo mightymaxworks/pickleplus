@@ -63,6 +63,9 @@ import CommunityDiscoveryPage from './pages/community-discover' // PKL-278651-CO
 // Import notification page (PKL-278651-COMM-0028-NOTIF)
 import NotificationsPage from './pages/notifications-page'
 
+// Import custom test login page to help with loading issues
+import TestLoginPage from './pages/test-login-page'
+
 // Import icons test page (PKL-278651-COMM-0007-ICONS)
 import IconsPage from './pages/icons'
 
@@ -160,6 +163,7 @@ export default function App() {
                   <Route path="/about" component={LazyAboutUsPage} />
                   <Route path="/test-routing" component={TestRoutingPage} />
                   <Route path="/landing-test" component={LandingPageTest} />
+                  <Route path="/test-login" component={TestLoginPage} />
                 
                   {/* Protected Routes */}
                   <Route path="/dashboard">
