@@ -8,6 +8,7 @@
  * 
  * @framework Framework5.1
  * @version 1.0.0
+ * @lastModified 2025-04-19
  */
 
 import { db } from '../../db';
@@ -20,28 +21,31 @@ import {
 import { ServerEventBus, ServerEvents } from '../../core/events/server-event-bus';
 import { ActivityMultiplierService } from './ActivityMultiplierService';
 
-// XP values for different community activities
-export const COMMUNITY_XP_VALUES = {
-  // Basic activities
-  POST_CREATED: 5,  // Matches CommunityActivityType.POST_CREATED
-  COMMENT_ADDED: 2, // Matches CommunityActivityType.COMMENT_ADDED
-  REACTION_ADDED: 1,  // Matches CommunityActivityType.REACTION_ADDED
+/**
+ * XP values for different community activities
+ * Maps activity types to their XP rewards
+ */
+export const COMMUNITY_XP_VALUES: Record<string, number> = {
+  // Basic activities - using exact string values from CommunityActivityType enum
+  [CommunityActivityType.POST_CREATED]: 5,
+  [CommunityActivityType.COMMENT_ADDED]: 2,
+  [CommunityActivityType.REACTION_ADDED]: 1,
   
   // Event-related activities
-  EVENT_CREATED: 10, // Currently not in enum but should be added
-  EVENT_ATTENDED: 5, // Matches CommunityActivityType.EVENT_ATTENDED
+  [CommunityActivityType.EVENT_ATTENDED]: 5,
+  'EVENT_CREATED': 10, // Special case not in enum
   
   // Community-building activities
-  CREATE_COMMUNITY: 25, // Currently not in enum but should be added
-  JOIN_COMMUNITY: 5,    // Currently not in enum but should be added
-  INVITATION_SENT: 2,   // Matches CommunityActivityType.INVITATION_SENT
+  [CommunityActivityType.INVITATION_SENT]: 2,
+  'CREATE_COMMUNITY': 25, // Special case not in enum
+  'JOIN_COMMUNITY': 5,    // Special case not in enum
   
   // Engagement and quality
-  PROFILE_UPDATED: 3,    // Matches CommunityActivityType.PROFILE_UPDATED
-  DAILY_LOGIN: 1,        // Matches CommunityActivityType.DAILY_LOGIN
-  FEATURED_POST: 15,     // Currently not in enum but should be added
-  WEEKLY_CONTRIBUTOR: 20,// Special awards not in basic enum
-  MONTHLY_CONTRIBUTOR: 50// Special awards not in basic enum
+  [CommunityActivityType.PROFILE_UPDATED]: 3,
+  [CommunityActivityType.DAILY_LOGIN]: 1,
+  'FEATURED_POST': 15,     // Special case not in enum
+  'WEEKLY_CONTRIBUTOR': 20,// Special awards
+  'MONTHLY_CONTRIBUTOR': 50// Special awards
 };
 
 export class CommunityXpIntegration {
@@ -88,44 +92,11 @@ export class CommunityXpIntegration {
       // Determine XP amount based on activity type
       let baseXp = 0;
       
-      switch (activityType) {
-        case CommunityActivityType.POST_CREATED:
-          baseXp = COMMUNITY_XP_VALUES.POST_CREATED;
-          break;
-        case CommunityActivityType.COMMENT_ADDED:
-          baseXp = COMMUNITY_XP_VALUES.COMMENT_ADDED;
-          break;
-        case CommunityActivityType.REACTION_ADDED:
-          baseXp = COMMUNITY_XP_VALUES.REACTION_ADDED;
-          break;
-        case CommunityActivityType.EVENT_ATTENDED:
-          baseXp = COMMUNITY_XP_VALUES.EVENT_ATTENDED;
-          break;
-        case CommunityActivityType.PROFILE_UPDATED:
-          baseXp = COMMUNITY_XP_VALUES.PROFILE_UPDATED;
-          break;
-        case CommunityActivityType.INVITATION_SENT:
-          baseXp = COMMUNITY_XP_VALUES.INVITATION_SENT;
-          break;
-        case CommunityActivityType.DAILY_LOGIN:
-          baseXp = COMMUNITY_XP_VALUES.DAILY_LOGIN;
-          break;
-        // Handle special cases not in the enum
-        case 'EVENT_CREATED' as any:
-          baseXp = COMMUNITY_XP_VALUES.EVENT_CREATED;
-          break;
-        case 'CREATE_COMMUNITY' as any:
-          baseXp = COMMUNITY_XP_VALUES.CREATE_COMMUNITY;
-          break;
-        case 'JOIN_COMMUNITY' as any:
-          baseXp = COMMUNITY_XP_VALUES.JOIN_COMMUNITY;
-          break;
-        case 'FEATURED_POST' as any:
-          baseXp = COMMUNITY_XP_VALUES.FEATURED_POST;
-          break;
-        default:
-          baseXp = 1; // Default minimal XP
-          console.log(`[XP] Unknown activity type: ${activityType}, awarding default XP`);
+      // Look up XP value from our mapping
+      baseXp = COMMUNITY_XP_VALUES[activityType] || 1;
+      
+      if (baseXp === 1 && !COMMUNITY_XP_VALUES[activityType]) {
+        console.log(`[XP] Unknown activity type: ${activityType}, awarding default XP`);
       }
       
       // Apply PicklePulse multiplier
@@ -165,17 +136,16 @@ export class CommunityXpIntegration {
     metadata?: Record<string, any>
   ) {
     try {
-      // Get user's current XP
-      const [userXp] = await db
-        .select({ xp: sql<number>`xp` })
-        .from(sql.raw('users'))
-        .where(eq(sql.raw('id'), userId));
+      // Get user's current XP from users table
+      const result = await db.execute(
+        sql`SELECT xp FROM users WHERE id = ${userId}`
+      );
       
-      if (!userXp) {
+      if (!result.rows || result.rows.length === 0) {
         throw new Error(`User ${userId} not found`);
       }
       
-      const currentXp = userXp.xp || 0;
+      const currentXp = result.rows[0].xp || 0;
       const newTotal = currentXp + amount;
       
       // Create XP transaction
@@ -192,10 +162,9 @@ export class CommunityXpIntegration {
       });
       
       // Update user's XP
-      await db
-        .update(sql.raw('users'))
-        .set({ xp: newTotal })
-        .where(eq(sql.raw('id'), userId));
+      await db.execute(
+        sql`UPDATE users SET xp = ${newTotal} WHERE id = ${userId}`
+      );
       
       // Check for level up (will be handled by a trigger or separate process)
       

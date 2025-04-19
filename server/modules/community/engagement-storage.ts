@@ -20,7 +20,7 @@ import {
   CommunityActivityType,
   InsertCommunityActivity,
   CommunityActivity,
-  CommunityEngagementMetric,
+  CommunityEngagementMetrics,
   CommunityEngagementLevel
 } from "@shared/schema/community-engagement";
 import { ServerEventBus, ServerEvents } from "../../core/events/server-event-bus";
@@ -47,7 +47,7 @@ export class CommunityEngagementStorage {
     await ServerEventBus.emit(ServerEvents.COMMUNITY_ACTIVITY_CREATED, {
       userId: activity.userId,
       communityId: activity.communityId,
-      activityType: activity.activityType,
+      activityType: activity.activityType as any, // Cast to any to work with the event bus
       activityId: newActivity.id,
       metadata: activity.activityData || {}
     });
@@ -61,7 +61,7 @@ export class CommunityEngagementStorage {
   async updateEngagementMetrics(
     userId: number,
     communityId: number,
-    activityType: CommunityActivityType
+    activityType: string
   ): Promise<void> {
     // Check if metrics record exists
     const [existingMetrics] = await db.select()
@@ -179,7 +179,7 @@ export class CommunityEngagementStorage {
   async getTopContributors(
     communityId: number,
     limit: number = 10
-  ): Promise<CommunityEngagementMetric[]> {
+  ): Promise<CommunityEngagementMetrics[]> {
     return db.select()
       .from(communityEngagementMetrics)
       .where(eq(communityEngagementMetrics.communityId, communityId))
@@ -212,7 +212,7 @@ export class CommunityEngagementStorage {
   async getUserEngagement(
     userId: number,
     communityId: number
-  ): Promise<CommunityEngagementMetric | undefined> {
+  ): Promise<CommunityEngagementMetrics | undefined> {
     const [metrics] = await db.select()
       .from(communityEngagementMetrics)
       .where(
