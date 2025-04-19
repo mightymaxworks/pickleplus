@@ -2,8 +2,8 @@
  * PKL-278651-COMM-0022-FEED
  * Activity Item Component
  * 
- * This component displays a single activity feed item with modern UI design,
- * matching the community card visual style with banner images and avatars.
+ * This component displays a single activity feed item with modern UI design
+ * that matches the CommunitySearchResults card styling with banner images and avatars.
  * 
  * @framework Framework5.1
  * @version 1.0.0
@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { 
   Activity, Users, Calendar, Trophy, MessageCircle,
   Heart, Star, Award, ThumbsUp, Bell, Check,
-  ExternalLink, Eye
+  Eye, MapPin
 } from 'lucide-react';
 import { Link } from 'wouter';
 
@@ -59,7 +59,7 @@ const ACTIVITY_COLORS: Record<string, string> = {
   'default': 'bg-primary'
 };
 
-// Activity gradient backgrounds
+// Activity background gradient mapping
 const ACTIVITY_GRADIENTS: Record<string, string> = {
   'community_join': 'from-blue-400 to-blue-700',
   'community_create': 'from-indigo-400 to-indigo-700',
@@ -75,11 +75,6 @@ const ACTIVITY_GRADIENTS: Record<string, string> = {
   'xp': 'from-cyan-400 to-cyan-700',
   'endorsement': 'from-sky-400 to-sky-700',
   'default': 'from-primary/80 to-primary'
-};
-
-// Banner background patterns (could be actual images in production)
-const getBannerPattern = (type: string): string => {
-  return `bg-gradient-to-br ${ACTIVITY_GRADIENTS[type] || ACTIVITY_GRADIENTS.default}`;
 };
 
 interface Activity {
@@ -156,105 +151,123 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity, onMarkAsRead }) =
   
   const displayName = activity.displayName || activity.username;
   const initials = getInitials(displayName);
-  const bannerPattern = getBannerPattern(activity.type);
+  const gradientClass = ACTIVITY_GRADIENTS[activity.type] || ACTIVITY_GRADIENTS.default;
   
   return (
-    <Card 
-      className={`w-full transition-all hover:shadow-md overflow-hidden ${!isRead ? 'ring-1 ring-primary/30' : ''} ${activity.isNew ? 'animate-highlight-fade' : ''}`}
-      onClick={handleMarkAsRead}
-    >
-      {/* Banner with gradient background */}
-      <div className="relative h-24 w-full overflow-hidden">
-        <div className={`absolute inset-0 ${bannerPattern}`}></div>
-        <div className="absolute inset-0 bg-black/20"></div>
-        
-        {/* Activity badge in top right */}
-        <div className="absolute top-2 right-2">
+    <Card className="w-full transition-all hover:shadow-md overflow-hidden">
+      {/* Banner Image Section - Match CommunitySearchResults styling */}
+      <div className="relative h-32 w-full overflow-hidden">
+        <div className={`absolute inset-0 bg-gradient-to-br ${gradientClass}`}></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60"></div>
+        <div className="absolute bottom-2 left-3">
+          <Avatar className="h-12 w-12 border-2 border-white shadow-md">
+            <AvatarImage src={activity.avatar || ''} alt={displayName} />
+            <AvatarFallback className={getIconBackgroundColor()}>
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+        </div>
+        <div className="absolute top-2 right-2 flex gap-1.5">
           <Badge 
             variant="outline" 
-            className={`${getIconBackgroundColor()} text-white border-white/20 shadow-sm flex items-center gap-1`}
+            className={`${getIconBackgroundColor()} text-white text-[10px] sm:text-xs py-0 h-5 px-1.5 sm:px-2 border-white/20 shadow-sm`}
           >
             {getIcon()}
-            <span className="hidden sm:inline">
+            <span className="ml-1">
               {activity.type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
             </span>
           </Badge>
+          
+          {!isRead && (
+            <Badge variant="outline" className="bg-primary/10 text-primary border-white/20 shadow-sm text-[10px] h-5 px-1.5">
+              <span className="mr-1">New</span>
+              <span className="h-2 w-2 rounded-full bg-primary block"></span>
+            </Badge>
+          )}
         </div>
-        
-        {/* User Avatar */}
-        <div className="absolute bottom-0 translate-y-1/2 left-3">
-          <Avatar className="h-12 w-12 border-2 border-white shadow-md">
-            <AvatarImage src={activity.avatar || ''} alt={displayName} />
-            <AvatarFallback className={getIconBackgroundColor()}>{initials}</AvatarFallback>
-          </Avatar>
-        </div>
-        
-        {/* Unread indicator */}
-        {!isRead && (
-          <div className="absolute top-2 left-2">
-            <span className="h-2 w-2 rounded-full bg-white shadow-md block"></span>
-          </div>
-        )}
       </div>
       
-      <CardHeader className="pt-6 pb-2 pl-20">
+      <CardHeader className={`pb-2 ${activity.bannerUrl ? 'pt-3' : 'pt-4'}`}>
         <div className="flex justify-between items-start">
-          <div>
-            <p className="font-medium text-sm">
+          <div className="pl-16">
+            <p className="font-medium text-base">
               {displayName}
             </p>
-            <time dateTime={activity.timestamp} className="text-xs text-muted-foreground">
-              {formattedTime}
-            </time>
+            <div className="flex items-center text-sm text-muted-foreground mt-1">
+              <time dateTime={activity.timestamp} className="text-xs text-muted-foreground">
+                {formattedTime}
+              </time>
+              
+              {activity.metadata?.location && (
+                <div className="flex items-center ml-4">
+                  <MapPin className="h-3.5 w-3.5 mr-1" />
+                  <span>{activity.metadata.location}</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </CardHeader>
       
-      <CardContent className="pt-0">
-        <p className="text-sm text-foreground">{activity.content}</p>
+      <CardContent className="pb-3">
+        <p className="text-sm text-muted-foreground line-clamp-2">
+          {activity.content}
+        </p>
+        
+        {activity.metadata?.tags && (
+          <div className="flex flex-wrap gap-1 sm:gap-2 mt-3">
+            {activity.metadata.tags.split(',').map((tag: string, index: number) => (
+              <Badge 
+                key={index} 
+                variant="secondary" 
+                className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0 truncate max-w-[80px] sm:max-w-[120px]"
+              >
+                {tag.trim()}
+              </Badge>
+            ))}
+          </div>
+        )}
       </CardContent>
       
-      <CardFooter className="pt-2 pb-3 flex justify-between border-t mt-2">
-        <div className="text-xs text-muted-foreground flex items-center">
+      <CardFooter className="pt-0 flex justify-between">
+        <div className="text-sm flex items-center">
           {isCommunityRelated ? (
-            <Users className="h-3.5 w-3.5 mr-1" />
+            <Users className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
           ) : isEventRelated ? (
-            <Calendar className="h-3.5 w-3.5 mr-1" />
+            <Calendar className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
           ) : (
-            <Activity className="h-3.5 w-3.5 mr-1" />
+            <Activity className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
           )}
-          <span>
+          <span className="text-muted-foreground">
             {activity.metadata?.additionalInfo || 
             (activity.communityId ? 'Community activity' : 
             (isEventRelated ? 'Event activity' : 'User activity'))}
           </span>
         </div>
         
-        {!isRead && onMarkAsRead ? (
-          <Button 
-            size="sm" 
-            variant="ghost" 
-            className="h-7 px-2 text-xs"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleMarkAsRead();
-            }}
-          >
-            <Check className="h-3 w-3 mr-1" />
-            Mark as read
-          </Button>
+        {getActivityLink() !== '#' ? (
+          <Link to={getActivityLink()}>
+            <Button size="sm" variant="outline" className="h-8 px-2 sm:px-3">
+              <Eye className="h-3.5 w-3.5 sm:mr-1.5" />
+              <span className="hidden sm:inline">View Details</span>
+              <span className="inline sm:hidden ml-1 text-xs">View</span>
+            </Button>
+          </Link>
         ) : (
-          getActivityLink() !== '#' && (
-            <Link to={getActivityLink()}>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="h-7 px-2 text-xs"
-              >
-                <Eye className="h-3 w-3 mr-1" />
-                View
-              </Button>
-            </Link>
+          !isRead && onMarkAsRead && (
+            <Button 
+              size="sm" 
+              variant="ghost"
+              className="h-8 px-2 sm:px-3"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleMarkAsRead();
+              }}
+            >
+              <Check className="h-3.5 w-3.5 sm:mr-1.5" />
+              <span className="hidden sm:inline">Mark as Read</span>
+              <span className="inline sm:hidden ml-1 text-xs">Read</span>
+            </Button>
           )
         )}
       </CardFooter>
