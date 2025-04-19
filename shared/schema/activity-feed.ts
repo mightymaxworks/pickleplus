@@ -1,138 +1,113 @@
 /**
  * PKL-278651-COMM-0022-FEED
- * Activity Feed Schema
+ * Activity Feed Schemas
  * 
- * Extended schema for the community activity feed with additional fields
- * for real-time updates.
+ * This file defines the database schemas for activity feeds.
  * 
  * @framework Framework5.1
  * @version 1.0.0
  * @lastModified 2025-04-19
  */
 
+import { pgTable, serial, integer, varchar, text, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import { pgTable, serial, integer, varchar, text, timestamp, jsonb, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod";
 import { users } from "../schema";
 import { communities } from "./community";
 
 /**
- * Community activities table enhanced for the real-time feed.
- * This extends the base communityActivities table from community-engagement.ts
- * with additional fields specific to the activity feed.
+ * Activity Feed Entries Table
  */
-export const communityActivityFeed = pgTable("community_activity_feed", {
+export const activityFeedEntries = pgTable("activity_feed_entries", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
-  communityId: integer("community_id").references(() => communities.id),
   type: varchar("type", { length: 50 }).notNull(),
   content: text("content").notNull(),
-  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  communityId: integer("community_id").references(() => communities.id),
   metadata: jsonb("metadata"),
   relatedEntityId: integer("related_entity_id"),
-  relatedEntityType: varchar("related_entity_type", { length: 50 }),
-  isPublic: boolean("is_public").default(true),
-  isHidden: boolean("is_hidden").default(false),
-  impressionCount: integer("impression_count").default(0)
+  relatedEntityType: varchar("related_entity_type", { length: 100 }),
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow()
 });
 
 /**
- * Relationship between activities and users who have interacted with them
+ * Activity Feed Entries Relations
  */
-export const activityInteractions = pgTable("activity_interactions", {
+export const activityFeedEntriesRelations = relations(activityFeedEntries, ({ one }) => ({
+  user: one(users, {
+    fields: [activityFeedEntries.userId],
+    references: [users.id]
+  }),
+  community: one(communities, {
+    fields: [activityFeedEntries.communityId],
+    references: [communities.id]
+  })
+}));
+
+/**
+ * Activity Feed Read Status Table
+ * Tracks which users have read which activities
+ */
+export const activityReadStatus = pgTable("activity_read_status", {
   id: serial("id").primaryKey(),
-  activityId: integer("activity_id").notNull().references(() => communityActivityFeed.id),
   userId: integer("user_id").notNull().references(() => users.id),
-  interactionType: varchar("interaction_type", { length: 20 }).notNull(), // like, view, share
-  timestamp: timestamp("timestamp").defaultNow().notNull(),
-  metadata: jsonb("metadata")
+  activityId: integer("activity_id").notNull().references(() => activityFeedEntries.id),
+  readAt: timestamp("read_at").defaultNow()
 });
 
 /**
- * Activity feed settings per user
+ * Activity Read Status Relations
+ */
+export const activityReadStatusRelations = relations(activityReadStatus, ({ one }) => ({
+  user: one(users, {
+    fields: [activityReadStatus.userId],
+    references: [users.id]
+  }),
+  activity: one(activityFeedEntries, {
+    fields: [activityReadStatus.activityId],
+    references: [activityFeedEntries.id]
+  })
+}));
+
+/**
+ * Activity Feed Settings Table
+ * User preferences for activity feed
  */
 export const activityFeedSettings = pgTable("activity_feed_settings", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id).unique(),
-  showPublicActivities: boolean("show_public_activities").default(true),
+  showGlobalActivities: boolean("show_global_activities").default(true),
   showCommunityActivities: boolean("show_community_activities").default(true),
   showFriendActivities: boolean("show_friend_activities").default(true),
-  notifyOnMention: boolean("notify_on_mention").default(true),
-  notifyOnComment: boolean("notify_on_comment").default(true),
-  notifyOnLike: boolean("notify_on_like").default(true),
-  activityTypesFilter: jsonb("activity_types_filter"),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  showAchievementActivities: boolean("show_achievement_activities").default(true),
+  showMatchActivities: boolean("show_match_activities").default(true),
+  showTournamentActivities: boolean("show_tournament_activities").default(true),
+  activityDisplayLimit: integer("activity_display_limit").default(50),
+  updatedAt: timestamp("updated_at").defaultNow()
 });
 
-// Relations
-export const communityActivityFeedRelations = relations(
-  communityActivityFeed, 
-  ({ one, many }) => ({
-    user: one(users, {
-      fields: [communityActivityFeed.userId],
-      references: [users.id],
-    }),
-    community: one(communities, {
-      fields: [communityActivityFeed.communityId],
-      references: [communities.id],
-    }),
-    interactions: many(activityInteractions)
+/**
+ * Activity Feed Settings Relations
+ */
+export const activityFeedSettingsRelations = relations(activityFeedSettings, ({ one }) => ({
+  user: one(users, {
+    fields: [activityFeedSettings.userId],
+    references: [users.id]
   })
-);
+}));
 
-export const activityInteractionsRelations = relations(
-  activityInteractions, 
-  ({ one }) => ({
-    activity: one(communityActivityFeed, {
-      fields: [activityInteractions.activityId],
-      references: [communityActivityFeed.id],
-    }),
-    user: one(users, {
-      fields: [activityInteractions.userId],
-      references: [users.id],
-    }),
-  })
-);
+// Create insert schemas
+export const insertActivityFeedEntrySchema = createInsertSchema(activityFeedEntries);
+export const insertActivityReadStatusSchema = createInsertSchema(activityReadStatus);
+export const insertActivityFeedSettingsSchema = createInsertSchema(activityFeedSettings);
 
-export const activityFeedSettingsRelations = relations(
-  activityFeedSettings, 
-  ({ one }) => ({
-    user: one(users, {
-      fields: [activityFeedSettings.userId],
-      references: [users.id],
-    }),
-  })
-);
+// Define types
+export type ActivityFeedEntry = typeof activityFeedEntries.$inferSelect;
+export type InsertActivityFeedEntry = typeof activityFeedEntries.$inferInsert;
 
-// Zod validation schemas
-export const insertCommunityActivityFeedSchema = createInsertSchema(
-  communityActivityFeed, 
-  {
-    metadata: z.any().optional(),
-  }
-);
-
-export const insertActivityInteractionSchema = createInsertSchema(
-  activityInteractions, 
-  {
-    metadata: z.any().optional(),
-  }
-);
-
-export const insertActivityFeedSettingsSchema = createInsertSchema(
-  activityFeedSettings, 
-  {
-    activityTypesFilter: z.any().optional(),
-  }
-);
-
-// TypeScript types
-export type CommunityActivityFeed = typeof communityActivityFeed.$inferSelect;
-export type InsertCommunityActivityFeed = z.infer<typeof insertCommunityActivityFeedSchema>;
-
-export type ActivityInteraction = typeof activityInteractions.$inferSelect;
-export type InsertActivityInteraction = z.infer<typeof insertActivityInteractionSchema>;
+export type ActivityReadStatus = typeof activityReadStatus.$inferSelect;
+export type InsertActivityReadStatus = typeof activityReadStatus.$inferInsert;
 
 export type ActivityFeedSettings = typeof activityFeedSettings.$inferSelect;
-export type InsertActivityFeedSettings = z.infer<typeof insertActivityFeedSettingsSchema>;
+export type InsertActivityFeedSettings = typeof activityFeedSettings.$inferInsert;

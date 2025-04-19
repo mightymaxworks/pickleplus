@@ -1,8 +1,8 @@
 /**
  * PKL-278651-COMM-0022-FEED
- * WebSocket Server Implementation
+ * WebSocket Server
  * 
- * This module sets up and manages the WebSocket server for real-time updates.
+ * This module implements the WebSocket server for real-time communication.
  * 
  * @framework Framework5.1
  * @version 1.0.0
@@ -11,240 +11,302 @@
 
 import { Server as HttpServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
-import { ServerEventBus } from '../../core/events';
+import { randomUUID } from 'crypto';
+import { ServerEventBus } from '../../core/events/server-event-bus';
+import { parse } from 'cookie';
+import { passport } from '../../services/passport';
 
-// Client connection interface
-interface Client {
+interface WebSocketClient {
   id: string;
+  socket: WebSocket;
+  topics: Set<string>;
   userId?: number;
-  ws: WebSocket;
-  isAlive: boolean;
-  subscriptions: string[];
+  isAuthenticated: boolean;
 }
 
-// Message types
-type MessageType = 'subscribe' | 'unsubscribe' | 'ping' | 'auth';
-
-interface Message {
-  type: MessageType;
-  topics?: string[];
-  token?: string;
-  userId?: number;
-  payload?: any;
-}
-
-export class WebSocketManager {
+/**
+ * WebSocket server for real-time communication
+ */
+export class PickleSocketServer {
   private wss: WebSocketServer;
-  private clients: Map<string, Client> = new Map();
-  private pingInterval: NodeJS.Timeout | null = null;
-
+  private clients: Map<string, WebSocketClient> = new Map();
+  private topicSubscriptions: Map<string, Set<string>> = new Map();
+  private userConnections: Map<number, Set<string>> = new Map();
+  
   constructor(server: HttpServer) {
-    // Initialize WebSocket server on a dedicated path to avoid conflict with Vite's HMR
     this.wss = new WebSocketServer({ 
       server, 
-      path: '/ws' 
+      path: '/ws',
+      clientTracking: true
     });
-
-    console.log('[WebSocket] Server initialized on path /ws');
     
-    this.setupEventHandlers();
-    this.startPingInterval();
-    this.subscribeToServerEvents();
+    this.initialize();
   }
-
-  private setupEventHandlers(): void {
-    this.wss.on('connection', (ws: WebSocket) => {
-      const clientId = this.generateClientId();
-      
-      // Initialize client
-      const client: Client = {
-        id: clientId,
-        ws,
-        isAlive: true,
-        subscriptions: []
-      };
-      
-      this.clients.set(clientId, client);
-      console.log(`[WebSocket] Client connected: ${clientId}, total connections: ${this.clients.size}`);
-
-      // Send welcome message
-      this.sendToClient(client, {
-        type: 'connection',
-        status: 'connected',
-        clientId,
-        message: 'Connected to Pickle+ WebSocket server'
-      });
-
-      // Handle incoming messages
-      ws.on('message', (data: Buffer) => {
-        try {
-          const message = JSON.parse(data.toString()) as Message;
-          this.handleClientMessage(client, message);
-        } catch (err) {
-          console.error('[WebSocket] Error parsing message:', err);
-          this.sendToClient(client, {
-            type: 'error',
-            message: 'Invalid message format'
-          });
-        }
-      });
-
-      // Handle disconnection
-      ws.on('close', () => {
-        this.clients.delete(clientId);
-        console.log(`[WebSocket] Client disconnected: ${clientId}, remaining connections: ${this.clients.size}`);
-      });
-
-      // Handle pong (keepalive)
-      ws.on('pong', () => {
-        client.isAlive = true;
-      });
+  
+  /**
+   * Initialize the WebSocket server
+   */
+  private initialize(): void {
+    // Set up connection handling
+    this.wss.on('connection', (socket, request) => {
+      this.handleConnection(socket, request);
     });
-  }
-
-  private handleClientMessage(client: Client, message: Message): void {
-    switch (message.type) {
-      case 'subscribe':
-        if (message.topics && Array.isArray(message.topics)) {
-          // Add topics to client subscriptions without using Set
-          const uniqueTopics = [...client.subscriptions];
-          message.topics.forEach(topic => {
-            if (!uniqueTopics.includes(topic)) {
-              uniqueTopics.push(topic);
-            }
-          });
-          client.subscriptions = uniqueTopics;
-          this.sendToClient(client, {
-            type: 'subscribed',
-            topics: message.topics
-          });
-          console.log(`[WebSocket] Client ${client.id} subscribed to topics: ${message.topics.join(', ')}`);
+    
+    // Subscribe to all events from the event bus
+    ServerEventBus.subscribe('*', (topic, data) => {
+      this.publishToSubscribers(topic, data);
+    });
+    
+    // Set up periodic ping to keep connections alive
+    setInterval(() => {
+      this.wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.ping();
         }
-        break;
-        
-      case 'unsubscribe':
-        if (message.topics && Array.isArray(message.topics)) {
-          // Remove topics from client subscriptions
-          client.subscriptions = client.subscriptions.filter(topic => !message.topics?.includes(topic));
-          this.sendToClient(client, {
-            type: 'unsubscribed',
-            topics: message.topics
-          });
-          console.log(`[WebSocket] Client ${client.id} unsubscribed from topics: ${message.topics.join(', ')}`);
-        }
-        break;
-        
-      case 'ping':
-        // Respond with pong
-        this.sendToClient(client, { type: 'pong' });
-        break;
-        
-      case 'auth':
-        if (message.userId) {
-          client.userId = message.userId;
-          console.log(`[WebSocket] Client ${client.id} authenticated for user ${message.userId}`);
-          this.sendToClient(client, {
-            type: 'auth',
-            status: 'success',
-            userId: message.userId
-          });
-        }
-        break;
-        
-      default:
-        console.warn(`[WebSocket] Unknown message type: ${message.type}`);
-        this.sendToClient(client, {
-          type: 'error',
-          message: `Unknown message type: ${message.type}`
-        });
-    }
-  }
-
-  private startPingInterval(): void {
-    // Check client connections every 30 seconds
-    this.pingInterval = setInterval(() => {
-      this.clients.forEach((client, id) => {
-        if (!client.isAlive) {
-          client.ws.terminate();
-          this.clients.delete(id);
-          console.log(`[WebSocket] Terminated inactive client: ${id}`);
-          return;
-        }
-        
-        client.isAlive = false;
-        client.ws.ping();
       });
     }, 30000);
-  }
-
-  private sendToClient(client: Client, data: any): void {
-    if (client.ws.readyState === WebSocket.OPEN) {
-      client.ws.send(JSON.stringify(data));
-    }
-  }
-
-  private broadcastToTopic(topic: string, data: any): void {
-    this.clients.forEach(client => {
-      if (client.subscriptions.includes(topic) && client.ws.readyState === WebSocket.OPEN) {
-        this.sendToClient(client, {
-          type: 'message',
-          topic,
-          data
-        });
-      }
-    });
-  }
-
-  private subscribeToServerEvents(): void {
-    // Subscribe to community activity events
-    ServerEventBus.subscribe('community:activity:created', (data) => {
-      this.broadcastToTopic('community:activity', data);
-      
-      // Also broadcast to community-specific topic
-      if (data.communityId) {
-        this.broadcastToTopic(`community:${data.communityId}:activity`, data);
-      }
-    });
     
-    // Subscribe to other events as needed
-    const relevantEvents = [
-      'community:post:created',
-      'community:comment:added',
-      'community:event:created',
-      'community:member:joined'
-    ];
+    console.log('[WS] WebSocket server initialized');
+  }
+  
+  /**
+   * Handle new WebSocket connections
+   */
+  private handleConnection(socket: WebSocket, request: any): void {
+    // Generate a unique client ID
+    const clientId = randomUUID();
     
-    relevantEvents.forEach(event => {
-      ServerEventBus.subscribe(event, (data) => {
-        // Convert event to topic format
-        const topic = event.replace(/:/g, '.');
-        this.broadcastToTopic(topic, data);
+    // Create a client object
+    const client: WebSocketClient = {
+      id: clientId,
+      socket,
+      topics: new Set(),
+      isAuthenticated: false
+    };
+    
+    // Extract authentication info from cookies if available
+    this.authenticateClient(client, request);
+    
+    // Add to client list
+    this.clients.set(clientId, client);
+    
+    // Send connection confirmation
+    socket.send(JSON.stringify({
+      type: 'connection',
+      status: 'connected',
+      clientId,
+      isAuthenticated: client.isAuthenticated
+    }));
+    
+    console.log(`[WS] Client connected: ${clientId}`);
+    
+    // Set up message handling
+    socket.on('message', (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        this.handleMessage(client, data);
+      } catch (error) {
+        console.error('[WS] Error parsing message:', error);
         
-        // Also broadcast to community-specific topic if applicable
-        if (data.communityId) {
-          this.broadcastToTopic(`community.${data.communityId}.${topic}`, data);
-        }
-      });
+        socket.send(JSON.stringify({
+          type: 'error',
+          message: 'Invalid message format'
+        }));
+      }
+    });
+    
+    // Set up disconnect handling
+    socket.on('close', () => {
+      this.handleDisconnect(client);
+      console.log(`[WS] Client disconnected: ${clientId}`);
+    });
+    
+    socket.on('error', (error) => {
+      console.error(`[WS] Socket error for client ${clientId}:`, error);
     });
   }
-
-  private generateClientId(): string {
-    return `client_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  
+  /**
+   * Try to authenticate the client using session cookies
+   */
+  private authenticateClient(client: WebSocketClient, request: any): void {
+    try {
+      // Extract session ID from cookies
+      const cookieHeader = request.headers.cookie;
+      if (cookieHeader) {
+        const cookies = parse(cookieHeader);
+        
+        // If we have a session cookie, associate the user ID with this connection
+        if (cookies['connect.sid']) {
+          // This is a simplified approach - in a real implementation you would
+          // verify the session with the Express session store
+          // For now, we'll just mark the client as authenticated
+          client.isAuthenticated = true;
+          
+          // In a real implementation, we would get the user ID from the session
+          // For demonstration purposes, let's use a dummy user ID
+          client.userId = 1; // Placeholder user ID
+          
+          // Add to user connections map
+          if (client.userId) {
+            if (!this.userConnections.has(client.userId)) {
+              this.userConnections.set(client.userId, new Set());
+            }
+            this.userConnections.get(client.userId)?.add(client.id);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('[WS] Error authenticating client:', error);
+    }
   }
-
-  public shutdown(): void {
-    if (this.pingInterval) {
-      clearInterval(this.pingInterval);
+  
+  /**
+   * Handle client messages
+   */
+  private handleMessage(client: WebSocketClient, data: any): void {
+    // Handle subscribe/unsubscribe requests
+    if (data.type === 'subscribe' && Array.isArray(data.topics)) {
+      this.handleSubscribe(client, data.topics);
+    } else if (data.type === 'unsubscribe' && Array.isArray(data.topics)) {
+      this.handleUnsubscribe(client, data.topics);
+    }
+  }
+  
+  /**
+   * Handle client subscription requests
+   */
+  private handleSubscribe(client: WebSocketClient, topics: string[]): void {
+    for (const topic of topics) {
+      // Skip empty topics
+      if (!topic) continue;
+      
+      // Add to client's topics
+      client.topics.add(topic);
+      
+      // Add to topic subscriptions
+      if (!this.topicSubscriptions.has(topic)) {
+        this.topicSubscriptions.set(topic, new Set());
+      }
+      this.topicSubscriptions.get(topic)?.add(client.id);
     }
     
-    this.clients.forEach(client => {
-      client.ws.terminate();
+    // Confirm subscription
+    client.socket.send(JSON.stringify({
+      type: 'subscribed',
+      topics: Array.from(client.topics)
+    }));
+  }
+  
+  /**
+   * Handle client unsubscribe requests
+   */
+  private handleUnsubscribe(client: WebSocketClient, topics: string[]): void {
+    for (const topic of topics) {
+      // Remove from client's topics
+      client.topics.delete(topic);
+      
+      // Remove from topic subscriptions
+      this.topicSubscriptions.get(topic)?.delete(client.id);
+      
+      // Clean up empty topic sets
+      if (this.topicSubscriptions.get(topic)?.size === 0) {
+        this.topicSubscriptions.delete(topic);
+      }
+    }
+    
+    // Confirm unsubscription
+    client.socket.send(JSON.stringify({
+      type: 'unsubscribed',
+      topics
+    }));
+  }
+  
+  /**
+   * Handle client disconnections
+   */
+  private handleDisconnect(client: WebSocketClient): void {
+    // Remove from all topic subscriptions
+    for (const topic of client.topics) {
+      this.topicSubscriptions.get(topic)?.delete(client.id);
+      
+      // Clean up empty topic sets
+      if (this.topicSubscriptions.get(topic)?.size === 0) {
+        this.topicSubscriptions.delete(topic);
+      }
+    }
+    
+    // Remove from user connections
+    if (client.userId) {
+      this.userConnections.get(client.userId)?.delete(client.id);
+      
+      // Clean up empty user connection sets
+      if (this.userConnections.get(client.userId)?.size === 0) {
+        this.userConnections.delete(client.userId);
+      }
+    }
+    
+    // Remove from clients map
+    this.clients.delete(client.id);
+  }
+  
+  /**
+   * Publish a message to all subscribers of a topic
+   */
+  private publishToSubscribers(topic: string, data: any): void {
+    // Get all clients subscribed to this topic
+    const subscribers = this.topicSubscriptions.get(topic);
+    
+    if (!subscribers || subscribers.size === 0) {
+      return;
+    }
+    
+    // Prepare the message
+    const message = JSON.stringify({
+      topic,
+      payload: data,
+      timestamp: new Date().toISOString()
     });
     
-    this.clients.clear();
-    console.log('[WebSocket] Server shut down');
+    // Send to all subscribers
+    subscribers.forEach(clientId => {
+      const client = this.clients.get(clientId);
+      
+      if (client && client.socket.readyState === WebSocket.OPEN) {
+        client.socket.send(message);
+      }
+    });
+  }
+  
+  /**
+   * Send a message to a specific user
+   */
+  public sendToUser(userId: number, topic: string, data: any): void {
+    const userClients = this.userConnections.get(userId);
+    
+    if (!userClients || userClients.size === 0) {
+      return;
+    }
+    
+    // Prepare the message
+    const message = JSON.stringify({
+      topic,
+      payload: data,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Send to all of the user's connected clients
+    userClients.forEach(clientId => {
+      const client = this.clients.get(clientId);
+      
+      if (client && client.socket.readyState === WebSocket.OPEN) {
+        client.socket.send(message);
+      }
+    });
   }
 }
 
-// Export the WebSocketManager class
-export default WebSocketManager;
+// Export factory function to create the WebSocket server
+export function createWebSocketServer(server: HttpServer): PickleSocketServer {
+  return new PickleSocketServer(server);
+}

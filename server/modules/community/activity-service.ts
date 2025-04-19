@@ -1,8 +1,9 @@
 /**
  * PKL-278651-COMM-0022-FEED
- * Community Activity Service
+ * Activity Service
  * 
- * This service handles community activity tracking and retrieval.
+ * This service handles business logic for community activities, including
+ * retrieving, creating, and managing community activities.
  * 
  * @framework Framework5.1
  * @version 1.0.0
@@ -10,14 +11,28 @@
  */
 
 import { db } from '../../db';
-import { serverEventBus } from '../../core/events';
-import { eq, desc, sql, and } from 'drizzle-orm';
-import { users } from '../../../shared/schema';
-import { communities } from '../../../shared/schema/community';
-import { communityMembers } from '../../../shared/schema/community';
-import { communityActivityFeed as communityActivities } from '../../../shared/schema/activity-feed';
+import { users } from '@shared/schema';
+import * as schema from '@shared/schema/activity-feed';
+import { communities, communityMembers } from '@shared/schema/community';
+import { 
+  eq, 
+  desc, 
+  and, 
+  or, 
+  inArray, 
+  sql 
+} from 'drizzle-orm';
+import { ServerEvents } from '../../core/events/server-event-bus';
 
-interface CreateActivityParams {
+interface GetActivitiesOptions {
+  communityId?: number;
+  userId?: number;
+  limit?: number;
+  offset?: number;
+  types?: string[];
+}
+
+export interface CreateActivityParams {
   type: string;
   userId: number;
   content: string;
@@ -28,173 +43,281 @@ interface CreateActivityParams {
 }
 
 /**
- * Creates a new activity record and emits an event for real-time updates
+ * Emit an event to all clients
+ */
+function emitEvent(topic: string, data: any) {
+  // Using ServerEvents enum if it matches
+  const eventName = Object.values(ServerEvents).find(event => event === topic);
+  
+  // If topic is a known ServerEvent, emit it that way, otherwise emit as custom topic
+  if (eventName) {
+    ServerEventBus.emit(eventName as ServerEvents, data);
+  } else {
+    // For custom topics that don't match ServerEvents
+    // This would typically be implemented with a custom event emitter
+    console.log(`[ActivityService] Emitting custom event: ${topic}`, data);
+    // Custom implementation would go here
+  }
+}
+
+/**
+ * Get activities for a specific community or all visible communities
+ */
+export async function getActivities(options: GetActivitiesOptions = {}) {
+  try {
+    const { 
+      communityId, 
+      userId, 
+      limit = 10, 
+      offset = 0,
+      types
+    } = options;
+    
+    // Build the query
+    let query = db
+      .select({
+        id: schema.activityFeedEntries.id,
+        type: schema.activityFeedEntries.type,
+        userId: schema.activityFeedEntries.userId,
+        username: users.username,
+        displayName: users.displayName,
+        avatar: users.avatarUrl,
+        content: schema.activityFeedEntries.content,
+        timestamp: schema.activityFeedEntries.createdAt,
+        communityId: schema.activityFeedEntries.communityId,
+        communityName: communities.name,
+        metadata: schema.activityFeedEntries.metadata,
+        relatedEntityId: schema.activityFeedEntries.relatedEntityId,
+        relatedEntityType: schema.activityFeedEntries.relatedEntityType,
+        isRead: schema.activityFeedEntries.isRead
+      })
+      .from(schema.activityFeedEntries)
+      .leftJoin(users, eq(schema.activityFeedEntries.userId, users.id))
+      .leftJoin(communities, eq(schema.activityFeedEntries.communityId, communities.id))
+      .orderBy(desc(schema.activityFeedEntries.createdAt))
+      .limit(limit)
+      .offset(offset);
+    
+    // Apply filters
+    const conditions = [];
+    
+    // Filter by community if provided
+    if (communityId) {
+      conditions.push(eq(schema.activityFeedEntries.communityId, communityId));
+    } else if (userId) {
+      // If no specific community but there is a user, get activities from communities the user belongs to
+      // This requires joining with communityMembers to check membership
+      query = query.leftJoin(
+        communityMembers,
+        and(
+          eq(schema.activityFeedEntries.communityId, communityMembers.communityId),
+          eq(communityMembers.userId, userId)
+        )
+      );
+      
+      conditions.push(
+        or(
+          // Activities without a community (global)
+          sql`${schema.activityFeedEntries.communityId} IS NULL`,
+          // Activities in public communities
+          sql`${communities.isPublic} = true`,
+          // Activities in communities the user is a member of
+          and(
+            sql`${communityMembers.userId} = ${userId}`,
+            sql`${communityMembers.status} = 'active'`
+          )
+        )
+      );
+    } else {
+      // If no community or user, only get activities from public communities or with no community
+      conditions.push(
+        or(
+          sql`${schema.activityFeedEntries.communityId} IS NULL`,
+          sql`${communities.isPublic} = true`
+        )
+      );
+    }
+    
+    // Filter by activity types if provided
+    if (types && types.length > 0) {
+      conditions.push(inArray(schema.activityFeedEntries.type, types));
+    }
+    
+    // Apply all conditions if any
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+    
+    // Execute query
+    const results = await query;
+    
+    return results;
+  } catch (error) {
+    console.error('[ActivityService] Error getting activities:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get activities for a specific user
+ */
+export async function getUserActivities(userId: number, limit: number = 10) {
+  try {
+    const results = await db
+      .select({
+        id: schema.activityFeedEntries.id,
+        type: schema.activityFeedEntries.type,
+        userId: schema.activityFeedEntries.userId,
+        username: users.username,
+        displayName: users.displayName,
+        avatar: users.avatarUrl,
+        content: schema.activityFeedEntries.content,
+        timestamp: schema.activityFeedEntries.createdAt,
+        communityId: schema.activityFeedEntries.communityId,
+        communityName: communities.name,
+        metadata: schema.activityFeedEntries.metadata,
+        relatedEntityId: schema.activityFeedEntries.relatedEntityId,
+        relatedEntityType: schema.activityFeedEntries.relatedEntityType,
+        isRead: schema.activityFeedEntries.isRead
+      })
+      .from(schema.activityFeedEntries)
+      .leftJoin(users, eq(schema.activityFeedEntries.userId, users.id))
+      .leftJoin(communities, eq(schema.activityFeedEntries.communityId, communities.id))
+      .where(eq(schema.activityFeedEntries.userId, userId))
+      .orderBy(desc(schema.activityFeedEntries.createdAt))
+      .limit(limit);
+    
+    return results;
+  } catch (error) {
+    console.error('[ActivityService] Error getting user activities:', error);
+    throw error;
+  }
+}
+
+/**
+ * Create a new activity
  */
 export async function createActivity(params: CreateActivityParams) {
   try {
-    // Insert into database
-    const [activity] = await db.insert(communityActivities)
+    const {
+      type,
+      userId,
+      content,
+      communityId,
+      metadata,
+      relatedEntityId,
+      relatedEntityType
+    } = params;
+    
+    // Insert the activity
+    const [activity] = await db
+      .insert(schema.activityFeedEntries)
       .values({
-        type: params.type,
-        userId: params.userId,
-        content: params.content,
-        communityId: params.communityId,
-        metadata: params.metadata ? JSON.stringify(params.metadata) : null,
-        relatedEntityId: params.relatedEntityId,
-        relatedEntityType: params.relatedEntityType,
-        timestamp: new Date()
+        type,
+        userId,
+        content,
+        communityId,
+        metadata,
+        relatedEntityId,
+        relatedEntityType,
+        isRead: false
       })
       .returning();
     
     if (!activity) {
-      throw new Error('Failed to create activity record');
+      throw new Error('Failed to create activity');
     }
     
-    // Get user details to include in the event
-    const [user] = await db.select({
-      id: users.id,
-      username: users.username,
-      displayName: users.displayName,
-      avatar: users.avatar
-    })
-    .from(users)
-    .where(eq(users.id, params.userId));
+    // Get user details
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId));
     
     // Get community details if applicable
-    let communityName = undefined;
-    if (params.communityId) {
-      const [community] = await db.select({
-        name: communities.name
-      })
-      .from(communities)
-      .where(eq(communities.id, params.communityId));
+    let communityName;
+    if (communityId) {
+      const [community] = await db
+        .select({
+          name: communities.name
+        })
+        .from(communities)
+        .where(eq(communities.id, communityId));
       
       communityName = community?.name;
     }
     
-    // Prepare activity event data
-    const activityEvent = {
-      ...activity,
+    // Create enriched activity response
+    const enrichedActivity = {
+      id: activity.id,
+      type: activity.type,
+      userId: activity.userId,
       username: user?.username,
       displayName: user?.displayName,
-      avatar: user?.avatar,
-      communityName
+      avatar: user?.avatarUrl,
+      content: activity.content,
+      timestamp: activity.createdAt?.toISOString() || new Date().toISOString(),
+      communityId: activity.communityId,
+      communityName,
+      metadata: activity.metadata,
+      relatedEntityId: activity.relatedEntityId,
+      relatedEntityType: activity.relatedEntityType,
+      isRead: activity.isRead
     };
     
-    // Publish event for WebSocket broadcast
-    serverEventBus.publish('community:activity:created', activityEvent);
+    // Emit the activity via the event bus for WebSocket broadcasting
+    if (communityId) {
+      // Community-specific activity
+      emitEvent(ServerEvents.COMMUNITY_ACTIVITY_CREATED, {
+        ...enrichedActivity,
+        communityId
+      });
+      
+      // Also emit to specific community channel for WebSocket
+      emitEvent(`community:${communityId}:activities`, enrichedActivity);
+    }
     
-    // Return the created activity with additional user and community details
-    return activityEvent;
+    // Also emit to global feed
+    emitEvent('community:activities', enrichedActivity);
+    
+    return enrichedActivity;
   } catch (error) {
-    console.error('[Activity Service] Error creating activity:', error);
+    console.error('[ActivityService] Error creating activity:', error);
     throw error;
   }
 }
 
 /**
- * Gets activities for all communities or a specific community
+ * Mark an activity as read for a specific user
  */
-export async function getActivities(options: { communityId?: number, limit?: number, userId?: number }) {
+export async function markActivityAsRead(activityId: number, userId: number) {
   try {
-    const query = db.select({
-      id: communityActivities.id,
-      type: communityActivities.type,
-      userId: communityActivities.userId,
-      content: communityActivities.content,
-      timestamp: communityActivities.timestamp,
-      communityId: communityActivities.communityId,
-      metadata: communityActivities.metadata,
-      relatedEntityId: communityActivities.relatedEntityId,
-      relatedEntityType: communityActivities.relatedEntityType,
-      username: users.username,
-      displayName: users.displayName,
-      avatar: users.avatar,
-      communityName: communities.name
-    })
-    .from(communityActivities)
-    .leftJoin(users, eq(communityActivities.userId, users.id))
-    .leftJoin(communities, eq(communityActivities.communityId, communities.id))
-    .orderBy(desc(communityActivities.timestamp));
+    // Check if read status already exists
+    const existingStatus = await db
+      .select()
+      .from(schema.activityReadStatus)
+      .where(
+        and(
+          eq(schema.activityReadStatus.activityId, activityId),
+          eq(schema.activityReadStatus.userId, userId)
+        )
+      )
+      .limit(1);
     
-    // Filter by community if specified
-    if (options.communityId) {
-      query.where(eq(communityActivities.communityId, options.communityId));
+    // If not already marked as read, create read status
+    if (existingStatus.length === 0) {
+      await db
+        .insert(schema.activityReadStatus)
+        .values({
+          activityId,
+          userId,
+          readAt: new Date()
+        });
     }
     
-    // If user ID is provided, only show activities from communities they're a member of
-    if (options.userId && !options.communityId) {
-      // Get the communities the user is a member of
-      const userCommunities = await db.select({ communityId: communityMembers.communityId })
-        .from(communityMembers)
-        .where(eq(communityMembers.userId, options.userId));
-      
-      const communityIds = userCommunities.map(c => c.communityId);
-      
-      // Include activities from the user's communities or public activities
-      if (communityIds.length > 0) {
-        query.where(
-          sql`${communityActivities.communityId} IS NULL OR ${communityActivities.communityId} IN (${communityIds.join(',')})`
-        );
-      } else {
-        // If not in any community, only show public activities
-        query.where(sql`${communityActivities.communityId} IS NULL`);
-      }
-    }
-    
-    // Apply limit if specified
-    if (options.limit && options.limit > 0) {
-      query.limit(options.limit);
-    }
-    
-    const activities = await query;
-    
-    // Transform metadata from string to object
-    return activities.map(activity => ({
-      ...activity,
-      metadata: activity.metadata ? JSON.parse(activity.metadata as string) : undefined
-    }));
+    return { success: true, activityId, userId };
   } catch (error) {
-    console.error('[Activity Service] Error fetching activities:', error);
-    throw error;
-  }
-}
-
-/**
- * Gets activities created by a specific user
- */
-export async function getUserActivities(userId: number, limit?: number) {
-  try {
-    const query = db.select({
-      id: communityActivities.id,
-      type: communityActivities.type,
-      content: communityActivities.content,
-      timestamp: communityActivities.timestamp,
-      communityId: communityActivities.communityId,
-      metadata: communityActivities.metadata,
-      relatedEntityId: communityActivities.relatedEntityId,
-      relatedEntityType: communityActivities.relatedEntityType,
-      communityName: communities.name
-    })
-    .from(communityActivities)
-    .leftJoin(communities, eq(communityActivities.communityId, communities.id))
-    .where(eq(communityActivities.userId, userId))
-    .orderBy(desc(communityActivities.timestamp));
-    
-    // Apply limit if specified
-    if (limit && limit > 0) {
-      query.limit(limit);
-    }
-    
-    const activities = await query;
-    
-    // Transform metadata from string to object
-    return activities.map(activity => ({
-      ...activity,
-      metadata: activity.metadata ? JSON.parse(activity.metadata as string) : undefined
-    }));
-  } catch (error) {
-    console.error('[Activity Service] Error fetching user activities:', error);
+    console.error('[ActivityService] Error marking activity as read:', error);
     throw error;
   }
 }

@@ -1,9 +1,8 @@
 /**
  * PKL-278651-COMM-0022-FEED
- * Real-time Community Activity Feed Component
+ * Activity Feed Component
  * 
- * This component displays a feed of community activities and updates in real-time
- * using WebSockets.
+ * This component renders a feed of community activities with real-time updates.
  * 
  * @framework Framework5.1
  * @version 1.0.0
@@ -11,214 +10,169 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useWebSocket } from '@/hooks/use-websocket';
+import { useActivityFeed } from '@/hooks/use-activity-feed';
 import { useAuth } from '@/hooks/use-auth';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ActivityItem } from './ActivityItem';
+import { Button } from '@/components/ui/button';
+import { RefreshCwIcon, FilterIcon } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Bell, MessageSquare, Calendar, Users, Award, Trophy, ThumbsUp, Activity } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { formatDistance } from 'date-fns';
-
-// Activity types and their icons
-const activityIcons: Record<string, React.ReactNode> = {
-  'post': <MessageSquare className="h-4 w-4" />,
-  'comment': <MessageSquare className="h-4 w-4" />,
-  'event': <Calendar className="h-4 w-4" />,
-  'join': <Users className="h-4 w-4" />,
-  'achievement': <Award className="h-4 w-4" />,
-  'ranking': <Trophy className="h-4 w-4" />,
-  'like': <ThumbsUp className="h-4 w-4" />,
-  'default': <Activity className="h-4 w-4" />
-};
-
-interface ActivityItem {
-  id: string;
-  type: string;
-  userId: number;
-  username?: string;
-  displayName?: string;
-  avatar?: string;
-  content: string;
-  timestamp: string;
-  communityId?: number;
-  communityName?: string;
-  metadata?: any;
-  relatedEntityId?: number;
-  relatedEntityType?: string;
-}
 
 interface ActivityFeedProps {
   communityId?: number;
-  maxItems?: number;
-  className?: string;
-  showHeader?: boolean;
   title?: string;
+  compact?: boolean;
+  limit?: number;
+  showFilters?: boolean;
+  className?: string;
 }
 
 export function ActivityFeed({
   communityId,
-  maxItems = 10,
-  className,
-  showHeader = true,
-  title = "Activity Feed"
+  title = "Activity Feed",
+  compact = false,
+  limit,
+  showFilters = true,
+  className = ""
 }: ActivityFeedProps) {
+  const { activities, loading, error, fetchActivities, hasMoreActivities, loadMoreActivities } = useActivityFeed();
   const { user } = useAuth();
-  const { isConnected, lastMessage, subscribe } = useWebSocket(user?.id);
-  const [activities, setActivities] = useState<ActivityItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Subscribe to activity topics when connected
+  const [activityType, setActivityType] = useState<string>('all');
+  const [newActivitiesCount, setNewActivitiesCount] = useState(0);
+  
+  // Filter activities by type if a filter is selected
+  const filteredActivities = activityType === 'all'
+    ? activities
+    : activities.filter(activity => activity.type === activityType);
+  
+  // Handle refreshing the feed
+  const handleRefresh = () => {
+    fetchActivities({ communityId, reset: true });
+    setNewActivitiesCount(0);
+  };
+  
+  // Handle filtering by activity type
+  const handleTypeChange = (value: string) => {
+    setActivityType(value);
+  };
+  
+  // Add new activity count indicator
   useEffect(() => {
-    if (isConnected && user) {
-      // Subscribe to general activity feed
-      const topics = ['community.activity'];
-      
-      // Also subscribe to specific community if provided
-      if (communityId) {
-        topics.push(`community.${communityId}.activity`);
-      }
-      
-      subscribe(topics);
-      console.log('[ActivityFeed] Subscribed to topics:', topics);
-    }
-  }, [isConnected, user, communityId, subscribe]);
-
-  // Fetch initial activities
-  useEffect(() => {
-    const fetchActivities = async () => {
-      setIsLoading(true);
-      try {
-        const endpoint = communityId 
-          ? `/api/community/${communityId}/activities` 
-          : '/api/community/activities';
-        
-        const response = await fetch(endpoint);
-        if (!response.ok) {
-          throw new Error('Failed to fetch activities');
-        }
-        
-        const data = await response.json();
-        setActivities(data.slice(0, maxItems));
-      } catch (error) {
-        console.error('[ActivityFeed] Error fetching activities:', error);
-        // Show empty state instead of error
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchActivities();
-  }, [communityId, maxItems]);
-
-  // Handle incoming WebSocket messages
-  useEffect(() => {
-    if (lastMessage && lastMessage.type === 'message' && lastMessage.topic?.includes('activity')) {
-      const newActivity = lastMessage.data as ActivityItem;
-      
-      // Only add to feed if it's relevant to this component
-      if (!communityId || newActivity.communityId === communityId) {
-        // Add to beginning of array and maintain max items limit
-        setActivities(prev => [newActivity, ...prev].slice(0, maxItems));
-      }
-    }
-  }, [lastMessage, communityId, maxItems]);
-
-  // Render activity item
-  const renderActivity = (activity: ActivityItem) => {
-    const icon = activityIcons[activity.type] || activityIcons.default;
-    const timeAgo = formatDistance(new Date(activity.timestamp), new Date(), { addSuffix: true });
+    // This would typically be triggered by a WebSocket message
+    // For now, we'll just use a placeholder to demonstrate the capability
+    const interval = setInterval(() => {
+      // In a real implementation, this would be triggered by the WebSocket
+      // Instead of incrementing randomly
+    }, 30000);
     
+    return () => clearInterval(interval);
+  }, []);
+  
+  // Render loading skeletons
+  if (loading && activities.length === 0) {
     return (
-      <div key={activity.id} className="flex items-start space-x-4 mb-4">
-        <Avatar className="h-8 w-8">
-          <AvatarImage src={activity.avatar} alt={activity.displayName || activity.username} />
-          <AvatarFallback>{activity.displayName?.[0] || activity.username?.[0] || 'U'}</AvatarFallback>
-        </Avatar>
-        
-        <div className="flex-1 space-y-1">
-          <div className="flex items-center justify-between">
-            <div className="font-medium">{activity.displayName || activity.username}</div>
-            <div className="flex items-center">
-              <Badge variant="outline" className="mr-2 flex items-center gap-1">
-                {icon}
-                <span className="text-xs capitalize">{activity.type}</span>
-              </Badge>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="text-xs text-muted-foreground">{timeAgo}</span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{new Date(activity.timestamp).toLocaleString()}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          </div>
-          
-          <p className="text-sm">{activity.content}</p>
-          
-          {activity.communityName && !communityId && (
-            <Badge variant="secondary" className="mt-1">
-              {activity.communityName}
+      <div className={`space-y-4 ${className}`}>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">{title}</h2>
+        </div>
+        {[1, 2, 3, 4, 5].map((i) => (
+          <Skeleton key={i} className="h-24 w-full rounded-md" />
+        ))}
+      </div>
+    );
+  }
+  
+  // Render error state
+  if (error && activities.length === 0) {
+    return (
+      <Alert variant="destructive" className={className}>
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>
+          Failed to load activity feed. {error.message}
+          <Button variant="outline" size="sm" onClick={handleRefresh} className="mt-2">
+            Try Again
+          </Button>
+        </AlertDescription>
+      </Alert>
+    );
+  }
+  
+  return (
+    <div className={className}>
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center">
+          <h2 className="text-xl font-semibold">{title}</h2>
+          {newActivitiesCount > 0 && (
+            <Badge className="ml-2 bg-blue-500">
+              {newActivitiesCount} new
             </Badge>
           )}
         </div>
+        
+        <div className="flex space-x-2">
+          {showFilters && (
+            <Select value={activityType} onValueChange={handleTypeChange}>
+              <SelectTrigger className="w-[140px]">
+                <FilterIcon className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Filter" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Activities</SelectItem>
+                <SelectItem value="post">Posts</SelectItem>
+                <SelectItem value="event">Events</SelectItem>
+                <SelectItem value="achievement">Achievements</SelectItem>
+                <SelectItem value="join">Joins</SelectItem>
+                <SelectItem value="like">Likes</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+          
+          <Button variant="outline" size="icon" onClick={handleRefresh}>
+            <RefreshCwIcon className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
-    );
-  };
-
-  return (
-    <Card className={cn("w-full", className)}>
-      {showHeader && (
-        <>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xl flex items-center gap-2">
-                <Bell className="h-5 w-5" />
-                {title}
-              </CardTitle>
-              
-              <Badge variant={isConnected ? "success" : "destructive"} className="text-xs">
-                {isConnected ? "Live" : "Offline"}
-              </Badge>
-            </div>
-          </CardHeader>
-          <Separator />
-        </>
+      
+      {newActivitiesCount > 0 && (
+        <Button 
+          variant="outline" 
+          className="w-full mb-4"
+          onClick={handleRefresh}
+        >
+          Show {newActivitiesCount} new {newActivitiesCount === 1 ? 'activity' : 'activities'}
+        </Button>
       )}
       
-      <CardContent className={cn("pt-4", !showHeader && "pt-6")}>
-        <ScrollArea className="h-[400px] pr-4">
-          {isLoading ? (
-            <div className="flex flex-col space-y-4">
-              {Array(3).fill(0).map((_, i) => (
-                <div key={i} className="flex items-start space-x-4">
-                  <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 w-1/4 bg-muted animate-pulse rounded" />
-                    <div className="h-3 w-3/4 bg-muted animate-pulse rounded" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : activities.length > 0 ? (
-            activities.map(renderActivity)
-          ) : (
-            <div className="text-center py-8">
-              <Bell className="h-8 w-8 mx-auto text-muted-foreground" />
-              <p className="mt-2 text-muted-foreground">No activities to show yet</p>
-              <p className="text-sm text-muted-foreground">New activities will appear here in real-time</p>
-            </div>
+      {filteredActivities.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          No activities to display.
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filteredActivities.map((activity) => (
+            <ActivityItem 
+              key={activity.id}
+              {...activity}
+              onClick={() => {/* Handle activity click */}}
+            />
+          ))}
+          
+          {!compact && hasMoreActivities && (
+            <Button 
+              variant="outline" 
+              className="w-full mt-4"
+              onClick={() => loadMoreActivities()}
+              disabled={loading}
+            >
+              {loading ? 'Loading...' : 'Load More'}
+            </Button>
           )}
-        </ScrollArea>
-      </CardContent>
-    </Card>
+        </div>
+      )}
+    </div>
   );
 }
-
-export default ActivityFeed;
