@@ -14,7 +14,8 @@ export * from './server-event-bus';
 
 // For backward compatibility
 // Re-exporting the original EventBus class
-export { EventBus, EventHandler as EventBusHandler } from './event-bus';
+export { EventBus } from './event-bus';
+export type { EventHandler as EventBusHandler } from './event-bus';
 
 // Re-exporting the serverEventBus
 export { serverEventBus, ServerEvents as LegacyServerEvents } from './eventBus';

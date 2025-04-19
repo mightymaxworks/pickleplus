@@ -631,6 +631,32 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
         // We don't fail the request if auto-validation fails
       }
       
+      // PKL-278651-XP-0004-MATCH: Integration with XP System
+      try {
+        // Import from core/events directly to ensure we have the latest definitions
+        const { ServerEventBus, ServerEvents } = await import('./core/events');
+        
+        // Format player data for XP system
+        const playerData = req.body.players.map((player: any) => ({
+          id: player.userId,
+          role: player.position || 'player',
+          winner: player.isWinner || false
+        }));
+        
+        // Emit MATCH_RECORDED event for XP system to process
+        ServerEventBus.emit(ServerEvents.MATCH_RECORDED, {
+          matchId: match.id,
+          userId: req.user.id, // User who recorded the match
+          matchType: matchData.matchType,
+          players: playerData
+        });
+        
+        console.log(`[Match API] Emitted MATCH_RECORDED event for match ${match.id}`);
+      } catch (xpError) {
+        // Log the error but don't fail the request
+        console.error(`[Match API] Error emitting XP events:`, xpError);
+      }
+      
       return res.status(201).json(match);
     } catch (error) {
       console.error("[Match API] Error recording match:", error);

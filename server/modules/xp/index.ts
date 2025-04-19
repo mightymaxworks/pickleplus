@@ -1,11 +1,11 @@
 /**
- * PKL-278651-XP-0002-UI / PKL-278651-COMM-0022-XP
+ * PKL-278651-XP-0002-UI / PKL-278651-COMM-0022-XP / PKL-278651-XP-0004-MATCH
  * XP Module Entry Point
  * 
  * Exports and registers XP system routes and components.
  * 
  * @framework Framework5.1
- * @version 1.1.0
+ * @version 1.2.0
  * @lastModified 2025-04-19
  */
 
@@ -14,9 +14,11 @@ import xpRoutes from './xp-routes';
 import { XpService } from './xp-service';
 import { ActivityMultiplierService } from './ActivityMultiplierService';
 import { CommunityXpIntegration } from './community-xp-integration';
+import { MatchXpIntegration } from './match-xp-integration';
 
 // Shared services
 let communityXpIntegration: CommunityXpIntegration | null = null;
+let matchXpIntegration: MatchXpIntegration | null = null;
 let activityMultiplierService: ActivityMultiplierService | null = null;
 
 // Initialize the module and register routes
@@ -36,8 +38,19 @@ export function initializeXpModule(app: express.Express): void {
     console.log('[XP] Community XP Integration initialized');
   }
   
+  // PKL-278651-XP-0004-MATCH: Initialize Match XP Integration
+  if (!matchXpIntegration && activityMultiplierService) {
+    matchXpIntegration = new MatchXpIntegration(activityMultiplierService);
+    console.log('[XP] Match XP Integration initialized');
+  }
+  
   console.log('[XP] Module initialized successfully');
 }
 
-// Export service for use in other modules
-export { XpService, activityMultiplierService, communityXpIntegration };
+// Export services for use in other modules
+export { 
+  XpService, 
+  activityMultiplierService, 
+  communityXpIntegration,
+  matchXpIntegration 
+};
