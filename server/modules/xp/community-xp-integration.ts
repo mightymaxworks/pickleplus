@@ -18,6 +18,8 @@ import {
   communityActivities, 
   CommunityActivityType 
 } from '../../../shared/schema/community-engagement';
+// Import the ServerEventBus from the core events directory
+// The file exists at server/core/events/server-event-bus.ts as verified
 import { ServerEventBus, ServerEvents } from '../../core/events/server-event-bus';
 import { ActivityMultiplierService } from './ActivityMultiplierService';
 
@@ -195,7 +197,12 @@ export class CommunityXpIntegration {
         throw new Error(`User ${userId} not found`);
       }
       
-      const currentXp = result.rows[0].xp || 0;
+      // Parse the xp value from the result, ensuring it's a number
+      const currentXp = (result.rows[0].xp !== null && result.rows[0].xp !== undefined) 
+        ? Number(result.rows[0].xp) 
+        : 0;
+      
+      // Add the amount to calculate the new total
       const newTotal = currentXp + amount;
       
       // Create XP transaction
