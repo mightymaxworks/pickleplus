@@ -1,128 +1,163 @@
 /**
- * PKL-278651-XP-0002-UI
- * XP System Routes
+ * PKL-278651-XP-0002-UI / PKL-278651-XP-0005-ACHIEVE
+ * XP Module Routes
  * 
- * API endpoints for the XP system, including progress tracking,
- * history, and XP transactions.
+ * API routes for the XP system, including achievement data endpoints.
  * 
  * @framework Framework5.1
- * @version 1.0.0
+ * @version 1.1.0
+ * @lastModified 2025-04-19
  */
 
-import express, { Request, Response } from 'express';
+import express from 'express';
 import { XpService } from './xp-service';
-import { isAuthenticated } from '../auth/auth-middleware';
+import { ActivityMultiplierService } from './ActivityMultiplierService';
+import { achievementXpIntegration } from './index';
 
 const router = express.Router();
 const xpService = new XpService();
+const activityMultiplierService = new ActivityMultiplierService();
 
 /**
- * GET /api/xp/progress
- * Get user's XP progress and level info
+ * Get user's XP information
+ * GET /api/xp/info
  */
-router.get('/progress', isAuthenticated, async (req: Request, res: Response) => {
+router.get('/info', async (req, res) => {
   try {
-    // Use authenticated user's ID or the one specified in query
-    const userId = req.query.userId ? Number(req.query.userId) : req.user!.id;
-    
-    const levelInfo = await xpService.getUserLevelInfo(userId);
-    
-    // If requesting another user's info, verify permissions
-    if (userId !== req.user!.id) {
-      // For now, just allow access - in future, can add privacy or permissions checks
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ error: 'Unauthorized' });
     }
     
-    res.json(levelInfo);
+    const userId = req.user.id;
+    const xpInfo = await xpService.getUserXpInfo(userId);
+    
+    res.json(xpInfo);
   } catch (error) {
-    console.error('Error getting XP progress:', error);
-    res.status(500).json({ error: 'Failed to retrieve XP progress' });
+    console.error('[XP API] Error getting user XP info:', error);
+    res.status(500).json({ error: 'Failed to get XP information' });
   }
 });
 
 /**
+ * Get user's XP transaction history
  * GET /api/xp/history
- * Get user's XP history with pagination
  */
-router.get('/history', isAuthenticated, async (req: Request, res: Response) => {
+router.get('/history', async (req, res) => {
   try {
-    // Use authenticated user's ID or the one specified in query
-    const userId = req.query.userId ? Number(req.query.userId) : req.user!.id;
-    const limit = req.query.limit ? Number(req.query.limit) : 10;
-    const offset = req.query.offset ? Number(req.query.offset) : 0;
-    
-    // If requesting another user's info, verify permissions
-    if (userId !== req.user!.id) {
-      // For now, just allow access - in future, can add privacy or permissions checks
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ error: 'Unauthorized' });
     }
     
-    const history = await xpService.getUserXpHistory(userId, limit, offset);
+    const userId = req.user.id;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+    const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
     
-    // Check if there are more results
-    const totalCount = await xpService.countUserXpTransactions(userId);
-    const hasMore = offset + history.length < totalCount;
+    const xpHistory = await xpService.getUserXpTransactionHistory(userId, limit, offset);
     
-    res.json({
-      transactions: history,
-      total: totalCount,
-      hasMore
-    });
+    res.json(xpHistory);
   } catch (error) {
-    console.error('Error getting XP history:', error);
-    res.status(500).json({ error: 'Failed to retrieve XP history' });
+    console.error('[XP API] Error getting XP history:', error);
+    res.status(500).json({ error: 'Failed to get XP history' });
   }
 });
 
 /**
- * GET /api/xp/recommended
- * Get recommended activities for earning XP
+ * Get available multipliers
+ * GET /api/xp/multipliers
  */
-router.get('/recommended', isAuthenticated, async (req: Request, res: Response) => {
+router.get('/multipliers', async (req, res) => {
   try {
-    const userId = req.user!.id;
-    const limit = req.query.limit ? Number(req.query.limit) : 5;
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
     
-    const recommendations = await xpService.getRecommendedActivities(userId, limit);
+    const multipliers = await activityMultiplierService.getAllMultipliers();
     
-    res.json(recommendations);
+    res.json(multipliers);
   } catch (error) {
-    console.error('Error getting XP recommendations:', error);
-    res.status(500).json({ error: 'Failed to retrieve XP recommendations' });
+    console.error('[XP API] Error getting multipliers:', error);
+    res.status(500).json({ error: 'Failed to get multipliers' });
   }
 });
 
 /**
+ * Award XP manually (admin only)
  * POST /api/xp/award
- * Award XP to a user (admin or system use only)
  */
-router.post('/award', isAuthenticated, async (req: Request, res: Response) => {
+router.post('/award', async (req, res) => {
   try {
-    // Check if user is admin
-    // const isAdmin = req.user!.role === 'admin'; // Implement role-based check later
-    const isAdmin = true; // For now, allow all authenticated users
-    
-    if (!isAdmin) {
-      return res.status(403).json({ error: 'Unauthorized' });
+    if (!req.isAuthenticated() || !req.user || !req.user.isAdmin) {
+      return res.status(401).json({ error: 'Unauthorized' });
     }
     
-    const { userId, amount, source, sourceType, description } = req.body;
+    const { userId, amount, source, sourceId, sourceType, description } = req.body;
     
     if (!userId || !amount || !source) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
     
-    const awardedAmount = await xpService.awardXp({
+    await xpService.awardXp({
       userId,
       amount,
       source,
+      sourceId,
       sourceType,
-      description,
-      createdById: req.user!.id
+      description
     });
     
-    res.json({ awarded: awardedAmount });
+    res.json({ success: true });
   } catch (error) {
-    console.error('Error awarding XP:', error);
+    console.error('[XP API] Error awarding XP:', error);
     res.status(500).json({ error: 'Failed to award XP' });
+  }
+});
+
+/**
+ * Get user's achievements
+ * GET /api/xp/achievements
+ */
+router.get('/achievements', async (req, res) => {
+  try {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const userId = parseInt(req.query.userId as string) || req.user.id;
+    
+    // If requesting another user's achievements, ensure privacy checks
+    if (userId !== req.user.id && !req.user.isAdmin) {
+      // In a real app, check if the target user allows viewing their achievements
+      // For simplicity, we'll just allow it here
+    }
+    
+    if (!achievementXpIntegration) {
+      return res.status(500).json({ error: 'Achievement system not initialized' });
+    }
+    
+    const achievements = await achievementXpIntegration.getUserAchievements(userId);
+    
+    res.json(achievements);
+  } catch (error) {
+    console.error('[XP API] Error getting achievements:', error);
+    res.status(500).json({ error: 'Failed to get achievements' });
+  }
+});
+
+/**
+ * Get system-wide XP leaderboard
+ * GET /api/xp/leaderboard
+ */
+router.get('/leaderboard', async (req, res) => {
+  try {
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+    const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
+    
+    const leaderboard = await xpService.getXpLeaderboard(limit, offset);
+    
+    res.json(leaderboard);
+  } catch (error) {
+    console.error('[XP API] Error getting XP leaderboard:', error);
+    res.status(500).json({ error: 'Failed to get XP leaderboard' });
   }
 });
 

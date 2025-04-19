@@ -1,10 +1,9 @@
 /**
  * PKL-278651-XP-0005-ACHIEVE
- * Achievement System XP Integration Module
+ * Achievement XP Integration
  * 
- * This module integrates the Achievement System with the XP System,
- * awarding XP for unlocking achievements and tracking progress
- * toward XP-based achievements.
+ * Provides integration between the Achievement System and XP System,
+ * awarding XP for achievement unlocks and checking for XP-based achievements.
  * 
  * @framework Framework5.1
  * @version 1.0.0
@@ -12,232 +11,365 @@
  */
 
 import { db } from '../../db';
-import { sql } from 'drizzle-orm';
-import { 
-  xpTransactions,
-  XP_SOURCE
-} from '../../../shared/schema/xp';
-
-import { ServerEventBus, ServerEvents } from '../../core/events';
 import { ActivityMultiplierService } from './ActivityMultiplierService';
-
-/**
- * XP values for different achievement tiers
- */
-export const ACHIEVEMENT_XP_VALUES: Record<string, number> = {
-  'BRONZE': 10,
-  'SILVER': 20,
-  'GOLD': 35,
-  'PLATINUM': 50,
-  'DIAMOND': 75,
-  'MASTER': 100
-};
+import { XpService } from './xp-service';
+import { ServerEventBus } from '../../core/events/server-event-bus';
+import { eq, and, gte, sql } from 'drizzle-orm';
+import { 
+  achievements,
+  userAchievements,
+  xpTransactions,
+  xpLevelThresholds
+} from '@shared/schema';
 
 export class AchievementXpIntegration {
-  private multiplierService: ActivityMultiplierService;
+  private xpService: XpService;
+  private activityMultiplierService: ActivityMultiplierService;
   
-  constructor(multiplierService: ActivityMultiplierService) {
-    this.multiplierService = multiplierService;
-    this.setupEventListeners();
+  constructor(activityMultiplierService: ActivityMultiplierService) {
+    this.activityMultiplierService = activityMultiplierService;
+    this.xpService = new XpService();
     
-    // Initialize default multipliers for achievement activities
-    this.multiplierService.initializeDefaultMultipliers()
-      .then(() => console.log('[XP] Achievement multipliers initialized'))
-      .catch(err => console.error('[XP] Error initializing achievement multipliers:', err));
-      
-    console.log('[XP] Achievement XP Integration initialized - Framework 5.1');
+    // Initialize event listeners
+    this.registerEventListeners();
+    
+    console.log('[XP] AchievementXpIntegration initialized');
   }
   
   /**
-   * Set up event listeners for achievement events
+   * Register event listeners for achievement-related events
    */
-  private setupEventListeners() {
-    console.log('[XP] Setting up achievement event listeners');
-
-    // Listen for achievement unlocked events
-    ServerEventBus.subscribe(ServerEvents.ACHIEVEMENT_UNLOCKED, async (data: {
-      userId: number;
-      achievementId: number;
-      achievementTitle: string;
-      achievementTier: string;
-      achievementCategory: string;
-    }) => {
-      console.log(`[XP] Received achievement unlocked event for user ${data.userId}: ${data.achievementTitle} (${data.achievementTier})`);
-      
-      try {
-        // Award XP for the achievement
-        await this.awardAchievementXp(
-          data.userId,
-          data.achievementId,
-          data.achievementTier,
-          data.achievementTitle,
-          data.achievementCategory
-        );
-      } catch (error) {
-        console.error('[XP] Error processing achievement XP:', error);
-      }
-    });
+  private registerEventListeners(): void {
+    // Listen for achievement unlock events
+    ServerEventBus.subscribe('achievement:unlocked', this.handleAchievementUnlocked.bind(this));
     
-    // Listen for achievement progress events to track XP-based achievements
-    ServerEventBus.subscribe(ServerEvents.XP_AWARDED, async (data: {
-      userId: number;
-      amount: number;
-      source: string;
-      sourceType: string;
-      newTotal: number;
-    }) => {
-      try {
-        // Check for XP-based achievements that might be unlocked
-        await this.checkXpBasedAchievements(data.userId, data.newTotal);
-      } catch (error) {
-        console.error('[XP] Error checking XP-based achievements:', error);
-      }
-    });
+    // Listen for XP awarded events to check for XP-based achievements
+    ServerEventBus.subscribe('xp:awarded', this.checkXpBasedAchievements.bind(this));
+    
+    console.log('[XP] AchievementXpIntegration event listeners registered');
   }
   
   /**
-   * Award XP for unlocking an achievement
+   * Handle achievement unlocked event
+   * Award XP based on achievement difficulty
    */
-  private async awardAchievementXp(
-    userId: number,
-    achievementId: number,
-    tier: string,
-    title: string,
-    category: string
-  ): Promise<number> {
+  private async handleAchievementUnlocked(data: any): Promise<void> {
+    if (!data || !data.achievementId || !data.userId) {
+      console.error('[XP] Invalid achievement unlock event data:', data);
+      return;
+    }
+    
     try {
-      // Determine base XP based on achievement tier
-      const tierUpper = tier.toUpperCase();
-      const baseXp = ACHIEVEMENT_XP_VALUES[tierUpper] || 5; // Default to 5 XP if tier not found
-      
-      // Apply PicklePulse multiplier
-      const finalXp = await this.multiplierService.calculateXpForActivity(
-        'achievement_unlock', 
-        baseXp
-      );
-      
-      // Get user's current XP from users table
-      const result = await db.execute(
-        sql`SELECT xp FROM users WHERE id = ${userId}`
-      );
-      
-      if (!result.rows || result.rows.length === 0) {
-        throw new Error(`User ${userId} not found`);
-      }
-      
-      // Parse the xp value from the result, ensuring it's a number
-      const currentXp = (result.rows[0].xp !== null && result.rows[0].xp !== undefined) 
-        ? Number(result.rows[0].xp) 
-        : 0;
-      
-      // Add the amount to calculate the new total
-      const newTotal = currentXp + finalXp;
-      
-      // Create XP transaction
-      await db.insert(xpTransactions).values({
-        userId,
-        amount: finalXp,
-        source: XP_SOURCE.ACHIEVEMENT,
-        sourceType: 'ACHIEVEMENT_UNLOCK',
-        sourceId: achievementId,
-        runningTotal: newTotal,
-        description: `Achievement unlocked: ${title} (${tier})`,
-        metadata: {
-          achievementTitle: title,
-          achievementTier: tier,
-          achievementCategory: category
-        }
+      // Get achievement details to determine XP reward
+      const achievement = await db.query.achievements.findFirst({
+        where: eq(achievements.id, data.achievementId)
       });
       
-      // Update user's XP
-      await db.execute(
-        sql`UPDATE users SET xp = ${newTotal} WHERE id = ${userId}`
-      );
+      if (!achievement) {
+        console.error(`[XP] Achievement not found for ID: ${data.achievementId}`);
+        return;
+      }
       
-      console.log(`[XP] Awarded ${finalXp} XP to user ${userId} for unlocking achievement: ${title} (${tier})`);
+      // Use direct XP reward from achievement if available, otherwise use difficulty
+      const xpReward = achievement.xpReward || this.getXpRewardForTier(achievement.difficulty || 'medium');
       
-      return finalXp;
+      // Apply any active multipliers
+      const multiplier = await this.activityMultiplierService.getCurrentActivityMultiplier('achievement');
+      const finalXpReward = Math.round(xpReward * multiplier);
+      
+      // Award XP to the user
+      await this.xpService.awardXp({
+        userId: data.userId,
+        amount: finalXpReward,
+        source: 'achievement',
+        sourceId: data.achievementId.toString(),
+        sourceType: 'achievement_unlock',
+        description: `Unlocked ${achievement.name} achievement`
+      });
+      
+      console.log(`[XP] Awarded ${finalXpReward} XP to user ${data.userId} for achievement unlock: ${achievement.name}`);
     } catch (error) {
-      console.error('[XP] Error awarding achievement XP:', error);
-      return 0;
+      console.error('[XP] Error awarding XP for achievement unlock:', error);
     }
   }
   
   /**
-   * Check for XP-based achievements that might be unlocked based on total XP
+   * Check for XP-based achievements when XP is awarded
    */
-  private async checkXpBasedAchievements(userId: number, totalXp: number): Promise<void> {
+  private async checkXpBasedAchievements(data: any): Promise<void> {
+    if (!data || !data.userId) {
+      return;
+    }
+    
     try {
-      // Define XP thresholds for achievements
-      const xpThresholds = [
-        { threshold: 10, achievementId: 'XP_BEGINNER', title: 'XP Beginner', tier: 'BRONZE', category: 'PROGRESSION' },
-        { threshold: 50, achievementId: 'XP_NOVICE', title: 'XP Novice', tier: 'BRONZE', category: 'PROGRESSION' },
-        { threshold: 100, achievementId: 'XP_ENTHUSIAST', title: 'XP Enthusiast', tier: 'SILVER', category: 'PROGRESSION' },
-        { threshold: 250, achievementId: 'XP_CONTENDER', title: 'XP Contender', tier: 'SILVER', category: 'PROGRESSION' },
-        { threshold: 500, achievementId: 'XP_EXPERT', title: 'XP Expert', tier: 'GOLD', category: 'PROGRESSION' },
-        { threshold: 1000, achievementId: 'XP_MASTER', title: 'XP Master', tier: 'PLATINUM', category: 'PROGRESSION' },
-        { threshold: 2500, achievementId: 'XP_LEGEND', title: 'XP Legend', tier: 'DIAMOND', category: 'PROGRESSION' },
-        { threshold: 5000, achievementId: 'XP_GRANDMASTER', title: 'XP Grandmaster', tier: 'MASTER', category: 'PROGRESSION' }
-      ];
+      const userId = data.userId;
       
-      // Find all thresholds that the user has crossed
-      const crossedThresholds = xpThresholds.filter(t => totalXp >= t.threshold);
+      // Get total XP for the user
+      const totalXpResult = await db
+        .select({
+          totalXp: sql<number>`SUM(${xpTransactions.amount})`
+        })
+        .from(xpTransactions)
+        .where(eq(xpTransactions.userId, userId));
       
-      if (crossedThresholds.length === 0) {
-        return; // No thresholds crossed
-      }
+      const totalXp = totalXpResult[0]?.totalXp || 0;
       
-      // Check which achievements the user has already unlocked
-      const existingAchievements = await db.execute(
-        sql`SELECT achievement_id FROM user_achievements WHERE user_id = ${userId} AND achievement_id IN (${crossedThresholds.map(t => t.achievementId).join(',')})`
-      );
+      // Check for XP milestone achievements
+      await this.checkXpMilestoneAchievements(userId, totalXp);
       
-      const unlockedIds = new Set(existingAchievements.rows?.map(row => row.achievement_id) || []);
+      // Check for level milestone achievements
+      await this.checkLevelMilestoneAchievements(userId, totalXp);
       
-      // Filter to only new achievements to unlock
-      const newAchievements = crossedThresholds.filter(t => !unlockedIds.has(t.achievementId));
-      
-      // Unlock each new achievement
-      for (const achievement of newAchievements) {
-        // Find or create the achievement in the achievements table
-        const [achievementRecord] = await db.execute(
-          sql`SELECT id FROM achievements WHERE code = ${achievement.achievementId}`
-        );
-        
-        let achievementId: number;
-        
-        if (!achievementRecord) {
-          // Create the achievement if it doesn't exist
-          const [newAchievement] = await db.execute(
-            sql`INSERT INTO achievements (code, title, description, tier, category, created_at, updated_at)
-                VALUES (${achievement.achievementId}, ${achievement.title}, 'Reach ${achievement.threshold} XP', 
-                        ${achievement.tier}, ${achievement.category}, NOW(), NOW())
-                RETURNING id`
-          );
-          achievementId = newAchievement.id;
-        } else {
-          achievementId = achievementRecord.id;
-        }
-        
-        // Record that the user has unlocked this achievement
-        await db.execute(
-          sql`INSERT INTO user_achievements (user_id, achievement_id, unlocked_at)
-              VALUES (${userId}, ${achievementId}, NOW())`
-        );
-        
-        // Emit achievement unlocked event
-        ServerEventBus.emit(ServerEvents.ACHIEVEMENT_UNLOCKED, {
-          userId,
-          achievementId,
-          achievementTitle: achievement.title,
-          achievementTier: achievement.tier,
-          achievementCategory: achievement.category
-        });
-        
-        console.log(`[XP] Unlocked achievement for user ${userId}: ${achievement.title} (${achievement.tier})`);
-      }
     } catch (error) {
       console.error('[XP] Error checking XP-based achievements:', error);
+    }
+  }
+  
+  /**
+   * Check for XP milestone achievements (based on total XP accumulated)
+   */
+  private async checkXpMilestoneAchievements(userId: number, totalXp: number): Promise<void> {
+    try {
+      // Get all XP milestone achievements
+      const xpMilestoneAchievements = await db.query.achievements.findMany({
+        where: eq(achievements.category, 'PROGRESSION')
+      });
+      
+      // Check each achievement
+      for (const achievement of xpMilestoneAchievements) {
+        // Parse requirements as JSON to get the required XP
+        const requirements = typeof achievement.requirements === 'string'
+          ? JSON.parse(achievement.requirements)
+          : achievement.requirements;
+          
+        const requiredXp = requirements?.xpRequired || 0;
+        
+        // If user has enough XP and hasn't unlocked this achievement yet
+        if (totalXp >= requiredXp) {
+          const existingUserAchievement = await db.query.userAchievements.findFirst({
+            where: and(
+              eq(userAchievements.userId, userId),
+              eq(userAchievements.achievementId, achievement.id)
+            )
+          });
+          
+          // If not unlocked yet, unlock it
+          if (!existingUserAchievement) {
+            await this.unlockAchievement(userId, achievement.id, totalXp, requiredXp);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('[XP] Error checking XP milestone achievements:', error);
+    }
+  }
+  
+  /**
+   * Check for level milestone achievements (based on level thresholds)
+   */
+  private async checkLevelMilestoneAchievements(userId: number, totalXp: number): Promise<void> {
+    try {
+      // Get user's current level
+      const levelThresholds = await db.query.xpLevelThresholds.findMany({
+        orderBy: (fields, { asc }) => [asc(fields.xpRequired)]
+      });
+      
+      let currentLevel = 1;
+      for (const threshold of levelThresholds) {
+        if (totalXp >= threshold.xpRequired) {
+          currentLevel = threshold.level;
+        } else {
+          break;
+        }
+      }
+      
+      // Get level milestone achievements
+      const levelMilestoneAchievements = await db.query.achievements.findMany({
+        where: eq(achievements.category, 'LEVEL')
+      });
+      
+      // Check each achievement
+      for (const achievement of levelMilestoneAchievements) {
+        // Parse requirements as JSON to get the required level
+        const requirements = typeof achievement.requirements === 'string'
+          ? JSON.parse(achievement.requirements)
+          : achievement.requirements;
+          
+        const requiredLevel = requirements?.levelRequired || 0;
+        
+        // If user has reached the required level and hasn't unlocked this achievement yet
+        if (currentLevel >= requiredLevel) {
+          const existingUserAchievement = await db.query.userAchievements.findFirst({
+            where: and(
+              eq(userAchievements.userId, userId),
+              eq(userAchievements.achievementId, achievement.id)
+            )
+          });
+          
+          // If not unlocked yet, unlock it
+          if (!existingUserAchievement) {
+            await this.unlockAchievement(userId, achievement.id, currentLevel, requiredLevel);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('[XP] Error checking level milestone achievements:', error);
+    }
+  }
+  
+  /**
+   * Unlock an achievement for a user
+   */
+  private async unlockAchievement(
+    userId: number, 
+    achievementId: number, 
+    currentValue: number,
+    requiredValue: number
+  ): Promise<void> {
+    try {
+      const now = new Date();
+      
+      // Create new user achievement entry
+      await db.insert(userAchievements).values({
+        userId,
+        achievementId,
+        progress: currentValue,
+        unlockedAt: now,
+        completedAt: now,
+        createdAt: now,
+        updatedAt: now
+      });
+      
+      // Emit achievement unlocked event
+      ServerEventBus.publish('achievement:unlocked', {
+        userId,
+        achievementId,
+        timestamp: now
+      });
+      
+      console.log(`[XP] Achievement ${achievementId} unlocked for user ${userId}`);
+    } catch (error) {
+      console.error('[XP] Error unlocking achievement:', error);
+    }
+  }
+  
+  /**
+   * Get XP reward amount based on achievement tier
+   */
+  private getXpRewardForTier(tier: string): number {
+    switch (tier.toUpperCase()) {
+      case 'BRONZE':
+        return 10;
+      case 'SILVER':
+        return 20;
+      case 'GOLD':
+        return 35;
+      case 'PLATINUM':
+        return 50;
+      case 'DIAMOND':
+        return 75;
+      case 'MASTER':
+        return 100;
+      default:
+        return 5; // Basic tier
+    }
+  }
+  
+  /**
+   * API method to get a user's achievements
+   */
+  async getUserAchievements(userId: number) {
+    try {
+      // Get all achievements
+      const allAchievements = await db.query.achievements.findMany();
+      
+      // Get user's unlocked achievements
+      const userAchievementsList = await db.query.userAchievements.findMany({
+        where: eq(userAchievements.userId, userId)
+      });
+      
+      // Map achievements with unlocked status
+      const achievementsWithProgress = allAchievements.map(achievement => {
+        const unlockedAchievement = userAchievementsList.find(ua => ua.achievementId === achievement.id);
+        
+        // Parse requirements as JSON
+        const requirements = typeof achievement.requirements === 'string'
+          ? JSON.parse(achievement.requirements)
+          : achievement.requirements;
+          
+        return {
+          id: achievement.id,
+          name: achievement.name,
+          description: achievement.description,
+          difficulty: achievement.difficulty,
+          category: achievement.category,
+          badgeUrl: achievement.badgeUrl,
+          xpReward: achievement.xpReward,
+          isUnlocked: !!unlockedAchievement,
+          unlockedAt: unlockedAchievement?.unlockedAt ? unlockedAchievement.unlockedAt.toISOString() : null,
+          progress: unlockedAchievement?.progress || 0,
+          requirements
+        };
+      });
+      
+      // Get total XP for XP progress achievements
+      const totalXpResult = await db
+        .select({
+          totalXp: sql<number>`SUM(${xpTransactions.amount})`
+        })
+        .from(xpTransactions)
+        .where(eq(xpTransactions.userId, userId));
+      
+      const totalXp = totalXpResult[0]?.totalXp || 0;
+      
+      // Get user's current level
+      const levelThresholds = await db.query.xpLevelThresholds.findMany({
+        orderBy: (fields, { asc }) => [asc(fields.xpRequired)]
+      });
+      
+      let currentLevel = 1;
+      let nextLevel = 2;
+      let currentLevelXp = 0;
+      let nextLevelXp = 100;
+      
+      for (let i = 0; i < levelThresholds.length; i++) {
+        if (totalXp >= levelThresholds[i].xpRequired) {
+          currentLevel = levelThresholds[i].level;
+          currentLevelXp = levelThresholds[i].xpRequired;
+          
+          if (i < levelThresholds.length - 1) {
+            nextLevel = levelThresholds[i + 1].level;
+            nextLevelXp = levelThresholds[i + 1].xpRequired;
+          }
+        } else {
+          if (i > 0) {
+            currentLevelXp = levelThresholds[i - 1].xpRequired;
+          }
+          nextLevelXp = levelThresholds[i].xpRequired;
+          nextLevel = levelThresholds[i].level;
+          break;
+        }
+      }
+      
+      // Calculate XP progress to next level
+      const levelProgress = nextLevelXp > currentLevelXp
+        ? Math.min(100, Math.floor(((totalXp - currentLevelXp) / (nextLevelXp - currentLevelXp)) * 100))
+        : 100;
+      
+      return {
+        achievements: achievementsWithProgress,
+        stats: {
+          totalXp,
+          currentLevel,
+          nextLevel,
+          levelProgress,
+          unlockedCount: userAchievementsList.length,
+          totalCount: allAchievements.length
+        }
+      };
+    } catch (error) {
+      console.error('[XP] Error getting user achievements:', error);
+      throw error;
     }
   }
 }

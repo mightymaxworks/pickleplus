@@ -11,9 +11,9 @@
 
 import express, { Request, Response } from 'express';
 import { DatabaseStorage } from '../storage';
-import ActivityMultiplierService from '../modules/xp/ActivityMultiplierService';
-import XpEconomyMonitor from '../modules/xp/XpEconomyMonitor';
-import MultiplierRecalibrationScheduler from '../modules/xp/MultiplierRecalibrationScheduler';
+import { ActivityMultiplierService } from '../modules/xp/ActivityMultiplierService';
+import { XpEconomyMonitor } from '../modules/xp/XpEconomyMonitor';
+import { MultiplierRecalibrationScheduler } from '../modules/xp/MultiplierRecalibrationScheduler';
 
 export function registerPicklePulseRoutes(app: express.Express, storage: DatabaseStorage) {
   // Create services

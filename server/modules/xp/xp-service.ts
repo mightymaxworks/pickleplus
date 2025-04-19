@@ -1,497 +1,321 @@
 /**
- * PKL-278651-XP-0003-PULSE
+ * PKL-278651-XP-0001-FOUND
  * XP Service
  * 
- * Core service for XP operations with business logic for
- * awarding XP, tracking levels, and providing recommendations.
- * Integrated with PicklePulse™ activity multiplier system.
+ * Core service for XP management, including awarding XP, tracking XP progress,
+ * and determining user levels.
  * 
  * @framework Framework5.1
- * @version 1.1.0
+ * @version 1.0.0
+ * @lastModified 2025-04-19
  */
 
 import { db } from '../../db';
-import { and, eq, desc, lte, sql, gte } from 'drizzle-orm';
-import {
-  xpTransactions,
+import { ServerEventBus } from '../../core/events/server-event-bus';
+import { eq, desc, asc, sql, and, gte } from 'drizzle-orm';
+import { 
+  xpTransactions, 
   xpLevelThresholds,
-  activityMultipliers,
   users
 } from '@shared/schema';
-import ActivityMultiplierService from './ActivityMultiplierService';
 
-// Type for XP award parameters
-interface AwardXpParams {
+export interface AwardXpParams {
   userId: number;
   amount: number;
   source: string;
+  sourceId?: string;
   sourceType?: string;
-  sourceId?: number;
   description?: string;
-  createdById?: number;
-  matchId?: number;
-  communityId?: number;
-  achievementId?: number;
-  tournamentId?: number;
-}
-
-// Type for activity recommendation
-interface ActivityRecommendation {
-  type: string;
-  description: string;
-  xpAmount: number;
-  difficulty: 'easy' | 'medium' | 'hard';
-  url?: string;
-  isMultiplierActive?: boolean; // Whether this activity has an active multiplier
-}
-
-// Type for level info
-interface LevelInfo {
-  currentLevel: number;
-  currentXp: number;
-  nextLevelXp: number;
-  progress: number;
-  remainingXp: number;
-  lifetimeXp: number;
-  benefits: {
-    perks: string[];
-    isKeyMilestone?: boolean;
-  };
 }
 
 export class XpService {
   /**
    * Award XP to a user
-   * Handles application of multipliers
    */
-  async awardXp(params: AwardXpParams): Promise<number> {
+  async awardXp(params: AwardXpParams): Promise<void> {
     try {
-      // Apply any active multipliers
-      const actualAmount = await this.applyMultipliers(params.amount, params.source, params.userId);
+      const { userId, amount, source, sourceId, sourceType, description } = params;
       
-      // Insert transaction
-      const [transaction] = await db.insert(xpTransactions).values({
-        userId: params.userId,
-        amount: actualAmount,
-        source: params.source,
-        sourceType: params.sourceType || null,
-        sourceId: params.sourceId || null,
-        description: params.description || null,
-        createdById: params.createdById || null,
-        matchId: params.matchId || null,
-        communityId: params.communityId || null,
-        achievementId: params.achievementId || null,
-        tournamentId: params.tournamentId || null
+      if (amount <= 0) {
+        console.warn(`[XP] Cannot award non-positive XP amount: ${amount}`);
+        return;
+      }
+      
+      const now = new Date();
+      
+      // Insert XP transaction record
+      const [xpTransaction] = await db.insert(xpTransactions).values({
+        userId,
+        amount,
+        source,
+        sourceId: sourceId || null,
+        sourceType: sourceType || null,
+        description: description || null,
+        createdAt: now,
+        updatedAt: now
       }).returning();
       
-      // Update user's total XP (optional optimization)
-      await this.updateUserTotalXp(params.userId);
+      // Emit event for awarded XP
+      ServerEventBus.publish('xp:awarded', {
+        userId,
+        amount,
+        source,
+        sourceId,
+        sourceType,
+        transactionId: xpTransaction.id,
+        timestamp: now
+      });
       
-      // Check for level up event
-      await this.checkForLevelUp(params.userId);
+      console.log(`[XP] Awarded ${amount} XP to user ${userId} from ${source}`);
       
-      return actualAmount;
+      // Check for level up
+      await this.checkForLevelUp(userId);
     } catch (error) {
-      console.error('Error awarding XP:', error);
+      console.error('[XP] Error awarding XP:', error);
       throw error;
     }
   }
   
   /**
-   * Get user's current XP and level info
+   * Check if user leveled up and emit event if so
    */
-  async getUserLevelInfo(userId: number): Promise<LevelInfo> {
+  private async checkForLevelUp(userId: number): Promise<void> {
     try {
-      // Get user's total XP
-      const totalXp = await this.getUserTotalXp(userId);
+      // Get total XP for the user
+      const totalXpResult = await db
+        .select({
+          totalXp: sql<number>`SUM(${xpTransactions.amount})`
+        })
+        .from(xpTransactions)
+        .where(eq(xpTransactions.userId, userId));
       
-      // Get current level based on XP
-      const currentLevel = await this.getUserLevel(userId);
+      const totalXp = totalXpResult[0]?.totalXp || 0;
       
-      // Get XP required for current level
-      const currentLevelData = await db.query.xpLevelThresholds.findFirst({
-        where: eq(xpLevelThresholds.level, currentLevel)
+      // Get level thresholds in ascending order
+      const levelThresholds = await db.query.xpLevelThresholds.findMany({
+        orderBy: (fields, { asc }) => [asc(fields.xpRequired)]
       });
       
-      // Get XP required for next level
-      const nextLevelData = await db.query.xpLevelThresholds.findFirst({
-        where: eq(xpLevelThresholds.level, currentLevel + 1)
+      // Determine user's current level
+      let currentLevel = 1;
+      let previousLevel = 1;
+      
+      // Update current level based on XP thresholds
+      if (levelThresholds && levelThresholds.length > 0) {
+        for (const threshold of levelThresholds) {
+          if (totalXp >= threshold.xpRequired) {
+            previousLevel = currentLevel;
+            currentLevel = threshold.level;
+          } else {
+            break;
+          }
+        }
+      }
+      
+      // Update user's level in database if changed
+      if (currentLevel > previousLevel) {
+        // Emit level up event
+        ServerEventBus.publish('xp:levelup', {
+          userId,
+          previousLevel,
+          newLevel: currentLevel,
+          totalXp,
+          timestamp: new Date()
+        });
+        
+        console.log(`[XP] User ${userId} leveled up from ${previousLevel} to ${currentLevel}`);
+      }
+    } catch (error) {
+      console.error('[XP] Error checking for level up:', error);
+    }
+  }
+  
+  /**
+   * Get XP information for a user
+   */
+  async getUserXpInfo(userId: number) {
+    try {
+      // Get total XP for the user
+      const totalXpResult = await db
+        .select({
+          totalXp: sql<number>`SUM(${xpTransactions.amount})`
+        })
+        .from(xpTransactions)
+        .where(eq(xpTransactions.userId, userId));
+      
+      const totalXp = totalXpResult[0]?.totalXp || 0;
+      
+      // Get level thresholds in ascending order
+      const levelThresholds = await db.query.xpLevelThresholds.findMany({
+        orderBy: (fields, { asc }) => [asc(fields.xpRequired)]
       });
       
-      // Calculate XP needed for next level
-      const nextLevelXp = nextLevelData?.xpRequired || Infinity;
-      const xpForCurrentLevel = currentLevelData?.xpRequired || 0;
-      const xpSinceLastLevel = totalXp - xpForCurrentLevel;
-      const xpToNextLevel = nextLevelXp - xpForCurrentLevel;
-      const progress = Math.min(Math.floor((xpSinceLastLevel / xpToNextLevel) * 100), 100);
-      const remainingXp = nextLevelXp - totalXp;
+      // Determine user's current level and next level
+      let currentLevel = 1;
+      let nextLevel = 2;
+      let currentLevelXp = 0;
+      let nextLevelXp = 100;
+      let currentLevelInfo = null;
+      let nextLevelInfo = null;
       
-      // Get benefits for current level
-      const benefits = await this.getLevelBenefits(currentLevel);
+      if (levelThresholds && levelThresholds.length > 0) {
+        for (let i = 0; i < levelThresholds.length; i++) {
+          if (totalXp >= levelThresholds[i].xpRequired) {
+            currentLevel = levelThresholds[i].level;
+            currentLevelXp = levelThresholds[i].xpRequired;
+            currentLevelInfo = levelThresholds[i];
+            
+            if (i < levelThresholds.length - 1) {
+              nextLevel = levelThresholds[i + 1].level;
+              nextLevelXp = levelThresholds[i + 1].xpRequired;
+              nextLevelInfo = levelThresholds[i + 1];
+            } else {
+              // Max level reached
+              nextLevel = currentLevel;
+              nextLevelXp = currentLevelXp;
+              nextLevelInfo = currentLevelInfo;
+            }
+          } else {
+            if (i > 0) {
+              currentLevelInfo = levelThresholds[i - 1];
+            }
+            nextLevelInfo = levelThresholds[i];
+            nextLevel = levelThresholds[i].level;
+            nextLevelXp = levelThresholds[i].xpRequired;
+            break;
+          }
+        }
+      }
+      
+      // Calculate XP progress percentage to next level
+      const xpForCurrentLevel = currentLevelXp;
+      const xpForNextLevel = nextLevelXp;
+      const xpNeededForNextLevel = xpForNextLevel - xpForCurrentLevel;
+      const currentXpProgress = totalXp - xpForCurrentLevel;
+      const progressPercentage = xpNeededForNextLevel > 0
+        ? Math.min(100, Math.floor((currentXpProgress / xpNeededForNextLevel) * 100))
+        : 100;
       
       return {
+        userId,
+        totalXp,
         currentLevel,
-        currentXp: totalXp,
-        nextLevelXp,
-        progress,
-        remainingXp,
-        lifetimeXp: totalXp,
-        benefits
+        nextLevel,
+        xpForCurrentLevel,
+        xpForNextLevel,
+        xpNeededForNextLevel,
+        currentXpProgress,
+        progressPercentage,
+        currentLevelInfo,
+        nextLevelInfo
       };
     } catch (error) {
-      console.error('Error getting user level info:', error);
+      console.error('[XP] Error getting user XP info:', error);
       throw error;
     }
   }
   
   /**
-   * Get user's XP transaction history
+   * Get XP transaction history for a user
    */
-  async getUserXpHistory(userId: number, limit: number, offset: number = 0) {
+  async getUserXpTransactionHistory(userId: number, limit = 10, offset = 0) {
     try {
-      return await db.query.xpTransactions.findMany({
+      const transactions = await db.query.xpTransactions.findMany({
         where: eq(xpTransactions.userId, userId),
-        orderBy: [desc(xpTransactions.createdAt)],
+        orderBy: (fields, { desc }) => [desc(fields.createdAt)],
         limit,
         offset
       });
+      
+      // Get total count for pagination
+      const totalCountResult = await db
+        .select({
+          count: sql<number>`COUNT(*)`
+        })
+        .from(xpTransactions)
+        .where(eq(xpTransactions.userId, userId));
+      
+      const totalCount = totalCountResult[0]?.count || 0;
+      
+      return {
+        transactions,
+        pagination: {
+          total: totalCount,
+          limit,
+          offset,
+          hasMore: offset + limit < totalCount
+        }
+      };
     } catch (error) {
-      console.error('Error getting XP history:', error);
+      console.error('[XP] Error getting user XP transaction history:', error);
       throw error;
     }
   }
   
   /**
-   * Count user's XP transactions for pagination
+   * Get XP leaderboard
    */
-  async countUserXpTransactions(userId: number): Promise<number> {
+  async getXpLeaderboard(limit = 10, offset = 0) {
     try {
-      const result = await db.select({ count: sql`count(*)` })
+      // Get users with their total XP
+      const usersWithXp = await db
+        .select({
+          userId: xpTransactions.userId,
+          totalXp: sql<number>`SUM(${xpTransactions.amount})`
+        })
         .from(xpTransactions)
-        .where(eq(xpTransactions.userId, userId));
+        .groupBy(xpTransactions.userId)
+        .orderBy(desc(sql<number>`SUM(${xpTransactions.amount})`))
+        .limit(limit)
+        .offset(offset);
       
-      return Number(result[0].count) || 0;
-    } catch (error) {
-      console.error('Error counting XP transactions:', error);
-      return 0;
-    }
-  }
-  
-  /**
-   * Get personalized activity recommendations for earning XP
-   */
-  async getRecommendedActivities(userId: number, limit: number = 5): Promise<ActivityRecommendation[]> {
-    try {
-      // Get user's recent activity to personalize recommendations
-      const recentTransactions = await db.query.xpTransactions.findMany({
-        where: eq(xpTransactions.userId, userId),
-        orderBy: [desc(xpTransactions.createdAt)],
-        limit: 20
-      });
-      
-      // Get active multipliers for boosted recommendations
-      const activeMultipliers = await db.query.activityMultipliers.findMany({
-        where: sql`current_timestamp < expiration_date`
-      });
-      
-      // Base recommendations
-      const baseRecommendations: ActivityRecommendation[] = [
-        {
-          type: 'match',
-          description: 'Play a match today',
-          xpAmount: 5,
-          difficulty: 'easy',
-          url: '/matches/new'
-        },
-        {
-          type: 'community',
-          description: 'Create a post in a community',
-          xpAmount: 1,
-          difficulty: 'easy',
-          url: '/communities'
-        },
-        {
-          type: 'tournament',
-          description: 'Join an upcoming tournament',
-          xpAmount: 10,
-          difficulty: 'medium',
-          url: '/tournaments'
-        },
-        {
-          type: 'profile',
-          description: 'Complete your profile information',
-          xpAmount: 3,
-          difficulty: 'easy',
-          url: '/profile/edit'
-        },
-        {
-          type: 'match',
-          description: 'Win 3 matches this week',
-          xpAmount: 15,
-          difficulty: 'medium',
-          url: '/matches/new'
-        },
-        {
-          type: 'community',
-          description: 'Create a community event',
-          xpAmount: 3,
-          difficulty: 'medium',
-          url: '/communities'
-        }
-      ];
-      
-      // Apply multipliers to recommendations
-      const recommendationsWithMultipliers = baseRecommendations.map(rec => {
-        const matchingMultiplier = activeMultipliers.find(m => 
-          m.activityType === rec.type
-        );
-        
-        if (matchingMultiplier) {
+      // Get user details for the leaderboard
+      const leaderboardEntries = await Promise.all(
+        usersWithXp.map(async (entry) => {
+          const userResult = await db.query.users.findFirst({
+            where: eq(users.id, entry.userId),
+            columns: {
+              id: true,
+              username: true,
+              displayName: true,
+              avatarUrl: true
+            }
+          });
+          
+          const userXpInfo = await this.getUserXpInfo(entry.userId);
+          
           return {
-            ...rec,
-            xpAmount: Math.round(rec.xpAmount * matchingMultiplier.multiplierValue * 10) / 10,
-            isMultiplierActive: true
+            userId: entry.userId,
+            username: userResult?.username,
+            displayName: userResult?.displayName || userResult?.username,
+            avatarUrl: userResult?.avatarUrl,
+            totalXp: entry.totalXp,
+            level: userXpInfo.currentLevel
           };
-        }
-        
-        return rec;
-      });
-      
-      // Analyze user patterns to prioritize recommendations
-      // Simple algorithm - recommend things they haven't done recently
-      const recentActivityTypes = new Set(
-        recentTransactions.map(t => t.source)
+        })
       );
       
-      // Prioritize recommendations for activities the user hasn't done recently
-      const prioritizedRecommendations = [
-        // First show recommendations with active multipliers
-        ...recommendationsWithMultipliers.filter(r => r.isMultiplierActive),
-        // Then activities they haven't done recently
-        ...recommendationsWithMultipliers.filter(r => 
-          !r.isMultiplierActive && !recentActivityTypes.has(r.type)
-        ),
-        // Then the rest
-        ...recommendationsWithMultipliers.filter(r => 
-          !r.isMultiplierActive && recentActivityTypes.has(r.type)
-        )
-      ];
-      
-      return prioritizedRecommendations.slice(0, limit);
-    } catch (error) {
-      console.error('Error getting recommended activities:', error);
-      // Return some fallback recommendations
-      return [
-        {
-          type: 'match',
-          description: 'Play a match today',
-          xpAmount: 5,
-          difficulty: 'easy'
-        },
-        {
-          type: 'community',
-          description: 'Create a post in a community',
-          xpAmount: 1,
-          difficulty: 'easy'
-        }
-      ];
-    }
-  }
-  
-  /**
-   * Calculate and apply multipliers to XP awards
-   */
-  private async applyMultipliers(
-    baseAmount: number, 
-    activityType: string, 
-    userId: number
-  ): Promise<number> {
-    try {
-      // Get any active multipliers for this activity type
-      const activeMultipliers = await db.query.activityMultipliers.findMany({
-        where: and(
-          eq(activityMultipliers.activityType, activityType),
-          sql`current_timestamp < expiration_date`
-        )
-      });
-      
-      // Special case - check if this is their first activity of this type today
-      const isFirstActivityToday = await this.isFirstActivityOfTypeToday(userId, activityType);
-      
-      // Apply all applicable multipliers
-      let finalAmount = baseAmount;
-      
-      // Apply global multipliers
-      for (const multiplier of activeMultipliers) {
-        finalAmount *= multiplier.multiplierValue;
-      }
-      
-      // Apply first-of-day bonus (1.5x)
-      if (isFirstActivityToday) {
-        finalAmount *= 1.5;
-      }
-      
-      // Round to 1 decimal place
-      return Math.round(finalAmount * 10) / 10;
-    } catch (error) {
-      console.error('Error applying multipliers:', error);
-      return baseAmount; // Fallback to base amount if error
-    }
-  }
-  
-  /**
-   * Check if this is user's first activity of this type today
-   */
-  private async isFirstActivityOfTypeToday(userId: number, activityType: string): Promise<boolean> {
-    try {
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
-      
-      const recentActivity = await db.query.xpTransactions.findFirst({
-        where: and(
-          eq(xpTransactions.userId, userId),
-          eq(xpTransactions.source, activityType),
-          sql`created_at > ${todayStart.toISOString()}`
-        )
-      });
-      
-      return !recentActivity;
-    } catch (error) {
-      console.error('Error checking first activity of the day:', error);
-      return false;
-    }
-  }
-  
-  /**
-   * Update user's total XP in the users table (optimization)
-   */
-  private async updateUserTotalXp(userId: number): Promise<void> {
-    try {
-      const totalXp = await this.calculateUserTotalXp(userId);
-      
-      await db.update(users)
-        .set({
-          totalXp
+      // Get total count for pagination
+      const totalCountResult = await db
+        .select({
+          count: sql<number>`COUNT(DISTINCT ${xpTransactions.userId})`
         })
-        .where(eq(users.id, userId));
-    } catch (error) {
-      console.error('Error updating user total XP:', error);
-      // Don't throw - this is an optimization, not critical
-    }
-  }
-  
-  /**
-   * Calculate user's total XP from transactions
-   */
-  private async calculateUserTotalXp(userId: number): Promise<number> {
-    try {
-      const result = await db.select({ sum: sql`sum(amount)` })
-        .from(xpTransactions)
-        .where(eq(xpTransactions.userId, userId));
+        .from(xpTransactions);
       
-      return Number(result[0].sum) || 0;
-    } catch (error) {
-      console.error('Error calculating total XP:', error);
-      return 0;
-    }
-  }
-  
-  /**
-   * Get user's current total XP
-   */
-  private async getUserTotalXp(userId: number): Promise<number> {
-    try {
-      // Try to get from users table first (optimization)
-      const user = await db.query.users.findFirst({
-        where: eq(users.id, userId),
-        columns: {
-          totalXp: true
-        }
-      });
+      const totalCount = totalCountResult[0]?.count || 0;
       
-      if (user?.totalXp !== null && user?.totalXp !== undefined) {
-        return user.totalXp;
-      }
-      
-      // Fall back to calculating from transactions
-      return await this.calculateUserTotalXp(userId);
-    } catch (error) {
-      console.error('Error getting user total XP:', error);
-      return await this.calculateUserTotalXp(userId);
-    }
-  }
-  
-  /**
-   * Determine user's current level based on XP
-   */
-  private async getUserLevel(userId: number): Promise<number> {
-    try {
-      const totalXp = await this.getUserTotalXp(userId);
-      
-      // Find the highest level threshold that the user has passed
-      const levelData = await db.query.xpLevelThresholds.findMany({
-        where: sql`xp_required <= ${totalXp}`,
-        orderBy: [desc(xpLevelThresholds.level)],
-        limit: 1
-      });
-      
-      if (levelData.length > 0) {
-        return levelData[0].level;
-      }
-      
-      return 1; // Default to level 1
-    } catch (error) {
-      console.error('Error getting user level:', error);
-      return 1; // Default to level 1
-    }
-  }
-  
-  /**
-   * Get benefits for a specific level
-   */
-  private async getLevelBenefits(level: number): Promise<{ perks: string[], isKeyMilestone?: boolean }> {
-    try {
-      const levelData = await db.query.xpLevelThresholds.findFirst({
-        where: eq(xpLevelThresholds.level, level)
-      });
-      
-      if (!levelData || !levelData.benefits) {
-        return { perks: [] };
-      }
-      
-      // Parse benefits from JSON
-      let benefits;
-      try {
-        benefits = JSON.parse(levelData.benefits);
-      } catch {
-        benefits = {};
-      }
-      
-      // Determine if this is a key milestone level (levels 5, 10, 25, 50, 75, 100)
-      const isKeyMilestone = [5, 10, 25, 50, 75, 100].includes(level);
-      
-      // Extract perks or return empty array
       return {
-        perks: Array.isArray(benefits.perks) ? benefits.perks : [],
-        isKeyMilestone
+        leaderboard: leaderboardEntries,
+        pagination: {
+          total: totalCount,
+          limit,
+          offset,
+          hasMore: offset + limit < totalCount
+        }
       };
     } catch (error) {
-      console.error('Error getting level benefits:', error);
-      return { perks: [] };
-    }
-  }
-  
-  /**
-   * Check for level up event
-   */
-  private async checkForLevelUp(userId: number): Promise<boolean> {
-    try {
-      // Implementation can be added later for level-up notifications
-      // This could trigger WebSocket events or store a level-up flag
-      return false;
-    } catch (error) {
-      console.error('Error checking for level up:', error);
-      return false;
+      console.error('[XP] Error getting XP leaderboard:', error);
+      throw error;
     }
   }
 }

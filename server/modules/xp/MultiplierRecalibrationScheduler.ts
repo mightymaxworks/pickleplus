@@ -9,7 +9,7 @@
  * @version 1.0.0
  */
 
-import ActivityMultiplierService from './ActivityMultiplierService';
+import { ActivityMultiplierService } from './ActivityMultiplierService';
 import { DatabaseStorage } from '../../storage';
 
 export class MultiplierRecalibrationScheduler {
@@ -57,7 +57,7 @@ export class MultiplierRecalibrationScheduler {
   private runRecalibration(): void {
     console.log('[PicklePulse] Running scheduled recalibration');
     
-    this.multiplierService.recalibrateMultipliers()
+    this.multiplierService.recalculateMultipliers()
       .then(() => {
         console.log('[PicklePulse] Scheduled recalibration completed successfully');
       })
@@ -82,4 +82,3 @@ export class MultiplierRecalibrationScheduler {
   }
 }
 
-export default MultiplierRecalibrationScheduler;
