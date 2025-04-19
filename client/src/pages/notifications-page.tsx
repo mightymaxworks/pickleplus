@@ -13,6 +13,7 @@ import { notificationsSDK, UserNotification } from '@/lib/sdk/notificationsSDK';
 import { useLocation } from 'wouter';
 import { format, formatDistanceToNow } from 'date-fns';
 import { queryClient } from '@/lib/queryClient';
+import { TestNotificationButton } from '@/components/notifications/TestNotificationButton';
 import { useToast } from '@/hooks/use-toast';
 import { PageHeader } from '@/components/ui/page-header';
 import { LayoutContainer } from '@/components/layout/LayoutContainer';
@@ -184,10 +185,16 @@ export default function NotificationsPage() {
   
   return (
     <LayoutContainer maxWidth="lg">
-      <PageHeader 
-        title="Notifications" 
-        description="View and manage your notifications"
-      />
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <PageHeader 
+          title="Notifications" 
+          description="View and manage your notifications"
+        />
+        
+        <div className="flex items-center">
+          <TestNotificationButton />
+        </div>
+      </div>
       
       <div className="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <Tabs 

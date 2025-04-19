@@ -34,6 +34,88 @@ export function registerCommunityNotificationsRoutes(app: express.Express) {
     res.status(200).json({ message: 'Notifications API routes are working' });
   });
   
+  // Add a testing endpoint to generate sample notifications
+  app.post('/api/notifications/generate-test', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+      
+      console.log(`[API] Generating test notifications for user ${userId}`);
+      
+      const notificationTypes = [
+        {
+          type: 'community_invite',
+          title: 'You\'ve been invited to a community',
+          message: 'MightyMax invited you to join "Pickleball Pros of Portland"',
+          referenceType: 'community',
+          referenceId: 1
+        },
+        {
+          type: 'event_reminder',
+          title: 'Upcoming event reminder',
+          message: 'Your registered event "Weekend Tournament" starts tomorrow',
+          referenceType: 'event',
+          referenceId: 2,
+          communityId: 1
+        },
+        {
+          type: 'post_mention',
+          title: 'Someone mentioned you',
+          message: 'CourtMaster mentioned you in a post: "Great game yesterday!"',
+          referenceType: 'post',
+          referenceId: 3,
+          communityId: 1
+        },
+        {
+          type: 'community_announcement',
+          title: 'New community announcement',
+          message: 'Important update about our upcoming season schedule',
+          referenceType: 'community',
+          referenceId: 1
+        },
+        {
+          type: 'post_reply',
+          title: 'New reply to your post',
+          message: 'PicklePro replied to your post about paddle recommendations',
+          referenceType: 'post',
+          referenceId: 5,
+          communityId: 2
+        }
+      ];
+      
+      // Create multiple test notifications
+      const createdNotifications = [];
+      
+      for (const notifData of notificationTypes) {
+        const notification = await createNotification({
+          userId,
+          type: notifData.type,
+          title: notifData.title,
+          message: notifData.message,
+          referenceType: notifData.referenceType,
+          referenceId: notifData.referenceId,
+          communityId: notifData.communityId
+        });
+        
+        if (notification) {
+          createdNotifications.push(notification);
+        }
+      }
+      
+      console.log(`[API] Created ${createdNotifications.length} test notifications for user ${userId}`);
+      
+      res.status(201).json({ 
+        message: `Successfully created ${createdNotifications.length} test notifications`,
+        notifications: createdNotifications
+      });
+    } catch (error) {
+      console.error('Error generating test notifications:', error);
+      res.status(500).json({ error: 'Failed to generate test notifications' });
+    }
+  });
+  
   return router;
 }
 
