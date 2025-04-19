@@ -23,8 +23,7 @@ import {
   users
 } from '../../../shared/schema';
 
-import { eventEmitter } from '../../core/events/server-event-bus';
-import type { ServerEvents } from '../../core/events/server-event-bus';
+import { ServerEventBus, ServerEvents } from '../../core/events';
 import { ActivityMultiplierService } from './ActivityMultiplierService';
 
 /**
@@ -69,7 +68,7 @@ export class MatchXpIntegration {
     console.log('[XP] Setting up match activity event listeners');
 
     // Listen for match recorded events
-    eventEmitter.on('match:recorded' as ServerEvents, async (data: {
+    ServerEventBus.subscribe(ServerEvents.MATCH_RECORDED, async (data: {
       matchId: number;
       userId: number;
       matchType?: string;
@@ -396,7 +395,7 @@ export class MatchXpIntegration {
       );
       
       // Emit XP awarded event
-      eventEmitter.emit('xp:awarded' as ServerEvents, {
+      ServerEventBus.emit(ServerEvents.XP_AWARDED, {
         userId,
         amount,
         source: XP_SOURCE.MATCH,

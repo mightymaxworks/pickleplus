@@ -98,15 +98,6 @@ app.use((req, res, next) => {
   // Server API Routes
   await registerRoutes(app);
   
-  // Initialize WebSocket server for real-time updates (PKL-278651-COMM-0022-FEED)
-  try {
-    const webSocketModule = await import('./modules/websocket');
-    const wsManager = webSocketModule.initializeWebSocketServer(serverHttp);
-    console.log('[API] WebSocket server initialized successfully');
-  } catch (error) {
-    console.error('[API] Error initializing WebSocket server:', error);
-  }
-  
   // Error handler should come after routes but before Vite
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

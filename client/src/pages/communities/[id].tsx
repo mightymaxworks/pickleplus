@@ -82,49 +82,19 @@ export default function CommunityDetailPage() {
     window.history.pushState({}, '', url.toString());
   };
   
-  // Fetch community data directly
+  // Fetch community data
   const { 
-    data: directCommunity,
-    isLoading: directLoading, 
-    error: directError
-  } = useCommunity(communityId);
-  
-  // Fallback to the enhanced community data provider
-  const { 
-    community: providerCommunity, 
-    isLoading: providerLoading, 
-    error: providerError,
+    community, 
+    isLoading, 
+    error,
     joinCommunity,
     leaveCommunity
   } = useCommunityWithData(communityId);
-
-  // Use the direct community data if available, otherwise use the provider
-  const community = directCommunity || providerCommunity;
-  const isLoading = directLoading || providerLoading;
-  const error = directError || providerError;
   
-  // Debugging
+  // Redirect if community not found
   useEffect(() => {
-    console.log('[PKL-278651-COMM-UI-DEBUG] Community Detail Page Load:',
-      'ID:', communityId,
-      'Direct Community:', directCommunity ? 'Found' : 'Not Found',
-      'Provider Community:', providerCommunity ? 'Found' : 'Not Found',
-      'Final Community:', community ? 'Found' : 'Not Found'
-    );
-  }, [communityId, directCommunity, providerCommunity, community]);
-  
-  // Redirect if community not found but delay the check to avoid flashing
-  useEffect(() => {
-    // Add a small delay to give the API time to respond (prevents unnecessary redirects during loading)
-    if (!isLoading && communityId !== 0) {
-      const timeoutId = setTimeout(() => {
-        if (!community) {
-          console.log('[PKL-278651-COMM-UI-DEBUG] Community not found, redirecting to communities list');
-          navigate("/communities");
-        }
-      }, 500);
-      
-      return () => clearTimeout(timeoutId);
+    if (!isLoading && !community && communityId !== 0) {
+      navigate("/communities");
     }
   }, [communityId, community, isLoading, navigate]);
   
@@ -238,7 +208,7 @@ export default function CommunityDetailPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="prose dark:prose-invert max-w-none">
-                      {community?.description ? (
+                      {community.description ? (
                         <p>{community.description}</p>
                       ) : (
                         <p className="text-muted-foreground italic">

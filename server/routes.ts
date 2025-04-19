@@ -34,7 +34,6 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { initializeCommunityModule } from "./modules/community"; // PKL-278651-COMM-0006-HUB
-import { activityFeedRoutes } from "./modules/community/activity-routes"; // PKL-278651-COMM-0022-FEED
 
 // Import necessary schema
 import { 
@@ -162,12 +161,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   initApiGateway(app);
   
   // Initialize Community Hub Module (PKL-278651-COMM-0006-HUB)
-  // Note: We don't pass the httpServer here because WebSocket server
-  // is already initialized in index.ts (PKL-278651-COMM-0022-FEED)
   initializeCommunityModule({ app });
-  
-  // Note: Activity feed routes are now registered through the community module (PKL-278651-COMM-0022-FEED)
-  // Real-time updates are handled by the WebSocket server initialized in index.ts
   
   // Initialize XP System Module (PKL-278651-XP-0001-FOUND)
   initializeXpModule(app);

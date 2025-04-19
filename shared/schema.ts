@@ -69,22 +69,6 @@ import {
   type InsertMultiplierRecalibration
 } from './schema/xp';
 
-// Import Activity Feed schema (PKL-278651-COMM-0022-FEED - Real-time Activity Feed)
-import {
-  activityFeedEntries,
-  activityReadStatus,
-  activityFeedSettings,
-  insertActivityFeedEntrySchema,
-  insertActivityReadStatusSchema,
-  insertActivityFeedSettingsSchema,
-  type ActivityFeedEntry,
-  type InsertActivityFeedEntry,
-  type ActivityReadStatus,
-  type InsertActivityReadStatus,
-  type ActivityFeedSettings,
-  type InsertActivityFeedSettings
-} from './schema/activity-feed';
-
 // Import API Gateway schema (PKL-278651-API-0001-GATEWAY - API Gateway & Developer Portal)
 import {
   apiDeveloperAccounts,

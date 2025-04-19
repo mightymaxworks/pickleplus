@@ -174,65 +174,36 @@ export function CommunitySearchResults({
       ) : communities && communities.length > 0 ? (
         <div className="space-y-4">
           {communities.map((community) => (
-            <Card key={community.id} className="w-full transition-all hover:shadow-md overflow-hidden group">
+            <Card key={community.id} className="w-full transition-all hover:shadow-md overflow-hidden">
               {/* Add Banner Image Display - Enhanced */}
-              <div className="relative h-32 w-full overflow-hidden">
-                {community.bannerUrl ? (
+              {community.bannerUrl && (
+                <div className="relative h-32 w-full overflow-hidden">
                   <img 
                     src={community.bannerUrl}
                     alt={`${community.name} banner`}
                     className="w-full h-full object-cover"
                   />
-                ) : (
-                  // Generate gradient background if no banner image - using predefined gradient classes
-                  <div className={`absolute inset-0 ${
-                    community.id % 4 === 0 ? 'bg-gradient-to-br from-blue-500 to-green-400' :
-                    community.id % 4 === 1 ? 'bg-gradient-to-br from-purple-500 to-pink-400' :
-                    community.id % 4 === 2 ? 'bg-gradient-to-br from-amber-500 to-orange-400' :
-                    'bg-gradient-to-br from-indigo-500 to-sky-400'
-                  }`}>
-                    {/* Pattern overlay */}
-                    <div className="absolute inset-0 opacity-10 flex items-center justify-center">
-                      <div className="w-full h-full flex items-center justify-center">
-                        <div className="w-full h-full">
-                          {/* Court pattern as a fallback design */}
-                          <svg width="100%" height="100%" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.2 }}>
-                            <rect x="2" y="2" width="36" height="36" rx="2" stroke="currentColor" strokeWidth="1" strokeDasharray="2 2" />
-                            <line x1="20" y1="2" x2="20" y2="38" stroke="currentColor" strokeWidth="1" strokeDasharray="2 2" />
-                            <line x1="2" y1="20" x2="38" y2="20" stroke="currentColor" strokeWidth="1" strokeDasharray="2 2" />
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60"></div>
+                  <div className="absolute bottom-2 left-3">
+                    <Avatar className="h-12 w-12 border-2 border-white shadow-md">
+                      <AvatarImage src={community.avatarUrl || undefined} alt={community.name} />
+                      <AvatarFallback className="bg-primary text-primary-foreground">
+                        {community.name.substring(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
                   </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60"></div>
-                <div className="absolute bottom-2 left-3">
-                  <Avatar className="h-12 w-12 border-2 border-white shadow-md">
-                    <AvatarImage src={community.avatarUrl || undefined} alt={community.name} />
-                    <AvatarFallback className="bg-primary text-primary-foreground">
-                      {community.name.substring(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="absolute top-2 right-2 flex gap-1.5">
+                    {getSkillLevelBadge(community.skillLevel)}
+                    {requiresApproval(community) && (
+                      <Badge variant="outline" className="bg-amber-100 text-amber-700 text-[10px] sm:text-xs py-0 h-5 px-1.5 sm:px-2 truncate max-w-[70px] sm:max-w-[120px] border-white/20 shadow-sm">
+                        <Shield className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1 flex-shrink-0" /> 
+                        <span className="hidden sm:inline">Approval Required</span>
+                        <span className="inline sm:hidden">Approval</span>
+                      </Badge>
+                    )}
+                  </div>
                 </div>
-                <div className="absolute top-2 right-2 flex gap-1.5">
-                  {getSkillLevelBadge(community.skillLevel)}
-                  {requiresApproval(community) && (
-                    <Badge variant="outline" className="bg-amber-100 text-amber-700 text-[10px] sm:text-xs py-0 h-5 px-1.5 sm:px-2 truncate max-w-[70px] sm:max-w-[120px] border-white/20 shadow-sm">
-                      <Shield className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1 flex-shrink-0" /> 
-                      <span className="hidden sm:inline">Approval Required</span>
-                      <span className="inline sm:hidden">Approval</span>
-                    </Badge>
-                  )}
-                  {community.isDefault && (
-                    <Badge variant="outline" className="bg-green-100 text-green-700 text-[10px] sm:text-xs py-0 h-5 px-1.5 sm:px-2 truncate max-w-[70px] sm:max-w-[120px] border-white/20 shadow-sm">
-                      <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1 flex-shrink-0" /> 
-                      <span className="hidden sm:inline">Official Group</span>
-                      <span className="inline sm:hidden">Official</span>
-                    </Badge>
-                  )}
-                </div>
-              </div>
+              )}
               
               <CardHeader className={`pb-2 ${community.bannerUrl ? 'pt-3' : 'pt-4'}`}>
                 <div className="flex justify-between items-start">

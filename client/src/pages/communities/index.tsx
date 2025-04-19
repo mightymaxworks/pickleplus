@@ -61,7 +61,6 @@ import CommunityProfileMockup from '../../core/modules/community/components/mock
 import CommunityCreationMockup from '../../core/modules/community/components/mockups/CommunityCreationMockup';
 import CommunityEventsMockup from '../../core/modules/community/components/mockups/CommunityEventsMockup';
 import CommunityAnnouncementsMockup from '../../core/modules/community/components/mockups/CommunityAnnouncementsMockup';
-import ActivityFeedMockup from '../../core/modules/community/components/mockups/ActivityFeedMockup';
 
 // Pickleball SVG Icon
 const PickleballIcon = () => (
@@ -205,7 +204,6 @@ export default function CommunitiesPage() {
     { id: 'profile', label: 'Profile', icon: <Users className="w-5 h-5" /> },
     { id: 'create', label: 'Create', icon: <PlusCircle className="w-5 h-5" /> },
     { id: 'events', label: 'Events', icon: <Calendar className="w-5 h-5" /> },
-    { id: 'activity', label: 'Activity', icon: <Activity className="w-5 h-5" /> },
     { id: 'announcements', label: 'News', icon: <Megaphone className="w-5 h-5" /> }
   ];
   
@@ -298,10 +296,6 @@ export default function CommunitiesPage() {
               
               <TabsContent value="events" className="pt-4">
                 <CommunityEventsMockup />
-              </TabsContent>
-              
-              <TabsContent value="activity" className="pt-4">
-                <ActivityFeedMockup />
               </TabsContent>
               
               <TabsContent value="announcements" className="pt-4">

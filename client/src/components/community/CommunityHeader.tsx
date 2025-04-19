@@ -109,16 +109,10 @@ export function CommunityHeader({
     ? format(new Date(community.createdAt), 'MMMM yyyy')
     : 'Unknown';
   
-  // Format statistics with null checks
-  const memberCountDisplay = community.isDefault ? "Private" : 
-                            (typeof community.memberCount === 'number' ? 
-                             community.memberCount.toLocaleString() : '0');
-  
-  const eventCountDisplay = typeof community.eventCount === 'number' ? 
-                            community.eventCount.toLocaleString() : '0';
-                            
-  const postCountDisplay = typeof community.postCount === 'number' ? 
-                          community.postCount.toLocaleString() : '0';
+  // Format statistics
+  const memberCountDisplay = community.isDefault ? "Private" : community.memberCount.toLocaleString();
+  const eventCountDisplay = community.eventCount.toLocaleString(); 
+  const postCountDisplay = community.postCount.toLocaleString();
   
   // Handle navigation
   const handleBackToList = () => {
@@ -330,7 +324,7 @@ export function CommunityHeader({
           </div>
           
           {/* Tags - horizontal scroll on mobile */}
-          {community.tags && typeof community.tags === 'string' && (
+          {community.tags && (
             <div className="flex gap-1.5 sm:gap-2 mb-2 sm:mb-3 overflow-x-auto pb-1 -mx-1 px-1">
               {community.tags.split(',').map((tag) => (
                 <Badge 
