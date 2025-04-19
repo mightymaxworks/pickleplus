@@ -10,14 +10,12 @@
  */
 
 import { db } from '../../db';
-import { ServerEventBus } from '../../core/events';
+import { serverEventBus } from '../../core/events';
 import { eq, desc, sql, and } from 'drizzle-orm';
-import { 
-  communityActivities, 
-  communities, 
-  users,
-  communityMembers
-} from '../../../shared/schema';
+import { users } from '../../../shared/schema';
+import { communities } from '../../../shared/schema/community';
+import { communityMembers } from '../../../shared/schema/community';
+import { communityActivityFeed as communityActivities } from '../../../shared/schema/activity-feed';
 
 interface CreateActivityParams {
   type: string;
@@ -84,7 +82,7 @@ export async function createActivity(params: CreateActivityParams) {
     };
     
     // Publish event for WebSocket broadcast
-    ServerEventBus.publish('community:activity:created', activityEvent);
+    serverEventBus.publish('community:activity:created', activityEvent);
     
     // Return the created activity with additional user and community details
     return activityEvent;

@@ -1,26 +1,26 @@
 /**
- * PKL-278651-COMM-0006-HUB
- * Community Hub Module
+ * PKL-278651-COMM-0022-FEED
+ * Community Module Index
  * 
- * This is the main export file for the community hub module.
+ * This module exports community-related functionality.
+ * 
+ * @framework Framework5.1
+ * @version 1.0.0
+ * @lastModified 2025-04-19
  */
-import { registerCommunityRoutes } from './routes';
 
-export interface CommunityModuleOptions {
-  app: any;
-}
+import activityRoutes from './activity-routes';
+import { Router } from 'express';
+import { initializeCommunityModule } from './initialize';
 
-/**
- * Initialize the community hub module
- */
-export function initializeCommunityModule(options: CommunityModuleOptions) {
-  console.log('[MODULE] Initializing Community Hub Module (PKL-278651-COMM-0006-HUB)');
-  
-  // Register routes
-  registerCommunityRoutes(options.app);
-  
-  return {
-    name: 'community-hub',
-    version: '1.0.0',
-  };
-}
+// Create the community router
+const communityRouter = Router();
+
+// Mount activity routes
+communityRouter.use('/', activityRoutes);
+
+// Export the community router and initialization function
+export { communityRouter, initializeCommunityModule };
+
+// Export individual services
+export * from './activity-service';
