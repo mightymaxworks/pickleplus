@@ -238,7 +238,7 @@ export default function CommunityDetailPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="prose dark:prose-invert max-w-none">
-                      {community.description ? (
+                      {community?.description ? (
                         <p>{community.description}</p>
                       ) : (
                         <p className="text-muted-foreground italic">

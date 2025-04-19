@@ -330,7 +330,7 @@ export function CommunityHeader({
           </div>
           
           {/* Tags - horizontal scroll on mobile */}
-          {community.tags && (
+          {community.tags && typeof community.tags === 'string' && (
             <div className="flex gap-1.5 sm:gap-2 mb-2 sm:mb-3 overflow-x-auto pb-1 -mx-1 px-1">
               {community.tags.split(',').map((tag) => (
                 <Badge 
