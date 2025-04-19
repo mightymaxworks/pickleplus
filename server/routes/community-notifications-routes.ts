@@ -352,7 +352,7 @@ router.put('/api/notification-preferences/:preferenceId',
  * Create a new notification preference
  * POST /api/notification-preferences
  */
-router.post('/notification-preferences',
+router.post('/api/notification-preferences',
   isAuthenticated,
   async (req: Request, res: Response) => {
     try {
