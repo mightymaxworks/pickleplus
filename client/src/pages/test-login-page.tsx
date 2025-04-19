@@ -1,3 +1,13 @@
+/**
+ * PKL-278651-COMM-0028-NOTIF - Test Login Page
+ * Implementation timestamp: 2025-04-19 17:25 ET
+ * 
+ * A simplified login page with pre-filled credentials for testing
+ * Allows easier testing of notification features without having to handle complex authentication
+ * 
+ * Framework 5.2 compliant implementation
+ */
+
 import React, { useState } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
