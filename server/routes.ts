@@ -34,6 +34,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { initializeCommunityModule } from "./modules/community"; // PKL-278651-COMM-0006-HUB
+import { activityFeedRoutes } from "./modules/community/activity-routes"; // PKL-278651-COMM-0022-FEED
 
 // Import necessary schema
 import { 
@@ -162,6 +163,10 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Initialize Community Hub Module (PKL-278651-COMM-0006-HUB)
   initializeCommunityModule({ app });
+  
+  // Register activity feed routes (PKL-278651-COMM-0022-FEED)
+  console.log("[API] Registering activity feed routes (PKL-278651-COMM-0022-FEED)");
+  app.use("/api/activities", activityFeedRoutes);
   
   // Initialize XP System Module (PKL-278651-XP-0001-FOUND)
   initializeXpModule(app);

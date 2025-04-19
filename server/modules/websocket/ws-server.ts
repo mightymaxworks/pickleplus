@@ -12,9 +12,8 @@
 import { Server as HttpServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { randomUUID } from 'crypto';
-import { ServerEventBus } from '../../core/events/server-event-bus';
+import { ServerEvents, eventEmitter } from '../../core/events/server-event-bus';
 import { parse } from 'cookie';
-import { passport } from '../../services/passport';
 
 interface WebSocketClient {
   id: string;
@@ -53,7 +52,7 @@ export class PickleSocketServer {
     });
     
     // Subscribe to all events from the event bus
-    ServerEventBus.subscribe('*', (topic, data) => {
+    eventEmitter.on('*' as ServerEvents, (topic, data) => {
       this.publishToSubscribers(topic, data);
     });
     

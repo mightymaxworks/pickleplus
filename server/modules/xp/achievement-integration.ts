@@ -13,7 +13,8 @@
 import { db } from '../../db';
 import { ActivityMultiplierService } from './ActivityMultiplierService';
 import { XpService } from './xp-service';
-import { ServerEventBus } from '../../core/events/server-event-bus';
+import { eventEmitter } from '../../core/events/server-event-bus';
+import type { ServerEvents } from '../../core/events/server-event-bus';
 import { eq, and, gte, sql } from 'drizzle-orm';
 import { 
   achievements,
@@ -41,10 +42,10 @@ export class AchievementXpIntegration {
    */
   private registerEventListeners(): void {
     // Listen for achievement unlock events
-    ServerEventBus.subscribe('achievement:unlocked', this.handleAchievementUnlocked.bind(this));
+    eventEmitter.on('achievement:unlocked' as ServerEvents, this.handleAchievementUnlocked.bind(this));
     
     // Listen for XP awarded events to check for XP-based achievements
-    ServerEventBus.subscribe('xp:awarded', this.checkXpBasedAchievements.bind(this));
+    eventEmitter.on('xp:awarded' as ServerEvents, this.checkXpBasedAchievements.bind(this));
     
     console.log('[XP] AchievementXpIntegration event listeners registered');
   }
@@ -241,7 +242,7 @@ export class AchievementXpIntegration {
       });
       
       // Emit achievement unlocked event
-      ServerEventBus.publish('achievement:unlocked', {
+      eventEmitter.emit('achievement:unlocked' as ServerEvents, {
         userId,
         achievementId,
         timestamp: now

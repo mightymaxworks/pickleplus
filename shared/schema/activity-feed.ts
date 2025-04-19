@@ -1,69 +1,128 @@
 /**
  * PKL-278651-COMM-0022-FEED
- * Activity Feed Schemas
+ * Activity Feed Schema
  * 
- * This file defines the database schemas for activity feeds.
+ * This module defines the database schema for the activity feed feature.
  * 
- * @framework Framework5.1
  * @version 1.0.0
  * @lastModified 2025-04-19
+ * @framework Framework5.1
  */
 
-import { pgTable, serial, integer, varchar, text, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
-import { createInsertSchema } from "drizzle-zod";
-import { users } from "../schema";
-import { communities } from "./community";
+import { 
+  integer, 
+  serial, 
+  text, 
+  boolean, 
+  timestamp, 
+  pgTable, 
+  json 
+} from 'drizzle-orm/pg-core';
+import { createInsertSchema } from 'drizzle-zod';
+import { z } from 'zod';
+import { relations } from 'drizzle-orm';
 
 /**
  * Activity Feed Entries Table
+ * Stores activity feed events
  */
-export const activityFeedEntries = pgTable("activity_feed_entries", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
-  type: varchar("type", { length: 50 }).notNull(),
-  content: text("content").notNull(),
-  communityId: integer("community_id").references(() => communities.id),
-  metadata: jsonb("metadata"),
-  relatedEntityId: integer("related_entity_id"),
-  relatedEntityType: varchar("related_entity_type", { length: 100 }),
-  isRead: boolean("is_read").default(false),
-  createdAt: timestamp("created_at").defaultNow()
+export const activityFeedEntries = pgTable('activity_feed_entries', {
+  id: serial('id').primaryKey(),
+  
+  // User who performed the activity
+  userId: integer('user_id').notNull(),
+  
+  // Username (denormalized for performance)
+  username: text('username').notNull(),
+  
+  // Display name (optional)
+  displayName: text('display_name'),
+  
+  // User avatar URL (optional)
+  avatar: text('avatar'),
+  
+  // Type of activity (e.g., match_recorded, achievement_unlocked)
+  type: text('type').notNull(),
+  
+  // Content of the activity
+  content: text('content').notNull(),
+  
+  // Timestamp when the activity occurred
+  timestamp: timestamp('timestamp').notNull().defaultNow(),
+  
+  // Community ID (if activity is related to a community)
+  communityId: integer('community_id'),
+  
+  // Community name (denormalized for performance)
+  communityName: text('community_name'),
+  
+  // Additional metadata (stored as JSON)
+  metadata: json('metadata'),
+  
+  // Related entity (e.g., match ID, achievement ID)
+  relatedEntityId: integer('related_entity_id'),
+  
+  // Type of related entity (e.g., match, achievement)
+  relatedEntityType: text('related_entity_type'),
+  
+  // Target user ID (if activity is directed at a specific user)
+  targetUserId: integer('target_user_id'),
+  
+  // When the activity was created
+  createdAt: timestamp('created_at').notNull().defaultNow()
 });
 
 /**
- * Activity Feed Entries Relations
- */
-export const activityFeedEntriesRelations = relations(activityFeedEntries, ({ one }) => ({
-  user: one(users, {
-    fields: [activityFeedEntries.userId],
-    references: [users.id]
-  }),
-  community: one(communities, {
-    fields: [activityFeedEntries.communityId],
-    references: [communities.id]
-  })
-}));
-
-/**
- * Activity Feed Read Status Table
+ * Activity Read Status Table
  * Tracks which users have read which activities
  */
-export const activityReadStatus = pgTable("activity_read_status", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
-  activityId: integer("activity_id").notNull().references(() => activityFeedEntries.id),
-  readAt: timestamp("read_at").defaultNow()
+export const activityReadStatus = pgTable('activity_read_status', {
+  id: serial('id').primaryKey(),
+  
+  // User who read the activity
+  userId: integer('user_id').notNull(),
+  
+  // Activity that was read
+  activityId: integer('activity_id').notNull(),
+  
+  // When the activity was read
+  readAt: timestamp('read_at').notNull().defaultNow()
 });
 
 /**
- * Activity Read Status Relations
+ * Activity Feed Settings Table
+ * Stores user preferences for activity feeds
  */
+export const activityFeedSettings = pgTable('activity_feed_settings', {
+  id: serial('id').primaryKey(),
+  
+  // User ID
+  userId: integer('user_id').notNull().unique(),
+  
+  // Whether to send email notifications for activities
+  emailNotifications: boolean('email_notifications').notNull().default(true),
+  
+  // Whether to send push notifications for activities
+  pushNotifications: boolean('push_notifications').notNull().default(true),
+  
+  // Whether to show read activities in the feed
+  showReadActivities: boolean('show_read_activities').notNull().default(false),
+  
+  // How many activities to display in the feed (default: 50)
+  activityDisplayLimit: integer('activity_display_limit').notNull().default(50),
+  
+  // When the settings were last updated
+  updatedAt: timestamp('updated_at').notNull().defaultNow()
+});
+
+/**
+ * Relations
+ */
+export const activityFeedEntriesRelations = relations(activityFeedEntries, ({ many }) => ({
+  readStatus: many(activityReadStatus)
+}));
+
 export const activityReadStatusRelations = relations(activityReadStatus, ({ one }) => ({
-  user: one(users, {
-    fields: [activityReadStatus.userId],
-    references: [users.id]
-  }),
   activity: one(activityFeedEntries, {
     fields: [activityReadStatus.activityId],
     references: [activityFeedEntries.id]
@@ -71,43 +130,29 @@ export const activityReadStatusRelations = relations(activityReadStatus, ({ one 
 }));
 
 /**
- * Activity Feed Settings Table
- * User preferences for activity feed
+ * Schemas
  */
-export const activityFeedSettings = pgTable("activity_feed_settings", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id).unique(),
-  showGlobalActivities: boolean("show_global_activities").default(true),
-  showCommunityActivities: boolean("show_community_activities").default(true),
-  showFriendActivities: boolean("show_friend_activities").default(true),
-  showAchievementActivities: boolean("show_achievement_activities").default(true),
-  showMatchActivities: boolean("show_match_activities").default(true),
-  showTournamentActivities: boolean("show_tournament_activities").default(true),
-  activityDisplayLimit: integer("activity_display_limit").default(50),
-  updatedAt: timestamp("updated_at").defaultNow()
-});
+export const insertActivityFeedEntrySchema = createInsertSchema(activityFeedEntries, {
+  // Add validation rules if needed
+  content: z => z.string().min(1).max(500)
+}).omit({ id: true });
+
+export const insertActivityReadStatusSchema = createInsertSchema(activityReadStatus, {
+  // Add validation rules if needed
+}).omit({ id: true });
+
+export const insertActivityFeedSettingsSchema = createInsertSchema(activityFeedSettings, {
+  // Add validation rules if needed
+}).omit({ id: true });
 
 /**
- * Activity Feed Settings Relations
+ * Types
  */
-export const activityFeedSettingsRelations = relations(activityFeedSettings, ({ one }) => ({
-  user: one(users, {
-    fields: [activityFeedSettings.userId],
-    references: [users.id]
-  })
-}));
-
-// Create insert schemas
-export const insertActivityFeedEntrySchema = createInsertSchema(activityFeedEntries);
-export const insertActivityReadStatusSchema = createInsertSchema(activityReadStatus);
-export const insertActivityFeedSettingsSchema = createInsertSchema(activityFeedSettings);
-
-// Define types
-export type ActivityFeedEntry = typeof activityFeedEntries.$inferSelect;
-export type InsertActivityFeedEntry = typeof activityFeedEntries.$inferInsert;
+export type ActivityFeedItem = typeof activityFeedEntries.$inferSelect;
+export type InsertActivityFeedItem = z.infer<typeof insertActivityFeedEntrySchema>;
 
 export type ActivityReadStatus = typeof activityReadStatus.$inferSelect;
-export type InsertActivityReadStatus = typeof activityReadStatus.$inferInsert;
+export type InsertActivityReadStatus = z.infer<typeof insertActivityReadStatusSchema>;
 
 export type ActivityFeedSettings = typeof activityFeedSettings.$inferSelect;
-export type InsertActivityFeedSettings = typeof activityFeedSettings.$inferInsert;
+export type InsertActivityFeedSettings = z.infer<typeof insertActivityFeedSettingsSchema>;

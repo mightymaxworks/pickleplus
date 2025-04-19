@@ -18,8 +18,9 @@ import {
   communityActivities, 
   CommunityActivityType 
 } from '../../../shared/schema/community-engagement';
-// Import the ServerEventBus from the core events directory
-import { ServerEventBus, ServerEvents } from '../../core/events';
+// Import the event emitter from the core events directory
+import { eventEmitter } from '../../core/events/server-event-bus';
+import type { ServerEvents } from '../../core/events/server-event-bus';
 import { ActivityMultiplierService } from './ActivityMultiplierService';
 
 /**
@@ -71,7 +72,7 @@ export class CommunityXpIntegration {
     console.log('[XP] Setting up community activity event listeners');
 
     // Listen for community activity events
-    ServerEventBus.subscribe(ServerEvents.COMMUNITY_ACTIVITY_CREATED, async (data: {
+    eventEmitter.on('community:activity:created' as ServerEvents, async (data: {
       userId: number;
       communityId: number;
       activityType: CommunityActivityType | string; // Allow string to be more flexible with event types
@@ -89,7 +90,7 @@ export class CommunityXpIntegration {
     });
     
     // Listen for other community-related events
-    ServerEventBus.subscribe(ServerEvents.COMMUNITY_POST_CREATED, async (data: {
+    eventEmitter.on('community:post:created' as ServerEvents, async (data: {
       userId: number;
       communityId: number;
       postId: number;
@@ -102,7 +103,7 @@ export class CommunityXpIntegration {
       );
     });
     
-    ServerEventBus.subscribe(ServerEvents.COMMUNITY_COMMENT_CREATED, async (data: {
+    eventEmitter.on('community:post:comment:created' as ServerEvents, async (data: {
       userId: number;
       communityId: number;
       commentId: number;
@@ -115,8 +116,8 @@ export class CommunityXpIntegration {
       );
     });
     
-    // Use the event from ServerEvents enum now that it's been added
-    ServerEventBus.subscribe(ServerEvents.COMMUNITY_EVENT_ATTENDED, async (data: {
+    // Use the event from ServerEvents type now that it's been added
+    eventEmitter.on('community:event:registered' as ServerEvents, async (data: {
       userId: number;
       communityId: number;
       eventId: number;
@@ -226,7 +227,7 @@ export class CommunityXpIntegration {
       // Check for level up (will be handled by a trigger or separate process)
       
       // Emit XP awarded event
-      ServerEventBus.emit(ServerEvents.XP_AWARDED, {
+      eventEmitter.emit('xp:awarded' as ServerEvents, {
         userId,
         amount,
         source: XP_SOURCE.COMMUNITY,

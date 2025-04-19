@@ -1,323 +1,255 @@
 /**
  * PKL-278651-COMM-0022-FEED
- * Activity Service
+ * Activity Feed Service
  * 
- * This service handles business logic for community activities, including
- * retrieving, creating, and managing community activities.
+ * This service handles the business logic for activity feeds,
+ * including querying activities and emitting events for new activities.
  * 
- * @framework Framework5.1
  * @version 1.0.0
  * @lastModified 2025-04-19
+ * @framework Framework5.1
  */
 
 import { db } from '../../db';
-import { users } from '@shared/schema';
-import * as schema from '@shared/schema/activity-feed';
-import { communities, communityMembers } from '@shared/schema/community';
+import { and, desc, eq, gt, inArray, isNull, or, sql } from 'drizzle-orm';
 import { 
-  eq, 
-  desc, 
-  and, 
-  or, 
-  inArray, 
-  sql 
-} from 'drizzle-orm';
-import { ServerEvents } from '../../core/events/server-event-bus';
+  activityFeedEntries, 
+  activityReadStatus, 
+  activityFeedSettings,
+  ActivityFeedItem
+} from '@shared/schema/activity-feed';
+import { communities, communityMembers, users } from '@shared/schema';
+import { ServerEvents, eventEmitter } from '../../core/events/server-event-bus';
 
 interface GetActivitiesOptions {
-  communityId?: number;
-  userId?: number;
   limit?: number;
   offset?: number;
-  types?: string[];
-}
-
-export interface CreateActivityParams {
-  type: string;
-  userId: number;
-  content: string;
   communityId?: number;
-  metadata?: Record<string, any>;
-  relatedEntityId?: number;
-  relatedEntityType?: string;
 }
 
 /**
- * Emit an event to all clients
+ * ActivityFeedService class
+ * 
+ * Manages all activity feed operations
  */
-function emitEvent(topic: string, data: any) {
-  // Using ServerEvents enum if it matches
-  const eventName = Object.values(ServerEvents).find(event => event === topic);
-  
-  // If topic is a known ServerEvent, emit it that way, otherwise emit as custom topic
-  if (eventName) {
-    ServerEventBus.emit(eventName as ServerEvents, data);
-  } else {
-    // For custom topics that don't match ServerEvents
-    // This would typically be implemented with a custom event emitter
-    console.log(`[ActivityService] Emitting custom event: ${topic}`, data);
-    // Custom implementation would go here
-  }
-}
-
-/**
- * Get activities for a specific community or all visible communities
- */
-export async function getActivities(options: GetActivitiesOptions = {}) {
-  try {
-    const { 
-      communityId, 
-      userId, 
-      limit = 10, 
-      offset = 0,
-      types
-    } = options;
-    
-    // Build the query
-    let query = db
-      .select({
-        id: schema.activityFeedEntries.id,
-        type: schema.activityFeedEntries.type,
-        userId: schema.activityFeedEntries.userId,
-        username: users.username,
-        displayName: users.displayName,
-        avatar: users.avatarUrl,
-        content: schema.activityFeedEntries.content,
-        timestamp: schema.activityFeedEntries.createdAt,
-        communityId: schema.activityFeedEntries.communityId,
-        communityName: communities.name,
-        metadata: schema.activityFeedEntries.metadata,
-        relatedEntityId: schema.activityFeedEntries.relatedEntityId,
-        relatedEntityType: schema.activityFeedEntries.relatedEntityType,
-        isRead: schema.activityFeedEntries.isRead
-      })
-      .from(schema.activityFeedEntries)
-      .leftJoin(users, eq(schema.activityFeedEntries.userId, users.id))
-      .leftJoin(communities, eq(schema.activityFeedEntries.communityId, communities.id))
-      .orderBy(desc(schema.activityFeedEntries.createdAt))
-      .limit(limit)
-      .offset(offset);
-    
-    // Apply filters
-    const conditions = [];
-    
-    // Filter by community if provided
-    if (communityId) {
-      conditions.push(eq(schema.activityFeedEntries.communityId, communityId));
-    } else if (userId) {
-      // If no specific community but there is a user, get activities from communities the user belongs to
-      // This requires joining with communityMembers to check membership
-      query = query.leftJoin(
-        communityMembers,
-        and(
-          eq(schema.activityFeedEntries.communityId, communityMembers.communityId),
-          eq(communityMembers.userId, userId)
-        )
-      );
+class ActivityFeedService {
+  /**
+   * Create a new activity in the feed
+   */
+  async createActivity(activityData: Omit<ActivityFeedItem, 'id' | 'timestamp'>): Promise<ActivityFeedItem> {
+    try {
+      const [activity] = await db
+        .insert(activityFeedEntries)
+        .values({
+          ...activityData,
+          timestamp: new Date()
+        })
+        .returning();
       
-      conditions.push(
-        or(
-          // Activities without a community (global)
-          sql`${schema.activityFeedEntries.communityId} IS NULL`,
-          // Activities in public communities
-          sql`${communities.isPublic} = true`,
-          // Activities in communities the user is a member of
+      // Emit WebSocket event for real-time updates
+      eventEmitter.emit('activity:created', activity);
+      
+      // If the activity is associated with a specific community, emit community-specific event
+      if (activity.communityId) {
+        eventEmitter.emit(`community:${activity.communityId}:activity`, activity);
+      }
+      
+      return activity;
+    } catch (error) {
+      console.error('[PKL-278651-COMM-0022-FEED] Error creating activity:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Get activities for a specific user
+   */
+  async getActivitiesForUser(
+    userId: number,
+    options: GetActivitiesOptions = {}
+  ): Promise<(ActivityFeedItem & { isRead: boolean })[]> {
+    try {
+      const { limit = 10, offset = 0, communityId } = options;
+      
+      // Get the user's community memberships
+      const userCommunities = await db
+        .select({ communityId: communityMembers.communityId })
+        .from(communityMembers)
+        .where(eq(communityMembers.userId, userId));
+      
+      const userCommunityIds = userCommunities.map(c => c.communityId);
+      
+      // Construct the base query for getting activities relevant to the user
+      const baseQuery = db
+        .select({
+          a: activityFeedEntries,
+          isRead: sql<boolean>`CASE WHEN ${activityReadStatus.userId} IS NOT NULL THEN true ELSE false END`
+        })
+        .from(activityFeedEntries)
+        .leftJoin(
+          activityReadStatus,
           and(
-            sql`${communityMembers.userId} = ${userId}`,
-            sql`${communityMembers.status} = 'active'`
+            eq(activityReadStatus.activityId, activityFeedEntries.id),
+            eq(activityReadStatus.userId, userId)
           )
         )
-      );
-    } else {
-      // If no community or user, only get activities from public communities or with no community
-      conditions.push(
-        or(
-          sql`${schema.activityFeedEntries.communityId} IS NULL`,
-          sql`${communities.isPublic} = true`
-        )
-      );
-    }
-    
-    // Filter by activity types if provided
-    if (types && types.length > 0) {
-      conditions.push(inArray(schema.activityFeedEntries.type, types));
-    }
-    
-    // Apply all conditions if any
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions));
-    }
-    
-    // Execute query
-    const results = await query;
-    
-    return results;
-  } catch (error) {
-    console.error('[ActivityService] Error getting activities:', error);
-    throw error;
-  }
-}
-
-/**
- * Get activities for a specific user
- */
-export async function getUserActivities(userId: number, limit: number = 10) {
-  try {
-    const results = await db
-      .select({
-        id: schema.activityFeedEntries.id,
-        type: schema.activityFeedEntries.type,
-        userId: schema.activityFeedEntries.userId,
-        username: users.username,
-        displayName: users.displayName,
-        avatar: users.avatarUrl,
-        content: schema.activityFeedEntries.content,
-        timestamp: schema.activityFeedEntries.createdAt,
-        communityId: schema.activityFeedEntries.communityId,
-        communityName: communities.name,
-        metadata: schema.activityFeedEntries.metadata,
-        relatedEntityId: schema.activityFeedEntries.relatedEntityId,
-        relatedEntityType: schema.activityFeedEntries.relatedEntityType,
-        isRead: schema.activityFeedEntries.isRead
-      })
-      .from(schema.activityFeedEntries)
-      .leftJoin(users, eq(schema.activityFeedEntries.userId, users.id))
-      .leftJoin(communities, eq(schema.activityFeedEntries.communityId, communities.id))
-      .where(eq(schema.activityFeedEntries.userId, userId))
-      .orderBy(desc(schema.activityFeedEntries.createdAt))
-      .limit(limit);
-    
-    return results;
-  } catch (error) {
-    console.error('[ActivityService] Error getting user activities:', error);
-    throw error;
-  }
-}
-
-/**
- * Create a new activity
- */
-export async function createActivity(params: CreateActivityParams) {
-  try {
-    const {
-      type,
-      userId,
-      content,
-      communityId,
-      metadata,
-      relatedEntityId,
-      relatedEntityType
-    } = params;
-    
-    // Insert the activity
-    const [activity] = await db
-      .insert(schema.activityFeedEntries)
-      .values({
-        type,
-        userId,
-        content,
-        communityId,
-        metadata,
-        relatedEntityId,
-        relatedEntityType,
-        isRead: false
-      })
-      .returning();
-    
-    if (!activity) {
-      throw new Error('Failed to create activity');
-    }
-    
-    // Get user details
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, userId));
-    
-    // Get community details if applicable
-    let communityName;
-    if (communityId) {
-      const [community] = await db
-        .select({
-          name: communities.name
-        })
-        .from(communities)
-        .where(eq(communities.id, communityId));
+        .where(
+          or(
+            // Public activities (no community ID)
+            isNull(activityFeedEntries.communityId),
+            
+            // Activities from communities the user is a member of
+            inArray(activityFeedEntries.communityId, userCommunityIds),
+            
+            // Activities about the user
+            eq(activityFeedEntries.targetUserId, userId)
+          )
+        );
       
-      communityName = community?.name;
-    }
-    
-    // Create enriched activity response
-    const enrichedActivity = {
-      id: activity.id,
-      type: activity.type,
-      userId: activity.userId,
-      username: user?.username,
-      displayName: user?.displayName,
-      avatar: user?.avatarUrl,
-      content: activity.content,
-      timestamp: activity.createdAt?.toISOString() || new Date().toISOString(),
-      communityId: activity.communityId,
-      communityName,
-      metadata: activity.metadata,
-      relatedEntityId: activity.relatedEntityId,
-      relatedEntityType: activity.relatedEntityType,
-      isRead: activity.isRead
-    };
-    
-    // Emit the activity via the event bus for WebSocket broadcasting
-    if (communityId) {
-      // Community-specific activity
-      emitEvent(ServerEvents.COMMUNITY_ACTIVITY_CREATED, {
-        ...enrichedActivity,
-        communityId
-      });
+      // Apply community filter if specified
+      const query = communityId
+        ? baseQuery.where(eq(activityFeedEntries.communityId, communityId))
+        : baseQuery;
       
-      // Also emit to specific community channel for WebSocket
-      emitEvent(`community:${communityId}:activities`, enrichedActivity);
+      // Execute the query with limit, offset, and sorting
+      const results = await query
+        .orderBy(desc(activityFeedEntries.timestamp))
+        .limit(limit)
+        .offset(offset);
+      
+      // Transform the results
+      return results.map(({ a, isRead }) => ({
+        ...a,
+        isRead: isRead ?? false
+      }));
+    } catch (error) {
+      console.error('[PKL-278651-COMM-0022-FEED] Error getting activities for user:', error);
+      throw error;
     }
-    
-    // Also emit to global feed
-    emitEvent('community:activities', enrichedActivity);
-    
-    return enrichedActivity;
-  } catch (error) {
-    console.error('[ActivityService] Error creating activity:', error);
-    throw error;
+  }
+  
+  /**
+   * Get unread activities for a specific user
+   */
+  async getUnreadActivitiesForUser(
+    userId: number,
+    communityId?: number
+  ): Promise<ActivityFeedItem[]> {
+    try {
+      // Get the user's community memberships
+      const userCommunities = await db
+        .select({ communityId: communityMembers.communityId })
+        .from(communityMembers)
+        .where(eq(communityMembers.userId, userId));
+      
+      const userCommunityIds = userCommunities.map(c => c.communityId);
+      
+      // Find all activities relevant to the user that are not marked as read
+      const baseQuery = db
+        .select({ activity: activityFeedEntries })
+        .from(activityFeedEntries)
+        .leftJoin(
+          activityReadStatus,
+          and(
+            eq(activityReadStatus.activityId, activityFeedEntries.id),
+            eq(activityReadStatus.userId, userId)
+          )
+        )
+        .where(
+          and(
+            // Not yet marked as read
+            isNull(activityReadStatus.id),
+            // Activities relevant to the user
+            or(
+              // Public activities (no community ID)
+              isNull(activityFeedEntries.communityId),
+              // Activities from communities the user is a member of
+              inArray(activityFeedEntries.communityId, userCommunityIds),
+              // Activities about the user
+              eq(activityFeedEntries.targetUserId, userId)
+            )
+          )
+        );
+      
+      // Apply community filter if specified
+      const query = communityId
+        ? baseQuery.where(eq(activityFeedEntries.communityId, communityId))
+        : baseQuery;
+      
+      // Execute query
+      const results = await query.orderBy(desc(activityFeedEntries.timestamp));
+      
+      return results.map(r => r.activity);
+    } catch (error) {
+      console.error('[PKL-278651-COMM-0022-FEED] Error getting unread activities:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Get the count of unread activities for a user
+   */
+  async getUnreadActivityCount(
+    userId: number,
+    communityId?: number
+  ): Promise<number> {
+    try {
+      // Get unread activities
+      const unreadActivities = await this.getUnreadActivitiesForUser(userId, communityId);
+      
+      // Return the count
+      return unreadActivities.length;
+    } catch (error) {
+      console.error('[PKL-278651-COMM-0022-FEED] Error getting unread activity count:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Update user's activity feed settings
+   */
+  async updateActivityFeedSettings(
+    userId: number,
+    settings: Partial<{
+      emailNotifications: boolean;
+      pushNotifications: boolean;
+      showReadActivities: boolean;
+    }>
+  ): Promise<any> {
+    try {
+      // Check if user has settings
+      const [existingSettings] = await db
+        .select()
+        .from(activityFeedSettings)
+        .where(eq(activityFeedSettings.userId, userId));
+      
+      if (existingSettings) {
+        // Update existing settings
+        const [updated] = await db
+          .update(activityFeedSettings)
+          .set(settings)
+          .where(eq(activityFeedSettings.userId, userId))
+          .returning();
+        
+        return updated;
+      } else {
+        // Create new settings
+        const [created] = await db
+          .insert(activityFeedSettings)
+          .values({
+            userId,
+            ...settings
+          })
+          .returning();
+        
+        return created;
+      }
+    } catch (error) {
+      console.error('[PKL-278651-COMM-0022-FEED] Error updating activity feed settings:', error);
+      throw error;
+    }
   }
 }
 
-/**
- * Mark an activity as read for a specific user
- */
-export async function markActivityAsRead(activityId: number, userId: number) {
-  try {
-    // Check if read status already exists
-    const existingStatus = await db
-      .select()
-      .from(schema.activityReadStatus)
-      .where(
-        and(
-          eq(schema.activityReadStatus.activityId, activityId),
-          eq(schema.activityReadStatus.userId, userId)
-        )
-      )
-      .limit(1);
-    
-    // If not already marked as read, create read status
-    if (existingStatus.length === 0) {
-      await db
-        .insert(schema.activityReadStatus)
-        .values({
-          activityId,
-          userId,
-          readAt: new Date()
-        });
-    }
-    
-    return { success: true, activityId, userId };
-  } catch (error) {
-    console.error('[ActivityService] Error marking activity as read:', error);
-    throw error;
-  }
-}
+// Export singleton instance
+export const activityFeedService = new ActivityFeedService();

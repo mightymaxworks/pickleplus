@@ -11,7 +11,7 @@
  */
 
 import { db } from '../../db';
-import { ServerEventBus } from '../../core/events/server-event-bus';
+import { ServerEvents, eventEmitter } from '../../core/events/server-event-bus';
 import { eq, desc, asc, sql, and, gte } from 'drizzle-orm';
 import { 
   xpTransactions, 
@@ -56,7 +56,7 @@ export class XpService {
       }).returning();
       
       // Emit event for awarded XP
-      ServerEventBus.publish('xp:awarded', {
+      eventEmitter.emit('xp:awarded' as ServerEvents, {
         userId,
         amount,
         source,
@@ -115,7 +115,7 @@ export class XpService {
       // Update user's level in database if changed
       if (currentLevel > previousLevel) {
         // Emit level up event
-        ServerEventBus.publish('xp:levelup', {
+        eventEmitter.emit('xp:levelup' as ServerEvents, {
           userId,
           previousLevel,
           newLevel: currentLevel,

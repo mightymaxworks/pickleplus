@@ -16,6 +16,8 @@
 
 import { db } from './server/db';
 import { sql } from 'drizzle-orm';
+import { activityFeedEntries, activityReadStatus, activityFeedSettings } from './shared/schema/activity-feed';
+import { createId } from '@paralleldrive/cuid2';
 
 /**
  * Check if a table exists in the database
@@ -23,121 +25,121 @@ import { sql } from 'drizzle-orm';
 async function checkTableExists(tableName: string): Promise<boolean> {
   const result = await db.execute(sql`
     SELECT EXISTS (
-      SELECT 1
-      FROM information_schema.tables
-      WHERE table_name = ${tableName}
-    )
+      SELECT FROM information_schema.tables 
+      WHERE table_schema = 'public'
+      AND table_name = ${tableName}
+    );
   `);
   
-  return result.rows[0].exists;
+  return result.rows[0]?.exists === true;
 }
 
 /**
  * Main function to run the migration
  */
 async function runMigration() {
-  console.log('Starting activity feed migration...');
+  console.log('[PKL-278651-COMM-0022-FEED] Starting activity feed migration...');
   
   try {
-    // Check if activity feed entries table exists
-    const activityFeedTableExists = await checkTableExists('activity_feed_entries');
+    // Check if tables already exist
+    const activityTableExists = await checkTableExists('activity_feed_entries');
+    const readStatusTableExists = await checkTableExists('activity_read_status');
+    const settingsTableExists = await checkTableExists('activity_feed_settings');
     
-    if (!activityFeedTableExists) {
-      console.log('Creating activity_feed_entries table...');
-      
-      await db.execute(sql`
-        CREATE TABLE activity_feed_entries (
-          id SERIAL PRIMARY KEY,
-          user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-          type VARCHAR(50) NOT NULL,
-          content TEXT NOT NULL,
-          community_id INTEGER REFERENCES communities(id) ON DELETE CASCADE,
-          metadata JSONB,
-          related_entity_id INTEGER,
-          related_entity_type VARCHAR(100),
-          is_read BOOLEAN DEFAULT FALSE,
-          created_at TIMESTAMPTZ DEFAULT NOW()
-        )
-      `);
-      
-      console.log('Creating index on activity_feed_entries (user_id)...');
-      await db.execute(sql`
-        CREATE INDEX idx_activity_feed_entries_user_id ON activity_feed_entries(user_id)
-      `);
-      
-      console.log('Creating index on activity_feed_entries (community_id)...');
-      await db.execute(sql`
-        CREATE INDEX idx_activity_feed_entries_community_id ON activity_feed_entries(community_id)
-      `);
-      
-      console.log('Creating index on activity_feed_entries (type)...');
-      await db.execute(sql`
-        CREATE INDEX idx_activity_feed_entries_type ON activity_feed_entries(type)
-      `);
-    } else {
-      console.log('activity_feed_entries table already exists, skipping...');
+    if (activityTableExists && readStatusTableExists && settingsTableExists) {
+      console.log('[PKL-278651-COMM-0022-FEED] Activity feed tables already exist, skipping migration.');
+      return;
     }
     
-    // Check if activity read status table exists
-    const activityReadStatusTableExists = await checkTableExists('activity_read_status');
-    
-    if (!activityReadStatusTableExists) {
-      console.log('Creating activity_read_status table...');
+    // Create the tables
+    // Note: Drizzle creates tables in the correct order based on dependencies
+    await db.execute(sql`
+      -- Create activity_feed_entries table if it doesn't exist
+      CREATE TABLE IF NOT EXISTS "activity_feed_entries" (
+        "id" SERIAL PRIMARY KEY,
+        "user_id" INTEGER NOT NULL,
+        "username" TEXT NOT NULL,
+        "display_name" TEXT,
+        "avatar" TEXT,
+        "type" TEXT NOT NULL,
+        "content" TEXT NOT NULL,
+        "timestamp" TIMESTAMP NOT NULL DEFAULT NOW(),
+        "community_id" INTEGER,
+        "community_name" TEXT,
+        "metadata" JSONB,
+        "related_entity_id" INTEGER,
+        "related_entity_type" TEXT,
+        "target_user_id" INTEGER,
+        "created_at" TIMESTAMP NOT NULL DEFAULT NOW()
+      );
       
-      await db.execute(sql`
-        CREATE TABLE activity_read_status (
-          id SERIAL PRIMARY KEY,
-          user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-          activity_id INTEGER NOT NULL REFERENCES activity_feed_entries(id) ON DELETE CASCADE,
-          read_at TIMESTAMPTZ DEFAULT NOW(),
-          UNIQUE(user_id, activity_id)
-        )
-      `);
+      -- Create activity_read_status table if it doesn't exist
+      CREATE TABLE IF NOT EXISTS "activity_read_status" (
+        "id" SERIAL PRIMARY KEY,
+        "user_id" INTEGER NOT NULL,
+        "activity_id" INTEGER NOT NULL,
+        "read_at" TIMESTAMP NOT NULL DEFAULT NOW(),
+        CONSTRAINT "activity_read_status_activity_fk"
+          FOREIGN KEY ("activity_id") REFERENCES "activity_feed_entries" ("id")
+          ON DELETE CASCADE
+      );
       
-      console.log('Creating index on activity_read_status (user_id, activity_id)...');
-      await db.execute(sql`
-        CREATE INDEX idx_activity_read_status_user_activity ON activity_read_status(user_id, activity_id)
-      `);
-    } else {
-      console.log('activity_read_status table already exists, skipping...');
-    }
-    
-    // Check if activity feed settings table exists
-    const activityFeedSettingsTableExists = await checkTableExists('activity_feed_settings');
-    
-    if (!activityFeedSettingsTableExists) {
-      console.log('Creating activity_feed_settings table...');
+      -- Create activity_feed_settings table if it doesn't exist
+      CREATE TABLE IF NOT EXISTS "activity_feed_settings" (
+        "id" SERIAL PRIMARY KEY,
+        "user_id" INTEGER NOT NULL UNIQUE,
+        "email_notifications" BOOLEAN NOT NULL DEFAULT TRUE,
+        "push_notifications" BOOLEAN NOT NULL DEFAULT TRUE,
+        "show_read_activities" BOOLEAN NOT NULL DEFAULT FALSE,
+        "activity_display_limit" INTEGER NOT NULL DEFAULT 50,
+        "updated_at" TIMESTAMP NOT NULL DEFAULT NOW()
+      );
       
-      await db.execute(sql`
-        CREATE TABLE activity_feed_settings (
-          id SERIAL PRIMARY KEY,
-          user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-          show_global_activities BOOLEAN DEFAULT TRUE,
-          show_community_activities BOOLEAN DEFAULT TRUE,
-          show_friend_activities BOOLEAN DEFAULT TRUE,
-          show_achievement_activities BOOLEAN DEFAULT TRUE,
-          show_match_activities BOOLEAN DEFAULT TRUE,
-          show_tournament_activities BOOLEAN DEFAULT TRUE,
-          activity_display_limit INTEGER DEFAULT 50,
-          updated_at TIMESTAMPTZ DEFAULT NOW()
-        )
-      `);
-    } else {
-      console.log('activity_feed_settings table already exists, skipping...');
-    }
+      -- Create indexes
+      CREATE INDEX IF NOT EXISTS "activity_feed_entries_user_id_idx" ON "activity_feed_entries" ("user_id");
+      CREATE INDEX IF NOT EXISTS "activity_feed_entries_community_id_idx" ON "activity_feed_entries" ("community_id");
+      CREATE INDEX IF NOT EXISTS "activity_feed_entries_timestamp_idx" ON "activity_feed_entries" ("timestamp" DESC);
+      CREATE INDEX IF NOT EXISTS "activity_read_status_user_id_idx" ON "activity_read_status" ("user_id");
+      CREATE INDEX IF NOT EXISTS "activity_read_status_activity_id_idx" ON "activity_read_status" ("activity_id");
+      CREATE UNIQUE INDEX IF NOT EXISTS "activity_read_status_user_activity_idx" ON "activity_read_status" ("user_id", "activity_id");
+    `);
     
-    console.log('Activity feed migration completed successfully!');
+    console.log('[PKL-278651-COMM-0022-FEED] Activity feed tables created successfully!');
+    
+    // Insert some sample data
+    const adminUserId = 1; // System/admin user ID
+    
+    // Create a sample activity for system announcements
+    await db.insert(activityFeedEntries).values({
+      userId: adminUserId,
+      username: 'system',
+      displayName: 'Pickle+ System',
+      type: 'system_announcement',
+      content: 'Welcome to the new Activity Feed! You will now receive real-time updates about matches, achievements, and community events.',
+      timestamp: new Date(),
+      metadata: { 
+        icon: 'bell',
+        color: 'blue',
+        priority: 'high'
+      }
+    });
+    
+    console.log('[PKL-278651-COMM-0022-FEED] Sample activity created successfully!');
+    console.log('[PKL-278651-COMM-0022-FEED] Migration completed successfully!');
+    
   } catch (error) {
-    console.error('Error running activity feed migration:', error);
+    console.error('[PKL-278651-COMM-0022-FEED] Error during migration:', error);
     process.exit(1);
   }
 }
 
 // Run the migration
-runMigration().then(() => {
-  console.log('Migration completed, exiting...');
-  process.exit(0);
-}).catch(error => {
-  console.error('Fatal error during migration:', error);
-  process.exit(1);
-});
+runMigration()
+  .then(() => {
+    console.log('[PKL-278651-COMM-0022-FEED] Activity feed migration completed.');
+    process.exit(0);
+  })
+  .catch(error => {
+    console.error('[PKL-278651-COMM-0022-FEED] Migration failed:', error);
+    process.exit(1);
+  });
