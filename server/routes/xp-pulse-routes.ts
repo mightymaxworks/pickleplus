@@ -146,6 +146,41 @@ export function registerPicklePulseRoutes(app: express.Express, storage: Databas
   });
   
   /**
+   * GET /api/xp/simulate-activity
+   * Simulates different activity levels and their effect on multipliers
+   */
+  app.get('/api/xp/simulate-activity', async (req: Request, res: Response) => {
+    try {
+      // Get parameters from query
+      const activityType = (req.query.activityType as string) || 'community';
+      const activityLevel = req.query.level ? parseFloat(req.query.level as string) : 1.0;
+      const baseXp = req.query.baseXp ? parseFloat(req.query.baseXp as string) : 1.0;
+      
+      // Get the current base multiplier
+      const multiplier = await activityMultiplierService.getCurrentActivityMultiplier(activityType);
+      
+      // Apply the activity adjustment using the public method
+      const adjustedMultiplier = activityMultiplierService.applyActivityAdjustment(multiplier, activityLevel);
+      
+      // Calculate the resulting XP
+      const xpAmount = Math.round(baseXp * adjustedMultiplier * 10) / 10;
+      
+      res.status(200).json({
+        activityType,
+        activityLevel,
+        baseXp,
+        baseMultiplier: multiplier,
+        adjustedMultiplier,
+        calculatedXp: xpAmount,
+        reductionPct: activityLevel > 1.0 ? `${Math.round((1 - (adjustedMultiplier / multiplier)) * 100)}%` : '0%'
+      });
+    } catch (error) {
+      console.error('[API] Error simulating activity impact:', error);
+      res.status(500).json({ error: 'Error simulating activity impact' });
+    }
+  });
+  
+  /**
    * GET /api/xp/calculate
    * Calculates XP for a given activity type and base amount
    */

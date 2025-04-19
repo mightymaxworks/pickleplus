@@ -217,8 +217,8 @@ export class ActivityMultiplierService {
           lastRecalibration: new Date()
         });
       } else {
-        // Apply a simple bounds check (would be based on schema in production)
-        const boundedValue = Math.min(Math.max(newValue, 0.5), 2.0);
+        // Apply bounds check - multipliers can be as low as 0.05 for extreme cases
+        const boundedValue = Math.min(Math.max(newValue, 0.05), 2.0);
         
         // Update existing multiplier
         await db.update(activityMultipliers)
@@ -293,9 +293,6 @@ export class ActivityMultiplierService {
       // This is where the proprietary Pickle Pulse™ algorithm would analyze
       // platform-wide activity patterns and adjust multipliers accordingly.
       
-      // For implementation simplicity, we're using a simplified version
-      // that adjusts multipliers based on time of day and day of week
-      
       const now = new Date();
       const hour = now.getHours();
       const dayOfWeek = now.getDay(); // 0 = Sunday, 6 = Saturday
@@ -309,10 +306,23 @@ export class ActivityMultiplierService {
       // Off-hours boost (midnight - 6AM)
       const isOffHours = hour >= 0 && hour < 6;
       
-      // Calculate multipliers based on these factors
-      const matchMultiplier = isWeekend ? 1.5 : isPeakHours ? 1.25 : 1.0;
-      const communityMultiplier = isWeekend ? 1.25 : isPeakHours ? 1.5 : isOffHours ? 1.75 : 1.0;
-      const achievementMultiplier = 1.0; // Achievements have fixed multipliers
+      // Simulating an actual activity monitoring system
+      // In a real implementation, these would be calculated from database metrics
+      
+      // SIMULATION: Get activity levels for different activity types
+      const activityLevels = await this.getSimulatedActivityLevels();
+      
+      // Base multipliers based on time factors
+      let baseMatchMultiplier = isWeekend ? 1.5 : isPeakHours ? 1.25 : 1.0;
+      let baseCommunityMultiplier = isWeekend ? 1.25 : isPeakHours ? 1.5 : isOffHours ? 1.75 : 1.0;
+      let baseAchievementMultiplier = 1.0; // Achievements have fixed multipliers
+      
+      // Apply activity-based adjustments
+      const matchMultiplier = this.applyActivityAdjustment(baseMatchMultiplier, activityLevels.match);
+      const communityMultiplier = this.applyActivityAdjustment(baseCommunityMultiplier, activityLevels.community);
+      const achievementMultiplier = baseAchievementMultiplier; // Achievements aren't adjusted based on volume
+      
+      console.log(`[XP] Activity-adjusted multipliers - Match: ${matchMultiplier.toFixed(2)}, Community: ${communityMultiplier.toFixed(2)}`);
       
       // Apply the new multipliers
       await this.updateMultiplier('match', matchMultiplier, 'Automated Pickle Pulse™ adjustment');
@@ -323,5 +333,57 @@ export class ActivityMultiplierService {
     } catch (error) {
       console.error('[XP] Error recalculating multipliers:', error);
     }
+  }
+  
+  /**
+   * Apply activity-based adjustment to a base multiplier
+   * This reduces the multiplier when activity is very high to prevent XP inflation
+   */
+  public applyActivityAdjustment(baseMultiplier: number, activityLevel: number): number {
+    // activityLevel is a ratio of current activity to normal activity
+    // 1.0 = normal activity, 2.0 = twice normal, 0.5 = half normal
+    
+    if (activityLevel <= 1.0) {
+      // Below normal activity - no reduction
+      return baseMultiplier;
+    } else if (activityLevel <= 2.0) {
+      // Up to 2x normal activity - gradual reduction
+      const reduction = (activityLevel - 1.0) * 0.3; // Reduce by up to 30%
+      return Math.max(baseMultiplier * (1.0 - reduction), 0.5);
+    } else if (activityLevel <= 5.0) {
+      // 2-5x normal activity - stronger reduction
+      const reduction = 0.3 + (activityLevel - 2.0) * 0.15; // 30% to 75% reduction
+      return Math.max(baseMultiplier * (1.0 - reduction), 0.2);
+    } else {
+      // Extreme activity (>5x normal) - severe reduction to prevent farming
+      return Math.max(baseMultiplier * 0.1, 0.05);
+    }
+  }
+  
+  /**
+   * Get simulated activity levels for different activity types
+   * In a real implementation, this would query actual activity metrics from the database
+   */
+  private async getSimulatedActivityLevels(): Promise<{[key: string]: number}> {
+    // For demonstration purposes, we're simulating different activity levels:
+    
+    const simulationDate = new Date();
+    const hour = simulationDate.getHours();
+    
+    // Simulate high community activity during peak social hours (6-9 PM)
+    const highCommunityActivity = hour >= 18 && hour <= 21;
+    
+    // Simulate high match activity during weekend afternoons
+    const isWeekend = simulationDate.getDay() === 0 || simulationDate.getDay() === 6;
+    const afternoonHours = hour >= 13 && hour <= 17;
+    const highMatchActivity = isWeekend && afternoonHours;
+    
+    // Create simulated activity levels
+    // 1.0 = normal, >1.0 = above normal, <1.0 = below normal
+    return {
+      match: highMatchActivity ? 3.5 : (isWeekend ? 1.8 : 1.0),
+      community: highCommunityActivity ? 2.7 : 1.2,
+      achievement: 1.0 // Achievement unlocks tend to be more evenly distributed
+    };
   }
 }
