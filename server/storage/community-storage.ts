@@ -46,11 +46,36 @@ export interface CommunityStorage {
   getCommunities(filters?: {
     location?: string;
     skillLevel?: string;
+    minSkillLevel?: string;
+    maxSkillLevel?: string;
     tags?: string[];
     search?: string;
+    isPrivate?: boolean;
+    hasEvents?: boolean;
+    eventType?: string;
+    minMemberCount?: number;
+    maxMemberCount?: number;
+    createdAfter?: Date;
+    createdBefore?: Date;
+    excludeIds?: number[];
+    includeIds?: number[];
+    recommendForUser?: number;
+    popular?: boolean;
+    featured?: boolean;
+    excludeMemberOf?: number | null;
+    sort?: string;
+    
     limit?: number;
     offset?: number;
   }): Promise<Community[]>;
+  
+  /**
+   * Get recommended communities for a specific user based on their interests and connections
+   * @param userId - The user ID to get recommendations for
+   * @param limit - Maximum number of recommendations to return
+   * @returns Promise<Community[]> - A list of recommended communities
+   */
+  getRecommendedCommunities(userId: number, limit?: number): Promise<Community[]>;
   
   getCommunityById(id: number): Promise<Community | undefined>;
   

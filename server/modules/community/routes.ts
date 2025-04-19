@@ -229,6 +229,110 @@ router.get('/', communityAuth, async (req: Request, res: Response) => {
 });
 
 /**
+ * @layer Server
+ * @module Community
+ * @description Enhanced community discovery with trending, popular, and personalized recommendations
+ * @dependsOn Database Layer (communitiesTable, communityMembersTable, communityPostsTable, communityEventsTable)
+ * @endpoint GET /api/communities/discover
+ * @version 1.0.0
+ * @lastModified 2025-04-19 13:15 ET
+ * @framework Framework5.2
+ * @sprint PKL-278651-COMM-0022-DISC
+ * @changes
+ * - New endpoint for discovering communities
+ * - Trending algorithm based on recent activity
+ * - Personalized recommendations based on user interests and connections
+ * - Featured communities selected by admins
+ * - New communities that are gaining traction
+ */
+router.get('/discover', communityAuth, async (req: Request, res: Response) => {
+  try {
+    // Get current user ID if authenticated
+    const userId = req.user?.id || null;
+    console.log(`[PKL-278651-COMM-0022-DISC] Discovery request from user ${userId || 'anonymous'}`);
+    
+    // Get the category parameter
+    const { category, limit = '10' } = req.query;
+    const limitNum = parseInt(String(limit)) || 10;
+    
+    // Default result structure
+    const result: any = {
+      trending: [],
+      recommended: [],
+      popular: [],
+      new: [],
+      featured: []
+    };
+    
+    // Process based on requested category, or get all if no category specified
+    const categories = category ? [String(category)] : Object.keys(result);
+    
+    for (const cat of categories) {
+      switch (cat) {
+        case 'trending':
+          // Trending communities have high recent activity (posts, events, new members)
+          result.trending = await storage.getCommunities({
+            sort: 'recent_activity',
+            limit: limitNum,
+            excludeMemberOf: userId
+          });
+          break;
+          
+        case 'recommended':
+          // Recommended communities are based on user interests and connections
+          if (userId) {
+            result.recommended = await storage.getRecommendedCommunities(userId, limitNum);
+          } else {
+            // For anonymous users, show diverse popular communities
+            result.recommended = await storage.getCommunities({
+              sort: 'diverse',
+              limit: limitNum
+            });
+          }
+          break;
+          
+        case 'popular':
+          // Popular communities have the most members
+          result.popular = await storage.getCommunities({
+            sort: 'member_count',
+            limit: limitNum,
+            excludeMemberOf: userId
+          });
+          break;
+          
+        case 'new':
+          // New communities created recently
+          result.new = await storage.getCommunities({
+            sort: 'created_at',
+            limit: limitNum,
+            excludeMemberOf: userId
+          });
+          break;
+          
+        case 'featured':
+          // Featured communities selected by admins
+          result.featured = await storage.getCommunities({
+            featured: true,
+            limit: limitNum,
+            excludeMemberOf: userId
+          });
+          break;
+      }
+    }
+    
+    // If a specific category was requested, return just that category
+    if (category) {
+      res.json(result[String(category)] || []);
+    } else {
+      res.json(result);
+    }
+  } catch (error) {
+    console.error('[PKL-278651-COMM-0022-DISC] Error discovering communities:', error);
+    res.status(500).json({ message: 'Failed to discover communities' });
+  }
+});
+
+/**
  * Get IDs of communities the current user is a member of
  * GET /api/communities/my-community-ids
  * 
