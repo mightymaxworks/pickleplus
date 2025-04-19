@@ -25,7 +25,7 @@ import {
   insertCommunityRoleSchema,
   insertContentApprovalSchema,
   insertContentFilterSettingsSchema
-} from '../../shared/schema';
+} from '../../shared/schema/moderation';
 import { isAuthenticated } from '../auth';
 import { isCommunityModerator } from '../middleware/community-middleware.js';
 import { moderationService } from '../modules/community/moderation-service.js';
@@ -53,14 +53,10 @@ router.get('/communities/:communityId/moderation/reports',
         return res.status(400).json({ error: 'Invalid community ID' });
       }
       
-      const reports = await db.query.contentReports.findMany({
-        where: eq(contentReports.communityId, communityId),
-        orderBy: [desc(contentReports.createdAt)],
-        with: {
-          reporter: true,
-          reviewer: true
-        }
-      });
+      const reports = await db.select()
+        .from(contentReports)
+        .where(eq(contentReports.communityId, communityId))
+        .orderBy(desc(contentReports.createdAt));
       
       res.status(200).json(reports);
     } catch (error) {
@@ -181,14 +177,10 @@ router.get('/communities/:communityId/moderation/actions',
         return res.status(400).json({ error: 'Invalid community ID' });
       }
       
-      const actions = await db.query.moderationActions.findMany({
-        where: eq(moderationActions.communityId, communityId),
-        orderBy: [desc(moderationActions.createdAt)],
-        with: {
-          moderator: true,
-          targetUser: true
-        }
-      });
+      const actions = await db.select()
+        .from(moderationActions)
+        .where(eq(moderationActions.communityId, communityId))
+        .orderBy(desc(moderationActions.createdAt));
       
       res.status(200).json(actions);
     } catch (error) {
@@ -308,9 +300,9 @@ router.get('/communities/:communityId/roles',
         return res.status(400).json({ error: 'Invalid community ID' });
       }
       
-      const roles = await db.query.communityRoles.findMany({
-        where: eq(communityRoles.communityId, communityId),
-      });
+      const roles = await db.select()
+        .from(communityRoles)
+        .where(eq(communityRoles.communityId, communityId));
       
       res.status(200).json(roles);
     } catch (error) {
@@ -431,12 +423,13 @@ router.delete('/communities/:communityId/roles/:roleId',
       }
       
       // Check if it's a default role
-      const role = await db.query.communityRoles.findFirst({
-        where: and(
+      const [role] = await db.select()
+        .from(communityRoles)
+        .where(and(
           eq(communityRoles.id, roleId),
           eq(communityRoles.communityId, communityId)
-        )
-      });
+        ))
+        .limit(1);
       
       if (!role) {
         return res.status(404).json({ error: 'Role not found' });
