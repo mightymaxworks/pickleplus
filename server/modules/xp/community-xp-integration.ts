@@ -19,8 +19,7 @@ import {
   CommunityActivityType 
 } from '../../../shared/schema/community-engagement';
 // Import the ServerEventBus from the core events directory
-// The file exists at server/core/events/server-event-bus.ts as verified
-import { ServerEventBus, ServerEvents } from '../../core/events/server-event-bus';
+import { ServerEventBus, ServerEvents } from '../../core/events';
 import { ActivityMultiplierService } from './ActivityMultiplierService';
 
 /**
@@ -116,7 +115,9 @@ export class CommunityXpIntegration {
       );
     });
     
-    ServerEventBus.subscribe(ServerEvents.COMMUNITY_EVENT_ATTENDED, async (data: {
+    // Use constant string since the event type may not be in the enum yet
+    // This ensures compatibility even if the ServerEvents enum doesn't have the exact event
+    ServerEventBus.subscribe('community:event:attended' as any, async (data: {
       userId: number;
       communityId: number;
       eventId: number;
