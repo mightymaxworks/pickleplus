@@ -1003,6 +1003,199 @@ export const communityStorageImplementation: CommunityStorage = {
       .returning();
     
     return result[0];
+  },
+  
+  /**
+   * PKL-278651-COMM-0022-DISC
+   * Get recommended communities for a user based on their interests and connections
+   * 
+   * This implementation uses several factors for recommendations:
+   * 1. User's skill level
+   * 2. User's location
+   * 3. Communities with similar tags to those the user is already part of
+   * 4. Active communities with recent posts or events
+   * 
+   * @param userId The user ID to get recommendations for
+   * @param limit Maximum number of communities to return (default: 10)
+   * @returns Promise<Community[]> List of recommended communities
+   */
+  async getRecommendedCommunities(userId: number, limit: number = 10): Promise<Community[]> {
+    const db = this.getDb();
+    console.log(`[PKL-278651-COMM-0022-DISC] Getting recommendations for user ${userId}`);
+    
+    try {
+      // Get user data to determine interests
+      const [userData] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+      
+      if (!userData) {
+        console.error(`[PKL-278651-COMM-0022-DISC] User ${userId} not found`);
+        return [];
+      }
+      
+      // Get communities the user is already a member of
+      const userMemberships = await db
+        .select({
+          communityId: communityMembers.communityId
+        })
+        .from(communityMembers)
+        .where(eq(communityMembers.userId, userId));
+      
+      const userCommunityIds = userMemberships.map(m => m.communityId);
+      console.log(`[PKL-278651-COMM-0022-DISC] User ${userId} is a member of ${userCommunityIds.length} communities`);
+      
+      // If user isn't in any communities yet, recommend popular ones
+      if (userCommunityIds.length === 0) {
+        console.log(`[PKL-278651-COMM-0022-DISC] User ${userId} is not in any communities, recommending popular ones`);
+        return await db
+          .select()
+          .from(communities)
+          .orderBy(desc(communities.memberCount))
+          .limit(limit);
+      }
+      
+      // Get tags from communities the user is a part of
+      const userCommunities = await db
+        .select()
+        .from(communities)
+        .where(inArray(communities.id, userCommunityIds));
+      
+      // Extract and analyze tags from user's communities
+      const userTags = new Set<string>();
+      userCommunities.forEach(community => {
+        if (community.tags) {
+          const tags = community.tags.split(',').map(tag => tag.trim());
+          tags.forEach(tag => userTags.add(tag));
+        }
+      });
+      
+      console.log(`[PKL-278651-COMM-0022-DISC] User ${userId} has these community tags:`, Array.from(userTags));
+      
+      // Get communities with similar tags, skill level, or location, but exclude communities user is already in
+      let recommendedCommunities = await db
+        .select()
+        .from(communities)
+        .where(
+          and(
+            // Exclude communities user is already in
+            userCommunityIds.length > 0 
+              ? sql`${communities.id} NOT IN (${userCommunityIds.join(',')})` 
+              : sql`1=1`,
+            
+            // Must be active
+            eq(communities.isActive, true),
+            
+            // Public communities only for recommendations
+            eq(communities.isPrivate, false),
+            
+            // Match at least one of these conditions
+            or(
+              // Similar location
+              userData.location && communities.location 
+                ? ilike(communities.location, `%${userData.location}%`) 
+                : sql`1=0`,
+              
+              // Similar skill level
+              userData.skillLevel && communities.skillLevel 
+                ? eq(communities.skillLevel, userData.skillLevel) 
+                : sql`1=0`,
+              
+              // Has events (active community)
+              sql`${communities.eventCount} > 0`,
+              
+              // Has discussions (active community)
+              sql`${communities.postCount} > 0`,
+              
+              // Has similar tags
+              Array.from(userTags).length > 0 
+                ? or(...Array.from(userTags).map(tag => 
+                    ilike(communities.tags, `%${tag}%`)
+                  )) 
+                : sql`1=0`
+            )
+          )
+        )
+        .orderBy(desc(communities.memberCount))
+        .limit(limit * 2); // Get more than needed for diversity
+      
+      console.log(`[PKL-278651-COMM-0022-DISC] Found ${recommendedCommunities.length} potential recommendations`);
+      
+      // Prioritize results using a scoring system and add diversity
+      const scoredCommunities = recommendedCommunities.map(community => {
+        let score = 0;
+        
+        // More members = higher score
+        score += Math.min(community.memberCount / 10, 5);
+        
+        // More posts = higher score
+        score += Math.min(community.postCount / 5, 3);
+        
+        // More events = higher score
+        score += Math.min(community.eventCount / 2, 5);
+        
+        // Recent creation = higher score
+        const daysSinceCreation = Math.floor((Date.now() - community.createdAt.getTime()) / (1000 * 60 * 60 * 24));
+        score += Math.max(30 - daysSinceCreation, 0) / 10;
+        
+        // Matching skill level = higher score
+        if (userData.skillLevel && community.skillLevel === userData.skillLevel) {
+          score += 5;
+        }
+        
+        // Matching location = higher score
+        if (userData.location && community.location && 
+            community.location.toLowerCase().includes(userData.location.toLowerCase())) {
+          score += 5;
+        }
+        
+        // Tag matching = higher score
+        if (community.tags) {
+          const communityTags = community.tags.split(',').map(tag => tag.trim());
+          const matchingTags = communityTags.filter(tag => userTags.has(tag));
+          score += matchingTags.length * 2;
+        }
+        
+        return { community, score };
+      });
+      
+      // Sort by score and take top results
+      scoredCommunities.sort((a, b) => b.score - a.score);
+      
+      // Ensure diversity by including some communities based on different criteria
+      const topCommunities = scoredCommunities.slice(0, Math.floor(limit * 0.7))
+        .map(item => item.community);
+      
+      // Add some new communities for discovery
+      const newCommunityCutoff = new Date();
+      newCommunityCutoff.setDate(newCommunityCutoff.getDate() - 30); // Last 30 days
+      
+      const newCommunities = await db
+        .select()
+        .from(communities)
+        .where(
+          and(
+            userCommunityIds.length > 0 && topCommunities.length > 0
+              ? sql`${communities.id} NOT IN (${[...userCommunityIds, ...topCommunities.map(c => c.id)].join(',')})` 
+              : sql`1=1`,
+            sql`${communities.createdAt} > ${newCommunityCutoff.toISOString()}`,
+            eq(communities.isPrivate, false),
+            eq(communities.isActive, true)
+          )
+        )
+        .orderBy(desc(communities.createdAt))
+        .limit(Math.ceil(limit * 0.3));
+      
+      console.log(`[PKL-278651-COMM-0022-DISC] Added ${newCommunities.length} new communities for discovery`);
+      
+      // Combine results
+      return [...topCommunities, ...newCommunities].slice(0, limit);
+    } catch (error) {
+      console.error('[PKL-278651-COMM-0022-DISC] Error getting recommended communities:', error);
+      return [];
+    }
   }
 };
 
