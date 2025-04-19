@@ -2,7 +2,8 @@
  * PKL-278651-COMM-0022-FEED
  * Activity Item Component
  * 
- * This component displays a single activity feed item.
+ * This component displays a single activity feed item with modern UI design,
+ * matching the community card visual style with banner images and avatars.
  * 
  * @framework Framework5.1
  * @version 1.0.0
@@ -13,10 +14,14 @@ import React, { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { 
   Activity, Users, Calendar, Trophy, MessageCircle,
-  Heart, Star, Award, ThumbsUp, Bell, Check
+  Heart, Star, Award, ThumbsUp, Bell, Check,
+  ExternalLink, Eye
 } from 'lucide-react';
+import { Link } from 'wouter';
 
 // Activity types with icon mapping
 const ACTIVITY_ICONS: Record<string, React.ReactNode> = {
@@ -52,6 +57,29 @@ const ACTIVITY_COLORS: Record<string, string> = {
   'xp': 'bg-cyan-500',
   'endorsement': 'bg-sky-500',
   'default': 'bg-primary'
+};
+
+// Activity gradient backgrounds
+const ACTIVITY_GRADIENTS: Record<string, string> = {
+  'community_join': 'from-blue-400 to-blue-700',
+  'community_create': 'from-indigo-400 to-indigo-700',
+  'community_leave': 'from-gray-400 to-gray-700',
+  'event_create': 'from-emerald-400 to-emerald-700',
+  'event_join': 'from-green-400 to-green-700',
+  'event_leave': 'from-gray-400 to-gray-700',
+  'achievement': 'from-amber-400 to-amber-700',
+  'comment': 'from-purple-400 to-purple-700',
+  'like': 'from-rose-400 to-rose-700',
+  'rating': 'from-yellow-400 to-yellow-700',
+  'badge': 'from-orange-400 to-orange-700',
+  'xp': 'from-cyan-400 to-cyan-700',
+  'endorsement': 'from-sky-400 to-sky-700',
+  'default': 'from-primary/80 to-primary'
+};
+
+// Banner background patterns (could be actual images in production)
+const getBannerPattern = (type: string): string => {
+  return `bg-gradient-to-br ${ACTIVITY_GRADIENTS[type] || ACTIVITY_GRADIENTS.default}`;
 };
 
 interface Activity {
@@ -104,68 +132,133 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity, onMarkAsRead }) =
     }
   };
   
+  // Determine if this activity is related to a community
+  const isCommunityRelated = activity.type.startsWith('community_') || activity.communityId;
+  
+  // Determine if this activity is related to an event
+  const isEventRelated = activity.type.startsWith('event_');
+  
+  // Get appropriate link based on activity type
+  const getActivityLink = () => {
+    if (activity.communityId && isCommunityRelated) {
+      return `/communities/${activity.communityId}`;
+    } 
+    else if (activity.relatedEntityId) {
+      if (isEventRelated) {
+        return `/events/${activity.relatedEntityId}`;
+      } 
+      else if (activity.type === 'achievement') {
+        return `/achievements/${activity.relatedEntityId}`;
+      }
+    }
+    return '#';
+  };
+  
   const displayName = activity.displayName || activity.username;
   const initials = getInitials(displayName);
+  const bannerPattern = getBannerPattern(activity.type);
   
   return (
-    <div 
-      className={`
-        relative flex items-start space-x-3 rounded-lg border p-3 transition-all duration-300
-        ${!isRead ? 'bg-muted/40 dark:bg-muted/10' : 'bg-transparent'}
-        ${activity.isNew ? 'animate-highlight-fade' : ''}
-      `}
+    <Card 
+      className={`w-full transition-all hover:shadow-md overflow-hidden ${!isRead ? 'ring-1 ring-primary/30' : ''} ${activity.isNew ? 'animate-highlight-fade' : ''}`}
       onClick={handleMarkAsRead}
     >
-      {/* User Avatar */}
-      <Avatar className="h-10 w-10">
-        <AvatarImage src={activity.avatar || ''} alt={displayName} />
-        <AvatarFallback>{initials}</AvatarFallback>
-      </Avatar>
+      {/* Banner with gradient background */}
+      <div className="relative h-24 w-full overflow-hidden">
+        <div className={`absolute inset-0 ${bannerPattern}`}></div>
+        <div className="absolute inset-0 bg-black/20"></div>
+        
+        {/* Activity badge in top right */}
+        <div className="absolute top-2 right-2">
+          <Badge 
+            variant="outline" 
+            className={`${getIconBackgroundColor()} text-white border-white/20 shadow-sm flex items-center gap-1`}
+          >
+            {getIcon()}
+            <span className="hidden sm:inline">
+              {activity.type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+            </span>
+          </Badge>
+        </div>
+        
+        {/* User Avatar */}
+        <div className="absolute bottom-0 translate-y-1/2 left-3">
+          <Avatar className="h-12 w-12 border-2 border-white shadow-md">
+            <AvatarImage src={activity.avatar || ''} alt={displayName} />
+            <AvatarFallback className={getIconBackgroundColor()}>{initials}</AvatarFallback>
+          </Avatar>
+        </div>
+        
+        {/* Unread indicator */}
+        {!isRead && (
+          <div className="absolute top-2 left-2">
+            <span className="h-2 w-2 rounded-full bg-white shadow-md block"></span>
+          </div>
+        )}
+      </div>
       
-      {/* Activity Content */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-medium">
-            {displayName}
-          </p>
-          <div className="flex items-center">
-            {!isRead && (
-              <span className="mr-2 h-2 w-2 rounded-full bg-primary" />
-            )}
+      <CardHeader className="pt-6 pb-2 pl-20">
+        <div className="flex justify-between items-start">
+          <div>
+            <p className="font-medium text-sm">
+              {displayName}
+            </p>
             <time dateTime={activity.timestamp} className="text-xs text-muted-foreground">
               {formattedTime}
             </time>
           </div>
         </div>
-        
-        <p className="mt-1 text-sm text-foreground">{activity.content}</p>
-        
-        {/* Activity Metadata and Actions */}
-        <div className="mt-2 flex items-center space-x-2">
-          <Badge 
-            variant="outline" 
-            className={`flex items-center space-x-1 px-2 py-0.5 ${getIconBackgroundColor()} text-white`}
-          >
-            {getIcon()}
-            <span>{activity.type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</span>
-          </Badge>
-          
-          {!isRead && onMarkAsRead && (
-            <button
-              type="button"
-              className="ml-auto text-xs text-muted-foreground hover:text-foreground flex items-center"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleMarkAsRead();
-              }}
-            >
-              <Check className="h-3 w-3 mr-1" />
-              Mark as read
-            </button>
+      </CardHeader>
+      
+      <CardContent className="pt-0">
+        <p className="text-sm text-foreground">{activity.content}</p>
+      </CardContent>
+      
+      <CardFooter className="pt-2 pb-3 flex justify-between border-t mt-2">
+        <div className="text-xs text-muted-foreground flex items-center">
+          {isCommunityRelated ? (
+            <Users className="h-3.5 w-3.5 mr-1" />
+          ) : isEventRelated ? (
+            <Calendar className="h-3.5 w-3.5 mr-1" />
+          ) : (
+            <Activity className="h-3.5 w-3.5 mr-1" />
           )}
+          <span>
+            {activity.metadata?.additionalInfo || 
+            (activity.communityId ? 'Community activity' : 
+            (isEventRelated ? 'Event activity' : 'User activity'))}
+          </span>
         </div>
-      </div>
-    </div>
+        
+        {!isRead && onMarkAsRead ? (
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="h-7 px-2 text-xs"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleMarkAsRead();
+            }}
+          >
+            <Check className="h-3 w-3 mr-1" />
+            Mark as read
+          </Button>
+        ) : (
+          getActivityLink() !== '#' && (
+            <Link to={getActivityLink()}>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="h-7 px-2 text-xs"
+              >
+                <Eye className="h-3 w-3 mr-1" />
+                View
+              </Button>
+            </Link>
+          )
+        )}
+      </CardFooter>
+    </Card>
   );
 };
 
