@@ -11,7 +11,7 @@
 import { Request, Response } from "express";
 import { xpService } from "../services/xp-service";
 import { z } from "zod";
-import { isAdmin, isAuthenticated } from "../middleware/auth";
+import { isAdmin, isAuthenticated } from "../auth";
 
 /**
  * Register XP routes

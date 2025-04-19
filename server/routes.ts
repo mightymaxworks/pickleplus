@@ -159,6 +159,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Initialize Community Hub Module (PKL-278651-COMM-0006-HUB)
   initializeCommunityModule({ app });
   
+  // Register XP System Routes (PKL-278651-XP-0001-FOUND)
+  registerXpRoutes(app);
+  
   // Register Batch API routes (PKL-278651-PERF-0001.4-API)
   app.use("/api", batchApiRoutes);
   
