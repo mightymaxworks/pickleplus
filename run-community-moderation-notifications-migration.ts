@@ -9,13 +9,6 @@
  */
 import { db } from './server/db';
 import { sql } from 'drizzle-orm';
-import { 
-  contentReports,
-  moderationActions,
-  communityRoles,
-  userNotifications,
-  notificationPreferences
-} from './shared/schema';
 
 /**
  * Main function to run the migration
@@ -24,10 +17,10 @@ async function main() {
   console.log('Starting Community Moderation and Notifications migration...');
   
   try {
-    // Check if tables already exist
-    const tablesExist = await checkTablesExist(db);
+    // Check if tables already exist using simpler approach
+    const tableExists = await checkTableExists(db, 'content_reports');
     
-    if (tablesExist) {
+    if (tableExists) {
       console.log('Community Moderation and Notifications tables already exist. Exiting...');
       process.exit(0);
     }
@@ -122,13 +115,30 @@ async function main() {
     
     console.log('Community Notification tables created successfully');
     
-    // Add default roles for each community
-    console.log('Adding default community roles...');
-    await addDefaultCommunityRoles();
+    // Insert default community roles for admin community
+    console.log('Adding default community roles for admin community (id=1)...');
     
-    // Add default notification preferences for each user
-    console.log('Adding default notification preferences...');
-    await addDefaultNotificationPreferences();
+    // Add default roles for admin community (id=1)
+    await db.execute(sql`
+      INSERT INTO community_roles (community_id, name, permissions, color)
+      VALUES 
+        (1, 'Administrator', 'manage_community,manage_members,manage_content,manage_roles,manage_settings', '#FF5733'),
+        (1, 'Moderator', 'manage_content,manage_members', '#33A1FF'),
+        (1, 'Member', 'view_content,create_content,participate', '#33FF57')
+      ON CONFLICT (community_id, name) DO NOTHING
+    `);
+    
+    // Insert default notification preferences for first user
+    console.log('Adding default notification preferences for first user (id=1)...');
+    
+    await db.execute(sql`
+      INSERT INTO notification_preferences (user_id, notification_type, channel, is_enabled)
+      VALUES 
+        (1, 'community_post', 'app', TRUE),
+        (1, 'mention', 'app', TRUE),
+        (1, 'event_reminder', 'app', TRUE),
+        (1, 'moderation_action', 'app', TRUE)
+    `);
     
     console.log('Community Moderation and Notifications migration completed successfully');
   } catch (error) {
@@ -138,130 +148,22 @@ async function main() {
 }
 
 /**
- * Check if the Community Moderation and Notifications tables already exist
+ * Simple function to check if a table exists
  */
-async function checkTablesExist(db: any): Promise<boolean> {
+async function checkTableExists(db: any, tableName: string): Promise<boolean> {
   try {
-    // Query to check if the tables exist
     const result = await db.execute(sql`
       SELECT EXISTS (
         SELECT FROM information_schema.tables 
         WHERE table_schema = 'public' 
-        AND table_name = 'content_reports'
-      ) AS content_reports_exists,
-      EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_name = 'user_notifications'
-      ) AS user_notifications_exists
+        AND table_name = ${tableName}
+      )
     `);
     
-    return result[0].content_reports_exists && result[0].user_notifications_exists;
+    return result[0].exists;
   } catch (error) {
-    console.error('Error checking if tables exist:', error);
+    console.error(`Error checking if table ${tableName} exists:`, error);
     return false;
-  }
-}
-
-/**
- * Add default community roles to each community
- */
-async function addDefaultCommunityRoles() {
-  // Get all communities
-  const communities = await db.query.communities.findMany();
-  
-  for (const community of communities) {
-    // Check if default roles already exist for this community
-    const existingRoles = await db.query.communityRoles.findMany({
-      where: (roles, { eq }) => eq(roles.communityId, community.id)
-    });
-    
-    if (existingRoles.length > 0) {
-      console.log(`Default roles already exist for community ${community.name} (ID: ${community.id})`);
-      continue;
-    }
-    
-    // Add default roles
-    const defaultRoles = [
-      {
-        communityId: community.id,
-        name: 'Administrator',
-        permissions: 'manage_community,manage_members,manage_content,manage_roles,manage_settings',
-        color: '#FF5733'
-      },
-      {
-        communityId: community.id,
-        name: 'Moderator',
-        permissions: 'manage_content,manage_members',
-        color: '#33A1FF'
-      },
-      {
-        communityId: community.id,
-        name: 'Member',
-        permissions: 'view_content,create_content,participate',
-        color: '#33FF57'
-      }
-    ];
-    
-    for (const role of defaultRoles) {
-      await db.insert(communityRoles).values(role);
-    }
-    
-    console.log(`Added default roles for community ${community.name} (ID: ${community.id})`);
-  }
-}
-
-/**
- * Add default notification preferences for each user
- */
-async function addDefaultNotificationPreferences() {
-  // Get all users
-  const users = await db.query.users.findMany();
-  
-  for (const user of users) {
-    // Check if default preferences already exist for this user
-    const existingPreferences = await db.query.notificationPreferences.findMany({
-      where: (prefs, { eq }) => eq(prefs.userId, user.id)
-    });
-    
-    if (existingPreferences.length > 0) {
-      console.log(`Default notification preferences already exist for user ${user.username} (ID: ${user.id})`);
-      continue;
-    }
-    
-    // Add default preferences
-    const defaultPreferences = [
-      {
-        userId: user.id,
-        notificationType: 'community_post',
-        channel: 'app',
-        isEnabled: true
-      },
-      {
-        userId: user.id,
-        notificationType: 'mention',
-        channel: 'app',
-        isEnabled: true
-      },
-      {
-        userId: user.id,
-        notificationType: 'event_reminder',
-        channel: 'app',
-        isEnabled: true
-      },
-      {
-        userId: user.id,
-        notificationType: 'moderation_action',
-        channel: 'app',
-        isEnabled: true
-      }
-    ];
-    
-    for (const pref of defaultPreferences) {
-      await db.insert(notificationPreferences).values(pref);
-    }
-    
-    console.log(`Added default notification preferences for user ${user.username} (ID: ${user.id})`);
   }
 }
 
