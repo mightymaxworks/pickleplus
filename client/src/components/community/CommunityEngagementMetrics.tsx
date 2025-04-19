@@ -9,24 +9,23 @@
  * - Engagement levels
  * 
  * @version 1.0.0
- * @lastModified 2025-04-18
+ * @lastModified 2025-04-19
  * @framework Framework5.1
  */
 
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { CalendarDays, Star, TrendingUp, Users, Award, FileText, Activity, MessageSquare, Calendar } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { CalendarDays, Star, TrendingUp, Users, Award, FileText, Activity, MessageSquare, Calendar, CheckCircle } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 
 interface CommunityEngagementMetricsProps {
   communityId: number;
@@ -95,6 +94,7 @@ interface UserEngagement {
 
 const CommunityEngagementMetrics: React.FC<CommunityEngagementMetricsProps> = ({ communityId }) => {
   const [activeTab, setActiveTab] = useState('top-contributors');
+  const { toast } = useToast();
   
   // Get top contributors for the community
   const { data: topContributors, isLoading: isLoadingContributors } = useQuery({
@@ -194,6 +194,33 @@ const CommunityEngagementMetrics: React.FC<CommunityEngagementMetricsProps> = ({
     POLL_VOTED: 'voted on a poll'
   };
   
+  // Mutation to record a community activity
+  const recordActivityMutation = useMutation({
+    mutationFn: async (data: { activityType: string, activityData?: Record<string, any> }) => {
+      const res = await apiRequest(
+        'POST',
+        `/api/communities/${communityId}/engagement/activity`,
+        data
+      );
+      return await res.json();
+    },
+    onSuccess: () => {
+      // Invalidate relevant queries to refresh the data
+      queryClient.invalidateQueries({ queryKey: ['/api/communities', communityId, 'engagement'] });
+      toast({
+        title: 'Activity recorded',
+        description: 'Your activity in this community has been recorded.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Failed to record activity',
+        description: 'There was a problem recording your activity.',
+        variant: 'destructive',
+      });
+    }
+  });
+  
   return (
     <Card className="w-full shadow-md">
       <CardHeader>
@@ -206,56 +233,100 @@ const CommunityEngagementMetrics: React.FC<CommunityEngagementMetricsProps> = ({
         </CardDescription>
       </CardHeader>
       
-      {userEngagement && (
-        <CardContent className="border rounded-lg p-4 mb-4 bg-muted/30">
-          <div className="flex items-center gap-4 mb-3">
-            <div>
-              <h4 className="font-semibold">Your Engagement</h4>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <Badge variant="outline" className="font-semibold">
-                  {userEngagement.currentLevel?.levelName || 'Newcomer'}
-                </Badge>
-                <span className="text-xs">•</span>
-                <span>{userEngagement.metrics.totalPoints} points</span>
+      {!isLoadingUserEngagement && (
+        userEngagement ? (
+          // User has engagement data
+          <CardContent className="border rounded-lg p-4 mb-4 bg-muted/30">
+            <div className="flex items-center gap-4 mb-3">
+              <div>
+                <h4 className="font-semibold">Your Engagement</h4>
+                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <Badge variant="outline" className="font-semibold">
+                    {userEngagement.currentLevel?.levelName || 'Newcomer'}
+                  </Badge>
+                  <span className="text-xs">•</span>
+                  <span>{userEngagement.metrics.totalPoints} points</span>
+                </div>
+              </div>
+              
+              {userEngagement.nextLevel && (
+                <div className="ml-auto text-right">
+                  <span className="text-xs text-muted-foreground">Next level: {userEngagement.nextLevel.levelName}</span>
+                  <Progress 
+                    value={Math.round(
+                      ((userEngagement.metrics.totalPoints - (userEngagement.currentLevel?.pointThreshold || 0)) / 
+                      (userEngagement.nextLevel.pointThreshold - (userEngagement.currentLevel?.pointThreshold || 0))) * 100
+                    )} 
+                    className="w-32 h-2" 
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {userEngagement.pointsToNextLevel} points needed
+                  </span>
+                </div>
+              )}
+            </div>
+            
+            <div className="grid grid-cols-4 gap-2 mt-2 text-center">
+              <div className="space-y-1">
+                <span className="text-sm font-semibold">{userEngagement.metrics.totalActivities}</span>
+                <p className="text-xs text-muted-foreground">Activities</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-sm font-semibold">{userEngagement.metrics.postCount}</span>
+                <p className="text-xs text-muted-foreground">Posts</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-sm font-semibold">{userEngagement.metrics.commentCount}</span>
+                <p className="text-xs text-muted-foreground">Comments</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-sm font-semibold">{userEngagement.metrics.streakDays}</span>
+                <p className="text-xs text-muted-foreground">Day streak</p>
+              </div>
+            </div>
+          </CardContent>
+        ) : (
+          // New user without engagement data yet
+          <CardContent className="border rounded-lg p-4 mb-4 bg-muted/30">
+            <div className="flex items-center gap-4 mb-3">
+              <div>
+                <h4 className="font-semibold">Your Engagement</h4>
+                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <Badge variant="outline" className="font-semibold">
+                    Newcomer
+                  </Badge>
+                  <span className="text-xs">•</span>
+                  <span>0 points</span>
+                </div>
               </div>
             </div>
             
-            {userEngagement.nextLevel && (
-              <div className="ml-auto text-right">
-                <span className="text-xs text-muted-foreground">Next level: {userEngagement.nextLevel.levelName}</span>
-                <Progress 
-                  value={Math.round(
-                    ((userEngagement.metrics.totalPoints - (userEngagement.currentLevel?.pointThreshold || 0)) / 
-                    (userEngagement.nextLevel.pointThreshold - (userEngagement.currentLevel?.pointThreshold || 0))) * 100
-                  )} 
-                  className="w-32 h-2" 
-                />
-                <span className="text-xs text-muted-foreground">
-                  {userEngagement.pointsToNextLevel} points needed
-                </span>
+            <div className="grid grid-cols-4 gap-2 mt-2 text-center">
+              <div className="space-y-1">
+                <span className="text-sm font-semibold">0</span>
+                <p className="text-xs text-muted-foreground">Activities</p>
               </div>
-            )}
-          </div>
-          
-          <div className="grid grid-cols-4 gap-2 mt-2 text-center">
-            <div className="space-y-1">
-              <span className="text-sm font-semibold">{userEngagement.metrics.totalActivities}</span>
-              <p className="text-xs text-muted-foreground">Activities</p>
+              <div className="space-y-1">
+                <span className="text-sm font-semibold">0</span>
+                <p className="text-xs text-muted-foreground">Posts</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-sm font-semibold">0</span>
+                <p className="text-xs text-muted-foreground">Comments</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-sm font-semibold">0</span>
+                <p className="text-xs text-muted-foreground">Day streak</p>
+              </div>
             </div>
-            <div className="space-y-1">
-              <span className="text-sm font-semibold">{userEngagement.metrics.postCount}</span>
-              <p className="text-xs text-muted-foreground">Posts</p>
+            
+            <div className="mt-4 flex justify-center">
+              <Button size="sm" variant="outline" className="text-xs">
+                Start Engaging
+              </Button>
             </div>
-            <div className="space-y-1">
-              <span className="text-sm font-semibold">{userEngagement.metrics.commentCount}</span>
-              <p className="text-xs text-muted-foreground">Comments</p>
-            </div>
-            <div className="space-y-1">
-              <span className="text-sm font-semibold">{userEngagement.metrics.streakDays}</span>
-              <p className="text-xs text-muted-foreground">Day streak</p>
-            </div>
-          </div>
-        </CardContent>
+          </CardContent>
+        )
       )}
       
       <CardContent>
@@ -416,60 +487,60 @@ const CommunityEngagementMetrics: React.FC<CommunityEngagementMetricsProps> = ({
               </div>
             ) : (
               <div className="space-y-4">
-                {engagementLevels?.sort((a, b) => a.pointThreshold - b.pointThreshold).map((level, index) => (
-                  <div 
-                    key={level.id} 
-                    className={`p-3 rounded-lg border ${userEngagement?.currentLevel?.id === level.id 
-                      ? 'bg-primary/5 border-primary/20' 
-                      : 'bg-card'}`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Badge 
-                          variant={userEngagement?.currentLevel?.id === level.id ? "default" : "outline"} 
-                          className="px-2 py-0.5"
-                        >
-                          {level.levelName}
-                        </Badge>
-                        
-                        {userEngagement?.currentLevel?.id === level.id && (
-                          <Badge variant="secondary" className="text-xs">Your level</Badge>
-                        )}
+                {engagementLevels && engagementLevels.length > 0 ? (
+                  engagementLevels.sort((a, b) => a.pointThreshold - b.pointThreshold).map((level, index) => (
+                    <div 
+                      key={level.id} 
+                      className={`p-3 rounded-lg border ${userEngagement?.currentLevel?.id === level.id 
+                        ? 'bg-primary/5 border-primary/20' 
+                        : 'bg-card'}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Badge 
+                            variant={userEngagement?.currentLevel?.id === level.id ? "default" : "outline"} 
+                            className="px-2 py-0.5"
+                          >
+                            {level.levelName}
+                          </Badge>
+                          
+                          {userEngagement?.currentLevel?.id === level.id && (
+                            <Badge variant="secondary" className="text-xs">Your level</Badge>
+                          )}
+                        </div>
+                        <span className="text-sm font-medium">{level.pointThreshold}+ points</span>
                       </div>
-                      <span className="text-sm font-medium">{level.pointThreshold}+ points</span>
+                      
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {level.description || `${level.levelName} community members`}
+                      </p>
+                      
+                      {level.benefits && level.benefits.length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-xs font-medium mb-1">Benefits:</p>
+                          <ul className="text-xs text-muted-foreground space-y-1">
+                            {level.benefits.map((benefit: string, i: number) => (
+                              <li key={i} className="flex items-center gap-1">
+                                <span className="w-1 h-1 rounded-full bg-primary inline-block"></span>
+                                {benefit}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {index < (engagementLevels.length - 1) && (
+                        <div className="mt-3 flex items-center text-xs text-muted-foreground">
+                          <TrendingUp className="w-3 h-3 mr-1" />
+                          <span>
+                            Need {engagementLevels[index + 1].pointThreshold - level.pointThreshold} more points 
+                            to reach {engagementLevels[index + 1].levelName}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                    
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {level.description || `${level.levelName} community members`}
-                    </p>
-                    
-                    {level.benefits && level.benefits.length > 0 && (
-                      <div className="mt-2">
-                        <p className="text-xs font-medium mb-1">Benefits:</p>
-                        <ul className="text-xs text-muted-foreground space-y-1">
-                          {level.benefits.map((benefit, i) => (
-                            <li key={i} className="flex items-center gap-1">
-                              <span className="w-1 h-1 rounded-full bg-primary inline-block"></span>
-                              {benefit}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    
-                    {index < (engagementLevels.length - 1) && (
-                      <div className="mt-3 flex items-center text-xs text-muted-foreground">
-                        <TrendingUp className="w-3 h-3 mr-1" />
-                        <span>
-                          Need {engagementLevels[index + 1].pointThreshold - level.pointThreshold} more points 
-                          to reach {engagementLevels[index + 1].levelName}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-                
-                {(!engagementLevels || engagementLevels.length === 0) && (
+                  ))
+                ) : (
                   <div className="text-center py-6 text-muted-foreground">
                     <Award className="h-10 w-10 mx-auto mb-2 opacity-20" />
                     <p>No engagement levels defined</p>
