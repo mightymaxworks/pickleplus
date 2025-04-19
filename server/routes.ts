@@ -35,7 +35,7 @@ import path from 'path';
 import fs from 'fs';
 import { initializeCommunityModule } from "./modules/community"; // PKL-278651-COMM-0006-HUB
 import communityNotificationsRoutes from "./routes/community-notifications-routes"; // PKL-278651-COMM-0028-NOTIF
-import communityModerationRoutes from "./routes/community-moderation-routes"; // PKL-278651-COMM-0029-MOD
+import { registerCommunityModerationRoutes } from "./routes/community-moderation-routes"; // PKL-278651-COMM-0029-MOD
 
 // Import necessary schema
 import { 
@@ -221,7 +221,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Register Community Moderation Routes (PKL-278651-COMM-0029-MOD)
   console.log("[API] Setting up community moderation routes...");
-  app.use(communityModerationRoutes);
+  registerCommunityModerationRoutes(app);
   
   // Register Batch API routes (PKL-278651-PERF-0001.4-API)
   app.use("/api", batchApiRoutes);
