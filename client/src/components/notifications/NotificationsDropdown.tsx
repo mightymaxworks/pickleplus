@@ -54,7 +54,7 @@ export function NotificationsDropdown({ onClose, unreadCount }: NotificationsDro
     mutationFn: notificationsSDK.markAsRead,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/count'] });
     }
   });
   
@@ -63,7 +63,7 @@ export function NotificationsDropdown({ onClose, unreadCount }: NotificationsDro
     mutationFn: notificationsSDK.markAllAsRead,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/count'] });
       toast({
         title: "All notifications marked as read",
         variant: "default",

@@ -79,7 +79,7 @@ export const notificationsSDK = {
    * Mark all notifications as read
    */
   async markAllAsRead(): Promise<void> {
-    await apiRequest('PATCH', '/api/notifications/mark-all-read');
+    await apiRequest('POST', '/api/notifications/read-all');
   },
   
   /**

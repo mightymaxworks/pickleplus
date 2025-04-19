@@ -102,6 +102,8 @@ router.get('/notifications/count',
     try {
       const userId = req.user?.id;
       
+      console.log(`[API] Fetching unread notification count for user ${userId}`);
+      
       // Get unread count
       const result = await db
         .select({ count: db.fn.count() })
@@ -115,6 +117,8 @@ router.get('/notifications/count',
         );
       
       const count = parseInt(result[0].count.toString());
+      
+      console.log(`[API] Unread notification count for user ${userId}: ${count}`);
       
       res.status(200).json({ count });
     } catch (error) {
