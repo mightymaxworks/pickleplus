@@ -349,30 +349,20 @@ export class ModerationService {
    */
   async getReports(communityId: number, status?: string) {
     try {
-      let query = db.query.contentReports.findMany({
-        where: eq(contentReports.communityId, communityId),
-        orderBy: [desc(contentReports.createdAt)],
-        with: {
-          reporter: true,
-          reviewer: true
-        }
-      });
-
       if (status) {
-        query = db.query.contentReports.findMany({
-          where: and(
+        return await db.select()
+          .from(contentReports)
+          .where(and(
             eq(contentReports.communityId, communityId),
             eq(contentReports.status, status)
-          ),
-          orderBy: [desc(contentReports.createdAt)],
-          with: {
-            reporter: true,
-            reviewer: true
-          }
-        });
+          ))
+          .orderBy(desc(contentReports.createdAt));
+      } else {
+        return await db.select()
+          .from(contentReports)
+          .where(eq(contentReports.communityId, communityId))
+          .orderBy(desc(contentReports.createdAt));
       }
-
-      return await query;
     } catch (error) {
       console.error('[Moderation] Error getting reports:', error);
       throw error;
@@ -384,14 +374,10 @@ export class ModerationService {
    */
   async getModerationActions(communityId: number) {
     try {
-      const actions = await db.query.moderationActions.findMany({
-        where: eq(moderationActions.communityId, communityId),
-        orderBy: [desc(moderationActions.createdAt)],
-        with: {
-          moderator: true,
-          targetUser: true
-        }
-      });
+      const actions = await db.select()
+        .from(moderationActions)
+        .where(eq(moderationActions.communityId, communityId))
+        .orderBy(desc(moderationActions.createdAt));
 
       return actions;
     } catch (error) {
