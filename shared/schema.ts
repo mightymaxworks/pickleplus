@@ -141,20 +141,28 @@ import {
   type InsertTournamentBracketMatch
 } from './schema/tournament-brackets';
 
-// Import moderation schema (PKL-278651-COMM-0027-MOD - Community Moderation Tools)
+// Import moderation schema (PKL-278651-COMM-0029-MOD - Enhanced Community Moderation Tools)
 import {
   contentReports,
   moderationActions,
   communityRoles,
+  contentApprovalQueue,
+  contentFilterSettings,
   insertContentReportSchema,
   insertModerationActionSchema,
   insertCommunityRoleSchema,
+  insertContentApprovalSchema,
+  insertContentFilterSettingsSchema,
   type ContentReport,
   type InsertContentReport,
   type ModerationAction,
   type InsertModerationAction,
   type CommunityRole,
-  type InsertCommunityRole
+  type InsertCommunityRole,
+  type ContentApproval,
+  type InsertContentApproval,
+  type ContentFilterSettings,
+  type InsertContentFilterSettings
 } from './schema/moderation';
 
 // Import notifications schema (PKL-278651-COMM-0028-NOTIF - Community Notifications)
@@ -1076,20 +1084,28 @@ export {
 
 // Add additional core schema exports here as the system grows
 
-// Export community moderation schemas (PKL-278651-COMM-0027-MOD)
+// Export community moderation schemas (PKL-278651-COMM-0029-MOD)
 export {
   contentReports,
   moderationActions, 
   communityRoles,
+  contentApprovalQueue,
+  contentFilterSettings,
   insertContentReportSchema,
   insertModerationActionSchema,
   insertCommunityRoleSchema,
+  insertContentApprovalSchema,
+  insertContentFilterSettingsSchema,
   type ContentReport,
   type InsertContentReport,
   type ModerationAction,
   type InsertModerationAction,
   type CommunityRole,
-  type InsertCommunityRole
+  type InsertCommunityRole,
+  type ContentApproval,
+  type InsertContentApproval,
+  type ContentFilterSettings,
+  type InsertContentFilterSettings
 };
 
 // Export community notifications schemas (PKL-278651-COMM-0028-NOTIF)

@@ -1,8 +1,11 @@
 /**
- * PKL-278651-COMM-0027-MOD - Community Moderation Routes
- * Implementation timestamp: 2025-04-19 12:35 ET
+ * PKL-278651-COMM-0029-MOD - Enhanced Community Moderation Routes
+ * Implementation timestamp: 2025-04-19 18:15 ET
  * 
- * API routes for community moderation system
+ * API routes for community moderation system with enhanced features:
+ * - Content filtering
+ * - Approval workflows
+ * - Enhanced reporting
  * 
  * Framework 5.2 compliant implementation
  */
@@ -15,17 +18,22 @@ import {
   contentReports, 
   moderationActions, 
   communityRoles,
+  contentApprovalQueue,
+  contentFilterSettings,
   insertContentReportSchema,
   insertModerationActionSchema,
-  insertCommunityRoleSchema
+  insertCommunityRoleSchema,
+  insertContentApprovalSchema,
+  insertContentFilterSettingsSchema
 } from '../../shared/schema';
 import { isAuthenticated } from '../auth';
 import { isCommunityModerator } from '../middleware/community-middleware.js';
+import { moderationService } from '../modules/community/moderation-service.js';
 
 const router = express.Router();
 
 export function registerCommunityModerationRoutes(app: express.Express) {
-  console.log('[ROUTES] Registering Community Moderation Routes (PKL-278651-COMM-0027-MOD)');
+  console.log('[ROUTES] Registering Community Moderation Routes (PKL-278651-COMM-0029-MOD)');
   app.use('/api', router);
   return router;
 }
@@ -452,6 +460,191 @@ router.delete('/communities/:communityId/roles/:roleId',
       res.status(204).send();
     } catch (error) {
       console.error('Error deleting community role:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
+
+/**
+ * Get content filter settings for a community
+ * GET /api/communities/:communityId/moderation/filter-settings
+ */
+router.get('/communities/:communityId/moderation/filter-settings',
+  isAuthenticated,
+  async (req: Request, res: Response) => {
+    try {
+      const communityId = parseInt(req.params.communityId);
+      
+      if (isNaN(communityId)) {
+        return res.status(400).json({ error: 'Invalid community ID' });
+      }
+      
+      // Use moderation service to get settings
+      const settings = await moderationService.getContentFilterSettings(communityId);
+      
+      res.status(200).json(settings);
+    } catch (error) {
+      console.error('Error fetching content filter settings:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
+
+/**
+ * Update content filter settings for a community
+ * PUT /api/communities/:communityId/moderation/filter-settings
+ */
+router.put('/communities/:communityId/moderation/filter-settings',
+  isAuthenticated,
+  isCommunityModerator,
+  async (req: Request, res: Response) => {
+    try {
+      const communityId = parseInt(req.params.communityId);
+      
+      if (isNaN(communityId)) {
+        return res.status(400).json({ error: 'Invalid community ID' });
+      }
+      
+      // Validate request body
+      const updateSchema = z.object({
+        enabledFilters: z.any().optional(),
+        bannedKeywords: z.string().optional(),
+        sensitiveContentTypes: z.string().optional(),
+        requireApproval: z.boolean().optional(),
+        autoModEnabled: z.boolean().optional()
+      });
+      
+      const validationResult = updateSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ error: validationResult.error.errors });
+      }
+      
+      // Update settings
+      const updatedSettings = await moderationService.updateContentFilterSettings(
+        communityId,
+        validationResult.data
+      );
+      
+      res.status(200).json(updatedSettings);
+    } catch (error) {
+      console.error('Error updating content filter settings:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
+
+/**
+ * Filter content for a community
+ * POST /api/communities/:communityId/moderation/filter-content
+ */
+router.post('/communities/:communityId/moderation/filter-content',
+  isAuthenticated,
+  async (req: Request, res: Response) => {
+    try {
+      const communityId = parseInt(req.params.communityId);
+      const userId = req.user?.id;
+      
+      if (isNaN(communityId)) {
+        return res.status(400).json({ error: 'Invalid community ID' });
+      }
+      
+      // Validate request body
+      const contentSchema = z.object({
+        content: z.string().min(1).max(5000),
+        contentType: z.enum(['post', 'comment', 'event'])
+      });
+      
+      const validationResult = contentSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ error: validationResult.error.errors });
+      }
+      
+      // Filter the content
+      const { content, contentType } = validationResult.data;
+      const result = await moderationService.filterContent(
+        communityId,
+        content,
+        contentType,
+        userId
+      );
+      
+      res.status(200).json(result);
+    } catch (error) {
+      console.error('Error filtering content:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
+
+/**
+ * Get pending approval queue items for a community
+ * GET /api/communities/:communityId/moderation/approval-queue
+ */
+router.get('/communities/:communityId/moderation/approval-queue',
+  isAuthenticated,
+  isCommunityModerator,
+  async (req: Request, res: Response) => {
+    try {
+      const communityId = parseInt(req.params.communityId);
+      
+      if (isNaN(communityId)) {
+        return res.status(400).json({ error: 'Invalid community ID' });
+      }
+      
+      // Get pending content items
+      const items = await moderationService.getPendingContentItems(communityId);
+      
+      res.status(200).json(items);
+    } catch (error) {
+      console.error('Error fetching approval queue:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
+
+/**
+ * Review a queued content item
+ * PATCH /api/communities/:communityId/moderation/approval-queue/:itemId
+ */
+router.patch('/communities/:communityId/moderation/approval-queue/:itemId',
+  isAuthenticated,
+  isCommunityModerator,
+  async (req: Request, res: Response) => {
+    try {
+      const communityId = parseInt(req.params.communityId);
+      const itemId = parseInt(req.params.itemId);
+      const moderatorId = req.user?.id;
+      
+      if (isNaN(communityId) || isNaN(itemId)) {
+        return res.status(400).json({ error: 'Invalid ID parameters' });
+      }
+      
+      // Validate request body
+      const reviewSchema = z.object({
+        approved: z.boolean(),
+        moderationNotes: z.string().max(500).optional()
+      });
+      
+      const validationResult = reviewSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ error: validationResult.error.errors });
+      }
+      
+      // Review the queued content
+      const { approved, moderationNotes } = validationResult.data;
+      const updatedItem = await moderationService.reviewQueuedContent(
+        itemId,
+        moderatorId,
+        approved,
+        moderationNotes
+      );
+      
+      res.status(200).json(updatedItem);
+    } catch (error) {
+      console.error('Error reviewing queued content:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
