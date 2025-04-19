@@ -22,7 +22,8 @@ export function initializeCommunityModule(options: { app: express.Express }): vo
   
   const { app } = options;
   
-  // Register routes
+  // Register routes for both singular and plural endpoints for compatibility
+  app.use('/api/communities', isAuthenticated, communityRouter);
   app.use('/api/community', isAuthenticated, communityRouter);
   
   console.log('[API] Community module initialized successfully');
