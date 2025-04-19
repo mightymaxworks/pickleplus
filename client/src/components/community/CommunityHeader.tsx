@@ -109,10 +109,16 @@ export function CommunityHeader({
     ? format(new Date(community.createdAt), 'MMMM yyyy')
     : 'Unknown';
   
-  // Format statistics
-  const memberCountDisplay = community.isDefault ? "Private" : community.memberCount.toLocaleString();
-  const eventCountDisplay = community.eventCount.toLocaleString(); 
-  const postCountDisplay = community.postCount.toLocaleString();
+  // Format statistics with null checks
+  const memberCountDisplay = community.isDefault ? "Private" : 
+                            (typeof community.memberCount === 'number' ? 
+                             community.memberCount.toLocaleString() : '0');
+  
+  const eventCountDisplay = typeof community.eventCount === 'number' ? 
+                            community.eventCount.toLocaleString() : '0';
+                            
+  const postCountDisplay = typeof community.postCount === 'number' ? 
+                          community.postCount.toLocaleString() : '0';
   
   // Handle navigation
   const handleBackToList = () => {
