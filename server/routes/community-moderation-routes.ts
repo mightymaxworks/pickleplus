@@ -549,6 +549,10 @@ router.post('/communities/:communityId/moderation/filter-content',
         return res.status(400).json({ error: 'Invalid community ID' });
       }
       
+      if (!userId) {
+        return res.status(401).json({ error: 'User must be authenticated' });
+      }
+      
       // Validate request body
       const contentSchema = z.object({
         content: z.string().min(1).max(5000),
@@ -619,6 +623,10 @@ router.patch('/communities/:communityId/moderation/approval-queue/:itemId',
       
       if (isNaN(communityId) || isNaN(itemId)) {
         return res.status(400).json({ error: 'Invalid ID parameters' });
+      }
+      
+      if (!moderatorId) {
+        return res.status(401).json({ error: 'User must be authenticated' });
       }
       
       // Validate request body

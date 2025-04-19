@@ -14,17 +14,22 @@
 
 import { db } from '../../db';
 import { 
+  userNotifications,
+  type InsertUserNotification
+} from '@shared/schema';
+
+import {
   contentReports, 
   moderationActions, 
   contentApprovalQueue,
   contentFilterSettings,
-  userNotifications,
-  InsertContentReport, 
-  InsertModerationAction,
-  InsertContentApproval,
-  InsertContentFilterSettings,
-  InsertUserNotification
-} from '@shared/schema';
+  type InsertContentReport, 
+  type InsertModerationAction,
+  type InsertContentApproval,
+  type InsertContentFilterSettings,
+  type ContentReport,
+  type ContentApproval
+} from '@shared/schema/moderation';
 import { eq, and, desc, sql } from 'drizzle-orm';
 
 /**
@@ -324,16 +329,13 @@ export class ModerationService {
    */
   async getPendingContentItems(communityId: number) {
     try {
-      const items = await db.query.contentApprovalQueue.findMany({
-        where: and(
+      const items = await db.select()
+        .from(contentApprovalQueue)
+        .where(and(
           eq(contentApprovalQueue.communityId, communityId),
           eq(contentApprovalQueue.status, 'pending')
-        ),
-        orderBy: [desc(contentApprovalQueue.createdAt)],
-        with: {
-          user: true
-        }
-      });
+        ))
+        .orderBy(desc(contentApprovalQueue.createdAt));
 
       return items;
     } catch (error) {
