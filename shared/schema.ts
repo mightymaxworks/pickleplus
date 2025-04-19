@@ -146,9 +146,6 @@ import {
   contentReports,
   moderationActions,
   communityRoles,
-  contentReportsRelations,
-  moderationActionsRelations,
-  communityRolesRelations,
   insertContentReportSchema,
   insertModerationActionSchema,
   insertCommunityRoleSchema,
@@ -164,8 +161,6 @@ import {
 import {
   userNotifications,
   notificationPreferences,
-  userNotificationsRelations,
-  notificationPreferencesRelations,
   insertUserNotificationSchema,
   insertNotificationPreferenceSchema,
   type UserNotification,
@@ -867,6 +862,83 @@ export const userDailyMatchesRelations = relations(userDailyMatches, ({ one }) =
   user: one(users, { fields: [userDailyMatches.userId], references: [users.id] })
 }));
 
+// PKL-278651-COMM-0027-MOD - Community Moderation Tools
+// Define relations for contentReports
+export const contentReportsRelations = relations(contentReports, ({ one }) => ({
+  reporter: one(users, {
+    fields: [contentReports.reporterId],
+    references: [users.id],
+    relationName: 'content_report_reporter'
+  }),
+  community: one(communities, {
+    fields: [contentReports.communityId],
+    references: [communities.id],
+    relationName: 'content_report_community'
+  }),
+  reviewer: one(users, {
+    fields: [contentReports.reviewerId],
+    references: [users.id],
+    relationName: 'content_report_reviewer'
+  }),
+}));
+
+// Define relations for moderationActions
+export const moderationActionsRelations = relations(moderationActions, ({ one }) => ({
+  community: one(communities, {
+    fields: [moderationActions.communityId],
+    references: [communities.id],
+    relationName: 'moderation_action_community'
+  }),
+  moderator: one(users, {
+    fields: [moderationActions.moderatorId],
+    references: [users.id],
+    relationName: 'moderation_action_moderator'
+  }),
+  targetUser: one(users, {
+    fields: [moderationActions.targetUserId],
+    references: [users.id],
+    relationName: 'moderation_action_target_user'
+  }),
+}));
+
+// Define relations for communityRoles
+export const communityRolesRelations = relations(communityRoles, ({ one }) => ({
+  community: one(communities, {
+    fields: [communityRoles.communityId],
+    references: [communities.id],
+    relationName: 'community_role_community'
+  }),
+}));
+
+// PKL-278651-COMM-0028-NOTIF - Community Notifications
+// Define relations for userNotifications
+export const userNotificationsRelations = relations(userNotifications, ({ one }) => ({
+  user: one(users, {
+    fields: [userNotifications.userId],
+    references: [users.id],
+    relationName: 'user_notification_user'
+  }),
+  community: one(communities, {
+    fields: [userNotifications.communityId],
+    references: [communities.id],
+    relationName: 'user_notification_community'
+  }),
+}));
+
+// Define relations for notificationPreferences
+export const notificationPreferencesRelations = relations(notificationPreferences, ({ one }) => ({
+  user: one(users, {
+    fields: [notificationPreferences.userId],
+    references: [users.id],
+    relationName: 'notification_preference_user'
+  }),
+  community: one(communities, {
+    fields: [notificationPreferences.communityId],
+    references: [communities.id],
+    relationName: 'notification_preference_community'
+  }),
+}));
+
 // Import required types for enhanced match recording system
 import { matchStatistics, performanceImpacts, matchHighlights } from './match-statistics-schema';
 
@@ -1003,3 +1075,31 @@ export {
 } from './schema/xp';
 
 // Add additional core schema exports here as the system grows
+
+// Export community moderation schemas (PKL-278651-COMM-0027-MOD)
+export {
+  contentReports,
+  moderationActions, 
+  communityRoles,
+  insertContentReportSchema,
+  insertModerationActionSchema,
+  insertCommunityRoleSchema,
+  type ContentReport,
+  type InsertContentReport,
+  type ModerationAction,
+  type InsertModerationAction,
+  type CommunityRole,
+  type InsertCommunityRole
+};
+
+// Export community notifications schemas (PKL-278651-COMM-0028-NOTIF)
+export {
+  userNotifications,
+  notificationPreferences,
+  insertUserNotificationSchema,
+  insertNotificationPreferenceSchema,
+  type UserNotification,
+  type InsertUserNotification,
+  type NotificationPreference,
+  type InsertNotificationPreference
+};

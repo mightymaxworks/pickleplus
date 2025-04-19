@@ -42,33 +42,7 @@ export const notificationPreferences = pgTable('notification_preferences', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-// Define relations for user notifications
-export const userNotificationsRelations = relations(userNotifications, ({ one }) => ({
-  user: one('users', {
-    fields: [userNotifications.userId],
-    references: [serial('id')],
-    relationName: 'user_notification_user'
-  }),
-  community: one('communities', {
-    fields: [userNotifications.communityId],
-    references: [serial('id')],
-    relationName: 'user_notification_community'
-  }),
-}));
-
-// Define relations for notification preferences
-export const notificationPreferencesRelations = relations(notificationPreferences, ({ one }) => ({
-  user: one('users', {
-    fields: [notificationPreferences.userId],
-    references: [serial('id')],
-    relationName: 'notification_preference_user'
-  }),
-  community: one('communities', {
-    fields: [notificationPreferences.communityId],
-    references: [serial('id')],
-    relationName: 'notification_preference_community'
-  }),
-}));
+// Note: Relations will be defined in the main schema.ts file where all tables are available
 
 // Create insert schemas using drizzle-zod
 export const insertUserNotificationSchema = createInsertSchema(userNotifications, {
