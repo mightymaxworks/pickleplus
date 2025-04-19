@@ -100,8 +100,8 @@ app.use((req, res, next) => {
   
   // Initialize WebSocket server for real-time updates (PKL-278651-COMM-0022-FEED)
   try {
-    const { initializeWebSocketServer } = require('./modules/websocket');
-    const wsManager = initializeWebSocketServer(serverHttp);
+    const webSocketModule = await import('./modules/websocket');
+    const wsManager = webSocketModule.initializeWebSocketServer(serverHttp);
     console.log('[API] WebSocket server initialized successfully');
   } catch (error) {
     console.error('[API] Error initializing WebSocket server:', error);
