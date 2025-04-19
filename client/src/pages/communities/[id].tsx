@@ -82,18 +82,41 @@ export default function CommunityDetailPage() {
     window.history.pushState({}, '', url.toString());
   };
   
-  // Fetch community data
+  // Fetch community data directly
   const { 
-    community, 
-    isLoading, 
-    error,
+    data: directCommunity,
+    isLoading: directLoading, 
+    error: directError
+  } = useCommunity(communityId);
+  
+  // Fallback to the enhanced community data provider
+  const { 
+    community: providerCommunity, 
+    isLoading: providerLoading, 
+    error: providerError,
     joinCommunity,
     leaveCommunity
   } = useCommunityWithData(communityId);
+
+  // Use the direct community data if available, otherwise use the provider
+  const community = directCommunity || providerCommunity;
+  const isLoading = directLoading || providerLoading;
+  const error = directError || providerError;
+  
+  // Debugging
+  useEffect(() => {
+    console.log('[PKL-278651-COMM-UI-DEBUG] Community Detail Page Load:',
+      'ID:', communityId,
+      'Direct Community:', directCommunity ? 'Found' : 'Not Found',
+      'Provider Community:', providerCommunity ? 'Found' : 'Not Found',
+      'Final Community:', community ? 'Found' : 'Not Found'
+    );
+  }, [communityId, directCommunity, providerCommunity, community]);
   
   // Redirect if community not found
   useEffect(() => {
     if (!isLoading && !community && communityId !== 0) {
+      console.log('[PKL-278651-COMM-UI-DEBUG] Community not found, redirecting to communities list');
       navigate("/communities");
     }
   }, [communityId, community, isLoading, navigate]);
