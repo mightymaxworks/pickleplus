@@ -1,204 +1,311 @@
 /**
  * PKL-278651-COMM-0022-FEED
- * ActivityItem Component
+ * Activity Item Component
  * 
- * This component renders a single activity feed item with appropriate styling
- * and interactions based on the activity type.
+ * This component renders a single activity item in the activity feed.
  * 
  * @framework Framework5.1
  * @version 1.0.0
  * @lastModified 2025-04-19
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'wouter';
-import { formatDistanceToNow } from 'date-fns';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { CalendarClock, Star, Medal, Users, Trophy, MessageCircle, Heart, Award, User } from 'lucide-react';
-import { ActivityFeedItem } from '@/hooks/use-activity-feed';
+import { 
+  MoreHorizontal, 
+  Calendar, 
+  MessageSquare, 
+  Trophy, 
+  Medal, 
+  Users, 
+  Activity, 
+  Check,
+  Star,
+  TrendingUp,
+  Zap
+} from 'lucide-react';
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { format, formatDistanceToNow } from 'date-fns';
 
-// Map of activity types to their respective icons
-const ACTIVITY_ICONS: Record<string, React.ReactNode> = {
-  'match_recorded': <Trophy className="h-4 w-4 text-green-500" />,
-  'achievement_unlocked': <Medal className="h-4 w-4 text-yellow-500" />,
-  'tournament_joined': <Trophy className="h-4 w-4 text-blue-500" />,
-  'tournament_created': <Trophy className="h-4 w-4 text-purple-500" />,
-  'community_joined': <Users className="h-4 w-4 text-blue-500" />,
-  'community_created': <Users className="h-4 w-4 text-green-500" />,
-  'profile_updated': <User className="h-4 w-4 text-gray-500" />,
-  'rank_up': <Star className="h-4 w-4 text-yellow-500" />,
-  'xp_milestone': <Award className="h-4 w-4 text-purple-500" />,
-  'comment': <MessageCircle className="h-4 w-4 text-blue-500" />,
-  'like': <Heart className="h-4 w-4 text-red-500" />,
-  'event_created': <CalendarClock className="h-4 w-4 text-green-500" />,
-  'event_joined': <CalendarClock className="h-4 w-4 text-blue-500" />
-};
-
-// Default icon for unknown activity types
-const DEFAULT_ICON = <CalendarClock className="h-4 w-4 text-gray-500" />;
-
-interface ActivityItemProps {
-  activity: ActivityFeedItem;
-  onMarkAsRead?: (id: number) => void;
-  interactive?: boolean;
+// Activity interface from ActivityFeed component
+interface Activity {
+  id: number;
+  userId: number;
+  username: string;
+  displayName: string | null;
+  avatar: string | null;
+  content: string;
+  type: string;
+  communityId: number | null;
+  relatedEntityId: number | null;
+  relatedEntityType: string | null;
+  metadata: any | null;
+  timestamp: string;
+  isRead?: boolean;
+  isNew?: boolean;
 }
 
-/**
- * ActivityItem Component
- */
-const ActivityItem: React.FC<ActivityItemProps> = ({ 
-  activity, 
+interface ActivityItemProps {
+  activity: Activity;
+  onMarkAsRead?: (activityId: number) => void;
+  showActions?: boolean;
+  showCommunityBadge?: boolean;
+}
+
+export const ActivityItem: React.FC<ActivityItemProps> = ({
+  activity,
   onMarkAsRead,
-  interactive = true
+  showActions = true,
+  showCommunityBadge = true
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
+  const [isHighlighted, setIsHighlighted] = useState(activity.isNew || false);
   
-  // Get the icon for this activity type
-  const icon = ACTIVITY_ICONS[activity.type] || DEFAULT_ICON;
+  // Reset highlight effect after 5 seconds
+  useEffect(() => {
+    if (isHighlighted) {
+      const timer = setTimeout(() => {
+        setIsHighlighted(false);
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isHighlighted]);
   
-  // Format the timestamp as a relative time (e.g., "5 minutes ago")
+  // Format timestamp as relative time (e.g., "2 hours ago")
   const formattedTime = formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true });
   
-  // Generate link URL based on activity type and related entity
-  const getLinkUrl = () => {
-    if (!interactive) return undefined;
-    
+  // Format timestamp for tooltip (full date and time)
+  const fullTimestamp = format(new Date(activity.timestamp), 'PPpp');
+  
+  // Get activity icon based on type
+  const getActivityIcon = () => {
     switch (activity.type) {
       case 'match_recorded':
-        return activity.relatedEntityId ? `/matches/${activity.relatedEntityId}` : '/matches';
-      case 'achievement_unlocked':
-        return '/achievements';
+        return <Activity className="h-4 w-4 text-blue-500" />;
+      case 'comment':
+        return <MessageSquare className="h-4 w-4 text-green-500" />;
       case 'tournament_joined':
-      case 'tournament_created':
-        return activity.relatedEntityId ? `/tournaments/${activity.relatedEntityId}` : '/tournaments';
+        return <Trophy className="h-4 w-4 text-amber-500" />;
+      case 'achievement':
+        return <Medal className="h-4 w-4 text-purple-500" />;
       case 'community_joined':
-      case 'community_created':
-        return activity.communityId ? `/communities/${activity.communityId}` : '/communities';
-      case 'profile_updated':
-        return `/profile/${activity.username}`;
-      case 'rank_up':
-        return '/leaderboard';
-      case 'xp_milestone':
-        return '/xp';
-      case 'event_created':
-      case 'event_joined':
-        return activity.relatedEntityId ? `/events/${activity.relatedEntityId}` : '/events';
+        return <Users className="h-4 w-4 text-indigo-500" />;
+      case 'level_up':
+        return <TrendingUp className="h-4 w-4 text-red-500" />;
+      case 'xp_earned':
+        return <Zap className="h-4 w-4 text-orange-500" />;
+      case 'featured':
+        return <Star className="h-4 w-4 text-yellow-500" />;
+      case 'event':
+        return <Calendar className="h-4 w-4 text-teal-500" />;
       default:
-        return undefined;
+        return <Check className="h-4 w-4 text-gray-500" />;
     }
   };
   
-  // Handle click on the activity item
-  const handleClick = () => {
+  // Get link based on activity type and related entity
+  const getActivityLink = () => {
+    const { type, relatedEntityId, relatedEntityType, communityId } = activity;
+    
+    switch (type) {
+      case 'match_recorded':
+        return `/matches?id=${relatedEntityId}`;
+      case 'comment':
+        if (relatedEntityType === 'community') {
+          return `/communities/${relatedEntityId}`;
+        }
+        return '#';
+      case 'tournament_joined':
+        return `/tournaments/${relatedEntityId}`;
+      case 'community_joined':
+        return `/communities/${communityId || relatedEntityId}`;
+      case 'event':
+        if (communityId && relatedEntityId) {
+          return `/communities/${communityId}/events/${relatedEntityId}`;
+        }
+        return `/events/${relatedEntityId}`;
+      default:
+        return '#';
+    }
+  };
+  
+  // Get community name from ID (simplified for now)
+  const getCommunityName = (communityId: number) => {
+    const communityMap: Record<number, string> = {
+      1: 'Pickle+ Giveaway Group',
+      2: 'Seattle Pickleball Club',
+      3: 'Tournament Players',
+      4: 'Coaching Corner',
+      5: 'Beginners Bootcamp'
+    };
+    
+    return communityMap[communityId] || `Community #${communityId}`;
+  };
+  
+  // Handle clicking on activity item (mark as read if not already)
+  const handleActivityClick = () => {
     if (!activity.isRead && onMarkAsRead) {
       onMarkAsRead(activity.id);
     }
   };
   
-  const linkUrl = getLinkUrl();
-  
-  // The activity content component
-  const ActivityContentComponent = () => (
-    <div className="flex items-start gap-3">
-      {/* User Avatar */}
-      <Avatar className="h-8 w-8">
-        <AvatarImage src={activity.avatar || undefined} alt={activity.username} />
-        <AvatarFallback>
-          {activity.displayName ? activity.displayName.charAt(0).toUpperCase() : activity.username.charAt(0).toUpperCase()}
-        </AvatarFallback>
-      </Avatar>
-      
-      {/* Activity Content */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1 mb-1">
-          <span className="font-semibold text-sm truncate">
-            {activity.displayName || activity.username}
-          </span>
-          
-          {/* Activity Type Badge */}
-          <Badge 
-            variant="outline" 
-            className="text-xs ml-2 py-0 px-2 h-5 flex items-center gap-1"
-          >
-            {icon}
-            <span className="capitalize">{activity.type.replace('_', ' ')}</span>
-          </Badge>
-        </div>
-        
-        {/* Activity Content */}
-        <p className="text-sm text-muted-foreground break-words line-clamp-2">
-          {activity.content}
-        </p>
-        
-        {/* Community Badge (if applicable) */}
-        {activity.communityName && (
-          <div className="mt-1">
-            <Badge variant="secondary" className="text-xs">
-              {activity.communityName}
-            </Badge>
-          </div>
-        )}
-      </div>
-      
-      {/* Timestamp */}
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className="text-xs text-muted-foreground whitespace-nowrap">
-              {formattedTime}
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>
-            {new Date(activity.timestamp).toLocaleString()}
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    </div>
-  );
-  
   return (
-    <Card 
+    <Card
       className={cn(
-        "w-full mb-2 transition-all duration-200",
-        !activity.isRead && "border-l-4 border-l-primary",
-        isHovered && "shadow-md"
+        "border transition-all duration-500 overflow-hidden",
+        isHighlighted ? "bg-primary/5 border-primary/20" : "bg-card",
+        !activity.isRead ? "border-l-4 border-l-primary" : ""
       )}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onClick={handleClick}
+      onClick={handleActivityClick}
     >
-      <CardContent className="p-3">
-        {linkUrl ? (
-          <Link to={linkUrl}>
-            <ActivityContentComponent />
+      <CardContent className="p-4">
+        <div className="flex">
+          {/* User avatar */}
+          <Link href={`/profile/${activity.userId}`} className="mr-3 flex-shrink-0">
+            <Avatar className="h-10 w-10">
+              {activity.avatar ? (
+                <AvatarImage src={activity.avatar} alt={activity.displayName || activity.username} />
+              ) : (
+                <AvatarFallback>
+                  {(activity.displayName || activity.username).substring(0, 2).toUpperCase()}
+                </AvatarFallback>
+              )}
+            </Avatar>
           </Link>
-        ) : (
-          <ActivityContentComponent />
-        )}
+          
+          {/* Activity content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 mb-1">
+              {/* Author name */}
+              <Link 
+                href={`/profile/${activity.userId}`}
+                className="font-medium text-primary hover:underline truncate"
+              >
+                {activity.displayName || activity.username}
+              </Link>
+              
+              {/* Activity type badge */}
+              <div className="flex items-center gap-1">
+                <span className="text-muted-foreground">·</span>
+                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                  {getActivityIcon()}
+                  <span className="capitalize">{activity.type.replace('_', ' ')}</span>
+                </span>
+              </div>
+              
+              {/* Community badge if available */}
+              {showCommunityBadge && activity.communityId && (
+                <>
+                  <span className="text-muted-foreground">·</span>
+                  <Link href={`/communities/${activity.communityId}`}>
+                    <Badge variant="outline" className="text-xs px-1.5 py-0">
+                      {getCommunityName(activity.communityId)}
+                    </Badge>
+                  </Link>
+                </>
+              )}
+            </div>
+            
+            {/* Activity content */}
+            <div className="text-sm text-foreground mb-2">
+              {activity.content}
+            </div>
+            
+            {/* Activity metadata */}
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              {/* Timestamp with tooltip */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <span className="cursor-help">{formattedTime}</span>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-2 text-xs">
+                  {fullTimestamp}
+                </PopoverContent>
+              </Popover>
+              
+              {/* Action buttons */}
+              {showActions && (
+                <div className="flex items-center gap-2">
+                  {onMarkAsRead && !activity.isRead && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onMarkAsRead(activity.id);
+                      }}
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreHorizontal className="h-3.5 w-3.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-40">
+                      <DropdownMenuLabel>Options</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(getActivityLink(), '_blank');
+                        }}
+                      >
+                        View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Copy to clipboard functionality
+                          navigator.clipboard.writeText(activity.content);
+                        }}
+                      >
+                        Copy Text
+                      </DropdownMenuItem>
+                      {activity.communityId && (
+                        <DropdownMenuItem 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.location.href = `/communities/${activity.communityId}`;
+                          }}
+                        >
+                          View Community
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </CardContent>
-      
-      {/* Activity Actions */}
-      {interactive && !activity.isRead && onMarkAsRead && (
-        <CardFooter className="px-3 py-1 flex justify-end bg-muted/30 border-t">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onMarkAsRead(activity.id);
-            }}
-            className="h-6 text-xs"
-          >
-            Mark as read
-          </Button>
-        </CardFooter>
-      )}
     </Card>
   );
 };

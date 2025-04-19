@@ -12,7 +12,8 @@ import {
   Menu,
   Shield,
   CheckCircle2,
-  Palette
+  Palette,
+  Bell
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -53,6 +54,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     { name: 'Connections', path: '/connections', icon: <Users className="h-5 w-5" /> },
     { name: 'Coaching', path: '/coaching', icon: <BookOpen className="h-5 w-5" /> },
     { name: 'Communities', path: '/communities', icon: <Users className="h-5 w-5" /> },
+    // Activity Feed with real-time updates
+    { 
+      name: 'Activity Feed', 
+      path: '/activities', 
+      icon: <Bell className="h-5 w-5" />,
+      badge: { text: 'Live', variant: 'success' }
+    },
     // New NodeBB-based Community Hub
     { 
       name: 'Community Beta', 
