@@ -6,7 +6,7 @@
  * for the PicklePulse™ algorithm.
  * 
  * @framework Framework5.1
- * @version 1.0.0
+ * @version 1.0.1
  */
 
 import { db } from '../../db';
@@ -46,7 +46,7 @@ export class XpEconomyMonitor {
           totalXpIssued: sql<number>`sum(${xpTransactions.amount})`
         })
         .from(xpTransactions)
-        .where(gte(xpTransactions.timestamp, startDate));
+        .where(gte(xpTransactions.createdAt, startDate));
       
       // Get user count
       const [userCountResult] = await db
@@ -68,7 +68,7 @@ export class XpEconomyMonitor {
           count: sql<number>`count(*)`
         })
         .from(xpTransactions)
-        .where(gte(xpTransactions.timestamp, startDate))
+        .where(gte(xpTransactions.createdAt, startDate))
         .groupBy(xpTransactions.source);
       
       // Calculate distribution percentages
@@ -94,13 +94,13 @@ export class XpEconomyMonitor {
       // Get daily XP issued
       const dailyXpResult = await db
         .select({
-          date: sql<string>`date_trunc('day', ${xpTransactions.timestamp})`,
+          date: sql<string>`date_trunc('day', ${xpTransactions.createdAt})`,
           amount: sql<number>`sum(${xpTransactions.amount})`
         })
         .from(xpTransactions)
-        .where(gte(xpTransactions.timestamp, startDate))
-        .groupBy(sql`date_trunc('day', ${xpTransactions.timestamp})`)
-        .orderBy(sql`date_trunc('day', ${xpTransactions.timestamp})`);
+        .where(gte(xpTransactions.createdAt, startDate))
+        .groupBy(sql`date_trunc('day', ${xpTransactions.createdAt})`)
+        .orderBy(sql`date_trunc('day', ${xpTransactions.createdAt})`);
       
       const dailyXpIssued = dailyXpResult.map(item => ({
         date: new Date(item.date).toISOString().split('T')[0],

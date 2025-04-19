@@ -29,6 +29,7 @@ import { registerFeedbackRoutes } from "./modules/feedback/routes"; // PKL-27865
 import { initApiGateway } from "./modules/api-gateway"; // PKL-278651-API-0001-GATEWAY
 import { initializeAdminModule } from "./modules/admin"; // PKL-278651-ADMIN-0015-USER
 import { initializeXpModule } from "./modules/xp"; // PKL-278651-XP-0001-FOUND
+import { registerPicklePulseRoutes } from "./routes/xp-pulse-routes"; // PKL-278651-XP-0003-PULSE
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -161,6 +162,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Initialize XP System Module (PKL-278651-XP-0001-FOUND)
   initializeXpModule(app);
+  
+  // Initialize PicklePulse System (PKL-278651-XP-0003-PULSE)
+  const pickleScheduler = registerPicklePulseRoutes(app, storage);
   
   // Register Batch API routes (PKL-278651-PERF-0001.4-API)
   app.use("/api", batchApiRoutes);

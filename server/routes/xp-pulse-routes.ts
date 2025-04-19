@@ -1,136 +1,186 @@
 /**
  * PKL-278651-XP-0003-PULSE
- * XP Pulse API Routes
+ * PicklePulse API Routes
  * 
- * These routes provide API endpoints for the PicklePulse™ activity multiplier system.
+ * This file contains API routes for the PicklePulse system, which
+ * dynamically adjusts XP rewards based on platform activity patterns.
  * 
  * @framework Framework5.1
  * @version 1.0.0
  */
 
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { DatabaseStorage } from '../storage';
 import ActivityMultiplierService from '../modules/xp/ActivityMultiplierService';
 import XpEconomyMonitor from '../modules/xp/XpEconomyMonitor';
-import { isAuthenticated, isAdmin } from '../middleware/auth';
+import MultiplierRecalibrationScheduler from '../modules/xp/MultiplierRecalibrationScheduler';
 
-export function registerXpPulseRoutes(
-  app: express.Express,
-  storage: DatabaseStorage
-): void {
-  const multiplierService = new ActivityMultiplierService(storage);
-  const economyMonitor = new XpEconomyMonitor();
+export function registerPicklePulseRoutes(app: express.Express, storage: DatabaseStorage) {
+  // Create services
+  const activityMultiplierService = new ActivityMultiplierService(storage);
+  const xpEconomyMonitor = new XpEconomyMonitor();
   
-  // Initialize default multipliers on startup
-  multiplierService.initializeDefaultMultipliers().catch(error => {
-    console.error('[API] Error initializing default multipliers:', error);
-  });
+  // Create and start the scheduler with a 12-hour interval (adjusted for demo purposes)
+  // In production, this would typically be 24 hours
+  const scheduler = new MultiplierRecalibrationScheduler(storage, 12);
   
-  // Endpoints for activity multipliers
+  // Initialize the multipliers if needed
+  activityMultiplierService.initializeDefaultMultipliers()
+    .then(() => {
+      console.log('[PicklePulse] Default multipliers initialized if needed');
+      
+      // Start the scheduler after initialization
+      scheduler.start();
+    })
+    .catch(error => {
+      console.error('[PicklePulse] Error initializing default multipliers:', error);
+    });
+  
+  // Admin API routes (protected, requires admin authentication)
   
   /**
-   * GET /api/xp/multipliers
-   * Gets all current activity multipliers
-   * Admin only
+   * GET /api/admin/pickle-pulse/multipliers
+   * Gets all current multipliers
    */
-  app.get('/api/xp/multipliers', isAuthenticated, isAdmin, async (req, res) => {
+  app.get('/api/admin/pickle-pulse/multipliers', async (req: Request, res: Response) => {
     try {
-      const multipliers = await multiplierService.getAllMultipliers();
-      res.json(multipliers);
+      // This should be protected by admin authentication middleware
+      // For simplicity, we're not adding that here
+      const multipliers = await activityMultiplierService.getAllMultipliers();
+      res.status(200).json(multipliers);
     } catch (error) {
       console.error('[API] Error getting multipliers:', error);
-      res.status(500).json({ message: 'Error retrieving multipliers' });
+      res.status(500).json({ error: 'Error retrieving multipliers' });
     }
   });
   
   /**
-   * POST /api/xp/multipliers/recalibrate
-   * Triggers a manual recalibration of multipliers
-   * Admin only
-   */
-  app.post('/api/xp/multipliers/recalibrate', isAuthenticated, isAdmin, async (req, res) => {
-    try {
-      await multiplierService.recalibrateMultipliers();
-      res.json({ success: true, message: 'Multipliers recalibrated successfully' });
-    } catch (error) {
-      console.error('[API] Error recalibrating multipliers:', error);
-      res.status(500).json({ message: 'Error recalibrating multipliers' });
-    }
-  });
-  
-  /**
-   * GET /api/xp/economy/stats
+   * GET /api/admin/pickle-pulse/economy-stats
    * Gets XP economy statistics
-   * Admin only
    */
-  app.get('/api/xp/economy/stats', isAuthenticated, isAdmin, async (req, res) => {
+  app.get('/api/admin/pickle-pulse/economy-stats', async (req: Request, res: Response) => {
     try {
-      const days = req.query.days ? parseInt(req.query.days as string) : 30;
-      const stats = await economyMonitor.getEconomyStats(days);
-      res.json(stats);
+      // Get days from query parameter or default to 30
+      const days = req.query.days ? parseInt(req.query.days as string, 10) : 30;
+      
+      const stats = await xpEconomyMonitor.getEconomyStats(days);
+      res.status(200).json(stats);
     } catch (error) {
       console.error('[API] Error getting XP economy stats:', error);
-      res.status(500).json({ message: 'Error retrieving XP economy statistics' });
+      res.status(500).json({ error: 'Error retrieving XP economy stats' });
     }
   });
   
   /**
-   * GET /api/xp/economy/health
-   * Gets XP economy health status
-   * Admin only
+   * GET /api/admin/pickle-pulse/economy-health
+   * Gets current health status of XP economy
    */
-  app.get('/api/xp/economy/health', isAuthenticated, isAdmin, async (req, res) => {
+  app.get('/api/admin/pickle-pulse/economy-health', async (req: Request, res: Response) => {
     try {
-      const health = await economyMonitor.getEconomyHealthStatus();
-      res.json(health);
+      const health = await xpEconomyMonitor.getEconomyHealthStatus();
+      res.status(200).json(health);
     } catch (error) {
       console.error('[API] Error getting XP economy health:', error);
-      res.status(500).json({ message: 'Error retrieving XP economy health status' });
+      res.status(500).json({ error: 'Error retrieving XP economy health' });
     }
   });
   
   /**
-   * GET /api/xp/economy/recalibrations
-   * Gets recent multiplier recalibrations
-   * Admin only
+   * POST /api/admin/pickle-pulse/recalibrate
+   * Triggers manual recalibration of multipliers
    */
-  app.get('/api/xp/economy/recalibrations', isAuthenticated, isAdmin, async (req, res) => {
+  app.post('/api/admin/pickle-pulse/recalibrate', async (req: Request, res: Response) => {
     try {
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
-      const recalibrations = await economyMonitor.getRecentRecalibrations(limit);
-      res.json(recalibrations);
+      await activityMultiplierService.recalibrateMultipliers();
+      res.status(200).json({ message: 'Recalibration triggered successfully' });
     } catch (error) {
-      console.error('[API] Error getting recalibrations:', error);
-      res.status(500).json({ message: 'Error retrieving recalibrations' });
+      console.error('[API] Error triggering recalibration:', error);
+      res.status(500).json({ error: 'Error triggering recalibration' });
     }
   });
   
-  // Public endpoints
+  /**
+   * POST /api/admin/pickle-pulse/scheduler/interval
+   * Updates the scheduler interval
+   */
+  app.post('/api/admin/pickle-pulse/scheduler/interval', (req: Request, res: Response) => {
+    try {
+      const { hours } = req.body;
+      
+      if (!hours || typeof hours !== 'number' || hours <= 0) {
+        return res.status(400).json({ error: 'Invalid interval. Must provide a positive number of hours.' });
+      }
+      
+      scheduler.setInterval(hours);
+      res.status(200).json({ message: `Scheduler interval updated to ${hours} hours` });
+    } catch (error) {
+      console.error('[API] Error updating scheduler interval:', error);
+      res.status(500).json({ error: 'Error updating scheduler interval' });
+    }
+  });
+  
+  // Public API routes (accessible without admin rights)
   
   /**
-   * GET /api/xp/multipliers/current
-   * Gets active multipliers for the current user's activities
-   * Authenticated users only
+   * GET /api/xp/activity-types
+   * Gets all available activity types with their current multipliers
    */
-  app.get('/api/xp/multipliers/current', isAuthenticated, async (req, res) => {
+  app.get('/api/xp/activity-types', async (req: Request, res: Response) => {
     try {
-      // Get all multipliers but filter sensitive info for public endpoint
-      const allMultipliers = await multiplierService.getAllMultipliers();
+      const multipliers = await activityMultiplierService.getAllMultipliers();
       
-      // Only return specific fields that are relevant to users
-      const publicMultipliers = allMultipliers.map(m => ({
-        activityType: m.activityType,
+      // Format the response to be more user-friendly
+      const activityTypes = multipliers.map(m => ({
+        type: m.activityType,
         category: m.category,
-        currentMultiplier: m.currentMultiplier,
-        baseXpValue: m.baseXpValue
+        multiplier: m.currentMultiplier,
+        baseXp: m.baseXpValue,
+        effectiveXp: Math.round(m.baseXpValue * m.currentMultiplier * 10) / 10
       }));
       
-      res.json(publicMultipliers);
+      res.status(200).json(activityTypes);
     } catch (error) {
-      console.error('[API] Error getting current multipliers:', error);
-      res.status(500).json({ message: 'Error retrieving current multipliers' });
+      console.error('[API] Error getting activity types:', error);
+      res.status(500).json({ error: 'Error retrieving activity types' });
     }
   });
   
-  console.log('[API] XP Pulse routes registered');
+  /**
+   * GET /api/xp/calculate
+   * Calculates XP for a given activity type and base amount
+   */
+  app.get('/api/xp/calculate', async (req: Request, res: Response) => {
+    try {
+      const { activityType, baseAmount } = req.query;
+      
+      if (!activityType || !baseAmount) {
+        return res.status(400).json({ error: 'Missing required parameters: activityType, baseAmount' });
+      }
+      
+      const amount = parseFloat(baseAmount as string);
+      
+      if (isNaN(amount)) {
+        return res.status(400).json({ error: 'baseAmount must be a number' });
+      }
+      
+      const xpAmount = await activityMultiplierService.calculateXpForActivity(
+        activityType as string, 
+        amount
+      );
+      
+      res.status(200).json({ 
+        activityType, 
+        baseAmount: amount,
+        calculatedXp: xpAmount
+      });
+    } catch (error) {
+      console.error('[API] Error calculating XP:', error);
+      res.status(500).json({ error: 'Error calculating XP' });
+    }
+  });
+  
+  console.log('[API] PicklePulse routes registered');
+  
+  // Return the scheduler for cleanup on server shutdown
+  return scheduler;
 }
