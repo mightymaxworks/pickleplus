@@ -6,12 +6,13 @@
  * It implements the PicklePulse™ algorithm for balancing the XP economy.
  * 
  * @framework Framework5.1
- * @version 1.0.0
+ * @version 1.0.1
  */
 
 import { db } from '../../db';
-import { activityMultipliers, multiplierRecalibrations } from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import { activityMultipliers, multiplierRecalibrations, xpTransactions } from '@shared/schema';
+import { eq, gte } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import { DatabaseStorage } from '../../storage';
 
 // Default activity ratios - these represent ideal platform engagement distribution
@@ -115,10 +116,8 @@ export class ActivityMultiplierService {
               activityType: activityType,
               previousMultiplier: multiplier.currentMultiplier,
               newMultiplier: newMultiplier,
-              targetRatio: targetRatio,
-              actualRatio: currentRatio,
-              deviation: deviation,
-              timestamp: new Date()
+              adjustmentReason: `Adjusting for ${(deviation > 0 ? 'under' : 'over')}-representation (Target: ${targetRatio}, Actual: ${currentRatio})`,
+              // timestamp field is handled by defaultNow()
             });
           
           console.log(`[PicklePulse] Recalibrated ${activityType}: ${multiplier.currentMultiplier} -> ${newMultiplier}`);

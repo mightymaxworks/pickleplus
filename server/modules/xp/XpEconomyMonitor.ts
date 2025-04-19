@@ -12,7 +12,7 @@
 import { db } from '../../db';
 import { xpTransactions, activityMultipliers, users } from '@shared/schema';
 import { sql } from 'drizzle-orm';
-import { eq, gte, lte, desc } from 'drizzle-orm/expressions';
+import { eq, gte, lte, desc } from 'drizzle-orm';
 
 export interface XpEconomyStats {
   totalTransactions: number;
