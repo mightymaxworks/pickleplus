@@ -108,20 +108,20 @@ class ActivityFeedService {
         );
       
       // Apply community filter if specified
-      const query = communityId
+      const filteredQuery = communityId
         ? baseQuery.where(eq(activityFeedEntries.communityId, communityId))
         : baseQuery;
       
       // Execute the query with limit, offset, and sorting
-      const results = await query
+      const results = await filteredQuery
         .orderBy(desc(activityFeedEntries.timestamp))
         .limit(limit)
         .offset(offset);
       
       // Transform the results
-      return results.map(({ a, isRead }) => ({
-        ...a,
-        isRead: isRead ?? false
+      return results.map((row: { a: any; isRead: boolean | null }) => ({
+        ...row.a,
+        isRead: row.isRead ?? false
       }));
     } catch (error) {
       console.error('[PKL-278651-COMM-0022-FEED] Error getting activities for user:', error);
@@ -173,14 +173,14 @@ class ActivityFeedService {
         );
       
       // Apply community filter if specified
-      const query = communityId
+      const filteredQuery = communityId
         ? baseQuery.where(eq(activityFeedEntries.communityId, communityId))
         : baseQuery;
       
       // Execute query
-      const results = await query.orderBy(desc(activityFeedEntries.timestamp));
+      const results = await filteredQuery.orderBy(desc(activityFeedEntries.timestamp));
       
-      return results.map(r => r.activity);
+      return results.map((result: { activity: ActivityFeedItem }) => result.activity);
     } catch (error) {
       console.error('[PKL-278651-COMM-0022-FEED] Error getting unread activities:', error);
       throw error;
