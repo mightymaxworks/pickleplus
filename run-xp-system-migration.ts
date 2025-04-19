@@ -16,13 +16,12 @@
 import { Pool } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import * as schema from "./shared/schema";
-import chalk from "chalk";
 import { sql } from "drizzle-orm";
 import { xpLevelThresholds, activityMultipliers, multiplierRecalibrations } from "./shared/schema/xp";
 
 // Connect to the database
 if (!process.env.DATABASE_URL) {
-  console.error(chalk.red("DATABASE_URL environment variable is not set"));
+  console.error("DATABASE_URL environment variable is not set");
   process.exit(1);
 }
 
@@ -30,18 +29,18 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const db = drizzle(pool, { schema });
 
 async function runMigration() {
-  console.log(chalk.blue("Starting XP System Foundation Migration..."));
+  console.log("Starting XP System Foundation Migration...");
 
   try {
     // Check if tables already exist to avoid running migrations multiple times
     const tablesExist = await checkTablesExist();
     if (tablesExist) {
-      console.log(chalk.yellow("XP System tables already exist. Migration skipped."));
+      console.log("XP System tables already exist. Migration skipped.");
       process.exit(0);
     }
 
     // Create XP Level Thresholds Table
-    console.log(chalk.blue("Creating xp_level_thresholds table..."));
+    console.log("Creating xp_level_thresholds table...");
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS xp_level_thresholds (
         id SERIAL PRIMARY KEY,
@@ -56,7 +55,7 @@ async function runMigration() {
     `);
 
     // Create Activity Multipliers Table (for Pickle Pulse™)
-    console.log(chalk.blue("Creating activity_multipliers table..."));
+    console.log("Creating activity_multipliers table...");
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS activity_multipliers (
         id SERIAL PRIMARY KEY,
@@ -73,7 +72,7 @@ async function runMigration() {
     `);
 
     // Create Multiplier Recalibrations Table (for Pickle Pulse™ history)
-    console.log(chalk.blue("Creating multiplier_recalibrations table..."));
+    console.log("Creating multiplier_recalibrations table...");
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS multiplier_recalibrations (
         id SERIAL PRIMARY KEY,
@@ -87,7 +86,7 @@ async function runMigration() {
     `);
 
     // Modify the existing xp_transactions table to add balance and source_type fields
-    console.log(chalk.blue("Updating xp_transactions table..."));
+    console.log("Updating xp_transactions table...");
     await db.execute(sql`
       ALTER TABLE xp_transactions 
       ADD COLUMN IF NOT EXISTS balance INTEGER,
@@ -97,16 +96,16 @@ async function runMigration() {
     `);
 
     // Populate XP Level Thresholds with default values
-    console.log(chalk.blue("Populating default XP level thresholds..."));
+    console.log("Populating default XP level thresholds...");
     await populateDefaultXpLevelThresholds();
 
     // Populate Activity Multipliers with default values
-    console.log(chalk.blue("Populating default activity multipliers..."));
+    console.log("Populating default activity multipliers...");
     await populateDefaultActivityMultipliers();
 
-    console.log(chalk.green("XP System Foundation Migration completed successfully!"));
+    console.log("XP System Foundation Migration completed successfully!");
   } catch (error) {
-    console.error(chalk.red("Error running migration:"), error);
+    console.error("Error running migration:", error);
     process.exit(1);
   } finally {
     await pool.end();
@@ -127,7 +126,7 @@ async function checkTablesExist(): Promise<boolean> {
     
     return result[0]?.exists === true;
   } catch (error) {
-    console.error(chalk.red("Error checking if tables exist:"), error);
+    console.error("Error checking if tables exist:", error);
     return false;
   }
 }
