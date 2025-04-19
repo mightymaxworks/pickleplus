@@ -18,7 +18,8 @@ import {
   activityFeedSettings,
   ActivityFeedItem
 } from '@shared/schema/activity-feed';
-import { communities, communityMembers, users } from '@shared/schema';
+import { communities, communityMembers } from '@shared/schema/community';
+import { users } from '@shared/schema';
 import { ServerEvents, eventEmitter } from '../../core/events/server-event-bus';
 
 interface GetActivitiesOptions {

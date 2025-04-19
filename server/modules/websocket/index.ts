@@ -10,7 +10,7 @@
  */
 
 import { Server as HttpServer } from 'http';
-import WebSocketManager from './ws-server';
+import { PickleSocketServer as WebSocketManager } from './ws-server';
 
 // Singleton instance of the WebSocket manager
 let wsManagerInstance: WebSocketManager | null = null;

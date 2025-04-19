@@ -132,18 +132,18 @@ export const activityReadStatusRelations = relations(activityReadStatus, ({ one 
 /**
  * Schemas
  */
-export const insertActivityFeedEntrySchema = createInsertSchema(activityFeedEntries, {
-  // Add validation rules if needed
-  content: z => z.string().min(1).max(500)
-}).omit({ id: true });
+export const insertActivityFeedEntrySchema = createInsertSchema(activityFeedEntries)
+  .extend({
+    // Add validation rules if needed
+    content: z.string().min(1).max(500)
+  })
+  .omit({ id: true });
 
-export const insertActivityReadStatusSchema = createInsertSchema(activityReadStatus, {
-  // Add validation rules if needed
-}).omit({ id: true });
+export const insertActivityReadStatusSchema = createInsertSchema(activityReadStatus)
+  .omit({ id: true });
 
-export const insertActivityFeedSettingsSchema = createInsertSchema(activityFeedSettings, {
-  // Add validation rules if needed
-}).omit({ id: true });
+export const insertActivityFeedSettingsSchema = createInsertSchema(activityFeedSettings)
+  .omit({ id: true });
 
 /**
  * Types

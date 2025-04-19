@@ -303,6 +303,26 @@ export class PickleSocketServer {
       }
     });
   }
+  
+  /**
+   * Shutdown the WebSocket server
+   */
+  public shutdown(): void {
+    // Close all connections
+    this.wss.clients.forEach(client => {
+      client.terminate();
+    });
+    
+    // Close the server
+    this.wss.close();
+    
+    // Clear all data structures
+    this.clients.clear();
+    this.topicSubscriptions.clear();
+    this.userConnections.clear();
+    
+    console.log('[WS] WebSocket server shutdown complete');
+  }
 }
 
 // Export factory function to create the WebSocket server
