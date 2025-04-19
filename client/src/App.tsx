@@ -403,6 +403,16 @@ export default function App() {
                     {(params) => <ProtectedRoute component={IconsPage} path="/icons" />}
                   </Route>
                   
+                  {/* PKL-278651-COMM-0028-NOTIF - Notifications Page */}
+                  <Route path="/notifications">
+                    {(params) => <ProtectedRoute component={NotificationsPage} path="/notifications" />}
+                  </Route>
+                  
+                  {/* Test Login Page for easier testing */}
+                  <Route path="/test-login">
+                    {(params) => <TestLoginPage />}
+                  </Route>
+                  
                   <Route component={LazyNotFoundPage} />
                 </Switch>
                   </Suspense>
