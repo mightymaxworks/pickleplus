@@ -12,7 +12,6 @@
 import { Server as HttpServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { ServerEventBus } from '../../core/events';
-import { ServerEvents } from '../../core/events/event-types';
 
 // Client connection interface
 interface Client {
@@ -107,8 +106,14 @@ export class WebSocketManager {
     switch (message.type) {
       case 'subscribe':
         if (message.topics && Array.isArray(message.topics)) {
-          // Add topics to client subscriptions
-          client.subscriptions = [...new Set([...client.subscriptions, ...message.topics])];
+          // Add topics to client subscriptions without using Set
+          const uniqueTopics = [...client.subscriptions];
+          message.topics.forEach(topic => {
+            if (!uniqueTopics.includes(topic)) {
+              uniqueTopics.push(topic);
+            }
+          });
+          client.subscriptions = uniqueTopics;
           this.sendToClient(client, {
             type: 'subscribed',
             topics: message.topics
@@ -192,7 +197,7 @@ export class WebSocketManager {
 
   private subscribeToServerEvents(): void {
     // Subscribe to community activity events
-    ServerEventBus.subscribe('community:activity:created' as ServerEvents, (data) => {
+    ServerEventBus.subscribe('community:activity:created', (data) => {
       this.broadcastToTopic('community:activity', data);
       
       // Also broadcast to community-specific topic
@@ -207,7 +212,7 @@ export class WebSocketManager {
       'community:comment:added',
       'community:event:created',
       'community:member:joined'
-    ] as ServerEvents[];
+    ];
     
     relevantEvents.forEach(event => {
       ServerEventBus.subscribe(event, (data) => {

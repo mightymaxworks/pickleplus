@@ -12,7 +12,8 @@
 import { Server as HttpServer } from 'http';
 import WebSocketManager from './ws-server';
 
-let wsManager: WebSocketManager | null = null;
+// Singleton instance of the WebSocket manager
+let wsManagerInstance: WebSocketManager | null = null;
 
 /**
  * Initialize the WebSocket server
@@ -20,14 +21,13 @@ let wsManager: WebSocketManager | null = null;
  * @returns The WebSocket manager instance
  */
 export function initializeWebSocketServer(server: HttpServer): WebSocketManager {
-  if (wsManager) {
-    console.log('[WebSocket] WebSocket server already initialized');
-    return wsManager;
+  if (wsManagerInstance) {
+    console.log('[WebSocket] Manager already initialized, returning existing instance');
+    return wsManagerInstance;
   }
   
-  console.log('[WebSocket] Initializing WebSocket server');
-  wsManager = new WebSocketManager(server);
-  return wsManager;
+  wsManagerInstance = new WebSocketManager(server);
+  return wsManagerInstance;
 }
 
 /**
@@ -35,22 +35,25 @@ export function initializeWebSocketServer(server: HttpServer): WebSocketManager 
  * @returns The WebSocket manager instance or null if not initialized
  */
 export function getWebSocketManager(): WebSocketManager | null {
-  return wsManager;
+  return wsManagerInstance;
 }
 
 /**
  * Shutdown the WebSocket server
  */
 export function shutdownWebSocketServer(): void {
-  if (wsManager) {
-    wsManager.shutdown();
-    wsManager = null;
-    console.log('[WebSocket] WebSocket server shut down');
+  if (wsManagerInstance) {
+    wsManagerInstance.shutdown();
+    wsManagerInstance = null;
+    console.log('[WebSocket] Manager shutdown complete');
   }
 }
 
-export default {
-  initializeWebSocketServer,
-  getWebSocketManager,
-  shutdownWebSocketServer
-};
+// Add shutdown hook
+process.on('SIGINT', () => {
+  shutdownWebSocketServer();
+});
+
+process.on('SIGTERM', () => {
+  shutdownWebSocketServer();
+});
