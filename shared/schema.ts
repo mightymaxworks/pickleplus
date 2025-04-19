@@ -940,4 +940,40 @@ export {
   InsertCommunityLeaderboard
 };
 
+// Import enhanced XP system tables (PKL-278651-XP-0001-FOUND - XP System Foundation)
+import {
+  xpLevelThresholds,
+  activityMultipliers,
+  multiplierRecalibrations,
+  insertXpLevelThresholdSchema,
+  insertActivityMultiplierSchema,
+  insertMultiplierRecalibrationSchema,
+  XP_SOURCE,
+  type XpSource,
+  type XpLevelThreshold,
+  type InsertXpLevelThreshold,
+  type ActivityMultiplier,
+  type InsertActivityMultiplier,
+  type MultiplierRecalibration,
+  type InsertMultiplierRecalibration
+} from './schema/xp';
+
+// Export enhanced XP system tables and types
+export {
+  xpLevelThresholds,
+  activityMultipliers,
+  multiplierRecalibrations,
+  insertXpLevelThresholdSchema,
+  insertActivityMultiplierSchema,
+  insertMultiplierRecalibrationSchema,
+  XP_SOURCE,
+  type XpSource,
+  type XpLevelThreshold,
+  type InsertXpLevelThreshold,
+  type ActivityMultiplier,
+  type InsertActivityMultiplier,
+  type MultiplierRecalibration,
+  type InsertMultiplierRecalibration
+};
+
 // Add additional core schema exports here as the system grows
