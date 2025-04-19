@@ -5,99 +5,81 @@
  * Schema definitions for community engagement metrics tables.
  */
 
-import { relations } from 'drizzle-orm';
-import { integer, jsonb, pgTable, serial, text, timestamp, unique, varchar } from 'drizzle-orm/pg-core';
-import { createInsertSchema } from 'drizzle-zod';
-import { z } from 'zod';
-import { communities, users } from './index';
+import { relations } from "drizzle-orm";
+import { pgTable, serial, integer, varchar, text, timestamp, jsonb, boolean } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+import { users } from "../schema";
+import { communities } from "./community";
 
-/**
- * Community Engagement Metrics Table
- * Tracks individual user engagement metrics for each community
- */
-export const communityEngagementMetrics = pgTable('community_engagement_metrics', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id').notNull().references(() => users.id),
-  communityId: integer('community_id').notNull().references(() => communities.id),
-  totalPoints: integer('total_points').notNull().default(0),
-  totalActivities: integer('total_activities').notNull().default(0),
-  lastActivityAt: timestamp('last_activity_at', { withTimezone: true }).defaultNow(),
-  streakDays: integer('streak_days').notNull().default(0),
-  engagementLevel: varchar('engagement_level', { length: 20 }).default('NEWCOMER'),
-  postCount: integer('post_count').notNull().default(0),
-  commentCount: integer('comment_count').notNull().default(0),
-  eventAttendance: integer('event_attendance').notNull().default(0),
-  contributionData: jsonb('contribution_data'),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}, (table) => {
-  return {
-    userCommunityUnique: unique().on(table.userId, table.communityId),
-  };
+// Activity type enum
+export enum CommunityActivityType {
+  POST_CREATED = "post_created",
+  COMMENT_ADDED = "comment_added",
+  EVENT_ATTENDED = "event_attended",
+  PROFILE_UPDATED = "profile_updated",
+  REACTION_ADDED = "reaction_added",
+  INVITATION_SENT = "invitation_sent",
+  DAILY_LOGIN = "daily_login"
+}
+
+// Community Engagement Metrics Table
+export const communityEngagementMetrics = pgTable("community_engagement_metrics", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  communityId: integer("community_id").notNull().references(() => communities.id),
+  totalPoints: integer("total_points").notNull().default(0),
+  totalActivities: integer("total_activities").notNull().default(0),
+  lastActivityAt: timestamp("last_activity_at").defaultNow(),
+  streakDays: integer("streak_days").notNull().default(0),
+  engagementLevel: varchar("engagement_level", { length: 20 }).default("NEWCOMER"),
+  postCount: integer("post_count").notNull().default(0),
+  commentCount: integer("comment_count").notNull().default(0),
+  eventAttendance: integer("event_attendance").notNull().default(0),
+  contributionData: jsonb("contribution_data"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
-/**
- * Community Activities Table
- * Records individual user activities within communities
- */
-export const communityActivities = pgTable('community_activities', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id').notNull().references(() => users.id),
-  communityId: integer('community_id').notNull().references(() => communities.id),
-  activityType: varchar('activity_type', { length: 50 }).notNull(),
-  activityData: jsonb('activity_data'),
-  points: integer('points').notNull().default(1),
-  isHidden: boolean('is_hidden').notNull().default(false),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+// Community Activities Table
+export const communityActivities = pgTable("community_activities", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  communityId: integer("community_id").notNull().references(() => communities.id),
+  activityType: varchar("activity_type", { length: 50 }).notNull(),
+  activityData: jsonb("activity_data"),
+  points: integer("points").notNull().default(1),
+  isHidden: boolean("is_hidden").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
-/**
- * Community Engagement Levels Table
- * Defines engagement levels and their thresholds for communities
- */
-export const communityEngagementLevels = pgTable('community_engagement_levels', {
-  id: serial('id').primaryKey(),
-  communityId: integer('community_id').notNull().references(() => communities.id),
-  levelName: varchar('level_name', { length: 50 }).notNull(),
-  pointThreshold: integer('point_threshold').notNull(),
-  description: text('description'),
-  benefits: jsonb('benefits'),
-  badgeImageUrl: varchar('badge_image_url', { length: 255 }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}, (table) => {
-  return {
-    communityLevelUnique: unique().on(table.communityId, table.levelName),
-  };
+// Community Engagement Levels Table
+export const communityEngagementLevels = pgTable("community_engagement_levels", {
+  id: serial("id").primaryKey(),
+  communityId: integer("community_id").notNull().references(() => communities.id),
+  levelName: varchar("level_name", { length: 50 }).notNull(),
+  pointThreshold: integer("point_threshold").notNull(),
+  description: text("description"),
+  benefits: jsonb("benefits"),
+  badgeImageUrl: varchar("badge_image_url", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
-/**
- * Community Leaderboards Table
- * Stores leaderboard data for communities
- */
-export const communityLeaderboards = pgTable('community_leaderboards', {
-  id: serial('id').primaryKey(),
-  communityId: integer('community_id').notNull().references(() => communities.id),
-  userId: integer('user_id').notNull().references(() => users.id),
-  leaderboardType: varchar('leaderboard_type', { length: 50 }).notNull(),
-  points: integer('points').notNull().default(0),
-  rank: integer('rank'),
-  timePeriod: varchar('time_period', { length: 20 }).notNull(),
-  startDate: timestamp('start_date', { withTimezone: true }).notNull(),
-  endDate: timestamp('end_date', { withTimezone: true }).notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-}, (table) => {
-  return {
-    communityUserLeaderboardUnique: unique().on(
-      table.communityId, 
-      table.userId, 
-      table.leaderboardType, 
-      table.timePeriod
-    ),
-  };
+// Community Leaderboards Table
+export const communityLeaderboards = pgTable("community_leaderboards", {
+  id: serial("id").primaryKey(),
+  communityId: integer("community_id").notNull().references(() => communities.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  leaderboardType: varchar("leaderboard_type", { length: 50 }).notNull(),
+  points: integer("points").notNull().default(0),
+  rank: integer("rank"),
+  timePeriod: varchar("time_period", { length: 20 }).notNull(),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
 // Relations
-
 export const communityEngagementMetricsRelations = relations(
   communityEngagementMetrics, 
   ({ one }) => ({
@@ -151,7 +133,6 @@ export const communityLeaderboardsRelations = relations(
 );
 
 // Zod schemas for validation
-
 export const insertCommunityEngagementMetricsSchema = createInsertSchema(
   communityEngagementMetrics, 
   {
