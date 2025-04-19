@@ -91,7 +91,7 @@ export function registerPicklePulseRoutes(app: express.Express, storage: Databas
    */
   app.post('/api/admin/pickle-pulse/recalibrate', async (req: Request, res: Response) => {
     try {
-      await activityMultiplierService.recalibrateMultipliers();
+      await activityMultiplierService.recalculateMultipliers();
       res.status(200).json({ message: 'Recalibration triggered successfully' });
     } catch (error) {
       console.error('[API] Error triggering recalibration:', error);
