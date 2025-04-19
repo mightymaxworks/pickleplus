@@ -25,7 +25,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CalendarDays, Star, TrendingUp, Users, Award, FileText, Activity, MessageSquare, Calendar } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 
 interface CommunityEngagementMetricsProps {
   communityId: number;
@@ -99,11 +100,17 @@ const CommunityEngagementMetrics: React.FC<CommunityEngagementMetricsProps> = ({
   const { data: topContributors, isLoading: isLoadingContributors } = useQuery({
     queryKey: ['/api/communities', communityId, 'engagement', 'top-contributors'],
     queryFn: async () => {
-      const res = await apiRequest(
-        'GET', 
-        `/api/communities/${communityId}/engagement/top-contributors?limit=10`
-      );
-      return await res.json() as Contributor[];
+      try {
+        const res = await apiRequest(
+          'GET', 
+          `/api/communities/${communityId}/engagement/top-contributors?limit=10`
+        );
+        const data = await res.json();
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.error('Error fetching contributors:', error);
+        return [];
+      }
     }
   });
   
@@ -111,11 +118,17 @@ const CommunityEngagementMetrics: React.FC<CommunityEngagementMetricsProps> = ({
   const { data: recentActivities, isLoading: isLoadingActivities } = useQuery({
     queryKey: ['/api/communities', communityId, 'engagement', 'recent-activities'],
     queryFn: async () => {
-      const res = await apiRequest(
-        'GET', 
-        `/api/communities/${communityId}/engagement/recent-activities?limit=10`
-      );
-      return await res.json() as Activity[];
+      try {
+        const res = await apiRequest(
+          'GET', 
+          `/api/communities/${communityId}/engagement/recent-activities?limit=10`
+        );
+        const data = await res.json();
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.error('Error fetching activities:', error);
+        return [];
+      }
     }
   });
   
@@ -123,11 +136,17 @@ const CommunityEngagementMetrics: React.FC<CommunityEngagementMetricsProps> = ({
   const { data: engagementLevels, isLoading: isLoadingLevels } = useQuery({
     queryKey: ['/api/communities', communityId, 'engagement', 'levels'],
     queryFn: async () => {
-      const res = await apiRequest(
-        'GET', 
-        `/api/communities/${communityId}/engagement/levels`
-      );
-      return await res.json() as EngagementLevel[];
+      try {
+        const res = await apiRequest(
+          'GET', 
+          `/api/communities/${communityId}/engagement/levels`
+        );
+        const data = await res.json();
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.error('Error fetching engagement levels:', error);
+        return [];
+      }
     }
   });
   
