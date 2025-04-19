@@ -23,7 +23,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
   
   const { data: unreadCountData, isLoading, error } = useQuery({
-    queryKey: ['/api/notifications/unread-count'],
+    queryKey: ['/api/notifications/count'],
     queryFn: notificationsSDK.getUnreadCount,
     refetchInterval: 60000, // Refetch every minute
   });

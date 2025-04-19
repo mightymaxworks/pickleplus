@@ -23,7 +23,17 @@ const router = express.Router();
 
 export function registerCommunityNotificationsRoutes(app: express.Express) {
   console.log('[ROUTES] Registering Community Notifications Routes (PKL-278651-COMM-0028-NOTIF)');
-  app.use('/api', router);
+  
+  // The routes are registered with the app directly to avoid path prefix issues
+  // Each route in the router already starts with '/api/notifications'
+  app.use(router);
+  
+  // Add a direct test endpoint to verify the routes are being registered
+  app.get('/api/notifications/test', (req, res) => {
+    console.log('[API] Notifications test endpoint called');
+    res.status(200).json({ message: 'Notifications API routes are working' });
+  });
+  
   return router;
 }
 
@@ -31,7 +41,7 @@ export function registerCommunityNotificationsRoutes(app: express.Express) {
  * Get all notifications for the authenticated user
  * GET /api/notifications
  */
-router.get('/notifications',
+router.get('/api/notifications',
   isAuthenticated,
   async (req: Request, res: Response) => {
     try {
@@ -96,7 +106,7 @@ router.get('/notifications',
  * Get unread notification count
  * GET /api/notifications/count
  */
-router.get('/notifications/count',
+router.get('/api/notifications/count',
   isAuthenticated,
   async (req: Request, res: Response) => {
     try {
@@ -132,7 +142,7 @@ router.get('/notifications/count',
  * Mark notification as read
  * PATCH /api/notifications/:notificationId/read
  */
-router.patch('/notifications/:notificationId/read',
+router.patch('/api/notifications/:notificationId/read',
   isAuthenticated,
   async (req: Request, res: Response) => {
     try {
@@ -174,7 +184,7 @@ router.patch('/notifications/:notificationId/read',
  * Mark all notifications as read
  * POST /api/notifications/read-all
  */
-router.post('/notifications/read-all',
+router.post('/api/notifications/read-all',
   isAuthenticated,
   async (req: Request, res: Response) => {
     try {
@@ -207,7 +217,7 @@ router.post('/notifications/read-all',
  * Mark notification as deleted (soft delete)
  * DELETE /api/notifications/:notificationId
  */
-router.delete('/notifications/:notificationId',
+router.delete('/api/notifications/:notificationId',
   isAuthenticated,
   async (req: Request, res: Response) => {
     try {
@@ -249,7 +259,7 @@ router.delete('/notifications/:notificationId',
  * Get notification preferences for the authenticated user
  * GET /api/notification-preferences
  */
-router.get('/notification-preferences',
+router.get('/api/notification-preferences',
   isAuthenticated,
   async (req: Request, res: Response) => {
     try {
@@ -288,7 +298,7 @@ router.get('/notification-preferences',
  * Update notification preferences
  * PUT /api/notification-preferences/:preferenceId
  */
-router.put('/notification-preferences/:preferenceId',
+router.put('/api/notification-preferences/:preferenceId',
   isAuthenticated,
   async (req: Request, res: Response) => {
     try {
