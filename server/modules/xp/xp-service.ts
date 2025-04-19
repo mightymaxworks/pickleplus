@@ -1,22 +1,24 @@
 /**
- * PKL-278651-XP-0002-UI
+ * PKL-278651-XP-0003-PULSE
  * XP Service
  * 
  * Core service for XP operations with business logic for
  * awarding XP, tracking levels, and providing recommendations.
+ * Integrated with PicklePulse™ activity multiplier system.
  * 
  * @framework Framework5.1
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 import { db } from '../../db';
-import { and, eq, desc, lte, sql } from 'drizzle-orm';
+import { and, eq, desc, lte, sql, gte } from 'drizzle-orm';
 import {
   xpTransactions,
   xpLevelThresholds,
   activityMultipliers,
   users
 } from '@shared/schema';
+import ActivityMultiplierService from './ActivityMultiplierService';
 
 // Type for XP award parameters
 interface AwardXpParams {
