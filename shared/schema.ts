@@ -141,6 +141,39 @@ import {
   type InsertTournamentBracketMatch
 } from './schema/tournament-brackets';
 
+// Import moderation schema (PKL-278651-COMM-0027-MOD - Community Moderation Tools)
+import {
+  contentReports,
+  moderationActions,
+  communityRoles,
+  contentReportsRelations,
+  moderationActionsRelations,
+  communityRolesRelations,
+  insertContentReportSchema,
+  insertModerationActionSchema,
+  insertCommunityRoleSchema,
+  type ContentReport,
+  type InsertContentReport,
+  type ModerationAction,
+  type InsertModerationAction,
+  type CommunityRole,
+  type InsertCommunityRole
+} from './schema/moderation';
+
+// Import notifications schema (PKL-278651-COMM-0028-NOTIF - Community Notifications)
+import {
+  userNotifications,
+  notificationPreferences,
+  userNotificationsRelations,
+  notificationPreferencesRelations,
+  insertUserNotificationSchema,
+  insertNotificationPreferenceSchema,
+  type UserNotification,
+  type InsertUserNotification,
+  type NotificationPreference,
+  type InsertNotificationPreference
+} from './schema/notifications';
+
 // User table
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
