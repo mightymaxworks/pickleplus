@@ -5,8 +5,8 @@
  * This module provides storage methods for tracking and retrieving
  * community engagement metrics.
  * 
- * @version 1.0.0
- * @lastModified 2025-04-18
+ * @version 1.1.0
+ * @lastModified 2025-04-19
  * @framework Framework5.1
  */
 
@@ -23,6 +23,7 @@ import {
   CommunityEngagementMetric,
   CommunityEngagementLevel
 } from "@shared/schema/community-engagement";
+import { ServerEventBus, ServerEvents } from "../../core/events/server-event-bus";
 
 /**
  * Community Engagement Storage Interface
@@ -31,6 +32,7 @@ export class CommunityEngagementStorage {
   
   /**
    * Record a user activity in a community
+   * PKL-278651-COMM-0022-XP: Updated to emit activity events for XP integration
    */
   async recordActivity(activity: InsertCommunityActivity): Promise<CommunityActivity> {
     // Insert activity
@@ -40,6 +42,15 @@ export class CommunityEngagementStorage {
     
     // Update metrics after recording activity
     await this.updateEngagementMetrics(activity.userId, activity.communityId, activity.activityType);
+    
+    // PKL-278651-COMM-0022-XP: Emit event for XP integration
+    await ServerEventBus.emit(ServerEvents.COMMUNITY_ACTIVITY_CREATED, {
+      userId: activity.userId,
+      communityId: activity.communityId,
+      activityType: activity.activityType,
+      activityId: newActivity.id,
+      metadata: activity.activityData || {}
+    });
     
     return newActivity;
   }

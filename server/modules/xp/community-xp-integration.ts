@@ -23,25 +23,25 @@ import { ActivityMultiplierService } from './ActivityMultiplierService';
 // XP values for different community activities
 export const COMMUNITY_XP_VALUES = {
   // Basic activities
-  CREATE_POST: 5,
-  CREATE_COMMENT: 2,
-  LIKE_POST: 1,
-  LIKE_COMMENT: 1,
+  POST_CREATED: 5,  // Matches CommunityActivityType.POST_CREATED
+  COMMENT_ADDED: 2, // Matches CommunityActivityType.COMMENT_ADDED
+  REACTION_ADDED: 1,  // Matches CommunityActivityType.REACTION_ADDED
   
   // Event-related activities
-  CREATE_EVENT: 10,
-  JOIN_EVENT: 3,
-  ATTEND_EVENT: 5,
+  EVENT_CREATED: 10, // Currently not in enum but should be added
+  EVENT_ATTENDED: 5, // Matches CommunityActivityType.EVENT_ATTENDED
   
   // Community-building activities
-  CREATE_COMMUNITY: 25,
-  JOIN_COMMUNITY: 5,
-  INVITE_MEMBER: 2,
+  CREATE_COMMUNITY: 25, // Currently not in enum but should be added
+  JOIN_COMMUNITY: 5,    // Currently not in enum but should be added
+  INVITATION_SENT: 2,   // Matches CommunityActivityType.INVITATION_SENT
   
   // Engagement and quality
-  FEATURED_POST: 15,
-  WEEKLY_CONTRIBUTOR: 20,
-  MONTHLY_CONTRIBUTOR: 50
+  PROFILE_UPDATED: 3,    // Matches CommunityActivityType.PROFILE_UPDATED
+  DAILY_LOGIN: 1,        // Matches CommunityActivityType.DAILY_LOGIN
+  FEATURED_POST: 15,     // Currently not in enum but should be added
+  WEEKLY_CONTRIBUTOR: 20,// Special awards not in basic enum
+  MONTHLY_CONTRIBUTOR: 50// Special awards not in basic enum
 };
 
 export class CommunityXpIntegration {
@@ -89,41 +89,43 @@ export class CommunityXpIntegration {
       let baseXp = 0;
       
       switch (activityType) {
-        case 'create_post':
-          baseXp = COMMUNITY_XP_VALUES.CREATE_POST;
+        case CommunityActivityType.POST_CREATED:
+          baseXp = COMMUNITY_XP_VALUES.POST_CREATED;
           break;
-        case 'create_comment':
-          baseXp = COMMUNITY_XP_VALUES.CREATE_COMMENT;
+        case CommunityActivityType.COMMENT_ADDED:
+          baseXp = COMMUNITY_XP_VALUES.COMMENT_ADDED;
           break;
-        case 'like_post':
-          baseXp = COMMUNITY_XP_VALUES.LIKE_POST;
+        case CommunityActivityType.REACTION_ADDED:
+          baseXp = COMMUNITY_XP_VALUES.REACTION_ADDED;
           break;
-        case 'like_comment':
-          baseXp = COMMUNITY_XP_VALUES.LIKE_COMMENT;
+        case CommunityActivityType.EVENT_ATTENDED:
+          baseXp = COMMUNITY_XP_VALUES.EVENT_ATTENDED;
           break;
-        case 'create_event':
-          baseXp = COMMUNITY_XP_VALUES.CREATE_EVENT;
+        case CommunityActivityType.PROFILE_UPDATED:
+          baseXp = COMMUNITY_XP_VALUES.PROFILE_UPDATED;
           break;
-        case 'join_event':
-          baseXp = COMMUNITY_XP_VALUES.JOIN_EVENT;
+        case CommunityActivityType.INVITATION_SENT:
+          baseXp = COMMUNITY_XP_VALUES.INVITATION_SENT;
           break;
-        case 'attend_event':
-          baseXp = COMMUNITY_XP_VALUES.ATTEND_EVENT;
+        case CommunityActivityType.DAILY_LOGIN:
+          baseXp = COMMUNITY_XP_VALUES.DAILY_LOGIN;
           break;
-        case 'create_community':
+        // Handle special cases not in the enum
+        case 'EVENT_CREATED' as any:
+          baseXp = COMMUNITY_XP_VALUES.EVENT_CREATED;
+          break;
+        case 'CREATE_COMMUNITY' as any:
           baseXp = COMMUNITY_XP_VALUES.CREATE_COMMUNITY;
           break;
-        case 'join_community':
+        case 'JOIN_COMMUNITY' as any:
           baseXp = COMMUNITY_XP_VALUES.JOIN_COMMUNITY;
           break;
-        case 'invite_member':
-          baseXp = COMMUNITY_XP_VALUES.INVITE_MEMBER;
-          break;
-        case 'featured_post':
+        case 'FEATURED_POST' as any:
           baseXp = COMMUNITY_XP_VALUES.FEATURED_POST;
           break;
         default:
           baseXp = 1; // Default minimal XP
+          console.log(`[XP] Unknown activity type: ${activityType}, awarding default XP`);
       }
       
       // Apply PicklePulse multiplier
