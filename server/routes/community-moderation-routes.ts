@@ -20,7 +20,7 @@ import {
   insertCommunityRoleSchema
 } from '../../shared/schema';
 import { isAuthenticated } from '../auth';
-import { isCommunityModerator } from '../middleware/community-middleware';
+import { isCommunityModerator } from '../middleware/community-middleware.js';
 
 const router = express.Router();
 
