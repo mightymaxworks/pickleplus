@@ -8,10 +8,33 @@
  * @version 1.0.0
  */
 
-import { Request, Response } from "express";
-import { xpService } from "../services/xp-service";
-import { z } from "zod";
-import { isAdmin, isAuthenticated } from "../auth";
+import { Request, Response } from 'express';
+import { z } from 'zod';
+import { db } from '../db';
+import { xpTransactions, xpLevelThresholds, activityMultipliers, XP_SOURCE } from '../../shared/schema/xp';
+import { users } from '../../shared/schema';
+import { isAuthenticated, isAdmin } from '../middleware/auth';
+import { eq, desc, and, sql } from 'drizzle-orm';
+import { xpService } from '../services/xp-service';
+
+// Validation schema for XP awarding
+const awardXpSchema = z.object({
+  userId: z.number(),
+  amount: z.number().positive(),
+  source: z.enum([
+    XP_SOURCE.MATCH, 
+    XP_SOURCE.COMMUNITY, 
+    XP_SOURCE.PROFILE, 
+    XP_SOURCE.ACHIEVEMENT,
+    XP_SOURCE.TOURNAMENT,
+    XP_SOURCE.REDEMPTION,
+    XP_SOURCE.ADMIN
+  ]),
+  sourceType: z.string().optional(),
+  sourceId: z.number().optional(),
+  description: z.string().optional(),
+  metadata: z.record(z.any()).optional()
+});
 
 /**
  * Register XP routes
@@ -23,15 +46,16 @@ export function registerXpRoutes(app: any) {
    */
   app.get("/api/xp/history", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
-      const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
+      const userId = req.user?.id;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const offset = parseInt(req.query.offset as string) || 0;
       
       const history = await xpService.getUserXpHistory(userId, limit, offset);
-      res.json(history);
+      
+      return res.status(200).json(history);
     } catch (error) {
-      console.error("Error fetching XP history:", error);
-      res.status(500).json({ error: "Failed to retrieve XP history" });
+      console.error("Error getting XP history:", error);
+      return res.status(500).json({ message: "Failed to retrieve XP history" });
     }
   });
 
@@ -41,12 +65,14 @@ export function registerXpRoutes(app: any) {
    */
   app.get("/api/xp/level", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
+      const userId = req.user?.id;
+      
       const levelInfo = await xpService.getUserLevelInfo(userId);
-      res.json(levelInfo);
+      
+      return res.status(200).json(levelInfo);
     } catch (error) {
-      console.error("Error fetching level info:", error);
-      res.status(500).json({ error: "Failed to retrieve level information" });
+      console.error("Error getting level info:", error);
+      return res.status(500).json({ message: "Failed to retrieve level information" });
     }
   });
 
@@ -56,14 +82,15 @@ export function registerXpRoutes(app: any) {
    */
   app.get("/api/xp/recommended-activities", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const userId = req.user!.id;
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
+      const userId = req.user?.id;
+      const limit = parseInt(req.query.limit as string) || 5;
       
-      const activities = await xpService.getRecommendedActivities(userId, limit);
-      res.json(activities);
+      const recommendedActivities = await xpService.getRecommendedActivities(userId, limit);
+      
+      return res.status(200).json(recommendedActivities);
     } catch (error) {
-      console.error("Error fetching recommended activities:", error);
-      res.status(500).json({ error: "Failed to retrieve recommended activities" });
+      console.error("Error getting recommended activities:", error);
+      return res.status(500).json({ message: "Failed to retrieve recommended activities" });
     }
   });
 
@@ -73,36 +100,34 @@ export function registerXpRoutes(app: any) {
    */
   app.post("/api/admin/xp/award", isAuthenticated, isAdmin, async (req: Request, res: Response) => {
     try {
-      // Validate request body
-      const schema = z.object({
-        userId: z.number(),
-        amount: z.number().min(1).max(1000),
-        source: z.string(),
-        sourceType: z.string().optional(),
-        description: z.string().optional(),
-        metadata: z.record(z.any()).optional()
-      });
-
-      const validationResult = schema.safeParse(req.body);
-      if (!validationResult.success) {
-        return res.status(400).json({ error: "Invalid request data", details: validationResult.error });
+      const validation = awardXpSchema.safeParse(req.body);
+      
+      if (!validation.success) {
+        return res.status(400).json({ message: "Invalid award XP request", errors: validation.error.errors });
       }
-
-      const data = validationResult.data;
-      const newBalance = await xpService.awardXp({
-        userId: data.userId,
-        amount: data.amount,
-        source: data.source as any,
-        sourceType: data.sourceType,
-        description: data.description,
-        metadata: data.metadata,
-        createdById: req.user!.id
+      
+      const data = validation.data;
+      
+      // Check if user exists
+      const userExists = await db.select({ id: users.id }).from(users).where(eq(users.id, data.userId));
+      
+      if (userExists.length === 0) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Award XP through the service
+      const result = await xpService.awardXp({
+        ...data,
+        createdById: req.user?.id
       });
-
-      res.json({ success: true, newBalance });
+      
+      return res.status(201).json({ 
+        message: `Successfully awarded ${data.amount} XP to user ${data.userId}`,
+        xpAwarded: result
+      });
     } catch (error) {
       console.error("Error awarding XP:", error);
-      res.status(500).json({ error: "Failed to award XP" });
+      return res.status(500).json({ message: "Failed to award XP" });
     }
   });
 
@@ -113,10 +138,13 @@ export function registerXpRoutes(app: any) {
   app.post("/api/admin/xp/recalibrate", isAuthenticated, isAdmin, async (req: Request, res: Response) => {
     try {
       await xpService.runPicklePulseRecalibration();
-      res.json({ success: true, message: "Pickle Pulse™ recalibration completed successfully" });
+      
+      return res.status(200).json({ 
+        message: "Successfully recalibrated Pickle Pulse™ multipliers"
+      });
     } catch (error) {
-      console.error("Error running recalibration:", error);
-      res.status(500).json({ error: "Failed to run Pickle Pulse™ recalibration" });
+      console.error("Error recalibrating Pickle Pulse:", error);
+      return res.status(500).json({ message: "Failed to recalibrate Pickle Pulse™ multipliers" });
     }
   });
 }

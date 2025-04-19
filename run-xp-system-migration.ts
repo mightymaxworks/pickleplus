@@ -1,11 +1,12 @@
 /**
  * PKL-278651-XP-0001-FOUND
- * XP System Foundation Migration Script
+ * XP System Migration
  * 
- * This script creates the necessary database tables for the enhanced XP system:
- * - Updates the xp_transactions table with new fields for the Pickle Pulse™ system
- * - Creates xp_level_thresholds table for defining level progression
- * - Creates activity_multipliers and multiplier_recalibrations tables for Pickle Pulse™
+ * This script creates the database tables for the XP system:
+ * - xp_transactions: Records all XP awards to users
+ * - xp_level_thresholds: Defines XP needed for each level and associated benefits
+ * - activity_multipliers: Stores the current multiplier values for Pickle Pulse™
+ * - multiplier_recalibrations: Logs changes to multipliers for audit purposes
  * 
  * Run with: npx tsx run-xp-system-migration.ts
  * 
@@ -13,35 +14,62 @@
  * @version 1.0.0
  */
 
-import { Pool } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-serverless";
-import * as schema from "./shared/schema";
-import { sql } from "drizzle-orm";
-import { xpLevelThresholds, activityMultipliers, multiplierRecalibrations } from "./shared/schema/xp";
+import { Pool } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
+import { migrate } from 'drizzle-orm/neon-serverless/migrator';
+import * as schema from './shared/schema';
+import { 
+  xpTransactions, 
+  xpLevelThresholds, 
+  activityMultipliers, 
+  multiplierRecalibrations,
+  XP_SOURCE
+} from './shared/schema/xp';
+import dotenv from 'dotenv';
+import { eq } from 'drizzle-orm';
 
-// Connect to the database
+dotenv.config();
+
 if (!process.env.DATABASE_URL) {
-  console.error("DATABASE_URL environment variable is not set");
-  process.exit(1);
+  throw new Error('DATABASE_URL is not defined');
 }
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const db = drizzle(pool, { schema });
 
-async function runMigration() {
-  console.log("Starting XP System Foundation Migration...");
+/**
+ * Main migration function
+ */
+async function migrateXpSystem() {
+  console.log('Starting XP system migration...');
 
   try {
-    // Check if tables already exist to avoid running migrations multiple times
-    const tablesExist = await checkTablesExist();
-    if (tablesExist) {
-      console.log("XP System tables already exist. Migration skipped.");
-      process.exit(0);
-    }
-
-    // Create XP Level Thresholds Table
-    console.log("Creating xp_level_thresholds table...");
-    await db.execute(sql`
+    // Create XP transactions table
+    console.log('Creating XP transactions table...');
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS xp_transactions (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        amount INTEGER NOT NULL,
+        source VARCHAR(50) NOT NULL,
+        source_type VARCHAR(100),
+        source_id INTEGER,
+        description TEXT,
+        running_total INTEGER NOT NULL,
+        is_hidden BOOLEAN DEFAULT FALSE,
+        created_by_id INTEGER REFERENCES users(id),
+        match_id INTEGER,
+        community_id INTEGER,
+        achievement_id INTEGER,
+        tournament_id INTEGER,
+        metadata JSONB,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+    
+    // Create XP level thresholds table
+    console.log('Creating XP level thresholds table...');
+    await db.execute(`
       CREATE TABLE IF NOT EXISTS xp_level_thresholds (
         id SERIAL PRIMARY KEY,
         level INTEGER NOT NULL UNIQUE,
@@ -51,12 +79,12 @@ async function runMigration() {
         badge_url TEXT,
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-      )
+      );
     `);
-
-    // Create Activity Multipliers Table (for Pickle Pulse™)
-    console.log("Creating activity_multipliers table...");
-    await db.execute(sql`
+    
+    // Create activity multipliers table for Pickle Pulse™
+    console.log('Creating activity multipliers table...');
+    await db.execute(`
       CREATE TABLE IF NOT EXISTS activity_multipliers (
         id SERIAL PRIMARY KEY,
         activity_type VARCHAR(100) NOT NULL UNIQUE,
@@ -68,12 +96,12 @@ async function runMigration() {
         last_recalibration TIMESTAMP NOT NULL DEFAULT NOW(),
         base_xp_value INTEGER NOT NULL,
         is_active BOOLEAN DEFAULT TRUE
-      )
+      );
     `);
-
-    // Create Multiplier Recalibrations Table (for Pickle Pulse™ history)
-    console.log("Creating multiplier_recalibrations table...");
-    await db.execute(sql`
+    
+    // Create multiplier recalibrations table for Pickle Pulse™ history
+    console.log('Creating multiplier recalibrations table...');
+    await db.execute(`
       CREATE TABLE IF NOT EXISTS multiplier_recalibrations (
         id SERIAL PRIMARY KEY,
         activity_type VARCHAR(100) NOT NULL,
@@ -82,196 +110,140 @@ async function runMigration() {
         adjustment_reason TEXT,
         timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
         metadata JSONB
-      )
+      );
     `);
 
-    // Modify the existing xp_transactions table to add balance and source_type fields
-    console.log("Updating xp_transactions table...");
-    await db.execute(sql`
-      ALTER TABLE xp_transactions 
-      ADD COLUMN IF NOT EXISTS balance INTEGER,
-      ADD COLUMN IF NOT EXISTS source_type VARCHAR(50),
-      ADD COLUMN IF NOT EXISTS created_by_id INTEGER REFERENCES users(id),
-      ADD COLUMN IF NOT EXISTS is_hidden BOOLEAN DEFAULT FALSE
-    `);
-
-    // Populate XP Level Thresholds with default values
-    console.log("Populating default XP level thresholds...");
-    await populateDefaultXpLevelThresholds();
-
-    // Populate Activity Multipliers with default values
-    console.log("Populating default activity multipliers...");
-    await populateDefaultActivityMultipliers();
-
-    console.log("XP System Foundation Migration completed successfully!");
+    // Populate XP level thresholds with default values
+    console.log('Populating XP level thresholds with default values...');
+    const levelCount = await db.select().from(xpLevelThresholds).execute();
+    
+    if (levelCount.length === 0) {
+      // Define XP thresholds for levels 1-50
+      // Using the formula: xpRequired = 50 * level^2
+      const thresholds = [];
+      
+      for (let level = 1; level <= 50; level++) {
+        const xpRequired = level === 1 ? 0 : Math.floor(50 * Math.pow(level, 2));
+        thresholds.push({
+          level,
+          xpRequired,
+          description: `Level ${level}`,
+          benefits: { perks: level % 5 === 0 ? ["Special Badge", "Profile Highlight"] : [] }
+        });
+      }
+      
+      console.log(`Inserting ${thresholds.length} level thresholds...`);
+      await db.insert(xpLevelThresholds).values(thresholds).execute();
+    } else {
+      console.log(`Found ${levelCount.length} existing level thresholds, skipping insertion.`);
+    }
+    
+    // Populate activity multipliers with default values
+    console.log('Populating activity multipliers with default values...');
+    const multiplierCount = await db.select().from(activityMultipliers).execute();
+    
+    if (multiplierCount.length === 0) {
+      // Define base XP values and target distribution for each activity
+      const baseMultipliers = [
+        // Match-related activities (40% target distribution)
+        { 
+          activityType: 'match_play', 
+          category: 'match', 
+          currentMultiplier: 100, 
+          targetRatio: 40,
+          baseXpValue: 10
+        },
+        { 
+          activityType: 'match_win', 
+          category: 'match', 
+          currentMultiplier: 100, 
+          targetRatio: 35, 
+          baseXpValue: 5
+        },
+        { 
+          activityType: 'first_match_of_day', 
+          category: 'match', 
+          currentMultiplier: 100, 
+          targetRatio: 35, 
+          baseXpValue: 7
+        },
+        
+        // Community activities (35% target distribution)
+        { 
+          activityType: 'create_post', 
+          category: 'community', 
+          currentMultiplier: 100, 
+          targetRatio: 20, 
+          baseXpValue: 2
+        },
+        { 
+          activityType: 'add_comment', 
+          category: 'community', 
+          currentMultiplier: 100, 
+          targetRatio: 25, 
+          baseXpValue: 1
+        },
+        { 
+          activityType: 'create_event', 
+          category: 'community', 
+          currentMultiplier: 100, 
+          targetRatio: 20, 
+          baseXpValue: 8
+        },
+        { 
+          activityType: 'attend_event', 
+          category: 'community', 
+          currentMultiplier: 100, 
+          targetRatio: 35, 
+          baseXpValue: 5
+        },
+        
+        // Profile completion (15% target distribution)
+        { 
+          activityType: 'complete_profile_field', 
+          category: 'profile', 
+          currentMultiplier: 100, 
+          targetRatio: 80, 
+          baseXpValue: 3
+        },
+        { 
+          activityType: 'upload_profile_photo', 
+          category: 'profile', 
+          currentMultiplier: 100, 
+          targetRatio: 90, 
+          baseXpValue: 5
+        },
+        { 
+          activityType: 'verify_external_rating', 
+          category: 'profile', 
+          currentMultiplier: 100, 
+          targetRatio: 40, 
+          baseXpValue: 15
+        },
+        
+        // Achievement related (10% target distribution)
+        { 
+          activityType: 'unlock_achievement', 
+          category: 'achievement', 
+          currentMultiplier: 100, 
+          targetRatio: 90, 
+          baseXpValue: 0 // Varies by achievement, set in achievement table
+        },
+      ];
+      
+      console.log(`Inserting ${baseMultipliers.length} activity multipliers...`);
+      await db.insert(activityMultipliers).values(baseMultipliers).execute();
+    } else {
+      console.log(`Found ${multiplierCount.length} existing activity multipliers, skipping insertion.`);
+    }
+    
+    console.log('XP system migration completed successfully!');
   } catch (error) {
-    console.error("Error running migration:", error);
-    process.exit(1);
+    console.error('Error during XP system migration:', error);
+    throw error;
   } finally {
     await pool.end();
   }
 }
 
-/**
- * Check if the XP System tables already exist
- */
-async function checkTablesExist(): Promise<boolean> {
-  try {
-    const result = await db.execute(sql`
-      SELECT EXISTS (
-        SELECT 1 FROM information_schema.tables 
-        WHERE table_name = 'xp_level_thresholds'
-      ) AS "exists"
-    `);
-    
-    return result[0]?.exists === true;
-  } catch (error) {
-    console.error("Error checking if tables exist:", error);
-    return false;
-  }
-}
-
-/**
- * Populate default XP level thresholds based on our agreed progression
- */
-async function populateDefaultXpLevelThresholds() {
-  const defaultThresholds = [
-    { level: 1, xpRequired: 0, description: "Beginner", benefits: { badge: "beginner" } },
-    { level: 2, xpRequired: 50, description: "Novice", benefits: { badge: "novice" } },
-    { level: 3, xpRequired: 125, description: "Apprentice", benefits: { features: ["community_creation"] } },
-    { level: 4, xpRequired: 250, description: "Enthusiast", benefits: { features: ["avatar_frames"] } },
-    { level: 5, xpRequired: 400, description: "Adept", benefits: { title: "Enthusiast" } },
-    { level: 6, xpRequired: 600, description: "Skilled", benefits: { badge: "skilled" } },
-    { level: 7, xpRequired: 850, description: "Expert", benefits: { badge: "expert" } },
-    { level: 8, xpRequired: 1100, description: "Veteran", benefits: { badge: "veteran" } },
-    { level: 9, xpRequired: 1400, description: "Master", benefits: { badge: "master" } },
-    { level: 10, xpRequired: 1800, description: "Champion", benefits: { features: ["priority_registration"] } },
-    { level: 15, xpRequired: 2000, description: "Elite", benefits: { title: "Veteran", features: ["profile_flair"] } },
-    { level: 20, xpRequired: 3500, description: "Legend", benefits: { features: ["tournament_discounts"] } },
-    { level: 25, xpRequired: 5500, description: "Grandmaster", benefits: { title: "Elite", features: ["animated_effects"] } },
-    { level: 30, xpRequired: 8000, description: "Virtuoso", benefits: { features: ["seasonal_rewards"] } },
-    { level: 40, xpRequired: 15000, description: "Mythic", benefits: { title: "Legend", features: ["premium_effects"] } },
-    { level: 50, xpRequired: 25000, description: "Transcendent", benefits: { title: "Pickle Master", features: ["ultimate_customizations"] } }
-  ];
-
-  for (const threshold of defaultThresholds) {
-    await db.insert(xpLevelThresholds).values({
-      level: threshold.level,
-      xpRequired: threshold.xpRequired,
-      description: threshold.description,
-      benefits: threshold.benefits,
-    }).onConflictDoNothing();
-  }
-}
-
-/**
- * Populate default activity multipliers based on our XP value table
- */
-async function populateDefaultActivityMultipliers() {
-  const defaultActivities = [
-    // Match Play Category
-    { 
-      activityType: "MATCH_COMPLETE", 
-      category: "MATCH", 
-      baseXpValue: 10, 
-      targetRatio: 3500
-    },
-    { 
-      activityType: "MATCH_WIN", 
-      category: "MATCH", 
-      baseXpValue: 5, 
-      targetRatio: 1500
-    },
-    { 
-      activityType: "FIRST_MATCH_OF_DAY", 
-      category: "MATCH", 
-      baseXpValue: 7, 
-      targetRatio: 1000
-    },
-    { 
-      activityType: "WEEKLY_MATCH_STREAK", 
-      category: "MATCH", 
-      baseXpValue: 15, 
-      targetRatio: 500
-    },
-    
-    // Community Engagement Category
-    { 
-      activityType: "CREATE_POST", 
-      category: "COMMUNITY", 
-      baseXpValue: 2, 
-      targetRatio: 700
-    },
-    { 
-      activityType: "COMMENT_ON_POST", 
-      category: "COMMUNITY", 
-      baseXpValue: 1, 
-      targetRatio: 1200
-    },
-    { 
-      activityType: "CREATE_EVENT", 
-      category: "COMMUNITY", 
-      baseXpValue: 8, 
-      targetRatio: 200
-    },
-    { 
-      activityType: "ATTEND_EVENT", 
-      category: "COMMUNITY", 
-      baseXpValue: 5, 
-      targetRatio: 800
-    },
-    { 
-      activityType: "JOIN_COMMUNITY", 
-      category: "COMMUNITY", 
-      baseXpValue: 2, 
-      targetRatio: 300
-    },
-    
-    // Profile Completion Category
-    { 
-      activityType: "COMPLETE_PROFILE", 
-      category: "PROFILE", 
-      baseXpValue: 10, 
-      targetRatio: 300
-    },
-    { 
-      activityType: "ADD_PROFILE_PICTURE", 
-      category: "PROFILE", 
-      baseXpValue: 5, 
-      targetRatio: 150
-    },
-    
-    // Tournament Category
-    { 
-      activityType: "REGISTER_TOURNAMENT", 
-      category: "TOURNAMENT", 
-      baseXpValue: 5, 
-      targetRatio: 300
-    },
-    { 
-      activityType: "COMPLETE_TOURNAMENT", 
-      category: "TOURNAMENT", 
-      baseXpValue: 15, 
-      targetRatio: 250
-    },
-    { 
-      activityType: "TOURNAMENT_WIN", 
-      category: "TOURNAMENT", 
-      baseXpValue: 75, 
-      targetRatio: 50
-    }
-  ];
-
-  for (const activity of defaultActivities) {
-    await db.insert(activityMultipliers).values({
-      activityType: activity.activityType,
-      category: activity.category,
-      baseXpValue: activity.baseXpValue,
-      targetRatio: activity.targetRatio,
-      currentMultiplier: 100, // Start with 1.0x multiplier
-    }).onConflictDoNothing();
-  }
-}
-
-// Run the migration
-runMigration().catch(console.error);
+migrateXpSystem().catch(console.error);

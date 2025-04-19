@@ -9,17 +9,17 @@
  * @version 1.0.0
  */
 
-import { db } from "../db";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { db } from '../db';
 import { 
-  users, 
   xpTransactions, 
-  xpLevelThresholds,
-  activityMultipliers,
+  xpLevelThresholds, 
+  activityMultipliers, 
   multiplierRecalibrations,
   XP_SOURCE,
-  type XpSource
-} from "@shared/schema";
+  type InsertXpTransaction
+} from '../../shared/schema/xp';
+import { users } from '../../shared/schema';
+import { eq, desc, and, gt, sql, count, sum, max } from 'drizzle-orm';
 
 /**
  * Award XP Parameters
@@ -27,12 +27,16 @@ import {
 interface AwardXpParams {
   userId: number;
   amount: number;
-  source: XpSource;
+  source: string;
   sourceType?: string;
   sourceId?: number;
   description?: string;
   metadata?: Record<string, any>;
   createdById?: number;
+  matchId?: number;
+  communityId?: number;
+  achievementId?: number;
+  tournamentId?: number;
 }
 
 /**
@@ -46,52 +50,47 @@ export class XpService {
    */
   async awardXp(params: AwardXpParams): Promise<number> {
     try {
-      // Apply Pickle Pulse™ multiplier if sourceType is provided
-      let adjustedAmount = params.amount;
+      // Get the current running total of XP for the user
+      const userXpResult = await db
+        .select({ xp: sum(xpTransactions.amount) })
+        .from(xpTransactions)
+        .where(eq(xpTransactions.userId, params.userId));
       
-      if (params.sourceType) {
-        adjustedAmount = await this.applyPicklePulseMultiplier(params.amount, params.sourceType);
+      // Calculate new running total
+      const currentXp = userXpResult[0]?.xp || 0;
+      const newRunningTotal = Number(currentXp) + params.amount;
+      
+      // Apply Pickle Pulse™ multiplier if applicable
+      const { sourceType } = params;
+      let finalAmount = params.amount;
+      
+      if (sourceType) {
+        finalAmount = await this.applyPicklePulseMultiplier(params.amount, sourceType);
       }
-
-      // Get user's current XP
-      const user = await db.query.users.findFirst({
-        where: eq(users.id, params.userId),
-        columns: { xp: true }
-      });
-
-      if (!user) {
-        throw new Error(`User with ID ${params.userId} not found`);
-      }
-
-      // Calculate new XP balance
-      const newBalance = (user.xp || 0) + adjustedAmount;
-
-      // Create XP transaction record
-      const [transaction] = await db.insert(xpTransactions).values({
+      
+      // Insert XP transaction
+      const result = await db.insert(xpTransactions).values({
         userId: params.userId,
-        amount: adjustedAmount,
-        balance: newBalance,
+        amount: finalAmount,
         source: params.source,
         sourceType: params.sourceType,
         sourceId: params.sourceId,
-        description: params.description,
-        metadata: params.metadata,
-        createdById: params.createdById
-      }).returning();
-
-      // Update user's XP in the users table
-      await db.update(users)
-        .set({ 
-          xp: newBalance,
-          // Also update the level based on the new XP total
-          level: await this.calculateLevelForXp(newBalance)
-        })
-        .where(eq(users.id, params.userId));
-
-      // Return the new XP balance
-      return newBalance;
+        description: params.description || this.getActivityDescription(params.sourceType || 'unknown'),
+        runningTotal: newRunningTotal,
+        isHidden: false,
+        createdById: params.createdById,
+        matchId: params.matchId,
+        communityId: params.communityId,
+        achievementId: params.achievementId,
+        tournamentId: params.tournamentId,
+        metadata: params.metadata
+      }).returning({ amount: xpTransactions.amount });
+      
+      console.log(`Awarded ${finalAmount} XP to user ${params.userId} for ${params.sourceType || params.source}`);
+      
+      return result[0].amount;
     } catch (error) {
-      console.error("Error awarding XP:", error);
+      console.error('Error awarding XP:', error);
       throw error;
     }
   }
@@ -106,11 +105,9 @@ export class XpService {
       amount: await this.getBaseXpForActivity(activityType),
       source: XP_SOURCE.COMMUNITY,
       sourceType: activityType,
-      metadata: {
-        communityId,
-        ...metadata
-      },
-      description: `Community activity: ${activityType}`
+      sourceId: communityId, 
+      communityId,
+      metadata
     });
   }
 
@@ -125,8 +122,8 @@ export class XpService {
       source: XP_SOURCE.MATCH,
       sourceType: activityType,
       sourceId: matchId,
-      metadata,
-      description: `Match play: ${activityType}`
+      matchId,
+      metadata
     });
   }
 
@@ -140,8 +137,7 @@ export class XpService {
       amount: await this.getBaseXpForActivity(activityType),
       source: XP_SOURCE.PROFILE,
       sourceType: activityType,
-      metadata,
-      description: `Profile completion: ${activityType}`
+      metadata
     });
   }
 
@@ -149,15 +145,25 @@ export class XpService {
    * Get user's XP history
    */
   async getUserXpHistory(userId: number, limit = 10, offset = 0): Promise<typeof xpTransactions.$inferSelect[]> {
-    return db.query.xpTransactions.findMany({
-      where: and(
-        eq(xpTransactions.userId, userId),
-        eq(xpTransactions.isHidden, false)
-      ),
-      orderBy: [desc(xpTransactions.createdAt)],
-      limit,
-      offset
-    });
+    try {
+      const history = await db
+        .select()
+        .from(xpTransactions)
+        .where(
+          and(
+            eq(xpTransactions.userId, userId),
+            eq(xpTransactions.isHidden, false)
+          )
+        )
+        .orderBy(desc(xpTransactions.createdAt))
+        .limit(limit)
+        .offset(offset);
+      
+      return history;
+    } catch (error) {
+      console.error('Error getting XP history:', error);
+      throw error;
+    }
   }
 
   /**
@@ -167,70 +173,91 @@ export class XpService {
     currentLevel: number;
     currentXp: number;
     nextLevelXp: number;
-    xpForCurrentLevel: number;
     progress: number;
+    remainingXp: number;
+    lifetimeXp: number;
+    benefits: any;
   }> {
-    // Get user's current XP and level
-    const user = await db.query.users.findFirst({
-      where: eq(users.id, userId),
-      columns: { xp: true, level: true }
-    });
-
-    if (!user) {
-      throw new Error(`User with ID ${userId} not found`);
+    try {
+      // Get user's total XP
+      const userXpResult = await db
+        .select({ xp: sum(xpTransactions.amount) })
+        .from(xpTransactions)
+        .where(eq(xpTransactions.userId, userId));
+      
+      const lifetimeXp = Number(userXpResult[0]?.xp || 0);
+      
+      // Get level thresholds
+      const levels = await db
+        .select()
+        .from(xpLevelThresholds)
+        .orderBy(xpLevelThresholds.level);
+      
+      // Find current level
+      let currentLevel = 1;
+      let nextLevelXp = 0;
+      let benefits = {};
+      
+      for (let i = 0; i < levels.length; i++) {
+        if (lifetimeXp >= levels[i].xpRequired) {
+          currentLevel = levels[i].level;
+          benefits = levels[i].benefits;
+          
+          // Set next level threshold
+          if (i < levels.length - 1) {
+            nextLevelXp = levels[i + 1].xpRequired;
+          } else {
+            // Max level reached
+            nextLevelXp = levels[i].xpRequired;
+          }
+        } else {
+          // Found the next level
+          nextLevelXp = levels[i].xpRequired;
+          break;
+        }
+      }
+      
+      // Calculate progress to next level
+      const currentLevelData = levels.find(l => l.level === currentLevel);
+      const currentLevelXp = currentLevelData ? currentLevelData.xpRequired : 0;
+      const xpInCurrentLevel = lifetimeXp - currentLevelXp;
+      const xpRequiredForNextLevel = nextLevelXp - currentLevelXp;
+      const progress = Math.min(100, Math.round((xpInCurrentLevel / Math.max(1, xpRequiredForNextLevel)) * 100));
+      const remainingXp = nextLevelXp - lifetimeXp;
+      
+      return {
+        currentLevel,
+        currentXp: lifetimeXp,
+        nextLevelXp,
+        progress,
+        remainingXp,
+        lifetimeXp,
+        benefits
+      };
+    } catch (error) {
+      console.error('Error getting user level info:', error);
+      throw error;
     }
-
-    const currentXp = user.xp || 0;
-    const currentLevel = user.level || 1;
-
-    // Get XP thresholds for current and next level
-    const [currentLevelInfo, nextLevelInfo] = await Promise.all([
-      db.query.xpLevelThresholds.findFirst({
-        where: eq(xpLevelThresholds.level, currentLevel)
-      }),
-      db.query.xpLevelThresholds.findFirst({
-        where: eq(xpLevelThresholds.level, currentLevel + 1)
-      })
-    ]);
-
-    if (!currentLevelInfo) {
-      throw new Error(`Level threshold not found for level ${currentLevel}`);
-    }
-
-    const xpForCurrentLevel = currentLevelInfo.xpRequired;
-    const nextLevelXp = nextLevelInfo ? nextLevelInfo.xpRequired : Infinity;
-    const xpNeededForNextLevel = nextLevelXp - xpForCurrentLevel;
-    const xpProgressInCurrentLevel = currentXp - xpForCurrentLevel;
-    
-    // Calculate progress percentage (0-100)
-    const progress = Math.min(100, Math.floor((xpProgressInCurrentLevel / xpNeededForNextLevel) * 100));
-
-    return {
-      currentLevel,
-      currentXp,
-      nextLevelXp,
-      xpForCurrentLevel,
-      progress: isNaN(progress) ? 100 : progress // If at max level, show 100%
-    };
   }
 
   /**
    * Calculate level based on XP amount
    */
   async calculateLevelForXp(xpAmount: number): Promise<number> {
-    const levels = await db.query.xpLevelThresholds.findMany({
-      orderBy: [desc(xpLevelThresholds.xpRequired)]
-    });
-
-    // Start from highest level and work down
-    for (const level of levels) {
-      if (xpAmount >= level.xpRequired) {
-        return level.level;
-      }
+    try {
+      const levels = await db
+        .select()
+        .from(xpLevelThresholds)
+        .where(
+          xpLevelThresholds.xpRequired <= xpAmount
+        )
+        .orderBy(desc(xpLevelThresholds.level));
+      
+      return levels.length > 0 ? levels[0].level : 1;
+    } catch (error) {
+      console.error('Error calculating level for XP:', error);
+      throw error;
     }
-
-    // Default to level 1 if no thresholds match
-    return 1;
   }
 
   /**
@@ -239,26 +266,77 @@ export class XpService {
    */
   async getRecommendedActivities(userId: number, limit = 5): Promise<{
     activityType: string;
-    category: string;
-    baseXpValue: number;
-    adjustedXpValue: number;
     description: string;
+    xpValue: number;
+    isNew: boolean;
+    category: string;
   }[]> {
-    // Get activities with highest current multipliers
-    const multipliers = await db.query.activityMultipliers.findMany({
-      where: eq(activityMultipliers.isActive, true),
-      orderBy: [desc(activityMultipliers.currentMultiplier)],
-      limit
-    });
-
-    // Map to recommendation format
-    return multipliers.map(m => ({
-      activityType: m.activityType,
-      category: m.category,
-      baseXpValue: m.baseXpValue,
-      adjustedXpValue: Math.floor(m.baseXpValue * (m.currentMultiplier / 100)),
-      description: this.getActivityDescription(m.activityType)
-    }));
+    try {
+      // Get all activity multipliers, ordered by effective value (base XP × multiplier)
+      const activities = await db
+        .select({
+          activityType: activityMultipliers.activityType,
+          category: activityMultipliers.category,
+          baseXpValue: activityMultipliers.baseXpValue,
+          currentMultiplier: activityMultipliers.currentMultiplier
+        })
+        .from(activityMultipliers)
+        .where(eq(activityMultipliers.isActive, true))
+        .orderBy(sql`${activityMultipliers.baseXpValue} * ${activityMultipliers.currentMultiplier} / 100 DESC`);
+      
+      // Get the user's recent activities (last 7 days)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      
+      const recentActivities = await db
+        .select({
+          sourceType: xpTransactions.sourceType,
+          count: count()
+        })
+        .from(xpTransactions)
+        .where(
+          and(
+            eq(xpTransactions.userId, userId),
+            gt(xpTransactions.createdAt, sevenDaysAgo)
+          )
+        )
+        .groupBy(xpTransactions.sourceType);
+      
+      // Convert to a Map for easier lookup
+      const activityCounts = new Map<string, number>();
+      recentActivities.forEach(a => {
+        if (a.sourceType) {
+          activityCounts.set(a.sourceType, Number(a.count));
+        }
+      });
+      
+      // Build recommended activities list
+      // Prioritize activities with high effective value that user hasn't done recently
+      const recommended = activities.map(activity => {
+        const timesCompleted = activityCounts.get(activity.activityType) || 0;
+        const effectiveValue = Math.round((activity.baseXpValue * activity.currentMultiplier) / 100);
+        
+        return {
+          activityType: activity.activityType,
+          description: this.getActivityDescription(activity.activityType),
+          xpValue: effectiveValue,
+          isNew: timesCompleted === 0,
+          category: activity.category,
+          priority: effectiveValue * (timesCompleted === 0 ? 2 : 1) // Boost new activities
+        };
+      });
+      
+      // Sort by priority and take the top 'limit' activities
+      return recommended
+        .sort((a, b) => b.priority - a.priority)
+        .slice(0, limit)
+        .map(({ activityType, description, xpValue, isNew, category }) => ({
+          activityType, description, xpValue, isNew, category
+        }));
+    } catch (error) {
+      console.error('Error getting recommended activities:', error);
+      throw error;
+    }
   }
 
   /**
@@ -267,28 +345,35 @@ export class XpService {
    */
   private async applyPicklePulseMultiplier(baseAmount: number, activityType: string): Promise<number> {
     try {
-      // Get the current multiplier for this activity
-      const activityData = await db.query.activityMultipliers.findFirst({
-        where: and(
-          eq(activityMultipliers.activityType, activityType),
-          eq(activityMultipliers.isActive, true)
-        )
-      });
-
-      if (!activityData) {
-        // If no multiplier exists, return the base amount
+      // Get the current multiplier for this activity type
+      const multiplierResult = await db
+        .select({
+          currentMultiplier: activityMultipliers.currentMultiplier,
+          baseXpValue: activityMultipliers.baseXpValue
+        })
+        .from(activityMultipliers)
+        .where(eq(activityMultipliers.activityType, activityType));
+      
+      if (multiplierResult.length === 0) {
+        // No multiplier defined, use the base amount
+        console.log(`No multiplier found for activity type '${activityType}', using base amount`);
         return baseAmount;
       }
-
-      // Apply the multiplier (stored as integer, 100 = 1.0x)
-      const multiplier = activityData.currentMultiplier / 100;
-      const adjustedAmount = Math.round(baseAmount * multiplier);
-
-      // Return the adjusted amount, minimum 1 XP (never 0 for an activity)
-      return Math.max(1, adjustedAmount);
+      
+      const { currentMultiplier, baseXpValue } = multiplierResult[0];
+      
+      // Use the defined base XP value if available, otherwise use the provided amount
+      const baseXp = baseXpValue || baseAmount;
+      
+      // Apply multiplier (percentage)
+      const adjustedAmount = Math.round((baseXp * currentMultiplier) / 100);
+      
+      console.log(`Applied Pickle Pulse™ multiplier to ${activityType}: ${baseXp} × ${currentMultiplier}% = ${adjustedAmount}`);
+      
+      return adjustedAmount;
     } catch (error) {
-      console.error("Error applying Pickle Pulse multiplier:", error);
-      // In case of error, return the base amount to ensure users still get XP
+      console.error('Error applying Pickle Pulse multiplier:', error);
+      // Fallback to base amount on error
       return baseAmount;
     }
   }
@@ -297,36 +382,50 @@ export class XpService {
    * Get base XP value for an activity
    */
   private async getBaseXpForActivity(activityType: string): Promise<number> {
-    const activity = await db.query.activityMultipliers.findFirst({
-      where: eq(activityMultipliers.activityType, activityType),
-      columns: { baseXpValue: true }
-    });
-
-    return activity?.baseXpValue || 1; // Default to 1 XP if not found
+    try {
+      const result = await db
+        .select({ baseXpValue: activityMultipliers.baseXpValue })
+        .from(activityMultipliers)
+        .where(eq(activityMultipliers.activityType, activityType));
+      
+      if (result.length === 0) {
+        console.warn(`No base XP value defined for activity type '${activityType}', using default of 1`);
+        return 1;
+      }
+      
+      return result[0].baseXpValue;
+    } catch (error) {
+      console.error('Error getting base XP for activity:', error);
+      return 1; // Default fallback value
+    }
   }
 
   /**
    * Get a human-readable description for an activity type
    */
   private getActivityDescription(activityType: string): string {
-    const descriptionMap: Record<string, string> = {
-      MATCH_COMPLETE: "Complete a match",
-      MATCH_WIN: "Win a match",
-      FIRST_MATCH_OF_DAY: "Play your first match of the day",
-      WEEKLY_MATCH_STREAK: "Play matches 3 days in a row",
-      CREATE_POST: "Create a post in a community",
-      COMMENT_ON_POST: "Comment on a community post",
-      CREATE_EVENT: "Create a community event",
-      ATTEND_EVENT: "Attend a community event",
-      JOIN_COMMUNITY: "Join a new community",
-      COMPLETE_PROFILE: "Complete your profile",
-      ADD_PROFILE_PICTURE: "Add a profile picture",
-      REGISTER_TOURNAMENT: "Register for a tournament",
-      COMPLETE_TOURNAMENT: "Complete a tournament",
-      TOURNAMENT_WIN: "Win a tournament"
+    const descriptions: Record<string, string> = {
+      // Match-related
+      'match_play': 'Played a match',
+      'match_win': 'Won a match',
+      'first_match_of_day': 'First match of the day',
+      
+      // Community activities
+      'create_post': 'Created a community post',
+      'add_comment': 'Added a comment',
+      'create_event': 'Created a community event',
+      'attend_event': 'Attended a community event',
+      
+      // Profile completion
+      'complete_profile_field': 'Completed a profile field',
+      'upload_profile_photo': 'Uploaded a profile photo',
+      'verify_external_rating': 'Verified external rating',
+      
+      // Achievement related
+      'unlock_achievement': 'Unlocked an achievement'
     };
-
-    return descriptionMap[activityType] || activityType;
+    
+    return descriptions[activityType] || `Earned XP from ${activityType.replace('_', ' ')}`;
   }
 
   /**
@@ -335,96 +434,93 @@ export class XpService {
    */
   async runPicklePulseRecalibration(): Promise<void> {
     try {
-      console.log("Starting Pickle Pulse™ recalibration job");
-
-      // Get total activity counts for the past week
-      const activityCounts = await db.execute(sql`
-        SELECT 
-          source_type as activity_type, 
-          COUNT(*) as count
-        FROM xp_transactions
-        WHERE created_at > NOW() - INTERVAL '7 days'
-        AND source_type IS NOT NULL
-        GROUP BY source_type
-      `);
-
+      console.log('Starting Pickle Pulse™ recalibration...');
+      
+      // Get all activity types and their target ratios
+      const activityTypes = await db
+        .select()
+        .from(activityMultipliers);
+      
+      // Get the current activity distribution (last 7 days)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      
+      const activityCounts = await db
+        .select({
+          sourceType: xpTransactions.sourceType,
+          count: count(),
+          totalXp: sum(xpTransactions.amount)
+        })
+        .from(xpTransactions)
+        .where(gt(xpTransactions.createdAt, sevenDaysAgo))
+        .groupBy(xpTransactions.sourceType);
+      
       // Calculate total activities
       const totalActivities = activityCounts.reduce((sum, act) => sum + Number(act.count), 0);
-
-      // Get all activity multipliers
-      const allMultipliers = await db.query.activityMultipliers.findMany({
-        where: eq(activityMultipliers.isActive, true)
-      });
-
-      // Update each activity's multiplier
-      for (const multiplier of allMultipliers) {
-        // Find activity count
-        const activityData = activityCounts.find(a => a.activity_type === multiplier.activityType);
-        const activityCount = activityData ? Number(activityData.count) : 0;
+      
+      if (totalActivities === 0) {
+        console.log('No activities found in the last 7 days, skipping recalibration');
+        return;
+      }
+      
+      // Update each activity multiplier
+      for (const activity of activityTypes) {
+        const activityData = activityCounts.find(a => a.sourceType === activity.activityType);
+        const currentCount = activityData ? Number(activityData.count) : 0;
+        const currentRatio = Math.round((currentCount / totalActivities) * 100);
         
-        // Calculate current ratio (as percentage * 100)
-        const currentRatio = totalActivities > 0 
-          ? Math.round((activityCount / totalActivities) * 10000) 
-          : 0;
-          
-        // Calculate weekly trend
-        const weeklyTrend = multiplier.currentRatio > 0 
-          ? Math.round(((currentRatio - multiplier.currentRatio) / multiplier.currentRatio) * 100)
-          : 0;
-          
-        // Calculate adjustment factor based on target vs current ratio
-        // The further from target, the stronger the adjustment
-        const targetRatio = multiplier.targetRatio;
-        let rawAdjustment = 0;
+        // Calculate new multiplier based on target vs. current ratio
+        // If target is higher than current, increase multiplier to encourage activity
+        let newMultiplier = activity.currentMultiplier;
+        const adjustmentFactor = 5; // How aggressively to adjust (5% per recalibration)
         
-        if (currentRatio > 0) {
-          rawAdjustment = ((targetRatio / currentRatio) - 1) * 0.2; // 0.2 is adjustment strength
+        if (activity.targetRatio > currentRatio) {
+          // Increase multiplier to encourage this activity
+          newMultiplier = Math.min(200, activity.currentMultiplier + adjustmentFactor);
+        } else if (activity.targetRatio < currentRatio) {
+          // Decrease multiplier to discourage this activity
+          newMultiplier = Math.max(50, activity.currentMultiplier - adjustmentFactor);
         }
         
-        // Apply dampening: max 5% change per week
-        const cappedAdjustment = Math.max(-0.05, Math.min(0.05, rawAdjustment));
+        // Skip if no change
+        if (newMultiplier === activity.currentMultiplier) {
+          continue;
+        }
         
-        // Calculate new multiplier with adjustment
-        const previousMultiplier = multiplier.currentMultiplier;
-        let newMultiplier = Math.round(previousMultiplier * (1 + cappedAdjustment));
-        
-        // Apply bounds (80% to 150%)
-        newMultiplier = Math.max(80, Math.min(150, newMultiplier));
-        
-        // Record the recalibration history
+        // Log the change in the recalibrations table
         await db.insert(multiplierRecalibrations).values({
-          activityType: multiplier.activityType,
-          previousMultiplier,
+          activityType: activity.activityType,
+          previousMultiplier: activity.currentMultiplier,
           newMultiplier,
-          adjustmentReason: `Target: ${targetRatio}, Current: ${currentRatio}, Trend: ${weeklyTrend}%`,
+          adjustmentReason: `Auto-recalibration: target ${activity.targetRatio}%, current ${currentRatio}%`,
           metadata: {
-            targetRatio,
+            targetRatio: activity.targetRatio,
             currentRatio,
-            weeklyTrend,
-            rawAdjustment,
-            cappedAdjustment,
-            totalActivities
+            totalActivities,
+            activityCount: currentCount
           }
         });
         
-        // Update the multiplier
-        await db.update(activityMultipliers)
+        // Update the activity multiplier
+        await db
+          .update(activityMultipliers)
           .set({
             currentMultiplier: newMultiplier,
-            currentRatio,
-            weeklyTrend,
+            currentRatio: currentRatio,
+            weeklyTrend: currentRatio - activity.currentRatio,
             lastRecalibration: new Date()
           })
-          .where(eq(activityMultipliers.id, multiplier.id));
+          .where(eq(activityMultipliers.id, activity.id));
+        
+        console.log(`Recalibrated ${activity.activityType}: ${activity.currentMultiplier}% → ${newMultiplier}% (target: ${activity.targetRatio}%, current: ${currentRatio}%)`);
       }
       
-      console.log("Pickle Pulse™ recalibration completed successfully");
+      console.log('Pickle Pulse™ recalibration completed successfully');
     } catch (error) {
-      console.error("Error running Pickle Pulse recalibration:", error);
+      console.error('Error running Pickle Pulse recalibration:', error);
       throw error;
     }
   }
 }
 
-// Export singleton instance
 export const xpService = new XpService();
