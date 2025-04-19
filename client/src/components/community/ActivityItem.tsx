@@ -2,49 +2,58 @@
  * PKL-278651-COMM-0022-FEED
  * Activity Item Component
  * 
- * This component renders a single activity item in the activity feed.
+ * This component displays a single activity feed item.
  * 
  * @framework Framework5.1
  * @version 1.0.0
  * @lastModified 2025-04-19
  */
 
-import React, { useState, useEffect } from 'react';
-import { Link } from 'wouter';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { formatDistanceToNow } from 'date-fns';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { 
-  MoreHorizontal, 
-  Calendar, 
-  MessageSquare, 
-  Trophy, 
-  Medal, 
-  Users, 
-  Activity, 
-  Check,
-  Star,
-  TrendingUp,
-  Zap
+  Activity, Users, Calendar, Trophy, MessageCircle,
+  Heart, Star, Award, ThumbsUp, Bell, Check
 } from 'lucide-react';
-import { 
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from '@/components/ui/popover';
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
-import { cn } from '@/lib/utils';
-import { format, formatDistanceToNow } from 'date-fns';
 
-// Activity interface from ActivityFeed component
+// Activity types with icon mapping
+const ACTIVITY_ICONS: Record<string, React.ReactNode> = {
+  'community_join': <Users className="h-4 w-4" />,
+  'community_create': <Users className="h-4 w-4" />,
+  'community_leave': <Users className="h-4 w-4" />,
+  'event_create': <Calendar className="h-4 w-4" />,
+  'event_join': <Calendar className="h-4 w-4" />,
+  'event_leave': <Calendar className="h-4 w-4" />,
+  'achievement': <Trophy className="h-4 w-4" />,
+  'comment': <MessageCircle className="h-4 w-4" />,
+  'like': <Heart className="h-4 w-4" />,
+  'rating': <Star className="h-4 w-4" />,
+  'badge': <Award className="h-4 w-4" />,
+  'xp': <Activity className="h-4 w-4" />,
+  'endorsement': <ThumbsUp className="h-4 w-4" />,
+  'default': <Bell className="h-4 w-4" />
+};
+
+// Activity type colors
+const ACTIVITY_COLORS: Record<string, string> = {
+  'community_join': 'bg-blue-500',
+  'community_create': 'bg-indigo-600',
+  'community_leave': 'bg-gray-500',
+  'event_create': 'bg-emerald-500',
+  'event_join': 'bg-green-500',
+  'event_leave': 'bg-gray-500',
+  'achievement': 'bg-amber-500',
+  'comment': 'bg-purple-500',
+  'like': 'bg-rose-500',
+  'rating': 'bg-yellow-500',
+  'badge': 'bg-orange-500',
+  'xp': 'bg-cyan-500',
+  'endorsement': 'bg-sky-500',
+  'default': 'bg-primary'
+};
+
 interface Activity {
   id: number;
   userId: number;
@@ -65,248 +74,98 @@ interface Activity {
 interface ActivityItemProps {
   activity: Activity;
   onMarkAsRead?: (activityId: number) => void;
-  showActions?: boolean;
-  showCommunityBadge?: boolean;
 }
 
-export const ActivityItem: React.FC<ActivityItemProps> = ({
-  activity,
-  onMarkAsRead,
-  showActions = true,
-  showCommunityBadge = true
-}) => {
-  const [isHighlighted, setIsHighlighted] = useState(activity.isNew || false);
-  
-  // Reset highlight effect after 5 seconds
-  useEffect(() => {
-    if (isHighlighted) {
-      const timer = setTimeout(() => {
-        setIsHighlighted(false);
-      }, 5000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [isHighlighted]);
-  
-  // Format timestamp as relative time (e.g., "2 hours ago")
+const ActivityItem: React.FC<ActivityItemProps> = ({ activity, onMarkAsRead }) => {
+  const [isRead, setIsRead] = useState(activity.isRead ?? false);
   const formattedTime = formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true });
   
-  // Format timestamp for tooltip (full date and time)
-  const fullTimestamp = format(new Date(activity.timestamp), 'PPpp');
-  
-  // Get activity icon based on type
-  const getActivityIcon = () => {
-    switch (activity.type) {
-      case 'match_recorded':
-        return <Activity className="h-4 w-4 text-blue-500" />;
-      case 'comment':
-        return <MessageSquare className="h-4 w-4 text-green-500" />;
-      case 'tournament_joined':
-        return <Trophy className="h-4 w-4 text-amber-500" />;
-      case 'achievement':
-        return <Medal className="h-4 w-4 text-purple-500" />;
-      case 'community_joined':
-        return <Users className="h-4 w-4 text-indigo-500" />;
-      case 'level_up':
-        return <TrendingUp className="h-4 w-4 text-red-500" />;
-      case 'xp_earned':
-        return <Zap className="h-4 w-4 text-orange-500" />;
-      case 'featured':
-        return <Star className="h-4 w-4 text-yellow-500" />;
-      case 'event':
-        return <Calendar className="h-4 w-4 text-teal-500" />;
-      default:
-        return <Check className="h-4 w-4 text-gray-500" />;
-    }
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part.charAt(0))
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
   };
   
-  // Get link based on activity type and related entity
-  const getActivityLink = () => {
-    const { type, relatedEntityId, relatedEntityType, communityId } = activity;
-    
-    switch (type) {
-      case 'match_recorded':
-        return `/matches?id=${relatedEntityId}`;
-      case 'comment':
-        if (relatedEntityType === 'community') {
-          return `/communities/${relatedEntityId}`;
-        }
-        return '#';
-      case 'tournament_joined':
-        return `/tournaments/${relatedEntityId}`;
-      case 'community_joined':
-        return `/communities/${communityId || relatedEntityId}`;
-      case 'event':
-        if (communityId && relatedEntityId) {
-          return `/communities/${communityId}/events/${relatedEntityId}`;
-        }
-        return `/events/${relatedEntityId}`;
-      default:
-        return '#';
-    }
+  const getIcon = () => {
+    return ACTIVITY_ICONS[activity.type] || ACTIVITY_ICONS.default;
   };
   
-  // Get community name from ID (simplified for now)
-  const getCommunityName = (communityId: number) => {
-    const communityMap: Record<number, string> = {
-      1: 'Pickle+ Giveaway Group',
-      2: 'Seattle Pickleball Club',
-      3: 'Tournament Players',
-      4: 'Coaching Corner',
-      5: 'Beginners Bootcamp'
-    };
-    
-    return communityMap[communityId] || `Community #${communityId}`;
+  const getIconBackgroundColor = () => {
+    return ACTIVITY_COLORS[activity.type] || ACTIVITY_COLORS.default;
   };
   
-  // Handle clicking on activity item (mark as read if not already)
-  const handleActivityClick = () => {
-    if (!activity.isRead && onMarkAsRead) {
+  const handleMarkAsRead = () => {
+    if (!isRead && onMarkAsRead) {
       onMarkAsRead(activity.id);
+      setIsRead(true);
     }
   };
+  
+  const displayName = activity.displayName || activity.username;
+  const initials = getInitials(displayName);
   
   return (
-    <Card
-      className={cn(
-        "border transition-all duration-500 overflow-hidden",
-        isHighlighted ? "bg-primary/5 border-primary/20" : "bg-card",
-        !activity.isRead ? "border-l-4 border-l-primary" : ""
-      )}
-      onClick={handleActivityClick}
+    <div 
+      className={`
+        relative flex items-start space-x-3 rounded-lg border p-3 transition-all duration-300
+        ${!isRead ? 'bg-muted/40 dark:bg-muted/10' : 'bg-transparent'}
+        ${activity.isNew ? 'animate-highlight-fade' : ''}
+      `}
+      onClick={handleMarkAsRead}
     >
-      <CardContent className="p-4">
-        <div className="flex">
-          {/* User avatar */}
-          <Link href={`/profile/${activity.userId}`} className="mr-3 flex-shrink-0">
-            <Avatar className="h-10 w-10">
-              {activity.avatar ? (
-                <AvatarImage src={activity.avatar} alt={activity.displayName || activity.username} />
-              ) : (
-                <AvatarFallback>
-                  {(activity.displayName || activity.username).substring(0, 2).toUpperCase()}
-                </AvatarFallback>
-              )}
-            </Avatar>
-          </Link>
-          
-          {/* Activity content */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 mb-1">
-              {/* Author name */}
-              <Link 
-                href={`/profile/${activity.userId}`}
-                className="font-medium text-primary hover:underline truncate"
-              >
-                {activity.displayName || activity.username}
-              </Link>
-              
-              {/* Activity type badge */}
-              <div className="flex items-center gap-1">
-                <span className="text-muted-foreground">·</span>
-                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                  {getActivityIcon()}
-                  <span className="capitalize">{activity.type.replace('_', ' ')}</span>
-                </span>
-              </div>
-              
-              {/* Community badge if available */}
-              {showCommunityBadge && activity.communityId && (
-                <>
-                  <span className="text-muted-foreground">·</span>
-                  <Link href={`/communities/${activity.communityId}`}>
-                    <Badge variant="outline" className="text-xs px-1.5 py-0">
-                      {getCommunityName(activity.communityId)}
-                    </Badge>
-                  </Link>
-                </>
-              )}
-            </div>
-            
-            {/* Activity content */}
-            <div className="text-sm text-foreground mb-2">
-              {activity.content}
-            </div>
-            
-            {/* Activity metadata */}
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              {/* Timestamp with tooltip */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <span className="cursor-help">{formattedTime}</span>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-2 text-xs">
-                  {fullTimestamp}
-                </PopoverContent>
-              </Popover>
-              
-              {/* Action buttons */}
-              {showActions && (
-                <div className="flex items-center gap-2">
-                  {onMarkAsRead && !activity.isRead && (
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-6 w-6" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onMarkAsRead(activity.id);
-                      }}
-                    >
-                      <Check className="h-3.5 w-3.5" />
-                    </Button>
-                  )}
-                  
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-6 w-6"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <MoreHorizontal className="h-3.5 w-3.5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-40">
-                      <DropdownMenuLabel>Options</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          window.open(getActivityLink(), '_blank');
-                        }}
-                      >
-                        View Details
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // Copy to clipboard functionality
-                          navigator.clipboard.writeText(activity.content);
-                        }}
-                      >
-                        Copy Text
-                      </DropdownMenuItem>
-                      {activity.communityId && (
-                        <DropdownMenuItem 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            window.location.href = `/communities/${activity.communityId}`;
-                          }}
-                        >
-                          View Community
-                        </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              )}
-            </div>
+      {/* User Avatar */}
+      <Avatar className="h-10 w-10">
+        <AvatarImage src={activity.avatar || ''} alt={displayName} />
+        <AvatarFallback>{initials}</AvatarFallback>
+      </Avatar>
+      
+      {/* Activity Content */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium">
+            {displayName}
+          </p>
+          <div className="flex items-center">
+            {!isRead && (
+              <span className="mr-2 h-2 w-2 rounded-full bg-primary" />
+            )}
+            <time dateTime={activity.timestamp} className="text-xs text-muted-foreground">
+              {formattedTime}
+            </time>
           </div>
         </div>
-      </CardContent>
-    </Card>
+        
+        <p className="mt-1 text-sm text-foreground">{activity.content}</p>
+        
+        {/* Activity Metadata and Actions */}
+        <div className="mt-2 flex items-center space-x-2">
+          <Badge 
+            variant="outline" 
+            className={`flex items-center space-x-1 px-2 py-0.5 ${getIconBackgroundColor()} text-white`}
+          >
+            {getIcon()}
+            <span>{activity.type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</span>
+          </Badge>
+          
+          {!isRead && onMarkAsRead && (
+            <button
+              type="button"
+              className="ml-auto text-xs text-muted-foreground hover:text-foreground flex items-center"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleMarkAsRead();
+              }}
+            >
+              <Check className="h-3 w-3 mr-1" />
+              Mark as read
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 

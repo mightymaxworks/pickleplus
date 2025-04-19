@@ -40,19 +40,21 @@ export default function ActivityFeedMockup() {
             <CardContent>
               {/* Activity Feed Tabs */}
               <Tabs defaultValue="all" className="mb-4">
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="all">All</TabsTrigger>
-                  <TabsTrigger value="community">
-                    <Users className="h-4 w-4 mr-2" />
-                    Communities
+                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+                  <TabsTrigger value="all" className="px-2 sm:px-4">All</TabsTrigger>
+                  <TabsTrigger value="community" className="px-2 sm:px-4">
+                    <Users className="h-4 w-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">Communities</span>
+                    <span className="sm:hidden">Groups</span>
                   </TabsTrigger>
-                  <TabsTrigger value="events">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Events
+                  <TabsTrigger value="events" className="px-2 sm:px-4">
+                    <Calendar className="h-4 w-4 mr-1 sm:mr-2" />
+                    <span>Events</span>
                   </TabsTrigger>
-                  <TabsTrigger value="achievements">
-                    <Trophy className="h-4 w-4 mr-2" />
-                    Achievements
+                  <TabsTrigger value="achievements" className="px-2 sm:px-4">
+                    <Trophy className="h-4 w-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">Achievements</span>
+                    <span className="sm:hidden">Rewards</span>
                   </TabsTrigger>
                 </TabsList>
                 
@@ -102,34 +104,75 @@ export default function ActivityFeedMockup() {
         
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Quick Stats */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-medium">Activity Stats</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center pb-2 border-b">
-                  <span className="text-muted-foreground">Communities joined</span>
-                  <span className="font-medium">5</span>
+          {/* Mobile-friendly stats row (visible only on small screens) */}
+          <div className="md:hidden grid grid-cols-2 gap-4">
+            <Card>
+              <CardHeader className="py-3 px-4">
+                <CardTitle className="text-base font-medium">Activity Stats</CardTitle>
+              </CardHeader>
+              <CardContent className="px-4 pb-4 pt-0">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Communities</span>
+                    <span className="font-medium">5</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Events</span>
+                    <span className="font-medium">3</span>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center pb-2 border-b">
-                  <span className="text-muted-foreground">Recent events</span>
-                  <span className="font-medium">3</span>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="py-3 px-4">
+                <CardTitle className="text-base font-medium">Updates</CardTitle>
+              </CardHeader>
+              <CardContent className="px-4 pb-4 pt-0">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Achievements</span>
+                    <span className="font-medium">2</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Notifications</span>
+                    <span className="font-medium">7</span>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center pb-2 border-b">
-                  <span className="text-muted-foreground">New achievements</span>
-                  <span className="font-medium">2</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Unread notifications</span>
-                  <span className="font-medium">7</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
           
-          {/* Trending Communities */}
+          {/* Desktop stats card (hidden on mobile) */}
+          <div className="hidden md:block">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-medium">Activity Stats</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center pb-2 border-b">
+                    <span className="text-muted-foreground">Communities joined</span>
+                    <span className="font-medium">5</span>
+                  </div>
+                  <div className="flex justify-between items-center pb-2 border-b">
+                    <span className="text-muted-foreground">Recent events</span>
+                    <span className="font-medium">3</span>
+                  </div>
+                  <div className="flex justify-between items-center pb-2 border-b">
+                    <span className="text-muted-foreground">New achievements</span>
+                    <span className="font-medium">2</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Unread notifications</span>
+                    <span className="font-medium">7</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Trending Communities - same for all screen sizes */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-lg font-medium">Trending Communities</CardTitle>
