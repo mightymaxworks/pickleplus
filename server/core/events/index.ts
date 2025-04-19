@@ -13,8 +13,8 @@
 export * from './server-event-bus';
 
 // For backward compatibility
-import * as eventBusModule from './event-bus';
-import * as serverEventBusModule from './eventBus';
+// Re-exporting the original EventBus class
+export { EventBus, EventHandler as EventBusHandler } from './event-bus';
 
-export const EventBus = eventBusModule;
-export const serverEventBus = serverEventBusModule;
+// Re-exporting the serverEventBus
+export { serverEventBus, ServerEvents as LegacyServerEvents } from './eventBus';

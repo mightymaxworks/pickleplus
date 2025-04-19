@@ -23,7 +23,7 @@ import {
   CommunityEngagementMetrics,
   CommunityEngagementLevel
 } from "@shared/schema/community-engagement";
-import { ServerEventBus, ServerEvents } from "../../core/events/server-event-bus";
+import { ServerEventBus, ServerEvents } from "../../core/events";
 
 /**
  * Community Engagement Storage Interface

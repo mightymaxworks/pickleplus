@@ -115,9 +115,8 @@ export class CommunityXpIntegration {
       );
     });
     
-    // Use constant string since the event type may not be in the enum yet
-    // This ensures compatibility even if the ServerEvents enum doesn't have the exact event
-    ServerEventBus.subscribe('community:event:attended' as any, async (data: {
+    // Use the event from ServerEvents enum now that it's been added
+    ServerEventBus.subscribe(ServerEvents.COMMUNITY_EVENT_ATTENDED, async (data: {
       userId: number;
       communityId: number;
       eventId: number;

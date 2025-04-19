@@ -57,6 +57,7 @@ export enum ServerEvents {
   COMMUNITY_EVENT_DELETED = 'community:event:deleted',
   COMMUNITY_EVENT_JOINED = 'community:event:joined',
   COMMUNITY_EVENT_LEFT = 'community:event:left',
+  COMMUNITY_EVENT_ATTENDED = 'community:event:attended',
   COMMUNITY_ACTIVITY_CREATED = 'community:activity:created',
   
   // Redemption events
