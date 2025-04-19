@@ -95,14 +95,14 @@ export function CommunityHeader({
   const isMember = community.isMember || userRole !== null;
   
   // NOTE: Force showing the manage button if user is creator, regardless of role
-  const isCreator = user?.id === community.createdByUserId;
+  const isCreator = user?.id === community.creatorId;
   // Force hasManagePermissions to true if user is creator
   const hasManagePermissions = isAdmin || isModerator || 
                               userRole === CommunityMemberRole.ADMIN || 
                               userRole === CommunityMemberRole.MODERATOR || 
                               isCreator;
   
-  console.log("Is creator calculated:", isCreator, "Current user ID:", user?.id, "Creator ID:", community.createdByUserId, "hasManagePermissions:", hasManagePermissions);
+  console.log("Is creator calculated:", isCreator, "Current user ID:", user?.id, "Creator ID:", community.creatorId, "hasManagePermissions:", hasManagePermissions);
   
   // Format dates
   const formattedCreatedAt = community.createdAt 

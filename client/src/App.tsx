@@ -58,6 +58,7 @@ import CommunitiesPage from './pages/communities'
 import CommunityDetailPage from './pages/communities/[id]'
 import CreateCommunityPage from './pages/communities/create'
 import CommunityEventDetailPage from './pages/CommunityEventDetailPage' // PKL-278651-COMM-0016-RSVP
+import CommunityDiscoveryPage from './pages/community-discover' // PKL-278651-COMM-0022-DISC
 
 // Import icons test page (PKL-278651-COMM-0007-ICONS)
 import IconsPage from './pages/icons'
@@ -370,6 +371,11 @@ export default function App() {
                   </Route>
                   <Route path="/communities">
                     {(params) => <ProtectedRoute component={CommunitiesPage} path="/communities" />}
+                  </Route>
+                  
+                  {/* PKL-278651-COMM-0022-DISC - Enhanced Community Discovery */}
+                  <Route path="/communities/discover">
+                    {(params) => <ProtectedRoute component={CommunityDiscoveryPage} path="/communities/discover" />}
                   </Route>
                   
                   {/* PKL-278651-COMM-0011-OSI - NodeBB Community Hub v2 */}

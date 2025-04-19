@@ -214,6 +214,12 @@ export default function CommunitiesPage() {
       return;
     }
     
+    // PKL-278651-COMM-0022-DISC - Link to Enhanced Community Discovery
+    if (tab === 'discover') {
+      navigate('/communities/discover');
+      return;
+    }
+    
     setActiveTab(tab);
     // No confetti effect anymore
   };

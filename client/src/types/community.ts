@@ -1,272 +1,22 @@
 /**
- * PKL-278651-COMM-0013-SDK
- * Enhanced Client-side Community Types
+ * PKL-278651-COMM-0022-DISC
+ * Community Types
  * 
- * This file provides TypeScript types for community-related data structures
- * to be used on the client side without importing server-specific dependencies.
- * 
- * @version 3.0.0
- * @lastModified 2025-04-17
- * @changes
- * - Added better documentation for each interface
- * - Enhanced type safety with stricter definitions
- * - Added support for advanced filtering and sorting
- * - Added status types for community events and members
- * @preserves
- * - Core data model compatibility
- * - UI display properties
+ * This file defines the types used for the community feature.
  */
 
 /**
- * @enum
- * Community Member Role Types
- * Defines the possible roles a user can have in a community
+ * Enum for community member roles
  */
 export enum CommunityMemberRole {
-  ADMIN = 'admin',
+  MEMBER = 'member',
   MODERATOR = 'moderator',
-  MEMBER = 'member'
+  ADMIN = 'admin',
+  OWNER = 'owner'
 }
 
 /**
- * Member Filter Options
- * Used for filtering community members list
- */
-export interface MemberFilterOptions {
-  query?: string;
-  role?: CommunityMemberRole;
-  sortBy?: 'newest' | 'oldest' | 'alphabetical';
-  isActive?: boolean;
-  joinedAfter?: Date;
-  joinedBefore?: Date;
-}
-
-/**
- * @enum
- * Community Event Status Types
- * Defines the possible statuses for community events
- */
-export enum CommunityEventStatus {
-  UPCOMING = 'upcoming',
-  ONGOING = 'ongoing',
-  COMPLETED = 'completed',
-  CANCELLED = 'cancelled'
-}
-
-/**
- * @enum
- * Community Join Request Status Types
- * Defines the possible statuses for join requests
- */
-export enum CommunityJoinRequestStatus {
-  PENDING = 'pending',
-  APPROVED = 'approved',
-  REJECTED = 'rejected'
-}
-
-/**
- * @enum
- * Event Attendee Status Types
- * Defines the possible statuses for event attendance
- */
-export enum EventAttendeeStatus {
-  REGISTERED = 'registered',
-  WAITLISTED = 'waitlisted',
-  ATTENDED = 'attended', 
-  CANCELLED = 'cancelled'
-}
-
-/**
- * Community Filtering Options
- * Used for advanced filtering of communities
- */
-export interface CommunityFilterOptions {
-  query?: string;
-  skillLevel?: string;
-  location?: string;
-  tags?: string[];
-  memberCountMin?: number;
-  memberCountMax?: number;
-  hasEvents?: boolean;
-  createdAfter?: Date;
-  createdBefore?: Date;
-  isMember?: boolean;
-}
-
-/**
- * Community Sorting Options
- * Used for sorting community lists
- */
-export interface CommunitySortOptions {
-  sortBy: 'name' | 'memberCount' | 'eventCount' | 'postCount' | 'createdAt';
-  sortOrder: 'asc' | 'desc';
-}
-
-/**
- * Pagination Options
- * Used for paginating API results
- */
-export interface PaginationOptions {
-  limit?: number;
-  offset?: number;
-  page?: number;
-  pageSize?: number;
-}
-
-/**
- * Community Model
- * Represents a community entity in the Pickle+ platform
- */
-export interface Community {
-  id: number;
-  name: string;
-  description: string | null;
-  location: string | null;
-  skillLevel: string | null;
-  avatarUrl: string | null;
-  bannerUrl: string | null;
-  bannerPattern: string | null;
-  isPrivate: boolean | null;
-  requiresApproval: boolean | null;
-  isDefault: boolean | null;
-  tags: string | null;
-  memberCount: number;
-  eventCount: number;
-  postCount: number;
-  createdByUserId: number;
-  rules: string | null;
-  guidelines: string | null;
-  createdAt: Date | null;
-  updatedAt: Date | null;
-  // Extended properties for UI display
-  isMember?: boolean;
-  featuredTag?: string;
-  skill?: string;
-  rating?: number;
-  events?: number;
-  founded?: string;
-}
-
-// For creating communities
-export interface InsertCommunity {
-  name: string;
-  description?: string | null;
-  location?: string | null;
-  skillLevel?: string | null;
-  avatarUrl?: string | null;
-  bannerUrl?: string | null;
-  bannerPattern?: string | null;
-  isPrivate?: boolean;
-  requiresApproval?: boolean;
-  isDefault?: boolean;
-  tags?: string | null;
-  rules?: string | null;
-  guidelines?: string | null;
-  createdByUserId: number;
-}
-
-/**
- * Community Member Model
- * Represents a member of a community with their role and status
- */
-export interface CommunityMember {
-  id: number;
-  userId: number;
-  communityId: number;
-  role: CommunityMemberRole;
-  joinedAt: string;  // Changed to string for safer date handling
-  isActive: boolean;
-  lastActive: string | null;  // Changed to string for safer date handling
-  createdAt: string | null;  // Changed to string for safer date handling
-  updatedAt: string | null;  // Changed to string for safer date handling
-  
-  // Joined data
-  user?: {
-    displayName: string;
-    username: string;
-    avatarUrl: string | null;
-    email?: string;
-    bio?: string | null;
-    skillLevel?: string | null;
-  };
-  
-  // Extended properties
-  isCreator?: boolean;  // Flag to identify community creator
-  activeDays?: number;
-  contribution?: {
-    posts: number;
-    comments: number;
-    events: number;
-  };
-}
-
-/**
- * Community Member Insert Model
- * Used when adding a new member to a community
- */
-export interface InsertCommunityMember {
-  userId: number;
-  communityId: number;
-  role?: CommunityMemberRole;
-  isActive?: boolean;
-}
-
-/**
- * Media Type
- * Defines the structure for media attachments in posts
- */
-export interface PostMedia {
-  url: string;
-  type: 'image' | 'video' | 'document';
-  thumbnailUrl?: string;
-  name?: string;
-  size?: number;
-  width?: number;
-  height?: number;
-}
-
-/**
- * Community Post Model
- * Represents a post in a community
- */
-export interface CommunityPost {
-  id: number;
-  userId: number;
-  communityId: number;
-  content: string;
-  mediaUrls: PostMedia[] | null;
-  likes: number;
-  comments: number;
-  isPinned: boolean;
-  isAnnouncement: boolean;
-  createdAt: Date | null;
-  updatedAt: Date | null;
-  
-  // Joined data
-  user?: {
-    displayName: string;
-    username: string;
-    avatarUrl: string | null;
-  };
-  liked?: boolean;
-}
-
-/**
- * Community Post Insert Model
- * Used when creating a new post in a community
- */
-export interface InsertCommunityPost {
-  userId: number;
-  communityId: number;
-  content: string;
-  mediaUrls?: PostMedia[];
-  isPinned?: boolean;
-  isAnnouncement?: boolean;
-}
-
-/**
- * Community Event Type
- * Defines the type of community event
+ * Enum for community event types
  */
 export enum CommunityEventType {
   MATCH_PLAY = 'match_play',
@@ -278,192 +28,126 @@ export enum CommunityEventType {
 }
 
 /**
- * Community Event Model
- * Represents an event in a community
+ * Enum for community event status
  */
+export enum CommunityEventStatus {
+  UPCOMING = 'upcoming',
+  ONGOING = 'ongoing',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled'
+}
+
+/**
+ * Enum for event attendee status
+ */
+export enum EventAttendeeStatus {
+  REGISTERED = 'registered',
+  WAITLISTED = 'waitlisted',
+  ATTENDED = 'attended',
+  CANCELLED = 'cancelled'
+}
+
+/**
+ * Enum for community join request status
+ */
+export enum CommunityJoinRequestStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected'
+}
+
+export interface Community {
+  id: number;
+  name: string;
+  description?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  creatorId: number;
+  isPrivate: boolean;
+  requiresApproval: boolean;
+  isMember?: boolean;
+  isCreator?: boolean;
+  isDefault?: boolean;
+  avatarUrl?: string;
+  bannerUrl?: string;
+  location?: string;
+  tags?: string;
+  skillLevel?: string;
+  memberCount: number;
+  postCount: number;
+  eventCount: number;
+  featuredTag?: string;
+  themeColor?: string;
+}
+
+export interface CommunityPost {
+  id: number;
+  communityId: number;
+  userId: number;
+  title: string;
+  content: string;
+  createdAt: Date;
+  updatedAt: Date;
+  likesCount: number;
+  commentsCount: number;
+  isLikedByUser?: boolean;
+  authorName?: string;
+  authorAvatar?: string;
+}
+
 export interface CommunityEvent {
   id: number;
   communityId: number;
-  createdByUserId: number;
+  creatorId: number;
   title: string;
-  description: string | null;
-  eventDate: Date;
-  endDate: Date | null;
-  location: string | null;
-  isVirtual: boolean;
-  virtualMeetingUrl: string | null;
-  maxAttendees: number | null;
+  description: string;
+  location: string;
+  startTime: Date;
+  endTime: Date;
+  capacity: number;
   currentAttendees: number;
-  isPrivate: boolean;
-  isRecurring: boolean;
-  recurringPattern: string | null;
-  repeatFrequency: string | null;
-  status: CommunityEventStatus;
+  createdAt: Date;
+  updatedAt: Date;
+  isAttending?: boolean;
+  creatorName?: string;
+  creatorAvatar?: string;
   eventType: CommunityEventType;
-  minSkillLevel: string | null;  // Changed from skillLevelRequired
-  maxSkillLevel: string | null;  // Added from server schema
-  imageUrl: string | null;  // Changed from featuredImage
-  registrationDeadline: Date | null;
-  createdAt: Date | null;
-  updatedAt: Date | null;
-  
-  // Joined data
-  createdBy?: {
-    displayName: string;
-    username: string;
-    avatarUrl?: string | null;
-  };
-  isRegistered?: boolean;
+  status: CommunityEventStatus;
   registrationStatus?: EventAttendeeStatus;
+  skillLevel?: string;
+  requiresApproval?: boolean;
 }
 
-/**
- * Community Event Insert Model
- * Used when creating a new event in a community
- */
-export interface InsertCommunityEvent {
+export interface CommunityMember {
+  id: number;
   communityId: number;
-  createdByUserId: number;
-  title: string;
-  description?: string | null;
-  eventDate: Date;
-  endDate?: Date | null;
-  location?: string | null;
-  isVirtual?: boolean;
-  virtualMeetingUrl?: string | null;
-  maxAttendees?: number | null;
-  isPrivate?: boolean;
-  isRecurring?: boolean;
-  recurringPattern?: string | null;
-  repeatFrequency?: string | null;
-  status?: CommunityEventStatus;
-  eventType?: CommunityEventType;
-  minSkillLevel?: string | null; // Changed from skillLevelRequired to match server schema
-  maxSkillLevel?: string | null; // Added from server schema
-  imageUrl?: string | null; // Changed from featuredImage to match server schema
-  registrationDeadline?: Date | null;
-}
-
-/**
- * Community Event Attendee Model
- * Represents an attendee for a community event
- */
-export interface CommunityEventAttendee {
-  id: number;
-  eventId: number;
   userId: number;
-  status: EventAttendeeStatus;
-  registeredAt: Date | null;
-  checkedInAt: Date | null;
-  notes: string | null;
-  createdAt: Date | null;
-  updatedAt: Date | null;
-  
-  // Joined data
-  user?: {
-    displayName: string;
-    username: string;
-    avatarUrl: string | null;
-    skillLevel?: string | null;
-    bio?: string | null;
-  };
-  
-  // Extended properties for UI
-  playerRating?: number;
-  attendanceHistory?: {
-    total: number;
-    noShows: number;
-    lastAttended?: Date | null;
-  };
+  role: string;
+  joinedAt: Date;
+  username?: string;
+  firstName?: string;
+  lastName?: string;
+  avatarUrl?: string;
+  passportId?: string;
+  skillLevel?: string;
 }
 
-/**
- * Community Event Attendee Insert Model
- * Used when registering a user for an event
- */
-export interface InsertCommunityEventAttendee {
-  eventId: number;
-  userId: number;
-  status?: EventAttendeeStatus;
-  notes?: string | null;
-}
-
-/**
- * Community Post Comment Model
- * Represents a comment on a post
- */
-export interface CommunityPostComment {
-  id: number;
-  postId: number;
-  userId: number;
-  content: string;
-  likes: number;
-  parentCommentId: number | null;
-  createdAt: Date | null;
-  updatedAt: Date | null;
-  mediaUrls?: PostMedia[] | null;
-  isEdited?: boolean;
-  isPinned?: boolean;
-  
-  // Joined data
-  user?: {
-    displayName: string;
-    username: string;
-    avatarUrl: string | null;
-    skillLevel?: string | null;
-    isVerified?: boolean;
-  };
-  liked?: boolean;
-  replies?: CommunityPostComment[];
-  
-  // Extended properties
-  reactionCounts?: Record<string, number>; // For emoji reactions
-}
-
-/**
- * Community Post Comment Insert Model
- * Used when creating a new comment on a post
- */
-export interface InsertCommunityPostComment {
-  postId: number;
-  userId: number;
-  content: string;
-  parentCommentId?: number | null;
-  mediaUrls?: PostMedia[];
-}
-
-/**
- * Community Join Request Model
- * Represents a request to join a community
- */
 export interface CommunityJoinRequest {
   id: number;
   communityId: number;
   userId: number;
-  message: string | null;
+  message?: string;
   status: CommunityJoinRequestStatus;
   reviewedByUserId: number | null;
   reviewedAt: Date | null;
-  createdAt: Date | null;
+  createdAt: Date;
   updatedAt: Date | null;
-  
-  // Joined data
   user?: {
-    displayName: string;
-    username: string;
-    avatarUrl: string | null;
-    email?: string;
-    bio?: string | null;
-    skillLevel?: string | null;
-    playerRating?: number;
-  };
-  reviewedBy?: {
-    displayName: string;
-    username: string;
+    username?: string;
+    displayName?: string;
     avatarUrl?: string | null;
-  };
-  community?: {
-    name: string;
-    memberCount: number;
+    email?: string;
+    skillLevel?: string;
+    playerRating?: number;
   };
 }
