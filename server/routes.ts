@@ -164,9 +164,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Initialize Community Hub Module (PKL-278651-COMM-0006-HUB)
   initializeCommunityModule({ app });
   
-  // Register activity feed routes (PKL-278651-COMM-0022-FEED)
-  console.log("[API] Registering activity feed routes (PKL-278651-COMM-0022-FEED)");
-  app.use("/api/activities", activityFeedRoutes);
+  // Note: Activity feed routes are now registered through the community module (PKL-278651-COMM-0022-FEED)
   
   // Initialize XP System Module (PKL-278651-XP-0001-FOUND)
   initializeXpModule(app);

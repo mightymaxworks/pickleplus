@@ -10,14 +10,18 @@
  */
 
 import { activityFeedRoutes } from './activity-routes';
+import { communityRoutes } from './community-routes';
 import { Router } from 'express';
 import { initializeCommunityModule } from './initialize';
 
 // Create the community router
 const communityRouter = Router();
 
-// Mount activity routes
-communityRouter.use('/', activityFeedRoutes);
+// Mount community routes
+communityRouter.use('/', communityRoutes);
+
+// Mount activity routes 
+communityRouter.use('/activities', activityFeedRoutes);
 
 // Export the community router and initialization function
 export { communityRouter, initializeCommunityModule };
