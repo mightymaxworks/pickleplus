@@ -1,11 +1,12 @@
 /**
- * PKL-278651-XP-0001-FOUND
+ * PKL-278651-XP-0002-UI
  * XP System Schema Definition
  * 
  * This file defines the schema for XP system tables and enums.
+ * Updated with ultra-lean XP values and 100-level progression.
  * 
  * @framework Framework5.1
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 import { pgTable, serial, integer, text, timestamp, json, boolean, varchar, foreignKey } from "drizzle-orm/pg-core";
