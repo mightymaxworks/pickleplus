@@ -159,8 +159,19 @@ const CommunityEngagementMetrics: React.FC<CommunityEngagementMetricsProps> = ({
           'GET', 
           `/api/communities/${communityId}/engagement/me`
         );
+        
+        // Check if the response is successful
+        if (!res.ok) {
+          if (res.status === 404) {
+            console.log('User engagement metrics not found - user may be new to community');
+            return null;
+          }
+          throw new Error(`Failed to fetch user engagement: ${res.status}`);
+        }
+        
         return await res.json() as UserEngagement;
       } catch (error) {
+        console.error('Error fetching user engagement metrics:', error);
         // User might not be authenticated or not a member yet
         return null;
       }
@@ -242,25 +253,25 @@ const CommunityEngagementMetrics: React.FC<CommunityEngagementMetricsProps> = ({
                 <h4 className="font-semibold">Your Engagement</h4>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
                   <Badge variant="outline" className="font-semibold">
-                    {userEngagement.currentLevel?.levelName || 'Newcomer'}
+                    {userEngagement?.currentLevel?.levelName || 'Newcomer'}
                   </Badge>
                   <span className="text-xs">•</span>
-                  <span>{userEngagement.metrics.totalPoints} points</span>
+                  <span>{userEngagement?.metrics?.totalPoints || 0} points</span>
                 </div>
               </div>
               
-              {userEngagement.nextLevel && (
+              {userEngagement?.nextLevel && (
                 <div className="ml-auto text-right">
                   <span className="text-xs text-muted-foreground">Next level: {userEngagement.nextLevel.levelName}</span>
                   <Progress 
                     value={Math.round(
-                      ((userEngagement.metrics.totalPoints - (userEngagement.currentLevel?.pointThreshold || 0)) / 
-                      (userEngagement.nextLevel.pointThreshold - (userEngagement.currentLevel?.pointThreshold || 0))) * 100
+                      ((userEngagement?.metrics?.totalPoints || 0) - (userEngagement?.currentLevel?.pointThreshold || 0)) / 
+                      Math.max(1, (userEngagement.nextLevel.pointThreshold - (userEngagement?.currentLevel?.pointThreshold || 0))) * 100
                     )} 
                     className="w-32 h-2" 
                   />
                   <span className="text-xs text-muted-foreground">
-                    {userEngagement.pointsToNextLevel} points needed
+                    {userEngagement.pointsToNextLevel || 0} points needed
                   </span>
                 </div>
               )}
@@ -268,19 +279,19 @@ const CommunityEngagementMetrics: React.FC<CommunityEngagementMetricsProps> = ({
             
             <div className="grid grid-cols-4 gap-2 mt-2 text-center">
               <div className="space-y-1">
-                <span className="text-sm font-semibold">{userEngagement.metrics.totalActivities}</span>
+                <span className="text-sm font-semibold">{userEngagement?.metrics?.totalActivities || 0}</span>
                 <p className="text-xs text-muted-foreground">Activities</p>
               </div>
               <div className="space-y-1">
-                <span className="text-sm font-semibold">{userEngagement.metrics.postCount}</span>
+                <span className="text-sm font-semibold">{userEngagement?.metrics?.postCount || 0}</span>
                 <p className="text-xs text-muted-foreground">Posts</p>
               </div>
               <div className="space-y-1">
-                <span className="text-sm font-semibold">{userEngagement.metrics.commentCount}</span>
+                <span className="text-sm font-semibold">{userEngagement?.metrics?.commentCount || 0}</span>
                 <p className="text-xs text-muted-foreground">Comments</p>
               </div>
               <div className="space-y-1">
-                <span className="text-sm font-semibold">{userEngagement.metrics.streakDays}</span>
+                <span className="text-sm font-semibold">{userEngagement?.metrics?.streakDays || 0}</span>
                 <p className="text-xs text-muted-foreground">Day streak</p>
               </div>
             </div>
