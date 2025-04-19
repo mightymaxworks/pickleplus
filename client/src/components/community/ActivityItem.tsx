@@ -1,145 +1,206 @@
 /**
  * PKL-278651-COMM-0022-FEED
- * Activity Item Component
+ * ActivityItem Component
  * 
- * This component renders a single activity item in the feed.
+ * This component renders a single activity feed item with appropriate styling
+ * and interactions based on the activity type.
  * 
  * @framework Framework5.1
  * @version 1.0.0
  * @lastModified 2025-04-19
  */
 
-import React from 'react';
-import { formatDistanceToNow } from 'date-fns';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import React, { useState } from 'react';
 import { Link } from 'wouter';
-import { UsersIcon, MessageSquareIcon, CalendarIcon, TrophyIcon, HeartIcon, Share2Icon, MapPinIcon } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { CalendarClock, Star, Medal, Users, Trophy, MessageCircle, Heart, Award, User } from 'lucide-react';
+import { ActivityFeedItem } from '@/hooks/use-activity-feed';
+import { cn } from '@/lib/utils';
+
+// Map of activity types to their respective icons
+const ACTIVITY_ICONS: Record<string, React.ReactNode> = {
+  'match_recorded': <Trophy className="h-4 w-4 text-green-500" />,
+  'achievement_unlocked': <Medal className="h-4 w-4 text-yellow-500" />,
+  'tournament_joined': <Trophy className="h-4 w-4 text-blue-500" />,
+  'tournament_created': <Trophy className="h-4 w-4 text-purple-500" />,
+  'community_joined': <Users className="h-4 w-4 text-blue-500" />,
+  'community_created': <Users className="h-4 w-4 text-green-500" />,
+  'profile_updated': <User className="h-4 w-4 text-gray-500" />,
+  'rank_up': <Star className="h-4 w-4 text-yellow-500" />,
+  'xp_milestone': <Award className="h-4 w-4 text-purple-500" />,
+  'comment': <MessageCircle className="h-4 w-4 text-blue-500" />,
+  'like': <Heart className="h-4 w-4 text-red-500" />,
+  'event_created': <CalendarClock className="h-4 w-4 text-green-500" />,
+  'event_joined': <CalendarClock className="h-4 w-4 text-blue-500" />
+};
+
+// Default icon for unknown activity types
+const DEFAULT_ICON = <CalendarClock className="h-4 w-4 text-gray-500" />;
 
 interface ActivityItemProps {
-  id: number;
-  type: string;
-  userId: number;
-  username?: string;
-  displayName?: string;
-  avatar?: string;
-  content: string;
-  timestamp: string;
-  communityId?: number;
-  communityName?: string;
-  metadata?: Record<string, any>;
-  relatedEntityId?: number;
-  relatedEntityType?: string;
-  onClick?: () => void;
-  isNew?: boolean;
+  activity: ActivityFeedItem;
+  onMarkAsRead?: (id: number) => void;
+  interactive?: boolean;
 }
 
-export function ActivityItem({
-  id,
-  type,
-  userId,
-  username,
-  displayName,
-  avatar,
-  content,
-  timestamp,
-  communityId,
-  communityName,
-  metadata,
-  relatedEntityId,
-  relatedEntityType,
-  onClick,
-  isNew = false
-}: ActivityItemProps) {
-  // Get the appropriate icon for the activity type
-  const getActivityIcon = () => {
-    switch (type) {
-      case 'post':
-        return <MessageSquareIcon className="h-4 w-4" />;
-      case 'event':
-        return <CalendarIcon className="h-4 w-4" />;
-      case 'achievement':
-        return <TrophyIcon className="h-4 w-4" />;
-      case 'like':
-        return <HeartIcon className="h-4 w-4" />;
-      case 'share':
-        return <Share2Icon className="h-4 w-4" />;
-      case 'join':
-        return <UsersIcon className="h-4 w-4" />;
-      case 'location':
-        return <MapPinIcon className="h-4 w-4" />;
+/**
+ * ActivityItem Component
+ */
+const ActivityItem: React.FC<ActivityItemProps> = ({ 
+  activity, 
+  onMarkAsRead,
+  interactive = true
+}) => {
+  const [isHovered, setIsHovered] = useState(false);
+  
+  // Get the icon for this activity type
+  const icon = ACTIVITY_ICONS[activity.type] || DEFAULT_ICON;
+  
+  // Format the timestamp as a relative time (e.g., "5 minutes ago")
+  const formattedTime = formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true });
+  
+  // Generate link URL based on activity type and related entity
+  const getLinkUrl = () => {
+    if (!interactive) return undefined;
+    
+    switch (activity.type) {
+      case 'match_recorded':
+        return activity.relatedEntityId ? `/matches/${activity.relatedEntityId}` : '/matches';
+      case 'achievement_unlocked':
+        return '/achievements';
+      case 'tournament_joined':
+      case 'tournament_created':
+        return activity.relatedEntityId ? `/tournaments/${activity.relatedEntityId}` : '/tournaments';
+      case 'community_joined':
+      case 'community_created':
+        return activity.communityId ? `/communities/${activity.communityId}` : '/communities';
+      case 'profile_updated':
+        return `/profile/${activity.username}`;
+      case 'rank_up':
+        return '/leaderboard';
+      case 'xp_milestone':
+        return '/xp';
+      case 'event_created':
+      case 'event_joined':
+        return activity.relatedEntityId ? `/events/${activity.relatedEntityId}` : '/events';
       default:
-        return <MessageSquareIcon className="h-4 w-4" />;
+        return undefined;
     }
   };
   
-  // Format the timestamp
-  const formattedTime = formatDistanceToNow(new Date(timestamp), { addSuffix: true });
-
-  // Get user initials for avatar fallback
-  const getInitials = () => {
-    if (displayName) {
-      return displayName.split(' ').map(n => n[0]).join('').toUpperCase();
+  // Handle click on the activity item
+  const handleClick = () => {
+    if (!activity.isRead && onMarkAsRead) {
+      onMarkAsRead(activity.id);
     }
-    return username ? username.substring(0, 2).toUpperCase() : 'U';
   };
+  
+  const linkUrl = getLinkUrl();
+  
+  // The activity content component
+  const ActivityContentComponent = () => (
+    <div className="flex items-start gap-3">
+      {/* User Avatar */}
+      <Avatar className="h-8 w-8">
+        <AvatarImage src={activity.avatar || undefined} alt={activity.username} />
+        <AvatarFallback>
+          {activity.displayName ? activity.displayName.charAt(0).toUpperCase() : activity.username.charAt(0).toUpperCase()}
+        </AvatarFallback>
+      </Avatar>
+      
+      {/* Activity Content */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1 mb-1">
+          <span className="font-semibold text-sm truncate">
+            {activity.displayName || activity.username}
+          </span>
+          
+          {/* Activity Type Badge */}
+          <Badge 
+            variant="outline" 
+            className="text-xs ml-2 py-0 px-2 h-5 flex items-center gap-1"
+          >
+            {icon}
+            <span className="capitalize">{activity.type.replace('_', ' ')}</span>
+          </Badge>
+        </div>
+        
+        {/* Activity Content */}
+        <p className="text-sm text-muted-foreground break-words line-clamp-2">
+          {activity.content}
+        </p>
+        
+        {/* Community Badge (if applicable) */}
+        {activity.communityName && (
+          <div className="mt-1">
+            <Badge variant="secondary" className="text-xs">
+              {activity.communityName}
+            </Badge>
+          </div>
+        )}
+      </div>
+      
+      {/* Timestamp */}
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="text-xs text-muted-foreground whitespace-nowrap">
+              {formattedTime}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            {new Date(activity.timestamp).toLocaleString()}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
+  );
   
   return (
     <Card 
-      className={`mb-3 overflow-hidden transition-all hover:shadow-md ${isNew ? 'border-blue-400 bg-blue-50 dark:bg-blue-950 dark:border-blue-800' : ''}`}
-      onClick={onClick}
+      className={cn(
+        "w-full mb-2 transition-all duration-200",
+        !activity.isRead && "border-l-4 border-l-primary",
+        isHovered && "shadow-md"
+      )}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={handleClick}
     >
-      <CardContent className="p-4">
-        <div className="flex items-start space-x-4">
-          {/* User Avatar */}
-          <Link href={`/profile/${userId}`} className="shrink-0">
-            <Avatar className="h-10 w-10 border">
-              <AvatarImage src={avatar} alt={displayName || username || 'User'} />
-              <AvatarFallback>{getInitials()}</AvatarFallback>
-            </Avatar>
+      <CardContent className="p-3">
+        {linkUrl ? (
+          <Link to={linkUrl}>
+            <ActivityContentComponent />
           </Link>
-          
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center">
-                {/* User Name */}
-                <Link 
-                  href={`/profile/${userId}`}
-                  className="font-medium text-sm hover:underline truncate mr-2"
-                >
-                  {displayName || username || 'User'}
-                </Link>
-                
-                {/* Activity Type Badge */}
-                <Badge variant="outline" className="flex items-center text-xs ml-1">
-                  {getActivityIcon()}
-                  <span className="ml-1 capitalize">{type}</span>
-                </Badge>
-              </div>
-              
-              {/* Timestamp */}
-              <span className="text-muted-foreground text-xs">{formattedTime}</span>
-            </div>
-            
-            {/* Content */}
-            <p className="text-sm text-foreground mb-2">{content}</p>
-            
-            {/* Community Name if applicable */}
-            {communityId && communityName && (
-              <div className="flex items-center">
-                <Link 
-                  href={`/community/${communityId}`}
-                  className="text-xs text-muted-foreground hover:text-primary hover:underline flex items-center"
-                >
-                  <UsersIcon className="h-3 w-3 mr-1" />
-                  {communityName}
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
+        ) : (
+          <ActivityContentComponent />
+        )}
       </CardContent>
+      
+      {/* Activity Actions */}
+      {interactive && !activity.isRead && onMarkAsRead && (
+        <CardFooter className="px-3 py-1 flex justify-end bg-muted/30 border-t">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onMarkAsRead(activity.id);
+            }}
+            className="h-6 text-xs"
+          >
+            Mark as read
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
-}
+};
+
+export default ActivityItem;

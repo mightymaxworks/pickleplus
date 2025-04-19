@@ -1,178 +1,176 @@
 /**
  * PKL-278651-COMM-0022-FEED
- * Activity Feed Component
+ * ActivityFeed Component
  * 
- * This component renders a feed of community activities with real-time updates.
+ * This component displays a list of activity feed items with infinite scrolling
+ * and provides a way to mark items as read.
  * 
  * @framework Framework5.1
  * @version 1.0.0
  * @lastModified 2025-04-19
  */
 
-import React, { useState, useEffect } from 'react';
-import { useActivityFeed } from '@/hooks/use-activity-feed';
-import { useAuth } from '@/hooks/use-auth';
-import { ActivityItem } from './ActivityItem';
+import React, { useRef, useEffect, useState } from 'react';
+import { useActivityFeed, ActivityFeedProvider } from '@/hooks/use-activity-feed';
+import ActivityItem from './ActivityItem';
 import { Button } from '@/components/ui/button';
-import { RefreshCwIcon, FilterIcon } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
+import { Loader2, RefreshCw } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
 
 interface ActivityFeedProps {
   communityId?: number;
-  title?: string;
-  compact?: boolean;
-  limit?: number;
-  showFilters?: boolean;
+  maxHeight?: string | number;
   className?: string;
+  maxActivities?: number;
+  showRefreshButton?: boolean;
+  emptyMessage?: string;
 }
 
-export function ActivityFeed({
-  communityId,
-  title = "Activity Feed",
-  compact = false,
-  limit,
-  showFilters = true,
-  className = ""
-}: ActivityFeedProps) {
-  const { activities, loading, error, fetchActivities, hasMoreActivities, loadMoreActivities } = useActivityFeed();
-  const { user } = useAuth();
-  const [activityType, setActivityType] = useState<string>('all');
-  const [newActivitiesCount, setNewActivitiesCount] = useState(0);
+/**
+ * ActivityFeedContent Component (Internal)
+ * This component handles the actual display of activities
+ */
+const ActivityFeedContent: React.FC<Omit<ActivityFeedProps, 'maxActivities'>> = ({
+  maxHeight = '400px',
+  className,
+  showRefreshButton = true,
+  emptyMessage = 'No activities yet'
+}) => {
+  const { 
+    activities, 
+    loading, 
+    error, 
+    loadMore, 
+    hasMore, 
+    markAsRead,
+    refreshActivities
+  } = useActivityFeed();
   
-  // Filter activities by type if a filter is selected
-  const filteredActivities = activityType === 'all'
-    ? activities
-    : activities.filter(activity => activity.type === activityType);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   
-  // Handle refreshing the feed
-  const handleRefresh = () => {
-    fetchActivities({ communityId, reset: true });
-    setNewActivitiesCount(0);
-  };
-  
-  // Handle filtering by activity type
-  const handleTypeChange = (value: string) => {
-    setActivityType(value);
-  };
-  
-  // Add new activity count indicator
-  useEffect(() => {
-    // This would typically be triggered by a WebSocket message
-    // For now, we'll just use a placeholder to demonstrate the capability
-    const interval = setInterval(() => {
-      // In a real implementation, this would be triggered by the WebSocket
-      // Instead of incrementing randomly
-    }, 30000);
+  // Handle scroll to load more activities
+  const handleScroll = () => {
+    if (!scrollRef.current || loading || isLoadingMore || !hasMore) return;
     
-    return () => clearInterval(interval);
-  }, []);
+    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+    
+    // If user scrolled to the bottom (with a 50px buffer), load more
+    if (scrollHeight - scrollTop - clientHeight < 50) {
+      setIsLoadingMore(true);
+      loadMore().finally(() => setIsLoadingMore(false));
+    }
+  };
   
-  // Render loading skeletons
+  // Set up scroll event listener
+  useEffect(() => {
+    const scrollElement = scrollRef.current;
+    if (scrollElement) {
+      scrollElement.addEventListener('scroll', handleScroll);
+      return () => scrollElement.removeEventListener('scroll', handleScroll);
+    }
+  }, [hasMore, loading, isLoadingMore]);
+  
+  // Show loading state
   if (loading && activities.length === 0) {
     return (
-      <div className={`space-y-4 ${className}`}>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">{title}</h2>
-        </div>
-        {[1, 2, 3, 4, 5].map((i) => (
-          <Skeleton key={i} className="h-24 w-full rounded-md" />
-        ))}
+      <div className="flex flex-col items-center justify-center py-8">
+        <Loader2 className="w-8 h-8 animate-spin text-primary/70" />
+        <p className="text-sm text-muted-foreground mt-2">Loading activities...</p>
       </div>
     );
   }
   
-  // Render error state
+  // Show error state
   if (error && activities.length === 0) {
     return (
-      <Alert variant="destructive" className={className}>
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>
-          Failed to load activity feed. {error.message}
-          <Button variant="outline" size="sm" onClick={handleRefresh} className="mt-2">
-            Try Again
-          </Button>
-        </AlertDescription>
-      </Alert>
+      <div className="flex flex-col items-center justify-center py-8">
+        <p className="text-sm text-destructive mb-2">Failed to load activities</p>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => refreshActivities()}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="w-4 h-4" /> Try Again
+        </Button>
+      </div>
+    );
+  }
+  
+  // Show empty state
+  if (activities.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+        <p className="text-sm">{emptyMessage}</p>
+      </div>
     );
   }
   
   return (
-    <div className={className}>
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center">
-          <h2 className="text-xl font-semibold">{title}</h2>
-          {newActivitiesCount > 0 && (
-            <Badge className="ml-2 bg-blue-500">
-              {newActivitiesCount} new
-            </Badge>
-          )}
-        </div>
-        
-        <div className="flex space-x-2">
-          {showFilters && (
-            <Select value={activityType} onValueChange={handleTypeChange}>
-              <SelectTrigger className="w-[140px]">
-                <FilterIcon className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Filter" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Activities</SelectItem>
-                <SelectItem value="post">Posts</SelectItem>
-                <SelectItem value="event">Events</SelectItem>
-                <SelectItem value="achievement">Achievements</SelectItem>
-                <SelectItem value="join">Joins</SelectItem>
-                <SelectItem value="like">Likes</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
-          
-          <Button variant="outline" size="icon" onClick={handleRefresh}>
-            <RefreshCwIcon className="h-4 w-4" />
+    <div className={cn("relative", className)}>
+      {/* Refresh button */}
+      {showRefreshButton && (
+        <div className="absolute top-0 right-0 z-10 p-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => refreshActivities()}
+            className="h-8 w-8 p-0"
+            aria-label="Refresh activities"
+          >
+            <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
-      </div>
-      
-      {newActivitiesCount > 0 && (
-        <Button 
-          variant="outline" 
-          className="w-full mb-4"
-          onClick={handleRefresh}
-        >
-          Show {newActivitiesCount} new {newActivitiesCount === 1 ? 'activity' : 'activities'}
-        </Button>
       )}
       
-      {filteredActivities.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          No activities to display.
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {filteredActivities.map((activity) => (
+      {/* Activity list */}
+      <ScrollArea 
+        className={cn("pr-4", typeof maxHeight === 'string' ? maxHeight : `${maxHeight}px`)} 
+        ref={scrollRef}
+      >
+        <div className="space-y-2 py-2">
+          {activities.map((activity) => (
             <ActivityItem 
               key={activity.id}
-              {...activity}
-              onClick={() => {/* Handle activity click */}}
+              activity={activity}
+              onMarkAsRead={markAsRead}
             />
           ))}
           
-          {!compact && hasMoreActivities && (
-            <Button 
-              variant="outline" 
-              className="w-full mt-4"
-              onClick={() => loadMoreActivities()}
-              disabled={loading}
-            >
-              {loading ? 'Loading...' : 'Load More'}
-            </Button>
+          {/* Loading more indicator */}
+          {(isLoadingMore || (loading && activities.length > 0)) && (
+            <div className="flex justify-center py-2">
+              <Loader2 className="w-5 h-5 animate-spin text-primary/70" />
+            </div>
+          )}
+          
+          {/* End of list indicator */}
+          {!hasMore && activities.length > 0 && (
+            <div className="text-center py-2 text-xs text-muted-foreground">
+              No more activities to load
+            </div>
           )}
         </div>
-      )}
+      </ScrollArea>
     </div>
   );
-}
+};
+
+/**
+ * ActivityFeed Component (Public)
+ * This is a wrapper component that provides the ActivityFeedProvider context
+ */
+const ActivityFeed: React.FC<ActivityFeedProps> = (props) => {
+  return (
+    <ActivityFeedProvider 
+      communityId={props.communityId}
+      maxActivities={props.maxActivities}
+    >
+      <ActivityFeedContent {...props} />
+    </ActivityFeedProvider>
+  );
+};
+
+export default ActivityFeed;

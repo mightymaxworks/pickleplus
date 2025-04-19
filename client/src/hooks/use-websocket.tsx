@@ -1,235 +1,315 @@
 /**
  * PKL-278651-COMM-0022-FEED
- * WebSocket Hook
+ * useWebSocket Hook
  * 
- * This custom hook manages WebSocket connections and provides real-time
- * data subscription capabilities to React components.
+ * This hook manages WebSocket connections and subscriptions for real-time updates.
+ * It includes auto-reconnect functionality and provides an easy way for components
+ * to subscribe to specific topics.
  * 
  * @framework Framework5.1
  * @version 1.0.0
  * @lastModified 2025-04-19
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { useEffect, useRef, useCallback, useState } from 'react';
 
-type MessageHandler = (data: any) => void;
-type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
-
-interface UseWebSocketOptions {
-  /**
-   * Enable automatic reconnection
-   */
-  autoReconnect?: boolean;
-  
-  /**
-   * Number of milliseconds to wait between reconnection attempts
-   */
-  reconnectInterval?: number;
-  
-  /**
-   * Maximum number of reconnection attempts
-   */
-  maxReconnectAttempts?: number;
-  
-  /**
-   * Callback when connection status changes
-   */
-  onStatusChange?: (status: ConnectionStatus) => void;
+// Define WebSocket connection states
+export enum WebSocketState {
+  CONNECTING = 'connecting',
+  CONNECTED = 'connected',
+  DISCONNECTED = 'disconnected',
+  RECONNECTING = 'reconnecting',
 }
 
+// WebSocket event types
+type WebSocketEvent = 'message' | 'open' | 'close' | 'error';
+
+// WebSocket message handler type
+type MessageHandler = (data: any) => void;
+
+// WebSocket topic subscriber type
+interface TopicSubscriber {
+  topic: string;
+  callback: MessageHandler;
+}
+
+// WebSocket hook options
+interface UseWebSocketOptions {
+  // List of topics to subscribe to
+  subscribeTopics?: string[];
+  // Auto-reconnect settings
+  autoReconnect?: boolean;
+  reconnectInterval?: number;
+  maxReconnectAttempts?: number;
+  // Callback handlers
+  onOpen?: () => void;
+  onClose?: () => void;
+  onError?: (error: Event) => void;
+  onMessage?: MessageHandler;
+}
+
+// Default WebSocket options
+const defaultOptions: UseWebSocketOptions = {
+  subscribeTopics: [],
+  autoReconnect: true,
+  reconnectInterval: 3000,
+  maxReconnectAttempts: 5,
+};
+
 /**
- * Custom hook for WebSocket connections with auto-reconnect and subscription management
+ * Hook to manage WebSocket connections and subscriptions
  */
 export function useWebSocket(options: UseWebSocketOptions = {}) {
-  const { 
-    autoReconnect = true, 
-    reconnectInterval = 3000,
-    maxReconnectAttempts = 5,
-    onStatusChange
-  } = options;
+  // Merge options with defaults
+  const opts = { ...defaultOptions, ...options };
   
-  const [status, setStatus] = useState<ConnectionStatus>('disconnected');
-  const [lastMessage, setLastMessage] = useState<any>(null);
-  const socket = useRef<WebSocket | null>(null);
-  const reconnectAttempts = useRef(0);
-  const messageHandlers = useRef<Map<string, Set<MessageHandler>>>(new Map());
-  const { toast } = useToast();
-
-  // Update external status handler
-  useEffect(() => {
-    onStatusChange?.(status);
-  }, [status, onStatusChange]);
-
-  // Connect to the WebSocket server
+  // WebSocket connection state
+  const [connectionState, setConnectionState] = useState<WebSocketState>(WebSocketState.DISCONNECTED);
+  // WebSocket instance ref
+  const socketRef = useRef<WebSocket | null>(null);
+  // Keep track of subscribers
+  const subscribersRef = useRef<Map<string, Set<MessageHandler>>>(new Map());
+  // Track reconnection attempts
+  const reconnectAttemptsRef = useRef(0);
+  // Track if component is mounted
+  const isMountedRef = useRef(true);
+  // Client ID assigned by server
+  const [clientId, setClientId] = useState<string | null>(null);
+  // Authentication status from server
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  /**
+   * Get WebSocket server URL
+   */
+  const getWebSocketUrl = useCallback(() => {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host;
+    return `${protocol}//${host}/ws`;
+  }, []);
+  
+  /**
+   * Connect to WebSocket server
+   */
   const connect = useCallback(() => {
-    if (socket.current?.readyState === WebSocket.OPEN) {
-      return;
+    if (!isMountedRef.current) return;
+    
+    // Close existing connection if any
+    if (socketRef.current) {
+      socketRef.current.close();
     }
-
+    
     try {
-      setStatus('connecting');
+      // Create new WebSocket connection
+      const socket = new WebSocket(getWebSocketUrl());
+      socketRef.current = socket;
+      setConnectionState(WebSocketState.CONNECTING);
       
-      // Create WebSocket connection - use the same host but with ws/wss protocol
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/ws`;
-      
-      const ws = new WebSocket(wsUrl);
-      
-      ws.onopen = () => {
-        console.log('[WebSocket] Connected');
-        setStatus('connected');
-        reconnectAttempts.current = 0;
+      // Set up event handlers
+      socket.onopen = () => {
+        if (!isMountedRef.current) return;
         
-        // Re-subscribe to topics if needed
-        const topics = Array.from(messageHandlers.current.keys());
-        if (topics.length > 0) {
-          ws.send(JSON.stringify({
-            type: 'subscribe',
-            topics
-          }));
+        console.log('[WebSocket] Connected to server');
+        setConnectionState(WebSocketState.CONNECTED);
+        reconnectAttemptsRef.current = 0;
+        
+        // Subscribe to all requested topics
+        if (opts.subscribeTopics && opts.subscribeTopics.length > 0) {
+          subscribe(opts.subscribeTopics);
+        }
+        
+        // Call onOpen callback if provided
+        if (opts.onOpen) {
+          opts.onOpen();
         }
       };
       
-      ws.onmessage = (event) => {
+      socket.onmessage = (event) => {
+        if (!isMountedRef.current) return;
+        
         try {
           const data = JSON.parse(event.data);
-          setLastMessage(data);
           
-          // Handle connection-level messages
+          // Handle connection confirmation message
           if (data.type === 'connection' && data.status === 'connected') {
-            console.log('[WebSocket] Connection confirmed:', data.clientId);
+            setClientId(data.clientId);
+            setIsAuthenticated(data.isAuthenticated);
           }
           
-          // Dispatch to topic handlers
-          if (data.topic && messageHandlers.current.has(data.topic)) {
-            const handlers = messageHandlers.current.get(data.topic);
-            if (handlers) {
-              handlers.forEach(handler => {
+          // Handle regular messages with a topic
+          if (data.topic) {
+            // Call topic subscribers
+            const topicSubscribers = subscribersRef.current.get(data.topic);
+            if (topicSubscribers) {
+              topicSubscribers.forEach(callback => {
                 try {
-                  handler(data.payload || data);
+                  callback(data.payload);
                 } catch (error) {
-                  console.error('[WebSocket] Error in message handler:', error);
+                  console.error(`[WebSocket] Error in subscriber callback for topic ${data.topic}:`, error);
                 }
               });
             }
           }
           
+          // Call global message handler if provided
+          if (opts.onMessage) {
+            opts.onMessage(data);
+          }
         } catch (error) {
           console.error('[WebSocket] Error parsing message:', error);
         }
       };
       
-      ws.onclose = () => {
-        setStatus('disconnected');
-        console.log('[WebSocket] Disconnected');
+      socket.onclose = (event) => {
+        if (!isMountedRef.current) return;
         
-        // Attempt to reconnect if enabled
-        if (autoReconnect && reconnectAttempts.current < maxReconnectAttempts) {
-          reconnectAttempts.current += 1;
-          console.log(`[WebSocket] Reconnecting (attempt ${reconnectAttempts.current}/${maxReconnectAttempts})...`);
-          
-          setTimeout(() => {
-            connect();
-          }, reconnectInterval);
-        } else if (reconnectAttempts.current >= maxReconnectAttempts) {
-          setStatus('error');
-          toast({
-            title: 'Connection error',
-            description: 'Unable to connect to real-time updates. Please refresh the page.',
-            variant: 'destructive'
-          });
+        console.log(`[WebSocket] Connection closed (code: ${event.code}, reason: ${event.reason})`);
+        setConnectionState(WebSocketState.DISCONNECTED);
+        socketRef.current = null;
+        
+        // Call onClose callback if provided
+        if (opts.onClose) {
+          opts.onClose();
+        }
+        
+        // Auto-reconnect if enabled
+        if (opts.autoReconnect) {
+          if (reconnectAttemptsRef.current < (opts.maxReconnectAttempts || 5)) {
+            console.log(`[WebSocket] Reconnecting in ${opts.reconnectInterval}ms (attempt ${reconnectAttemptsRef.current + 1}/${opts.maxReconnectAttempts})`);
+            setConnectionState(WebSocketState.RECONNECTING);
+            setTimeout(() => {
+              reconnectAttemptsRef.current++;
+              connect();
+            }, opts.reconnectInterval);
+          } else {
+            console.error('[WebSocket] Max reconnect attempts reached');
+          }
         }
       };
       
-      ws.onerror = (error) => {
-        console.error('[WebSocket] Error:', error);
-        setStatus('error');
+      socket.onerror = (error) => {
+        if (!isMountedRef.current) return;
+        
+        console.error('[WebSocket] Connection error:', error);
+        
+        // Call onError callback if provided
+        if (opts.onError) {
+          opts.onError(error);
+        }
       };
-      
-      // Store the WebSocket instance
-      socket.current = ws;
-      
     } catch (error) {
-      console.error('[WebSocket] Connection error:', error);
-      setStatus('error');
+      console.error('[WebSocket] Error creating connection:', error);
+      setConnectionState(WebSocketState.DISCONNECTED);
     }
-  }, [autoReconnect, maxReconnectAttempts, reconnectInterval, toast]);
-
-  // Disconnect from the WebSocket server
+  }, [getWebSocketUrl, opts]);
+  
+  /**
+   * Disconnect from WebSocket server
+   */
   const disconnect = useCallback(() => {
-    if (socket.current) {
-      socket.current.close();
-      socket.current = null;
-      setStatus('disconnected');
+    if (socketRef.current) {
+      socketRef.current.close();
+      socketRef.current = null;
+      setConnectionState(WebSocketState.DISCONNECTED);
     }
   }, []);
-
-  // Subscribe to a topic
-  const subscribe = useCallback((topic: string, handler: MessageHandler) => {
-    // Initialize handlers set for this topic if it doesn't exist
-    if (!messageHandlers.current.has(topic)) {
-      messageHandlers.current.set(topic, new Set());
-      
-      // Send subscription message if socket is connected
-      if (socket.current?.readyState === WebSocket.OPEN) {
-        socket.current.send(JSON.stringify({
-          type: 'subscribe',
-          topics: [topic]
-        }));
-      }
+  
+  /**
+   * Subscribe to topics
+   */
+  const subscribe = useCallback((topics: string[]) => {
+    if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
+      console.warn('[WebSocket] Cannot subscribe to topics: not connected');
+      return;
     }
     
-    // Add handler to the set
-    messageHandlers.current.get(topic)?.add(handler);
+    // Send subscribe message
+    socketRef.current.send(JSON.stringify({
+      type: 'subscribe',
+      topics
+    }));
+    
+    console.log('[WebSocket] Subscribed to topics:', topics);
+  }, []);
+  
+  /**
+   * Unsubscribe from topics
+   */
+  const unsubscribe = useCallback((topics: string[]) => {
+    if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
+      console.warn('[WebSocket] Cannot unsubscribe from topics: not connected');
+      return;
+    }
+    
+    // Send unsubscribe message
+    socketRef.current.send(JSON.stringify({
+      type: 'unsubscribe',
+      topics
+    }));
+    
+    console.log('[WebSocket] Unsubscribed from topics:', topics);
+  }, []);
+  
+  /**
+   * Add a message handler for a specific topic
+   */
+  const addTopicListener = useCallback((topic: string, callback: MessageHandler) => {
+    if (!subscribersRef.current.has(topic)) {
+      subscribersRef.current.set(topic, new Set());
+    }
+    
+    subscribersRef.current.get(topic)?.add(callback);
+    
+    // Subscribe to the topic on the server if connected
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      subscribe([topic]);
+    }
     
     // Return unsubscribe function
     return () => {
-      const handlers = messageHandlers.current.get(topic);
-      if (handlers) {
-        handlers.delete(handler);
+      const topicSubscribers = subscribersRef.current.get(topic);
+      if (topicSubscribers) {
+        topicSubscribers.delete(callback);
         
-        // If no more handlers for this topic, unsubscribe
-        if (handlers.size === 0) {
-          messageHandlers.current.delete(topic);
+        // If no more subscribers for this topic, unsubscribe from the server
+        if (topicSubscribers.size === 0) {
+          subscribersRef.current.delete(topic);
           
-          if (socket.current?.readyState === WebSocket.OPEN) {
-            socket.current.send(JSON.stringify({
-              type: 'unsubscribe',
-              topics: [topic]
-            }));
+          if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+            unsubscribe([topic]);
           }
         }
       }
     };
-  }, []);
-
-  // Send a message to the server
-  const send = useCallback((message: any) => {
-    if (socket.current?.readyState === WebSocket.OPEN) {
-      socket.current.send(typeof message === 'string' ? message : JSON.stringify(message));
-      return true;
-    }
-    return false;
-  }, []);
-
-  // Connect when the hook is initialized
+  }, [subscribe, unsubscribe]);
+  
+  /**
+   * Connect when the component mounts
+   */
   useEffect(() => {
+    isMountedRef.current = true;
     connect();
     
-    // Clean up on unmount
+    // Clean up when the component unmounts
     return () => {
+      isMountedRef.current = false;
       disconnect();
     };
   }, [connect, disconnect]);
-
+  
+  /**
+   * Return hook API
+   */
   return {
-    status,
-    lastMessage,
+    connectionState,
     connect,
     disconnect,
     subscribe,
-    send,
-    isConnected: status === 'connected'
+    unsubscribe,
+    addTopicListener,
+    clientId,
+    isAuthenticated,
+    WebSocketState
   };
 }
+
+export default useWebSocket;
