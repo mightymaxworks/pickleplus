@@ -22,13 +22,18 @@ interface NotificationBellProps {
 export function NotificationBell({ className }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
   
-  const { data: unreadCountData, isLoading, error } = useQuery({
+  const { data: unreadCountData, isLoading } = useQuery({
     queryKey: ['/api/notifications/count'],
     queryFn: notificationsSDK.getUnreadCount,
     refetchInterval: 60000, // Refetch every minute
   });
   
   const unreadCount = unreadCountData?.count || 0;
+  
+  // Close dropdown handler
+  const handleClose = () => {
+    setIsOpen(false);
+  };
   
   return (
     <div className="relative">
