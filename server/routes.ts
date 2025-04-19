@@ -28,8 +28,7 @@ import batchApiRoutes from "./routes/batch-api-routes"; // PKL-278651-PERF-0001.
 import { registerFeedbackRoutes } from "./modules/feedback/routes"; // PKL-278651-FEED-0001-BUG
 import { initApiGateway } from "./modules/api-gateway"; // PKL-278651-API-0001-GATEWAY
 import { initializeAdminModule } from "./modules/admin"; // PKL-278651-ADMIN-0015-USER
-import { registerXpRoutes } from "./routes/xp-routes"; // PKL-278651-XP-0001-FOUND
-import { registerXpRoutes } from "./routes/xp-routes"; // PKL-278651-XP-0001-FOUND
+import { initializeXpModule } from "./modules/xp"; // PKL-278651-XP-0001-FOUND
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -160,8 +159,8 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Initialize Community Hub Module (PKL-278651-COMM-0006-HUB)
   initializeCommunityModule({ app });
   
-  // Register XP System Routes (PKL-278651-XP-0001-FOUND)
-  registerXpRoutes(app);
+  // Initialize XP System Module (PKL-278651-XP-0001-FOUND)
+  initializeXpModule(app);
   
   // Register Batch API routes (PKL-278651-PERF-0001.4-API)
   app.use("/api", batchApiRoutes);
