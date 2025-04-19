@@ -1,15 +1,16 @@
 /**
- * [PKL-278651-COMM-0027-MOD] Community Moderation Schema
- * Implementation timestamp: 2025-04-19 13:15 ET
+ * [PKL-278651-COMM-0029-MOD] Community Moderation Schema
+ * Implementation timestamp: 2025-04-19 18:07 ET
  * 
  * Schema definitions for community moderation functionality.
+ * Enhanced with content approval workflows and filtering.
  * 
  * Framework 5.2 compliance verified:
  * - Module-specific schema
  * - Clear type definitions
  * - Explicit relationships
  */
-import { pgTable, serial, integer, varchar, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, varchar, text, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -57,6 +58,35 @@ export const communityRoles = pgTable('community_roles', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+// Content approval queue for communities with pre-moderation
+export const contentApprovalQueue = pgTable('content_approval_queue', {
+  id: serial('id').primaryKey(),
+  communityId: integer('community_id').notNull(), // Reference to communities.id
+  userId: integer('user_id').notNull(), // Reference to users.id (content creator)
+  contentType: varchar('content_type', { length: 50 }).notNull(), // 'post', 'comment', 'event'
+  content: text('content').notNull(), // The actual content to approve
+  metadata: jsonb('metadata'), // Additional content data (images, links, etc.)
+  status: varchar('status', { length: 20 }).default('pending').notNull(), // 'pending', 'approved', 'rejected'
+  moderatorId: integer('moderator_id'), // Reference to users.id (reviewer)
+  moderationNotes: text('moderation_notes'),
+  reviewedAt: timestamp('reviewed_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Content filtering settings for communities
+export const contentFilterSettings = pgTable('content_filter_settings', {
+  id: serial('id').primaryKey(),
+  communityId: integer('community_id').notNull().unique(), // Reference to communities.id
+  enabledFilters: jsonb('enabled_filters').default('[]').notNull(), // Array of filter types enabled
+  bannedKeywords: text('banned_keywords').default('[]').notNull(), // JSON array of banned keywords
+  sensitiveContentTypes: text('sensitive_content_types').default('[]').notNull(), // JSON array of content types requiring approval
+  requireApproval: boolean('require_approval').default(false).notNull(), // Whether all content requires pre-approval
+  autoModEnabled: boolean('auto_mod_enabled').default(true).notNull(), // Whether automated moderation is enabled
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 // Note: Relations will be defined in the main schema.ts file where all tables are available
 
 // Create insert schemas using drizzle-zod
@@ -75,6 +105,20 @@ export const insertCommunityRoleSchema = createInsertSchema(communityRoles, {
   permissions: z.string().min(2),
 }).omit({ id: true, createdAt: true, updatedAt: true });
 
+export const insertContentApprovalSchema = createInsertSchema(contentApprovalQueue, {
+  contentType: z.enum(['post', 'comment', 'event']),
+  content: z.string().min(1).max(5000),
+  metadata: z.any().optional(),
+}).omit({ id: true, reviewedAt: true, createdAt: true, updatedAt: true });
+
+export const insertContentFilterSettingsSchema = createInsertSchema(contentFilterSettings, {
+  enabledFilters: z.any().default([]),
+  bannedKeywords: z.string().default('[]'),
+  sensitiveContentTypes: z.string().default('[]'),
+  requireApproval: z.boolean().default(false),
+  autoModEnabled: z.boolean().default(true),
+}).omit({ id: true, createdAt: true, updatedAt: true });
+
 // Create type definitions
 export type ContentReport = typeof contentReports.$inferSelect;
 export type InsertContentReport = z.infer<typeof insertContentReportSchema>;
@@ -84,3 +128,9 @@ export type InsertModerationAction = z.infer<typeof insertModerationActionSchema
 
 export type CommunityRole = typeof communityRoles.$inferSelect;
 export type InsertCommunityRole = z.infer<typeof insertCommunityRoleSchema>;
+
+export type ContentApproval = typeof contentApprovalQueue.$inferSelect;
+export type InsertContentApproval = z.infer<typeof insertContentApprovalSchema>;
+
+export type ContentFilterSettings = typeof contentFilterSettings.$inferSelect;
+export type InsertContentFilterSettings = z.infer<typeof insertContentFilterSettingsSchema>;
