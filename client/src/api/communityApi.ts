@@ -233,6 +233,9 @@ const communityApi = {
     // Popularity
     popular?: boolean;
     
+    // Default communities
+    include_default?: boolean;
+    
     // Sorting
     sort?: 'newest' | 'oldest' | 'name_asc' | 'name_desc' | 'members_high' | 'members_low' | 'events_high' | 'events_low';
     
@@ -242,6 +245,10 @@ const communityApi = {
   }) => {
     // Format dates if provided
     const params: Record<string, any> = { ...options };
+    
+    // Always include default communities 
+    // This ensures the Pickle+ Giveaway Group is included in the results
+    params.include_default = 'true';
     
     if (params.createdAfter instanceof Date) {
       params.createdAfter = params.createdAfter.toISOString();
@@ -264,13 +271,20 @@ const communityApi = {
       params.includeIds = params.includeIds.join(',');
     }
     
-    console.log('Advanced search params:', params);
+    console.log('[PKL-278651-COMM-0017-SEARCH] Advanced search params:', params);
     
     const response = await apiRequest<Community[]>({
       url: '/api/communities',
       method: 'GET',
       params,
     });
+    
+    console.log(`[PKL-278651-COMM-0017-SEARCH] Found ${response.length} communities`);
+    
+    // Check if we have any default communities
+    const defaultCommunities = response.filter(c => c.isDefault);
+    console.log(`[PKL-278651-COMM-0017-SEARCH] Found ${defaultCommunities.length} default communities`);
+    
     return response;
   },
 

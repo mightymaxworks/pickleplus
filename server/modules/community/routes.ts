@@ -124,12 +124,18 @@ router.get('/', communityAuth, async (req: Request, res: Response) => {
       excludeIds,
       includeIds,
       recommendForUser,
-      popular
+      popular,
+      include_default
     } = req.query;
     
     console.log('[PKL-278651-COMM-0017-SEARCH] Search query:', JSON.stringify(req.query));
     
     const filters: any = {};
+    
+    // Always include default communities if specified (like Pickle+ Giveaway Group)
+    if (include_default === 'true') {
+      filters.includeDefault = true;
+    }
     
     // Basic filters
     if (location) filters.location = String(location);
