@@ -47,6 +47,28 @@ import './match-statistics-schema';
 // Import event schema (PKL-278651-CONN-0003-EVENT - Event Check-in QR Code System)
 import { events, eventCheckIns, eventRegistrations, passportVerifications } from './schema/events';
 
+// Import XP system schema (PKL-278651-XP-0001-FOUND - XP System Foundation)
+import {
+  xpTransactions,
+  xpLevelThresholds,
+  activityMultipliers,
+  multiplierRecalibrations,
+  XP_SOURCE,
+  insertXpTransactionSchema,
+  insertXpLevelThresholdSchema,
+  insertActivityMultiplierSchema,
+  insertMultiplierRecalibrationSchema,
+  type XpSource,
+  type XpTransaction,
+  type InsertXpTransaction,
+  type XpLevelThreshold,
+  type InsertXpLevelThreshold,
+  type ActivityMultiplier,
+  type InsertActivityMultiplier,
+  type MultiplierRecalibration,
+  type InsertMultiplierRecalibration
+} from './schema/xp';
+
 // Import API Gateway schema (PKL-278651-API-0001-GATEWAY - API Gateway & Developer Portal)
 import {
   apiDeveloperAccounts,

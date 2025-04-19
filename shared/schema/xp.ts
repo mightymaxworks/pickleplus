@@ -8,9 +8,11 @@
  * @version 1.0.0
  */
 
-import { pgTable, serial, integer, text, timestamp, json, boolean, varchar } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, timestamp, json, boolean, varchar, foreignKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
+import { relations } from "drizzle-orm";
 import { z } from "zod";
+import { users } from "../schema";
 
 // XP Source Enum
 export const XP_SOURCE = {
@@ -24,6 +26,26 @@ export const XP_SOURCE = {
 } as const;
 
 export type XpSource = typeof XP_SOURCE[keyof typeof XP_SOURCE];
+
+// XP Transactions Table
+export const xpTransactions = pgTable("xp_transactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  amount: integer("amount").notNull(),
+  source: varchar("source", { length: 50 }).notNull(),
+  sourceType: varchar("source_type", { length: 100 }),
+  sourceId: integer("source_id"),
+  description: text("description"),
+  runningTotal: integer("running_total").notNull(),
+  isHidden: boolean("is_hidden").default(false), // For special events that shouldn't show in the feed
+  createdById: integer("created_by_id").references(() => users.id), // If awarded by admin
+  matchId: integer("match_id"), // If from a match
+  communityId: integer("community_id"), // If from community activity
+  achievementId: integer("achievement_id"), // If from achievement
+  tournamentId: integer("tournament_id"), // If from tournament
+  metadata: json("metadata"),
+  createdAt: timestamp("created_at").notNull().defaultNow()
+});
 
 // XP Level Thresholds Table
 export const xpLevelThresholds = pgTable("xp_level_thresholds", {
@@ -62,12 +84,29 @@ export const multiplierRecalibrations = pgTable("multiplier_recalibrations", {
   metadata: json("metadata")
 });
 
+// Define relations
+export const xpTransactionRelations = relations(xpTransactions, ({ one }) => ({
+  user: one(users, {
+    fields: [xpTransactions.userId],
+    references: [users.id]
+  }),
+  createdBy: one(users, {
+    fields: [xpTransactions.createdById],
+    references: [users.id]
+  })
+}));
+
 // Create insert schemas
+export const insertXpTransactionSchema = createInsertSchema(xpTransactions)
+  .omit({ id: true, createdAt: true });
 export const insertXpLevelThresholdSchema = createInsertSchema(xpLevelThresholds);
 export const insertActivityMultiplierSchema = createInsertSchema(activityMultipliers);
 export const insertMultiplierRecalibrationSchema = createInsertSchema(multiplierRecalibrations);
 
 // Create types
+export type XpTransaction = typeof xpTransactions.$inferSelect;
+export type InsertXpTransaction = z.infer<typeof insertXpTransactionSchema>;
+
 export type XpLevelThreshold = typeof xpLevelThresholds.$inferSelect;
 export type InsertXpLevelThreshold = z.infer<typeof insertXpLevelThresholdSchema>;
 
