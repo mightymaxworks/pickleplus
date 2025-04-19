@@ -15,7 +15,8 @@ import { isAuthenticated } from '../../auth';
 import { activityFeedService } from './activity-service';
 import { db } from '../../db';
 import { eq, and, desc, sql } from 'drizzle-orm';
-import { activityFeedEntries, activityReadStatus } from '@shared/schema/activity-feed';
+import { activityFeedEntries, activityReadStatus, insertActivityFeedEntrySchema } from '@shared/schema/activity-feed';
+import { ServerEvents, eventEmitter } from '../../core/events/server-event-bus';
 
 // Create router
 const router = express.Router();
@@ -46,6 +47,69 @@ router.get('/', isAuthenticated, async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('[PKL-278651-COMM-0022-FEED] Error fetching activities:', error);
     res.status(500).json({ message: 'Failed to fetch activities' });
+  }
+});
+
+/**
+ * Create a new activity
+ * POST /api/activities/create
+ * 
+ * Body:
+ * - content: string - The content of the activity
+ * - type: string - The type of activity (e.g., "comment", "match_recorded", etc.)
+ * - communityId: number | null - The ID of the community the activity belongs to (optional)
+ * - relatedEntityId: number | null - The ID of a related entity (optional)
+ * - relatedEntityType: string | null - The type of the related entity (optional)
+ * - metadata: object | null - Additional metadata for the activity (optional)
+ */
+router.post('/create', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+
+    const userId = req.user.id;
+    const { content, type, communityId, relatedEntityId, relatedEntityType, metadata } = req.body;
+
+    // Validate required fields
+    if (!content || !type) {
+      return res.status(400).json({ message: 'Content and type are required' });
+    }
+
+    // Create the activity
+    const [activity] = await db.insert(activityFeedEntries).values({
+      userId,
+      username: req.user.username,
+      displayName: req.user.displayName || req.user.username,
+      avatar: req.user.avatar || null,
+      content,
+      type,
+      communityId: communityId || null,
+      relatedEntityId: relatedEntityId || null,
+      relatedEntityType: relatedEntityType || null,
+      metadata: metadata || null,
+      timestamp: new Date()
+    }).returning();
+
+    // Emit event to notify subscribers via WebSocket
+    if (activity) {
+      // Emit to global activity feed
+      eventEmitter.emit('community:activities', activity);
+
+      // If this activity is associated with a community, emit to that community's feed as well
+      if (activity.communityId) {
+        eventEmitter.emit(`community:${activity.communityId}:activities`, activity);
+      }
+    }
+
+    res.status(201).json({ 
+      success: true, 
+      activity,
+      message: 'Activity created successfully' 
+    });
+  } catch (error: any) {
+    console.error('[PKL-278651-COMM-0022-FEED] Error creating activity:', error);
+    res.status(500).json({ message: 'Failed to create activity' });
   }
 });
 

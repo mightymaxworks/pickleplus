@@ -59,6 +59,9 @@ import CommunityDetailPage from './pages/communities/[id]'
 import CreateCommunityPage from './pages/communities/create'
 import CommunityEventDetailPage from './pages/CommunityEventDetailPage' // PKL-278651-COMM-0016-RSVP
 
+// Import activity feed page (PKL-278651-COMM-0022-FEED)
+import ActivityFeedPage from './pages/ActivityFeedPage'
+
 // Import icons test page (PKL-278651-COMM-0007-ICONS)
 import IconsPage from './pages/icons'
 
@@ -348,6 +351,11 @@ export default function App() {
                   {/* PKL-278651-XP-0002-UI - XP System Dashboard */}
                   <Route path="/xp-dashboard">
                     {(params) => <ProtectedRoute component={XpDashboardPage} path="/xp-dashboard" />}
+                  </Route>
+                  
+                  {/* PKL-278651-COMM-0022-FEED - Activity Feed Page */}
+                  <Route path="/activity-feed">
+                    {(params) => <ProtectedRoute component={ActivityFeedPage} path="/activity-feed" />}
                   </Route>
                   
                   {/* PKL-278651-COMM-0005-DASH-UNIFIED - Unified Activity-Centric Dashboard Route */}
