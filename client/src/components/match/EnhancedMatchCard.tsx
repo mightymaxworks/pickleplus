@@ -51,9 +51,26 @@ export function EnhancedMatchCard({ match, onValidationComplete }: EnhancedMatch
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [validationDialogOpen, setValidationDialogOpen] = useState(false);
 
-  // Get the opponent's info
-  const opponent = Object.values(match.playerNames || {})
-    .find(p => p.username !== user?.username);
+  // Get the opponent's info - find the correct opponent based on player IDs
+  const getCurrentOpponentId = () => {
+    // Find the opponent's ID based on match structure
+    if (match.playerOneId === user?.id) {
+      return match.playerTwoId;
+    } else if (match.playerTwoId === user?.id) {
+      return match.playerOneId;
+    }
+    // For partner matches
+    if (match.playerOnePartnerId === user?.id) {
+      return match.playerTwoId; // Return team captain as opponent
+    } else if (match.playerTwoPartnerId === user?.id) {
+      return match.playerOneId; // Return team captain as opponent
+    }
+    return null;
+  };
+  
+  // Get opponent ID and data
+  const opponentId = getCurrentOpponentId();
+  const opponent = opponentId && match.playerNames ? match.playerNames[opponentId] : null;
 
   // Check if the current user is the winner
   const isWinner = user?.id === match.winnerId;
