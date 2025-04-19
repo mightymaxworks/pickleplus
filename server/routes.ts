@@ -46,6 +46,9 @@ import {
   rankingPoints, playerRatings, rankingTiers
 } from "@shared/courtiq-schema";
 
+// Store active schedulers for cleanup on shutdown
+let activeSchedulers: any[] = [];
+
 export async function registerRoutes(app: express.Express): Promise<Server> {
   // Setup authentication
   setupAuth(app);
@@ -165,6 +168,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Initialize PicklePulse System (PKL-278651-XP-0003-PULSE)
   const pickleScheduler = registerPicklePulseRoutes(app, storage);
+  activeSchedulers.push(pickleScheduler);
   
   // Register Batch API routes (PKL-278651-PERF-0001.4-API)
   app.use("/api", batchApiRoutes);
@@ -1403,6 +1407,26 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     res.status(404).json({ error: "API endpoint not found", path: req.path });
   });
   
+  // Set up cleanup for active schedulers on process exit
+  process.on('SIGINT', () => {
+    console.log('\n[SERVER] Shutting down, cleaning up schedulers...');
+    
+    // Clean up all active schedulers
+    for (const scheduler of activeSchedulers) {
+      if (scheduler && typeof scheduler.stop === 'function') {
+        try {
+          scheduler.stop();
+          console.log('[SERVER] Scheduler stopped successfully');
+        } catch (error) {
+          console.error('[SERVER] Error stopping scheduler:', error);
+        }
+      }
+    }
+    
+    console.log('[SERVER] Cleanup complete');
+    process.exit(0);
+  });
+
   // Server is started in index.ts, so we just need to return null here
   return null as unknown as Server;
 }
