@@ -224,20 +224,39 @@ export function useCommunityWithData(id: number) {
     data: community, 
     isLoading, 
     error,
-    isError
+    isError,
+    refetch
   } = useCommunity(id);
+  
+  // Debug logging for community loading state
+  useEffect(() => {
+    console.log(`[PKL-278651-COMM-0017-SEARCH] useCommunityWithData(${id}):`, 
+      'Loading:', isLoading, 
+      'Error:', isError ? 'Yes' : 'No', 
+      'Community:', community ? 'Found' : 'Not Found'
+    );
+    
+    if (isError) {
+      console.error('[PKL-278651-COMM-0017-SEARCH] Community load error:', error);
+    }
+  }, [id, community, isLoading, isError, error]);
   
   // Set the current community ID in the context when this hook is used
   useEffect(() => {
     if (id && id !== context.currentCommunityId) {
       context.setCurrentCommunityId(id);
+      console.log(`[PKL-278651-COMM-0017-SEARCH] Setting current community ID to ${id}`);
     }
     
-    // Prefetch data for smoother experience
-    context.prefetchCommunityData(id);
+    // Prefetch data for smoother experience - but only if ID is valid
+    if (id > 0) {
+      console.log(`[PKL-278651-COMM-0017-SEARCH] Prefetching data for community ${id}`);
+      context.prefetchCommunityData(id);
+    }
     
     // Handle errors
     if (isError && error) {
+      console.error(`[PKL-278651-COMM-0017-SEARCH] Setting error for community ${id}:`, error);
       context.setError(error as Error);
     }
     
@@ -247,11 +266,18 @@ export function useCommunityWithData(id: number) {
     };
   }, [id, context, error, isError]);
   
+  // Add retry function for community data
+  const retryLoadCommunity = useCallback(() => {
+    console.log(`[PKL-278651-COMM-0017-SEARCH] Retrying load for community ${id}`);
+    return refetch();
+  }, [id, refetch]);
+  
   return {
     ...context,
     community,
     isLoading,
     error,
+    retryLoadCommunity,
     // Additional convenience fields
     isMember: community?.isMember || false,
     isAdmin: community?.role === 'admin',

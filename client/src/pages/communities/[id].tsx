@@ -113,11 +113,18 @@ export default function CommunityDetailPage() {
     );
   }, [communityId, directCommunity, providerCommunity, community]);
   
-  // Redirect if community not found
+  // Redirect if community not found but delay the check to avoid flashing
   useEffect(() => {
-    if (!isLoading && !community && communityId !== 0) {
-      console.log('[PKL-278651-COMM-UI-DEBUG] Community not found, redirecting to communities list');
-      navigate("/communities");
+    // Add a small delay to give the API time to respond (prevents unnecessary redirects during loading)
+    if (!isLoading && communityId !== 0) {
+      const timeoutId = setTimeout(() => {
+        if (!community) {
+          console.log('[PKL-278651-COMM-UI-DEBUG] Community not found, redirecting to communities list');
+          navigate("/communities");
+        }
+      }, 500);
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [communityId, community, isLoading, navigate]);
   
