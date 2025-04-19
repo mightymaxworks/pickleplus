@@ -356,20 +356,7 @@ export const userRedemptions = pgTable("user_redemptions", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
-// XP transactions table - Tracks all XP awards
-export const xpTransactions = pgTable("xp_transactions", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
-  amount: integer("amount").notNull(),
-  source: varchar("source", { length: 100 }).notNull(),
-  description: varchar("description", { length: 255 }),
-  timestamp: timestamp("timestamp").defaultNow().notNull(),
-  metadata: jsonb("metadata"),
-  matchId: integer("match_id").references(() => matches.id),
-  tournamentId: integer("tournament_id").references(() => tournaments.id),
-  achievementId: integer("achievement_id").references(() => achievements.id),
-  createdAt: timestamp("created_at").defaultNow()
-});
+// XP transactions table is defined in ./schema/xp.ts
 
 // Profile completion tracking table - Tracks which profile fields have been completed
 export const profileCompletionTracking = pgTable("profile_completion_tracking", {
@@ -543,7 +530,6 @@ export const userRelations = relations(users, ({ many }) => ({
   activities: many(activities),
   userRedemptions: many(userRedemptions),
   rankingHistory: many(rankingHistory),
-  xpTransactions: many(xpTransactions),
   rankingTransactions: many(rankingTransactions),
   rankingTierHistory: many(rankingTierHistory),
   coachingProfile: many(coachingProfiles),
@@ -566,7 +552,6 @@ export const userRelations = relations(users, ({ many }) => ({
 export const tournamentRelations = relations(tournaments, ({ many }) => ({
   registrations: many(tournamentRegistrations),
   matches: many(matches),
-  xpTransactions: many(xpTransactions),
   rankingTransactions: many(rankingTransactions)
 }));
 
@@ -578,7 +563,6 @@ export const matchRelations = relations(matches, ({ one, many }) => ({
   playerTwoPartner: one(users, { fields: [matches.playerTwoPartnerId], references: [users.id], relationName: "playerTwoPartner" }),
   winner: one(users, { fields: [matches.winnerId], references: [users.id], relationName: "winner" }),
   tournament: one(tournaments, { fields: [matches.tournamentId], references: [tournaments.id] }),
-  xpTransactions: many(xpTransactions),
   rankingTransactions: many(rankingTransactions)
 }));
 
@@ -714,6 +698,9 @@ export {
   ContactPreference,
   InsertContactPreference
 };
+
+// Re-export XP types from schema/xp.ts 
+// These are exported from schema/xp.ts and imported/re-exported at the bottom of this file
 
 export type Tournament = typeof tournaments.$inferSelect;
 export type InsertTournament = z.infer<typeof insertTournamentSchema>;
@@ -907,8 +894,7 @@ export const rankingTierHistoryRelations = relations(rankingTierHistory, ({ one 
 }));
 
 // XP and Ranking schemas
-export const insertXpTransactionSchema = createInsertSchema(xpTransactions)
-  .omit({ id: true, createdAt: true, timestamp: true });
+// insertXpTransactionSchema is now imported from schema/xp.ts
 
 export const insertRankingTransactionSchema = createInsertSchema(rankingTransactions)
   .omit({ id: true, createdAt: true, timestamp: true });
@@ -917,8 +903,7 @@ export const insertRankingTierHistorySchema = createInsertSchema(rankingTierHist
   .omit({ id: true, createdAt: true, timestamp: true });
 
 // XP and Ranking types
-export type XpTransaction = typeof xpTransactions.$inferSelect;
-export type InsertXpTransaction = z.infer<typeof insertXpTransactionSchema>;
+// These are now imported from ./schema/xp.ts
 
 export type RankingTransaction = typeof rankingTransactions.$inferSelect;
 export type InsertRankingTransaction = z.infer<typeof insertRankingTransactionSchema>;
@@ -962,15 +947,19 @@ export {
   InsertCommunityLeaderboard
 };
 
-// Import enhanced XP system tables (PKL-278651-XP-0001-FOUND - XP System Foundation)
-import {
+// Import and re-export XP system schema (PKL-278651-XP-0001-FOUND - XP System Foundation)
+export {
+  xpTransactions,
   xpLevelThresholds,
   activityMultipliers,
   multiplierRecalibrations,
+  insertXpTransactionSchema,
   insertXpLevelThresholdSchema,
   insertActivityMultiplierSchema,
   insertMultiplierRecalibrationSchema,
   XP_SOURCE,
+  type XpTransaction,
+  type InsertXpTransaction,
   type XpSource,
   type XpLevelThreshold,
   type InsertXpLevelThreshold,
@@ -979,23 +968,5 @@ import {
   type MultiplierRecalibration,
   type InsertMultiplierRecalibration
 } from './schema/xp';
-
-// Export enhanced XP system tables and types
-export {
-  xpLevelThresholds,
-  activityMultipliers,
-  multiplierRecalibrations,
-  insertXpLevelThresholdSchema,
-  insertActivityMultiplierSchema,
-  insertMultiplierRecalibrationSchema,
-  XP_SOURCE,
-  type XpSource,
-  type XpLevelThreshold,
-  type InsertXpLevelThreshold,
-  type ActivityMultiplier,
-  type InsertActivityMultiplier,
-  type MultiplierRecalibration,
-  type InsertMultiplierRecalibration
-};
 
 // Add additional core schema exports here as the system grows

@@ -1,9 +1,12 @@
 import {
   users, type User, type InsertUser,
   profileCompletionTracking, type ProfileCompletionTracking, type InsertProfileCompletionTracking,
-  xpTransactions, type XpTransaction, type InsertXpTransaction,
-  matches, type Match, type InsertMatch
+  matches, type Match, type InsertMatch,
+  type XpTransaction, type InsertXpTransaction
 } from "@shared/schema";
+
+// Import XP tables from their new modular location
+import { xpTransactions } from "@shared/schema/xp";
 
 // PKL-278651-ADMIN-0013-SEC - Admin Security Enhancements
 import {
