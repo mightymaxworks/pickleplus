@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils";
-import React from "react";
 
 interface LayoutContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
@@ -12,18 +11,20 @@ export function LayoutContainer({
   maxWidth = "xl",
   ...props
 }: LayoutContainerProps) {
+  const maxWidthClasses = {
+    sm: "max-w-screen-sm",
+    md: "max-w-screen-md",
+    lg: "max-w-screen-lg",
+    xl: "max-w-screen-xl",
+    "2xl": "max-w-screen-2xl",
+    full: "max-w-full",
+  };
+
   return (
     <div
       className={cn(
-        "mx-auto px-4 sm:px-6",
-        {
-          "max-w-screen-sm": maxWidth === "sm",
-          "max-w-screen-md": maxWidth === "md",
-          "max-w-screen-lg": maxWidth === "lg",
-          "max-w-screen-xl": maxWidth === "xl",
-          "max-w-screen-2xl": maxWidth === "2xl",
-          "max-w-full": maxWidth === "full",
-        },
+        "mx-auto w-full px-4 md:px-6",
+        maxWidthClasses[maxWidth],
         className
       )}
       {...props}

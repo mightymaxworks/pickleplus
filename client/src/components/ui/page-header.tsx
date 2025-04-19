@@ -1,11 +1,10 @@
 import { cn } from "@/lib/utils";
-import React from "react";
 
 interface PageHeaderProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 export function PageHeader({ className, ...props }: PageHeaderProps) {
   return (
-    <div className={cn("flex flex-col space-y-2 mb-6", className)} {...props} />
+    <div className={cn("grid gap-1", className)} {...props} />
   );
 }
 
@@ -19,7 +18,7 @@ export function PageHeaderHeading({
   return (
     <h1
       className={cn(
-        "text-2xl font-bold tracking-tight text-foreground md:text-3xl",
+        "text-3xl font-bold tracking-tight text-primary md:text-4xl",
         className
       )}
       {...props}
@@ -36,7 +35,7 @@ export function PageHeaderDescription({
 }: PageHeaderDescriptionProps) {
   return (
     <p
-      className={cn("text-sm text-muted-foreground md:text-base", className)}
+      className={cn("text-muted-foreground text-lg", className)}
       {...props}
     />
   );
