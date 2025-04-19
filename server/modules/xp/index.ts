@@ -23,7 +23,8 @@ let activityMultiplierService: ActivityMultiplierService | null = null;
 export function initializeXpModule(app: express.Express): void {
   // Initialize services
   if (!activityMultiplierService) {
-    activityMultiplierService = new ActivityMultiplierService(null);
+    activityMultiplierService = new ActivityMultiplierService();
+    console.log('[XP] ActivityMultiplierService initialized');
   }
   
   // Register routes with '/api/xp' prefix

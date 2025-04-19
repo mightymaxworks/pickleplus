@@ -32,10 +32,11 @@ const MAX_MULTIPLIER = 2.5;
 const MIN_MULTIPLIER = 0.8;
 
 export class ActivityMultiplierService {
-  private storage: DatabaseStorage;
+  private storage: DatabaseStorage | null;
   
-  constructor(storage: DatabaseStorage) {
-    this.storage = storage;
+  constructor(storage?: DatabaseStorage) {
+    this.storage = storage || null;
+    console.log('[PicklePulse] ActivityMultiplierService initialized');
   }
   
   /**

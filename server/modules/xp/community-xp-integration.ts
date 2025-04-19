@@ -54,26 +54,76 @@ export class CommunityXpIntegration {
   constructor(multiplierService: ActivityMultiplierService) {
     this.multiplierService = multiplierService;
     this.setupEventListeners();
+    
+    // Initialize default multipliers for community activities
+    this.multiplierService.initializeDefaultMultipliers()
+      .then(() => console.log('[XP] Community multipliers initialized'))
+      .catch(err => console.error('[XP] Error initializing community multipliers:', err));
+      
+    console.log('[XP] Community XP Integration initialized - Framework 5.1');
   }
   
   /**
    * Set up event listeners for community activities
    */
   private setupEventListeners() {
+    console.log('[XP] Setting up community activity event listeners');
+
     // Listen for community activity events
     ServerEventBus.subscribe(ServerEvents.COMMUNITY_ACTIVITY_CREATED, async (data: {
       userId: number;
       communityId: number;
-      activityType: CommunityActivityType;
+      activityType: CommunityActivityType | string; // Allow string to be more flexible with event types
       activityId?: number;
       metadata?: Record<string, any>;
+    }) => {
+      console.log(`[XP] Received community activity event: ${data.activityType} for user ${data.userId}`);
+      await this.handleCommunityActivity(
+        data.userId,
+        data.communityId,
+        data.activityType as any,
+        data.activityId,
+        data.metadata
+      );
+    });
+    
+    // Listen for other community-related events
+    ServerEventBus.subscribe(ServerEvents.COMMUNITY_POST_CREATED, async (data: {
+      userId: number;
+      communityId: number;
+      postId: number;
     }) => {
       await this.handleCommunityActivity(
         data.userId,
         data.communityId,
-        data.activityType,
-        data.activityId,
-        data.metadata
+        CommunityActivityType.POST_CREATED,
+        data.postId
+      );
+    });
+    
+    ServerEventBus.subscribe(ServerEvents.COMMUNITY_COMMENT_CREATED, async (data: {
+      userId: number;
+      communityId: number;
+      commentId: number;
+    }) => {
+      await this.handleCommunityActivity(
+        data.userId,
+        data.communityId,
+        CommunityActivityType.COMMENT_ADDED,
+        data.commentId
+      );
+    });
+    
+    ServerEventBus.subscribe(ServerEvents.COMMUNITY_EVENT_ATTENDED, async (data: {
+      userId: number;
+      communityId: number;
+      eventId: number;
+    }) => {
+      await this.handleCommunityActivity(
+        data.userId,
+        data.communityId,
+        CommunityActivityType.EVENT_ATTENDED,
+        data.eventId
       );
     });
   }

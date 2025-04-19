@@ -7,6 +7,7 @@
  * 
  * @framework Framework5.1
  * @version 1.0.0
+ * @lastModified 2025-04-19
  */
 
 export type EventHandler = (data: any) => void | Promise<void>;
@@ -89,6 +90,9 @@ class EventBus {
       const handlers = this.handlers.get(event);
       if (handlers) {
         handlers.delete(handler);
+        if (handlers.size === 0) {
+          this.handlers.delete(event);
+        }
       }
     };
   }
@@ -98,27 +102,22 @@ class EventBus {
    */
   async emit(event: ServerEvents, data: any = {}): Promise<void> {
     const handlers = this.handlers.get(event);
+    if (!handlers) return;
     
-    if (!handlers || handlers.size === 0) {
-      return;
-    }
+    // Convert Set to Array for compatibility with older JS environments
+    const handlersArray = Array.from(handlers);
     
     // Execute all handlers
-    const promises = [];
-    for (const handler of handlers) {
-      promises.push(
-        Promise.resolve().then(() => {
-          try {
-            return handler(data);
-          } catch (error) {
-            console.error(`[ServerEventBus] Error in handler for event ${event}:`, error);
-            return;
-          }
-        })
-      );
-    }
-    
-    await Promise.all(promises);
+    await Promise.all(
+      handlersArray.map(handler => {
+        try {
+          return Promise.resolve(handler(data));
+        } catch (error) {
+          console.error(`Error in event handler for ${event}:`, error);
+          return Promise.resolve();
+        }
+      })
+    );
   }
   
   /**
@@ -144,5 +143,4 @@ class EventBus {
   }
 }
 
-// Create and export singleton instance
 export const ServerEventBus = new EventBus();
