@@ -24,6 +24,7 @@ import { CommunityHeader } from "@/components/community/CommunityHeader";
 import { EventList } from "@/components/community/EventList";
 import { MembersList } from "@/components/community/MembersList";
 import { CommunityVisualSettings } from "@/components/community/CommunityVisualSettings";
+import { EnhancedMemberManagement } from "@/components/community/EnhancedMemberManagement";
 import { 
   CommunityInfoCard, 
   CommunityInfoDescription, 
@@ -61,7 +62,9 @@ import {
   Palette,
   MessageSquare,
   Settings,
-  ShieldAlert
+  ShieldAlert,
+  Shield,
+  UserPlus
 } from "lucide-react";
 import { JoinRequestManagement } from "@/components/community/JoinRequestManagement";
 import { CommunityAdminFAB } from "@/components/community/CommunityAdminFAB";
@@ -427,7 +430,7 @@ export default function CommunityDetailPage() {
                   {console.log("User has admin/mod permissions - showing management UI")}
                   {/* Management Tabs */}
                   <Tabs defaultValue="settings" className="w-full">
-                    <TabsList className="w-full sm:w-auto grid grid-cols-2 sm:flex overflow-hidden">
+                    <TabsList className="w-full sm:w-auto grid grid-cols-3 sm:flex overflow-hidden">
                       <TabsTrigger value="join-requests" className="flex gap-2 items-center justify-center py-3">
                         <Users className="h-5 w-5" />
                         <span className="hidden sm:inline font-medium">Join Requests</span>
@@ -437,6 +440,11 @@ export default function CommunityDetailPage() {
                         <Edit className="h-5 w-5" />
                         <span className="hidden sm:inline font-medium">Settings</span>
                         <span className="sm:hidden font-medium">Edit</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="member-management" className="flex gap-2 items-center justify-center py-3">
+                        <Shield className="h-5 w-5" />
+                        <span className="hidden sm:inline font-medium">Member Management</span>
+                        <span className="sm:hidden font-medium">Members</span>
                       </TabsTrigger>
                     </TabsList>
                     
@@ -517,6 +525,16 @@ export default function CommunityDetailPage() {
                           </CardContent>
                         </Card>
                       </div>
+                    </TabsContent>
+                    
+                    {/* Member Management Panel */}
+                    <TabsContent value="member-management" className="mt-6">
+                      {console.log("Member management tab selected")}
+                      <EnhancedMemberManagement 
+                        communityId={communityId}
+                        userRole={userRole}
+                        hasManagePermission={userRole === CommunityMemberRole.ADMIN || userRole === CommunityMemberRole.MODERATOR}
+                      />
                     </TabsContent>
                   </Tabs>
                 </>
