@@ -128,15 +128,16 @@ const CommunityStatistics: React.FC<CommunityStatisticsProps> = ({ communityId }
         );
         
         if (!res.ok) {
-          return generateFallbackActivityData();
+          console.error('Error fetching activity data: API returned status', res.status);
+          return [];
         }
         
         const data = await res.json();
         // Ensure we have array data for the charts
-        return Array.isArray(data) && data.length > 0 ? data : generateFallbackActivityData();
+        return Array.isArray(data) && data.length > 0 ? data : [];
       } catch (error) {
         console.error('Error fetching activity data:', error);
-        return generateFallbackActivityData();
+        return [];
       }
     }
   });
@@ -152,62 +153,20 @@ const CommunityStatistics: React.FC<CommunityStatisticsProps> = ({ communityId }
         );
         
         if (!res.ok) {
-          return generateFallbackEngagementDistribution();
+          console.error('Error fetching engagement distribution: API returned status', res.status);
+          return [];
         }
         
         const data = await res.json();
         // Ensure we have array data for the charts
-        return Array.isArray(data) && data.length > 0 ? data : generateFallbackEngagementDistribution();
+        return Array.isArray(data) && data.length > 0 ? data : [];
       } catch (error) {
         console.error('Error fetching engagement distribution:', error);
-        return generateFallbackEngagementDistribution();
+        return [];
       }
     }
   });
 
-  // Generate fallback data for development/demo purposes
-  const generateFallbackGrowthData = (period: string) => {
-    const days = period === 'week' ? 7 : period === 'month' ? 30 : 365;
-    const data = [];
-    const startValue = 50; // Starting member count
-    const maxIncrease = period === 'week' ? 5 : period === 'month' ? 15 : 150;
-    
-    let cumulativeValue = startValue;
-    
-    for (let i = days; i > 0; i--) {
-      const date = subDays(new Date(), i);
-      const increase = Math.floor(Math.random() * maxIncrease / 10) + 1;
-      cumulativeValue += increase;
-      
-      data.push({
-        date: format(date, 'MMM dd'),
-        members: cumulativeValue,
-        newMembers: increase
-      });
-    }
-    
-    return data;
-  };
-  
-  const generateFallbackActivityData = () => {
-    return [
-      { name: 'Posts', value: 28, fill: CHART_COLORS[0] },
-      { name: 'Comments', value: 42, fill: CHART_COLORS[1] },
-      { name: 'Event Attendance', value: 16, fill: CHART_COLORS[2] },
-      { name: 'Reactions', value: 36, fill: CHART_COLORS[3] }
-    ];
-  };
-  
-  const generateFallbackEngagementDistribution = () => {
-    return [
-      { name: 'Newcomer', value: 35, fill: CHART_COLORS[0] },
-      { name: 'Regular', value: 25, fill: CHART_COLORS[1] },
-      { name: 'Active', value: 20, fill: CHART_COLORS[2] },
-      { name: 'Core', value: 15, fill: CHART_COLORS[3] },
-      { name: 'Leader', value: 5, fill: CHART_COLORS[4] }
-    ];
-  };
-  
   // Calculate summary metrics
   const totalMembers = growthData ? growthData[growthData.length - 1]?.members || 0 : 0;
   const newMembersThisPeriod = growthData ? growthData.reduce((sum: number, item: any) => sum + item.newMembers, 0) : 0;
