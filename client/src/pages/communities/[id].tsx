@@ -24,6 +24,7 @@ import { CommunityHeader } from "@/components/community/CommunityHeader";
 import { EventList } from "@/components/community/EventList";
 import { MembersList } from "@/components/community/MembersList";
 import { CommunityVisualSettings } from "@/components/community/CommunityVisualSettings";
+import { PostList } from "@/components/post/PostList";
 import {
   Card,
   CardContent,
@@ -379,29 +380,7 @@ export default function CommunityDetailPage() {
           
           {/* Posts Tab */}
           {activeTab === "posts" && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Community Posts
-                </CardTitle>
-                <CardDescription>
-                  Coming soon - Posts and announcements from this community
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-16">
-                  <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                  <p className="text-lg font-medium mb-2">
-                    Posts feature coming soon
-                  </p>
-                  <p className="text-muted-foreground max-w-md mx-auto">
-                    We're working on building a great posts and announcements feature for communities.
-                    Check back soon!
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <PostList communityId={communityId} />
           )}
           
           {/* Engagement Tab */}
