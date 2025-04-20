@@ -531,7 +531,7 @@ export default function EventTemplateManager({ communityId }: EventTemplateManag
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">None (One-time event)</SelectItem>
+                            <SelectItem value="none">None (One-time event)</SelectItem>
                             <SelectItem value="daily">Daily</SelectItem>
                             <SelectItem value="weekly">Weekly</SelectItem>
                             <SelectItem value="biweekly">Bi-weekly</SelectItem>
@@ -587,7 +587,7 @@ export default function EventTemplateManager({ communityId }: EventTemplateManag
       {/* List of existing templates */}
       {templates && templates.length > 0 ? (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {templates.map((template) => (
+          {templates.map((template: EventTemplate) => (
             <Card key={template.id} className="overflow-hidden">
               <CardHeader className="pb-3 relative">
                 <div className="flex justify-between items-start">
@@ -908,7 +908,7 @@ export default function EventTemplateManager({ communityId }: EventTemplateManag
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">None (One-time event)</SelectItem>
+                          <SelectItem value="none">None (One-time event)</SelectItem>
                           <SelectItem value="daily">Daily</SelectItem>
                           <SelectItem value="weekly">Weekly</SelectItem>
                           <SelectItem value="biweekly">Bi-weekly</SelectItem>

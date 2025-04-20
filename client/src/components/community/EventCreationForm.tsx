@@ -127,7 +127,7 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
   
   // Function to apply template data to form
   const applyTemplate = (templateId: string) => {
-    if (!eventTemplates || templateId === "") return;
+    if (!eventTemplates || templateId === "none") return;
     
     const template = eventTemplates.find((t: EventTemplate) => t.id.toString() === templateId);
     if (!template) return;
@@ -264,7 +264,7 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
                       <SelectValue placeholder="Select a template..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Create without template</SelectItem>
+                      <SelectItem value="none">Create without template</SelectItem>
                       {eventTemplates.map((template: EventTemplate) => (
                         <SelectItem key={template.id} value={template.id.toString()}>
                           {template.name} 
