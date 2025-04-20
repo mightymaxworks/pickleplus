@@ -18,6 +18,7 @@ export interface UserNotification {
   isRead: boolean;
   referenceType: string | null;
   referenceId: number | null;
+  link: string | null;
   communityId: number | null;
   createdAt: string;
   updatedAt: string;
