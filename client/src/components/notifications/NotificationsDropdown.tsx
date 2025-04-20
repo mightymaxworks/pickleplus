@@ -77,13 +77,20 @@ export function NotificationsDropdown({ onClose, unreadCount }: NotificationsDro
       markAsReadMutation.mutate(notification.id);
     }
     
-    // Navigate based on notification type
-    if (notification.referenceType === 'community' && notification.referenceId) {
+    // First try to use the direct link if available
+    if (notification.link) {
+      navigate(notification.link);
+    }
+    // Fallback to reference-based navigation if link is not available
+    else if (notification.referenceType === 'community' && notification.referenceId) {
       navigate(`/communities/${notification.referenceId}`);
     } else if (notification.referenceType === 'post' && notification.referenceId && notification.communityId) {
       navigate(`/communities/${notification.communityId}/posts/${notification.referenceId}`);
     } else if (notification.referenceType === 'event' && notification.referenceId && notification.communityId) {
       navigate(`/communities/${notification.communityId}/events/${notification.referenceId}`);
+    } else {
+      // Default to dashboard if no specific navigation target
+      navigate('/dashboard');
     }
     
     onClose();
