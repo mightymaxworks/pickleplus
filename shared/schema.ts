@@ -56,6 +56,29 @@ import {
   type InsertEventTemplate
 } from './schema/event-templates';
 
+// Import media management schema (PKL-278651-COMM-0036-MEDIA - Community Media Management)
+import {
+  communityMedia,
+  communityGalleries,
+  galleryItems,
+  communityMediaRelations,
+  communityGalleriesRelations,
+  galleryItemsRelations,
+  insertMediaSchema,
+  insertGallerySchema,
+  insertGalleryItemSchema,
+  MediaType,
+  GalleryPrivacyLevel,
+  type Media,
+  type InsertMedia,
+  type Gallery,
+  type InsertGallery,
+  type GalleryItem,
+  type InsertGalleryItem,
+  type MediaWithRelations,
+  type GalleryWithRelations
+} from './schema/media';
+
 // Import XP system schema (PKL-278651-XP-0001-FOUND - XP System Foundation)
 import {
   xpTransactions,
