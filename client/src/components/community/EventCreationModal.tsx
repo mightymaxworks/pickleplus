@@ -45,7 +45,7 @@ export function EventCreationModal({
         {trigger || (
           <Button className="gap-1 whitespace-nowrap text-sm">
             <PlusCircle className="h-4 w-4" />
-            <span>Create Event</span>
+            <span className="hidden sm:inline">Create Event</span>
           </Button>
         )}
       </DialogTrigger>

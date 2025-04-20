@@ -467,7 +467,7 @@ export function CommunityHeader({
                   title="About"
                 >
                   <Info className="h-4 w-4 flex-shrink-0" />
-                  <span>About</span>
+                  <span className="hidden sm:inline">About</span>
                 </TabsTrigger>
                 
                 <TabsTrigger
@@ -476,7 +476,7 @@ export function CommunityHeader({
                   title="Events"
                 >
                   <Calendar className="h-4 w-4 flex-shrink-0" />
-                  <span>Events</span>
+                  <span className="hidden sm:inline">Events</span>
                 </TabsTrigger>
                 
                 <TabsTrigger
@@ -485,7 +485,7 @@ export function CommunityHeader({
                   title="Members"
                 >
                   <Users className="h-4 w-4 flex-shrink-0" />
-                  <span>Members</span>
+                  <span className="hidden sm:inline">Members</span>
                 </TabsTrigger>
                 
                 <TabsTrigger
@@ -494,7 +494,7 @@ export function CommunityHeader({
                   title="Posts"
                 >
                   <MessageSquare className="h-4 w-4 flex-shrink-0" />
-                  <span>Posts</span>
+                  <span className="hidden sm:inline">Posts</span>
                 </TabsTrigger>
                 
                 <TabsTrigger
@@ -503,7 +503,7 @@ export function CommunityHeader({
                   title="Engagement"
                 >
                   <Star className="h-4 w-4 flex-shrink-0" />
-                  <span>Engagement</span>
+                  <span className="hidden sm:inline">Engagement</span>
                 </TabsTrigger>
                 
                 {hasManagePermissions && (
@@ -513,7 +513,7 @@ export function CommunityHeader({
                     title="Manage Community"
                   >
                     <Settings className="h-4 w-4 flex-shrink-0" />
-                    <span>Manage</span>
+                    <span className="hidden sm:inline">Manage</span>
                   </TabsTrigger>
                 )}
               </TabsList>
