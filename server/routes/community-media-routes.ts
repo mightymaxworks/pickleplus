@@ -244,7 +244,9 @@ router.get(
         name: communities.name,
         avatarUrl: communities.avatarUrl,
         bannerUrl: communities.bannerUrl,
-        themeColor: communities.themeColor
+        themeColor: communities.themeColor,
+        accentColor: communities.accentColor,
+        bannerPattern: communities.bannerPattern
       })
       .from(communities)
       .where(eq(communities.id, communityId));
@@ -253,7 +255,12 @@ router.get(
         return res.status(404).json({ message: 'Community not found' });
       }
       
-      console.log(`[API][Community] Media settings fetched for community ${communityId}`);
+      console.log(`[API][Community] Media settings fetched for community ${communityId}: ${JSON.stringify({
+        id: community.id,
+        name: community.name,
+        hasAvatar: !!community.avatarUrl,
+        hasBanner: !!community.bannerUrl
+      })}`);
       
       res.status(200).json({
         community
