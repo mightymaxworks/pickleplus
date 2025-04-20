@@ -16,9 +16,8 @@ import { relations } from "drizzle-orm";
 import { integer, pgTable, serial, text, timestamp, boolean, uniqueIndex, jsonb, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
-import { communities } from "./community";
-import { users } from "./users";
-import { communityEvents } from "./events";
+import { communities, communityEvents } from "./community";
+import { users } from "../schema";
 
 /**
  * Media types supported by the platform

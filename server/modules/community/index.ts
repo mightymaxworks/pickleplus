@@ -4,15 +4,16 @@
  * 
  * This is the main export file for the community hub module.
  * Updated to include moderation, notification systems, enhanced member management,
- * and event template management.
+ * event template management, and media management.
  * 
- * Implementation timestamp: 2025-04-20 17:30 ET
+ * Implementation timestamp: 2025-04-20 17:45 ET
  */
 import { registerCommunityRoutes } from './routes';
 import { registerCommunityModerationRoutes } from '../../routes/community-moderation-routes';
 import { registerCommunityNotificationsRoutes } from '../../routes/community-notifications-routes';
 import memberManagementRoutes from '../../routes/community-member-management-routes-fixed';
 import eventTemplatesRoutes from './event-templates-routes-fixed';
+import mediaRoutes from './media-routes';
 
 export interface CommunityModuleOptions {
   app: any;
