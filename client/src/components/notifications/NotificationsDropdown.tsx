@@ -1,82 +1,108 @@
 /**
- * PKL-278651-COMM-0028-NOTIF-REALTIME - Enhanced Notifications Dropdown Component
- * Implementation timestamp: 2025-04-20 10:45 ET
+ * PKL-278651-COMM-0028-NOTIF-UI - Notifications Dropdown Component
+ * Implementation timestamp: 2025-04-20 14:45 ET
  * 
- * Dropdown displaying user's notifications with real-time updates via WebSocket
+ * Dropdown component for displaying notifications
  * 
  * Framework 5.2 compliant implementation
  */
 
-import { useEffect, useRef, useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
-import { notificationsSDK, UserNotification } from '@/lib/sdk/notificationsSDK';
+import React, { useEffect, useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { Loader2, X, Check, Bell, BellOff } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, CheckCircle, Calendar, Bell, MessageSquare, User, Users, Wifi, WifiOff, Award, Trophy, Activity } from 'lucide-react';
-import { useLocation } from 'wouter';
-import { formatDistanceToNow } from 'date-fns';
-import { queryClient } from '@/lib/queryClient';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useNotificationSocket } from '@/lib/hooks/useNotificationSocket';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import NotificationBell from './NotificationBell';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { UserNotification } from '@shared/schema/notifications';
 
 interface NotificationsDropdownProps {
-  onClose: () => void;
-  unreadCount: number;
-  realTimeEnabled?: boolean;
+  className?: string;
 }
 
-export function NotificationsDropdown({ 
-  onClose, 
-  unreadCount, 
-  realTimeEnabled = false 
-}: NotificationsDropdownProps) {
-  const [, navigate] = useLocation();
-  const dropdownRef = useRef<HTMLDivElement>(null);
+export const NotificationsDropdown: React.FC<NotificationsDropdownProps> = ({
+  className
+}) => {
+  const { user } = useAuth();
   const { toast } = useToast();
-  const [newNotificationHighlight, setNewNotificationHighlight] = useState<number | null>(null);
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('all');
   
-  // Handle click outside to close dropdown
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        onClose();
+  // Get notifications from API
+  const { data: notifications = [], isLoading } = useQuery<UserNotification[]>({
+    queryKey: ['/api/notifications'],
+    enabled: !!user && open,
+  });
+
+  // Setup WebSocket connection
+  const { connected, lastMessage } = useNotificationSocket({
+    onMessage: (message) => {
+      if (['new_notification', 'notification_batch', 'notification_read', 'notification_deleted', 'all_read'].includes(message.type)) {
+        // Refetch notifications when changes happen
+        queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
       }
     }
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [onClose]);
-  
-  // Get notifications
-  const { data: notifications, isLoading } = useQuery({
-    queryKey: ['/api/notifications', { limit: 15 }],
-    queryFn: () => notificationsSDK.getNotifications({ limit: 15 }),
-    refetchInterval: realTimeEnabled ? false : 30000, // Only poll if not using WebSockets
   });
   
-  // Mark notification as read mutation
+  // Mark a notification as read
   const markAsReadMutation = useMutation({
-    mutationFn: notificationsSDK.markAsRead,
+    mutationFn: async (id: number) => {
+      const response = await apiRequest('POST', `/api/notifications/${id}/read`);
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/notifications/count'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
     }
   });
   
-  // Mark all as read mutation
-  const markAllAsReadMutation = useMutation({
-    mutationFn: notificationsSDK.markAllAsRead,
+  // Delete a notification
+  const deleteNotificationMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest('DELETE', `/api/notifications/${id}`);
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/notifications/count'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
       toast({
-        title: "All notifications marked as read",
-        variant: "default",
+        title: 'Notification deleted',
+        description: 'The notification has been removed.',
       });
     }
+  });
+  
+  // Mark all as read
+  const markAllAsReadMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/notifications/mark-all-as-read');
+      return response.json();
+    },
+    onSuccess: (data: { count: number }) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
+      toast({
+        title: 'All notifications marked as read',
+        description: `${data.count} notifications have been marked as read.`,
+      });
+    }
+  });
+  
+  // Filter notifications based on active tab
+  const filteredNotifications = notifications.filter(notification => {
+    if (activeTab === 'all') return true;
+    if (activeTab === 'unread') return !notification.isRead;
+    return notification.type.startsWith(activeTab);
   });
   
   // Handle notification click
@@ -85,231 +111,121 @@ export function NotificationsDropdown({
       markAsReadMutation.mutate(notification.id);
     }
     
-    // First try to use the direct link if available
+    // Navigate to the notification target if available
     if (notification.link) {
-      navigate(notification.link);
-    }
-    // Fallback to reference-based navigation if link is not available
-    else if (notification.referenceType === 'community' && notification.referenceId) {
-      navigate(`/communities/${notification.referenceId}`);
-    } else if (notification.referenceType === 'post' && notification.referenceId && notification.metadata?.communityId) {
-      navigate(`/communities/${notification.metadata.communityId}/posts/${notification.referenceId}`);
-    } else if (notification.referenceType === 'event' && notification.referenceId && notification.metadata?.communityId) {
-      navigate(`/communities/${notification.metadata.communityId}/events/${notification.referenceId}`);
-    } else if (notification.referenceType === 'match' && notification.referenceId) {
-      navigate(`/matches/${notification.referenceId}`);
-    } else if (notification.referenceType === 'achievement' && notification.referenceId) {
-      navigate(`/achievements/${notification.referenceId}`);
-    } else if (notification.referenceType === 'profile') {
-      navigate('/profile');
-    } else {
-      // Default to dashboard if no specific navigation target
-      navigate('/dashboard');
-    }
-    
-    onClose();
-  };
-  
-  // Get icon based on notification type
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'community_post':
-      case 'community_comment':
-      case 'post_mention':
-      case 'post_reply':
-      case 'post_like':
-        return <MessageSquare className="h-5 w-5 text-blue-500" />;
-        
-      case 'community_event':
-      case 'event_reminder':
-      case 'event_registration':
-      case 'event_cancellation':
-      case 'event_updated':
-        return <Calendar className="h-5 w-5 text-green-500" />;
-        
-      case 'match_recorded':
-      case 'match_invite':
-        return <Activity className="h-5 w-5 text-purple-500" />;
-        
-      case 'friend_request':
-      case 'community_invite':
-      case 'community_join_approved':
-      case 'community_announcement':
-      case 'member_role_change':
-        return <Users className="h-5 w-5 text-indigo-500" />;
-        
-      case 'achievement_earned':
-      case 'level_up':
-        return <Award className="h-5 w-5 text-yellow-500" />;
-        
-      case 'tournament_invite':
-      case 'tournament_update':
-        return <Trophy className="h-5 w-5 text-amber-500" />;
-        
-      case 'xp_earned':
-        return <Activity className="h-5 w-5 text-emerald-500" />;
-        
-      case 'system_message':
-        return <Bell className="h-5 w-5 text-red-500" />;
-        
-      default:
-        return <Bell className="h-5 w-5 text-gray-500" />;
+      setOpen(false);
+      window.location.href = notification.link;
     }
   };
-  
-  // Format time
-  const formatTime = (dateString: string) => {
-    try {
-      return formatDistanceToNow(new Date(dateString), { addSuffix: true });
-    } catch (error) {
-      return 'Just now';
-    }
-  };
-  
-  // Group notifications by date (today, yesterday, this week, earlier)
-  const groupedNotifications = notifications?.reduce((groups: Record<string, UserNotification[]>, notification) => {
-    const date = new Date(notification.createdAt);
-    const now = new Date();
-    
-    // Today
-    if (date.toDateString() === now.toDateString()) {
-      if (!groups.today) groups.today = [];
-      groups.today.push(notification);
-    } 
-    // Yesterday
-    else if (date.toDateString() === new Date(now.setDate(now.getDate() - 1)).toDateString()) {
-      if (!groups.yesterday) groups.yesterday = [];
-      groups.yesterday.push(notification);
-    }
-    // This week (within 7 days)
-    else if (date > new Date(now.setDate(now.getDate() - 6))) {
-      if (!groups.thisWeek) groups.thisWeek = [];
-      groups.thisWeek.push(notification);
-    }
-    // Earlier
-    else {
-      if (!groups.earlier) groups.earlier = [];
-      groups.earlier.push(notification);
-    }
-    
-    return groups;
-  }, {}) || {};
-  
+
   return (
-    <motion.div 
-      ref={dropdownRef}
-      className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-gray-800 rounded-md shadow-lg overflow-hidden z-50"
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.2 }}
-    >
-      <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
-        <div className="flex items-center gap-2">
-          <h3 className="font-semibold text-lg">Notifications</h3>
-          {realTimeEnabled ? (
-            <Badge variant="outline" className="px-2 py-0 h-5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800">
-              <Wifi className="h-3 w-3 mr-1" />
-              <span className="text-xs">Live</span>
-            </Badge>
-          ) : (
-            <Badge variant="outline" className="px-2 py-0 h-5 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700">
-              <WifiOff className="h-3 w-3 mr-1" />
-              <span className="text-xs">Offline</span>
-            </Badge>
-          )}
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <div className={className}>
+          <NotificationBell onClick={() => setOpen(!open)} />
         </div>
-        {unreadCount > 0 && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => markAllAsReadMutation.mutate()}
-            disabled={markAllAsReadMutation.isPending}
-          >
-            {markAllAsReadMutation.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-1" />
-            ) : (
-              <CheckCircle className="h-4 w-4 mr-1" />
-            )}
-            Mark all as read
-          </Button>
-        )}
-      </div>
-      
-      <ScrollArea className="max-h-[400px]">
-        {isLoading ? (
-          <div className="flex items-center justify-center p-6">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </PopoverTrigger>
+      <PopoverContent 
+        className="w-[380px] p-0" 
+        align="end"
+        sideOffset={5}
+      >
+        <div className="flex items-center justify-between p-4 border-b">
+          <h3 className="font-semibold text-lg">Notifications</h3>
+          <div className="flex space-x-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => markAllAsReadMutation.mutate()}
+              disabled={markAllAsReadMutation.isPending || !notifications.some(n => !n.isRead)}
+            >
+              {markAllAsReadMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4 mr-1" />}
+              <span className="sr-only md:not-sr-only md:inline-block">Mark all as read</span>
+            </Button>
           </div>
-        ) : !notifications || notifications.length === 0 ? (
-          <div className="p-6 text-center text-gray-500 dark:text-gray-400">
-            <Bell className="h-10 w-10 mx-auto mb-2 opacity-30" />
-            <p>You don't have any notifications yet</p>
+        </div>
+        
+        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+          <div className="px-4 py-2 border-b">
+            <TabsList className="grid grid-cols-4 w-full">
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="unread">Unread</TabsTrigger>
+              <TabsTrigger value="community">Community</TabsTrigger>
+              <TabsTrigger value="match">Match</TabsTrigger>
+            </TabsList>
           </div>
-        ) : (
-          <div>
-            {/* Display grouped notifications */}
-            {Object.entries(groupedNotifications).map(([group, groupNotifications]) => (
-              <div key={group}>
-                <div className="px-3 py-1 bg-gray-50 dark:bg-gray-700/50 border-y dark:border-gray-700">
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                    {group === 'today' ? 'Today' : 
-                     group === 'yesterday' ? 'Yesterday' : 
-                     group === 'thisWeek' ? 'This Week' : 'Earlier'}
+          
+          <TabsContent value={activeTab} className="mt-0">
+            <ScrollArea className="h-[300px]">
+              {isLoading ? (
+                <div className="flex items-center justify-center h-[300px]">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary/70" />
+                </div>
+              ) : filteredNotifications.length > 0 ? (
+                <div>
+                  {filteredNotifications.map((notification) => (
+                    <div
+                      key={notification.id}
+                      className={cn(
+                        "p-4 hover:bg-accent/50 cursor-pointer transition-colors border-b last:border-b-0",
+                        !notification.isRead && "bg-accent/20"
+                      )}
+                      onClick={() => handleNotificationClick(notification)}
+                    >
+                      <div className="flex justify-between">
+                        <h4 className="font-medium text-sm">{notification.title}</h4>
+                        <div className="flex items-center space-x-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteNotificationMutation.mutate(notification.id);
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                            <span className="sr-only">Delete</span>
+                          </Button>
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1">{notification.message}</p>
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-xs text-muted-foreground">
+                          {notification.createdAt && formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+                        </span>
+                        {!notification.isRead && (
+                          <div className="h-2 w-2 rounded-full bg-primary"></div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-[300px] text-center p-4">
+                  <BellOff className="h-8 w-8 mb-2 text-muted-foreground" />
+                  <p className="text-muted-foreground">No notifications to display</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {activeTab === 'all' 
+                      ? "You're all caught up!" 
+                      : `No ${activeTab === 'unread' ? 'unread' : activeTab} notifications found.`}
                   </p>
                 </div>
-                
-                {groupNotifications.map((notification) => (
-                  <motion.div 
-                    key={notification.id} 
-                    className={`p-3 border-b dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-start gap-3 ${
-                      !notification.isRead ? 'bg-blue-50 dark:bg-blue-900/20' : ''
-                    } ${newNotificationHighlight === notification.id ? 'bg-yellow-50 dark:bg-yellow-900/20' : ''}`}
-                    onClick={() => handleNotificationClick(notification)}
-                    animate={newNotificationHighlight === notification.id ? {
-                      backgroundColor: ['rgba(254, 252, 232, 1)', 'rgba(254, 252, 232, 0)'],
-                      transition: { duration: 2 }
-                    } : {}}
-                    onAnimationComplete={() => {
-                      if (newNotificationHighlight === notification.id) {
-                        setNewNotificationHighlight(null);
-                      }
-                    }}
-                  >
-                    <div className="flex-shrink-0 mt-1">
-                      {getNotificationIcon(notification.type)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">{notification.title}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">{notification.message}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {formatTime(notification.createdAt)}
-                      </p>
-                    </div>
-                    {!notification.isRead && (
-                      <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></div>
-                    )}
-                  </motion.div>
-                ))}
-              </div>
-            ))}
-          </div>
-        )}
-      </ScrollArea>
-      
-      <div className="p-3 border-t dark:border-gray-700 text-center">
-        <Button 
-          variant="link" 
-          size="sm" 
-          className="text-sm text-primary"
-          onClick={() => {
-            navigate('/notifications');
-            onClose();
-          }}
-        >
-          View all notifications
-        </Button>
-      </div>
-    </motion.div>
+              )}
+            </ScrollArea>
+          </TabsContent>
+        </Tabs>
+        
+        <div className="p-2 border-t text-xs text-center text-muted-foreground">
+          <span>
+            {connected 
+              ? "Real-time notifications are active" 
+              : "Connecting to notification service..."}
+          </span>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
-}
+};
+
+export default NotificationsDropdown;

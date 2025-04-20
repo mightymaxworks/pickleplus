@@ -1,127 +1,108 @@
 /**
- * PKL-278651-COMM-0028-NOTIF-REALTIME - Enhanced Notification Bell Component
- * Implementation timestamp: 2025-04-20 10:40 ET
+ * PKL-278651-COMM-0028-NOTIF-UI - Notification Bell Component
+ * Implementation timestamp: 2025-04-20 14:30 ET
  * 
- * Bell icon component with real-time notification counter using WebSockets
+ * Bell icon component with counter for notifications
  * 
  * Framework 5.2 compliant implementation
  */
 
-import { useState, useEffect } from 'react';
-import { Bell } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { notificationsSDK } from '@/lib/sdk/notificationsSDK';
-import { NotificationsDropdown } from '@/components/notifications/NotificationsDropdown';
-import { cn } from '@/lib/utils';
+import React, { useEffect, useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import { useNotificationSocket } from '@/lib/hooks/useNotificationSocket';
-import { useToast } from '@/hooks/use-toast';
+import { Bell } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface NotificationBellProps {
+  onClick: () => void;
   className?: string;
 }
 
-export function NotificationBell({ className }: NotificationBellProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const { toast } = useToast();
+export const NotificationBell: React.FC<NotificationBellProps> = ({
+  onClick,
+  className
+}) => {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
-  
-  // Initialize WebSocket for real-time notifications
-  const { 
-    unreadCount,
-    connected,
-    connecting,
-    lastMessage 
-  } = useNotificationSocket({
-    onConnect: () => {
-      console.log('Connected to notification service');
-    },
+  const [animateBell, setAnimateBell] = useState(false);
+  const { unreadCount, connected, lastMessage } = useNotificationSocket({
     onMessage: (message) => {
-      // Invalidate notification queries when new notifications are received
-      if (message.type === 'new_notification' || 
-          message.type === 'notification_read' || 
-          message.type === 'all_read' || 
-          message.type === 'notification_deleted') {
-        queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+      if (message.type === 'new_notification' || message.type === 'notification_batch') {
+        triggerBellAnimation();
       }
     }
   });
   
-  // Fallback to REST API if WebSocket is not available
-  const { data: unreadCountData, isLoading } = useQuery({
-    queryKey: ['/api/notifications/count'],
-    queryFn: notificationsSDK.getUnreadCount,
-    refetchInterval: connected ? false : 60000, // Only poll if WebSocket is not connected
-    enabled: !connected, // Disable when WebSocket is active
+  // Get initial unread count from API
+  const { data: initialUnreadCount = 0 } = useQuery({
+    queryKey: ['/api/notifications/unread-count'],
+    enabled: !!user,
   });
   
-  // Determine unread count from WebSocket or REST API
-  const finalUnreadCount = connected ? unreadCount : (unreadCountData?.count || 0);
+  // Combine socket unread count with initial API count
+  const totalUnreadCount = unreadCount || initialUnreadCount;
   
-  // Visual bell shake effect when receiving new notifications
-  const [shouldShake, setShouldShake] = useState(false);
-  
-  useEffect(() => {
-    if (lastMessage?.type === 'new_notification') {
-      // Trigger shake animation
-      setShouldShake(true);
-      
-      // Reset animation after 1 second
-      const timer = setTimeout(() => setShouldShake(false), 1000);
-      return () => clearTimeout(timer);
+  // Mark all as read mutation
+  const markAllAsReadMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/notifications/mark-all-as-read');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
     }
-  }, [lastMessage]);
+  });
+  
+  const triggerBellAnimation = () => {
+    setAnimateBell(true);
+    setTimeout(() => setAnimateBell(false), 1000);
+  };
+  
+  // Trigger animation when unread count changes
+  useEffect(() => {
+    if (totalUnreadCount > 0) {
+      triggerBellAnimation();
+    }
+  }, [totalUnreadCount]);
   
   return (
-    <div className="relative">
-      <motion.button 
-        className={cn(
-          "relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200",
-          className
-        )}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        animate={shouldShake ? { 
-          rotate: [0, -10, 10, -5, 5, 0],
-          transition: { duration: 0.5 }
-        } : {}}
-        onClick={() => setIsOpen(!isOpen)}
-        aria-label={`Notifications ${finalUnreadCount > 0 ? `(${finalUnreadCount} unread)` : ''}`}
-      >
-        <Bell size={22} className={cn(
-          "text-gray-600 dark:text-gray-300",
-          finalUnreadCount > 0 && "text-[#FF5722] dark:text-[#FF7043]"
-        )} />
-        
-        <AnimatePresence>
-          {finalUnreadCount > 0 && (
-            <motion.div 
-              className="absolute top-1 right-1 min-w-4 h-4 rounded-full bg-[#FF5722] flex items-center justify-center text-white text-[10px] font-medium px-1"
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-            >
-              {finalUnreadCount > 99 ? '99+' : finalUnreadCount}
-            </motion.div>
-          )}
-        </AnimatePresence>
-        
-        {/* Connection status indicator - only visible when explicitly disconnected */}
-        {!connected && !connecting && (
-          <div className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-gray-400" title="Offline mode" />
-        )}
-      </motion.button>
-      
-      <AnimatePresence>
-        {isOpen && (
-          <NotificationsDropdown
-            onClose={() => setIsOpen(false)} 
-            unreadCount={finalUnreadCount}
-            realTimeEnabled={connected}
-          />
-        )}
-      </AnimatePresence>
-    </div>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            onClick={onClick}
+            variant="ghost"
+            size="sm"
+            className={cn(
+              "relative p-2 rounded-full",
+              animateBell && "animate-wiggle",
+              className
+            )}
+            aria-label={`Notifications ${totalUnreadCount > 0 ? `(${totalUnreadCount} unread)` : ''}`}
+          >
+            <Bell className="h-5 w-5" />
+            {totalUnreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs text-white">
+                {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
+              </span>
+            )}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">
+          <p>
+            {totalUnreadCount > 0 
+              ? `You have ${totalUnreadCount} unread notification${totalUnreadCount !== 1 ? 's' : ''}`
+              : 'Notifications'}
+          </p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
-}
+};
+
+export default NotificationBell;

@@ -10,9 +10,9 @@
 import { db } from '../../db';
 import { storage } from '../../storage';
 import { 
-  type Notification,
-  type InsertNotification, 
-  notifications 
+  type UserNotification as Notification,
+  type InsertUserNotification as InsertNotification, 
+  userNotifications as notifications 
 } from '@shared/schema';
 import { eq, and, desc, not, sql } from 'drizzle-orm';
 import { EventBus } from '../../core/events/event-bus';
