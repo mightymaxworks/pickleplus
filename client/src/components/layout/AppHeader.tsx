@@ -14,7 +14,8 @@ import { Menu, X, User, Home, LogOut, Settings, Calendar, Shield, Activity, Trop
 import { motion, AnimatePresence } from 'framer-motion';
 import { PicklePlusNewLogo } from '../icons/PicklePlusNewLogo';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
-import { NotificationBell } from '@/components/notifications/NotificationBell';
+import NotificationBell from '@/components/notifications/NotificationBell';
+import NotificationsDropdown from '@/components/notifications/NotificationsDropdown';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -82,8 +83,8 @@ export function AppHeader() {
         
         {/* Right side actions */}
         <div className="flex items-center justify-end gap-1 sm:gap-3">
-          {/* Notification Bell */}
-          <NotificationBell />
+          {/* Notifications Dropdown */}
+          <NotificationsDropdown />
           
           {/* User Profile Dropdown */}
           <DropdownMenu>
