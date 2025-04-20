@@ -458,7 +458,7 @@ export function CommunityHeader({
           className="w-full"
         >
           {/* Using ScrollArea for smoother horizontal scrolling on all devices */}
-          <ScrollArea className="w-full">
+          <ScrollArea className="w-full" data-orientation="horizontal">
             <div className="pb-px">
               <TabsList className="w-full justify-start h-auto p-0 bg-transparent border-b-0 flex-nowrap inline-flex min-w-max">
                 <TabsTrigger
