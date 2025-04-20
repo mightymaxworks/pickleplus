@@ -11,7 +11,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 
 export interface NotificationMessage {
-  type: 'new_notification' | 'notification_read' | 'all_read' | 'notification_deleted' | 'notification_batch' | 'unread_count' | 'connection_confirmed';
+  type: 'new_notification' | 'notification_read' | 'all_read' | 'notification_deleted' | 'notification_batch' | 'unread_count' | 'connection_confirmed' | 'read_all';
   data?: any;
   message?: string;
 }

@@ -33,26 +33,41 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
   const [animateBell, setAnimateBell] = useState(false);
   const { connected, lastMessage } = useNotificationSocket({
     onMessage: (message) => {
+      console.log('[NotificationBell] WebSocket message received:', message);
+      
       if (message.type === 'new_notification') {
         // Increment the counter by 1 for a single notification
-        setUnreadCount(prev => prev + 1);
+        console.log('[NotificationBell] New unread notification, incrementing count');
+        setUnreadCount(prev => {
+          const newCount = prev + 1;
+          console.log('[NotificationBell] Updated unread count:', newCount);
+          return newCount;
+        });
         triggerBellAnimation();
       } else if (message.type === 'notification_batch') {
         // For a batch, fetch the new count
+        console.log('[NotificationBell] Notification batch received, fetching updated count');
         const fetchUnreadCount = async () => {
           try {
             const response = await apiRequest('GET', '/api/notifications/unread-count');
             const data = await response.json();
+            console.log('[NotificationBell] Batch notification count response:', data);
+            
             if (data && typeof data.count === 'number') {
+              console.log('[NotificationBell] Setting batch notification count to:', data.count);
               setUnreadCount(data.count);
             }
           } catch (error) {
-            console.error('Failed to fetch unread count after batch notification:', error);
+            console.error('[NotificationBell] Failed to fetch unread count after batch notification:', error);
           }
         };
         
         fetchUnreadCount();
         triggerBellAnimation();
+      } else if (message.type === 'read_all') {
+        // For a "mark all as read" event from another tab/client
+        console.log('[NotificationBell] Received read_all event, resetting counter');
+        setUnreadCount(0);
       }
     }
   });
@@ -60,23 +75,35 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
   // PKL-278651-COMM-0028-NOTIF-FIX - Ultra-lean implementation (Framework 5.2)
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Initial fetch to set unread count
+  // Initial fetch to set unread count with enhanced debugging
   useEffect(() => {
     if (user) {
       // Only fetch if user is logged in
       const fetchUnreadCount = async () => {
         try {
+          console.log('[NotificationBell] Fetching initial unread count...');
           const response = await apiRequest('GET', '/api/notifications/unread-count');
           const data = await response.json();
+          console.log('[NotificationBell] Initial unread count response:', data);
+          
           if (data && typeof data.count === 'number') {
+            console.log('[NotificationBell] Setting unread count to:', data.count);
             setUnreadCount(data.count);
           }
         } catch (error) {
-          console.error('Failed to fetch unread count:', error);
+          console.error('[NotificationBell] Failed to fetch unread count:', error);
         }
       };
       
       fetchUnreadCount();
+      
+      // Set up a regular interval to refresh the count
+      const intervalId = setInterval(() => {
+        fetchUnreadCount();
+      }, 30000); // Every 30 seconds
+      
+      // Clear interval on unmount
+      return () => clearInterval(intervalId);
     }
   }, [user]);
   
@@ -94,8 +121,10 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
       // Directly set count to 0 since all are read
       setUnreadCount(0);
       
-      // Also refresh notification lists
+      // Also invalidate all related queries to force a refresh
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
+      
       console.log('[NotificationBell] All notifications marked as read, reset counter to 0');
     }
   });
