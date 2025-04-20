@@ -6,8 +6,8 @@
  * including member activity, participation metrics, and leaderboards.
  * 
  * @version 1.0.0
- * @lastModified 2025-04-18
- * @framework Framework5.1
+ * @lastModified 2025-04-20
+ * @framework Framework5.2
  */
 
 import express, { Request, Response } from 'express';

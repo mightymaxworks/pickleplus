@@ -170,3 +170,9 @@ export type InsertCommunityEngagementLevel = z.infer<typeof insertCommunityEngag
 
 export type CommunityLeaderboard = typeof communityLeaderboards.$inferSelect;
 export type InsertCommunityLeaderboard = z.infer<typeof insertCommunityLeaderboardSchema>;
+
+// Additional utility types for the frontend
+export interface ActivityData {
+  date: string;
+  count: number;
+}

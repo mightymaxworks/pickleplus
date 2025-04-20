@@ -17,15 +17,12 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { CommunityHeader } from '@/components/community/CommunityHeader';
 import CommunityLeaderboard from '@/components/community/CommunityLeaderboard';
 import EngagementBadges from '@/components/community/EngagementBadges';
+import CommunityEngagementMetrics from '@/components/community/CommunityEngagementMetrics';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Activity, Award, BarChart, Clock, TrendingUp, Users } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
-
-interface ActivityData {
-  date: string;
-  count: number;
-}
+import { ActivityData } from '@shared/schema/community-engagement';
 
 const CommunityEngagementPage: React.FC = () => {
   const { communityId } = useParams<{ communityId: string }>();
@@ -288,11 +285,17 @@ const CommunityEngagementPage: React.FC = () => {
           </TabsContent>
           
           <TabsContent value="leaderboard">
-            <CommunityLeaderboard communityId={communityIdNum} />
+            <div className="space-y-6">
+              <CommunityEngagementMetrics communityId={communityIdNum} />
+              <CommunityLeaderboard communityId={communityIdNum} />
+            </div>
           </TabsContent>
           
           <TabsContent value="badges">
-            <EngagementBadges communityId={communityIdNum} />
+            <div className="space-y-6">
+              <CommunityEngagementMetrics communityId={communityIdNum} />
+              <EngagementBadges communityId={communityIdNum} />
+            </div>
           </TabsContent>
         </Tabs>
       </div>
