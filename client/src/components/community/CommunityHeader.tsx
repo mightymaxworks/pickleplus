@@ -18,6 +18,7 @@ import { Community, CommunityMemberRole } from "@/types/community";
 import { useCommunityContext } from "@/lib/providers/CommunityProvider";
 import { useJoinCommunity, useLeaveCommunity } from "@/lib/hooks/useCommunity";
 import { useAuth } from "@/hooks/useAuth";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -449,65 +450,75 @@ export function CommunityHeader({
         </Card>
       </div>
       
-      {/* Enhanced Navigation tabs with improved visuals */}
-      <div className="border-b overflow-x-auto">
+      {/* Enhanced Navigation tabs with improved visuals - Sprint 1.3 */}
+      <div className="border-b">
         <Tabs
           defaultValue={currentTab}
           onValueChange={onTabChange}
           className="w-full"
         >
-          <TabsList className="w-full justify-start h-auto p-0 bg-transparent border-b-0 flex-nowrap">
-            <TabsTrigger
-              value="about"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none py-3 px-4 text-sm font-medium flex items-center gap-2 flex-shrink-0 transition-all"
-              title="About"
-            >
-              <Info className="h-4 w-4" />
-              <span className="hidden sm:inline">About</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="events"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none py-3 px-4 text-sm font-medium flex items-center gap-2 flex-shrink-0 transition-all"
-              title="Events"
-            >
-              <Calendar className="h-4 w-4" />
-              <span className="hidden sm:inline">Events</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="members"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none py-3 px-4 text-sm font-medium flex items-center gap-2 flex-shrink-0 transition-all"
-              title="Members"
-            >
-              <Users className="h-4 w-4" />
-              <span className="hidden sm:inline">Members</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="posts"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none py-3 px-4 text-sm font-medium flex items-center gap-2 flex-shrink-0 transition-all"
-              title="Posts"
-            >
-              <MessageSquare className="h-4 w-4" />
-              <span className="hidden sm:inline">Posts</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="engagement"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none py-3 px-4 text-sm font-medium flex items-center gap-2 flex-shrink-0 transition-all"
-              title="Engagement"
-            >
-              <Star className="h-4 w-4" />
-              <span className="hidden sm:inline">Engagement</span>
-            </TabsTrigger>
-            {hasManagePermissions && (
-              <TabsTrigger
-                value="manage"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none py-3 px-4 text-sm font-medium flex items-center gap-2 flex-shrink-0 ml-auto bg-primary/5 transition-all"
-                title="Manage Community"
-              >
-                <Settings className="h-4 w-4" />
-                <span className="hidden sm:inline">Manage</span>
-              </TabsTrigger>
-            )}
-          </TabsList>
+          {/* Using ScrollArea for smoother horizontal scrolling on all devices */}
+          <ScrollArea className="w-full" orientation="horizontal">
+            <div className="pb-px">
+              <TabsList className="w-full justify-start h-auto p-0 bg-transparent border-b-0 flex-nowrap inline-flex min-w-max">
+                <TabsTrigger
+                  value="about"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-none py-3 px-3 sm:px-4 text-xs sm:text-sm flex items-center gap-1 sm:gap-2 flex-shrink-0 transition-all whitespace-nowrap"
+                  title="About"
+                >
+                  <Info className="h-4 w-4 flex-shrink-0" />
+                  <span>About</span>
+                </TabsTrigger>
+                
+                <TabsTrigger
+                  value="events"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-none py-3 px-3 sm:px-4 text-xs sm:text-sm flex items-center gap-1 sm:gap-2 flex-shrink-0 transition-all whitespace-nowrap"
+                  title="Events"
+                >
+                  <Calendar className="h-4 w-4 flex-shrink-0" />
+                  <span>Events</span>
+                </TabsTrigger>
+                
+                <TabsTrigger
+                  value="members"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-none py-3 px-3 sm:px-4 text-xs sm:text-sm flex items-center gap-1 sm:gap-2 flex-shrink-0 transition-all whitespace-nowrap"
+                  title="Members"
+                >
+                  <Users className="h-4 w-4 flex-shrink-0" />
+                  <span>Members</span>
+                </TabsTrigger>
+                
+                <TabsTrigger
+                  value="posts"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-none py-3 px-3 sm:px-4 text-xs sm:text-sm flex items-center gap-1 sm:gap-2 flex-shrink-0 transition-all whitespace-nowrap"
+                  title="Posts"
+                >
+                  <MessageSquare className="h-4 w-4 flex-shrink-0" />
+                  <span>Posts</span>
+                </TabsTrigger>
+                
+                <TabsTrigger
+                  value="engagement"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-none py-3 px-3 sm:px-4 text-xs sm:text-sm flex items-center gap-1 sm:gap-2 flex-shrink-0 transition-all whitespace-nowrap"
+                  title="Engagement"
+                >
+                  <Star className="h-4 w-4 flex-shrink-0" />
+                  <span>Engagement</span>
+                </TabsTrigger>
+                
+                {hasManagePermissions && (
+                  <TabsTrigger
+                    value="manage"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-none py-3 px-3 sm:px-4 text-xs sm:text-sm flex items-center gap-1 sm:gap-2 flex-shrink-0 ml-auto bg-primary/5 transition-all whitespace-nowrap"
+                    title="Manage Community"
+                  >
+                    <Settings className="h-4 w-4 flex-shrink-0" />
+                    <span>Manage</span>
+                  </TabsTrigger>
+                )}
+              </TabsList>
+            </div>
+          </ScrollArea>
         </Tabs>
       </div>
     </div>
