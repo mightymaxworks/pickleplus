@@ -129,7 +129,9 @@ const CommunityStatistics: React.FC<CommunityStatisticsProps> = ({ communityId }
           return generateFallbackActivityData();
         }
         
-        return await res.json();
+        const data = await res.json();
+        // Ensure we have array data for the charts
+        return Array.isArray(data) && data.length > 0 ? data : generateFallbackActivityData();
       } catch (error) {
         console.error('Error fetching activity data:', error);
         return generateFallbackActivityData();
@@ -151,7 +153,9 @@ const CommunityStatistics: React.FC<CommunityStatisticsProps> = ({ communityId }
           return generateFallbackEngagementDistribution();
         }
         
-        return await res.json();
+        const data = await res.json();
+        // Ensure we have array data for the charts
+        return Array.isArray(data) && data.length > 0 ? data : generateFallbackEngagementDistribution();
       } catch (error) {
         console.error('Error fetching engagement distribution:', error);
         return generateFallbackEngagementDistribution();
