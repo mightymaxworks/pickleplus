@@ -19,7 +19,7 @@ import {
   useCommunityEvents,
   useCommunityPosts
 } from "@/lib/hooks/useCommunity";
-import CommunityEngagementMetrics from "@/components/community/CommunityEngagementMetrics";
+import EnhancedCommunityAnalytics from "@/components/community/EnhancedCommunityAnalytics";
 import { CommunityHeader } from "@/components/community/CommunityHeader";
 import { EventList } from "@/components/community/EventList";
 import { MembersList } from "@/components/community/MembersList";
@@ -411,9 +411,9 @@ export default function CommunityDetailPage() {
             <PostList communityId={communityId} />
           )}
           
-          {/* Engagement Tab */}
+          {/* Enhanced Analytics Tab - PKL-278651-COMM-0033-STATS */}
           {activeTab === "engagement" && (
-            <CommunityEngagementMetrics communityId={communityId} />
+            <EnhancedCommunityAnalytics communityId={communityId} />
           )}
           
           {/* Manage Tab (visible only to admins/moderators) */}
