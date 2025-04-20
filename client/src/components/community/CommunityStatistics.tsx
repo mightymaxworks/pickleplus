@@ -52,7 +52,8 @@ import {
   Clock, 
   Award, 
   BarChart2, 
-  PieChart as PieChartIcon
+  PieChart as PieChartIcon,
+  FileQuestion
 } from 'lucide-react';
 import { format, subDays } from 'date-fns';
 
@@ -103,14 +104,15 @@ const CommunityStatistics: React.FC<CommunityStatisticsProps> = ({ communityId }
         );
         
         if (!res.ok) {
-          // Create fallback data based on time range for initial development
-          return generateFallbackGrowthData(timeRange);
+          console.error('Error fetching growth data: API returned status', res.status);
+          return [];
         }
         
-        return await res.json();
+        const data = await res.json();
+        return Array.isArray(data) && data.length > 0 ? data : [];
       } catch (error) {
         console.error('Error fetching growth data:', error);
-        return generateFallbackGrowthData(timeRange);
+        return [];
       }
     }
   });
@@ -336,7 +338,7 @@ const CommunityStatistics: React.FC<CommunityStatisticsProps> = ({ communityId }
               
               {isLoadingGrowth ? (
                 <Skeleton className="h-64 w-full" />
-              ) : (
+              ) : growthData && growthData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={250}>
                   <LineChart
                     data={growthData}
@@ -376,6 +378,14 @@ const CommunityStatistics: React.FC<CommunityStatisticsProps> = ({ communityId }
                     />
                   </LineChart>
                 </ResponsiveContainer>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-64 text-center p-4">
+                  <FileQuestion className="h-12 w-12 text-muted-foreground mb-3" />
+                  <h3 className="text-lg font-medium mb-1">No Data Available</h3>
+                  <p className="text-sm text-muted-foreground max-w-md">
+                    There is no growth data available for this community yet. Data will appear as membership activity increases.
+                  </p>
+                </div>
               )}
             </div>
           </TabsContent>
@@ -387,7 +397,7 @@ const CommunityStatistics: React.FC<CommunityStatisticsProps> = ({ communityId }
               
               {isLoadingActivity ? (
                 <Skeleton className="h-64 w-full" />
-              ) : (
+              ) : activityData && activityData.length > 0 ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div>
                     <ResponsiveContainer width="100%" height={250}>
@@ -428,6 +438,14 @@ const CommunityStatistics: React.FC<CommunityStatisticsProps> = ({ communityId }
                     </ResponsiveContainer>
                   </div>
                 </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-64 text-center p-4">
+                  <Activity className="h-12 w-12 text-muted-foreground mb-3" />
+                  <h3 className="text-lg font-medium mb-1">No Activity Data</h3>
+                  <p className="text-sm text-muted-foreground max-w-md">
+                    There is no activity data available for this community yet. Data will appear as members interact within the community.
+                  </p>
+                </div>
               )}
             </div>
           </TabsContent>
@@ -439,7 +457,7 @@ const CommunityStatistics: React.FC<CommunityStatisticsProps> = ({ communityId }
               
               {isLoadingDistribution ? (
                 <Skeleton className="h-64 w-full" />
-              ) : (
+              ) : engagementDistribution && engagementDistribution.length > 0 ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div>
                     <ResponsiveContainer width="100%" height={250}>
@@ -480,6 +498,15 @@ const CommunityStatistics: React.FC<CommunityStatisticsProps> = ({ communityId }
                     </ResponsiveContainer>
                   </div>
                 </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-64 text-center p-4">
+                  <Award className="h-12 w-12 text-muted-foreground mb-3" />
+                  <h3 className="text-lg font-medium mb-1">No Engagement Data</h3>
+                  <p className="text-sm text-muted-foreground max-w-md">
+                    There is no engagement distribution data available for this community yet. 
+                    Data will appear as members engage with the community over time.
+                  </p>
+                </div>
               )}
               
               <div className="mt-4 text-sm text-muted-foreground">
@@ -497,14 +524,10 @@ const CommunityStatistics: React.FC<CommunityStatisticsProps> = ({ communityId }
         </Tabs>
       </CardContent>
       
-      <CardFooter className="flex justify-between border-t pt-4">
+      <CardFooter className="border-t pt-4">
         <p className="text-xs text-muted-foreground">
           Data updated hourly. Last update: {new Date().toLocaleTimeString()}
         </p>
-        <Button variant="outline" size="sm">
-          <Calendar className="h-4 w-4 mr-2" />
-          Export Data
-        </Button>
       </CardFooter>
     </Card>
   );
