@@ -81,8 +81,8 @@ export const multiplierRecalibrations = pgTable("multiplier_recalibrations", {
   previousMultiplier: integer("previous_multiplier").notNull(),
   newMultiplier: integer("new_multiplier").notNull(),
   adjustmentReason: text("adjustment_reason"),
-  timestamp: timestamp("timestamp").notNull().defaultNow(),
-  metadata: json("metadata")
+  createdAt: timestamp("created_at").notNull().defaultNow()
+  // Note: The 'metadata' column doesn't exist in the actual database table
 });
 
 // Define relations
