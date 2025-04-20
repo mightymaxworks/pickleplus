@@ -7,6 +7,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, User as UserIcon, Menu, X, Search, Settings, Home, Calendar, Award, Users, LogOut, Shield, Ticket, Palette } from 'lucide-react';
 import { PicklePlusNewLogo } from '../icons/PicklePlusNewLogo';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
+import { useQuery } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -18,9 +20,26 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [location, navigate] = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(3);
+  const [notificationCount, setNotificationCount] = useState(0);
   const isExtraSmallScreen = useMediaQuery('(max-width: 480px)');
   const isSmallScreen = useMediaQuery('(max-width: 640px)');
+  
+  // Query server for notification count
+  const { data: serverNotificationCount } = useQuery({
+    queryKey: ['/api/notifications/unread-count'],
+    queryFn: async () => {
+      console.log('[DashboardLayout] Fetching notification count from server');
+      const response = await apiRequest('GET', '/api/notifications/unread-count');
+      const data = await response.json();
+      console.log('[DashboardLayout] Server notification count:', data);
+      return data.count || 0;
+    },
+    enabled: !!user,
+    refetchInterval: 5000, // Refetch every 5 seconds
+    onSuccess: (count) => {
+      setNotificationCount(count);
+    }
+  });
   
   // Handle logout
   const handleLogout = () => {
