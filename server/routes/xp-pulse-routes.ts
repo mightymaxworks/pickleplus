@@ -1,12 +1,13 @@
 /**
- * PKL-278651-XP-0003-PULSE
+ * PKL-278651-XP-0003-PULSE-API
  * PicklePulse API Routes
  * 
  * This file contains API routes for the PicklePulse system, which
  * dynamically adjusts XP rewards based on platform activity patterns.
  * 
- * @framework Framework5.1
- * @version 1.0.0
+ * @framework Framework5.2
+ * @version 1.1.0
+ * @lastModified 2025-04-20
  */
 
 import express, { Request, Response } from 'express';
@@ -29,8 +30,9 @@ export function registerPicklePulseRoutes(app: express.Express, storage: Databas
     .then(() => {
       console.log('[PicklePulse] Default multipliers initialized if needed');
       
-      // Start the scheduler after initialization
-      scheduler.start();
+      // Start the scheduler after initialization with adaptive scheduling enabled
+      // PKL-278651-XP-0003-PULSE-ADAPT: Enable adaptive scheduling
+      scheduler.start(true); // true = use adaptive scheduling
     })
     .catch(error => {
       console.error('[PicklePulse] Error initializing default multipliers:', error);
@@ -91,11 +93,27 @@ export function registerPicklePulseRoutes(app: express.Express, storage: Databas
    */
   app.post('/api/admin/pickle-pulse/recalibrate', async (req: Request, res: Response) => {
     try {
-      await activityMultiplierService.recalculateMultipliers();
+      // Use the scheduler's forceRecalibration method
+      scheduler.forceRecalibration();
       res.status(200).json({ message: 'Recalibration triggered successfully' });
     } catch (error) {
       console.error('[API] Error triggering recalibration:', error);
       res.status(500).json({ error: 'Error triggering recalibration' });
+    }
+  });
+  
+  /**
+   * GET /api/admin/pickle-pulse/scheduler/status
+   * Gets the current status of the scheduler
+   * PKL-278651-XP-0003-PULSE-STATUS: Scheduler status API
+   */
+  app.get('/api/admin/pickle-pulse/scheduler/status', (req: Request, res: Response) => {
+    try {
+      const status = scheduler.getStatus();
+      res.status(200).json(status);
+    } catch (error) {
+      console.error('[API] Error getting scheduler status:', error);
+      res.status(500).json({ error: 'Error getting scheduler status' });
     }
   });
   
@@ -116,6 +134,35 @@ export function registerPicklePulseRoutes(app: express.Express, storage: Databas
     } catch (error) {
       console.error('[API] Error updating scheduler interval:', error);
       res.status(500).json({ error: 'Error updating scheduler interval' });
+    }
+  });
+  
+  /**
+   * POST /api/admin/pickle-pulse/scheduler/adaptive
+   * Toggles adaptive scheduling on or off
+   * PKL-278651-XP-0003-PULSE-ADAPT: Adaptive scheduling toggle API
+   */
+  app.post('/api/admin/pickle-pulse/scheduler/adaptive', (req: Request, res: Response) => {
+    try {
+      const { enabled } = req.body;
+      
+      if (typeof enabled !== 'boolean') {
+        return res.status(400).json({ error: 'Invalid parameter. Must provide a boolean "enabled" value.' });
+      }
+      
+      // Stop current scheduler
+      scheduler.stop();
+      
+      // Restart with new adaptive setting
+      scheduler.start(enabled);
+      
+      res.status(200).json({ 
+        message: `Adaptive scheduling ${enabled ? 'enabled' : 'disabled'}`,
+        adaptiveScheduling: enabled
+      });
+    } catch (error) {
+      console.error('[API] Error toggling adaptive scheduling:', error);
+      res.status(500).json({ error: 'Error toggling adaptive scheduling' });
     }
   });
   

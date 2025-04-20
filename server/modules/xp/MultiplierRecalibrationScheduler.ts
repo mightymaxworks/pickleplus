@@ -25,6 +25,7 @@ export class MultiplierRecalibrationScheduler {
   private nextRecalibrations: Map<string, Date> = new Map();
   private lastActivityLevels: Map<string, number> = new Map();
   private adaptiveCheckInterval: NodeJS.Timeout | null = null;
+  private lastRecalibrationTime: Date | null = null;
   
   /**
    * Constructor 
@@ -95,6 +96,9 @@ export class MultiplierRecalibrationScheduler {
   private runRecalibration(): void {
     console.log('[PicklePulse] Running scheduled recalibration');
     
+    // Update last recalibration time
+    this.lastRecalibrationTime = new Date();
+    
     this.multiplierService.recalculateMultipliers()
       .then(() => {
         console.log('[PicklePulse] Scheduled recalibration completed successfully');
@@ -110,6 +114,55 @@ export class MultiplierRecalibrationScheduler {
   }
   
   /**
+   * Get the current scheduler status
+   * PKL-278651-XP-0003-PULSE-STATUS: Scheduler status reporting
+   */
+  getStatus(): any {
+    // Calculate next scheduled full recalibration time
+    let nextScheduledRecalibration: Date | null = null;
+    if (this.recalibrationInterval !== null) {
+      // If scheduler is running, calculate next full run based on interval
+      nextScheduledRecalibration = new Date();
+      if (this.lastRecalibrationTime) {
+        nextScheduledRecalibration = new Date(this.lastRecalibrationTime);
+        nextScheduledRecalibration.setHours(
+          nextScheduledRecalibration.getHours() + 
+          (this.adaptiveSchedulingEnabled ? this.intervalHours * 1.5 : this.intervalHours)
+        );
+      } else {
+        nextScheduledRecalibration.setHours(
+          nextScheduledRecalibration.getHours() + 
+          (this.adaptiveSchedulingEnabled ? this.intervalHours * 1.5 : this.intervalHours)
+        );
+      }
+    }
+    
+    // Create status object
+    return {
+      active: this.recalibrationInterval !== null,
+      adaptiveSchedulingEnabled: this.adaptiveSchedulingEnabled,
+      intervalHours: this.intervalHours,
+      lastRecalibrationTime: this.lastRecalibrationTime?.toISOString() || null,
+      nextFullRecalibration: nextScheduledRecalibration?.toISOString() || null,
+      adaptiveRecalibrations: this.adaptiveSchedulingEnabled
+        ? Array.from(this.nextRecalibrations.entries()).map(([type, date]) => ({
+            activityType: type,
+            scheduledTime: date.toISOString()
+          }))
+        : []
+    };
+  }
+  
+  /**
+   * Force an immediate recalibration
+   * PKL-278651-XP-0003-PULSE-FORCE: Manual recalibration trigger 
+   */
+  forceRecalibration(): void {
+    console.log('[PicklePulse] Forcing immediate recalibration');
+    this.runRecalibration();
+  }
+  
+  /**
    * Check if any activities need adaptive recalibration
    * PKL-278651-XP-0003-PULSE-ADAPT: Adaptive recalibration checks
    */
@@ -120,12 +173,12 @@ export class MultiplierRecalibrationScheduler {
     let recalibratedAny = false;
     
     // Check each activity type that has a scheduled next recalibration
-    for (const [activityType, nextDate] of this.nextRecalibrations.entries()) {
+    Array.from(this.nextRecalibrations.entries()).forEach(async ([activityType, nextDate]) => {
       if (now >= nextDate) {
         await this.recalibrateSpecificActivity(activityType);
         recalibratedAny = true;
       }
-    }
+    });
     
     if (recalibratedAny) {
       // Reschedule next adaptive recalibrations after making changes
