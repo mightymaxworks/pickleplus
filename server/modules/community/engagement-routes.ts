@@ -281,5 +281,109 @@ router.get('/:communityId/engagement/levels', async (req: Request, res: Response
   }
 });
 
+/**
+ * Get community leaderboard
+ * GET /api/communities/:communityId/engagement/leaderboard
+ * PKL-278651-COMM-0021-ENGAGE: Leaderboard API implementation
+ */
+router.get('/:communityId/engagement/leaderboard', async (req: Request, res: Response) => {
+  try {
+    const communityId = parseInt(req.params.communityId);
+    const leaderboardType = (req.query.type as string) || 'overall';
+    const timePeriod = (req.query.period as string) || 'week';
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+    
+    // Validate leaderboard type
+    const validTypes = ['overall', 'posts', 'comments', 'events'];
+    if (!validTypes.includes(leaderboardType)) {
+      return res.status(400).json({ 
+        message: 'Invalid leaderboard type', 
+        validTypes
+      });
+    }
+    
+    // Validate time period
+    const validPeriods = ['day', 'week', 'month', 'year', 'all-time'];
+    if (!validPeriods.includes(timePeriod)) {
+      return res.status(400).json({ 
+        message: 'Invalid time period', 
+        validPeriods
+      });
+    }
+    
+    // Get leaderboard data
+    const leaderboard = await communityEngagementStorage.getCommunityLeaderboard(
+      communityId,
+      leaderboardType,
+      timePeriod,
+      limit
+    );
+    
+    res.json(leaderboard);
+  } catch (error: any) {
+    console.error('[PKL-278651-COMM-0021-ENGAGE] Error fetching leaderboard:', error);
+    res.status(500).json({ message: 'Failed to fetch leaderboard' });
+  }
+});
+
+/**
+ * Get user's position in a community leaderboard
+ * GET /api/communities/:communityId/engagement/leaderboard/position
+ * PKL-278651-COMM-0021-ENGAGE: User leaderboard position endpoint
+ */
+router.get('/:communityId/engagement/leaderboard/position', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const communityId = parseInt(req.params.communityId);
+    const userId = req.user!.id;
+    const leaderboardType = (req.query.type as string) || 'overall';
+    const timePeriod = (req.query.period as string) || 'week';
+    
+    // Get user's position
+    const position = await communityEngagementStorage.getUserLeaderboardPosition(
+      userId,
+      communityId,
+      leaderboardType,
+      timePeriod
+    );
+    
+    if (!position) {
+      return res.status(404).json({ message: 'User not found in leaderboard' });
+    }
+    
+    res.json(position);
+  } catch (error: any) {
+    console.error('[PKL-278651-COMM-0021-ENGAGE] Error fetching user leaderboard position:', error);
+    res.status(500).json({ message: 'Failed to fetch leaderboard position' });
+  }
+});
+
+/**
+ * Generate or refresh a community leaderboard
+ * POST /api/communities/:communityId/engagement/leaderboard/generate
+ * PKL-278651-COMM-0021-ENGAGE: Leaderboard generation endpoint
+ */
+router.post('/:communityId/engagement/leaderboard/generate', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const communityId = parseInt(req.params.communityId);
+    const leaderboardType = (req.body.type as string) || 'overall';
+    const timePeriod = (req.body.period as string) || 'week';
+    
+    // Check if user has permission (community admin or moderator)
+    // This would typically check the user's role in the community
+    
+    // Generate leaderboard
+    await communityEngagementStorage.generateLeaderboard(
+      communityId,
+      leaderboardType,
+      timePeriod
+    );
+    
+    res.status(201).json({ message: 'Leaderboard generated successfully' });
+  } catch (error: any) {
+    console.error('[PKL-278651-COMM-0021-ENGAGE] Error generating leaderboard:', error);
+    res.status(500).json({ message: 'Failed to generate leaderboard' });
+  }
+});
+
 // Export router
 export const communityEngagementRoutes = router;

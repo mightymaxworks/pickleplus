@@ -5,13 +5,13 @@
  * This module provides storage methods for tracking and retrieving
  * community engagement metrics.
  * 
- * @version 1.1.0
- * @lastModified 2025-04-19
- * @framework Framework5.1
+ * @version 1.2.0
+ * @lastModified 2025-04-20
+ * @framework Framework5.2
  */
 
 import { db } from "../../db";
-import { eq, and, desc, sql, gte, lte, isNull, count, max, sum, SQL } from "drizzle-orm";
+import { eq, and, desc, sql, gte, lte, isNull, count, max, sum, SQL, asc } from "drizzle-orm";
 import { 
   communityActivities, 
   communityEngagementMetrics, 
@@ -21,9 +21,12 @@ import {
   InsertCommunityActivity,
   CommunityActivity,
   CommunityEngagementMetrics,
-  CommunityEngagementLevel
+  CommunityEngagementLevel,
+  CommunityLeaderboard,
+  InsertCommunityLeaderboard
 } from "@shared/schema/community-engagement";
 import { ServerEventBus, ServerEvents } from "../../core/events";
+import { users } from "@shared/schema";
 
 /**
  * Community Engagement Storage Interface
@@ -283,6 +286,264 @@ export class CommunityEngagementStorage {
     .orderBy(sql`date_trunc('day', ${communityActivities.createdAt})::date::text`);
     
     return result;
+  }
+  
+  /**
+   * Get community leaderboard data
+   * PKL-278651-COMM-0021-ENGAGE: Leaderboard implementation
+   */
+  async getCommunityLeaderboard(
+    communityId: number,
+    leaderboardType: string = 'overall',
+    timePeriod: string = 'week',
+    limit: number = 20
+  ): Promise<any[]> {
+    // Try to find existing leaderboard data first
+    const existingLeaderboard = await this.getExistingLeaderboard(
+      communityId, 
+      leaderboardType, 
+      timePeriod
+    );
+    
+    if (existingLeaderboard.length > 0) {
+      // Return leaderboard with user details
+      return this.addUserDetailsToLeaderboard(existingLeaderboard, limit);
+    }
+    
+    // If no leaderboard data exists or it's outdated, generate it
+    await this.generateLeaderboard(communityId, leaderboardType, timePeriod);
+    
+    // Get the newly generated leaderboard
+    const freshLeaderboard = await this.getExistingLeaderboard(
+      communityId, 
+      leaderboardType, 
+      timePeriod
+    );
+    
+    // Return leaderboard with user details
+    return this.addUserDetailsToLeaderboard(freshLeaderboard, limit);
+  }
+  
+  /**
+   * Get existing leaderboard data from the database
+   */
+  private async getExistingLeaderboard(
+    communityId: number,
+    leaderboardType: string,
+    timePeriod: string
+  ): Promise<CommunityLeaderboard[]> {
+    // Get the time period range
+    const { startDate, endDate } = this.getTimePeriodDates(timePeriod);
+    
+    // Find an existing, current leaderboard
+    return db.select()
+      .from(communityLeaderboards)
+      .where(
+        and(
+          eq(communityLeaderboards.communityId, communityId),
+          eq(communityLeaderboards.leaderboardType, leaderboardType),
+          eq(communityLeaderboards.timePeriod, timePeriod),
+          gte(communityLeaderboards.endDate, new Date()) // Still valid
+        )
+      )
+      .orderBy(asc(communityLeaderboards.rank))
+  }
+  
+  /**
+   * Add user details to leaderboard entries
+   */
+  private async addUserDetailsToLeaderboard(
+    leaderboard: CommunityLeaderboard[],
+    limit: number
+  ): Promise<any[]> {
+    // Limit the number of entries
+    const limitedLeaderboard = leaderboard.slice(0, limit);
+    
+    // Add user details to each leaderboard entry
+    return Promise.all(
+      limitedLeaderboard.map(async (entry) => {
+        const [user] = await db.select({
+          id: users.id,
+          username: users.username,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          avatarUrl: users.avatarUrl
+        })
+        .from(users)
+        .where(eq(users.id, entry.userId));
+        
+        return {
+          ...entry,
+          user: user || null
+        };
+      })
+    );
+  }
+  
+  /**
+   * Generate a new leaderboard for the community
+   */
+  async generateLeaderboard(
+    communityId: number,
+    leaderboardType: string = 'overall',
+    timePeriod: string = 'week'
+  ): Promise<void> {
+    // Get the time period range
+    const { startDate, endDate } = this.getTimePeriodDates(timePeriod);
+    
+    // Get all users with engagement metrics in this community
+    let metricsQuery = db.select()
+      .from(communityEngagementMetrics)
+      .where(eq(communityEngagementMetrics.communityId, communityId))
+      .orderBy(desc(communityEngagementMetrics.totalPoints));
+    
+    // Filter or adjust based on leaderboard type
+    if (leaderboardType === 'posts') {
+      metricsQuery = db.select()
+        .from(communityEngagementMetrics)
+        .where(eq(communityEngagementMetrics.communityId, communityId))
+        .orderBy(desc(communityEngagementMetrics.postCount));
+    } else if (leaderboardType === 'comments') {
+      metricsQuery = db.select()
+        .from(communityEngagementMetrics)
+        .where(eq(communityEngagementMetrics.communityId, communityId))
+        .orderBy(desc(communityEngagementMetrics.commentCount));
+    } else if (leaderboardType === 'events') {
+      metricsQuery = db.select()
+        .from(communityEngagementMetrics)
+        .where(eq(communityEngagementMetrics.communityId, communityId))
+        .orderBy(desc(communityEngagementMetrics.eventAttendance));
+    }
+    
+    const metrics = await metricsQuery;
+    
+    // Delete any existing leaderboard for this period
+    await db.delete(communityLeaderboards)
+      .where(
+        and(
+          eq(communityLeaderboards.communityId, communityId),
+          eq(communityLeaderboards.leaderboardType, leaderboardType),
+          eq(communityLeaderboards.timePeriod, timePeriod)
+        )
+      );
+    
+    // Create new leaderboard entries
+    const leaderboardEntries: InsertCommunityLeaderboard[] = metrics.map((metric, index) => {
+      let points = metric.totalPoints;
+      
+      if (leaderboardType === 'posts') {
+        points = metric.postCount;
+      } else if (leaderboardType === 'comments') {
+        points = metric.commentCount;
+      } else if (leaderboardType === 'events') {
+        points = metric.eventAttendance;
+      }
+      
+      return {
+        communityId,
+        userId: metric.userId,
+        leaderboardType,
+        points,
+        rank: index + 1,
+        timePeriod,
+        startDate,
+        endDate,
+        createdAt: new Date()
+      };
+    });
+    
+    // Insert new leaderboard data if there are entries
+    if (leaderboardEntries.length > 0) {
+      await db.insert(communityLeaderboards).values(leaderboardEntries);
+    }
+  }
+  
+  /**
+   * Get start and end dates for a time period
+   */
+  private getTimePeriodDates(timePeriod: string): { startDate: Date, endDate: Date } {
+    const now = new Date();
+    const startDate = new Date();
+    let endDate = new Date();
+    
+    if (timePeriod === 'day') {
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(23, 59, 59, 999);
+    } else if (timePeriod === 'week') {
+      const day = startDate.getDay();
+      startDate.setDate(startDate.getDate() - day);
+      startDate.setHours(0, 0, 0, 0);
+      
+      endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + 6);
+      endDate.setHours(23, 59, 59, 999);
+    } else if (timePeriod === 'month') {
+      startDate.setDate(1);
+      startDate.setHours(0, 0, 0, 0);
+      
+      endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0);
+      endDate.setHours(23, 59, 59, 999);
+    } else if (timePeriod === 'year') {
+      startDate.setMonth(0, 1);
+      startDate.setHours(0, 0, 0, 0);
+      
+      endDate = new Date(startDate.getFullYear(), 11, 31);
+      endDate.setHours(23, 59, 59, 999);
+    } else if (timePeriod === 'all-time') {
+      // Use a far past date for all-time
+      startDate.setFullYear(2020, 0, 1);
+      startDate.setHours(0, 0, 0, 0);
+      
+      // Use a far future date for end
+      endDate.setFullYear(endDate.getFullYear() + 10);
+    }
+    
+    return { startDate, endDate };
+  }
+  
+  /**
+   * Get user's position in a community leaderboard
+   */
+  async getUserLeaderboardPosition(
+    userId: number,
+    communityId: number,
+    leaderboardType: string = 'overall',
+    timePeriod: string = 'week'
+  ): Promise<{ rank: number; total: number; points: number; } | null> {
+    // Get the user's leaderboard entry
+    const [userEntry] = await db.select()
+      .from(communityLeaderboards)
+      .where(
+        and(
+          eq(communityLeaderboards.userId, userId),
+          eq(communityLeaderboards.communityId, communityId),
+          eq(communityLeaderboards.leaderboardType, leaderboardType),
+          eq(communityLeaderboards.timePeriod, timePeriod)
+        )
+      );
+    
+    if (!userEntry) {
+      return null;
+    }
+    
+    // Get the total number of entries in this leaderboard
+    const [{ total }] = await db.select({
+      total: count()
+    })
+    .from(communityLeaderboards)
+    .where(
+      and(
+        eq(communityLeaderboards.communityId, communityId),
+        eq(communityLeaderboards.leaderboardType, leaderboardType),
+        eq(communityLeaderboards.timePeriod, timePeriod)
+      )
+    );
+    
+    return {
+      rank: typeof userEntry.rank === 'number' ? userEntry.rank : 0,
+      total: Number(total),
+      points: userEntry.points
+    };
   }
 }
 
