@@ -330,34 +330,110 @@ export function CommunityHeader({
               </div>
             </div>
             
-            {/* Action buttons - icons only for better mobile experience */}
+            {/* PKL-278651-COMM-0035-PROF - Enhanced Action Buttons Implementation - Sprint 1.5 */}
             <div className="flex gap-2 flex-shrink-0">
-              {/* Only show Join/Leave buttons - no Manage button */}
-              {!hasManagePermissions && (
-                isMember ? (
-                  /* Leave button for members */
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="bg-white/10 border-white/20 hover:bg-white/20 text-white h-8"
-                    onClick={handleLeave}
-                  >
-                    <LogOut className="h-4 w-4 mr-1" />
-                    <span className="sm:inline hidden">Leave</span>
-                  </Button>
-                ) : (
-                  /* Join button for non-members */
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="bg-white hover:bg-white/90 text-primary h-8"
-                    onClick={handleJoin}
-                  >
-                    <Users className="h-4 w-4 mr-1" />
-                    <span className="sm:inline hidden">Join</span>
-                  </Button>
-                )
+              {/* Primary Action Button */}
+              {hasManagePermissions ? (
+                /* Primary Manage Button for admins/mods/creators */
+                <Button 
+                  size="sm" 
+                  className="bg-white hover:bg-white/90 text-primary h-8 font-medium"
+                  onClick={() => onTabChange?.("manage")}
+                >
+                  <Settings className="h-4 w-4 mr-1" />
+                  <span className="hidden sm:inline">Manage</span>
+                </Button>
+              ) : isMember ? (
+                /* Primary Leave Button for members with confirmation dropdown */
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="bg-white/10 border-white/20 hover:bg-white/20 text-white h-8"
+                    >
+                      <LogOut className="h-4 w-4 mr-1" />
+                      <span className="hidden sm:inline">Leave</span>
+                      <ChevronDown className="h-3 w-3 ml-1 opacity-70" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>Member Actions</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLeave} className="text-red-600 focus:text-red-600">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Leave Community
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                /* Primary Join Button for non-members */
+                <Button 
+                  size="sm" 
+                  className="bg-white hover:bg-white/90 text-primary h-8 font-medium"
+                  onClick={handleJoin}
+                >
+                  <Users className="h-4 w-4 mr-1" />
+                  <span className="hidden sm:inline">Join</span>
+                </Button>
               )}
+              
+              {/* Secondary Action Button - always show regardless of role */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="bg-white/10 border-white/20 hover:bg-white/20 text-white h-8"
+                  >
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Community Actions</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  
+                  {/* Share option - available to everyone */}
+                  <DropdownMenuItem>
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Share
+                  </DropdownMenuItem>
+                  
+                  {/* Member-specific options */}
+                  {isMember && (
+                    <>
+                      <DropdownMenuItem>
+                        <Bell className="h-4 w-4 mr-2" />
+                        Notification Settings
+                      </DropdownMenuItem>
+                      {!community.isDefault && (
+                        <DropdownMenuItem onClick={handleLeave} className="text-red-600 focus:text-red-600">
+                          <LogOut className="h-4 w-4 mr-2" />
+                          Leave Community
+                        </DropdownMenuItem>
+                      )}
+                    </>
+                  )}
+                  
+                  {/* Admin/Moderator options */}
+                  {hasManagePermissions && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => onTabChange?.("manage")}>
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit Community
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  
+                  {/* Options for everyone */}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <Flag className="h-4 w-4 mr-2" />
+                    Report Community
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
           
