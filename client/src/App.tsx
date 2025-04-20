@@ -391,6 +391,15 @@ export default function App() {
                   <Route path="/communities/:communityId/events/:eventId">
                     {(params) => <ProtectedRoute component={CommunityEventDetailPage} path="/communities/:communityId/events/:eventId" />}
                   </Route>
+                  
+                  {/* PKL-278651-COMM-0036-MEDIA - Community Media Management */}
+                  <Route path="/communities/:communityId/media">
+                    {(params) => {
+                      const MediaManagementPage = lazyLoad(() => import('./pages/community/MediaManagementPage'));
+                      return <ProtectedRoute component={MediaManagementPage} path="/communities/:communityId/media" />;
+                    }}
+                  </Route>
+                  
                   <Route path="/communities">
                     {(params) => <ProtectedRoute component={CommunitiesPage} path="/communities" />}
                   </Route>
