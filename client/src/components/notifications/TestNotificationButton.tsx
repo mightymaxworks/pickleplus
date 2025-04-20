@@ -31,7 +31,7 @@ export function TestNotificationButton({ className }: TestNotificationButtonProp
       
       // Invalidate notifications queries
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/notifications/count'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
       
       toast({
         title: 'Test Notifications Generated',

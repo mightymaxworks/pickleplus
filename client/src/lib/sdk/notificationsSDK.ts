@@ -77,7 +77,7 @@ export const notificationsSDK = {
    */
   async getUnreadCount(): Promise<NotificationUnreadCount> {
     try {
-      const res = await apiRequest('GET', '/api/notifications/count');
+      const res = await apiRequest('GET', '/api/notifications/unread-count');
       
       if (!res.ok) {
         console.error('Error fetching notification count:', await res.text());
