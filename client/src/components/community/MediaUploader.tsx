@@ -206,13 +206,15 @@ export function MediaUploader({
               onChange={handleFileChange}
               accept={allowedTypes.join(",")}
               disabled={isUploading}
+              capture="environment"
             />
             <UploadCloud className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
             <p className="text-sm font-medium">
-              Drag and drop files here or click to browse
+              {window.innerWidth <= 640 ? "Tap to upload files" : "Drag and drop files here or click to browse"}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Upload up to {maxFiles} files (images, videos, or PDFs)
+              Upload up to {maxFiles} files
+              <span className="hidden sm:inline"> (images, videos, or PDFs)</span>
             </p>
           </div>
 

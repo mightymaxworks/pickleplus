@@ -297,9 +297,9 @@ export function MediaGallery({
         </div>
       )}
       
-      {/* Media grid */}
+      {/* Media grid - Mobile optimized */}
       {!isLoadingMedia && filteredMedia.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
           {filteredMedia.map((item) => (
             <Card 
               key={item.id}
@@ -311,13 +311,14 @@ export function MediaGallery({
               onClick={selectable ? () => toggleSelection(item) : undefined}
             >
               <div className="relative aspect-square bg-muted group">
-                {/* Media preview */}
+                {/* Media preview - Optimized for mobile with smaller file fetches */}
                 {item.mediaType === MediaType.IMAGE && (
                   <img
-                    src={item.filePath}
+                    src={item.thumbnailPath || item.filePath}
                     alt={item.title || "Image"}
                     className="object-cover w-full h-full"
                     loading="lazy"
+                    decoding="async"
                     onClick={(e) => {
                       if (!selectable) {
                         e.stopPropagation();
@@ -343,13 +344,14 @@ export function MediaGallery({
                         alt={item.title || "Video thumbnail"}
                         className="object-cover w-full h-full"
                         loading="lazy"
+                        decoding="async"
                       />
                     ) : (
-                      <Video className="h-12 w-12 text-muted-foreground" />
+                      <Video className="h-10 w-10 text-muted-foreground" />
                     )}
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="rounded-full bg-background/80 p-2">
-                        <Play className="h-8 w-8 text-primary" />
+                        <Play className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
                       </div>
                     </div>
                   </div>
@@ -357,7 +359,7 @@ export function MediaGallery({
                 
                 {(item.mediaType === MediaType.DOCUMENT || item.mediaType === MediaType.OTHER) && (
                   <div 
-                    className="flex flex-col items-center justify-center w-full h-full p-4"
+                    className="flex flex-col items-center justify-center w-full h-full p-2 sm:p-4"
                     onClick={(e) => {
                       if (!selectable) {
                         e.stopPropagation();
@@ -366,19 +368,22 @@ export function MediaGallery({
                     }}
                   >
                     {getMediaIcon(item.mediaType)}
-                    <p className="mt-2 text-sm text-center truncate max-w-full">
-                      {item.title || item.metadata?.originalFilename || "Document"}
+                    <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-center truncate max-w-full">
+                      {item.title || (item.metadata && 'originalFilename' in item.metadata ? item.metadata.originalFilename : "Document")}
                     </p>
                   </div>
                 )}
                 
-                {/* Action buttons */}
+                {/* Action buttons - Mobile-friendly with tap detection */}
                 {!selectable && (
-                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className={cn(
+                    "absolute top-2 right-2 transition-opacity",
+                    window.innerWidth <= 640 ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                  )}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 bg-background/80">
-                          <MoreVertical className="h-4 w-4" />
+                        <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 bg-background/80">
+                          <MoreVertical className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
@@ -402,19 +407,19 @@ export function MediaGallery({
                 {/* Selection indicator */}
                 {selectable && selectedItems.some(i => i.id === item.id) && (
                   <div className="absolute top-2 right-2">
-                    <div className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center">
-                      <Check className="h-4 w-4" />
+                    <div className="bg-primary text-primary-foreground w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center">
+                      <Check className="h-3 w-3 sm:h-4 sm:w-4" />
                     </div>
                   </div>
                 )}
               </div>
               
-              <CardContent className="p-3">
-                <h3 className="text-sm font-medium truncate">
-                  {item.title || item.metadata?.originalFilename || "Untitled"}
+              <CardContent className="p-2 sm:p-3">
+                <h3 className="text-xs sm:text-sm font-medium truncate">
+                  {item.title || (item.metadata && 'originalFilename' in item.metadata ? item.metadata.originalFilename : "Untitled")}
                 </h3>
-                <p className="text-xs text-muted-foreground">
-                  {format(new Date(item.createdAt), 'MMM d, yyyy')}
+                <p className="text-[10px] sm:text-xs text-muted-foreground">
+                  {format(new Date(item.createdAt || new Date()), 'MMM d, yyyy')}
                 </p>
               </CardContent>
             </Card>
@@ -422,13 +427,15 @@ export function MediaGallery({
         </div>
       )}
       
-      {/* Media preview dialog */}
+      {/* Media preview dialog - Mobile optimized */}
       <Dialog open={!!previewItem} onOpenChange={(open) => !open && setPreviewItem(null)}>
-        <DialogContent className="max-w-4xl w-[90vw] p-0 overflow-hidden">
-          <DialogHeader className="p-4 bg-background/90 backdrop-blur-sm absolute top-0 left-0 right-0 z-10">
-            <DialogTitle>{previewItem?.title || "Media Preview"}</DialogTitle>
+        <DialogContent className="max-w-4xl w-[95vw] sm:w-[90vw] p-0 overflow-hidden">
+          <DialogHeader className="p-3 sm:p-4 bg-background/90 backdrop-blur-sm absolute top-0 left-0 right-0 z-10">
+            <DialogTitle className="text-sm sm:text-base">{previewItem?.title || "Media Preview"}</DialogTitle>
             {previewItem?.description && (
-              <DialogDescription>{previewItem.description}</DialogDescription>
+              <DialogDescription className="text-xs sm:text-sm line-clamp-2 sm:line-clamp-3">
+                {previewItem.description}
+              </DialogDescription>
             )}
           </DialogHeader>
           
@@ -438,22 +445,38 @@ export function MediaGallery({
                 <img
                   src={previewItem.filePath}
                   alt={previewItem.title || "Image"}
-                  className="max-w-full max-h-[80vh] mx-auto"
+                  className="max-w-full max-h-[85vh] mx-auto"
+                  loading="eager"
                 />
               </div>
             )}
             
             {previewItem?.mediaType === MediaType.VIDEO && (
-              <div className="w-full h-full flex items-center justify-center">
+              <div className="w-full h-full flex items-center justify-center p-2 sm:p-4">
                 <video 
                   src={previewItem.filePath}
                   controls
-                  className="max-w-full max-h-[80vh]"
+                  playsInline
+                  controlsList="nodownload"
+                  className="max-w-full max-h-[85vh] w-full"
                 >
                   Your browser does not support the video tag.
                 </video>
               </div>
             )}
+            
+            {/* Download button for mobile convenience */}
+            <div className="absolute bottom-3 right-3 z-10">
+              <Button 
+                size="sm"
+                variant="secondary"
+                className="h-8 sm:h-9 shadow-md"
+                onClick={() => previewItem && window.open(previewItem.filePath, '_blank')}
+              >
+                <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="text-xs sm:text-sm">Download</span>
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
