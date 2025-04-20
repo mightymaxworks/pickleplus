@@ -7,8 +7,9 @@
  * Enhanced with improved visual hierarchy, animations, and mobile experience
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import useEventStatusSync from '@/lib/hooks/useEventStatusSync';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -140,6 +141,38 @@ export function EventList({
    * PKL-278651-CONN-0011-FIX - Event Registration Flow Data Processing
    * Framework5.2 compliant handling for events data with defensive programming
    */
+  // Extract the event IDs for WebSocket subscriptions
+  const eventIds = Array.isArray(events) ? events.map(event => event.id) : [];
+
+  /**
+   * PKL-278651-CONN-0012-SYNC - Event Status Synchronization
+   * Set up real-time WebSocket connection for event status updates
+   */
+  const { isConnected } = useEventStatusSync({
+    eventIds,
+    onStatusChange: (update) => {
+      console.log(`[WebSocket] Received update for event ${update.eventId}:`, update);
+      
+      // No need to manually update state, the queryClient.invalidateQueries in the hook
+      // will automatically trigger a refetch of the relevant queries
+      
+      // Show a toast notification for important updates
+      if (update.type === 'cancelled') {
+        toast({
+          title: "Event Cancelled",
+          description: "An event you're interested in has been cancelled.",
+          variant: "destructive"
+        });
+      } else if (update.type === 'rescheduled') {
+        toast({
+          title: "Event Rescheduled",
+          description: "An event you're registered for has been rescheduled.",
+          variant: "warning"
+        });
+      }
+    }
+  });
+
   const eventsWithRegistrationStatus = Array.isArray(events) 
     ? events.map(event => {
         return {
@@ -367,6 +400,22 @@ export function EventList({
   // Render events list grouped by date
   return (
     <div className={cn("space-y-8", className)}>
+      {/* PKL-278651-CONN-0012-SYNC - WebSocket connection status indicator */}
+      {showEnhancedStatus && (
+        <div className="flex items-center justify-end text-xs mb-1">
+          <div className={cn(
+            "flex items-center",
+            isConnected ? "text-green-600" : "text-amber-600"
+          )}>
+            <div className={cn(
+              "h-2 w-2 rounded-full mr-1",
+              isConnected ? "bg-green-500 animate-pulse" : "bg-amber-500"
+            )} />
+            {isConnected ? "Real-time updates active" : "Connecting..."}
+          </div>
+        </div>
+      )}
+      
       <ScrollArea className="pr-4 h-[600px]">
         <div className="pr-4">
           <AnimatePresence>
