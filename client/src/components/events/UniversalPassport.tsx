@@ -14,7 +14,7 @@
  * @lastModified 2025-04-20
  */
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
@@ -338,251 +338,279 @@ export function UniversalPassport({
             </CardDescription>
           </motion.div>
         </CardHeader>
-      <CardContent className="flex flex-col items-center justify-center pt-6 pb-8 relative">
-        {/* Verification badge with enhanced animation */}
-        <motion.div 
-          className="absolute top-2 right-2 z-10"
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
-        >
-          <Badge 
-            variant="outline" 
-            className="py-1 px-2 bg-primary/5 text-primary border-primary/20 flex items-center gap-1 shadow-sm"
+        <CardContent className="flex flex-col items-center justify-center pt-6 pb-8 relative">
+          {/* Verification badge with enhanced animation */}
+          <motion.div 
+            className="absolute top-2 right-2 z-10"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
           >
-            <ShieldCheckIcon className="h-3 w-3" />
-            <span className="text-xs font-medium">Verified</span>
-          </Badge>
-        </motion.div>
-        
-        {/* Background decoration element for visual interest */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <motion.div 
-            className="absolute -right-20 -top-20 w-40 h-40 rounded-full bg-primary/5 blur-3xl"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.5 }}
-            transition={{ duration: 0.8 }}
-          />
-          <motion.div 
-            className="absolute -left-20 -bottom-20 w-40 h-40 rounded-full bg-primary/5 blur-3xl"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.5 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          />
-        </div>
-        
-        {/* QR Code Display with enhanced animations */}
-        <motion.div
-          className={cn(
-            "p-5 rounded-xl border-2 border-primary/10 bg-white relative z-10",
-            highlightCode && "border-primary"
-          )}
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ 
-            scale: 1, 
-            opacity: 1,
-            boxShadow: highlightCode 
-              ? '0 0 15px 4px rgba(255, 87, 34, 0.2)' 
-              : '0 4px 12px rgba(0, 0, 0, 0.08)'
-          }}
-          transition={{ 
-            duration: 0.6, 
-            ease: "easeOut" 
-          }}
-          whileHover={{ 
-            scale: 1.02,
-            boxShadow: '0 8px 25px rgba(255, 87, 34, 0.15)' 
-          }}
-        >
-          {/* Animated corner accents */}
-          <motion.div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-primary" 
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3 }}
-          />
-          <motion.div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-primary" 
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4 }}
-          />
-          <motion.div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-primary" 
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5 }}
-          />
-          <motion.div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-primary" 
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.6 }}
-          />
+            <Badge 
+              variant="outline" 
+              className="py-1 px-2 bg-primary/5 text-primary border-primary/20 flex items-center gap-1 shadow-sm"
+            >
+              <ShieldCheckIcon className="h-3 w-3" />
+              <span className="text-xs font-medium">Verified</span>
+            </Badge>
+          </motion.div>
           
-          {passportCode && (
-            <QRCodeSVG
-              value={`PICKLEPLUSKP-${passportCode}`}
-              size={240}
-              level="H"
-              includeMargin={true}
-              imageSettings={{
-                src: "/src/assets/pickle-plus-logo.png",
-                height: 44,
-                width: 44,
-                excavate: true,
-              }}
+          {/* Background decoration element for visual interest */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <motion.div 
+              className="absolute -right-20 -top-20 w-40 h-40 rounded-full bg-primary/5 blur-3xl"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              transition={{ duration: 0.8 }}
             />
-          )}
-        </motion.div>
-        
-        {/* Passport code display with enhanced styling */}
-        <motion.div 
-          className="mt-8 flex flex-col items-center w-full"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <motion.div 
-            className="text-lg font-medium flex items-center bg-primary/5 px-4 py-2 rounded-full shadow-sm"
+            <motion.div 
+              className="absolute -left-20 -bottom-20 w-40 h-40 rounded-full bg-primary/5 blur-3xl"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            />
+          </div>
+          
+          {/* QR Code Display with enhanced animations */}
+          <motion.div
+            className={cn(
+              "p-5 rounded-xl border-2 border-primary/10 bg-white relative z-10",
+              highlightCode && "border-primary"
+            )}
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ 
+              scale: 1, 
+              opacity: 1,
+              boxShadow: highlightCode 
+                ? '0 0 15px 4px rgba(255, 87, 34, 0.2)' 
+                : '0 4px 12px rgba(0, 0, 0, 0.08)'
+            }}
+            transition={{ 
+              duration: 0.6, 
+              ease: "easeOut" 
+            }}
             whileHover={{ 
-              backgroundColor: "rgba(255, 87, 34, 0.08)",
-              transition: { duration: 0.2 }
+              scale: 1.02,
+              boxShadow: '0 8px 25px rgba(255, 87, 34, 0.15)' 
             }}
           >
-            <span className="text-muted-foreground mr-2">Code:</span>
-            <motion.span 
-              className={cn(
-                "font-bold text-primary tracking-wide",
-                highlightCode && "bg-primary/10 px-2 py-0.5 rounded-md"
-              )}
-              animate={{
-                scale: highlightCode ? 1.05 : 1,
-                color: highlightCode ? "rgb(235, 67, 14)" : "rgb(255, 87, 34)"
+            {/* Animated corner accents */}
+            <motion.div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-primary" 
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 }}
+            />
+            <motion.div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-primary" 
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4 }}
+            />
+            <motion.div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-primary" 
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.5 }}
+            />
+            <motion.div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-primary" 
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.6 }}
+            />
+            
+            {passportCode && (
+              <QRCodeSVG
+                value={`PICKLEPLUSKP-${passportCode}`}
+                size={240}
+                level="H"
+                includeMargin={true}
+                imageSettings={{
+                  src: "/src/assets/pickle-plus-logo.png",
+                  height: 44,
+                  width: 44,
+                  excavate: true,
+                }}
+              />
+            )}
+          </motion.div>
+          
+          {/* Passport code display with enhanced styling */}
+          <motion.div 
+            className="mt-8 flex flex-col items-center w-full"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <motion.div 
+              className="text-lg font-medium flex items-center bg-primary/5 px-4 py-2 rounded-full shadow-sm"
+              whileHover={{ 
+                backgroundColor: "rgba(255, 87, 34, 0.08)",
+                transition: { duration: 0.2 }
               }}
-              transition={{ duration: 0.4 }}
             >
-              {passportCode}
-            </motion.span>
-            <AnimatePresence>
-              {copiedCode && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.5, x: -20 }}
-                  animate={{ opacity: 1, scale: 1, x: 0 }}
-                  exit={{ opacity: 0, scale: 0.5 }}
-                  className="absolute ml-24"
-                >
-                  <CheckCircle2Icon className="h-5 w-5 text-green-500" />
-                </motion.div>
-              )}
-            </AnimatePresence>
+              <span className="text-muted-foreground mr-2">Code:</span>
+              <motion.span 
+                className={cn(
+                  "font-bold text-primary tracking-wide",
+                  highlightCode && "bg-primary/10 px-2 py-0.5 rounded-md"
+                )}
+                animate={{
+                  scale: highlightCode ? 1.05 : 1,
+                  color: highlightCode ? "rgb(235, 67, 14)" : "rgb(255, 87, 34)"
+                }}
+                transition={{ duration: 0.4 }}
+              >
+                {passportCode}
+              </motion.span>
+              <AnimatePresence>
+                {copiedCode && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.5, x: -20 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    exit={{ opacity: 0, scale: 0.5 }}
+                    className="absolute ml-24"
+                  >
+                    <CheckCircle2Icon className="h-5 w-5 text-green-500" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <motion.div
+                      whileHover={{ scale: 1.2 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6 ml-2 hover:bg-primary/10"
+                        onClick={copyPassportCode}
+                        aria-label="Copy passport code"
+                      >
+                        <Copy className={cn(
+                          "h-3.5 w-3.5", 
+                          copiedCode ? "text-green-500" : "text-muted-foreground"
+                        )} />
+                      </Button>
+                    </motion.div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Copy passport code</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </motion.div>
+            
+            <motion.div 
+              className="text-sm text-muted-foreground mt-3 flex items-center px-3 py-1.5 bg-muted/40 rounded-full"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <InfoIcon className="h-3.5 w-3.5 mr-2" />
+              Present this code when checking in to events
+            </motion.div>
+          </motion.div>
+          
+          {/* Registered events badge with enhanced animation */}
+          {registeredEvents && registeredEvents.length > 0 && (
+            <motion.div 
+              className="mt-8 w-full flex justify-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, type: "spring", stiffness: 100 }}
+            >
+              <Badge 
+                variant="outline" 
+                className="py-2 px-4 text-sm bg-green-50 border-green-200 text-green-700 flex items-center shadow-sm"
+              >
+                <CalendarDaysIcon className="h-4 w-4 mr-2" />
+                {registeredEvents.length} Registered Event{registeredEvents.length !== 1 ? 's' : ''}
+              </Badge>
+            </motion.div>
+          )}
+        </CardContent>
+        <CardFooter className="flex justify-between gap-4 pt-0 pb-5 bg-gradient-to-b from-muted/0 to-muted/20">
+          {/* View Registered Events button with animation */}
+          {registeredEvents && registeredEvents.length > 0 && (
+            <motion.div className="flex-1"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Button 
+                variant="default" 
+                className="w-full bg-primary/90 hover:bg-primary transition-all duration-300 shadow-sm"
+                onClick={onViewRegisteredEvents}
+                disabled={!onViewRegisteredEvents}
+              >
+                <CalendarDaysIcon className="h-4 w-4 mr-2" />
+                View My Events
+              </Button>
+            </motion.div>
+          )}
+          
+          {/* Quick Registration button if upcoming event is provided */}
+          {upcomingEvent && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.9, type: "spring", stiffness: 200 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      className="h-10 w-10 rounded-full border-green-400/50 bg-green-50/50 hover:border-green-500 hover:bg-green-100/50 shadow-sm"
+                      onClick={() => setShowQuickRegDialog(true)}
+                      aria-label="Quick register for event"
+                    >
+                      <ZapIcon className="h-5 w-5 text-green-600" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Quick Register for {upcomingEvent.name}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </motion.div>
+          )}
+          
+          {/* Scan button */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.85, type: "spring", stiffness: 200 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <motion.div
-                    whileHover={{ scale: 1.2 }}
-                    whileTap={{ scale: 0.9 }}
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="h-10 w-10 rounded-full border-primary/30 bg-primary/5 hover:border-primary/70 hover:bg-primary/10 shadow-sm"
+                    onClick={() => setShowScanDialog(true)}
+                    aria-label="Scan QR Code"
                   >
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-6 w-6 ml-2 hover:bg-primary/10"
-                      onClick={copyPassportCode}
-                      aria-label="Copy passport code"
-                    >
-                      <Copy className={cn(
-                        "h-3.5 w-3.5", 
-                        copiedCode ? "text-green-500" : "text-muted-foreground"
-                      )} />
-                    </Button>
-                  </motion.div>
+                    <ScanIcon className="h-5 w-5 text-primary" />
+                  </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Copy passport code</p>
+                  <p>Scan PicklePass™ QR Code</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </motion.div>
-          
-          <motion.div 
-            className="text-sm text-muted-foreground mt-3 flex items-center px-3 py-1.5 bg-muted/40 rounded-full"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            <InfoIcon className="h-3.5 w-3.5 mr-2" />
-            Present this code when checking in to events
-          </motion.div>
-        </motion.div>
-        
-        {/* Registered events badge with enhanced animation */}
-        {registeredEvents && registeredEvents.length > 0 && (
-          <motion.div 
-            className="mt-8 w-full flex justify-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, type: "spring", stiffness: 100 }}
-          >
-            <Badge 
-              variant="outline" 
-              className="py-2 px-4 text-sm bg-green-50 border-green-200 text-green-700 flex items-center shadow-sm"
-            >
-              <CalendarDaysIcon className="h-4 w-4 mr-2" />
-              {registeredEvents.length} Registered Event{registeredEvents.length !== 1 ? 's' : ''}
-            </Badge>
-          </motion.div>
-        )}
-      </CardContent>
-      <CardFooter className="flex justify-center gap-4 pt-0 pb-5 bg-gradient-to-b from-muted/0 to-muted/20">
-        {/* View Registered Events button with animation */}
-        {registeredEvents && registeredEvents.length > 0 && (
-          <motion.div className="w-full"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <Button 
-              variant="default" 
-              className="w-full bg-primary/90 hover:bg-primary transition-all duration-300 shadow-sm"
-              onClick={onViewRegisteredEvents}
-              disabled={!onViewRegisteredEvents}
-            >
-              <CalendarDaysIcon className="h-4 w-4 mr-2" />
-              View My Events
-            </Button>
-          </motion.div>
-        )}
-        
-        {/* Scan Instructions button with enhanced tooltip */}
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <motion.div
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
-                whileHover={{ rotate: 15, scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-10 w-10 rounded-full border-primary/30 hover:border-primary/70 hover:bg-primary/5 shadow-sm"
-                  aria-label="How to use your passport"
-                >
-                  <ScanIcon className="h-5 w-5 text-primary" />
-                </Button>
-              </motion.div>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-xs text-center p-4">
-              <p className="font-medium mb-1">How to use your PicklePass™</p>
-              <p className="text-sm text-muted-foreground">
-                At the event, an organizer will scan your passport code to 
-                check you in. Your passport works for all events you're registered for.
-              </p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </CardFooter>
-    </Card>
+        </CardFooter>
+      </Card>
+    </>
   );
 }
 
