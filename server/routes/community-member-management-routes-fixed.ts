@@ -30,7 +30,6 @@ const router = express.Router();
  */
 router.get('/:id/roles', isAuthenticated, async (req: Request, res: Response) => {
   try {
-    const storage = req.app.locals.storage as PgStorage;
     const communityId = parseInt(req.params.id);
     
     if (isNaN(communityId)) {
@@ -53,7 +52,6 @@ router.get('/:id/roles', isAuthenticated, async (req: Request, res: Response) =>
  */
 router.get('/:id/permission-types', isAuthenticated, async (req: Request, res: Response) => {
   try {
-    const storage = req.app.locals.storage as PgStorage;
     const communityId = parseInt(req.params.id);
     
     if (isNaN(communityId)) {
@@ -76,7 +74,6 @@ router.get('/:id/permission-types', isAuthenticated, async (req: Request, res: R
  */
 router.patch('/:id/roles/:role/permissions', isAuthenticated, checkPermission('manage_roles'), async (req: Request, res: Response) => {
   try {
-    const storage = req.app.locals.storage as PgStorage;
     const communityId = parseInt(req.params.id);
     const role = req.params.role;
     
@@ -101,7 +98,7 @@ router.patch('/:id/roles/:role/permissions', isAuthenticated, checkPermission('m
     await storage.updateRolePermissions(communityId, role, validatedData.data.permissions);
     
     // Log this action
-    const userId = req.session.userId!;
+    const userId = req.user!.id;
     await storage.logMemberAction({
       communityId,
       actionType: MemberActionType.CHANGE_PRIMARY_ROLE,
@@ -126,7 +123,6 @@ router.patch('/:id/roles/:role/permissions', isAuthenticated, checkPermission('m
  */
 router.post('/:id/custom-roles', isAuthenticated, checkPermission('manage_roles'), async (req: Request, res: Response) => {
   try {
-    const storage = req.app.locals.storage as PgStorage;
     const communityId = parseInt(req.params.id);
     
     if (isNaN(communityId)) {
@@ -162,7 +158,6 @@ router.post('/:id/custom-roles', isAuthenticated, checkPermission('manage_roles'
  */
 router.get('/:id/custom-roles', isAuthenticated, async (req: Request, res: Response) => {
   try {
-    const storage = req.app.locals.storage as PgStorage;
     const communityId = parseInt(req.params.id);
     
     if (isNaN(communityId)) {
@@ -185,7 +180,6 @@ router.get('/:id/custom-roles', isAuthenticated, async (req: Request, res: Respo
  */
 router.patch('/:id/custom-roles/:roleId', isAuthenticated, checkPermission('manage_roles'), async (req: Request, res: Response) => {
   try {
-    const storage = req.app.locals.storage as PgStorage;
     const communityId = parseInt(req.params.id);
     const roleId = parseInt(req.params.roleId);
     
@@ -209,7 +203,6 @@ router.patch('/:id/custom-roles/:roleId', isAuthenticated, checkPermission('mana
  */
 router.delete('/:id/custom-roles/:roleId', isAuthenticated, checkPermission('manage_roles'), async (req: Request, res: Response) => {
   try {
-    const storage = req.app.locals.storage as PgStorage;
     const communityId = parseInt(req.params.id);
     const roleId = parseInt(req.params.roleId);
     
@@ -242,10 +235,9 @@ router.delete('/:id/custom-roles/:roleId', isAuthenticated, checkPermission('man
  */
 router.post('/:id/members/:userId/assign-role', isAuthenticated, checkPermission('assign_roles'), async (req: Request, res: Response) => {
   try {
-    const storage = req.app.locals.storage as PgStorage;
     const communityId = parseInt(req.params.id);
     const targetUserId = parseInt(req.params.userId);
-    const currentUserId = req.session.userId!;
+    const currentUserId = req.user!.id;
     
     if (isNaN(communityId) || isNaN(targetUserId)) {
       return res.status(400).json({ message: 'Invalid ID provided' });
@@ -318,11 +310,10 @@ router.post('/:id/members/:userId/assign-role', isAuthenticated, checkPermission
  */
 router.delete('/:id/members/:userId/roles/:roleId', isAuthenticated, checkPermission('assign_roles'), async (req: Request, res: Response) => {
   try {
-    const storage = req.app.locals.storage as PgStorage;
     const communityId = parseInt(req.params.id);
     const targetUserId = parseInt(req.params.userId);
     const roleId = parseInt(req.params.roleId);
-    const currentUserId = req.session.userId!;
+    const currentUserId = req.user!.id;
     
     if (isNaN(communityId) || isNaN(targetUserId) || isNaN(roleId)) {
       return res.status(400).json({ message: 'Invalid ID provided' });
@@ -366,9 +357,8 @@ router.delete('/:id/members/:userId/roles/:roleId', isAuthenticated, checkPermis
  */
 router.post('/:id/members/bulk-actions', isAuthenticated, checkPermission('manage_members'), async (req: Request, res: Response) => {
   try {
-    const storage = req.app.locals.storage as PgStorage;
     const communityId = parseInt(req.params.id);
-    const currentUserId = req.session.userId!;
+    const currentUserId = req.user!.id;
     
     if (isNaN(communityId)) {
       return res.status(400).json({ message: 'Invalid community ID' });
@@ -478,7 +468,6 @@ router.post('/:id/members/bulk-actions', isAuthenticated, checkPermission('manag
  */
 router.get('/:id/members/with-roles', isAuthenticated, async (req: Request, res: Response) => {
   try {
-    const storage = req.app.locals.storage as PgStorage;
     const communityId = parseInt(req.params.id);
     
     if (isNaN(communityId)) {
@@ -489,15 +478,15 @@ router.get('/:id/members/with-roles', isAuthenticated, async (req: Request, res:
     const limit = parseInt(req.query.limit as string || '50');
     const offset = parseInt(req.query.offset as string || '0');
     const search = req.query.search as string || '';
-    const role = req.query.role as string || '';
+    const role = req.query.role as string || null;
     
     // Get members with roles
-    const members = await storage.getCommunityMembersWithRoles(
-      communityId, 
+    const membersWithRoles = await storage.getCommunityMembersWithRoles(
+      communityId,
       { limit, offset, search, role }
     );
     
-    res.json(members);
+    res.json(membersWithRoles);
   } catch (error) {
     console.error('[PKL-278651-COMM-0034-MEMBER] Error fetching members with roles:', error);
     res.status(500).json({ message: 'Failed to fetch members with roles' });
@@ -510,7 +499,6 @@ router.get('/:id/members/with-roles', isAuthenticated, async (req: Request, res:
  */
 router.get('/:id/action-logs', isAuthenticated, checkPermission('manage_members'), async (req: Request, res: Response) => {
   try {
-    const storage = req.app.locals.storage as PgStorage;
     const communityId = parseInt(req.params.id);
     
     if (isNaN(communityId)) {
@@ -518,17 +506,13 @@ router.get('/:id/action-logs', isAuthenticated, checkPermission('manage_members'
     }
     
     // Parse query parameters
-    const limit = parseInt(req.query.limit as string || '50');
+    const limit = parseInt(req.query.limit as string || '20');
     const offset = parseInt(req.query.offset as string || '0');
-    const actionType = req.query.actionType as MemberActionType | undefined;
     
     // Get action logs
-    const logs = await storage.getCommunityActionLogs(
-      communityId, 
-      { limit, offset, actionType }
-    );
+    const actionLogs = await storage.getCommunityActionLogs(communityId, limit, offset);
     
-    res.json(logs);
+    res.json(actionLogs);
   } catch (error) {
     console.error('[PKL-278651-COMM-0034-MEMBER] Error fetching action logs:', error);
     res.status(500).json({ message: 'Failed to fetch action logs' });

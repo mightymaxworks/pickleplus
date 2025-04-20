@@ -12,11 +12,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { storage } from '../storage';
 
-// Type definition for session with userId
-declare module 'express-session' {
-  interface SessionData {
-    userId: number;
-  }
+// Permission check middleware that handles both req.user.id and req.session.userId
+// depending on authentication method
+export interface SessionData {
+  userId: number;
 }
 
 /**
@@ -26,60 +25,51 @@ declare module 'express-session' {
 export function checkPermission(permissionType: string) {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // Check if user is authenticated
-      if (!req.isAuthenticated() || !req.user?.id) {
+      // Get user ID from req.user (passport) or req.session (custom auth)
+      const userId = req.user?.id || (req.session as any)?.userId;
+      
+      if (!userId) {
         return res.status(401).json({ message: 'Not authenticated' });
       }
       
-      const userId = req.user.id;
       const communityId = parseInt(req.params.id);
       
       if (isNaN(communityId)) {
         return res.status(400).json({ message: 'Invalid community ID' });
       }
       
-      // Get the user's membership
-      const membership = await storage.getCommunityMembership(communityId, userId);
-      
-      if (!membership) {
-        return res.status(403).json({ message: 'You are not a member of this community' });
-      }
-      
-      // Get the community
+      // Get community
       const community = await storage.getCommunityById(communityId);
       
       if (!community) {
         return res.status(404).json({ message: 'Community not found' });
       }
       
-      // If user is the community creator, grant permission
-      if (userId === community.createdByUserId) {
+      // Always allow the creator/owner
+      if (community.createdByUserId === userId) {
         return next();
       }
       
-      // Admins always have all permissions
-      if (membership.role === 'admin') {
+      // Check for admin permission
+      const isAdmin = await storage.checkCommunityPermission(communityId, userId, 'admin');
+      
+      if (isAdmin) {
         return next();
       }
       
-      // Check if the user's role has the required permission
-      const hasPermission = await storage.checkCommunityPermission(
-        communityId,
-        membership.role,
-        permissionType
-      );
+      // Check for specific permission
+      const hasPermission = await storage.checkCommunityPermission(communityId, userId, permissionType);
       
-      if (!hasPermission) {
-        return res.status(403).json({ 
-          message: `You don't have the required permission: ${permissionType}` 
-        });
+      if (hasPermission) {
+        return next();
       }
       
-      // User has permission, proceed
-      next();
+      return res.status(403).json({ 
+        message: 'You do not have permission to perform this action' 
+      });
     } catch (error) {
-      console.error('[PKL-278651-COMM-0034-MEMBER] Error checking permission:', error);
-      res.status(500).json({ message: 'Failed to check permission' });
+      console.error('[PKL-278651-COMM-0034-MEMBER] Permission check error:', error);
+      return res.status(500).json({ message: 'Error checking permissions' });
     }
   };
 }
@@ -88,92 +78,12 @@ export function checkPermission(permissionType: string) {
  * Check if the user is an admin of the community
  */
 export function isAdmin(req: Request, res: Response, next: NextFunction) {
-  (async () => {
-    try {
-      // Check if user is authenticated
-      if (!req.isAuthenticated() || !req.user?.id) {
-        return res.status(401).json({ message: 'Not authenticated' });
-      }
-      
-      const userId = req.user.id;
-      const communityId = parseInt(req.params.id);
-      
-      if (isNaN(communityId)) {
-        return res.status(400).json({ message: 'Invalid community ID' });
-      }
-      
-      // Get the user's membership
-      const membership = await storage.getCommunityMembership(communityId, userId);
-      
-      if (!membership) {
-        return res.status(403).json({ message: 'You are not a member of this community' });
-      }
-      
-      // Get the community
-      const community = await storage.getCommunityById(communityId);
-      
-      if (!community) {
-        return res.status(404).json({ message: 'Community not found' });
-      }
-      
-      // If user is the community creator or has admin role, grant permission
-      if (userId === community.createdByUserId || membership.role === 'admin') {
-        return next();
-      }
-      
-      res.status(403).json({ message: 'Only community admins can perform this action' });
-    } catch (error) {
-      console.error('[PKL-278651-COMM-0034-MEMBER] Error checking admin status:', error);
-      res.status(500).json({ message: 'Failed to check admin status' });
-    }
-  })();
+  return checkPermission('admin')(req, res, next);
 }
 
 /**
  * Check if the user has moderation privileges (admin or moderator) in the community
  */
 export function hasModeratorPermissions(req: Request, res: Response, next: NextFunction) {
-  (async () => {
-    try {
-      // Check if user is authenticated
-      if (!req.isAuthenticated() || !req.user?.id) {
-        return res.status(401).json({ message: 'Not authenticated' });
-      }
-      
-      const userId = req.user.id;
-      const communityId = parseInt(req.params.id);
-      
-      if (isNaN(communityId)) {
-        return res.status(400).json({ message: 'Invalid community ID' });
-      }
-      
-      // Get the user's membership
-      const membership = await storage.getCommunityMembership(communityId, userId);
-      
-      if (!membership) {
-        return res.status(403).json({ message: 'You are not a member of this community' });
-      }
-      
-      // Get the community
-      const community = await storage.getCommunityById(communityId);
-      
-      if (!community) {
-        return res.status(404).json({ message: 'Community not found' });
-      }
-      
-      // If user is the community creator, admin or moderator, grant permission
-      if (userId === community.createdByUserId || 
-          membership.role === 'admin' || 
-          membership.role === 'moderator') {
-        return next();
-      }
-      
-      res.status(403).json({ 
-        message: 'Only community administrators and moderators can perform this action' 
-      });
-    } catch (error) {
-      console.error('[PKL-278651-COMM-0034-MEMBER] Error checking moderator status:', error);
-      res.status(500).json({ message: 'Failed to check moderator status' });
-    }
-  })();
+  return checkPermission('moderate_content')(req, res, next);
 }
