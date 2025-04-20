@@ -61,8 +61,9 @@ import CommunityEventDetailPage from './pages/CommunityEventDetailPage' // PKL-2
 import CommunityDiscoveryPage from './pages/community-discover' // PKL-278651-COMM-0022-DISC
 import CommunityEngagementPage from './pages/community/CommunityEngagementPage' // PKL-278651-COMM-0021-ENGAGE
 
-// Import notification page (PKL-278651-COMM-0028-NOTIF)
+// Import notification pages (PKL-278651-COMM-0028-NOTIF)
 import NotificationsPage from './pages/notifications-page'
+import NotificationPreferencesPage from './pages/NotificationPreferencesPage'
 
 // Import custom test login page to help with loading issues
 import TestLoginPage from './pages/test-login-page'
