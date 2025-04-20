@@ -150,19 +150,18 @@ router.get('/api/notifications',
         isNull(userNotifications.deletedAt)
       );
       
-      const notifications = await db.query.userNotifications.findMany({
-        where: conditions,
-        orderBy: [desc(userNotifications.createdAt)],
-        limit: limit,
-        offset: offset,
-        with: {
-          community: true
-        }
-      });
+      // Use standard select instead of relations query which is causing an error
+      const notifications = await db
+        .select()
+        .from(userNotifications)
+        .where(conditions)
+        .orderBy(desc(userNotifications.createdAt))
+        .limit(limit)
+        .offset(offset);
       
       // Get total count for pagination
       const totalResult = await db
-        .select({ count: db.fn.count() })
+        .select({ count: sql`count(*)` })
         .from(userNotifications)
         .where(conditions);
       
@@ -196,9 +195,9 @@ router.get('/api/notifications/count',
       
       console.log(`[API] Fetching unread notification count for user ${userId}`);
       
-      // Get unread count
+      // Use SQL count directly instead of database function
       const result = await db
-        .select({ count: db.fn.count() })
+        .select({ count: sql`count(*)` })
         .from(userNotifications)
         .where(
           and(
