@@ -1,6 +1,6 @@
 /**
  * PKL-278651-COMM-0028-NOTIF - Notifications Page Component
- * Implementation timestamp: 2025-04-19 15:00 ET
+ * Implementation timestamp: 2025-04-20 07:30 ET
  * 
  * Page component for displaying all user notifications with filtering options
  * 
@@ -16,13 +16,20 @@ import { queryClient } from '@/lib/queryClient';
 import { TestNotificationButton } from '@/components/notifications/TestNotificationButton';
 import { useToast } from '@/hooks/use-toast';
 import { PageHeader } from '@/components/ui/page-header';
-import { LayoutContainer } from '@/components/layout/LayoutContainer';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Pagination } from '@/components/ui/pagination';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { 
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import { 
   Loader2, 
   Bell, 
@@ -33,7 +40,8 @@ import {
   Users, 
   Trash2,
   ArrowLeft,
-  AlertTriangle 
+  AlertTriangle,
+  Home
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -186,19 +194,26 @@ export default function NotificationsPage() {
   const totalPages = Math.max(1, Math.ceil((notifications?.length || 0) / pageSize));
   
   return (
-    <div>
-      <Button 
-        variant="ghost" 
-        size="sm" 
-        className="flex items-center gap-1 mb-4" 
-        onClick={() => navigate('/dashboard')}
-      >
-        <ArrowLeft size={16} />
-        <span>Back to Dashboard</span>
-      </Button>
+    <DashboardLayout>
+      <div className="px-4 py-6 sm:px-6 lg:px-8">
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb className="mb-6">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/dashboard">
+                <Home className="h-4 w-4 mr-1" />
+                <span>Dashboard</span>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Notifications</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
       
-      <LayoutContainer maxWidth="lg">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        {/* Page Header */}
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <PageHeader 
             title="Notifications" 
             description="View and manage your notifications"
@@ -209,7 +224,8 @@ export default function NotificationsPage() {
           </div>
         </div>
         
-        <div className="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        {/* Filters */}
+        <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <Tabs 
             defaultValue="all" 
             value={activeTab} 
@@ -283,7 +299,8 @@ export default function NotificationsPage() {
           </div>
         </div>
         
-        <div className="mt-6">
+        {/* Notifications List */}
+        <div>
           {isLoading ? (
             <div className="flex items-center justify-center p-12">
               <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -372,7 +389,7 @@ export default function NotificationsPage() {
             </div>
           )}
         </div>
-      </LayoutContainer>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
