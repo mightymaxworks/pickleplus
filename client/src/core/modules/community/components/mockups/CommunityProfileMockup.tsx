@@ -3,6 +3,9 @@
  * Community Profile Mockup
  * 
  * This component displays a mockup of a community profile page.
+ * 
+ * Updated: April 20, 2025 (PKL-278651-COMM-0031-CHLG-COMING-SOON)
+ * Added "Coming Soon" banner for Community Challenges feature
  */
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,8 +15,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   Users, Calendar, Trophy, MapPin, Share, Bell, Flag,
-  Mail, ExternalLink, BarChart, UserPlus, Star, Hash
+  Mail, ExternalLink, BarChart, UserPlus, Star, Hash,
+  Gift
 } from 'lucide-react';
+import { ChallengeSoon } from '@/components/community/ChallengeSoon';
 
 const CommunityProfileMockup: React.FC = () => {
   return (
@@ -179,6 +184,13 @@ const CommunityProfileMockup: React.FC = () => {
                   </Button>
                 </CardContent>
               </Card>
+              
+              {/* PKL-278651-COMM-0031-CHLG-COMING-SOON: Add Community Challenges Coming Soon Banner */}
+              <ChallengeSoon 
+                communityName="Seattle Pickleball Club"
+                communityId={3}
+                className="mt-6"
+              />
             </div>
 
             <div className="space-y-6">
@@ -301,14 +313,23 @@ const CommunityProfileMockup: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="events" className="pt-6">
-          <div className="flex items-center justify-center h-96 bg-muted/30 rounded-lg">
-            <div className="text-center max-w-md">
-              <Calendar className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
-              <h3 className="text-xl font-medium mb-2">Events Calendar</h3>
-              <p className="text-muted-foreground">
-                This tab would display a calendar of upcoming events, registration options,
-                past events history, and event photo galleries.
-              </p>
+          <div className="space-y-6">
+            {/* PKL-278651-COMM-0031-CHLG-COMING-SOON: Add Community Challenges Coming Soon Banner to Events tab */}
+            <ChallengeSoon 
+              communityName="Seattle Pickleball Club"
+              communityId={3}
+              className="mb-6"
+            />
+            
+            <div className="flex items-center justify-center h-64 bg-muted/30 rounded-lg">
+              <div className="text-center max-w-md">
+                <Calendar className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
+                <h3 className="text-xl font-medium mb-2">Events Calendar</h3>
+                <p className="text-muted-foreground">
+                  This tab would display a calendar of upcoming events, registration options,
+                  past events history, and event photo galleries.
+                </p>
+              </div>
             </div>
           </div>
         </TabsContent>
