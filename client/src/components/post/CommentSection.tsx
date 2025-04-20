@@ -350,9 +350,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
                   size="sm"
                   variant="ghost"
                   className="h-6 text-xs text-muted-foreground"
-                >
-                  Report
-                </ReportButton>
+                />
               </div>
               
               {/* Reply form */}

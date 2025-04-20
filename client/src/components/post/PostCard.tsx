@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { formatDistanceToNow } from "date-fns";
 import { ReportButton } from "@/components/moderation/ReportButton";
-import { CommentSection } from "./CommentSection";
+import { CommentSection } from "@/components/post";
 import { useAuth } from "@/hooks/useAuth";
 
 interface PostCardProps {
@@ -368,9 +368,7 @@ export function PostCard({ post, onCommentClick, showComments = false }: PostCar
             communityId={post.communityId}
             size="sm"
             variant="ghost"
-          >
-            Report
-          </ReportButton>
+          />
         </div>
       </CardFooter>
       

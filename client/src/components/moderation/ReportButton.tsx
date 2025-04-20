@@ -11,13 +11,14 @@ import { Button, ButtonProps } from "@/components/ui/button";
 import { Flag } from "lucide-react";
 import { ReportContentDialog } from "./ReportContentDialog";
 
-interface ReportButtonProps extends Omit<ButtonProps, "onClick"> {
+interface ReportButtonProps extends Omit<ButtonProps, "onClick" | "children"> {
   contentId: number;
   contentType: 'post' | 'comment' | 'event';
   communityId: number;
   variant?: "default" | "outline" | "ghost" | "link";
   size?: "default" | "sm" | "lg" | "icon";
   onReportComplete?: () => void;
+  children?: React.ReactNode;
 }
 
 /**
