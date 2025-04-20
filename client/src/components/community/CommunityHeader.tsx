@@ -188,18 +188,19 @@ export function CommunityHeader({
       </Button>
       
       {/* Hero section - enhanced with theme colors and patterns */}
-      <div className={cn(
-        "relative rounded-xl p-4 sm:p-6 text-white overflow-hidden",
-        community.bannerUrl 
-          ? "bg-gradient-to-r from-black/50 to-black/30" 
-          : `bg-gradient-to-r ${
-              community.themeColor 
-                ? `from-[${community.themeColor}]/90 to-[${community.themeColor}]/70` 
-                : community.accentColor 
-                  ? `from-[${community.accentColor}]/90 to-[${community.themeColor || '#4F46E5'}]/70`
-                  : "from-primary/90 to-primary/70"
-            }`,
-      )}>
+      <div 
+        className="relative rounded-xl p-4 sm:p-6 text-white overflow-hidden"
+        style={{
+          background: community.bannerUrl 
+            ? "linear-gradient(to right, rgba(0,0,0,0.5), rgba(0,0,0,0.3))" 
+            : `linear-gradient(to right, ${
+                community.themeColor 
+                  ? `${community.themeColor}E6, ${community.themeColor}B3` // 90% and 70% opacity
+                  : community.accentColor 
+                    ? `${community.accentColor}E6, ${community.themeColor || '#4F46E5'}B3`
+                    : "var(--primary)E6, var(--primary)B3"
+              })`
+        }}>
         {/* Banner Image (if available) */}
         {community.bannerUrl && (
           <div className="absolute inset-0 z-0">
@@ -213,41 +214,41 @@ export function CommunityHeader({
         )}
         
         {/* Pattern Overlay - enhanced with banner pattern support */}
-        <div className="absolute inset-0 opacity-10 bg-repeat">
+        <div className="absolute inset-0 opacity-20 bg-repeat">
           {community.bannerPattern === 'dots' ? (
-            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-              <pattern id="communityPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style={{color: 'white'}}>
+              <pattern id="communityDotsPattern" width="20" height="20" patternUnits="userSpaceOnUse">
                 <path d="M0 0h20v20H0z" fill="none" />
                 <circle cx="5" cy="5" r="1" fill="currentColor" />
                 <circle cx="15" cy="5" r="1" fill="currentColor" />
                 <circle cx="5" cy="15" r="1" fill="currentColor" />
                 <circle cx="15" cy="15" r="1" fill="currentColor" />
               </pattern>
-              <rect width="100%" height="100%" fill="url(#communityPattern)" />
+              <rect width="100%" height="100%" fill="url(#communityDotsPattern)" />
             </svg>
           ) : community.bannerPattern === 'diagonal' ? (
-            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-              <pattern id="communityPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style={{color: 'white'}}>
+              <pattern id="communityDiagonalPattern" width="20" height="20" patternUnits="userSpaceOnUse">
                 <path d="M0 0h20v20H0z" fill="none" />
                 <path d="M0 20L20 0" stroke="currentColor" strokeWidth="0.5" />
               </pattern>
-              <rect width="100%" height="100%" fill="url(#communityPattern)" />
+              <rect width="100%" height="100%" fill="url(#communityDiagonalPattern)" />
             </svg>
           ) : community.bannerPattern === 'waves' ? (
-            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-              <pattern id="communityPattern" width="40" height="20" patternUnits="userSpaceOnUse">
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style={{color: 'white'}}>
+              <pattern id="communityWavesPattern" width="40" height="20" patternUnits="userSpaceOnUse">
                 <path d="M0 0h40v20H0z" fill="none" />
                 <path d="M0 10C5 5, 15 15, 20 10C25 5, 35 15, 40 10" stroke="currentColor" strokeWidth="0.5" fill="none" />
               </pattern>
-              <rect width="100%" height="100%" fill="url(#communityPattern)" />
+              <rect width="100%" height="100%" fill="url(#communityWavesPattern)" />
             </svg>
           ) : (
-            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-              <pattern id="communityPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style={{color: 'white'}}>
+              <pattern id="communityGridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
                 <path d="M0 0h20v20H0z" fill="none" />
                 <path d="M10 0v20M0 10h20" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 2" />
               </pattern>
-              <rect width="100%" height="100%" fill="url(#communityPattern)" />
+              <rect width="100%" height="100%" fill="url(#communityGridPattern)" />
             </svg>
           )}
         </div>
