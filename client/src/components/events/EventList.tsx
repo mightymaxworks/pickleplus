@@ -167,7 +167,7 @@ export function EventList({
         toast({
           title: "Event Rescheduled",
           description: "An event you're registered for has been rescheduled.",
-          variant: "warning"
+          variant: "default"
         });
       }
     }
