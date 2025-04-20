@@ -24,6 +24,12 @@ import { CommunityHeader } from "@/components/community/CommunityHeader";
 import { EventList } from "@/components/community/EventList";
 import { MembersList } from "@/components/community/MembersList";
 import { CommunityVisualSettings } from "@/components/community/CommunityVisualSettings";
+import { 
+  CommunityInfoCard, 
+  CommunityInfoDescription, 
+  CommunityInfoTags, 
+  CommunityInfoStats 
+} from "@/components/community/CommunityInfoCard";
 import { PostList } from "@/components/post/PostList";
 import {
   Card,
@@ -199,138 +205,157 @@ export default function CommunityDetailPage() {
           {activeTab === "about" && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-6">
-                {/* About section */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Info className="h-5 w-5" />
-                      About This Community
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="prose dark:prose-invert max-w-none">
-                      {community.description ? (
-                        <p>{community.description}</p>
-                      ) : (
-                        <p className="text-muted-foreground italic">
-                          No description has been provided for this community.
-                        </p>
-                      )}
+                {/* PKL-278651-COMM-0014-UI-INFO - Sprint 1.4 - Collapsible Info Cards */}
+                {/* About section - enhanced with collapsible card */}
+                <CommunityInfoCard 
+                  title="About This Community"
+                  icon={<Info className="h-5 w-5" />}
+                  initialExpanded={true}
+                >
+                  <CommunityInfoDescription placeholder="No description has been provided for this community.">
+                    {community.description}
+                  </CommunityInfoDescription>
+                  
+                  {/* Tags section when available */}
+                  {community.tags && community.tags.length > 0 && (
+                    <div className="mt-4">
+                      <h4 className="text-sm font-medium mb-2">Community Focus</h4>
+                      <CommunityInfoTags tags={community.tags} colorScheme="accent" />
                     </div>
-                  </CardContent>
-                </Card>
-                
-                {/* Rules section */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <FileText className="h-5 w-5" />
-                      Community Rules
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="prose dark:prose-invert max-w-none">
-                      {community.rules ? (
-                        <div dangerouslySetInnerHTML={{ __html: community.rules }} />
-                      ) : (
-                        <p className="text-muted-foreground italic">
-                          No rules have been specified for this community.
-                        </p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                {/* Guidelines section */}
-                {community.guidelines && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Check className="h-5 w-5" />
-                        Community Guidelines
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="prose dark:prose-invert max-w-none">
-                        <div dangerouslySetInnerHTML={{ __html: community.guidelines }} />
+                  )}
+                  
+                  {/* Additional metadata */}
+                  <div className="mt-4 border-t pt-4">
+                    <h4 className="text-sm font-medium mb-2">Community Details</h4>
+                    <dl className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <dt className="text-muted-foreground">Founded</dt>
+                        <dd>
+                          {community.createdAt 
+                            ? new Date(community.createdAt).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })
+                            : 'Unknown'
+                          }
+                        </dd>
                       </div>
-                    </CardContent>
-                  </Card>
+                      <div>
+                        <dt className="text-muted-foreground">Membership</dt>
+                        <dd>{community.isPublic ? 'Public' : 'Private'}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted-foreground">Approval Required</dt>
+                        <dd>{community.requiresApproval ? 'Yes' : 'No'}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted-foreground">Location</dt>
+                        <dd>{community.location || 'Not specified'}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                </CommunityInfoCard>
+                
+                {/* Rules section - enhanced with collapsible card */}
+                <CommunityInfoCard 
+                  title="Community Rules"
+                  icon={<FileText className="h-5 w-5" />}
+                  initialExpanded={false}
+                  badgeText={community.rules ? "Important" : undefined}
+                  badgeVariant="destructive"
+                >
+                  <CommunityInfoDescription placeholder="No rules have been specified for this community.">
+                    {community.rules && <div dangerouslySetInnerHTML={{ __html: community.rules }} />}
+                  </CommunityInfoDescription>
+                </CommunityInfoCard>
+                
+                {/* Guidelines section - enhanced with collapsible card */}
+                {community.guidelines && (
+                  <CommunityInfoCard 
+                    title="Community Guidelines"
+                    icon={<Check className="h-5 w-5" />}
+                    initialExpanded={false}
+                  >
+                    <CommunityInfoDescription>
+                      <div dangerouslySetInnerHTML={{ __html: community.guidelines }} />
+                    </CommunityInfoDescription>
+                  </CommunityInfoCard>
                 )}
               </div>
               
               {/* Sidebar */}
               <div className="space-y-6">
-                {/* Recent events preview */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-center">
-                      <CardTitle>Upcoming Events</CardTitle>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleTabChange("events")}
-                        className="text-xs px-2"
-                      >
-                        See All
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <EventList 
-                      communityId={communityId} 
-                      layout="list" 
-                      showFilter={false}
-                      compact={true}
-                      limit={3}
-                      defaultView="upcoming"
-                    />
-                  </CardContent>
-                </Card>
+                {/* Recent events preview with our new CommunityInfoCard component */}
+                <CommunityInfoCard 
+                  title="Upcoming Events"
+                  icon={<Calendar className="h-5 w-5" />}
+                  initialExpanded={true}
+                  className="overflow-visible"
+                >
+                  <div className="flex justify-end mb-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleTabChange("events")}
+                      className="text-xs px-2 -mt-2"
+                    >
+                      <Calendar className="h-3.5 w-3.5 mr-1 sm:mr-2" />
+                      <span className="sm:inline">See All</span>
+                    </Button>
+                  </div>
+                  <EventList 
+                    communityId={communityId} 
+                    layout="list" 
+                    showFilter={false}
+                    compact={true}
+                    limit={3}
+                    defaultView="upcoming"
+                  />
+                </CommunityInfoCard>
                 
                 {/* Recent members preview - hidden for default communities */}
                 {!community.isDefault && (
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-center">
-                        <CardTitle>Members</CardTitle>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleTabChange("members")}
-                          className="text-xs px-2"
-                        >
-                          See All
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                      <MembersList 
-                        communityId={communityId}
-                        layout="list"
-                        showFilter={false}
-                        compact={true}
-                        limit={5}
-                      />
-                    </CardContent>
-                  </Card>
+                  <CommunityInfoCard 
+                    title="Members"
+                    icon={<Users className="h-5 w-5" />}
+                    initialExpanded={true}
+                    className="overflow-visible"
+                  >
+                    <div className="flex justify-end mb-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleTabChange("members")}
+                        className="text-xs px-2 -mt-2"
+                      >
+                        <Users className="h-3.5 w-3.5 mr-1 sm:mr-2" />
+                        <span className="sm:inline">See All</span>
+                      </Button>
+                    </div>
+                    <MembersList 
+                      communityId={communityId}
+                      layout="list"
+                      showFilter={false}
+                      compact={true}
+                      limit={5}
+                    />
+                  </CommunityInfoCard>
                 )}
                 
                 {/* Info card for default communities (no member count) */}
                 {community.isDefault && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Users className="h-5 w-5" />
-                        Official Group
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-center text-muted-foreground mt-1">
-                        All Pickle+ users automatically join this official group. Member information is kept private for security and privacy reasons.
-                      </p>
-                    </CardContent>
-                  </Card>
+                  <CommunityInfoCard 
+                    title="Official Group"
+                    icon={<Users className="h-5 w-5" />}
+                    initialExpanded={true}
+                    badgeText="Default"
+                    badgeVariant="outline"
+                  >
+                    <p className="text-muted-foreground">
+                      All Pickle+ users automatically join this official group. Member information is kept private for security and privacy reasons.
+                    </p>
+                  </CommunityInfoCard>
                 )}
               </div>
             </div>
@@ -407,7 +432,8 @@ export default function CommunityDetailPage() {
                       </TabsTrigger>
                       <TabsTrigger value="settings" className="flex gap-2 items-center justify-center py-3">
                         <Edit className="h-5 w-5" />
-                        <span className="font-medium">Settings</span>
+                        <span className="hidden sm:inline font-medium">Settings</span>
+                        <span className="sm:hidden font-medium">Edit</span>
                       </TabsTrigger>
                     </TabsList>
                     

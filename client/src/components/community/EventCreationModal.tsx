@@ -43,7 +43,7 @@ export function EventCreationModal({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button className="gap-1">
+          <Button className="gap-1 whitespace-nowrap text-sm">
             <PlusCircle className="h-4 w-4" />
             <span>Create Event</span>
           </Button>
