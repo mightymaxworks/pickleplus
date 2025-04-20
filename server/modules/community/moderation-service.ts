@@ -417,17 +417,64 @@ export class ModerationService {
 
   /**
    * Validate that reported content exists
+   * Implementation timestamp: 2025-04-20 21:15 ET
    */
   private async validateReportContent(reportData: InsertContentReport): Promise<boolean> {
-    // In a production system, this would check if the content exists
-    // For now, we'll simulate content validation for the moderation system
     try {
       if (!['post', 'comment', 'event'].includes(reportData.contentType)) {
         throw new Error('Invalid content type');
       }
       
-      // For now, we'll assume all content is valid since we don't have access
-      // to the community content tables in this implementation
+      // Check if content exists based on content type
+      if (reportData.contentType === 'post') {
+        const post = await db.select()
+          .from(communityPosts)
+          .where(eq(communityPosts.id, reportData.contentId))
+          .limit(1);
+          
+        if (post.length === 0) {
+          throw new Error('Post not found');
+        }
+        
+        // Verify post belongs to the reported community
+        if (post[0].communityId !== reportData.communityId) {
+          throw new Error('Post does not belong to the reported community');
+        }
+      } else if (reportData.contentType === 'comment') {
+        const comment = await db.select()
+          .from(communityPostComments)
+          .where(eq(communityPostComments.id, reportData.contentId))
+          .limit(1);
+          
+        if (comment.length === 0) {
+          throw new Error('Comment not found');
+        }
+        
+        // For comments, we need to check the post to verify community
+        const post = await db.select()
+          .from(communityPosts)
+          .where(eq(communityPosts.id, comment[0].postId))
+          .limit(1);
+          
+        if (post.length === 0 || post[0].communityId !== reportData.communityId) {
+          throw new Error('Comment does not belong to the reported community');
+        }
+      } else if (reportData.contentType === 'event') {
+        const event = await db.select()
+          .from(communityEvents)
+          .where(eq(communityEvents.id, reportData.contentId))
+          .limit(1);
+          
+        if (event.length === 0) {
+          throw new Error('Event not found');
+        }
+        
+        // Verify event belongs to the reported community
+        if (event[0].communityId !== reportData.communityId) {
+          throw new Error('Event does not belong to the reported community');
+        }
+      }
+      
       return true;
     } catch (error) {
       console.error('[Moderation] Error validating content:', error);
@@ -665,14 +712,22 @@ export class ModerationService {
         
         console.log(`[Moderation] Comment ${contentId} marked as removed`);
       } else if (contentType === 'event') {
-        // Mark event as canceled in the database
-        await db.update(communityEvents)
-          .set({
-            status: 'canceled',
-            cancellationReason: 'Removed by moderator',
-            updatedAt: new Date()
-          })
-          .where(eq(communityEvents.id, contentId));
+        // Get the existing event first to preserve data we need
+        const [existingEvent] = await db.select()
+          .from(communityEvents)
+          .where(eq(communityEvents.id, contentId))
+          .limit(1);
+          
+        if (existingEvent) {
+          // Mark event as canceled in the database
+          await db.update(communityEvents)
+            .set({
+              status: 'canceled',
+              description: '[Event canceled by moderator]',
+              updatedAt: new Date()
+            })
+            .where(eq(communityEvents.id, contentId));
+        }
         
         console.log(`[Moderation] Event ${contentId} marked as canceled`);
       } else {
