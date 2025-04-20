@@ -24,6 +24,7 @@ export const userNotifications = pgTable('user_notifications', {
   isRead: boolean('is_read').default(false).notNull(),
   referenceType: varchar('reference_type', { length: 50 }), // 'post', 'comment', 'event', 'report', etc.
   referenceId: integer('reference_id'),
+  link: text('link'), // Direct link to a specific page/route
   communityId: integer('community_id'), // Reference to communities.id
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -50,6 +51,7 @@ export const insertUserNotificationSchema = createInsertSchema(userNotifications
   title: z.string().min(1).max(100),
   message: z.string().min(1).max(1000),
   referenceType: z.string().min(1).max(50).optional(),
+  link: z.string().optional(), // Optional direct link to a page
 }).omit({ id: true, isRead: true, createdAt: true, updatedAt: true, deletedAt: true });
 
 export const insertNotificationPreferenceSchema = createInsertSchema(notificationPreferences, {
