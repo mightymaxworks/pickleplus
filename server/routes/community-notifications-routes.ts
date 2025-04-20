@@ -11,6 +11,7 @@ import express, { Request, Response } from 'express';
 import { z } from 'zod';
 import { db } from '../db';
 import { eq, and, desc, isNull, gt } from 'drizzle-orm';
+import { sql } from 'drizzle-orm/sql';
 import { 
   userNotifications, 
   notificationPreferences,
@@ -165,7 +166,7 @@ router.get('/api/notifications',
         .from(userNotifications)
         .where(conditions);
       
-      const total = parseInt(totalResult[0].count.toString());
+      const total = parseInt(String(totalResult[0].count));
       
       res.status(200).json({
         notifications,
@@ -207,7 +208,7 @@ router.get('/api/notifications/count',
           )
         );
       
-      const count = parseInt(result[0].count.toString());
+      const count = parseInt(String(result[0].count));
       
       console.log(`[API] Unread notification count for user ${userId}: ${count}`);
       
@@ -391,8 +392,9 @@ router.put('/api/notification-preferences/:preferenceId',
       }
       
       // Validate request body
+      // Note: Database column is 'is_enabled' but mapped to 'enabled' in code
       const updateSchema = z.object({
-        isEnabled: z.boolean().optional(),
+        enabled: z.boolean().optional(),
         channel: z.enum(['app', 'email']).optional(),
       });
       
@@ -502,7 +504,8 @@ export async function createNotification(notificationData: any) {
     });
     
     // If preference exists and is disabled, don't create notification
-    if (preference && !preference.enabled) {
+    // Note: DB column is 'is_enabled' but field is accessed as 'enabled' in the code
+    if (preference && preference.enabled === false) {
       return null;
     }
     
