@@ -12,7 +12,7 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/lib/auth';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Event } from '@shared/schema/events';
 
