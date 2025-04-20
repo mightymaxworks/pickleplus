@@ -86,7 +86,8 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
   // Mark all as read mutation
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/notifications/mark-all-as-read');
+      // BUGFIX: Fixed the API endpoint path to match the server implementation
+      const response = await apiRequest('POST', '/api/notifications/read-all');
       return response.json();
     },
     onSuccess: () => {
@@ -95,6 +96,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
       
       // Also refresh notification lists
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+      console.log('[NotificationBell] All notifications marked as read, reset counter to 0');
     }
   });
   

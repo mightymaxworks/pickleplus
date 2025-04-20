@@ -85,16 +85,18 @@ export const NotificationsDropdown: React.FC<NotificationsDropdownProps> = ({
   // Mark all as read
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/notifications/mark-all-as-read');
+      // BUGFIX: Fixed API endpoint path to match server implementation
+      const response = await apiRequest('POST', '/api/notifications/read-all');
       return response.json();
     },
-    onSuccess: (data: { count: number }) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
       queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
       toast({
         title: 'All notifications marked as read',
-        description: `${data.count} notifications have been marked as read.`,
+        description: 'All notifications have been marked as read.',
       });
+      console.log('[NotificationsDropdown] All notifications marked as read');
     }
   });
   
