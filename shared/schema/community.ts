@@ -215,26 +215,44 @@ export async function pushSchema() {
  * Added isDefault field to support automatic membership for all users
  * Default communities are groups that users are automatically joined to on registration
  */
+/**
+ * Communities table with enhanced media and styling support
+ * @updated PKL-278651-COMM-0032-UI-ALIGN (2025-04-20)
+ */
 export const communities = pgTable("communities", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 100 }).notNull(),
   description: text("description"),
   location: varchar("location", { length: 100 }),
   skillLevel: varchar("skill_level", { length: 50 }),
+  
+  // Enhanced media fields for UI alignment with mockups
   avatarUrl: text("avatar_url"),
   bannerUrl: text("banner_url"),
   bannerPattern: varchar("banner_pattern", { length: 50 }),
-  themeColor: varchar("theme_color", { length: 50 }),
+  
+  // Styling fields for enhanced UI
+  themeColor: varchar("theme_color", { length: 50 }).default('#4F46E5'),
+  accentColor: varchar("accent_color", { length: 50 }).default('#818CF8'),
+  
+  // Community settings
   isPrivate: boolean("is_private").default(false),
   requiresApproval: boolean("requires_approval").default(false),
   isDefault: boolean("is_default").default(false), // New field: marks communities that users automatically join
   tags: varchar("tags", { length: 255 }),
+  
+  // Counters
   memberCount: integer("member_count").default(0),
   eventCount: integer("event_count").default(0),
   postCount: integer("post_count").default(0),
+  
+  // Content
   createdByUserId: integer("created_by_user_id").notNull().references(() => users.id),
   rules: text("rules"),
   guidelines: text("guidelines"),
+  
+  // Tracking fields
+  lastUiUpdate: timestamp("last_ui_update").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });

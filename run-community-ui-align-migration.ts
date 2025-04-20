@@ -15,6 +15,8 @@
 
 import { db } from "./server/db";
 import { sql } from "drizzle-orm";
+import * as fs from 'fs';
+import * as path from 'path';
 
 /**
  * Check if specified columns exist in a table
@@ -51,25 +53,25 @@ async function migrateCommunityUiAlignment() {
     if (!columnsExist) {
       console.log("[PKL-278651-COMM-0032-UI-ALIGN] Adding columns for enhanced media support...");
       
-      // Add banner_image column
-      await db.execute(sql`
-        ALTER TABLE communities 
-        ADD COLUMN IF NOT EXISTS banner_image TEXT DEFAULT NULL
-      `);
-      
-      // Add profile_picture column
+      // Add banner_image column if it doesn't exist (this column may already exist in some environments)
       await db.execute(sql`
         ALTER TABLE communities 
         ADD COLUMN IF NOT EXISTS profile_picture TEXT DEFAULT NULL
       `);
       
-      // Add theme_color column
+      // Add profile_picture column if it doesn't exist (this column may already exist in some environments)
+      await db.execute(sql`
+        ALTER TABLE communities 
+        ADD COLUMN IF NOT EXISTS banner_image TEXT DEFAULT NULL
+      `);
+      
+      // Add theme_color column if it doesn't exist (with default value)
       await db.execute(sql`
         ALTER TABLE communities 
         ADD COLUMN IF NOT EXISTS theme_color TEXT DEFAULT '#4F46E5'
       `);
       
-      // Add accent_color column
+      // Add accent_color column if it doesn't exist (with default value)
       await db.execute(sql`
         ALTER TABLE communities 
         ADD COLUMN IF NOT EXISTS accent_color TEXT DEFAULT '#818CF8'
@@ -87,9 +89,6 @@ async function migrateCommunityUiAlignment() {
     }
     
     // Ensure directories exist for uploads
-    const fs = require('fs');
-    const path = require('path');
-    
     const dirs = [
       path.join(process.cwd(), 'uploads/communities/banners'),
       path.join(process.cwd(), 'uploads/communities/avatars')
