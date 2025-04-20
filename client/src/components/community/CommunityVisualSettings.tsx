@@ -277,31 +277,64 @@ export function CommunityVisualSettings({ community, isAdmin }: CommunityVisualS
     }
   };
 
+  /**
+   * PKL-278651-COMM-0032-UI-ALIGN
+   * Update community styling (theme color, accent color, banner pattern)
+   * @version 2.0.0
+   * @lastModified 2025-04-20
+   */
   const updateTheme = async () => {
     try {
       setIsThemeUpdating(true);
       
-      // Validate the hex color format
+      // Validate the hex color formats
       const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+      
       if (!hexColorRegex.test(themeColor)) {
         toast({
-          title: "Invalid color format",
+          title: "Invalid theme color format",
           description: "Please enter a valid hex color (e.g., #FF5733)",
           variant: "destructive",
         });
         return;
       }
       
-      await communityApi.updateCommunityTheme(community.id, themeColor);
+      if (!hexColorRegex.test(accentColor)) {
+        toast({
+          title: "Invalid accent color format",
+          description: "Please enter a valid hex color (e.g., #FF5733)",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Create the styling data object
+      const styleData = {
+        themeColor,
+        accentColor,
+        bannerPattern
+      };
+      
+      console.log("Updating community styling with:", styleData);
+      
+      // Make API call to update styling
+      await communityApi.updateCommunityTheme(community.id, styleData);
+      
       toast({
-        title: "Theme updated",
-        description: "Your community theme color has been updated",
+        title: "Styling updated",
+        description: "Your community visual styling has been updated",
       });
+      
+      // After a short delay, reload the page to apply all styling changes
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+      
     } catch (error: any) {
-      console.error("Error updating theme:", error);
+      console.error("Error updating styling:", error);
       
       // Provide more specific error messages based on the error
-      let errorMessage = "There was an error updating your theme color.";
+      let errorMessage = "There was an error updating your community styling.";
       
       if (error.message?.includes("CSRF token validation")) {
         errorMessage = "Security token validation failed. Please refresh the page and try again.";
@@ -343,8 +376,8 @@ export function CommunityVisualSettings({ community, isAdmin }: CommunityVisualS
               <span className="font-medium">Banner</span>
             </TabsTrigger>
             <TabsTrigger value="theme" className="flex items-center gap-2 justify-center py-3">
-              <Palette className="w-5 h-5" />
-              <span className="font-medium">Theme</span>
+              <Paintbrush className="w-5 h-5" />
+              <span className="font-medium">Styling</span>
             </TabsTrigger>
           </TabsList>
           
@@ -460,71 +493,169 @@ export function CommunityVisualSettings({ community, isAdmin }: CommunityVisualS
             </div>
           </TabsContent>
           
-          {/* Theme Color */}
+          {/* Styling Tab */}
           <TabsContent value="theme">
-            <div className="space-y-4">
-              <div className="flex flex-col space-y-4">
-                <Label htmlFor="themeColor">Theme Color</Label>
-                <div className="flex gap-4 flex-col sm:flex-row items-start">
-                  <div className="grid grid-cols-5 gap-3 w-full sm:w-auto">
-                    {/* Predefined colors palette - improved for touch */}
-                    {[
-                      "#FF5733", "#FFC300", "#36D7B7", "#3498DB", "#9B59B6",
-                      "#6366F1", "#F472B6", "#10B981", "#FF6B6B", "#4C51BF",
-                      "#8B5CF6", "#EC4899", "#F59E0B", "#84CC16", "#06B6D4"
-                    ].map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        className={`w-12 h-12 rounded-md border-2 ${
-                          themeColor === color ? "border-black dark:border-white shadow-md" : "border-transparent"
-                        }`}
-                        style={{ backgroundColor: color }}
-                        onClick={() => setThemeColor(color)}
-                        aria-label={`Select color ${color}`}
-                      />
-                    ))}
-                  </div>
-                  <div className="w-full sm:w-auto space-y-4">
-                    <div>
-                      <Label htmlFor="hex-color">Hex Color</Label>
-                      <Input
-                        id="hex-color"
-                        type="text"
-                        value={themeColor}
-                        onChange={(e) => setThemeColor(e.target.value)}
-                        className="w-full"
-                      />
+            <div className="space-y-6">
+              {/* Theme Color Section */}
+              <div className="space-y-4 pb-4 border-b">
+                <h3 className="font-medium text-lg">Primary Theme Color</h3>
+                <div className="flex flex-col space-y-4">
+                  <div className="flex gap-4 flex-col sm:flex-row items-start">
+                    <div className="grid grid-cols-5 gap-3 w-full sm:w-auto">
+                      {/* Predefined colors palette - improved for touch */}
+                      {[
+                        "#FF5733", "#FFC300", "#36D7B7", "#3498DB", "#9B59B6",
+                        "#6366F1", "#F472B6", "#10B981", "#FF6B6B", "#4C51BF",
+                        "#8B5CF6", "#EC4899", "#F59E0B", "#84CC16", "#06B6D4"
+                      ].map((color) => (
+                        <button
+                          key={color}
+                          type="button"
+                          className={`w-12 h-12 rounded-md border-2 ${
+                            themeColor === color ? "border-black dark:border-white shadow-md" : "border-transparent"
+                          }`}
+                          style={{ backgroundColor: color }}
+                          onClick={() => setThemeColor(color)}
+                          aria-label={`Select color ${color}`}
+                        />
+                      ))}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Label>Preview:</Label>
-                      <div
-                        className="w-12 h-12 rounded-md border border-gray-200"
-                        style={{ backgroundColor: themeColor }}
-                      ></div>
+                    <div className="w-full sm:w-auto space-y-4">
+                      <div>
+                        <Label htmlFor="hex-color">Hex Color</Label>
+                        <Input
+                          id="hex-color"
+                          type="text"
+                          value={themeColor}
+                          onChange={(e) => setThemeColor(e.target.value)}
+                          className="w-full"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Label>Preview:</Label>
+                        <div
+                          className="w-12 h-12 rounded-md border border-gray-200"
+                          style={{ backgroundColor: themeColor }}
+                        ></div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
               
-              <Button
-                onClick={updateTheme}
-                disabled={isThemeUpdating}
-                className="w-full py-6 text-lg"
-                size="lg"
-              >
-                {isThemeUpdating ? (
-                  <span className="flex items-center gap-2">
-                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
-                    Updating...
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-2">
-                    <Check className="h-5 w-5" />
-                    Save Theme
-                  </span>
-                )}
-              </Button>
+              {/* Accent Color Section */}
+              <div className="space-y-4 pb-4 border-b">
+                <h3 className="font-medium text-lg">Accent Color</h3>
+                <p className="text-sm text-muted-foreground">Used for buttons, links, and highlights</p>
+                <div className="flex flex-col space-y-4">
+                  <div className="flex gap-4 flex-col sm:flex-row items-start">
+                    <div className="grid grid-cols-5 gap-3 w-full sm:w-auto">
+                      {/* Predefined accent colors palette */}
+                      {[
+                        "#4338CA", "#8B5CF6", "#EC4899", "#F97316", "#F43F5E",
+                        "#10B981", "#0EA5E9", "#F59E0B", "#8D4E85", "#046C4E",
+                        "#7C3AED", "#0891B2", "#4F46E5", "#D946EF", "#2563EB"
+                      ].map((color) => (
+                        <button
+                          key={color}
+                          type="button"
+                          className={`w-12 h-12 rounded-md border-2 ${
+                            accentColor === color ? "border-black dark:border-white shadow-md" : "border-transparent"
+                          }`}
+                          style={{ backgroundColor: color }}
+                          onClick={() => setAccentColor(color)}
+                          aria-label={`Select accent color ${color}`}
+                        />
+                      ))}
+                    </div>
+                    <div className="w-full sm:w-auto space-y-4">
+                      <div>
+                        <Label htmlFor="accent-color">Hex Color</Label>
+                        <Input
+                          id="accent-color"
+                          type="text"
+                          value={accentColor}
+                          onChange={(e) => setAccentColor(e.target.value)}
+                          className="w-full"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Label>Preview:</Label>
+                        <div
+                          className="w-12 h-12 rounded-md border border-gray-200"
+                          style={{ backgroundColor: accentColor }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Banner Pattern Section */}
+              <div className="space-y-4 pb-4 border-b">
+                <h3 className="font-medium text-lg">Banner Pattern</h3>
+                <p className="text-sm text-muted-foreground">Choose a pattern for your community banner background</p>
+                <div className="space-y-4">
+                  <Select
+                    value={bannerPattern}
+                    onValueChange={setBannerPattern}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a pattern" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="solid">Solid Color</SelectItem>
+                      <SelectItem value="gradient">Gradient</SelectItem>
+                      <SelectItem value="dots">Dots</SelectItem>
+                      <SelectItem value="waves">Waves</SelectItem>
+                      <SelectItem value="triangles">Triangles</SelectItem>
+                      <SelectItem value="stripes">Stripes</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <div className="bg-gray-100 dark:bg-gray-800 rounded-md p-4">
+                    <div className="text-sm font-medium mb-2">Pattern Preview</div>
+                    <div 
+                      className="h-24 w-full rounded-md border"
+                      style={{
+                        backgroundColor: themeColor,
+                        backgroundImage: 
+                          bannerPattern === 'gradient' ? `linear-gradient(45deg, ${themeColor}, ${accentColor})` :
+                          bannerPattern === 'dots' ? `radial-gradient(${accentColor} 2px, transparent 2px)` :
+                          bannerPattern === 'waves' ? `repeating-linear-gradient(45deg, ${themeColor}, ${themeColor} 10px, ${accentColor} 10px, ${accentColor} 20px)` :
+                          bannerPattern === 'triangles' ? `linear-gradient(60deg, ${themeColor} 25%, ${accentColor} 25%)` :
+                          bannerPattern === 'stripes' ? `repeating-linear-gradient(90deg, ${themeColor}, ${themeColor} 10px, ${accentColor} 10px, ${accentColor} 20px)` :
+                          'none',
+                        backgroundSize: bannerPattern === 'dots' ? '20px 20px' : 'cover'
+                      }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Button
+                  onClick={updateTheme}
+                  disabled={isThemeUpdating}
+                  className="w-full py-6 text-lg"
+                  size="lg"
+                >
+                  {isThemeUpdating ? (
+                    <span className="flex items-center gap-2">
+                      <span className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+                      Updating Styling...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <Paintbrush className="h-5 w-5" />
+                      Save All Styling
+                    </span>
+                  )}
+                </Button>
+                <p className="text-sm text-center text-muted-foreground">
+                  This will update all visual styling for your community
+                </p>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
