@@ -107,8 +107,25 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
     }
   }, [user]);
   
-  // Display count from state
-  const displayCount = unreadCount;
+  // Force Query approach instead of state management for more reliable display
+  const { data: unreadCountFromServer } = useQuery({
+    queryKey: ['/api/notifications/unread-count'],
+    queryFn: async () => {
+      console.log('[NotificationBell] Force-fetching unread count from server');
+      const response = await apiRequest('GET', '/api/notifications/unread-count');
+      const data = await response.json();
+      console.log('[NotificationBell] Server reports unread count:', data);
+      return data.count || 0;
+    },
+    // More aggressive refetching
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    refetchInterval: 5000, // Refetch every 5 seconds
+    staleTime: 3000,      // Consider data stale after 3 seconds
+  });
+  
+  // Display count from direct query, falling back to state if query is loading
+  const displayCount = typeof unreadCountFromServer === 'number' ? unreadCountFromServer : unreadCount;
   
   // Mark all as read mutation
   const markAllAsReadMutation = useMutation({

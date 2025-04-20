@@ -19,6 +19,7 @@ import {
   insertNotificationPreferenceSchema
 } from '../../shared/schema';
 import { isAuthenticated } from '../auth';
+import { getNotificationWebSocketService } from '../modules/notifications/notificationWebSocketService';
 
 const router = express.Router();
 
@@ -307,6 +308,7 @@ router.post('/api/notifications/read-all',
           );
         
         // Emit notification via WebSocket
+        const notificationWebSocketService = getNotificationWebSocketService();
         if (notificationWebSocketService) {
           console.log(`[Notifications] Broadcasting read_all event to user ${userId}`);
           notificationWebSocketService.sendToUser(userId, {
