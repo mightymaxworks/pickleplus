@@ -45,44 +45,47 @@ export function registerCommunityNotificationsRoutes(app: express.Express) {
       
       console.log(`[API] Generating test notifications for user ${userId}`);
       
+      // Define test notifications that point to existing pages only
       const notificationTypes = [
         {
-          type: 'community_invite',
-          title: 'You\'ve been invited to a community',
-          message: 'MightyMax invited you to join "Pickleball Pros of Portland"',
-          referenceType: 'community',
-          referenceId: 1
+          type: 'system_message',
+          title: 'Welcome to Pickle+',
+          message: 'Thanks for joining Pickle+! Your account is now active',
+          referenceType: 'page',
+          referenceId: 0, // No specific reference
+          link: '/dashboard' // Direct link to dashboard
         },
         {
-          type: 'event_reminder',
-          title: 'Upcoming event reminder',
-          message: 'Your registered event "Weekend Tournament" starts tomorrow',
-          referenceType: 'event',
-          referenceId: 2,
-          communityId: 1
+          type: 'new_achievement',
+          title: 'New Achievement Unlocked',
+          message: 'You earned the "First Steps" achievement - welcome to the community!',
+          referenceType: 'page',
+          referenceId: 0,
+          link: '/achievements'  // Link to achievements page
         },
         {
-          type: 'post_mention',
-          title: 'Someone mentioned you',
-          message: 'CourtMaster mentioned you in a post: "Great game yesterday!"',
-          referenceType: 'post',
-          referenceId: 3,
-          communityId: 1
+          type: 'match_recorded',
+          title: 'Match Successfully Recorded',
+          message: 'Your match against PicklePro has been recorded',
+          referenceType: 'page',
+          referenceId: 0,
+          link: '/profile' // Link to profile page
         },
         {
-          type: 'community_announcement',
-          title: 'New community announcement',
-          message: 'Important update about our upcoming season schedule',
-          referenceType: 'community',
-          referenceId: 1
+          type: 'rating_update',
+          title: 'Your Rating Has Been Updated',
+          message: 'Congratulations! Your performance rating increased to 4.2',
+          referenceType: 'page',
+          referenceId: 0,
+          link: '/ranking' // Link to ranking page
         },
         {
-          type: 'post_reply',
-          title: 'New reply to your post',
-          message: 'PicklePro replied to your post about paddle recommendations',
-          referenceType: 'post',
-          referenceId: 5,
-          communityId: 2
+          type: 'system_update',
+          title: 'New Platform Features',
+          message: 'Check out the new Pickle+ features in our latest update',
+          referenceType: 'page',
+          referenceId: 0,
+          link: '/dashboard' // Link back to dashboard
         }
       ];
       
@@ -97,7 +100,7 @@ export function registerCommunityNotificationsRoutes(app: express.Express) {
           message: notifData.message,
           referenceType: notifData.referenceType,
           referenceId: notifData.referenceId,
-          communityId: notifData.communityId
+          link: notifData.link // Add direct link to existing pages
         });
         
         if (notification) {
