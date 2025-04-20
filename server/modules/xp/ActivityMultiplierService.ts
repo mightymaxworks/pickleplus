@@ -5,9 +5,9 @@
  * Handles the dynamic activity multipliers that adjust XP rewards
  * based on platform-wide activity patterns.
  * 
- * @framework Framework5.1
- * @version 1.0.0
- * @lastModified 2025-04-19
+ * @framework Framework5.2
+ * @version 1.1.0
+ * @lastModified 2025-04-20
  */
 
 import { db } from '../../db';
@@ -233,7 +233,7 @@ export class ActivityMultiplierService {
           activityType,
           previousMultiplier: multiplier.currentMultiplier,
           newMultiplier: boundedValue,
-          reason,
+          adjustmentReason: reason,
           timestamp: new Date()
         });
       }
@@ -287,52 +287,192 @@ export class ActivityMultiplierService {
   /**
    * Calculate and update multipliers based on recent platform activity
    * This is the core of the Pickle Pulse™ algorithm
+   * 
+   * PKL-278651-XP-0003-PULSE-ENH: Enhanced activity analysis
+   * Framework 5.2 compliant implementation with improved time factors and detailed activity analysis
    */
   async recalculateMultipliers(): Promise<void> {
     try {
-      // This is where the proprietary Pickle Pulse™ algorithm would analyze
-      // platform-wide activity patterns and adjust multipliers accordingly.
+      // Advanced time-based factors analysis
+      const timeFactors = this.calculateTimeFactors();
       
-      const now = new Date();
-      const hour = now.getHours();
-      const dayOfWeek = now.getDay(); // 0 = Sunday, 6 = Saturday
+      // Get detailed activity metrics
+      const activityMetrics = await this.getDetailedActivityMetrics();
       
-      // Weekend boost (Saturday and Sunday)
-      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+      // Calculate specific multipliers for each activity type
+      const activityMultipliers = await this.calculateActivityTypeMultipliers(timeFactors, activityMetrics);
       
-      // Peak hours boost (5PM - 9PM)
-      const isPeakHours = hour >= 17 && hour < 21;
-      
-      // Off-hours boost (midnight - 6AM)
-      const isOffHours = hour >= 0 && hour < 6;
-      
-      // Simulating an actual activity monitoring system
-      // In a real implementation, these would be calculated from database metrics
-      
-      // SIMULATION: Get activity levels for different activity types
-      const activityLevels = await this.getSimulatedActivityLevels();
-      
-      // Base multipliers based on time factors
-      let baseMatchMultiplier = isWeekend ? 1.5 : isPeakHours ? 1.25 : 1.0;
-      let baseCommunityMultiplier = isWeekend ? 1.25 : isPeakHours ? 1.5 : isOffHours ? 1.75 : 1.0;
-      let baseAchievementMultiplier = 1.0; // Achievements have fixed multipliers
-      
-      // Apply activity-based adjustments
-      const matchMultiplier = this.applyActivityAdjustment(baseMatchMultiplier, activityLevels.match);
-      const communityMultiplier = this.applyActivityAdjustment(baseCommunityMultiplier, activityLevels.community);
-      const achievementMultiplier = baseAchievementMultiplier; // Achievements aren't adjusted based on volume
-      
-      console.log(`[XP] Activity-adjusted multipliers - Match: ${matchMultiplier.toFixed(2)}, Community: ${communityMultiplier.toFixed(2)}`);
+      // Log the calculated multipliers
+      console.log(`[XP] Activity-adjusted multipliers:`, 
+        Object.entries(activityMultipliers)
+          .map(([type, value]) => `${type}: ${value.toFixed(2)}`)
+          .join(', ')
+      );
       
       // Apply the new multipliers
-      await this.updateMultiplier('match', matchMultiplier, 'Automated Pickle Pulse™ adjustment');
-      await this.updateMultiplier('community', communityMultiplier, 'Automated Pickle Pulse™ adjustment');
-      await this.updateMultiplier('achievement', achievementMultiplier, 'Automated Pickle Pulse™ adjustment');
+      for (const [activityType, multiplier] of Object.entries(activityMultipliers)) {
+        await this.updateMultiplier(
+          activityType, 
+          multiplier, 
+          `Automated Pickle Pulse™ adjustment (Framework 5.2)`
+        );
+      }
       
       console.log('[XP] Pickle Pulse™ multipliers recalculated successfully');
     } catch (error) {
       console.error('[XP] Error recalculating multipliers:', error);
     }
+  }
+  
+  /**
+   * Calculate time-based factors that influence activity multipliers
+   * PKL-278651-XP-0003-PULSE-TIME: Enhanced time-based factors
+   */
+  private calculateTimeFactors(): {[key: string]: number} {
+    const now = new Date();
+    const hour = now.getHours();
+    const minute = now.getMinutes();
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 6 = Saturday
+    const date = now.getDate();
+    const month = now.getMonth();
+    
+    // Weekend factor (higher on weekends)
+    const weekendFactor = (dayOfWeek === 0 || dayOfWeek === 6) ? 1.5 : 1.0;
+    
+    // Time of day factors
+    // Early morning (midnight - 6AM): Boost communities
+    const earlyMorningFactor = (hour >= 0 && hour < 6) ? 1.75 : 1.0;
+    
+    // Morning (6AM - 10AM): Standard
+    const morningFactor = (hour >= 6 && hour < 10) ? 1.1 : 1.0;
+    
+    // Work day (10AM - 5PM): Slight reduction for matches
+    const workDayFactor = (hour >= 10 && hour < 17) ? 0.9 : 1.0;
+    
+    // Peak evening (5PM - 9PM): Boost for all activities
+    const peakEveningFactor = (hour >= 17 && hour < 21) ? 1.25 : 1.0;
+    
+    // Late night (9PM - midnight): Boost for community
+    const lateNightFactor = (hour >= 21 && hour < 24) ? 1.2 : 1.0;
+    
+    // Special factor: Enhanced lunch hour boost (12-1PM)
+    const lunchBoostFactor = (hour === 12) ? 1.15 : 1.0;
+    
+    // Special factor: Late afternoon dip (3-4PM)
+    const afternoonDipFactor = (hour === 15) ? 0.95 : 1.0;
+    
+    // Special days: End of month boost
+    const isEndOfMonth = this.isLastDayOfMonth(now);
+    const endOfMonthFactor = isEndOfMonth ? 1.2 : 1.0;
+    
+    // Calculate compound factors for different activity types
+    return {
+      match_play: weekendFactor * peakEveningFactor * afternoonDipFactor * endOfMonthFactor,
+      match_win: weekendFactor * peakEveningFactor * 1.1 * endOfMonthFactor, // Extra boost for wins
+      first_match_of_day: morningFactor * 1.3 * endOfMonthFactor, // Extra boost for first match
+      create_post: earlyMorningFactor * lateNightFactor * lunchBoostFactor,
+      comment: earlyMorningFactor * peakEveningFactor * lunchBoostFactor,
+      create_event: workDayFactor * endOfMonthFactor * 1.1,
+      attend_event: weekendFactor * peakEveningFactor * endOfMonthFactor,
+      // Consolidated categories for backward compatibility
+      match: weekendFactor * peakEveningFactor * afternoonDipFactor * endOfMonthFactor,
+      community: earlyMorningFactor * lateNightFactor * lunchBoostFactor,
+      achievement: 1.0 // Achievements have fixed multipliers
+    };
+  }
+  
+  /**
+   * Calculate detailed multipliers for each activity type
+   * PKL-278651-XP-0003-PULSE-ACT: Enhanced activity-specific calculations
+   */
+  private async calculateActivityTypeMultipliers(
+    timeFactors: {[key: string]: number}, 
+    activityMetrics: {[key: string]: number}
+  ): Promise<{[key: string]: number}> {
+    const result: {[key: string]: number} = {};
+    
+    // For each activity type, apply time factors and activity-based adjustments
+    for (const [activityType, baseMultiplier] of Object.entries(timeFactors)) {
+      const activityLevel = activityMetrics[activityType] || 1.0;
+      const adjustedMultiplier = this.applyActivityAdjustment(baseMultiplier, activityLevel);
+      
+      // Add hysteresis to prevent frequent small changes
+      result[activityType] = await this.applyHysteresis(activityType, adjustedMultiplier);
+    }
+    
+    return result;
+  }
+  
+  /**
+   * Apply hysteresis to multiplier changes to prevent oscillation
+   * Only change multiplier if it differs by more than 10%
+   */
+  private async applyHysteresis(activityType: string, newMultiplier: number): Promise<number> {
+    try {
+      // Get current multiplier from database
+      const multiplier = await db.query.activityMultipliers.findFirst({
+        where: eq(activityMultipliers.activityType, activityType)
+      });
+      
+      if (!multiplier) return newMultiplier;
+      
+      const currentValue = multiplier.currentMultiplier;
+      const percentDifference = Math.abs((newMultiplier - currentValue) / currentValue);
+      
+      // Only change if difference is significant (>10%)
+      if (percentDifference < 0.1) {
+        return currentValue;
+      }
+      
+      return newMultiplier;
+    } catch (error) {
+      console.error(`[XP] Error applying hysteresis for ${activityType}:`, error);
+      return newMultiplier;
+    }
+  }
+  
+  /**
+   * Check if the given date is the last day of the month
+   */
+  private isLastDayOfMonth(date: Date): boolean {
+    const tomorrow = new Date(date);
+    tomorrow.setDate(date.getDate() + 1);
+    return tomorrow.getMonth() !== date.getMonth();
+  }
+  
+  /**
+   * Get detailed activity metrics for all activity types
+   * In a production implementation, this would query real activity data
+   * PKL-278651-XP-0003-PULSE-METRICS: Enhanced activity metrics collection
+   */
+  private async getDetailedActivityMetrics(): Promise<{[key: string]: number}> {
+    // In a real implementation, we would query actual activity metrics from the database
+    // For now, we'll use an enhanced version of the simulation that includes all activity types
+    
+    const simulationDate = new Date();
+    const hour = simulationDate.getHours();
+    const dayOfWeek = simulationDate.getDay(); 
+    
+    // Simulate activity patterns based on time of day and day of week
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    const isPeakHours = hour >= 17 && hour < 21;
+    const isMorning = hour >= 6 && hour < 10;
+    const isLunchtime = hour >= 12 && hour < 13;
+    const isLateNight = hour >= 21;
+    
+    return {
+      match_play: isPeakHours ? 2.5 : (isWeekend ? 3.2 : 1.0),
+      match_win: isPeakHours ? 2.3 : (isWeekend ? 3.0 : 1.0),
+      first_match_of_day: isMorning ? 1.8 : 0.9,
+      create_post: isLateNight ? 1.7 : (isLunchtime ? 1.5 : 1.0),
+      comment: isPeakHours ? 2.1 : (isLateNight ? 1.6 : 1.0),
+      create_event: isWeekend ? 0.7 : 1.2,
+      attend_event: isWeekend ? 3.5 : (isPeakHours ? 2.0 : 0.8),
+      // Consolidated categories for backward compatibility
+      match: isPeakHours ? 2.5 : (isWeekend ? 3.2 : 1.0),
+      community: isPeakHours ? 2.1 : (isLunchtime ? 1.8 : 1.2),
+      achievement: 1.0
+    };
   }
   
   /**
