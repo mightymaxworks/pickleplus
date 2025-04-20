@@ -104,10 +104,10 @@ export function setupEventStatusWebSocket(httpServer: Server) {
           const sessionId = sessionCookie.split('=')[1];
           
           // Get user from session - implement with your actual session handling
-          // This is a placeholder implementation
-          if (req.session?.passport?.user) {
-            userId = req.session.passport.user;
-          }
+          // This is a simplified approach as we don't have direct access to the session
+          // In a real implementation, we would use the session store to get the user ID
+          // For now, we'll handle unauthenticated users gracefully
+          // The actual user validation will happen when subscribing to protected channels
         }
       }
     } catch (error) {

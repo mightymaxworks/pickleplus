@@ -18,6 +18,7 @@ import { registerTournamentDiscoveryRoutes } from "./routes/tournament-discovery
 import { registerGoldenTicketRoutes } from "./routes/golden-ticket-routes";
 import { registerEventRoutes } from "./routes/event-routes";
 import { registerPassportVerificationRoutes } from "./routes/passport-verification-routes";
+import { setupEventWebSocketRoutes } from "./routes/event-websocket-routes"; // PKL-278651-CONN-0012-SYNC
 import { registerAdminReportRoutes } from "./routes/admin-report-routes";
 import { setupAdminDashboardRoutes } from "./routes/admin-dashboard-routes";
 import { registerTournamentBracketRoutes } from "./routes/register-tournament-bracket-routes";
@@ -243,6 +244,19 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Register Passport Verification routes (PKL-278651-CONN-0004-PASS-ADMIN)
   registerPassportVerificationRoutes(app);
+  
+  // Set up WebSocket server for real-time event status updates (PKL-278651-CONN-0012-SYNC)
+  try {
+    const httpServer = app.get('httpServer') as Server;
+    if (httpServer) {
+      setupEventWebSocketRoutes(httpServer);
+      console.log("[API] Event WebSocket server set up successfully");
+    } else {
+      console.error("[API] Failed to set up Event WebSocket server: HTTP server not available");
+    }
+  } catch (error) {
+    console.error("[API] Error setting up Event WebSocket server:", error);
+  }
   
   // Initialize Enhanced User Management module (PKL-278651-ADMIN-0015-USER)
   // This needs to be initialized before other admin routes to ensure proper routing

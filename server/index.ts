@@ -71,6 +71,9 @@ app.use((req, res, next) => {
     res.json({ status: "ok", time: new Date().toISOString() });
   });
   
+  // Make the HTTP server available for routes to use
+  app.set('httpServer', serverHttp);
+  
   // Serve static files from uploads directory
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
   console.log("[Static Files] Serving uploads directory from:", path.join(process.cwd(), 'uploads'));
