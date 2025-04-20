@@ -37,7 +37,7 @@ import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 
 // Types for notification preferences
 interface NotificationChannel {
@@ -69,7 +69,7 @@ const NotificationPreferencesPage: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [, navigate] = useNavigate();
+  const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<string>("all");
   const [selectedCommunity, setSelectedCommunity] = useState<number | null>(null);
 
@@ -91,10 +91,15 @@ const NotificationPreferencesPage: React.FC = () => {
   });
 
   // Fetch available communities for filtering
+  interface Community {
+    id: number;
+    name: string;
+  }
+  
   const { 
-    data: communities = [], 
+    data: communities = [] as Community[], 
     isLoading: communitiesLoading 
-  } = useQuery({
+  } = useQuery<Community[]>({
     queryKey: ['/api/communities/mine'],
     enabled: !!user,
   });

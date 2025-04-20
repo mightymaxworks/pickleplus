@@ -330,6 +330,9 @@ export default function App() {
                   <Route path="/notifications">
                     {(params) => <ProtectedRoute component={NotificationsPage} path="/notifications" />}
                   </Route>
+                  <Route path="/notifications/preferences">
+                    {(params) => <ProtectedRoute component={NotificationPreferencesPage} path="/notifications/preferences" />}
+                  </Route>
                   <Route path="/demo/match-reward" component={MatchRewardDemo} />
                   <Route path="/dev/qr-test" component={QRTestPage} />
                   <Route path="/events">
