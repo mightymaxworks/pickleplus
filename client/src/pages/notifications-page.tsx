@@ -190,6 +190,57 @@ export default function NotificationsPage() {
     setCurrentPage(1);
   };
   
+  // Group notifications by date
+  const groupNotificationsByDate = (notifs: UserNotification[] | undefined) => {
+    if (!notifs) return {};
+    
+    const groups: {[key: string]: UserNotification[]} = {
+      'Today': [],
+      'This Week': [],
+      'Earlier': []
+    };
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const weekAgo = new Date(today);
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    
+    notifs.forEach(notif => {
+      const createdDate = new Date(notif.createdAt);
+      
+      if (createdDate >= today) {
+        groups['Today'].push(notif);
+      } else if (createdDate >= weekAgo) {
+        groups['This Week'].push(notif);
+      } else {
+        groups['Earlier'].push(notif);
+      }
+    });
+    
+    // Only return groups that have notifications
+    return Object.fromEntries(
+      Object.entries(groups).filter(([_, notifications]) => notifications.length > 0)
+    );
+  };
+  
+  // Get priority color for notification type
+  const getNotificationPriorityColor = (type: string): string => {
+    const priorityMap: {[key: string]: string} = {
+      'community_announcement': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+      'event_reminder': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+      'community_invite': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
+      'post_mention': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+      'post_reply': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+      'default': 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+    };
+    
+    return priorityMap[type] || priorityMap['default'];
+  };
+  
+  // Group notifications
+  const groupedNotifications = groupNotificationsByDate(notifications);
+  
   // Calculate total pages - this is a simplified calculation since we don't have a total count
   const totalPages = Math.max(1, Math.ceil((notifications?.length || 0) / pageSize));
   
@@ -248,20 +299,82 @@ export default function NotificationsPage() {
           </Tabs>
           
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <Select onValueChange={handleFilterChange} defaultValue="all">
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Filter by type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All types</SelectItem>
-                <SelectItem value="community_invite">Community Invites</SelectItem>
-                <SelectItem value="community_join_approved">Join Approvals</SelectItem>
-                <SelectItem value="community_announcement">Announcements</SelectItem>
-                <SelectItem value="event_reminder">Event Reminders</SelectItem>
-                <SelectItem value="post_mention">Mentions</SelectItem>
-                <SelectItem value="post_reply">Replies</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* Enhanced filter UI with visual indicators */}
+            <div className="flex flex-col">
+              <p className="text-xs text-muted-foreground mb-1 ml-1">Filter by type</p>
+              <div className="flex flex-wrap gap-2 mb-2">
+                <Badge 
+                  variant={filterType === undefined ? "secondary" : "outline"}
+                  className="cursor-pointer hover:bg-secondary/80 whitespace-nowrap"
+                  onClick={() => handleFilterChange('all')}
+                >
+                  All types
+                </Badge>
+                <Badge 
+                  variant={filterType === 'community_invite' ? "secondary" : "outline"}
+                  className={`cursor-pointer hover:bg-purple-100 dark:hover:bg-purple-900/30 whitespace-nowrap ${
+                    filterType === 'community_invite' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300' : ''
+                  }`}
+                  onClick={() => handleFilterChange('community_invite')}
+                >
+                  Invites
+                </Badge>
+                <Badge 
+                  variant={filterType === 'community_announcement' ? "secondary" : "outline"}
+                  className={`cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/30 whitespace-nowrap ${
+                    filterType === 'community_announcement' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' : ''
+                  }`}
+                  onClick={() => handleFilterChange('community_announcement')}
+                >
+                  Announcements
+                </Badge>
+                <Badge 
+                  variant={filterType === 'event_reminder' ? "secondary" : "outline"}
+                  className={`cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-900/30 whitespace-nowrap ${
+                    filterType === 'event_reminder' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' : ''
+                  }`}
+                  onClick={() => handleFilterChange('event_reminder')}
+                >
+                  Events
+                </Badge>
+                <Badge 
+                  variant={filterType === 'post_mention' ? "secondary" : "outline"}
+                  className={`cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/30 whitespace-nowrap ${
+                    filterType === 'post_mention' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' : ''
+                  }`}
+                  onClick={() => handleFilterChange('post_mention')}
+                >
+                  Mentions
+                </Badge>
+                <Badge 
+                  variant={filterType === 'post_reply' ? "secondary" : "outline"}
+                  className={`cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/30 whitespace-nowrap ${
+                    filterType === 'post_reply' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : ''
+                  }`}
+                  onClick={() => handleFilterChange('post_reply')}
+                >
+                  Replies
+                </Badge>
+              </div>
+            </div>
+            
+            {/* For mobile, keep the dropdown too */}
+            <div className="md:hidden">
+              <Select onValueChange={handleFilterChange} defaultValue="all">
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Filter by type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All types</SelectItem>
+                  <SelectItem value="community_invite">Community Invites</SelectItem>
+                  <SelectItem value="community_join_approved">Join Approvals</SelectItem>
+                  <SelectItem value="community_announcement">Announcements</SelectItem>
+                  <SelectItem value="event_reminder">Event Reminders</SelectItem>
+                  <SelectItem value="post_mention">Mentions</SelectItem>
+                  <SelectItem value="post_reply">Replies</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             
             {unreadCount > 0 && (
               <Button 
@@ -307,74 +420,103 @@ export default function NotificationsPage() {
             </div>
           ) : !notifications || notifications.length === 0 ? (
             <Card className="p-12 text-center">
-              <Bell className="h-16 w-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
-              <h3 className="text-lg font-medium mb-2">No notifications</h3>
-              <p className="text-muted-foreground">
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-full h-24 w-24 flex items-center justify-center mx-auto mb-6">
+                <Bell className="h-12 w-12 text-gray-300 dark:text-gray-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Your notifications center is empty</h3>
+              <p className="text-muted-foreground max-w-md mx-auto mb-4">
                 {activeTab === 'unread' 
-                  ? "You've read all your notifications." 
-                  : "You don't have any notifications yet."}
+                  ? "You're all caught up! You've read all your notifications." 
+                  : "You don't have any notifications yet. When you receive notifications, they'll appear here."}
               </p>
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg max-w-sm mx-auto text-left mt-6">
+                <h4 className="font-medium flex items-center text-blue-800 dark:text-blue-300 mb-2">
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  Pro tip
+                </h4>
+                <p className="text-sm text-blue-700 dark:text-blue-200">
+                  Stay engaged with your community by participating in discussions and events to receive updates and notifications.
+                </p>
+              </div>
             </Card>
           ) : (
-            <div className="space-y-4">
-              {notifications.map((notification) => (
-                <Card 
-                  key={notification.id} 
-                  className={`p-4 cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 ${
-                    !notification.isRead ? 'border-l-4 border-l-blue-500' : ''
-                  }`}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 p-2 rounded-full bg-gray-100 dark:bg-gray-800">
-                      {getNotificationIcon(notification.type)}
-                    </div>
-                    
-                    <div 
-                      className="flex-1 min-w-0"
-                      onClick={() => handleNotificationClick(notification)}
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                        <div className="font-medium">{notification.title}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {formatTime(notification.createdAt)}
-                        </div>
-                      </div>
-                      <p className="text-sm mt-1">{notification.message}</p>
-                      
-                      <div className="flex items-center gap-2 mt-2">
-                        {!notification.isRead && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-8 px-2 text-xs"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              markAsReadMutation.mutate(notification.id);
-                            }}
-                          >
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Mark as read
-                          </Button>
-                        )}
-                        
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          className="h-8 px-2 text-xs text-destructive hover:text-destructive"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (window.confirm('Are you sure you want to delete this notification?')) {
-                              deleteNotificationMutation.mutate(notification.id);
-                            }
-                          }}
-                        >
-                          <Trash2 className="h-3 w-3 mr-1" />
-                          Delete
-                        </Button>
-                      </div>
-                    </div>
+            <div className="space-y-8">
+              {/* Render notifications grouped by date */}
+              {Object.entries(groupedNotifications).map(([timeGroup, notificationGroup]) => (
+                <div key={timeGroup}>
+                  <div className="mb-3 border-b pb-2 flex items-center">
+                    <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <h3 className="text-lg font-medium">{timeGroup}</h3>
                   </div>
-                </Card>
+                  
+                  <div className="space-y-4">
+                    {notificationGroup.map((notification) => (
+                      <Card 
+                        key={notification.id} 
+                        className={`p-4 cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 ${
+                          !notification.isRead ? 'border-l-4 border-l-blue-500' : ''
+                        }`}
+                      >
+                        <div className="flex items-start gap-4">
+                          <div className={`flex-shrink-0 p-2 rounded-full ${getNotificationPriorityColor(notification.type)}`}>
+                            {getNotificationIcon(notification.type)}
+                          </div>
+                          
+                          <div 
+                            className="flex-1 min-w-0"
+                            onClick={() => handleNotificationClick(notification)}
+                          >
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                              <div className="font-medium flex items-center">
+                                {notification.title}
+                                {/* Category badge */}
+                                <Badge variant="outline" className="ml-2 text-xs">
+                                  {notification.type.replace(/_/g, ' ')}
+                                </Badge>
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {formatTime(notification.createdAt)}
+                              </div>
+                            </div>
+                            <p className="text-sm mt-1">{notification.message}</p>
+                            
+                            <div className="flex items-center gap-2 mt-2">
+                              {!notification.isRead && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-8 px-2 text-xs"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    markAsReadMutation.mutate(notification.id);
+                                  }}
+                                >
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  Mark as read
+                                </Button>
+                              )}
+                              
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                className="h-8 px-2 text-xs text-destructive hover:text-destructive"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (window.confirm('Are you sure you want to delete this notification?')) {
+                                    deleteNotificationMutation.mutate(notification.id);
+                                  }
+                                }}
+                              >
+                                <Trash2 className="h-3 w-3 mr-1" />
+                                Delete
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
               ))}
               
               {totalPages > 1 && (
