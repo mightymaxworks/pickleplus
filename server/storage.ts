@@ -18,6 +18,23 @@ import {
   type InsertNotificationPreference
 } from "@shared/schema/notifications";
 
+// PKL-278651-COMM-0034-MEMBER - Enhanced Member Management
+import {
+  communityPermissionTypes,
+  communityRolePermissions,
+  communityCustomRoles,
+  communityRoleAssignments,
+  communityMemberActionsLog,
+  type CommunityPermissionType,
+  type CommunityRolePermission,
+  type CommunityCustomRole,
+  type CommunityRoleAssignment,
+  type CommunityMemberActionLog,
+  type RoleWithPermissions,
+  type PermissionGroup,
+  MemberActionType
+} from "@shared/schema";
+
 // PKL-278651-ADMIN-0013-SEC - Admin Security Enhancements
 import {
   auditLogs, type AuditLog, type InsertAuditLog,

@@ -1108,6 +1108,28 @@ export {
   type InsertContentFilterSettings
 };
 
+// Export enhanced member management schemas (PKL-278651-COMM-0034-MEMBER)
+export {
+  communityPermissionTypes,
+  communityRolePermissions,
+  communityCustomRoles,
+  communityRoleAssignments,
+  communityMemberActionsLog,
+  insertCommunityPermissionTypeSchema,
+  insertCommunityRolePermissionSchema,
+  insertCommunityCustomRoleSchema,
+  insertCommunityRoleAssignmentSchema,
+  insertCommunityMemberActionLogSchema,
+  type CommunityPermissionType,
+  type CommunityRolePermission,
+  type CommunityCustomRole,
+  type CommunityRoleAssignment,
+  type CommunityMemberActionLog,
+  type RoleWithPermissions,
+  type PermissionGroup,
+  MemberActionType
+} from './schema/community-roles';
+
 // Export community notifications schemas (PKL-278651-COMM-0028-NOTIF)
 export {
   userNotifications,
