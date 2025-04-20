@@ -115,9 +115,28 @@ export function CommunityHeader({
   const eventCountDisplay = community.eventCount.toLocaleString(); 
   const postCountDisplay = community.postCount.toLocaleString();
   
+  // Content section ref for scrolling
+  const contentSectionRef = React.useRef<HTMLDivElement>(null);
+  
   // Handle navigation
   const handleBackToList = () => {
     setLocation('/communities');
+  };
+  
+  // Handle tab changes with scroll
+  const handleTabChange = (value: string) => {
+    // Call the parent's onTabChange if provided
+    onTabChange?.(value);
+    
+    // Scroll to content section after a short delay to allow content to update
+    setTimeout(() => {
+      if (contentSectionRef.current) {
+        contentSectionRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start'
+        });
+      }
+    }, 100);
   };
   
   // Handle join/leave
@@ -338,7 +357,7 @@ export function CommunityHeader({
                 <Button 
                   size="sm" 
                   className="bg-white hover:bg-white/90 text-primary h-8 font-medium"
-                  onClick={() => onTabChange?.("manage")}
+                  onClick={() => handleTabChange("manage")}
                 >
                   <Settings className="h-4 w-4 mr-1" />
                   <span className="hidden sm:inline">Manage</span>
@@ -419,7 +438,7 @@ export function CommunityHeader({
                   {hasManagePermissions && (
                     <>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => onTabChange?.("manage")}>
+                      <DropdownMenuItem onClick={() => handleTabChange("manage")}>
                         <Edit className="h-4 w-4 mr-2" />
                         Edit Community
                       </DropdownMenuItem>
@@ -530,7 +549,7 @@ export function CommunityHeader({
       <div className="border-b">
         <Tabs
           defaultValue={currentTab}
-          onValueChange={onTabChange}
+          onValueChange={handleTabChange}
           className="w-full"
         >
           {/* Using ScrollArea for smoother horizontal scrolling on all devices */}
@@ -597,6 +616,9 @@ export function CommunityHeader({
           </ScrollArea>
         </Tabs>
       </div>
+      
+      {/* Content area reference for scrolling */}
+      <div ref={contentSectionRef} className="h-2" />
     </div>
   );
 }
