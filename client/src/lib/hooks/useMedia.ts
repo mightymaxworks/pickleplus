@@ -96,10 +96,10 @@ export const useMedia = (communityId: number) => {
   const createGalleryMutation = useMutation({
     mutationFn: (galleryData: { title: string; description?: string; privacyLevel?: GalleryPrivacyLevel; communityId: number; coverMediaId?: number; eventId?: number }) => {
       return mediaService.createGallery(communityId, {
-        title: galleryData.title,
+        name: galleryData.title, // Title maps to name in the gallery schema
         description: galleryData.description,
-        privacyLevel: galleryData.privacyLevel,
-        coverMediaId: galleryData.coverMediaId,
+        privacyLevel: galleryData.privacyLevel as GalleryPrivacyLevel,
+        coverImageId: galleryData.coverMediaId, // coverMediaId maps to coverImageId in the gallery schema
         eventId: galleryData.eventId
       });
     },
@@ -125,7 +125,7 @@ export const useMedia = (communityId: number) => {
       data: { 
         title: string; 
         description?: string; 
-        privacyLevel?: string; 
+        privacyLevel?: GalleryPrivacyLevel; 
         communityId: number;
         coverMediaId?: number;
         eventId?: number;
@@ -135,10 +135,10 @@ export const useMedia = (communityId: number) => {
         communityId, 
         params.galleryId, 
         {
-          title: params.data.title,
+          name: params.data.title, // Title maps to name in the gallery schema
           description: params.data.description,
-          privacyLevel: params.data.privacyLevel,
-          coverMediaId: params.data.coverMediaId,
+          privacyLevel: params.data.privacyLevel as GalleryPrivacyLevel,
+          coverImageId: params.data.coverMediaId, // coverMediaId maps to coverImageId in the gallery schema
           eventId: params.data.eventId
         }
       );

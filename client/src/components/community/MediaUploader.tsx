@@ -151,7 +151,7 @@ export function MediaUploader({
     }
   };
 
-  // Create file previews
+  // Create file previews with mobile optimizations
   const renderPreviews = () => {
     return files.map((file, index) => (
       <div
@@ -160,19 +160,28 @@ export function MediaUploader({
       >
         {getFileIcon(file)}
         <div className="flex-1 truncate">
-          <p className="text-sm font-medium truncate">{file.name}</p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs sm:text-sm font-medium truncate max-w-[150px] sm:max-w-none">
+            {file.name.length > 25 && window.innerWidth <= 640 
+              ? file.name.substring(0, 20) + '...' + file.name.substring(file.name.lastIndexOf('.')) 
+              : file.name}
+          </p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground">
             {(file.size / 1024 / 1024).toFixed(2)} MB
           </p>
         </div>
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity absolute right-1 top-1/2 -translate-y-1/2"
+          className={cn(
+            "h-7 w-7 sm:h-8 sm:w-8", 
+            window.innerWidth <= 640 
+              ? "opacity-100" // Always visible on mobile
+              : "opacity-0 group-hover:opacity-100 transition-opacity absolute right-1 top-1/2 -translate-y-1/2"
+          )}
           onClick={() => removeFile(index)}
           disabled={isUploading}
         >
-          <X className="h-4 w-4" />
+          <X className="h-3 w-3 sm:h-4 sm:w-4" />
           <span className="sr-only">Remove</span>
         </Button>
       </div>
@@ -183,12 +192,14 @@ export function MediaUploader({
     <Card>
       <CardContent className="pt-6">
         <form onSubmit={handleSubmit}>
+          {/* Mobile-optimized Upload Area */}
           <div
             className={cn(
-              "border-2 border-dashed rounded-lg p-4 text-center mb-4 cursor-pointer transition-colors",
+              "border-2 border-dashed rounded-lg p-4 text-center mb-4 transition-colors",
               isDragOver 
                 ? "border-primary bg-primary/10" 
-                : "border-border hover:border-primary/50"
+                : "border-border hover:border-primary/50",
+              window.innerWidth <= 640 ? "active:bg-primary/5" : "cursor-pointer"
             )}
             onDragOver={(e) => {
               e.preventDefault();
@@ -206,15 +217,43 @@ export function MediaUploader({
               onChange={handleFileChange}
               accept={allowedTypes.join(",")}
               disabled={isUploading}
-              capture="environment"
+              capture={window.innerWidth <= 640 ? "environment" : undefined}
             />
-            <UploadCloud className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+            
+            {/* Mobile camera button for direct photo capture */}
+            <div className="sm:hidden mb-2 flex justify-center">
+              <Button 
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-full h-12 w-12 p-0 flex items-center justify-center border-primary shadow-sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Create a special input for camera capture only
+                  const tempInput = document.createElement('input');
+                  tempInput.type = 'file';
+                  tempInput.accept = 'image/*';
+                  tempInput.capture = 'environment';
+                  tempInput.onchange = (e) => handleFileChange(e as any);
+                  tempInput.click();
+                }}
+              >
+                <ImageIcon className="h-5 w-5 text-primary" />
+              </Button>
+            </div>
+            
+            <UploadCloud className="h-8 w-8 sm:h-10 sm:w-10 mx-auto text-muted-foreground mb-2" />
             <p className="text-sm font-medium">
               {window.innerWidth <= 640 ? "Tap to upload files" : "Drag and drop files here or click to browse"}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               Upload up to {maxFiles} files
               <span className="hidden sm:inline"> (images, videos, or PDFs)</span>
+            </p>
+            
+            {/* Mobile-specific guidance */}
+            <p className="text-xs text-primary mt-2 sm:hidden">
+              Use the camera button to take a photo directly
             </p>
           </div>
 
@@ -227,54 +266,78 @@ export function MediaUploader({
             </div>
           )}
 
-          <div className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="title">Title (optional)</Label>
+          {/* Mobile-optimized Form Layout */}
+          <div className="grid gap-3 sm:gap-4">
+            {/* Mobile-specific file count indicator */}
+            {files.length > 0 && (
+              <div className="sm:hidden px-2 py-1 bg-muted/50 rounded-md text-center">
+                <p className="text-xs text-muted-foreground">
+                  {files.length} file{files.length !== 1 ? 's' : ''} selected 
+                  {files.length > 0 && ` (${(files.reduce((total, file) => total + file.size, 0) / (1024 * 1024)).toFixed(1)} MB total)`}
+                </p>
+              </div>
+            )}
+            
+            <div className="grid gap-1 sm:gap-2">
+              <Label htmlFor="title" className="text-xs sm:text-sm">Title (optional)</Label>
               <Input
                 id="title"
                 placeholder="Media title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 disabled={isUploading}
+                className="h-8 sm:h-10 text-sm"
               />
             </div>
             
-            <div className="grid gap-2">
-              <Label htmlFor="description">Description (optional)</Label>
+            <div className="grid gap-1 sm:gap-2">
+              <Label htmlFor="description" className="text-xs sm:text-sm">Description (optional)</Label>
               <Textarea
                 id="description"
                 placeholder="Add a description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 disabled={isUploading}
+                className="min-h-[60px] sm:min-h-[80px] text-sm"
               />
             </div>
             
-            <div className="grid gap-2">
-              <Label htmlFor="tags">Tags (comma-separated, optional)</Label>
+            <div className="grid gap-1 sm:gap-2">
+              <Label htmlFor="tags" className="text-xs sm:text-sm">Tags (comma-separated, optional)</Label>
               <Input
                 id="tags"
                 placeholder="event, tournament, practice"
                 value={tags}
                 onChange={(e) => setTags(e.target.value)}
                 disabled={isUploading}
+                className="h-8 sm:h-10 text-sm"
               />
             </div>
 
             <Button
               type="submit"
-              className="w-full"
+              className="w-full mt-2 h-10 sm:h-11"
               disabled={files.length === 0 || isUploading}
             >
               {isUploading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Uploading...
+                  <span className="text-sm">Uploading...</span>
                 </>
               ) : (
-                "Upload Files"
+                <>
+                  <UploadCloud className="mr-2 h-4 w-4" />
+                  <span className="text-sm">Upload {files.length > 0 ? `${files.length} File${files.length !== 1 ? 's' : ''}` : 'Files'}</span>
+                </>
               )}
             </Button>
+            
+            {/* Mobile upload progress indicator */}
+            {isUploading && (
+              <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-primary animate-pulse" style={{ width: '100%' }}></div>
+              </div>
+            )}
           </div>
         </form>
       </CardContent>
