@@ -369,7 +369,7 @@ export function MediaGallery({
                   >
                     {getMediaIcon(item.mediaType)}
                     <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-center truncate max-w-full">
-                      {item.title || (item.metadata && 'originalFilename' in item.metadata ? item.metadata.originalFilename : "Document")}
+                      {item.title || (item.metadata && typeof item.metadata === 'object' && item.metadata && 'originalFilename' in item.metadata ? String(item.metadata.originalFilename) : "Document")}
                     </p>
                   </div>
                 )}
@@ -416,7 +416,7 @@ export function MediaGallery({
               
               <CardContent className="p-2 sm:p-3">
                 <h3 className="text-xs sm:text-sm font-medium truncate">
-                  {item.title || (item.metadata && 'originalFilename' in item.metadata ? item.metadata.originalFilename : "Untitled")}
+                  {item.title || (item.metadata && typeof item.metadata === 'object' && item.metadata && 'originalFilename' in item.metadata ? String(item.metadata.originalFilename) : "Untitled")}
                 </h3>
                 <p className="text-[10px] sm:text-xs text-muted-foreground">
                   {format(new Date(item.createdAt || new Date()), 'MMM d, yyyy')}

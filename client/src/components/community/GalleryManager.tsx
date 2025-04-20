@@ -149,8 +149,8 @@ export function GalleryManager({ communityId }: GalleryManagerProps) {
       title: gallery.name || "",
       description: gallery.description || "",
       privacyLevel: gallery.privacyLevel || GalleryPrivacyLevel.PUBLIC,
-      coverMediaId: gallery.coverImageId,
-      eventId: gallery.eventId,
+      coverMediaId: gallery.coverImageId ?? undefined,
+      eventId: gallery.eventId ?? undefined,
     });
     setIsCreateDialogOpen(true);
   };

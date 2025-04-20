@@ -14,7 +14,7 @@ import { mediaService } from "@/lib/api/community/media-service";
 import { communityKeys } from "@/lib/api/community/keys";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { MediaType } from "@shared/schema/media";
+import { MediaType, GalleryPrivacyLevel } from "@shared/schema/media";
 
 export type MediaFilter = {
   mediaType?: MediaType;
@@ -94,14 +94,16 @@ export const useMedia = (communityId: number) => {
 
   // Create gallery mutation
   const createGalleryMutation = useMutation({
-    mutationFn: (galleryData: { title: string; description?: string; privacyLevel?: string }) => {
-      return mediaService.createGallery(communityId, galleryData);
+    mutationFn: (galleryData: { title: string; description?: string; privacyLevel?: GalleryPrivacyLevel; communityId: number; coverMediaId?: number; eventId?: number }) => {
+      return mediaService.createGallery(communityId, {
+        title: galleryData.title,
+        description: galleryData.description,
+        privacyLevel: galleryData.privacyLevel,
+        coverMediaId: galleryData.coverMediaId,
+        eventId: galleryData.eventId
+      });
     },
     onSuccess: () => {
-      toast({
-        title: "Gallery created",
-        description: "Your gallery has been created successfully.",
-      });
       // Invalidate galleries cache to refresh the list
       queryClient.invalidateQueries({
         queryKey: communityKeys.galleries(communityId),
@@ -111,6 +113,69 @@ export const useMedia = (communityId: number) => {
       toast({
         title: "Gallery creation failed",
         description: error.message || "Failed to create gallery. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Update gallery mutation
+  const updateGalleryMutation = useMutation({
+    mutationFn: (params: { 
+      galleryId: number; 
+      data: { 
+        title: string; 
+        description?: string; 
+        privacyLevel?: string; 
+        communityId: number;
+        coverMediaId?: number;
+        eventId?: number;
+      } 
+    }) => {
+      return mediaService.updateGallery(
+        communityId, 
+        params.galleryId, 
+        {
+          title: params.data.title,
+          description: params.data.description,
+          privacyLevel: params.data.privacyLevel,
+          coverMediaId: params.data.coverMediaId,
+          eventId: params.data.eventId
+        }
+      );
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate specific gallery and galleries list
+      queryClient.invalidateQueries({
+        queryKey: communityKeys.gallery(communityId, variables.galleryId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: communityKeys.galleries(communityId),
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Gallery update failed",
+        description: error.message || "Failed to update gallery. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Delete gallery mutation
+  const deleteGalleryMutation = useMutation({
+    mutationFn: (galleryId: number) => {
+      return mediaService.deleteGallery(communityId, galleryId);
+    },
+    onSuccess: () => {
+      // Invalidate galleries cache to refresh the list
+      queryClient.invalidateQueries({
+        queryKey: communityKeys.galleries(communityId),
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Gallery deletion failed",
+        description: error.message || "Failed to delete gallery. Please try again.",
         variant: "destructive",
       });
     },
@@ -188,6 +253,30 @@ export const useMedia = (communityId: number) => {
     await uploadMediaMutation.mutateAsync(formData);
   };
 
+  // Remove media from gallery mutation
+  const removeFromGalleryMutation = useMutation({
+    mutationFn: (params: { galleryId: number; mediaId: number }) => {
+      return mediaService.removeMediaFromGallery(
+        communityId,
+        params.galleryId,
+        params.mediaId
+      );
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate specific gallery to refresh its media items
+      queryClient.invalidateQueries({
+        queryKey: communityKeys.gallery(communityId, variables.galleryId),
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to remove from gallery",
+        description: error.message || "Failed to remove media from gallery. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     // Media data and state
     media,
@@ -206,7 +295,10 @@ export const useMedia = (communityId: number) => {
     uploadMediaMutation,
     deleteMediaMutation,
     createGalleryMutation,
+    updateGalleryMutation,
+    deleteGalleryMutation,
     addToGalleryMutation,
+    removeFromGalleryMutation,
     
     // Helper functions
     handleFileUpload,
