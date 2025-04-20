@@ -64,7 +64,8 @@ import {
   ChevronDown,
   ChevronLeft,
   Star,
-  Info
+  Info,
+  Image
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format, formatDistance } from "date-fns";
@@ -599,6 +600,16 @@ export function CommunityHeader({
                 >
                   <Star className="h-4 w-4 flex-shrink-0" />
                   <span className="hidden sm:inline">Engagement</span>
+                </TabsTrigger>
+                
+                {/* PKL-278651-COMM-0036-MEDIA - Media Management Tab */}
+                <TabsTrigger
+                  value="media"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-none py-3 px-3 sm:px-4 text-xs sm:text-sm flex items-center gap-1 sm:gap-2 flex-shrink-0 transition-all whitespace-nowrap"
+                  title="Media"
+                >
+                  <Image className="h-4 w-4 flex-shrink-0" />
+                  <span className="hidden sm:inline">Media</span>
                 </TabsTrigger>
                 
                 {hasManagePermissions && (

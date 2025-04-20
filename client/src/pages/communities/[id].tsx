@@ -64,7 +64,8 @@ import {
   Settings,
   ShieldAlert,
   Shield,
-  UserPlus
+  UserPlus,
+  Image
 } from "lucide-react";
 import { JoinRequestManagement } from "@/components/community/JoinRequestManagement";
 import { CommunityAdminFAB } from "@/components/community/CommunityAdminFAB";
@@ -417,6 +418,46 @@ export default function CommunityDetailPage() {
           {/* Enhanced Analytics Tab - PKL-278651-COMM-0033-STATS */}
           {activeTab === "engagement" && (
             <EnhancedCommunityAnalytics communityId={communityId} />
+          )}
+          
+          {/* Media Tab - PKL-278651-COMM-0036-MEDIA */}
+          {activeTab === "media" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Image className="h-5 w-5" />
+                  Community Media
+                </CardTitle>
+                <CardDescription>
+                  Photos, videos, and documents shared in this community
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-sm text-muted-foreground">
+                    Browse media or visit the media management page to upload and organize content.
+                  </p>
+                  <Button asChild>
+                    <a href={`/communities/${communityId}/media`} target="_blank" rel="noopener noreferrer">
+                      <Image className="mr-2 h-4 w-4" />
+                      Media Management
+                    </a>
+                  </Button>
+                </div>
+                
+                {/* Load the gallery component */}
+                <div className="mt-2">
+                  <Suspense fallback={<div className="py-16 text-center">
+                    <Skeleton className="h-40 w-full" />
+                    <p className="text-sm text-muted-foreground mt-2">Loading media gallery...</p>
+                  </div>}>
+                    <div className="max-h-[500px] overflow-y-auto">
+                      <MediaGallery communityId={communityId} />
+                    </div>
+                  </Suspense>
+                </div>
+              </CardContent>
+            </Card>
           )}
           
           {/* Manage Tab (visible only to admins/moderators) */}
