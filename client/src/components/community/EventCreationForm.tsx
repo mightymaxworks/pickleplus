@@ -265,7 +265,7 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="">Create without template</SelectItem>
-                      {eventTemplates.map((template) => (
+                      {eventTemplates.map((template: EventTemplate) => (
                         <SelectItem key={template.id} value={template.id.toString()}>
                           {template.name} 
                           {template.isDefault && " (Default)"}
