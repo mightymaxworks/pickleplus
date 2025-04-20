@@ -9,12 +9,13 @@
  * @lastModified 2025-04-17
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CalendarIcon, Info, MapPin, Users, Clock, Globe } from "lucide-react";
+import { CalendarIcon, Info, MapPin, Users, Clock, Globe, LayoutTemplate } from "lucide-react";
 import { format } from "date-fns";
+import { useEventTemplates, EventTemplate } from "@/lib/hooks/useEventTemplates";
 
 // UI Components
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -86,7 +87,9 @@ interface EventCreationFormProps {
 export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCreationFormProps) {
   const { toast } = useToast();
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const createEvent = useCreateCommunityEvent();
+  const { data: eventTemplates, isLoading: templatesLoading } = useEventTemplates(communityId);
   
   // Create date objects for defaults
   const today = new Date();
@@ -121,6 +124,57 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
   
   const isVirtual = form.watch("isVirtual");
   const isRecurring = form.watch("isRecurring");
+  
+  // Function to apply template data to form
+  const applyTemplate = (templateId: string) => {
+    if (!eventTemplates || templateId === "") return;
+    
+    const template = eventTemplates.find((t: EventTemplate) => t.id.toString() === templateId);
+    if (!template) return;
+    
+    // Reset form with template values
+    form.setValue("title", template.name);
+    form.setValue("description", template.description || "");
+    form.setValue("eventType", template.eventType as CommunityEventType);
+    form.setValue("location", template.location || "");
+    form.setValue("isVirtual", template.isVirtual);
+    if (template.isVirtual && template.virtualMeetingUrl) {
+      form.setValue("virtualMeetingUrl", template.virtualMeetingUrl);
+    }
+    if (template.maxAttendees) {
+      form.setValue("maxAttendees", template.maxAttendees);
+    }
+    if (template.minSkillLevel) {
+      form.setValue("minSkillLevel", template.minSkillLevel);
+    }
+    if (template.maxSkillLevel) {
+      form.setValue("maxSkillLevel", template.maxSkillLevel);
+    }
+    if (template.recurringPattern) {
+      form.setValue("isRecurring", true);
+      form.setValue("recurringPattern", template.recurringPattern);
+    }
+    
+    // Set event duration based on template
+    if (template.durationMinutes) {
+      const endDate = new Date(form.getValues("eventDate"));
+      endDate.setMinutes(endDate.getMinutes() + template.durationMinutes);
+      form.setValue("endDate", endDate);
+    }
+    
+    toast({
+      title: "Template Applied",
+      description: `Applied "${template.name}" template to your event.`,
+      variant: "default",
+    });
+  };
+  
+  // Effect to watch for template changes
+  useEffect(() => {
+    if (selectedTemplate) {
+      applyTemplate(selectedTemplate);
+    }
+  }, [selectedTemplate]);
   
   // Handle form submission
   const onSubmit = async (data: EventFormValues) => {
@@ -189,6 +243,40 @@ export function EventCreationForm({ communityId, onSuccess, onCancel }: EventCre
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Event Template Selector */}
+            {eventTemplates && eventTemplates.length > 0 && (
+              <div className="mb-6 p-4 border rounded-md bg-muted/30">
+                <div className="flex items-center gap-2 mb-2">
+                  <LayoutTemplate className="h-5 w-5 text-primary" />
+                  <h3 className="font-medium">Use Event Template</h3>
+                </div>
+                
+                <div className="flex flex-col gap-3">
+                  <p className="text-sm text-muted-foreground">
+                    Select a template to pre-fill the form with saved event settings
+                  </p>
+                  
+                  <Select 
+                    value={selectedTemplate}
+                    onValueChange={setSelectedTemplate}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a template..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Create without template</SelectItem>
+                      {eventTemplates.map((template) => (
+                        <SelectItem key={template.id} value={template.id.toString()}>
+                          {template.name} 
+                          {template.isDefault && " (Default)"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+            
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               {/* Event Title */}
               <div className="md:col-span-2">

@@ -47,6 +47,15 @@ import './match-statistics-schema';
 // Import event schema (PKL-278651-CONN-0003-EVENT - Event Check-in QR Code System)
 import { events, eventCheckIns, eventRegistrations, passportVerifications } from './schema/events';
 
+// Import event templates schema (PKL-278651-COMM-0035-EVENT - Enhanced Event Display and Management)
+import { 
+  eventTemplates,
+  eventTemplatesRelations,
+  insertEventTemplateSchema,
+  type EventTemplate,
+  type InsertEventTemplate
+} from './schema/event-templates';
+
 // Import XP system schema (PKL-278651-XP-0001-FOUND - XP System Foundation)
 import {
   xpTransactions,
