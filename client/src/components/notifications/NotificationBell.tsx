@@ -24,7 +24,7 @@ interface NotificationBellProps {
   className?: string;
 }
 
-export const NotificationBell: React.FC<NotificationBellProps> = ({
+const NotificationBell: React.FC<NotificationBellProps> = ({
   onClick,
   className
 }) => {
@@ -107,25 +107,33 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
     }
   }, [user]);
   
-  // Force Query approach instead of state management for more reliable display
-  const { data: unreadCountFromServer } = useQuery({
+  // Override EVERYTHING with a direct query to server
+  // This ensures no previous state or placeholder values persist
+  const { data: serverCount, isLoading } = useQuery({
     queryKey: ['/api/notifications/unread-count'],
     queryFn: async () => {
       console.log('[NotificationBell] Force-fetching unread count from server');
       const response = await apiRequest('GET', '/api/notifications/unread-count');
       const data = await response.json();
       console.log('[NotificationBell] Server reports unread count:', data);
+      
+      // Override the state as well to ensure consistency
+      if (data && typeof data.count === 'number') {
+        setUnreadCount(data.count);
+      }
+      
       return data.count || 0;
     },
-    // More aggressive refetching
+    // Super aggressive refetching
     refetchOnWindowFocus: true,
     refetchOnMount: true,
-    refetchInterval: 5000, // Refetch every 5 seconds
-    staleTime: 3000,      // Consider data stale after 3 seconds
+    refetchInterval: 2000, // Refetch every 2 seconds
+    staleTime: 1000,      // Consider data stale after 1 second
   });
   
-  // Display count from direct query, falling back to state if query is loading
-  const displayCount = typeof unreadCountFromServer === 'number' ? unreadCountFromServer : unreadCount;
+  // CRITICAL: ONLY use the server's value, and if it's loading, display 0
+  // This ensures we never display any cached or placeholder values
+  const displayCount = isLoading ? 0 : serverCount;
   
   // Mark all as read mutation
   const markAllAsReadMutation = useMutation({
