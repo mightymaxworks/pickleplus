@@ -1,6 +1,12 @@
 /**
  * PKL-278651-CONN-0003-EVENT - PicklePass™ System
  * Event Routes for Admin and Check-in Operations
+ * 
+ * PKL-278651-CONN-0012-SYNC - Event Status Synchronization
+ * Real-time event updates via WebSockets integration
+ * 
+ * @lastModified 2025-04-20
+ * @implementation Framework5.2
  */
 
 import express, { Request, Response } from "express";
@@ -8,6 +14,12 @@ import { isAuthenticated, isAdmin } from "../auth";
 import { storage } from "../storage";
 import { insertEventSchema, insertEventCheckInSchema } from "@shared/schema/events";
 import { ZodError } from "zod";
+import { 
+  broadcastEventRegistrationStatusChange, 
+  broadcastEventAttendanceUpdate, 
+  broadcastEventCancellation, 
+  broadcastEventScheduleChange 
+} from "./event-websocket-routes"; // PKL-278651-CONN-0012-SYNC
 
 const router = express.Router();
 
@@ -118,6 +130,32 @@ router.put("/:id", isAuthenticated, isAdmin, async (req: Request, res: Response)
     
     const updatedEvent = await storage.updateEvent(eventId, updates);
     
+    // PKL-278651-CONN-0012-SYNC - Broadcast schedule changes if they were updated
+    try {
+      // Check if startDateTime or endDateTime was updated
+      if (updates.startDateTime || updates.endDateTime) {
+        // Broadcast schedule change with safe access to event properties
+        const startDateTimeStr = updatedEvent && updatedEvent.startDateTime 
+          ? updatedEvent.startDateTime.toISOString() 
+          : '';
+        const endDateTimeStr = updatedEvent && updatedEvent.endDateTime 
+          ? updatedEvent.endDateTime.toISOString() 
+          : '';
+        
+        broadcastEventScheduleChange(eventId, startDateTimeStr, endDateTimeStr);
+        console.log(`[API][PKL-278651-CONN-0012-SYNC] Schedule change broadcast for event ${eventId}`);
+      }
+      
+      // If event was cancelled, broadcast that too
+      if (updates.status === 'cancelled') {
+        broadcastEventCancellation(eventId);
+        console.log(`[API][PKL-278651-CONN-0012-SYNC] Cancellation broadcast for event ${eventId}`);
+      }
+    } catch (wsError) {
+      // Don't fail the update if WebSocket broadcast fails
+      console.error(`[API] WebSocket broadcast error for event ${eventId}:`, wsError);
+    }
+    
     res.json(updatedEvent);
   } catch (error) {
     console.error(`[API] Error updating event ${req.params.id}:`, error);
@@ -152,6 +190,16 @@ router.delete("/:id", isAuthenticated, isAdmin, async (req: Request, res: Respon
     const success = await storage.deleteEvent(eventId);
     
     if (success) {
+      // PKL-278651-CONN-0012-SYNC - Broadcast event cancellation via WebSocket
+      try {
+        // Broadcast to all connected WebSocket clients that the event is cancelled
+        broadcastEventCancellation(eventId);
+        console.log(`[API][PKL-278651-CONN-0012-SYNC] Event deletion broadcast for event ${eventId}`);
+      } catch (wsError) {
+        // Don't fail the delete if WebSocket broadcast fails
+        console.error(`[API] WebSocket broadcast error for event ${eventId}:`, wsError);
+      }
+      
       res.status(204).end();
     } else {
       res.status(500).json({ error: "Failed to delete event" });
@@ -421,6 +469,25 @@ router.post("/:id/register", isAuthenticated, async (req: Request, res: Response
     
     console.log(`[API] User ${req.user!.id} successfully registered for event ${eventId}`);
     
+    // PKL-278651-CONN-0012-SYNC - Broadcast registration status change via WebSocket
+    try {
+      // Broadcast to all connected WebSocket clients that need to know
+      broadcastEventRegistrationStatusChange(eventId, req.user!.id, true);
+      
+      // Get the updated registration count
+      const count = await storage.getEventRegistrationCount(eventId);
+      
+      // Broadcast attendance update with the new count
+      // Use the maxAttendees property if it exists, or default to 0
+      const maxAttendees = event.maxAttendees || 0;
+      broadcastEventAttendanceUpdate(eventId, count, maxAttendees);
+      
+      console.log(`[API][PKL-278651-CONN-0012-SYNC] Registration broadcast complete for event ${eventId}`);
+    } catch (wsError) {
+      // Don't fail the registration if WebSocket broadcast fails
+      console.error(`[API] WebSocket broadcast error for event ${eventId}:`, wsError);
+    }
+    
     res.status(201).json(registration);
   } catch (error) {
     console.error(`[API] Error registering for event ${req.params.id}:`, error);
@@ -457,6 +524,26 @@ router.post("/:id/cancel-registration", isAuthenticated, async (req: Request, re
     
     if (success) {
       console.log(`[API] User ${req.user!.id} successfully cancelled registration for event ${eventId}`);
+      
+      // PKL-278651-CONN-0012-SYNC - Broadcast registration status change via WebSocket
+      try {
+        // Broadcast to all connected WebSocket clients that need to know
+        broadcastEventRegistrationStatusChange(eventId, req.user!.id, false);
+        
+        // Get the updated registration count
+        const count = await storage.getEventRegistrationCount(eventId);
+        
+        // Broadcast attendance update with the new count
+        // Use the maxAttendees property if it exists, or default to 0
+        const maxAttendees = event.maxAttendees || 0;
+        broadcastEventAttendanceUpdate(eventId, count, maxAttendees);
+        
+        console.log(`[API][PKL-278651-CONN-0012-SYNC] Cancellation broadcast complete for event ${eventId}`);
+      } catch (wsError) {
+        // Don't fail the cancellation if WebSocket broadcast fails
+        console.error(`[API] WebSocket broadcast error for event ${eventId}:`, wsError);
+      }
+      
       res.json({ success: true });
     } else {
       res.status(500).json({ success: false, error: "Failed to cancel registration" });
