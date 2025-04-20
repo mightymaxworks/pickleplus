@@ -44,8 +44,12 @@ export function initializeCommunityModule(options: CommunityModuleOptions) {
   console.log('[MODULE] Initializing Enhanced Event Display and Templates System (PKL-278651-COMM-0035-EVENT)');
   options.app.use('/api', eventTemplatesRoutes);
   
+  // Register media management routes (PKL-278651-COMM-0036-MEDIA)
+  console.log('[MODULE] Initializing Community Media Management System (PKL-278651-COMM-0036-MEDIA)');
+  options.app.use('/api/community', mediaRoutes);
+  
   return {
     name: 'community-hub',
-    version: '1.3.0', // Version updated to reflect new features
+    version: '1.4.0', // Version updated to reflect new features
   };
 }

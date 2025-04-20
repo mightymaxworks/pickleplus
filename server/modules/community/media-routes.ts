@@ -30,7 +30,7 @@ import {
   insertGalleryItemSchema 
 } from '../../../shared/schema/media';
 import { z } from 'zod';
-import { isAuthenticated, isCommunityAdmin, isCommunityMember } from '../../middleware/auth';
+import { isAuthenticated, isCommunityAdmin, isCommunityMember } from '../../middleware/community-auth';
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -177,28 +177,33 @@ mediaRouter.get(
       const communityId = parseInt(req.params.communityId);
       const { mediaType, limit = '20', offset = '0', sort = 'newest' } = req.query;
       
-      let query = db
-        .select()
-        .from(communityMedia)
-        .where(eq(communityMedia.communityId, communityId))
-        .limit(parseInt(limit as string))
-        .offset(parseInt(offset as string));
-        
+      // Build and execute query based on parameters
+      let queryBuilder = db.select().from(communityMedia);
+      
+      // Filter by community ID (required)
+      queryBuilder = queryBuilder.where(eq(communityMedia.communityId, communityId));
+      
       // Filter by media type if provided
       if (mediaType) {
-        query = query.where(eq(communityMedia.mediaType, mediaType as string));
+        queryBuilder = queryBuilder.where(eq(communityMedia.mediaType, mediaType as string));
       }
       
       // Sort based on parameter
       if (sort === 'newest') {
-        query = query.orderBy(desc(communityMedia.createdAt));
+        queryBuilder = queryBuilder.orderBy(desc(communityMedia.createdAt));
       } else if (sort === 'oldest') {
-        query = query.orderBy(asc(communityMedia.createdAt));
+        queryBuilder = queryBuilder.orderBy(asc(communityMedia.createdAt));
       } else if (sort === 'featured') {
-        query = query.orderBy(desc(communityMedia.isFeatured));
+        queryBuilder = queryBuilder.orderBy(desc(communityMedia.isFeatured));
       }
       
-      const media = await query;
+      // Apply pagination
+      queryBuilder = queryBuilder
+        .limit(parseInt(limit as string))
+        .offset(parseInt(offset as string));
+      
+      // Execute query
+      const media = await queryBuilder;
       
       res.status(200).json(media);
     } catch (error) {
