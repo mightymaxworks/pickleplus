@@ -141,7 +141,7 @@ export function EventList({
       isLoadingStatus: isLoadingRegistrationStatus,
       // Add formatting for grouping
       dateForGrouping: event.startDateTime ? 
-        safeFormatDate(event.startDateTime, { month: 'long', day: 'numeric', year: 'numeric' }) : 
+        safeFormatDate(event.startDateTime) : 
         'Date TBD'
     };
   }) || [];
@@ -422,7 +422,7 @@ export function EventList({
                               <div className="flex items-center mt-1">
                                 <ClockIcon className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
                                 <span>
-                                  {safeFormatTime(event.startDateTime)}
+                                  {event.startDateTime ? safeFormatTime(event.startDateTime) : 'Time TBD'}
                                   {event.endDateTime && ` - ${safeFormatTime(event.endDateTime)}`}
                                 </span>
                               </div>
@@ -480,10 +480,23 @@ export function EventList({
                                   animate={{ opacity: 1, scale: 1 }}
                                   exit={{ opacity: 0, scale: 0.8 }}
                                 >
-                                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                    <CheckIcon className="h-3 w-3 mr-1" />
-                                    Registered
-                                  </Badge>
+                                  {showEnhancedStatus ? (
+                                    <div className="flex items-center gap-2">
+                                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                        <CheckIcon className="h-3 w-3 mr-1" />
+                                        Registered
+                                      </Badge>
+                                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                        <TicketIcon className="h-3 w-3 mr-1" />
+                                        Pass Ready
+                                      </Badge>
+                                    </div>
+                                  ) : (
+                                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                      <CheckIcon className="h-3 w-3 mr-1" />
+                                      Registered
+                                    </Badge>
+                                  )}
                                 </motion.div>
                               )}
                             </AnimatePresence>
@@ -571,7 +584,7 @@ export function EventList({
                 <div className="flex items-center">
                   <CalendarIcon className="h-3.5 w-3.5 mr-1.5" />
                   <span>
-                    {selectedEvent && safeFormatDate(selectedEvent.startDateTime, { month: 'long', day: 'numeric', year: 'numeric' })}
+                    {selectedEvent && safeFormatDate(selectedEvent.startDateTime)}
                   </span>
                 </div>
                 <div className="flex items-center">

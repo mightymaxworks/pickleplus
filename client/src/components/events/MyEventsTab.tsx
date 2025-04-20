@@ -421,6 +421,18 @@ export function MyEventsTab({ className, onEventClick, onPassportClick }: MyEven
                               </div>
                             )}
                             
+                            {/* Enhanced Registration Status Badges */}
+                            <div className="flex flex-wrap gap-2 mt-3">
+                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                <CheckIcon className="h-3 w-3 mr-1" />
+                                Registered
+                              </Badge>
+                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                <TicketIcon className="h-3 w-3 mr-1" />
+                                Pass Ready
+                              </Badge>
+                            </div>
+                            
                             <motion.div 
                               className="mt-2"
                               initial={{ opacity: 0, scale: 0.9 }}

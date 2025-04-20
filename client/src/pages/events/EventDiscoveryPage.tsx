@@ -181,6 +181,7 @@ export default function EventDiscoveryPage() {
                 <EventList 
                   showViewButton={true}
                   onEventClick={handleEventClick}
+                  showEnhancedStatus={true}
                 />
               </TabsContent>
               
