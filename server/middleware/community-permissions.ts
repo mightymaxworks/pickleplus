@@ -10,7 +10,14 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { PgStorage } from '../storage';
+import { storage } from '../storage';
+
+// Type definition for session with userId
+declare module 'express-session' {
+  interface SessionData {
+    userId: number;
+  }
+}
 
 /**
  * Middleware to check if a user has a specific permission in a community
@@ -20,12 +27,11 @@ export function checkPermission(permissionType: string) {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Check if user is authenticated
-      if (!req.isAuthenticated() || !req.session.userId) {
+      if (!req.isAuthenticated() || !req.user?.id) {
         return res.status(401).json({ message: 'Not authenticated' });
       }
       
-      const storage = req.app.locals.storage as PgStorage;
-      const userId = req.session.userId;
+      const userId = req.user.id;
       const communityId = parseInt(req.params.id);
       
       if (isNaN(communityId)) {
@@ -82,110 +88,92 @@ export function checkPermission(permissionType: string) {
  * Check if the user is an admin of the community
  */
 export function isAdmin(req: Request, res: Response, next: NextFunction) {
-  try {
-    // Check if user is authenticated
-    if (!req.isAuthenticated() || !req.session.userId) {
-      return res.status(401).json({ message: 'Not authenticated' });
+  (async () => {
+    try {
+      // Check if user is authenticated
+      if (!req.isAuthenticated() || !req.user?.id) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
+      const userId = req.user.id;
+      const communityId = parseInt(req.params.id);
+      
+      if (isNaN(communityId)) {
+        return res.status(400).json({ message: 'Invalid community ID' });
+      }
+      
+      // Get the user's membership
+      const membership = await storage.getCommunityMembership(communityId, userId);
+      
+      if (!membership) {
+        return res.status(403).json({ message: 'You are not a member of this community' });
+      }
+      
+      // Get the community
+      const community = await storage.getCommunityById(communityId);
+      
+      if (!community) {
+        return res.status(404).json({ message: 'Community not found' });
+      }
+      
+      // If user is the community creator or has admin role, grant permission
+      if (userId === community.createdByUserId || membership.role === 'admin') {
+        return next();
+      }
+      
+      res.status(403).json({ message: 'Only community admins can perform this action' });
+    } catch (error) {
+      console.error('[PKL-278651-COMM-0034-MEMBER] Error checking admin status:', error);
+      res.status(500).json({ message: 'Failed to check admin status' });
     }
-    
-    const storage = req.app.locals.storage as PgStorage;
-    const userId = req.session.userId;
-    const communityId = parseInt(req.params.id);
-    
-    if (isNaN(communityId)) {
-      return res.status(400).json({ message: 'Invalid community ID' });
-    }
-    
-    // Get the user's membership
-    storage.getCommunityMembership(communityId, userId)
-      .then(membership => {
-        if (!membership) {
-          return res.status(403).json({ message: 'You are not a member of this community' });
-        }
-        
-        // Get the community
-        storage.getCommunityById(communityId)
-          .then(community => {
-            if (!community) {
-              return res.status(404).json({ message: 'Community not found' });
-            }
-            
-            // If user is the community creator or has admin role, grant permission
-            if (userId === community.createdByUserId || membership.role === 'admin') {
-              return next();
-            }
-            
-            res.status(403).json({ message: 'Only community admins can perform this action' });
-          })
-          .catch(error => {
-            console.error('[PKL-278651-COMM-0034-MEMBER] Error fetching community:', error);
-            res.status(500).json({ message: 'Failed to check admin status' });
-          });
-      })
-      .catch(error => {
-        console.error('[PKL-278651-COMM-0034-MEMBER] Error fetching membership:', error);
-        res.status(500).json({ message: 'Failed to check admin status' });
-      });
-  } catch (error) {
-    console.error('[PKL-278651-COMM-0034-MEMBER] Error checking admin status:', error);
-    res.status(500).json({ message: 'Failed to check admin status' });
-  }
+  })();
 }
 
 /**
  * Check if the user has moderation privileges (admin or moderator) in the community
  */
 export function hasModeratorPermissions(req: Request, res: Response, next: NextFunction) {
-  try {
-    // Check if user is authenticated
-    if (!req.isAuthenticated() || !req.session.userId) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
-    
-    const storage = req.app.locals.storage as PgStorage;
-    const userId = req.session.userId;
-    const communityId = parseInt(req.params.id);
-    
-    if (isNaN(communityId)) {
-      return res.status(400).json({ message: 'Invalid community ID' });
-    }
-    
-    // Get the user's membership
-    storage.getCommunityMembership(communityId, userId)
-      .then(membership => {
-        if (!membership) {
-          return res.status(403).json({ message: 'You are not a member of this community' });
-        }
-        
-        // Get the community
-        storage.getCommunityById(communityId)
-          .then(community => {
-            if (!community) {
-              return res.status(404).json({ message: 'Community not found' });
-            }
-            
-            // If user is the community creator, admin or moderator, grant permission
-            if (userId === community.createdByUserId || 
-                membership.role === 'admin' || 
-                membership.role === 'moderator') {
-              return next();
-            }
-            
-            res.status(403).json({ 
-              message: 'Only community administrators and moderators can perform this action' 
-            });
-          })
-          .catch(error => {
-            console.error('[PKL-278651-COMM-0034-MEMBER] Error fetching community:', error);
-            res.status(500).json({ message: 'Failed to check moderator status' });
-          });
-      })
-      .catch(error => {
-        console.error('[PKL-278651-COMM-0034-MEMBER] Error fetching membership:', error);
-        res.status(500).json({ message: 'Failed to check moderator status' });
+  (async () => {
+    try {
+      // Check if user is authenticated
+      if (!req.isAuthenticated() || !req.user?.id) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
+      const userId = req.user.id;
+      const communityId = parseInt(req.params.id);
+      
+      if (isNaN(communityId)) {
+        return res.status(400).json({ message: 'Invalid community ID' });
+      }
+      
+      // Get the user's membership
+      const membership = await storage.getCommunityMembership(communityId, userId);
+      
+      if (!membership) {
+        return res.status(403).json({ message: 'You are not a member of this community' });
+      }
+      
+      // Get the community
+      const community = await storage.getCommunityById(communityId);
+      
+      if (!community) {
+        return res.status(404).json({ message: 'Community not found' });
+      }
+      
+      // If user is the community creator, admin or moderator, grant permission
+      if (userId === community.createdByUserId || 
+          membership.role === 'admin' || 
+          membership.role === 'moderator') {
+        return next();
+      }
+      
+      res.status(403).json({ 
+        message: 'Only community administrators and moderators can perform this action' 
       });
-  } catch (error) {
-    console.error('[PKL-278651-COMM-0034-MEMBER] Error checking moderator status:', error);
-    res.status(500).json({ message: 'Failed to check moderator status' });
-  }
+    } catch (error) {
+      console.error('[PKL-278651-COMM-0034-MEMBER] Error checking moderator status:', error);
+      res.status(500).json({ message: 'Failed to check moderator status' });
+    }
+  })();
 }

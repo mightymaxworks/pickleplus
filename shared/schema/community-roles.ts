@@ -2,86 +2,104 @@
  * PKL-278651-COMM-0034-MEMBER
  * Community Roles Schema
  * 
- * This file defines the schema for the enhanced community member management.
+ * This file defines the tables and types for enhanced community member management.
  * 
  * @framework Framework5.2
  * @version 1.0.0
  * @lastModified 2025-04-20
  */
 
-import { pgTable, serial, varchar, boolean, timestamp, integer, json, text, uniqueIndex } from 'drizzle-orm/pg-core';
-import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { z } from 'zod';
-import { communities, communityMembers } from './community';
-import { users } from '../schema';
-import { relations } from 'drizzle-orm';
+import { pgTable, serial, integer, varchar, text, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
 
-// Permission types table
-export const communityPermissionTypes = pgTable('community_permission_types', {
-  id: serial('id').primaryKey(),
-  name: varchar('name', { length: 50 }).notNull().unique(),
-  description: text('description'),
-  category: varchar('category', { length: 50 }),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow()
+import { users } from "../schema";
+import { communities, communityMembers } from "./community";
+
+/**
+ * Enum for member action types
+ */
+export enum MemberActionType {
+  PROMOTE = "promote",
+  DEMOTE = "demote",
+  REMOVE = "remove",
+  BAN = "ban",
+  UNBAN = "unban",
+  ADD_ROLE = "add_role",
+  REMOVE_ROLE = "remove_role",
+  CHANGE_PRIMARY_ROLE = "change_primary_role"
+}
+
+/**
+ * Community Permission Types Table
+ * Defines the available permission types in the system with descriptions
+ */
+export const communityPermissionTypes = pgTable("community_permission_types", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 50 }).notNull().unique(),
+  displayName: varchar("display_name", { length: 100 }).notNull(),
+  description: text("description").notNull(),
+  category: varchar("category", { length: 50 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
-// Role permissions table
-export const communityRolePermissions = pgTable('community_role_permissions', {
-  id: serial('id').primaryKey(),
-  communityId: integer('community_id').notNull().references(() => communities.id),
-  role: varchar('role', { length: 50 }).notNull(),
-  permissionType: varchar('permission_type', { length: 50 }).notNull().references(() => communityPermissionTypes.name),
-  isGranted: boolean('is_granted').notNull().default(false),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow()
-}, (table) => {
-  return {
-    rolePermUnique: uniqueIndex('role_perm_unique_idx').on(table.communityId, table.role, table.permissionType)
-  };
+/**
+ * Community Role Permissions Table
+ * Maps base roles (admin, moderator, member) to their default permissions
+ */
+export const communityRolePermissions = pgTable("community_role_permissions", {
+  id: serial("id").primaryKey(),
+  communityId: integer("community_id").notNull().references(() => communities.id, { onDelete: "cascade" }),
+  role: varchar("role", { length: 20 }).notNull(), // 'admin', 'moderator', 'member'
+  permissionType: varchar("permission_type", { length: 50 }).notNull(),
+  allowed: boolean("allowed").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
-// Custom roles table
-export const communityCustomRoles = pgTable('community_custom_roles', {
-  id: serial('id').primaryKey(),
-  communityId: integer('community_id').notNull().references(() => communities.id),
-  name: varchar('name', { length: 50 }).notNull(),
-  color: varchar('color', { length: 20 }),
-  icon: varchar('icon', { length: 50 }),
-  displayOrder: integer('display_order').default(0),
-  isAssignable: boolean('is_assignable').default(true),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow()
-}, (table) => {
-  return {
-    nameUnique: uniqueIndex('custom_role_name_unique_idx').on(table.communityId, table.name)
-  };
+/**
+ * Community Custom Roles Table
+ * Defines custom roles that can be assigned to members
+ */
+export const communityCustomRoles = pgTable("community_custom_roles", {
+  id: serial("id").primaryKey(),
+  communityId: integer("community_id").notNull().references(() => communities.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 50 }).notNull(),
+  description: text("description"),
+  color: varchar("color", { length: 20 }).notNull().default("#6366f1"),
+  icon: varchar("icon", { length: 50 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
-// Role assignments table
-export const communityRoleAssignments = pgTable('community_role_assignments', {
-  id: serial('id').primaryKey(),
-  communityId: integer('community_id').notNull().references(() => communities.id),
-  userId: integer('user_id').notNull().references(() => users.id),
-  customRoleId: integer('custom_role_id').notNull().references(() => communityCustomRoles.id),
-  assignedByUserId: integer('assigned_by_user_id').references(() => users.id),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow()
-}, (table) => {
-  return {
-    assignmentUnique: uniqueIndex('role_assignment_unique_idx').on(table.communityId, table.userId, table.customRoleId)
-  };
+/**
+ * Community Role Assignments Table
+ * Maps users to their custom roles in communities
+ */
+export const communityRoleAssignments = pgTable("community_role_assignments", {
+  id: serial("id").primaryKey(),
+  communityId: integer("community_id").notNull().references(() => communities.id, { onDelete: "cascade" }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  customRoleId: integer("custom_role_id").notNull().references(() => communityCustomRoles.id, { onDelete: "cascade" }),
+  assignedByUserId: integer("assigned_by_user_id").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
-// Member actions log table
-export const communityMemberActionsLog = pgTable('community_member_actions_log', {
-  id: serial('id').primaryKey(),
-  communityId: integer('community_id').notNull().references(() => communities.id),
-  actionType: varchar('action_type', { length: 50 }).notNull(),
-  performedByUserId: integer('performed_by_user_id').references(() => users.id),
-  targetUserIds: json('target_user_ids').$type<number[]>().notNull(),
-  actionDetails: json('action_details'),
-  createdAt: timestamp('created_at').defaultNow()
+/**
+ * Community Member Actions Log Table
+ * Tracks all member management actions for audit purposes
+ */
+export const communityMemberActionsLog = pgTable("community_member_actions_log", {
+  id: serial("id").primaryKey(),
+  communityId: integer("community_id").notNull().references(() => communities.id, { onDelete: "cascade" }),
+  actionType: varchar("action_type", { length: 50 }).notNull(),
+  performedByUserId: integer("performed_by_user_id").notNull().references(() => users.id),
+  targetUserIds: integer("target_user_ids").array().notNull(),
+  actionDetails: jsonb("action_details"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
 // Relations
@@ -105,7 +123,7 @@ export const communityCustomRolesRelations = relations(communityCustomRoles, ({ 
     fields: [communityCustomRoles.communityId],
     references: [communities.id]
   }),
-  roleAssignments: many(communityRoleAssignments)
+  assignments: many(communityRoleAssignments)
 }));
 
 export const communityRoleAssignmentsRelations = relations(communityRoleAssignments, ({ one }) => ({
@@ -138,46 +156,37 @@ export const communityMemberActionsLogRelations = relations(communityMemberActio
   })
 }));
 
-// Export Zod schemas
+// Create Zod schemas for data validation
 export const insertCommunityPermissionTypeSchema = createInsertSchema(communityPermissionTypes);
+
 export const insertCommunityRolePermissionSchema = createInsertSchema(communityRolePermissions);
+
 export const insertCommunityCustomRoleSchema = createInsertSchema(communityCustomRoles);
+
 export const insertCommunityRoleAssignmentSchema = createInsertSchema(communityRoleAssignments);
-export const insertCommunityMemberActionLogSchema = createInsertSchema(communityMemberActionsLog);
 
-// Export types
-export type CommunityPermissionType = z.infer<typeof insertCommunityPermissionTypeSchema>;
-export type CommunityRolePermission = z.infer<typeof insertCommunityRolePermissionSchema>;
-export type CommunityCustomRole = z.infer<typeof insertCommunityCustomRoleSchema>;
-export type CommunityRoleAssignment = z.infer<typeof insertCommunityRoleAssignmentSchema>;
-export type CommunityMemberActionLog = z.infer<typeof insertCommunityMemberActionLogSchema>;
+export const insertCommunityMemberActionLogSchema = createInsertSchema(communityMemberActionsLog, {
+  actionType: (schema) => z.nativeEnum(MemberActionType)
+});
 
-// Additional types for frontend use
+// Types for DB inference
+export type CommunityPermissionType = typeof communityPermissionTypes.$inferSelect;
+export type CommunityRolePermission = typeof communityRolePermissions.$inferSelect;
+export type CommunityCustomRole = typeof communityCustomRoles.$inferSelect;
+export type CommunityRoleAssignment = typeof communityRoleAssignments.$inferSelect;
+export type CommunityMemberActionLog = typeof communityMemberActionsLog.$inferSelect;
+
+// Custom types for the API
 export interface RoleWithPermissions {
   roleName: string;
-  permissions: {
-    [key: string]: boolean;
-  };
-  members?: number;
+  permissions: Record<string, boolean>;
 }
 
 export interface PermissionGroup {
   category: string;
   permissions: {
     name: string;
+    displayName: string;
     description: string;
-    isGranted: boolean;
   }[];
-}
-
-export enum MemberActionType {
-  PROMOTE = 'promote',
-  DEMOTE = 'demote',
-  REMOVE = 'remove',
-  ADD_ROLE = 'add_role',
-  REMOVE_ROLE = 'remove_role',
-  CHANGE_PRIMARY_ROLE = 'change_primary_role',
-  BAN = 'ban',
-  UNBAN = 'unban',
-  BULK_INVITE = 'bulk_invite'
 }
