@@ -228,11 +228,8 @@ export function MyEventsTab({ className, onEventClick, onPassportClick }: MyEven
         return;
       }
       
-      const dateKey = formatDate(new Date(event.startDateTime), { 
-        month: 'long', 
-        day: 'numeric',
-        year: 'numeric'
-      } as Intl.DateTimeFormatOptions);
+      // Use simple formatDate without extra options
+      const dateKey = formatDate(new Date(event.startDateTime));
       
       if (!grouped[dateKey]) grouped[dateKey] = [];
       grouped[dateKey].push(event);
@@ -422,19 +419,8 @@ export function MyEventsTab({ className, onEventClick, onPassportClick }: MyEven
                             )}
                             
                             {/* Enhanced Registration Status Badges */}
-                            <div className="flex flex-wrap gap-2 mt-3">
-                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                <CheckIcon className="h-3 w-3 mr-1" />
-                                Registered
-                              </Badge>
-                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                <TicketIcon className="h-3 w-3 mr-1" />
-                                Pass Ready
-                              </Badge>
-                            </div>
-                            
                             <motion.div 
-                              className="mt-2"
+                              className="flex flex-wrap gap-2 mt-3"
                               initial={{ opacity: 0, scale: 0.9 }}
                               animate={{ opacity: 1, scale: 1 }}
                               transition={{ delay: 0.2 }}
@@ -443,6 +429,16 @@ export function MyEventsTab({ className, onEventClick, onPassportClick }: MyEven
                                 <CheckIcon className="h-3 w-3 mr-1" />
                                 Registered
                               </Badge>
+                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                <TicketIcon className="h-3 w-3 mr-1" />
+                                Pass Ready
+                              </Badge>
+                              {soon && (
+                                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                                  <CalendarIcon className="h-3 w-3 mr-1" />
+                                  Upcoming Soon
+                                </Badge>
+                              )}
                             </motion.div>
                           </CardContent>
                           
