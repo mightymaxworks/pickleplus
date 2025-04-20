@@ -139,9 +139,9 @@ router.post(
       // Update the community record with the new file URL
       let updateData: any = {};
       if (uploadType === 'avatar') {
-        updateData = { profilePicture: fileUrl };
+        updateData = { avatarUrl: fileUrl };
       } else if (uploadType === 'banner') {
-        updateData = { bannerImage: fileUrl };
+        updateData = { bannerUrl: fileUrl };
       }
       
       // Update the community record
@@ -242,8 +242,8 @@ router.get(
       const [community] = await db.select({
         id: communities.id,
         name: communities.name,
-        profilePicture: communities.profilePicture,
-        bannerImage: communities.bannerImage,
+        avatarUrl: communities.avatarUrl,
+        bannerUrl: communities.bannerUrl,
         themeColor: communities.themeColor
       })
       .from(communities)
