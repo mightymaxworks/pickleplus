@@ -146,10 +146,10 @@ export function GalleryManager({ communityId }: GalleryManagerProps) {
   const handleEditGallery = (gallery: Gallery) => {
     setEditingGallery(gallery);
     form.reset({
-      title: gallery.title,
+      title: gallery.name || "",
       description: gallery.description || "",
       privacyLevel: gallery.privacyLevel || GalleryPrivacyLevel.PUBLIC,
-      coverMediaId: gallery.coverMediaId,
+      coverMediaId: gallery.coverImageId,
       eventId: gallery.eventId,
     });
     setIsCreateDialogOpen(true);
@@ -380,10 +380,14 @@ export function GalleryManager({ communityId }: GalleryManagerProps) {
         </DialogContent>
       </Dialog>
       
-      {/* Main gallery management interface */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold tracking-tight">Media Galleries</h2>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
+      {/* Main gallery management interface - Mobile optimized */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Media Galleries</h2>
+        <Button 
+          onClick={() => setIsCreateDialogOpen(true)}
+          className="w-full sm:w-auto justify-center"
+          size={window.innerWidth <= 640 ? "sm" : "default"}
+        >
           <FolderPlus className="mr-2 h-4 w-4" />
           New Gallery
         </Button>
@@ -391,8 +395,8 @@ export function GalleryManager({ communityId }: GalleryManagerProps) {
       
       <Tabs defaultValue="galleries" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="galleries">Galleries</TabsTrigger>
-          <TabsTrigger value="media">Media Library</TabsTrigger>
+          <TabsTrigger value="galleries" className="py-2 text-sm sm:text-base">Galleries</TabsTrigger>
+          <TabsTrigger value="media" className="py-2 text-sm sm:text-base">Media Library</TabsTrigger>
         </TabsList>
         
         {/* Galleries view */}
@@ -416,22 +420,22 @@ export function GalleryManager({ communityId }: GalleryManagerProps) {
               </Button>
             </div>
           ) : galleries && galleries.length > 0 ? (
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {galleries.map((gallery) => (
-                <Card key={gallery.id} className="overflow-hidden">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <div className="flex items-center space-x-2">
-                      <div className="bg-muted rounded-full p-1">
+                <Card key={gallery.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 py-2 px-3 sm:pb-2 sm:px-4">
+                    <div className="flex items-center space-x-2 max-w-[75%]">
+                      <div className="bg-muted rounded-full p-1 flex-shrink-0">
                         {getPrivacyIcon(gallery.privacyLevel as GalleryPrivacyLevel)}
                       </div>
-                      <CardTitle className="text-sm font-medium">
-                        {gallery.title}
+                      <CardTitle className="text-xs sm:text-sm font-medium truncate">
+                        {gallery.name}
                       </CardTitle>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
+                        <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8">
+                          <MoreVertical className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
@@ -461,15 +465,15 @@ export function GalleryManager({ communityId }: GalleryManagerProps) {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </CardHeader>
-                  <CardContent className="pb-2">
+                  <CardContent className="py-1 px-3 sm:pb-2 sm:px-4">
                     {gallery.description && (
-                      <CardDescription className="text-xs line-clamp-2">
+                      <CardDescription className="text-[11px] sm:text-xs line-clamp-2">
                         {gallery.description}
                       </CardDescription>
                     )}
                   </CardContent>
-                  <CardFooter className="text-xs text-muted-foreground">
-                    Created {format(new Date(gallery.createdAt), 'MMMM d, yyyy')}
+                  <CardFooter className="py-2 px-3 sm:px-4 text-[10px] sm:text-xs text-muted-foreground">
+                    Created {gallery.createdAt ? format(new Date(gallery.createdAt), 'MMM d, yyyy') : format(new Date(), 'MMM d, yyyy')}
                   </CardFooter>
                 </Card>
               ))}
@@ -491,7 +495,7 @@ export function GalleryManager({ communityId }: GalleryManagerProps) {
             </div>
           )}
           
-          {/* Media selection mode */}
+          {/* Media selection mode - Mobile optimized */}
           {isSelectingMedia && selectedGallery && (
             <Dialog open={true} onOpenChange={(open) => {
               if (!open) {
@@ -499,15 +503,24 @@ export function GalleryManager({ communityId }: GalleryManagerProps) {
                 setSelectedMedia([]);
               }
             }}>
-              <DialogContent className="sm:max-w-[90vw] max-h-[90vh]">
-                <DialogHeader>
-                  <DialogTitle>Add Media to {selectedGallery.title}</DialogTitle>
-                  <DialogDescription>
-                    Select media items to add to this gallery.
+              <DialogContent className="sm:max-w-[90vw] max-h-[90vh] p-3 sm:p-6">
+                <DialogHeader className="mb-2 sm:mb-4">
+                  <DialogTitle className="text-base sm:text-lg">
+                    Add Media to {selectedGallery.name}
+                  </DialogTitle>
+                  <DialogDescription className="text-xs sm:text-sm">
+                    Tap images to select items for this gallery.
                   </DialogDescription>
                 </DialogHeader>
                 
-                <ScrollArea className="h-[60vh] w-full">
+                {/* Selection count badge for mobile - fixed position */}
+                <div className="fixed top-16 sm:top-20 left-1/2 -translate-x-1/2 z-50 sm:hidden">
+                  <div className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full shadow-md">
+                    {selectedMedia.length} selected
+                  </div>
+                </div>
+                
+                <ScrollArea className="h-[50vh] sm:h-[60vh] w-full">
                   <MediaGallery
                     communityId={communityId}
                     selectable={true}
@@ -520,38 +533,39 @@ export function GalleryManager({ communityId }: GalleryManagerProps) {
                         }
                       });
                     }}
+                    maxSelectable={50}
                   />
                 </ScrollArea>
                 
-                <DialogFooter>
-                  <div className="flex justify-between items-center w-full">
-                    <p className="text-sm text-muted-foreground">
-                      {selectedMedia.length} items selected
-                    </p>
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        onClick={() => {
-                          setIsSelectingMedia(false);
-                          setSelectedMedia([]);
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                      <Button 
-                        onClick={handleAddMediaToGallery}
-                        disabled={selectedMedia.length === 0 || addToGalleryMutation.isPending}
-                      >
-                        {addToGalleryMutation.isPending ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Adding...
-                          </>
-                        ) : (
-                          <>Add to Gallery</>
-                        )}
-                      </Button>
-                    </div>
+                <DialogFooter className="flex-col sm:flex-row gap-3 sm:gap-2 mt-3 sm:mt-0">
+                  <div className="hidden sm:block text-xs sm:text-sm text-muted-foreground">
+                    {selectedMedia.length} items selected
+                  </div>
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setIsSelectingMedia(false);
+                        setSelectedMedia([]);
+                      }}
+                      className="flex-1 sm:flex-none text-xs sm:text-sm py-2 px-3 h-9 sm:h-10"
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={handleAddMediaToGallery}
+                      disabled={selectedMedia.length === 0 || addToGalleryMutation.isPending}
+                      className="flex-1 sm:flex-none text-xs sm:text-sm py-2 px-3 h-9 sm:h-10"
+                    >
+                      {addToGalleryMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Adding...
+                        </>
+                      ) : (
+                        <>Add {selectedMedia.length > 0 ? selectedMedia.length : ''} to Gallery</>
+                      )}
+                    </Button>
                   </div>
                 </DialogFooter>
               </DialogContent>
