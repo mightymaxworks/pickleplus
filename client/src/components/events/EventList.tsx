@@ -48,12 +48,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 
 // Helper function to safely format dates
-const safeFormatDate = (dateString: any, options: any = {}) => {
+const safeFormatDate = (dateString: any) => {
   try {
     if (!dateString) return 'Date TBD';
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return 'Date TBD';
-    return formatDate(date, options);
+    
+    // Format with default options
+    return formatDate(date);
   } catch (error) {
     console.error('Error formatting date:', error);
     return 'Date TBD';
@@ -78,13 +80,16 @@ interface EventListProps {
   showViewButton?: boolean;
   onEventClick?: (event: Event) => void;
   className?: string;
+  /** Show enhanced registration status */
+  showEnhancedStatus?: boolean;
 }
 
 export function EventList({ 
   limit = 5, 
   showViewButton = true,
   onEventClick,
-  className = ''
+  className = '',
+  showEnhancedStatus = false
 }: EventListProps) {
   const [registerDialogOpen, setRegisterDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
