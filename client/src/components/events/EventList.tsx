@@ -104,11 +104,14 @@ export function EventList({
     queryFn: () => getUpcomingEvents(limit)
   });
   
-  // Use a single query for all events registration status
+  /**
+   * PKL-278651-CONN-0011-FIX - Event Registration Flow Error Handling
+   * Framework5.2 compliant null-safety implementation for event registration status
+   */
   const { data: registrationStatusData, isLoading: isLoadingRegistrationStatus } = useQuery({
-    queryKey: ['/api/events/registration-status', events?.map(e => e.id).join(',')],
+    queryKey: ['/api/events/registration-status', Array.isArray(events) ? events.map(e => e.id).join(',') : ''],
     queryFn: async () => {
-      if (!events || events.length === 0) return {};
+      if (!events || !Array.isArray(events) || events.length === 0) return {};
       
       // Create an object to store registration status for each event
       const statuses: Record<number, boolean> = {};
@@ -133,18 +136,23 @@ export function EventList({
     staleTime: 5 * 60 * 1000 // 5 minutes
   });
   
-  // Map events to their registration status and preprocess for grouping
-  const eventsWithRegistrationStatus = events?.map(event => {
-    return {
-      ...event,
-      isRegistered: registrationStatusData?.[event.id] || false,
-      isLoadingStatus: isLoadingRegistrationStatus,
-      // Add formatting for grouping
-      dateForGrouping: event.startDateTime ? 
-        safeFormatDate(event.startDateTime) : 
-        'Date TBD'
-    };
-  }) || [];
+  /**
+   * PKL-278651-CONN-0011-FIX - Event Registration Flow Data Processing
+   * Framework5.2 compliant handling for events data with defensive programming
+   */
+  const eventsWithRegistrationStatus = Array.isArray(events) 
+    ? events.map(event => {
+        return {
+          ...event,
+          isRegistered: registrationStatusData?.[event.id] || false,
+          isLoadingStatus: isLoadingRegistrationStatus,
+          // Add formatting for grouping
+          dateForGrouping: event.startDateTime ? 
+            safeFormatDate(event.startDateTime) : 
+            'Date TBD'
+        };
+      }) 
+    : [];
   
   // Group events by date for better organization
   const groupedEvents = useMemo(() => {
