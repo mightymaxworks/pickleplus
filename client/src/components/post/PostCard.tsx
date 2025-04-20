@@ -221,7 +221,11 @@ export function PostCard({ post, onCommentClick, showComments = false }: PostCar
   };
   
   // Determine if user can edit/delete post
-  const canModifyPost = user && (user.id === post.userId || user.role === "admin" || user.role === "moderator");
+  const canModifyPost = user && (
+    user.id === post.userId || 
+    (user as any).role === "admin" || 
+    (user as any).role === "moderator"
+  );
   
   // Formatted media URLs
   const mediaUrls = formattedMediaUrls();

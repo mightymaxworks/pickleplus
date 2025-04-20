@@ -265,14 +265,18 @@ export function CommentSection({ postId }: CommentSectionProps) {
     
     return filteredComments.map((comment: any) => {
       const isLiked = comment.isLikedByUser;
-      const canModify = user && (user.id === comment.userId || user.role === "admin" || user.role === "moderator");
+      const canModify = user && (
+        user.id === comment.userId || 
+        (user as any).role === "admin" || 
+        (user as any).role === "moderator"
+      );
       
       return (
         <div key={comment.id} className="mb-4">
           <div className="flex gap-3">
             {/* Avatar */}
             <Avatar className="h-8 w-8">
-              <AvatarImage src={comment.user?.avatarUrl} alt={comment.user?.username || "User"} />
+              <AvatarImage src={comment.user?.avatarUrl as string} alt={comment.user?.username || "User"} />
               <AvatarFallback>
                 {(comment.user?.firstName?.charAt(0) || comment.user?.username?.charAt(0) || "U").toUpperCase()}
               </AvatarFallback>
@@ -424,7 +428,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
       {user && (
         <div className="flex gap-3 mb-6">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user.avatarUrl} alt={user.firstName || user.username || "User"} />
+            <AvatarImage src={user.avatarUrl as string} alt={user.firstName || user.username || "User"} />
             <AvatarFallback>
               {(user.firstName?.charAt(0) || user.username?.charAt(0) || "U").toUpperCase()}
             </AvatarFallback>
