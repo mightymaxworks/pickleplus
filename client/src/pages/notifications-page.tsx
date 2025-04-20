@@ -41,7 +41,8 @@ import {
   Trash2,
   ArrowLeft,
   AlertTriangle,
-  Home
+  Home,
+  Settings
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -272,10 +273,21 @@ export default function NotificationsPage() {
       
         {/* Page Header */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-          <PageHeader 
-            title="Notifications" 
-            description="View and manage your notifications"
-          />
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+            <PageHeader 
+              title="Notifications" 
+              description="View and manage your notifications"
+            />
+            
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/notifications/preferences')}
+              className="mt-2 md:mt-0"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Notification Preferences
+            </Button>
+          </div>
           
           <div className="flex items-center">
             <TestNotificationButton />
