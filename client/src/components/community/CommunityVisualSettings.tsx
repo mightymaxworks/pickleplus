@@ -1,23 +1,31 @@
 /**
- * PKL-278651-COMM-0019-VISUALS
+ * PKL-278651-COMM-0032-UI-ALIGN
  * Community Visual Settings Component
  * 
  * This component provides an interface for community admins
  * to customize the visual appearance of their community including
- * avatar, banner, and theme color.
+ * avatar, banner, theme color, accent color, and banner pattern.
+ * 
+ * @version 2.0.0
+ * @lastModified 2025-04-20
+ * @changes
+ * - Updated to use standardized field names (avatarUrl, bannerUrl)
+ * - Added support for new styling fields (accentColor, bannerPattern)
+ * - Updated to use new API endpoints from PKL-278651-COMM-0032-UI-ALIGN
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Upload, Image, Palette, Check } from "lucide-react";
+import { Upload, Image, Palette, Check, Paintbrush } from "lucide-react";
 import { Community } from "@/types/community";
 import communityApi from "@/api/communityApi";
 import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface CommunityVisualSettingsProps {
   community: Community;
@@ -32,12 +40,53 @@ export function CommunityVisualSettings({ community, isAdmin }: CommunityVisualS
   const [avatarPreview, setAvatarPreview] = useState<string | null>(community.avatarUrl || null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(community.bannerUrl || null);
   const [themeColor, setThemeColor] = useState<string>((community as any).themeColor || "#6366F1");
+  const [accentColor, setAccentColor] = useState<string>((community as any).accentColor || "#4338CA");
+  const [bannerPattern, setBannerPattern] = useState<string>((community as any).bannerPattern || "solid");
   const [isAvatarUploading, setIsAvatarUploading] = useState(false);
   const [isBannerUploading, setIsBannerUploading] = useState(false);
   const [isThemeUpdating, setIsThemeUpdating] = useState(false);
+  const [communityMediaData, setCommunityMediaData] = useState<any>(null);
   const { toast } = useToast();
 
   const form = useForm();
+
+  // Fetch community media data from the API
+  useEffect(() => {
+    const fetchCommunityMedia = async () => {
+      try {
+        const response = await communityApi.getCommunityMedia(community.id);
+        if (response && response.community) {
+          console.log("Loaded community media data:", response.community);
+          setCommunityMediaData(response.community);
+          
+          // Update state with the latest data from API
+          if (response.community.avatarUrl) {
+            setAvatarPreview(response.community.avatarUrl);
+          }
+          
+          if (response.community.bannerUrl) {
+            setBannerPreview(response.community.bannerUrl);
+          }
+          
+          if (response.community.themeColor) {
+            setThemeColor(response.community.themeColor);
+          }
+          
+          if (response.community.accentColor) {
+            setAccentColor(response.community.accentColor);
+          }
+          
+          if (response.community.bannerPattern) {
+            setBannerPattern(response.community.bannerPattern);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching community media data:", error);
+      }
+    };
+    
+    fetchCommunityMedia();
+  }, [community.id]);
 
   // If user is not an admin, log and show an error message
   if (!isAdmin) {

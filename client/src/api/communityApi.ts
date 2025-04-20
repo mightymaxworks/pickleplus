@@ -488,8 +488,13 @@ const communityApi = {
   },
   
   /**
-   * PKL-278651-COMM-0019-VISUALS
+   * PKL-278651-COMM-0032-UI-ALIGN
    * Upload community avatar image
+   * @version 2.0.0
+   * @lastModified 2025-04-20
+   * @changes
+   * - Updated to use the new standardized endpoint structure /api/communities/:communityId/avatar
+   * - Updated for field name standardization (avatarUrl)
    */
   uploadCommunityAvatar: async (communityId: number, file: File) => {
     const response = await uploadFile(
@@ -504,8 +509,13 @@ const communityApi = {
   },
   
   /**
-   * PKL-278651-COMM-0019-VISUALS
+   * PKL-278651-COMM-0032-UI-ALIGN
    * Upload community banner image
+   * @version 2.0.0
+   * @lastModified 2025-04-20
+   * @changes
+   * - Updated to use the new standardized endpoint structure /api/communities/:communityId/banner
+   * - Updated for field name standardization (bannerUrl)
    */
   uploadCommunityBanner: async (communityId: number, file: File) => {
     const response = await uploadFile(
@@ -520,18 +530,52 @@ const communityApi = {
   },
   
   /**
-   * PKL-278651-COMM-0019-VISUALS
-   * Update community theme color
+   * PKL-278651-COMM-0032-UI-ALIGN
+   * Update community styling (theme color, accent color, etc.)
+   * @version 2.0.0
+   * @lastModified 2025-04-20
+   * @changes
+   * - Updated endpoint from /theme to /styling
+   * - Added support for accentColor and bannerPattern
    */
-  updateCommunityTheme: async (communityId: number, themeColor: string) => {
+  updateCommunityTheme: async (communityId: number, styleData: { 
+    themeColor?: string, 
+    accentColor?: string,
+    bannerPattern?: string
+  }) => {
     const response = await apiRequest<Community>({
-      url: `/api/communities/${communityId}/theme`,
+      url: `/api/communities/${communityId}/styling`,
       method: 'PATCH',
-      data: { themeColor },
+      data: styleData,
     });
     
-    // Invalidate community cache to reflect new theme
+    // Invalidate community cache to reflect new styling
     queryClient.invalidateQueries({ queryKey: communityKeys.detail(communityId) });
+    
+    return response;
+  },
+  
+  /**
+   * PKL-278651-COMM-0032-UI-ALIGN
+   * Get community media and styling settings
+   * @version 1.0.0
+   * @lastModified 2025-04-20
+   */
+  getCommunityMedia: async (communityId: number) => {
+    const response = await apiRequest<{
+      community: {
+        id: number;
+        name: string;
+        avatarUrl: string | null;
+        bannerUrl: string | null;
+        themeColor: string | null;
+        accentColor: string | null;
+        bannerPattern: string | null;
+      }
+    }>({
+      url: `/api/communities/${communityId}/media`,
+      method: 'GET',
+    });
     
     return response;
   }
