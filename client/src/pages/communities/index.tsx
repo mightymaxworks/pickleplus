@@ -256,58 +256,11 @@ export default function CommunitiesPage() {
               />
             </div>
             
-            <Tabs value={activeTab} onValueChange={(value) => {
-              setActiveTab(value);
-              // No confetti effect on tab change
-            }}>
-              {/* Icon-based Navigation */}
-              <div className="relative">
-                
-                <div 
-                  className="mb-8 p-2 bg-muted/30 rounded-xl border border-muted/80 overflow-hidden shadow-inner"
-                  id="community-tab-navigation"
-                  data-testid="community-tabs"
-                  aria-label="Community Navigation Tabs"
-                >
-                  <div className="w-full flex items-center justify-center gap-1 sm:gap-3 lg:gap-6">
-                    {navItems.map((item) => (
-                      <NavIcon 
-                        key={item.id}
-                        icon={item.icon}
-                        label={item.label}
-                        active={activeTab === item.id}
-                        onClick={() => handleNavClick(item.id)}
-                        data-testid={`tab-${item.id}`}
-                        data-component={`community-tab-${item.id}`}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-              </div>
-              
-              {/* Tab Content */}
-              <TabsContent value="discover" className="pt-4">
-                {/* PKL-278651-COMM-0017-SEARCH: Use new advanced search component */}
-                <CommunityDiscoveryMockupV2 />
-              </TabsContent>
-              
-              <TabsContent value="profile" className="pt-4">
-                <CommunityProfileMockup />
-              </TabsContent>
-              
-              <TabsContent value="create" className="pt-4">
-                <CommunityCreationMockup />
-              </TabsContent>
-              
-              <TabsContent value="events" className="pt-4">
-                <CommunityEventsMockup />
-              </TabsContent>
-              
-              <TabsContent value="announcements" className="pt-4">
-                <CommunityAnnouncementsMockup />
-              </TabsContent>
-            </Tabs>
+            {/* Content */}
+            <div className="pt-4">
+              {/* PKL-278651-COMM-0017-SEARCH: Use new advanced search component */}
+              <CommunityDiscoveryMockupV2 />
+            </div>
           </div>
         </div>
       </CommunityProvider>
