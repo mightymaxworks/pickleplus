@@ -8,6 +8,16 @@ import {
 // Import XP tables from their new modular location
 import { xpTransactions } from "@shared/schema/xp";
 
+// PKL-278651-COMM-0028-NOTIF-REALTIME - Real-time Notifications
+import {
+  userNotifications,
+  notificationPreferences,
+  type UserNotification,
+  type InsertUserNotification,
+  type NotificationPreference,
+  type InsertNotificationPreference
+} from "@shared/schema/notifications";
+
 // PKL-278651-ADMIN-0013-SEC - Admin Security Enhancements
 import {
   auditLogs, type AuditLog, type InsertAuditLog,
