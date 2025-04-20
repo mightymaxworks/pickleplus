@@ -22,6 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Pagination } from '@/components/ui/pagination';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { 
   Loader2, 
   Bell, 
@@ -30,7 +31,8 @@ import {
   MessageSquare, 
   User, 
   Users, 
-  Trash2, 
+  Trash2,
+  ArrowLeft,
   AlertTriangle 
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -184,181 +186,193 @@ export default function NotificationsPage() {
   const totalPages = Math.max(1, Math.ceil((notifications?.length || 0) / pageSize));
   
   return (
-    <LayoutContainer maxWidth="lg">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <PageHeader 
-          title="Notifications" 
-          description="View and manage your notifications"
-        />
-        
-        <div className="flex items-center">
-          <TestNotificationButton />
-        </div>
-      </div>
+    <div>
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        className="flex items-center gap-1 mb-4" 
+        onClick={() => navigate('/dashboard')}
+      >
+        <ArrowLeft size={16} />
+        <span>Back to Dashboard</span>
+      </Button>
       
-      <div className="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <Tabs 
-          defaultValue="all" 
-          value={activeTab} 
-          onValueChange={handleTabChange}
-          className="w-full sm:w-auto"
-        >
-          <TabsList>
-            <TabsTrigger value="all">
-              All
-            </TabsTrigger>
-            <TabsTrigger value="unread">
-              Unread
-              {unreadCount > 0 && (
-                <Badge variant="destructive" className="ml-2">
-                  {unreadCount}
-                </Badge>
-              )}
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-        
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Select onValueChange={handleFilterChange} defaultValue="all">
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="Filter by type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All types</SelectItem>
-              <SelectItem value="community_invite">Community Invites</SelectItem>
-              <SelectItem value="community_join_approved">Join Approvals</SelectItem>
-              <SelectItem value="community_announcement">Announcements</SelectItem>
-              <SelectItem value="event_reminder">Event Reminders</SelectItem>
-              <SelectItem value="post_mention">Mentions</SelectItem>
-              <SelectItem value="post_reply">Replies</SelectItem>
-            </SelectContent>
-          </Select>
+      <LayoutContainer maxWidth="lg">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <PageHeader 
+            title="Notifications" 
+            description="View and manage your notifications"
+          />
           
-          {unreadCount > 0 && (
+          <div className="flex items-center">
+            <TestNotificationButton />
+          </div>
+        </div>
+        
+        <div className="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <Tabs 
+            defaultValue="all" 
+            value={activeTab} 
+            onValueChange={handleTabChange}
+            className="w-full sm:w-auto"
+          >
+            <TabsList>
+              <TabsTrigger value="all">
+                All
+              </TabsTrigger>
+              <TabsTrigger value="unread">
+                Unread
+                {unreadCount > 0 && (
+                  <Badge variant="destructive" className="ml-2">
+                    {unreadCount}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+          
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Select onValueChange={handleFilterChange} defaultValue="all">
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Filter by type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All types</SelectItem>
+                <SelectItem value="community_invite">Community Invites</SelectItem>
+                <SelectItem value="community_join_approved">Join Approvals</SelectItem>
+                <SelectItem value="community_announcement">Announcements</SelectItem>
+                <SelectItem value="event_reminder">Event Reminders</SelectItem>
+                <SelectItem value="post_mention">Mentions</SelectItem>
+                <SelectItem value="post_reply">Replies</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            {unreadCount > 0 && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => markAllAsReadMutation.mutate()}
+                disabled={markAllAsReadMutation.isPending}
+              >
+                {markAllAsReadMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                )}
+                Mark all as read
+              </Button>
+            )}
+            
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={() => markAllAsReadMutation.mutate()}
-              disabled={markAllAsReadMutation.isPending}
+              onClick={() => {
+                if (window.confirm('Are you sure you want to clear all notifications? This cannot be undone.')) {
+                  clearAllNotificationsMutation.mutate();
+                }
+              }}
+              disabled={clearAllNotificationsMutation.isPending}
             >
-              {markAllAsReadMutation.isPending ? (
+              {clearAllNotificationsMutation.isPending ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (
-                <CheckCircle className="h-4 w-4 mr-2" />
+                <Trash2 className="h-4 w-4 mr-2" />
               )}
-              Mark all as read
+              Clear all
             </Button>
-          )}
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => {
-              if (window.confirm('Are you sure you want to clear all notifications? This cannot be undone.')) {
-                clearAllNotificationsMutation.mutate();
-              }
-            }}
-            disabled={clearAllNotificationsMutation.isPending}
-          >
-            {clearAllNotificationsMutation.isPending ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <Trash2 className="h-4 w-4 mr-2" />
-            )}
-            Clear all
-          </Button>
-        </div>
-      </div>
-      
-      <div className="mt-6">
-        {isLoading ? (
-          <div className="flex items-center justify-center p-12">
-            <Loader2 className="h-10 w-10 animate-spin text-primary" />
           </div>
-        ) : !notifications || notifications.length === 0 ? (
-          <Card className="p-12 text-center">
-            <Bell className="h-16 w-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
-            <h3 className="text-lg font-medium mb-2">No notifications</h3>
-            <p className="text-muted-foreground">
-              {activeTab === 'unread' 
-                ? "You've read all your notifications." 
-                : "You don't have any notifications yet."}
-            </p>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            {notifications.map((notification) => (
-              <Card 
-                key={notification.id} 
-                className={`p-4 cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 ${
-                  !notification.isRead ? 'border-l-4 border-l-blue-500' : ''
-                }`}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 p-2 rounded-full bg-gray-100 dark:bg-gray-800">
-                    {getNotificationIcon(notification.type)}
-                  </div>
-                  
-                  <div 
-                    className="flex-1 min-w-0"
-                    onClick={() => handleNotificationClick(notification)}
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                      <div className="font-medium">{notification.title}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {formatTime(notification.createdAt)}
-                      </div>
+        </div>
+        
+        <div className="mt-6">
+          {isLoading ? (
+            <div className="flex items-center justify-center p-12">
+              <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            </div>
+          ) : !notifications || notifications.length === 0 ? (
+            <Card className="p-12 text-center">
+              <Bell className="h-16 w-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+              <h3 className="text-lg font-medium mb-2">No notifications</h3>
+              <p className="text-muted-foreground">
+                {activeTab === 'unread' 
+                  ? "You've read all your notifications." 
+                  : "You don't have any notifications yet."}
+              </p>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {notifications.map((notification) => (
+                <Card 
+                  key={notification.id} 
+                  className={`p-4 cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 ${
+                    !notification.isRead ? 'border-l-4 border-l-blue-500' : ''
+                  }`}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 p-2 rounded-full bg-gray-100 dark:bg-gray-800">
+                      {getNotificationIcon(notification.type)}
                     </div>
-                    <p className="text-sm mt-1">{notification.message}</p>
                     
-                    <div className="flex items-center gap-2 mt-2">
-                      {!notification.isRead && (
+                    <div 
+                      className="flex-1 min-w-0"
+                      onClick={() => handleNotificationClick(notification)}
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                        <div className="font-medium">{notification.title}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {formatTime(notification.createdAt)}
+                        </div>
+                      </div>
+                      <p className="text-sm mt-1">{notification.message}</p>
+                      
+                      <div className="flex items-center gap-2 mt-2">
+                        {!notification.isRead && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 px-2 text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              markAsReadMutation.mutate(notification.id);
+                            }}
+                          >
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Mark as read
+                          </Button>
+                        )}
+                        
                         <Button 
                           variant="ghost" 
-                          size="sm" 
-                          className="h-8 px-2 text-xs"
+                          size="sm"
+                          className="h-8 px-2 text-xs text-destructive hover:text-destructive"
                           onClick={(e) => {
                             e.stopPropagation();
-                            markAsReadMutation.mutate(notification.id);
+                            if (window.confirm('Are you sure you want to delete this notification?')) {
+                              deleteNotificationMutation.mutate(notification.id);
+                            }
                           }}
                         >
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          Mark as read
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Delete
                         </Button>
-                      )}
-                      
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        className="h-8 px-2 text-xs text-destructive hover:text-destructive"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (window.confirm('Are you sure you want to delete this notification?')) {
-                            deleteNotificationMutation.mutate(notification.id);
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-3 w-3 mr-1" />
-                        Delete
-                      </Button>
+                      </div>
                     </div>
                   </div>
+                </Card>
+              ))}
+              
+              {totalPages > 1 && (
+                <div className="flex justify-center mt-6">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                  />
                 </div>
-              </Card>
-            ))}
-            
-            {totalPages > 1 && (
-              <div className="flex justify-center mt-6">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={setCurrentPage}
-                />
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </LayoutContainer>
+              )}
+            </div>
+          )}
+        </div>
+      </LayoutContainer>
+    </div>
   );
 }
