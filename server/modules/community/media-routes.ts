@@ -176,34 +176,51 @@ mediaRouter.get(
     try {
       const communityId = parseInt(req.params.communityId);
       const { mediaType, limit = '20', offset = '0', sort = 'newest' } = req.query;
+      const limitNum = parseInt(limit as string);
+      const offsetNum = parseInt(offset as string);
       
-      // Build and execute query based on parameters
-      let queryBuilder = db.select().from(communityMedia);
-      
-      // Filter by community ID (required)
-      queryBuilder = queryBuilder.where(eq(communityMedia.communityId, communityId));
-      
-      // Filter by media type if provided
+      // Base condition - always filter by community ID
+      let whereCondition;
       if (mediaType) {
-        queryBuilder = queryBuilder.where(eq(communityMedia.mediaType, mediaType as string));
+        // Include media type in filter if provided
+        whereCondition = and(
+          eq(communityMedia.communityId, communityId),
+          eq(communityMedia.mediaType, mediaType as string)
+        );
+      } else {
+        // Just filter by community ID
+        whereCondition = eq(communityMedia.communityId, communityId);
       }
       
-      // Sort based on parameter
-      if (sort === 'newest') {
-        queryBuilder = queryBuilder.orderBy(desc(communityMedia.createdAt));
-      } else if (sort === 'oldest') {
-        queryBuilder = queryBuilder.orderBy(asc(communityMedia.createdAt));
+      // Execute query with appropriate sort order
+      let media;
+      
+      if (sort === 'oldest') {
+        media = await db
+          .select()
+          .from(communityMedia)
+          .where(whereCondition)
+          .orderBy(asc(communityMedia.createdAt))
+          .limit(limitNum)
+          .offset(offsetNum);
       } else if (sort === 'featured') {
-        queryBuilder = queryBuilder.orderBy(desc(communityMedia.isFeatured));
+        media = await db
+          .select()
+          .from(communityMedia)
+          .where(whereCondition)
+          .orderBy(desc(communityMedia.isFeatured))
+          .limit(limitNum)
+          .offset(offsetNum);
+      } else {
+        // Default - sort by newest
+        media = await db
+          .select()
+          .from(communityMedia)
+          .where(whereCondition)
+          .orderBy(desc(communityMedia.createdAt))
+          .limit(limitNum)
+          .offset(offsetNum);
       }
-      
-      // Apply pagination
-      queryBuilder = queryBuilder
-        .limit(parseInt(limit as string))
-        .offset(parseInt(offset as string));
-      
-      // Execute query
-      const media = await queryBuilder;
       
       res.status(200).json(media);
     } catch (error) {
