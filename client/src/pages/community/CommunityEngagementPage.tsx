@@ -22,6 +22,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Activity, Award, BarChart, Clock, TrendingUp, Users } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 
+interface ActivityData {
+  date: string;
+  count: number;
+}
+
 const CommunityEngagementPage: React.FC = () => {
   const { communityId } = useParams<{ communityId: string }>();
   const communityIdNum = parseInt(communityId);
@@ -58,7 +63,7 @@ const CommunityEngagementPage: React.FC = () => {
   });
   
   // Get activity trends
-  const { data: activityTrends, isLoading: loadingTrends } = useQuery({
+  const { data: activityTrends, isLoading: loadingTrends } = useQuery<ActivityData[]>({
     queryKey: ['/api/communities', communityIdNum, 'engagement', 'trends'],
     queryFn: async () => {
       try {
@@ -84,7 +89,7 @@ const CommunityEngagementPage: React.FC = () => {
   };
   
   // Prepare activity chart data
-  const activityChartData = React.useMemo(() => {
+  const activityChartData: ActivityData[] = React.useMemo(() => {
     if (!activityTrends || activityTrends.length === 0) {
       // Return empty data for each of the last 7 days
       return formatRecentDates().map(date => ({
@@ -107,7 +112,7 @@ const CommunityEngagementPage: React.FC = () => {
       ) : (
         <CommunityHeader 
           community={community} 
-          activeTab="engagement"
+          currentTab="engagement"
         />
       )}
       
@@ -200,8 +205,8 @@ const CommunityEngagementPage: React.FC = () => {
                       <Skeleton className="h-8 w-16" />
                     ) : (
                       activityChartData
-                        .filter((d: any) => new Date(d.date) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))
-                        .reduce((sum: number, day: any) => sum + day.count, 0)
+                        .filter((d: ActivityData) => new Date(d.date) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))
+                        .reduce((sum: number, day: ActivityData) => sum + day.count, 0)
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">Recent activity volume</p>
@@ -230,8 +235,8 @@ const CommunityEngagementPage: React.FC = () => {
                       {activityChartData.length > 0 ? (
                         // Simple chart visualization 
                         <div className="flex items-end justify-between h-48 w-full gap-2">
-                          {activityChartData.slice(-7).map((day, i) => {
-                            const maxValue = Math.max(...activityChartData.map(d => d.count), 5);
+                          {activityChartData.slice(-7).map((day: ActivityData, i: number) => {
+                            const maxValue = Math.max(...activityChartData.map((d: ActivityData) => d.count), 5);
                             const heightPercent = day.count ? (day.count / maxValue) * 100 : 0;
                             
                             return (
