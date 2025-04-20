@@ -1,12 +1,13 @@
 /**
- * PKL-278651-COMM-0035-EVENT
+ * PKL-278651-COMM-0036-MEDIA
  * Community API Query Keys
  * 
  * This file contains query keys for community-related API endpoints
  * to be used with TanStack Query.
  * 
- * @version 1.0.0
+ * @version 1.1.0
  * @lastModified 2025-04-20
+ * @updated Added media and gallery keys for media management
  */
 
 // Base keys for community endpoints
@@ -44,4 +45,18 @@ export const communityKeys = {
     [...communityKeys.detail(communityId), 'roles'] as const,
   role: (communityId: number, roleId: number | string) => 
     [...communityKeys.roles(communityId), roleId] as const,
+    
+  // Community media management
+  media: (communityId: number) => 
+    [...communityKeys.detail(communityId), 'media'] as const,
+  mediaItem: (communityId: number, mediaId: number) => 
+    [...communityKeys.media(communityId), mediaId] as const,
+    
+  // Community galleries management
+  galleries: (communityId: number) => 
+    [...communityKeys.detail(communityId), 'galleries'] as const,
+  gallery: (communityId: number, galleryId: number) => 
+    [...communityKeys.galleries(communityId), galleryId] as const,
+  galleryItems: (communityId: number, galleryId: number) => 
+    [...communityKeys.gallery(communityId, galleryId), 'items'] as const,
 };
