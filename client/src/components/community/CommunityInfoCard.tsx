@@ -105,10 +105,11 @@ export function CommunityInfoTags({
   tags, 
   colorScheme = "secondary" 
 }: { 
-  tags: string[]; 
+  tags: string[] | null | undefined; 
   colorScheme?: "default" | "secondary" | "outline" | "accent"; 
 }) {
-  if (!tags || tags.length === 0) {
+  // Make sure tags is an array before trying to map over it
+  if (!tags || !Array.isArray(tags) || tags.length === 0) {
     return null;
   }
   

@@ -217,10 +217,13 @@ export default function CommunityDetailPage() {
                   </CommunityInfoDescription>
                   
                   {/* Tags section when available */}
-                  {community.tags && community.tags.length > 0 && (
+                  {community.tags && (
                     <div className="mt-4">
                       <h4 className="text-sm font-medium mb-2">Community Focus</h4>
-                      <CommunityInfoTags tags={community.tags} colorScheme="accent" />
+                      <CommunityInfoTags 
+                        tags={typeof community.tags === 'string' ? community.tags.split(',').map(t => t.trim()) : []} 
+                        colorScheme="accent" 
+                      />
                     </div>
                   )}
                   
