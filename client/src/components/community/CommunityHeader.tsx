@@ -448,7 +448,7 @@ export function CommunityHeader({
         </Card>
       </div>
       
-      {/* Navigation tabs - optimized for mobile */}
+      {/* Enhanced Navigation tabs with improved visuals */}
       <div className="border-b overflow-x-auto">
         <Tabs
           defaultValue={currentTab}
@@ -458,46 +458,52 @@ export function CommunityHeader({
           <TabsList className="w-full justify-start h-auto p-0 bg-transparent border-b-0 flex-nowrap">
             <TabsTrigger
               value="about"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none py-2 px-3 text-xs flex-shrink-0"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none py-3 px-4 text-sm font-medium flex items-center gap-2 flex-shrink-0 transition-all"
               title="About"
             >
-              <Info className="h-5 w-5" />
+              <Info className="h-4 w-4" />
+              <span className="hidden sm:inline">About</span>
             </TabsTrigger>
             <TabsTrigger
               value="events"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none py-2 px-3 text-xs flex-shrink-0"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none py-3 px-4 text-sm font-medium flex items-center gap-2 flex-shrink-0 transition-all"
               title="Events"
             >
-              <Calendar className="h-5 w-5" />
+              <Calendar className="h-4 w-4" />
+              <span className="hidden sm:inline">Events</span>
             </TabsTrigger>
             <TabsTrigger
               value="members"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none py-2 px-3 text-xs flex-shrink-0"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none py-3 px-4 text-sm font-medium flex items-center gap-2 flex-shrink-0 transition-all"
               title="Members"
             >
-              <Users className="h-5 w-5" />
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline">Members</span>
             </TabsTrigger>
             <TabsTrigger
               value="posts"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none py-2 px-3 text-xs flex-shrink-0"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none py-3 px-4 text-sm font-medium flex items-center gap-2 flex-shrink-0 transition-all"
               title="Posts"
             >
-              <MessageSquare className="h-5 w-5" />
+              <MessageSquare className="h-4 w-4" />
+              <span className="hidden sm:inline">Posts</span>
             </TabsTrigger>
             <TabsTrigger
               value="engagement"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none py-2 px-3 text-xs flex-shrink-0"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none py-3 px-4 text-sm font-medium flex items-center gap-2 flex-shrink-0 transition-all"
               title="Engagement"
             >
-              <Star className="h-5 w-5" />
+              <Star className="h-4 w-4" />
+              <span className="hidden sm:inline">Engagement</span>
             </TabsTrigger>
             {hasManagePermissions && (
               <TabsTrigger
                 value="manage"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none py-2 px-3 text-xs flex-shrink-0 bg-primary/10 text-primary"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none py-3 px-4 text-sm font-medium flex items-center gap-2 flex-shrink-0 ml-auto bg-primary/5 transition-all"
                 title="Manage Community"
               >
-                <Settings className="h-5 w-5" />
+                <Settings className="h-4 w-4" />
+                <span className="hidden sm:inline">Manage</span>
               </TabsTrigger>
             )}
           </TabsList>

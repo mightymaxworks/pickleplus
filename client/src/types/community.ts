@@ -56,6 +56,10 @@ export enum CommunityJoinRequestStatus {
   REJECTED = 'rejected'
 }
 
+/**
+ * PKL-278651-COMM-0032-UI-ALIGN 
+ * Enhanced Community interface
+ */
 export interface Community {
   id: number;
   name: string;
@@ -77,7 +81,10 @@ export interface Community {
   postCount: number;
   eventCount: number;
   featuredTag?: string;
+  // Enhanced visual properties
   themeColor?: string;
+  accentColor?: string;
+  bannerPattern?: 'grid' | 'dots' | 'diagonal' | 'waves';
 }
 
 export interface CommunityPost {
