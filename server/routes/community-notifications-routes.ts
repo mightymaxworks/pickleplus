@@ -189,9 +189,9 @@ router.get('/api/notifications',
 
 /**
  * Get unread notification count
- * GET /api/notifications/count
+ * GET /api/notifications/count and GET /api/notifications/unread-count (alias)
  */
-router.get('/api/notifications/count',
+router.get(['/api/notifications/count', '/api/notifications/unread-count'],
   isAuthenticated,
   async (req: Request, res: Response) => {
     try {
