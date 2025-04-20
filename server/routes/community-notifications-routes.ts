@@ -483,6 +483,69 @@ router.post('/api/notification-preferences',
 );
 
 /**
+ * Update all notification preferences of a category
+ * POST /api/notification-preferences/category
+ */
+router.post('/api/notification-preferences/category',
+  isAuthenticated,
+  async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      
+      // Validate request body
+      const updateCategorySchema = z.object({
+        category: z.string(),
+        enabled: z.boolean(),
+        communityId: z.number().optional(),
+      });
+      
+      const validationResult = updateCategorySchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ error: validationResult.error.errors });
+      }
+      
+      const { category, enabled, communityId } = validationResult.data;
+      
+      // Build conditions
+      let conditions = and(
+        eq(notificationPreferences.userId, userId),
+        eq(notificationPreferences.category, category)
+      );
+      
+      if (communityId) {
+        conditions = and(
+          conditions,
+          eq(notificationPreferences.communityId, communityId)
+        );
+      }
+      
+      // Update all preferences in this category
+      const result = await db
+        .update(notificationPreferences)
+        .set({ 
+          enabled: enabled,
+          updatedAt: new Date()
+        })
+        .where(conditions);
+      
+      // Fetch updated preferences
+      const updatedPreferences = await db.query.notificationPreferences.findMany({
+        where: conditions
+      });
+      
+      res.status(200).json({
+        message: `Updated ${updatedPreferences.length} preferences in category ${category}`,
+        preferences: updatedPreferences
+      });
+    } catch (error) {
+      console.error('Error updating notification preferences by category:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
+
+/**
  * Create a new notification (internal API, not exposed directly)
  * This will be used by other services to create notifications
  */

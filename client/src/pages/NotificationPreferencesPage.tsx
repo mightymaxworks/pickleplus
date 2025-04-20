@@ -107,7 +107,7 @@ const NotificationPreferencesPage: React.FC = () => {
   // Update notification preference
   const updatePreferenceMutation = useMutation({
     mutationFn: async ({ id, enabled }: { id: number, enabled: boolean }) => {
-      const response = await apiRequest('PATCH', `/api/notification-preferences/${id}/read`, {
+      const response = await apiRequest('PUT', `/api/notification-preferences/${id}`, {
         enabled
       });
       return response.json();
@@ -305,7 +305,7 @@ const NotificationPreferencesPage: React.FC = () => {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
-          {communities && communities.length > 0 && (
+          {Array.isArray(communities) && communities.length > 0 && (
             <Select
               value={selectedCommunity?.toString() || "all"}
               onValueChange={(value) => setSelectedCommunity(value === "all" ? null : parseInt(value))}
@@ -315,7 +315,7 @@ const NotificationPreferencesPage: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Communities</SelectItem>
-                {communities.map((community: any) => (
+                {communities.map((community) => (
                   <SelectItem key={community.id} value={community.id.toString()}>
                     {community.name}
                   </SelectItem>
