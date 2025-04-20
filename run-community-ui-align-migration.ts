@@ -46,23 +46,23 @@ async function migrateCommunityUiAlignment() {
   console.log("[PKL-278651-COMM-0032-UI-ALIGN] Starting Community UI Alignment migration...");
   
   try {
-    // Check if the columns already exist
+    // Check if the columns already exist using standardized field names
     const columnsExist = await checkColumnsExist(db, 'communities', 
-      ['banner_image', 'profile_picture', 'theme_color', 'accent_color', 'last_ui_update']);
+      ['avatar_url', 'banner_url', 'theme_color', 'accent_color', 'banner_pattern', 'last_ui_update']);
     
     if (!columnsExist) {
-      console.log("[PKL-278651-COMM-0032-UI-ALIGN] Adding columns for enhanced media support...");
+      console.log("[PKL-278651-COMM-0032-UI-ALIGN] Adding columns for enhanced media support with standardized field names...");
       
-      // Add banner_image column if it doesn't exist (this column may already exist in some environments)
+      // Add avatar_url column if it doesn't exist (standardized field name)
       await db.execute(sql`
         ALTER TABLE communities 
-        ADD COLUMN IF NOT EXISTS profile_picture TEXT DEFAULT NULL
+        ADD COLUMN IF NOT EXISTS avatar_url TEXT DEFAULT NULL
       `);
       
-      // Add profile_picture column if it doesn't exist (this column may already exist in some environments)
+      // Add banner_url column if it doesn't exist (standardized field name)
       await db.execute(sql`
         ALTER TABLE communities 
-        ADD COLUMN IF NOT EXISTS banner_image TEXT DEFAULT NULL
+        ADD COLUMN IF NOT EXISTS banner_url TEXT DEFAULT NULL
       `);
       
       // Add theme_color column if it doesn't exist (with default value)
@@ -77,10 +77,30 @@ async function migrateCommunityUiAlignment() {
         ADD COLUMN IF NOT EXISTS accent_color TEXT DEFAULT '#818CF8'
       `);
       
+      // Add banner_pattern column if it doesn't exist (with default value null)
+      await db.execute(sql`
+        ALTER TABLE communities 
+        ADD COLUMN IF NOT EXISTS banner_pattern TEXT DEFAULT NULL
+      `);
+      
       // Add last_ui_update column (for tracking when UI was last updated)
       await db.execute(sql`
         ALTER TABLE communities 
         ADD COLUMN IF NOT EXISTS last_ui_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      `);
+      
+      // Migration for existing data - move profile_picture to avatar_url if it exists
+      await db.execute(sql`
+        UPDATE communities 
+        SET avatar_url = profile_picture 
+        WHERE profile_picture IS NOT NULL AND avatar_url IS NULL
+      `);
+      
+      // Migration for existing data - move banner_image to banner_url if it exists
+      await db.execute(sql`
+        UPDATE communities 
+        SET banner_url = banner_image 
+        WHERE banner_image IS NOT NULL AND banner_url IS NULL
       `);
       
       console.log("[PKL-278651-COMM-0032-UI-ALIGN] Community UI Alignment migration completed successfully");
