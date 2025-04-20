@@ -18,8 +18,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   ChevronRight, ChevronLeft, Upload, MapPin, 
-  Info, CheckCircle, Users, Shield, Globe, Calendar 
+  Info, CheckCircle, Users, Shield, Globe, Calendar,
+  Gift, Star 
 } from 'lucide-react';
+import { ChallengeSoon } from '@/components/community/ChallengeSoon';
 
 // Common example tags
 const EXAMPLE_TAGS = [
@@ -570,6 +572,14 @@ const CommunityCreationMockup: React.FC = () => {
                     <li>• Automated content filtering enabled</li>
                     <li>• RSVP required for events</li>
                   </ul>
+                </div>
+                
+                {/* PKL-278651-COMM-0031-CHLG-COMING-SOON: Coming Soon Challenges Banner */}
+                <div className="mt-3 mb-3">
+                  <ChallengeSoon 
+                    communityName="Seattle Pickleball Club"
+                    className="border border-dashed border-primary/50"
+                  />
                 </div>
                 
                 <div className="flex flex-wrap gap-2 mt-3">
