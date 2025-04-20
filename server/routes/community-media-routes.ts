@@ -168,7 +168,7 @@ router.post(
 );
 
 /**
- * Update community styling (theme color, accent color)
+ * Update community styling (theme color, accent color, banner pattern)
  * PATCH /api/communities/:communityId/styling
  */
 router.patch(
@@ -180,21 +180,28 @@ router.patch(
       console.log('[API][Community] Processing styling update request');
       
       const communityId = parseInt(req.params.communityId);
-      const { themeColor } = req.body;
+      const { themeColor, accentColor, bannerPattern } = req.body;
       
       // Validate the hex color format if provided
-      if (themeColor) {
-        const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
-        if (!hexColorRegex.test(themeColor)) {
-          return res.status(400).json({ 
-            message: 'Invalid theme color format. Please use a valid hex color (e.g., #FF5733).' 
-          });
-        }
+      const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+      
+      if (themeColor && !hexColorRegex.test(themeColor)) {
+        return res.status(400).json({ 
+          message: 'Invalid theme color format. Please use a valid hex color (e.g., #FF5733).' 
+        });
+      }
+      
+      if (accentColor && !hexColorRegex.test(accentColor)) {
+        return res.status(400).json({ 
+          message: 'Invalid accent color format. Please use a valid hex color (e.g., #FF5733).' 
+        });
       }
       
       // Update the community record with the new styling
       const updateData: any = {};
       if (themeColor) updateData.themeColor = themeColor;
+      if (accentColor) updateData.accentColor = accentColor;
+      if (bannerPattern !== undefined) updateData.bannerPattern = bannerPattern;
       
       // Only update if we have styling properties to update
       if (Object.keys(updateData).length === 0) {
@@ -207,7 +214,7 @@ router.patch(
         .where(eq(communities.id, communityId))
         .returning();
       
-      console.log(`[API][Community] Styling updated for community ${communityId}`);
+      console.log(`[API][Community] Styling updated for community ${communityId}:`, updateData);
       
       res.status(200).json({
         message: 'Community styling updated successfully',
