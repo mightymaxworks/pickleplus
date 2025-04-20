@@ -94,6 +94,22 @@ export const moderationService = {
     );
     return await response.json();
   },
+  
+  /**
+   * Review a content report (requires moderator role)
+   */
+  async reviewReport(communityId: number, reportId: number, data: {
+    status: string,
+    reviewNotes?: string,
+    action?: string
+  }) {
+    const response = await apiRequest(
+      'PATCH',
+      `/api/communities/${communityId}/moderation/reports/${reportId}`,
+      data
+    );
+    return await response.json();
+  },
 
   /**
    * Get pending content items for a community (requires moderator role)
