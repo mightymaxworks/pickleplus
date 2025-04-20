@@ -122,8 +122,77 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     }
   });
   
-  // Create multer upload instance
+  // Configure storage for post media uploads
+  // PKL-278651-COMM-0022-POST - Post Media Upload
+  const postMediaStorage = multer.diskStorage({
+    destination: (req: any, file: any, cb: any) => {
+      const uploadPath = 'uploads/posts';
+      if (!fs.existsSync(uploadPath)) {
+        fs.mkdirSync(uploadPath, { recursive: true });
+      }
+      cb(null, uploadPath);
+    },
+    filename: (req: any, file: any, cb: any) => {
+      const fileExt = path.extname(file.originalname);
+      const fileName = `post_media_${Date.now()}_${Math.floor(Math.random() * 10000)}${fileExt}`;
+      cb(null, fileName);
+    }
+  });
+
+  // File filter to validate uploaded post media files
+  const postMediaFileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+    // Allow only image files
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  };
+  
+  // Create multer upload instances
   const testUpload = multer({ storage: testStorage });
+  const postMediaUpload = multer({ 
+    storage: postMediaStorage,
+    fileFilter: postMediaFileFilter,
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB file size limit
+      files: 10 // Maximum 10 files per upload
+    }
+  });
+  
+  // POST /api/upload - Endpoint for uploading post media
+  // PKL-278651-COMM-0022-POST - Implementation timestamp: 2025-04-20 03:30 ET
+  app.post('/api/upload', isAuthenticated, postMediaUpload.array('files', 10), (req: Request, res: Response) => {
+    console.log('[POST MEDIA] Upload request received');
+    
+    try {
+      if (!req.files || (Array.isArray(req.files) && req.files.length === 0)) {
+        return res.status(400).json({ message: 'No files uploaded' });
+      }
+      
+      // Make URLs for each uploaded file
+      const files = Array.isArray(req.files) ? req.files : [req.files];
+      const urls = files.map(file => {
+        // Create URL path relative to server root
+        return `/${file.path.replace(/\\/g, '/')}`;
+      });
+      
+      console.log('[POST MEDIA] Files uploaded successfully:', urls);
+      
+      res.status(201).json({
+        success: true,
+        message: 'Files uploaded successfully',
+        urls: urls,
+        count: urls.length
+      });
+    } catch (error) {
+      console.error('[POST MEDIA] Upload error:', error);
+      res.status(500).json({ 
+        message: 'Error uploading files',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
   
   // Create a dedicated test upload endpoint with minimal complexity
   app.post('/test-upload-endpoint', testUpload.single('file'), (req: Request, res: Response) => {
