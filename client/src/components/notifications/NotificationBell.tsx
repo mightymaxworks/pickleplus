@@ -33,27 +33,55 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
   const [animateBell, setAnimateBell] = useState(false);
   const { connected, lastMessage } = useNotificationSocket({
     onMessage: (message) => {
-      if (message.type === 'new_notification' || message.type === 'notification_batch') {
+      if (message.type === 'new_notification') {
+        // Increment the counter by 1 for a single notification
+        setUnreadCount(prev => prev + 1);
         triggerBellAnimation();
-        // Invalidate the count when we get a new notification
-        queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
+      } else if (message.type === 'notification_batch') {
+        // For a batch, fetch the new count
+        const fetchUnreadCount = async () => {
+          try {
+            const response = await apiRequest('GET', '/api/notifications/unread-count');
+            const data = await response.json();
+            if (data && typeof data.count === 'number') {
+              setUnreadCount(data.count);
+            }
+          } catch (error) {
+            console.error('Failed to fetch unread count after batch notification:', error);
+          }
+        };
+        
+        fetchUnreadCount();
+        triggerBellAnimation();
       }
     }
   });
   
-  // Get unread count directly from API - Framework 5.2 simplified implementation
-  const { data: unreadCountData } = useQuery({
-    queryKey: ['/api/notifications/unread-count'],
-    queryFn: async () => {
-      const response = await apiRequest('GET', '/api/notifications/unread-count');
-      const data = await response.json();
-      return data.count || 0;
-    },
-    enabled: !!user,
-  });
+  // PKL-278651-COMM-0028-NOTIF-FIX - Ultra-lean implementation (Framework 5.2)
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Initial fetch to set unread count
+  useEffect(() => {
+    if (user) {
+      // Only fetch if user is logged in
+      const fetchUnreadCount = async () => {
+        try {
+          const response = await apiRequest('GET', '/api/notifications/unread-count');
+          const data = await response.json();
+          if (data && typeof data.count === 'number') {
+            setUnreadCount(data.count);
+          }
+        } catch (error) {
+          console.error('Failed to fetch unread count:', error);
+        }
+      };
+      
+      fetchUnreadCount();
+    }
+  }, [user]);
   
-  // Use count directly from API response
-  const displayCount = typeof unreadCountData === 'number' ? unreadCountData : 0;
+  // Display count from state
+  const displayCount = unreadCount;
   
   // Mark all as read mutation
   const markAllAsReadMutation = useMutation({
@@ -62,8 +90,11 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
       return response.json();
     },
     onSuccess: () => {
+      // Directly set count to 0 since all are read
+      setUnreadCount(0);
+      
+      // Also refresh notification lists
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
     }
   });
   
