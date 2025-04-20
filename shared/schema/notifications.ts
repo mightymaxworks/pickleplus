@@ -37,7 +37,7 @@ export const notificationPreferences = pgTable('notification_preferences', {
   communityId: integer('community_id'), // Reference to communities.id, null = global preference
   notificationType: varchar('notification_type', { length: 50 }).notNull(), // 'post', 'comment', 'mention', etc.
   channel: varchar('channel', { length: 20 }).notNull(), // 'app', 'email'
-  enabled: boolean('enabled').default(true).notNull(),
+  enabled: boolean('is_enabled').default(true).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
