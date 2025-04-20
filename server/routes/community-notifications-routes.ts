@@ -276,12 +276,10 @@ router.post('/api/notifications/read-all',
       const userId = req.user?.id;
       
       // Update all unread notifications
-      await db
-        .update(userNotifications)
-        .set({
-          isRead: true,
-          updatedAt: new Date()
-        })
+      // Get the current unread count before making the update
+      const countResult = await db
+        .select({ count: sql`count(*)` })
+        .from(userNotifications)
         .where(
           and(
             eq(userNotifications.userId, userId),
@@ -290,7 +288,41 @@ router.post('/api/notifications/read-all',
           )
         );
       
-      res.status(200).json({ success: true });
+      const markedCount = parseInt(String(countResult[0].count));
+      
+      if (markedCount > 0) {
+        // Only update if there are unread notifications
+        await db
+          .update(userNotifications)
+          .set({
+            isRead: true,
+            updatedAt: new Date()
+          })
+          .where(
+            and(
+              eq(userNotifications.userId, userId),
+              eq(userNotifications.isRead, false),
+              isNull(userNotifications.deletedAt)
+            )
+          );
+        
+        // Emit notification via WebSocket
+        if (notificationWebSocketService) {
+          console.log(`[Notifications] Broadcasting read_all event to user ${userId}`);
+          notificationWebSocketService.sendToUser(userId, {
+            type: 'read_all',
+            message: 'All notifications marked as read'
+          });
+          
+          // Also send the updated count (which is 0)
+          notificationWebSocketService.sendToUser(userId, {
+            type: 'unread_count',
+            data: 0
+          });
+        }
+      }
+      
+      res.status(200).json({ success: true, count: markedCount });
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
       res.status(500).json({ error: 'Internal server error' });
