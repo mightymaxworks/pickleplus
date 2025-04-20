@@ -59,6 +59,7 @@ import CommunityDetailPage from './pages/communities/[id]'
 import CreateCommunityPage from './pages/communities/create'
 import CommunityEventDetailPage from './pages/CommunityEventDetailPage' // PKL-278651-COMM-0016-RSVP
 import CommunityDiscoveryPage from './pages/community-discover' // PKL-278651-COMM-0022-DISC
+import CommunityEngagementPage from './pages/community/CommunityEngagementPage' // PKL-278651-COMM-0021-ENGAGE
 
 // Import notification page (PKL-278651-COMM-0028-NOTIF)
 import NotificationsPage from './pages/notifications-page'
@@ -375,6 +376,11 @@ export default function App() {
                   </Route>
                   <Route path="/communities/:id">
                     {(params) => <ProtectedRoute component={CommunityDetailPage} path="/communities/:id" />}
+                  </Route>
+                  
+                  {/* PKL-278651-COMM-0021-ENGAGE - Community Engagement Page */}
+                  <Route path="/communities/:communityId/engagement">
+                    {(params) => <ProtectedRoute component={CommunityEngagementPage} path="/communities/:communityId/engagement" />}
                   </Route>
                   
                   {/* PKL-278651-COMM-0016-RSVP - Community Event Detail Page with RSVP */}

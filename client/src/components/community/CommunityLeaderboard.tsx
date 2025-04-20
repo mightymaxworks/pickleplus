@@ -19,7 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { apiRequest } from '@/lib/queryClient';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Award, Calendar, Clock, TrendingUp, Trophy, Users } from 'lucide-react';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/useAuth';
 
 interface CommunityLeaderboardProps {
   communityId: number;
