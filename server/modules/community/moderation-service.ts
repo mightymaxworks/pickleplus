@@ -19,6 +19,12 @@ import {
 } from '@shared/schema';
 
 import {
+  communityPosts,
+  communityEvents,
+  communityPostComments
+} from '@shared/schema/community';
+
+import {
   contentReports, 
   moderationActions, 
   contentApprovalQueue,
@@ -556,12 +562,30 @@ export class ModerationService {
       // This would need to be expanded based on all possible content types
       if (report.contentType === 'post') {
         const [post] = await db.select()
-          .from(contentReports)
-          .where(eq(contentReports.id, report.contentId))
+          .from(communityPosts)
+          .where(eq(communityPosts.id, report.contentId))
           .limit(1);
           
         if (post) {
-          targetUserId = post.reporterId; // Using reporterId as a placeholder for the actual user ID
+          targetUserId = post.userId; // Get the actual post creator's ID
+        }
+      } else if (report.contentType === 'comment') {
+        const [comment] = await db.select()
+          .from(communityPostComments)
+          .where(eq(communityPostComments.id, report.contentId))
+          .limit(1);
+          
+        if (comment) {
+          targetUserId = comment.userId; // Get the actual comment creator's ID
+        }
+      } else if (report.contentType === 'event') {
+        const [event] = await db.select()
+          .from(communityEvents)
+          .where(eq(communityEvents.id, report.contentId))
+          .limit(1);
+          
+        if (event) {
+          targetUserId = event.createdByUserId; // Get the actual event creator's ID
         }
       }
       
@@ -570,10 +594,27 @@ export class ModerationService {
         await this.removeContent(report.contentType, report.contentId);
       }
 
-      // Record the moderation action
+      // Determine action type based on report action
       let actionType = 'content_removal';
-      // The action type would be determined from additional report details
-      // This would be expanded in a full implementation
+      
+      if (report.action) {
+        switch (report.action) {
+          case 'remove_content':
+            actionType = 'content_removal';
+            break;
+          case 'warn_user':
+            actionType = 'user_warning';
+            break;
+          case 'temp_ban':
+            actionType = 'temporary_ban';
+            break;
+          case 'perm_ban':
+            actionType = 'permanent_ban';
+            break;
+          default:
+            actionType = 'content_removal';
+        }
+      }
 
       await db.insert(moderationActions).values({
         communityId: report.communityId,
@@ -593,22 +634,49 @@ export class ModerationService {
   }
 
   /**
-   * Remove content based on content type
+   * [PKL-278651-COMM-0029-MOD] Remove content based on content type
+   * Implementation timestamp: 2025-04-20 18:30 ET
    */
   private async removeContent(contentType: string, contentId: number): Promise<void> {
     try {
-      // In a production system, we would update the content status in the appropriate tables
-      // This is a placeholder implementation for now
-      console.log(`[Moderation] Content of type ${contentType} with ID ${contentId} would be removed/flagged as deleted`);
+      console.log(`[Moderation] Removing content of type ${contentType} with ID ${contentId}`);
       
-      // Each content type would have its own handling (post, comment, event)
-      // For now just log what would happen
+      // Handle each content type appropriately
       if (contentType === 'post') {
-        console.log(`[Moderation] Post ${contentId} marked as deleted`);
+        // Mark post as removed in the database
+        await db.update(communityPosts)
+          .set({
+            // Set a modification that indicates the post was removed without actually deleting it
+            content: '[Post removed by moderator]',
+            updatedAt: new Date()
+          })
+          .where(eq(communityPosts.id, contentId));
+        
+        console.log(`[Moderation] Post ${contentId} marked as removed`);
       } else if (contentType === 'comment') {
-        console.log(`[Moderation] Comment ${contentId} marked as deleted`);
+        // Mark comment as removed in the database
+        await db.update(communityPostComments)
+          .set({
+            // Set comment as deleted - for comment tables, we use a different field structure
+            content: '[Comment removed by moderator]',
+            updatedAt: new Date()
+          })
+          .where(eq(communityPostComments.id, contentId));
+        
+        console.log(`[Moderation] Comment ${contentId} marked as removed`);
       } else if (contentType === 'event') {
+        // Mark event as canceled in the database
+        await db.update(communityEvents)
+          .set({
+            status: 'canceled',
+            cancellationReason: 'Removed by moderator',
+            updatedAt: new Date()
+          })
+          .where(eq(communityEvents.id, contentId));
+        
         console.log(`[Moderation] Event ${contentId} marked as canceled`);
+      } else {
+        console.warn(`[Moderation] Unknown content type: ${contentType}`);
       }
     } catch (error) {
       console.error('[Moderation] Error removing content:', error);
