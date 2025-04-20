@@ -1,261 +1,380 @@
 /**
- * PKL-278651-COMM-0028-NOTIF-SERVICE - Notification Service
- * Implementation timestamp: 2025-04-20 10:10 ET
+ * PKL-278651-COMM-0028-NOTIF-REALTIME - Notification Service
+ * Implementation timestamp: 2025-04-20 11:10 ET
  * 
- * Service for managing notifications and emitting notification events
+ * Core service for managing notifications with EventBus integration
  * 
  * Framework 5.2 compliant implementation
  */
 
-import { storage } from '../../storage';
-import { EventBus } from '../../core/events/event-bus';
 import { db } from '../../db';
+import { storage } from '../../storage';
 import { 
-  userNotifications,
-  type UserNotification,
-  type InsertUserNotification
-} from '../../../shared/schema';
-import { eq, and, isNull } from 'drizzle-orm';
+  type Notification,
+  type InsertNotification, 
+  notifications 
+} from '@shared/schema';
+import { eq, and, desc, not, sql } from 'drizzle-orm';
+import { EventBus } from '../../core/events/event-bus';
 import { logger } from '../../utils/logger';
 
-export class NotificationService {
+class NotificationService {
   private eventBus: EventBus;
-
+  
   constructor(eventBus: EventBus) {
     this.eventBus = eventBus;
-    logger.info('[Notification] NotificationService initialized');
   }
-
+  
   /**
-   * Create a new notification for a user
+   * Create a new notification
+   * @param data Notification data to insert
+   * @returns Created notification
    */
-  async createNotification(notification: InsertUserNotification): Promise<UserNotification> {
+  public async createNotification(data: InsertNotification): Promise<Notification> {
     try {
+      logger.debug('[Notification] Creating notification:', data);
+      
       // Insert notification into database
-      const [createdNotification] = await db.insert(userNotifications)
-        .values(notification)
+      const [notification] = await db.insert(notifications)
+        .values(data)
         .returning();
       
-      if (!createdNotification) {
-        throw new Error('Failed to create notification');
-      }
+      // Emit notification event
+      this.eventBus.emit('notification.new', {
+        userId: notification.userId,
+        notification
+      });
       
-      // Emit notification created event
-      this.eventBus.emit('notification.created', createdNotification);
+      logger.info(`[Notification] Notification ${notification.id} created for user ${notification.userId}`);
       
-      logger.debug(`[Notification] Created notification for user ${notification.userId}: ${notification.title}`);
-      
-      return createdNotification;
+      return notification;
     } catch (error) {
       logger.error('[Notification] Error creating notification:', error);
-      throw error;
+      throw new Error('Failed to create notification');
     }
   }
   
   /**
-   * Create notifications for multiple users (batch)
+   * Create multiple notifications at once (for bulk operations)
+   * @param dataList Array of notification data to insert
+   * @returns Created notifications
    */
-  async createNotificationsForUsers(
-    userIds: number[], 
-    notificationData: Omit<InsertUserNotification, 'userId'>
-  ): Promise<number> {
+  public async createMultipleNotifications(dataList: InsertNotification[]): Promise<Notification[]> {
+    if (!dataList.length) {
+      return [];
+    }
+    
     try {
-      // Create notification for each user
-      const notifications = userIds.map(userId => ({
-        ...notificationData,
-        userId
-      }));
+      logger.debug(`[Notification] Creating ${dataList.length} notifications`);
       
-      // Insert all notifications
-      const result = await db.insert(userNotifications)
-        .values(notifications)
-        .returning({ id: userNotifications.id, userId: userNotifications.userId });
+      // Insert notifications into database
+      const createdNotifications = await db.insert(notifications)
+        .values(dataList)
+        .returning();
       
-      // Emit events for each created notification
-      result.forEach(notification => {
-        this.eventBus.emit('notification.created', notification);
+      // Group notifications by user for efficient event emission
+      const notificationsByUser = createdNotifications.reduce((acc, notification) => {
+        if (!acc[notification.userId]) {
+          acc[notification.userId] = [];
+        }
+        acc[notification.userId].push(notification);
+        return acc;
+      }, {} as Record<number, Notification[]>);
+      
+      // Emit events for each user
+      Object.entries(notificationsByUser).forEach(([userId, userNotifications]) => {
+        this.eventBus.emit('notification.batch', {
+          userId: parseInt(userId),
+          notifications: userNotifications
+        });
       });
       
-      logger.info(`[Notification] Created ${result.length} notifications for ${userIds.length} users`);
+      logger.info(`[Notification] ${createdNotifications.length} notifications created`);
       
-      return result.length;
+      return createdNotifications;
     } catch (error) {
-      logger.error('[Notification] Error creating notifications for multiple users:', error);
-      throw error;
+      logger.error('[Notification] Error creating multiple notifications:', error);
+      throw new Error('Failed to create multiple notifications');
+    }
+  }
+  
+  /**
+   * Get a notification by ID
+   * @param id Notification ID
+   * @returns Notification or null if not found
+   */
+  public async getNotification(id: number): Promise<Notification | undefined> {
+    try {
+      const [notification] = await db.select()
+        .from(notifications)
+        .where(eq(notifications.id, id));
+      
+      return notification;
+    } catch (error) {
+      logger.error(`[Notification] Error getting notification ${id}:`, error);
+      throw new Error('Failed to get notification');
+    }
+  }
+  
+  /**
+   * Get notifications for a user
+   * @param userId User ID
+   * @param options Query options
+   * @returns Array of notifications
+   */
+  public async getUserNotifications(
+    userId: number,
+    options: {
+      limit?: number;
+      offset?: number;
+      unreadOnly?: boolean;
+      includeRead?: boolean;
+      types?: string[];
+    } = {}
+  ): Promise<Notification[]> {
+    const {
+      limit = 20,
+      offset = 0,
+      unreadOnly = false,
+      includeRead = true,
+      types
+    } = options;
+    
+    try {
+      logger.debug(`[Notification] Getting notifications for user ${userId}`);
+      
+      let query = db.select()
+        .from(notifications)
+        .where(eq(notifications.userId, userId));
+      
+      // Add filter for read/unread status
+      if (unreadOnly) {
+        query = query.where(eq(notifications.isRead, false));
+      } else if (!includeRead) {
+        query = query.where(eq(notifications.isRead, false));
+      }
+      
+      // Add filter for notification types
+      if (types && types.length > 0) {
+        query = query.where(sql`${notifications.type} IN (${types.join(',')})`);
+      }
+      
+      // Add order by, limit and offset
+      const result = await query
+        .orderBy(desc(notifications.createdAt))
+        .limit(limit)
+        .offset(offset);
+      
+      return result;
+    } catch (error) {
+      logger.error(`[Notification] Error getting notifications for user ${userId}:`, error);
+      throw new Error('Failed to get user notifications');
+    }
+  }
+  
+  /**
+   * Get unread notification count for a user
+   * @param userId User ID
+   * @returns Count of unread notifications
+   */
+  public async getUnreadCount(userId: number): Promise<number> {
+    try {
+      const result = await db.select({ count: sql`COUNT(*)` })
+        .from(notifications)
+        .where(and(
+          eq(notifications.userId, userId),
+          eq(notifications.isRead, false)
+        ));
+      
+      return parseInt(result[0].count.toString(), 10) || 0;
+    } catch (error) {
+      logger.error(`[Notification] Error getting unread count for user ${userId}:`, error);
+      throw new Error('Failed to get unread notification count');
     }
   }
   
   /**
    * Mark a notification as read
+   * @param id Notification ID
+   * @param userId User ID (for verification)
+   * @returns Updated notification
    */
-  async markNotificationAsRead(notificationId: number): Promise<boolean> {
+  public async markAsRead(id: number, userId: number): Promise<Notification> {
     try {
-      // Find notification to get userId
-      const [notification] = await db.select()
-        .from(userNotifications)
-        .where(eq(userNotifications.id, notificationId));
+      logger.debug(`[Notification] Marking notification ${id} as read for user ${userId}`);
       
-      if (!notification) {
-        throw new Error(`Notification with ID ${notificationId} not found`);
+      const [updatedNotification] = await db.update(notifications)
+        .set({ isRead: true, readAt: new Date() })
+        .where(and(
+          eq(notifications.id, id),
+          eq(notifications.userId, userId),
+          eq(notifications.isRead, false)
+        ))
+        .returning();
+      
+      if (!updatedNotification) {
+        throw new Error('Notification not found or already read');
       }
-      
-      // Update notification
-      await db.update(userNotifications)
-        .set({ isRead: true, updatedAt: new Date() })
-        .where(eq(userNotifications.id, notificationId));
       
       // Emit notification read event
       this.eventBus.emit('notification.read', {
-        notificationId,
-        userId: notification.userId
+        userId,
+        notificationId: id
       });
       
-      logger.debug(`[Notification] Marked notification ${notificationId} as read for user ${notification.userId}`);
+      logger.info(`[Notification] Notification ${id} marked as read for user ${userId}`);
       
-      return true;
+      return updatedNotification;
     } catch (error) {
-      logger.error(`[Notification] Error marking notification ${notificationId} as read:`, error);
-      return false;
+      logger.error(`[Notification] Error marking notification ${id} as read:`, error);
+      throw new Error('Failed to mark notification as read');
     }
   }
   
   /**
    * Mark all notifications as read for a user
+   * @param userId User ID
+   * @returns Count of notifications marked as read
    */
-  async markAllNotificationsAsRead(userId: number): Promise<number> {
+  public async markAllAsRead(userId: number): Promise<number> {
     try {
-      // Find unread notifications
-      const unreadNotifications = await db.select({ id: userNotifications.id })
-        .from(userNotifications)
+      logger.debug(`[Notification] Marking all notifications as read for user ${userId}`);
+      
+      // Find all unread notifications
+      const unreadNotifications = await db.select({ id: notifications.id })
+        .from(notifications)
         .where(and(
-          eq(userNotifications.userId, userId),
-          eq(userNotifications.isRead, false),
-          isNull(userNotifications.deletedAt)
+          eq(notifications.userId, userId),
+          eq(notifications.isRead, false)
         ));
       
+      if (!unreadNotifications.length) {
+        return 0;
+      }
+      
       // Update all unread notifications
-      await db.update(userNotifications)
-        .set({ isRead: true, updatedAt: new Date() })
+      const result = await db.update(notifications)
+        .set({ isRead: true, readAt: new Date() })
         .where(and(
-          eq(userNotifications.userId, userId),
-          eq(userNotifications.isRead, false),
-          isNull(userNotifications.deletedAt)
+          eq(notifications.userId, userId),
+          eq(notifications.isRead, false)
         ));
+      
+      const count = unreadNotifications.length;
       
       // Emit all read event
       this.eventBus.emit('notification.all_read', { userId });
       
-      logger.info(`[Notification] Marked ${unreadNotifications.length} notifications as read for user ${userId}`);
-      
-      return unreadNotifications.length;
-    } catch (error) {
-      logger.error(`[Notification] Error marking all notifications as read for user ${userId}:`, error);
-      return 0;
-    }
-  }
-  
-  /**
-   * Delete a notification (soft delete)
-   */
-  async deleteNotification(notificationId: number): Promise<boolean> {
-    try {
-      // Find notification to get userId
-      const [notification] = await db.select()
-        .from(userNotifications)
-        .where(eq(userNotifications.id, notificationId));
-      
-      if (!notification) {
-        throw new Error(`Notification with ID ${notificationId} not found`);
-      }
-      
-      // Soft delete notification
-      await db.update(userNotifications)
-        .set({ deletedAt: new Date() })
-        .where(eq(userNotifications.id, notificationId));
-      
-      // Emit notification deleted event
-      this.eventBus.emit('notification.deleted', {
-        notificationId,
-        userId: notification.userId
-      });
-      
-      logger.debug(`[Notification] Deleted notification ${notificationId} for user ${notification.userId}`);
-      
-      return true;
-    } catch (error) {
-      logger.error(`[Notification] Error deleting notification ${notificationId}:`, error);
-      return false;
-    }
-  }
-  
-  /**
-   * Delete all notifications for a user (soft delete)
-   */
-  async deleteAllNotifications(userId: number): Promise<number> {
-    try {
-      // Find active notifications
-      const activeNotifications = await db.select({ id: userNotifications.id })
-        .from(userNotifications)
-        .where(and(
-          eq(userNotifications.userId, userId),
-          isNull(userNotifications.deletedAt)
-        ));
-      
-      // Soft delete all active notifications
-      await db.update(userNotifications)
-        .set({ deletedAt: new Date() })
-        .where(and(
-          eq(userNotifications.userId, userId),
-          isNull(userNotifications.deletedAt)
-        ));
-      
-      // Emit notifications deleted event
-      activeNotifications.forEach(notification => {
-        this.eventBus.emit('notification.deleted', {
-          notificationId: notification.id,
-          userId
-        });
-      });
-      
-      logger.info(`[Notification] Deleted ${activeNotifications.length} notifications for user ${userId}`);
-      
-      return activeNotifications.length;
-    } catch (error) {
-      logger.error(`[Notification] Error deleting all notifications for user ${userId}:`, error);
-      return 0;
-    }
-  }
-  
-  /**
-   * Create a system notification (sent to all users)
-   */
-  async createSystemNotification(
-    title: string,
-    message: string,
-    link?: string
-  ): Promise<number> {
-    try {
-      // Get all active user IDs
-      const userIds = await storage.getAllActiveUserIds();
-      
-      // Create notification data
-      const notificationData: Omit<InsertUserNotification, 'userId'> = {
-        type: 'system_message',
-        title,
-        message,
-        referenceType: 'system',
-        link: link || null
-      };
-      
-      // Create notifications for all users
-      const count = await this.createNotificationsForUsers(userIds, notificationData);
-      
-      logger.info(`[Notification] Created system notification "${title}" for ${count} users`);
+      logger.info(`[Notification] ${count} notifications marked as read for user ${userId}`);
       
       return count;
     } catch (error) {
+      logger.error(`[Notification] Error marking all notifications as read for user ${userId}:`, error);
+      throw new Error('Failed to mark all notifications as read');
+    }
+  }
+  
+  /**
+   * Delete a notification
+   * @param id Notification ID
+   * @param userId User ID (for verification)
+   * @returns Boolean indicating success
+   */
+  public async deleteNotification(id: number, userId: number): Promise<boolean> {
+    try {
+      logger.debug(`[Notification] Deleting notification ${id} for user ${userId}`);
+      
+      // Verify notification exists and belongs to user
+      const [notification] = await db.select()
+        .from(notifications)
+        .where(and(
+          eq(notifications.id, id),
+          eq(notifications.userId, userId)
+        ));
+      
+      if (!notification) {
+        return false;
+      }
+      
+      // Delete notification
+      await db.delete(notifications)
+        .where(and(
+          eq(notifications.id, id),
+          eq(notifications.userId, userId)
+        ));
+      
+      // Emit notification deleted event
+      this.eventBus.emit('notification.deleted', {
+        userId,
+        notificationId: id
+      });
+      
+      logger.info(`[Notification] Notification ${id} deleted for user ${userId}`);
+      
+      return true;
+    } catch (error) {
+      logger.error(`[Notification] Error deleting notification ${id}:`, error);
+      throw new Error('Failed to delete notification');
+    }
+  }
+  
+  /**
+   * Create a system-wide notification for all users
+   * @param data Base notification data (without userId)
+   * @returns Created notifications
+   */
+  public async createSystemNotification(data: Omit<InsertNotification, 'userId'>): Promise<Notification[]> {
+    try {
+      logger.debug('[Notification] Creating system-wide notification');
+      
+      // Get all active users
+      const users = await storage.getAllActiveUsers();
+      
+      if (!users.length) {
+        logger.warn('[Notification] No active users found for system notification');
+        return [];
+      }
+      
+      // Create notifications for each user
+      const notificationsToCreate = users.map(user => ({
+        ...data,
+        userId: user.id
+      }));
+      
+      return this.createMultipleNotifications(notificationsToCreate);
+    } catch (error) {
       logger.error('[Notification] Error creating system notification:', error);
-      throw error;
+      throw new Error('Failed to create system notification');
+    }
+  }
+  
+  /**
+   * Create notifications for multiple users
+   * @param userIds Array of user IDs
+   * @param data Base notification data (without userId)
+   * @returns Created notifications
+   */
+  public async createNotificationForUsers(
+    userIds: number[],
+    data: Omit<InsertNotification, 'userId'>
+  ): Promise<Notification[]> {
+    if (!userIds.length) {
+      return [];
+    }
+    
+    try {
+      logger.debug(`[Notification] Creating notification for ${userIds.length} users`);
+      
+      // Create notifications for each user
+      const notificationsToCreate = userIds.map(userId => ({
+        ...data,
+        userId
+      }));
+      
+      return this.createMultipleNotifications(notificationsToCreate);
+    } catch (error) {
+      logger.error('[Notification] Error creating notifications for multiple users:', error);
+      throw new Error('Failed to create notifications for users');
     }
   }
 }
@@ -263,13 +382,12 @@ export class NotificationService {
 // Singleton instance
 let notificationService: NotificationService | null = null;
 
-export function getNotificationService(eventBus?: EventBus): NotificationService {
-  if (!notificationService && eventBus) {
-    notificationService = new NotificationService(eventBus);
-  }
-  
+/**
+ * Get the NotificationService instance
+ */
+export function getNotificationService(eventBus: EventBus): NotificationService {
   if (!notificationService) {
-    throw new Error('NotificationService not initialized');
+    notificationService = new NotificationService(eventBus);
   }
   
   return notificationService;

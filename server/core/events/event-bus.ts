@@ -1,88 +1,115 @@
 /**
- * Event Bus for Pickle+ 
- * This provides a centralized event system for modules to communicate with each other.
+ * PKL-278651-CORE-0002-EVENT - Event Bus Service
+ * Implementation timestamp: 2025-04-20 10:55 ET
+ * 
+ * Simple pub/sub event bus for application-wide events
+ * 
+ * Framework 5.2 compliant implementation
  */
 
-export type EventHandler = (data: any) => void;
+import { logger } from '../../utils/logger';
+
+type EventListener = (data: any) => void;
 
 export class EventBus {
-  private handlers: Map<string, EventHandler[]> = new Map();
-
+  private listeners: Map<string, EventListener[]> = new Map();
+  
   /**
    * Subscribe to an event
-   * @param eventName The name of the event to subscribe to
-   * @param handler The handler function to call when the event is emitted
-   * @returns An unsubscribe function
+   * @param event Event name
+   * @param listener Callback function
+   * @returns Unsubscribe function
    */
-  subscribe(eventName: string, handler: EventHandler): () => void {
-    if (!this.handlers.has(eventName)) {
-      this.handlers.set(eventName, []);
+  public subscribe(event: string, listener: EventListener): () => void {
+    if (!this.listeners.has(event)) {
+      this.listeners.set(event, []);
     }
-
-    const handlers = this.handlers.get(eventName)!;
-    handlers.push(handler);
-
+    
+    const eventListeners = this.listeners.get(event)!;
+    eventListeners.push(listener);
+    
+    logger.debug(`[EventBus] Subscribed to event: ${event}, Total listeners: ${eventListeners.length}`);
+    
+    // Return unsubscribe function
     return () => {
-      const index = handlers.indexOf(handler);
-      if (index !== -1) {
-        handlers.splice(index, 1);
+      const idx = eventListeners.indexOf(listener);
+      if (idx !== -1) {
+        eventListeners.splice(idx, 1);
+        logger.debug(`[EventBus] Unsubscribed from event: ${event}, Remaining listeners: ${eventListeners.length}`);
       }
     };
   }
-
+  
   /**
-   * Emit an event
-   * @param eventName The name of the event to emit
-   * @param data The data to pass to handlers
+   * Emit an event with data
+   * @param event Event name
+   * @param data Event data
    */
-  emit(eventName: string, data: any): void {
-    if (!this.handlers.has(eventName)) {
+  public emit(event: string, data: any): void {
+    if (!this.listeners.has(event)) {
       return;
     }
-
-    const handlers = this.handlers.get(eventName)!;
-    for (const handler of handlers) {
+    
+    const eventListeners = this.listeners.get(event)!;
+    logger.debug(`[EventBus] Emitting event: ${event} to ${eventListeners.length} listeners`);
+    
+    for (const listener of eventListeners) {
       try {
-        handler(data);
+        listener(data);
       } catch (error) {
-        console.error(`Error in event handler for ${eventName}:`, error);
+        logger.error(`[EventBus] Error in event listener for ${event}:`, error);
       }
     }
   }
-
+  
   /**
-   * Check if an event has subscribers
-   * @param eventName The name of the event to check
-   * @returns True if the event has subscribers, false otherwise
+   * Check if an event has listeners
+   * @param event Event name
+   * @returns Boolean indicating if the event has listeners
    */
-  hasSubscribers(eventName: string): boolean {
-    return this.handlers.has(eventName) && this.handlers.get(eventName)!.length > 0;
+  public hasListeners(event: string): boolean {
+    return this.listeners.has(event) && this.listeners.get(event)!.length > 0;
   }
-
+  
   /**
-   * Get the number of subscribers for an event
-   * @param eventName The name of the event to check
-   * @returns The number of subscribers
+   * Get the number of listeners for an event
+   * @param event Event name
+   * @returns Number of listeners
    */
-  getSubscriberCount(eventName: string): number {
-    if (!this.handlers.has(eventName)) {
+  public getListenerCount(event: string): number {
+    if (!this.listeners.has(event)) {
       return 0;
     }
-    return this.handlers.get(eventName)!.length;
+    
+    return this.listeners.get(event)!.length;
   }
-
+  
   /**
-   * Clear all handlers for a specific event
-   * @param eventName The name of the event to clear
+   * Clear all listeners for a specific event
+   * @param event Event name
    */
-  clearEvent(eventName: string): void {
-    this.handlers.delete(eventName);
+  public clearEvent(event: string): void {
+    this.listeners.delete(event);
+    logger.debug(`[EventBus] Cleared all listeners for event: ${event}`);
   }
-
+  
   /**
-   * Clear all event handlers
+   * Clear all listeners for all events
    */
-  clearAll(): void {
-    this.handlers.clear();
+  public clearAll(): void {
+    this.listeners.clear();
+    logger.debug('[EventBus] Cleared all event listeners');
   }
+}
+
+// Singleton instance
+let eventBus: EventBus | null = null;
+
+export function getEventBus(): EventBus {
+  if (!eventBus) {
+    eventBus = new EventBus();
+    logger.info('[EventBus] EventBus instance created');
+  }
+  
+  return eventBus;
 }

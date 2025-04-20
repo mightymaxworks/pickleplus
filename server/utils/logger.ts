@@ -1,96 +1,91 @@
 /**
- * PKL-278651-COMM-0028-NOTIF-REALTIME - Logger Utility
- * Implementation timestamp: 2025-04-20 10:15 ET
+ * PKL-278651-CORE-0003-LOGGER - Shared Logger Utility
+ * Implementation timestamp: 2025-04-20 11:00 ET
  * 
- * Simple logger utility for consistent logging
+ * Common logging utility for consistent logging format across the application
  * 
  * Framework 5.2 compliant implementation
  */
 
-// Log levels
-export enum LogLevel {
-  DEBUG = 'debug',
-  INFO = 'info',
-  WARN = 'warn',
-  ERROR = 'error'
-}
-
-// Current log level - can be set via environment variable
-let currentLogLevel: LogLevel = (process.env.LOG_LEVEL || 'info') as LogLevel;
-
-// Order of log levels for comparison
-const logLevelOrder = {
-  [LogLevel.DEBUG]: 0,
-  [LogLevel.INFO]: 1,
-  [LogLevel.WARN]: 2,
-  [LogLevel.ERROR]: 3
+const LOG_LEVELS = {
+  ERROR: 'ERROR',
+  WARN: 'WARN',
+  INFO: 'INFO',
+  DEBUG: 'DEBUG'
 };
 
-// Determine if a log level should be shown
-function shouldLog(level: LogLevel): boolean {
-  return logLevelOrder[level] >= logLevelOrder[currentLogLevel];
-}
+// Environment-based log level (defaults to INFO)
+const currentLogLevel = (process.env.LOG_LEVEL || 'INFO').toUpperCase();
 
-// Format date for logs
-function formatDate(): string {
-  return new Date().toISOString();
-}
+const shouldLog = (level: string): boolean => {
+  const levels = {
+    ERROR: 0,
+    WARN: 1,
+    INFO: 2,
+    DEBUG: 3
+  };
+  
+  return levels[level as keyof typeof levels] <= levels[currentLogLevel as keyof typeof levels];
+};
 
-// Format log message
-function formatMessage(level: LogLevel, message: string, ...args: any[]): string {
+// Format date for log timestamp
+const formatDate = (): string => {
+  const now = new Date();
+  return now.toISOString();
+};
+
+// Format log message with timestamp and level
+const formatLogMessage = (level: string, message: string, ...args: any[]): string => {
   const timestamp = formatDate();
-  let formattedMessage = `${timestamp} [${level.toUpperCase()}] ${message}`;
+  let logMessage = `${timestamp} [${level}] ${message}`;
   
   if (args.length > 0) {
-    // Handle objects and arrays in args
-    const formattedArgs = args.map(arg => {
+    // Handle objects and errors
+    args.forEach(arg => {
       if (arg instanceof Error) {
-        return arg.stack || arg.message;
-      }
-      if (typeof arg === 'object' && arg !== null) {
+        logMessage += `\n  ${arg.stack || arg.message}`;
+      } else if (typeof arg === 'object') {
         try {
-          return JSON.stringify(arg);
+          logMessage += `\n  ${JSON.stringify(arg, null, 2)}`;
         } catch (e) {
-          return String(arg);
+          logMessage += `\n  [Object cannot be stringified]`;
         }
+      } else {
+        logMessage += ` ${arg}`;
       }
-      return String(arg);
     });
-    
-    formattedMessage += ` ${formattedArgs.join(' ')}`;
   }
   
-  return formattedMessage;
-}
+  return logMessage;
+};
 
-// Logger implementation
 export const logger = {
-  setLogLevel(level: LogLevel): void {
-    currentLogLevel = level;
-    console.log(`Log level set to ${level}`);
-  },
-  
-  debug(message: string, ...args: any[]): void {
-    if (shouldLog(LogLevel.DEBUG)) {
-      console.debug(formatMessage(LogLevel.DEBUG, message, ...args));
-    }
-  },
-  
-  info(message: string, ...args: any[]): void {
-    if (shouldLog(LogLevel.INFO)) {
-      console.info(formatMessage(LogLevel.INFO, message, ...args));
+  error(message: string, ...args: any[]): void {
+    if (shouldLog(LOG_LEVELS.ERROR)) {
+      console.error(formatLogMessage(LOG_LEVELS.ERROR, message, ...args));
     }
   },
   
   warn(message: string, ...args: any[]): void {
-    if (shouldLog(LogLevel.WARN)) {
-      console.warn(formatMessage(LogLevel.WARN, message, ...args));
+    if (shouldLog(LOG_LEVELS.WARN)) {
+      console.warn(formatLogMessage(LOG_LEVELS.WARN, message, ...args));
     }
   },
   
-  error(message: string, ...args: any[]): void {
-    if (shouldLog(LogLevel.ERROR)) {
-      console.error(formatMessage(LogLevel.ERROR, message, ...args));
+  info(message: string, ...args: any[]): void {
+    if (shouldLog(LOG_LEVELS.INFO)) {
+      console.info(formatLogMessage(LOG_LEVELS.INFO, message, ...args));
     }
+  },
+  
+  debug(message: string, ...args: any[]): void {
+    if (shouldLog(LOG_LEVELS.DEBUG)) {
+      console.debug(formatLogMessage(LOG_LEVELS.DEBUG, message, ...args));
+    }
+  },
+  
+  // Log with custom level
+  log(level: string, message: string, ...args: any[]): void {
+    console.log(formatLogMessage(level, message, ...args));
   }
 };
