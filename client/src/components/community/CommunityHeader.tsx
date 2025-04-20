@@ -187,12 +187,18 @@ export function CommunityHeader({
         Back to Communities
       </Button>
       
-      {/* Hero section - optimized for mobile */}
+      {/* Hero section - enhanced with theme colors and patterns */}
       <div className={cn(
         "relative rounded-xl p-4 sm:p-6 text-white overflow-hidden",
         community.bannerUrl 
           ? "bg-gradient-to-r from-black/50 to-black/30" 
-          : "bg-gradient-to-r from-primary/90 to-primary/70",
+          : `bg-gradient-to-r ${
+              community.themeColor 
+                ? `from-[${community.themeColor}]/90 to-[${community.themeColor}]/70` 
+                : community.accentColor 
+                  ? `from-[${community.accentColor}]/90 to-[${community.themeColor || '#4F46E5'}]/70`
+                  : "from-primary/90 to-primary/70"
+            }`,
       )}>
         {/* Banner Image (if available) */}
         {community.bannerUrl && (
@@ -206,26 +212,72 @@ export function CommunityHeader({
           </div>
         )}
         
-        {/* Pattern Overlay */}
+        {/* Pattern Overlay - enhanced with banner pattern support */}
         <div className="absolute inset-0 opacity-10 bg-repeat">
-          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-            <pattern id="communityPattern" width="20" height="20" patternUnits="userSpaceOnUse">
-              <path d="M0 0h20v20H0z" fill="none" />
-              <path d="M10 0v20M0 10h20" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 2" />
-            </pattern>
-            <rect width="100%" height="100%" fill="url(#communityPattern)" />
-          </svg>
+          {community.bannerPattern === 'dots' ? (
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+              <pattern id="communityPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+                <path d="M0 0h20v20H0z" fill="none" />
+                <circle cx="5" cy="5" r="1" fill="currentColor" />
+                <circle cx="15" cy="5" r="1" fill="currentColor" />
+                <circle cx="5" cy="15" r="1" fill="currentColor" />
+                <circle cx="15" cy="15" r="1" fill="currentColor" />
+              </pattern>
+              <rect width="100%" height="100%" fill="url(#communityPattern)" />
+            </svg>
+          ) : community.bannerPattern === 'diagonal' ? (
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+              <pattern id="communityPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+                <path d="M0 0h20v20H0z" fill="none" />
+                <path d="M0 20L20 0" stroke="currentColor" strokeWidth="0.5" />
+              </pattern>
+              <rect width="100%" height="100%" fill="url(#communityPattern)" />
+            </svg>
+          ) : community.bannerPattern === 'waves' ? (
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+              <pattern id="communityPattern" width="40" height="20" patternUnits="userSpaceOnUse">
+                <path d="M0 0h40v20H0z" fill="none" />
+                <path d="M0 10C5 5, 15 15, 20 10C25 5, 35 15, 40 10" stroke="currentColor" strokeWidth="0.5" fill="none" />
+              </pattern>
+              <rect width="100%" height="100%" fill="url(#communityPattern)" />
+            </svg>
+          ) : (
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+              <pattern id="communityPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+                <path d="M0 0h20v20H0z" fill="none" />
+                <path d="M10 0v20M0 10h20" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 2" />
+              </pattern>
+              <rect width="100%" height="100%" fill="url(#communityPattern)" />
+            </svg>
+          )}
         </div>
         
         <div className="relative z-10">
           <div className="flex items-center gap-3 sm:gap-4 mb-3">
-            {/* Avatar and Title */}
-            <Avatar className="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 border-4 border-white/20 shadow-lg flex-shrink-0">
-              <AvatarImage src={community.avatarUrl || undefined} alt={community.name} />
-              <AvatarFallback className="text-xl sm:text-2xl md:text-3xl font-medium">
-                {community.name.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            {/* Enhanced Avatar with improved styling */}
+            <div className="relative">
+              <Avatar className="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 border-4 border-white/20 shadow-lg flex-shrink-0 ring-4 ring-offset-2 ring-offset-transparent ring-white/10">
+                <AvatarImage 
+                  src={community.avatarUrl || undefined} 
+                  alt={community.name}
+                  className="object-cover"
+                />
+                <AvatarFallback 
+                  className="text-xl sm:text-2xl md:text-3xl font-medium"
+                  style={{
+                    backgroundColor: community.themeColor || community.accentColor || '#4F46E5',
+                    color: 'white'
+                  }}
+                >
+                  {community.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              {community.isDefault && (
+                <div className="absolute -bottom-1 -right-1 bg-primary text-white rounded-full p-1 shadow-md">
+                  <Shield className="h-4 w-4" />
+                </div>
+              )}
+            </div>
             
             <div className="min-w-0 flex-1">
               {/* Title */}
