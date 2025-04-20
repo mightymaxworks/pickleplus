@@ -418,7 +418,7 @@ const CommunityStatistics: React.FC<CommunityStatisticsProps> = ({ communityId }
                           dataKey="value"
                           label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                         >
-                          {activityData.map((entry: { fill?: string }, index: number) => (
+                          {activityData?.map((entry: { fill?: string }, index: number) => (
                             <Cell key={`cell-${index}`} fill={entry.fill || CHART_COLORS[index % CHART_COLORS.length]} />
                           ))}
                         </Pie>
@@ -470,7 +470,7 @@ const CommunityStatistics: React.FC<CommunityStatisticsProps> = ({ communityId }
                           dataKey="value"
                           label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                         >
-                          {engagementDistribution.map((entry: { fill?: string }, index: number) => (
+                          {engagementDistribution?.map((entry: { fill?: string }, index: number) => (
                             <Cell key={`cell-${index}`} fill={entry.fill || CHART_COLORS[index % CHART_COLORS.length]} />
                           ))}
                         </Pie>
