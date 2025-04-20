@@ -1,6 +1,7 @@
 /**
  * PKL-278651-COMM-0028-NOTIF-UI - Notification Bell Component
  * Implementation timestamp: 2025-04-20 14:30 ET
+ * Bug fix timestamp: 2025-04-20 11:56 ET
  * 
  * Bell icon component with counter for notifications
  * 
@@ -8,7 +9,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth.tsx';
 import { useNotificationSocket } from '@/lib/hooks/useNotificationSocket';
 import { Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -16,6 +17,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { notificationsSDK } from '@/lib/sdk/notificationsSDK';
 
 interface NotificationBellProps {
   onClick: () => void;
@@ -29,22 +31,29 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [animateBell, setAnimateBell] = useState(false);
-  const { unreadCount, connected, lastMessage } = useNotificationSocket({
+  const { connected, lastMessage } = useNotificationSocket({
     onMessage: (message) => {
       if (message.type === 'new_notification' || message.type === 'notification_batch') {
         triggerBellAnimation();
+        // Invalidate the count when we get a new notification
+        queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
       }
     }
   });
   
-  // Get initial unread count from API
-  const { data: initialUnreadCount = 0 } = useQuery({
+  // Get unread count directly from API - Framework 5.2 simplified implementation
+  const { data: unreadCountData } = useQuery({
     queryKey: ['/api/notifications/unread-count'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/notifications/unread-count');
+      const data = await response.json();
+      return data.count || 0;
+    },
     enabled: !!user,
   });
   
-  // Combine socket unread count with initial API count
-  const totalUnreadCount = unreadCount || initialUnreadCount;
+  // Use count directly from API response
+  const displayCount = typeof unreadCountData === 'number' ? unreadCountData : 0;
   
   // Mark all as read mutation
   const markAllAsReadMutation = useMutation({
@@ -65,10 +74,10 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
   
   // Trigger animation when unread count changes
   useEffect(() => {
-    if (totalUnreadCount > 0) {
+    if (displayCount > 0) {
       triggerBellAnimation();
     }
-  }, [totalUnreadCount]);
+  }, [displayCount]);
   
   return (
     <TooltipProvider>
@@ -83,20 +92,20 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
               animateBell && "animate-wiggle",
               className
             )}
-            aria-label={`Notifications ${totalUnreadCount > 0 ? `(${totalUnreadCount} unread)` : ''}`}
+            aria-label={`Notifications ${displayCount > 0 ? `(${displayCount} unread)` : ''}`}
           >
             <Bell className="h-5 w-5" />
-            {totalUnreadCount > 0 && (
+            {displayCount > 0 && (
               <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs text-white">
-                {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
+                {displayCount > 99 ? '99+' : displayCount}
               </span>
             )}
           </Button>
         </TooltipTrigger>
         <TooltipContent side="bottom">
           <p>
-            {totalUnreadCount > 0 
-              ? `You have ${totalUnreadCount} unread notification${totalUnreadCount !== 1 ? 's' : ''}`
+            {displayCount > 0 
+              ? `You have ${displayCount} unread notification${displayCount !== 1 ? 's' : ''}`
               : 'Notifications'}
           </p>
         </TooltipContent>
