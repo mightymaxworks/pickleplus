@@ -80,6 +80,7 @@ export interface IStorage {
   sessionStore: Store;
   // User operations
   getUser(id: number): Promise<User | undefined>;
+  getAllActiveUserIds(): Promise<number[]>;
   getUserById(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByIdentifier(identifier: string): Promise<User | undefined>;
@@ -213,6 +214,38 @@ export interface IStorage {
     score: string;
     scoreDetails?: any;
   }): Promise<TournamentBracketMatch | undefined>;
+  
+  // PKL-278651-COMM-0028-NOTIF-REALTIME - Notification Operations
+  // User notification operations
+  getUserNotifications(userId: number, options?: {
+    limit?: number;
+    offset?: number;
+    includeRead?: boolean;
+    type?: string;
+  }): Promise<UserNotification[]>;
+  
+  getUserNotificationById(notificationId: number): Promise<UserNotification | undefined>;
+  
+  createUserNotification(notification: InsertUserNotification): Promise<UserNotification>;
+  
+  createNotificationsForUsers(userIds: number[], notificationData: Omit<InsertUserNotification, 'userId'>): Promise<number>;
+  
+  markNotificationAsRead(notificationId: number): Promise<boolean>;
+  
+  markAllNotificationsAsRead(userId: number): Promise<number>;
+  
+  getUnreadNotificationCount(userId: number): Promise<number>;
+  
+  deleteNotification(notificationId: number): Promise<boolean>;
+  
+  deleteAllNotifications(userId: number): Promise<number>;
+  
+  // Notification preference operations
+  getUserNotificationPreferences(userId: number): Promise<NotificationPreference[]>;
+  
+  getUserNotificationPreferenceByType(userId: number, type: string): Promise<NotificationPreference | undefined>;
+  
+  updateNotificationPreference(userId: number, type: string, enabled: boolean, channels?: string[]): Promise<NotificationPreference>;
   
   // PKL-278651-COMM-0006-HUB - Community Hub Implementation
   // Community operations
@@ -3153,6 +3186,310 @@ export class DatabaseStorage implements IStorage {
   
   async updateJoinRequestStatus(requestId: number, status: string, reviewedByUserId: number): Promise<any> {
     return communityStorageImplementation.updateJoinRequestStatus(requestId, status, reviewedByUserId);
+  }
+  
+  // PKL-278651-COMM-0028-NOTIF-REALTIME - User notification methods
+  
+  /**
+   * Get all active user IDs from the system
+   * Used for broadcasting system-wide notifications
+   */
+  async getAllActiveUserIds(): Promise<number[]> {
+    try {
+      const result = await db.select({ id: users.id })
+        .from(users)
+        .where(and(
+          eq(users.isActive, true),
+          eq(users.isTestData, false)
+        ));
+      
+      return result.map(user => user.id);
+    } catch (error) {
+      console.error('[Storage] getAllActiveUserIds error:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * Get user notifications with filtering options
+   */
+  async getUserNotifications(
+    userId: number, 
+    options?: {
+      limit?: number;
+      offset?: number;
+      includeRead?: boolean;
+      type?: string;
+    }
+  ): Promise<UserNotification[]> {
+    try {
+      const { limit = 20, offset = 0, includeRead = false, type } = options || {};
+      
+      // Build query conditions
+      const conditions = [];
+      conditions.push(eq(userNotifications.userId, userId));
+      conditions.push(isNull(userNotifications.deletedAt));
+      
+      if (!includeRead) {
+        conditions.push(eq(userNotifications.isRead, false));
+      }
+      
+      if (type) {
+        conditions.push(eq(userNotifications.type, type));
+      }
+      
+      // Execute query
+      const notifications = await db.select()
+        .from(userNotifications)
+        .where(and(...conditions))
+        .orderBy(desc(userNotifications.createdAt))
+        .limit(limit)
+        .offset(offset);
+      
+      return notifications;
+    } catch (error) {
+      console.error('[Storage] getUserNotifications error:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * Get a specific notification by ID
+   */
+  async getUserNotificationById(notificationId: number): Promise<UserNotification | undefined> {
+    try {
+      const [notification] = await db.select()
+        .from(userNotifications)
+        .where(and(
+          eq(userNotifications.id, notificationId),
+          isNull(userNotifications.deletedAt)
+        ));
+      
+      return notification;
+    } catch (error) {
+      console.error('[Storage] getUserNotificationById error:', error);
+      return undefined;
+    }
+  }
+  
+  /**
+   * Create a notification for a user
+   */
+  async createUserNotification(notification: InsertUserNotification): Promise<UserNotification> {
+    try {
+      const [createdNotification] = await db.insert(userNotifications)
+        .values(notification)
+        .returning();
+      
+      return createdNotification;
+    } catch (error) {
+      console.error('[Storage] createUserNotification error:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Create notifications for multiple users
+   */
+  async createNotificationsForUsers(
+    userIds: number[], 
+    notificationData: Omit<InsertUserNotification, 'userId'>
+  ): Promise<number> {
+    try {
+      // Generate notifications for each user
+      const notifications = userIds.map(userId => ({
+        ...notificationData,
+        userId
+      }));
+      
+      // Insert all notifications
+      const result = await db.insert(userNotifications)
+        .values(notifications)
+        .returning({ id: userNotifications.id });
+      
+      return result.length;
+    } catch (error) {
+      console.error('[Storage] createNotificationsForUsers error:', error);
+      return 0;
+    }
+  }
+  
+  /**
+   * Mark a notification as read
+   */
+  async markNotificationAsRead(notificationId: number): Promise<boolean> {
+    try {
+      await db.update(userNotifications)
+        .set({ 
+          isRead: true,
+          updatedAt: new Date()
+        })
+        .where(eq(userNotifications.id, notificationId));
+      
+      return true;
+    } catch (error) {
+      console.error('[Storage] markNotificationAsRead error:', error);
+      return false;
+    }
+  }
+  
+  /**
+   * Mark all notifications as read for a user
+   */
+  async markAllNotificationsAsRead(userId: number): Promise<number> {
+    try {
+      const result = await db.update(userNotifications)
+        .set({ 
+          isRead: true,
+          updatedAt: new Date()
+        })
+        .where(and(
+          eq(userNotifications.userId, userId),
+          eq(userNotifications.isRead, false),
+          isNull(userNotifications.deletedAt)
+        ))
+        .returning({ id: userNotifications.id });
+      
+      return result.length;
+    } catch (error) {
+      console.error('[Storage] markAllNotificationsAsRead error:', error);
+      return 0;
+    }
+  }
+  
+  /**
+   * Get unread notification count for a user
+   */
+  async getUnreadNotificationCount(userId: number): Promise<number> {
+    try {
+      const [result] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(userNotifications)
+        .where(and(
+          eq(userNotifications.userId, userId),
+          eq(userNotifications.isRead, false),
+          isNull(userNotifications.deletedAt)
+        ));
+      
+      return result?.count || 0;
+    } catch (error) {
+      console.error('[Storage] getUnreadNotificationCount error:', error);
+      return 0;
+    }
+  }
+  
+  /**
+   * Soft delete a notification
+   */
+  async deleteNotification(notificationId: number): Promise<boolean> {
+    try {
+      await db.update(userNotifications)
+        .set({ deletedAt: new Date() })
+        .where(eq(userNotifications.id, notificationId));
+      
+      return true;
+    } catch (error) {
+      console.error('[Storage] deleteNotification error:', error);
+      return false;
+    }
+  }
+  
+  /**
+   * Soft delete all notifications for a user
+   */
+  async deleteAllNotifications(userId: number): Promise<number> {
+    try {
+      const result = await db.update(userNotifications)
+        .set({ deletedAt: new Date() })
+        .where(and(
+          eq(userNotifications.userId, userId),
+          isNull(userNotifications.deletedAt)
+        ))
+        .returning({ id: userNotifications.id });
+      
+      return result.length;
+    } catch (error) {
+      console.error('[Storage] deleteAllNotifications error:', error);
+      return 0;
+    }
+  }
+  
+  /**
+   * Get notification preferences for a user
+   */
+  async getUserNotificationPreferences(userId: number): Promise<NotificationPreference[]> {
+    try {
+      const preferences = await db.select()
+        .from(notificationPreferences)
+        .where(eq(notificationPreferences.userId, userId));
+      
+      return preferences;
+    } catch (error) {
+      console.error('[Storage] getUserNotificationPreferences error:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * Get notification preference for a specific type
+   */
+  async getUserNotificationPreferenceByType(userId: number, type: string): Promise<NotificationPreference | undefined> {
+    try {
+      const [preference] = await db.select()
+        .from(notificationPreferences)
+        .where(and(
+          eq(notificationPreferences.userId, userId),
+          eq(notificationPreferences.type, type)
+        ));
+      
+      return preference;
+    } catch (error) {
+      console.error('[Storage] getUserNotificationPreferenceByType error:', error);
+      return undefined;
+    }
+  }
+  
+  /**
+   * Update notification preference
+   */
+  async updateNotificationPreference(userId: number, type: string, enabled: boolean, channels?: string[]): Promise<NotificationPreference> {
+    try {
+      // Check if preference exists
+      const existingPref = await this.getUserNotificationPreferenceByType(userId, type);
+      
+      if (existingPref) {
+        // Update existing preference
+        const [updatedPref] = await db.update(notificationPreferences)
+          .set({ 
+            enabled, 
+            channels: channels || existingPref.channels,
+            updatedAt: new Date()
+          })
+          .where(and(
+            eq(notificationPreferences.userId, userId),
+            eq(notificationPreferences.type, type)
+          ))
+          .returning();
+        
+        return updatedPref;
+      } else {
+        // Create new preference
+        const [newPref] = await db.insert(notificationPreferences)
+          .values({
+            userId,
+            type,
+            enabled,
+            channels: channels || ['app'],
+            updatedAt: new Date()
+          })
+          .returning();
+        
+        return newPref;
+      }
+    } catch (error) {
+      console.error('[Storage] updateNotificationPreference error:', error);
+      throw error;
+    }
   }
 }
 
