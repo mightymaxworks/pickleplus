@@ -1,114 +1,246 @@
 /**
- * PKL-278651-BOUNCE-0001-CORE
- * Bounce Testing System Schema Definitions
+ * PKL-278651-BOUNCE-0001-CORE - Bounce Automated Testing System
+ * Schema definitions for the Bounce testing system.
  * 
- * This file defines the database schema and types for the Bounce automated testing system.
+ * This module defines the database tables and types for the Bounce testing system,
+ * which performs non-destructive automated testing on the application.
  * 
- * @framework Framework5.2
  * @version 1.0.0
+ * @framework Framework5.2
  * @lastModified 2025-04-21
  */
 
-import { pgTable, serial, uuid, timestamp, text, integer, real, boolean, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, timestamp, boolean, varchar, jsonb } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-import { users } from "./users";
+import { users } from "../schema";
 
 /**
- * Test run record - tracks a single execution of the Bounce test suite
+ * Test run status enum - represents the current state of a test run
+ */
+export enum BounceTestRunStatus {
+  PLANNED = "planned",
+  RUNNING = "running",
+  COMPLETED = "completed",
+  FAILED = "failed",
+  CANCELLED = "cancelled"
+}
+
+/**
+ * Finding severity enum - represents the severity of a test finding
+ */
+export enum BounceFindingSeverity {
+  CRITICAL = "critical",
+  HIGH = "high",
+  MEDIUM = "medium",
+  LOW = "low",
+  INFO = "info"
+}
+
+/**
+ * Finding status enum - represents the current status of a finding
+ */
+export enum BounceFindingStatus {
+  NEW = "new",
+  TRIAGE = "triage",
+  CONFIRMED = "confirmed",
+  IN_PROGRESS = "in_progress",
+  FIXED = "fixed",
+  WONT_FIX = "wont_fix",
+  DUPLICATE = "duplicate"
+}
+
+/**
+ * Evidence type enum - represents the type of evidence collected
+ */
+export enum BounceEvidenceType {
+  SCREENSHOT = "screenshot",
+  CONSOLE_LOG = "console_log",
+  NETWORK_REQUEST = "network_request",
+  DOM_STATE = "dom_state",
+  PERFORMANCE_METRIC = "performance_metric"
+}
+
+/**
+ * Interaction type enum - represents the type of user interaction with Bounce
+ */
+export enum BounceInteractionType {
+  REPORT_ISSUE = "report_issue",
+  CONFIRM_FINDING = "confirm_finding",
+  DISPUTE_FINDING = "dispute_finding",
+  PROVIDE_FEEDBACK = "provide_feedback",
+  VIEW_REPORT = "view_report"
+}
+
+/**
+ * Bounce test runs table - Tracks automated test executions
  */
 export const bounceTestRuns = pgTable("bounce_test_runs", {
   id: serial("id").primaryKey(),
-  testId: uuid("test_id").notNull().defaultRandom(),
-  startTime: timestamp("start_time").notNull().defaultNow(),
-  endTime: timestamp("end_time"),
-  browsers: text("browsers").notNull(), // Comma-separated list of browsers used
-  testTypes: text("test_types").notNull(), // Comma-separated list of test types
-  coverage: real("coverage"), // Test coverage percentage
-  status: text("status").notNull().default("running"), // 'running', 'completed', 'failed'
-  totalIssues: integer("total_issues").default(0),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  status: varchar("status", { length: 50 })
+    .notNull()
+    .default(BounceTestRunStatus.PLANNED),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  userId: integer("user_id").references(() => users.id),
+  targetUrl: varchar("target_url", { length: 255 }),
+  testConfig: jsonb("test_config"),
+  totalFindings: integer("total_findings").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
 });
 
 /**
- * Finding record - represents a bug or issue discovered during testing
+ * Bounce findings table - Stores issues discovered during testing
  */
 export const bounceFindings = pgTable("bounce_findings", {
   id: serial("id").primaryKey(),
-  findingId: text("finding_id").notNull(), // Human-readable ID like "PASSPORT-QR-001"
-  testRunId: integer("test_run_id").references(() => bounceTestRuns.id, { onDelete: "cascade" }),
+  testRunId: integer("test_run_id").references(() => bounceTestRuns.id),
+  title: varchar("title", { length: 255 }).notNull(),
   description: text("description").notNull(),
-  severity: text("severity").notNull(), // 'critical', 'moderate', 'low'
-  area: text("area").notNull(), // Feature area: 'passport', 'events', etc.
-  path: text("path"), // URL path where issue was found
-  browser: text("browser").notNull(),
-  device: text("device"),
-  screenSize: text("screen_size"),
-  reproducibility: integer("reproducibility").default(100), // Percentage (0-100)
-  status: text("status").notNull().default("open"), // 'open', 'in_progress', 'fixed', 'verified'
-  assignedTo: integer("assigned_to").references(() => users.id),
+  severity: varchar("severity", { length: 50 })
+    .notNull()
+    .default(BounceFindingSeverity.MEDIUM),
+  status: varchar("status", { length: 50 })
+    .notNull()
+    .default(BounceFindingStatus.NEW),
+  reproducibleSteps: text("reproducible_steps"),
+  affectedUrl: varchar("affected_url", { length: 255 }),
+  browserInfo: jsonb("browser_info"),
+  assignedToUserId: integer("assigned_to_user_id").references(() => users.id),
+  reportedByUserId: integer("reported_by_user_id").references(() => users.id),
+  fixCommitHash: varchar("fix_commit_hash", { length: 100 }),
   fixedAt: timestamp("fixed_at"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
 });
 
 /**
- * Evidence record - stores screenshots and other evidence for findings
+ * Bounce evidence table - Stores evidence related to findings
  */
 export const bounceEvidence = pgTable("bounce_evidence", {
   id: serial("id").primaryKey(),
-  findingId: integer("finding_id").references(() => bounceFindings.id, { onDelete: "cascade" }),
-  evidenceType: text("evidence_type").notNull(), // 'screenshot', 'console', 'video', etc.
-  filePath: text("file_path").notNull(), // Path to stored evidence file
-  description: text("description"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  findingId: integer("finding_id").references(() => bounceFindings.id),
+  type: varchar("type", { length: 50 })
+    .notNull()
+    .default(BounceEvidenceType.SCREENSHOT),
+  content: text("content").notNull(),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow()
 });
 
 /**
- * Schedule record - configures automated test scheduling
+ * Bounce schedules table - Configures automated test scheduling
  */
 export const bounceSchedules = pgTable("bounce_schedules", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull(), // E.g., "Daily Passport Tests"
-  cronExpression: text("cron_expression").notNull(), // Cron expression for scheduling
-  browsers: text("browsers").notNull(), // Comma-separated list of browsers to test
-  testTypes: text("test_types").notNull(), // Comma-separated list of test types to run
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  cronExpression: varchar("cron_expression", { length: 50 }),
+  testConfig: jsonb("test_config").notNull(),
   isActive: boolean("is_active").default(true),
-  lastRun: timestamp("last_run"),
-  nextRun: timestamp("next_run"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  lastRunAt: timestamp("last_run_at"),
+  nextRunAt: timestamp("next_run_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
 });
 
 /**
- * Interaction record - tracks user interactions with Bounce for gamification
+ * Bounce interactions table - Tracks user interactions with Bounce for gamification
  */
 export const bounceInteractions = pgTable("bounce_interactions", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }),
-  interactionType: text("interaction_type").notNull(), // 'spot', 'challenge', 'report', 'quest'
-  points: integer("points").notNull(),
-  details: jsonb("details"), // Additional interaction details
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  userId: integer("user_id").references(() => users.id),
+  findingId: integer("finding_id").references(() => bounceFindings.id),
+  type: varchar("type", { length: 50 })
+    .notNull()
+    .default(BounceInteractionType.VIEW_REPORT),
+  points: integer("points").default(0),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow()
 });
 
-// Zod schemas for validation
+// Relations definitions
+export const bounceTestRunsRelations = relations(bounceTestRuns, ({ one, many }) => ({
+  findings: many(bounceFindings),
+  user: one(users, {
+    fields: [bounceTestRuns.userId],
+    references: [users.id]
+  })
+}));
 
-export const insertBounceTestRunSchema = createInsertSchema(bounceTestRuns)
-  .omit({ id: true, createdAt: true, testId: true });
+export const bounceFindingsRelations = relations(bounceFindings, ({ one, many }) => ({
+  testRun: one(bounceTestRuns, {
+    fields: [bounceFindings.testRunId],
+    references: [bounceTestRuns.id]
+  }),
+  evidence: many(bounceEvidence),
+  assignedTo: one(users, {
+    fields: [bounceFindings.assignedToUserId],
+    references: [users.id]
+  }),
+  reportedBy: one(users, {
+    fields: [bounceFindings.reportedByUserId],
+    references: [users.id]
+  }),
+  interactions: many(bounceInteractions)
+}));
 
-export const insertBounceFindingSchema = createInsertSchema(bounceFindings)
-  .omit({ id: true, createdAt: true });
+export const bounceEvidenceRelations = relations(bounceEvidence, ({ one }) => ({
+  finding: one(bounceFindings, {
+    fields: [bounceEvidence.findingId],
+    references: [bounceFindings.id]
+  })
+}));
 
-export const insertBounceEvidenceSchema = createInsertSchema(bounceEvidence)
-  .omit({ id: true, createdAt: true });
+export const bounceInteractionsRelations = relations(bounceInteractions, ({ one }) => ({
+  user: one(users, {
+    fields: [bounceInteractions.userId],
+    references: [users.id]
+  }),
+  finding: one(bounceFindings, {
+    fields: [bounceInteractions.findingId],
+    references: [bounceFindings.id]
+  })
+}));
 
-export const insertBounceScheduleSchema = createInsertSchema(bounceSchedules)
-  .omit({ id: true, createdAt: true });
+// Create insert schemas using Zod
+export const insertBounceTestRunSchema = createInsertSchema(bounceTestRuns).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  totalFindings: true
+});
 
-export const insertBounceInteractionSchema = createInsertSchema(bounceInteractions)
-  .omit({ id: true, createdAt: true });
+export const insertBounceFindingSchema = createInsertSchema(bounceFindings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  fixedAt: true
+});
 
-// Types
+export const insertBounceEvidenceSchema = createInsertSchema(bounceEvidence).omit({
+  id: true,
+  createdAt: true
+});
 
+export const insertBounceScheduleSchema = createInsertSchema(bounceSchedules).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  lastRunAt: true,
+  nextRunAt: true
+});
+
+export const insertBounceInteractionSchema = createInsertSchema(bounceInteractions).omit({
+  id: true,
+  createdAt: true
+});
+
+// Export types derived from schemas
 export type BounceTestRun = typeof bounceTestRuns.$inferSelect;
 export type InsertBounceTestRun = z.infer<typeof insertBounceTestRunSchema>;
 
@@ -123,39 +255,3 @@ export type InsertBounceSchedule = z.infer<typeof insertBounceScheduleSchema>;
 
 export type BounceInteraction = typeof bounceInteractions.$inferSelect;
 export type InsertBounceInteraction = z.infer<typeof insertBounceInteractionSchema>;
-
-// Severity and status enums for type safety
-
-export enum BounceFindingSeverity {
-  CRITICAL = 'critical',
-  MODERATE = 'moderate',
-  LOW = 'low'
-}
-
-export enum BounceFindingStatus {
-  OPEN = 'open',
-  IN_PROGRESS = 'in_progress',
-  FIXED = 'fixed',
-  VERIFIED = 'verified'
-}
-
-export enum BounceInteractionType {
-  SPOT = 'spot',
-  CHALLENGE = 'challenge',
-  REPORT = 'report',
-  QUEST = 'quest'
-}
-
-export enum BounceTestRunStatus {
-  RUNNING = 'running',
-  COMPLETED = 'completed',
-  FAILED = 'failed'
-}
-
-export enum BounceEvidenceType {
-  SCREENSHOT = 'screenshot',
-  CONSOLE = 'console',
-  VIDEO = 'video',
-  NETWORK = 'network',
-  LOG = 'log'
-}

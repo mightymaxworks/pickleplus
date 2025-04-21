@@ -113,6 +113,39 @@ import {
   apiWebhookDeliveryLogs
 } from './schema/api-gateway';
 
+// Import Bounce testing system schema (PKL-278651-BOUNCE-0001-CORE - Bounce Automated Testing System)
+import {
+  bounceTestRuns,
+  bounceFindings,
+  bounceEvidence,
+  bounceSchedules,
+  bounceInteractions,
+  bounceTestRunsRelations,
+  bounceFindingsRelations,
+  bounceEvidenceRelations,
+  bounceInteractionsRelations,
+  insertBounceTestRunSchema,
+  insertBounceFindingSchema,
+  insertBounceEvidenceSchema,
+  insertBounceScheduleSchema,
+  insertBounceInteractionSchema,
+  BounceTestRunStatus,
+  BounceFindingSeverity,
+  BounceFindingStatus,
+  BounceEvidenceType,
+  BounceInteractionType,
+  type BounceTestRun,
+  type InsertBounceTestRun,
+  type BounceFinding,
+  type InsertBounceFinding,
+  type BounceEvidence,
+  type InsertBounceEvidence,
+  type BounceSchedule,
+  type InsertBounceSchedule,
+  type BounceInteraction,
+  type InsertBounceInteraction
+} from './schema/bounce';
+
 // Import Community schema (PKL-278651-COMM-0006-HUB - Community Hub Implementation)
 import {
   communities,
@@ -369,6 +402,39 @@ export const achievements = pgTable("achievements", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
+
+// Re-export Bounce schema components
+export {
+  bounceTestRuns,
+  bounceFindings,
+  bounceEvidence,
+  bounceSchedules,
+  bounceInteractions,
+  bounceTestRunsRelations,
+  bounceFindingsRelations,
+  bounceEvidenceRelations,
+  bounceInteractionsRelations,
+  insertBounceTestRunSchema,
+  insertBounceFindingSchema,
+  insertBounceEvidenceSchema,
+  insertBounceScheduleSchema,
+  insertBounceInteractionSchema,
+  BounceTestRunStatus,
+  BounceFindingSeverity, 
+  BounceFindingStatus,
+  BounceEvidenceType,
+  BounceInteractionType,
+  type BounceTestRun,
+  type InsertBounceTestRun,
+  type BounceFinding,
+  type InsertBounceFinding,
+  type BounceEvidence,
+  type InsertBounceEvidence,
+  type BounceSchedule,
+  type InsertBounceSchedule,
+  type BounceInteraction,
+  type InsertBounceInteraction
+};
 
 // User achievements table
 export const userAchievements = pgTable("user_achievements", {
