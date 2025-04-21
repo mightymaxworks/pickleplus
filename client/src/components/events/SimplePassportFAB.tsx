@@ -16,12 +16,12 @@ import { motion } from 'framer-motion';
 import { TicketIcon } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 
 export const SimplePassportFAB = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [, navigate] = useNavigate();
+  const [, navigate] = useLocation();
   
   // Handle button click - navigate to passport page
   const handleClick = () => {

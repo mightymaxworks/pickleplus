@@ -11,14 +11,14 @@
  */
 
 import React from 'react';
-import { useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StandardLayout } from '@/components/layout/StandardLayout';
 import { ModernUniversalPassport } from '@/components/events/ModernUniversalPassport';
 
 export function PassportPage() {
-  const [, navigate] = useNavigate();
+  const [, navigate] = useLocation();
   
   // Handle back button
   const handleBack = () => {
