@@ -518,14 +518,14 @@ const BounceFindings: React.FC = () => {
             
             <div className="flex-grow flex justify-end">
               <Select
-                value={filters.area || ""}
-                onValueChange={(value) => setFilters({ ...filters, area: value || undefined })}
+                value={filters.area || "all_areas"}
+                onValueChange={(value) => setFilters({ ...filters, area: value === "all_areas" ? undefined : value })}
               >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Filter by area" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Areas</SelectItem>
+                  <SelectItem value="all_areas">All Areas</SelectItem>
                   {metaData?.areas?.map((area) => (
                     <SelectItem key={area} value={area}>{area}</SelectItem>
                   ))}
