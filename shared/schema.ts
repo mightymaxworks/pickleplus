@@ -146,6 +146,26 @@ import {
   type InsertBounceInteraction
 } from './schema/bounce';
 
+// Import Bounce gamification schema (PKL-278651-BOUNCE-0004-GAME - Bounce Gamification)
+import {
+  bounceAchievements,
+  userBounceAchievements,
+  bounceLeaderboard,
+  bounceAchievementsRelations,
+  userBounceAchievementsRelations,
+  bounceLeaderboardRelations,
+  insertBounceAchievementSchema,
+  insertUserBounceAchievementSchema,
+  insertBounceLeaderboardSchema,
+  BounceAchievementType,
+  type BounceAchievement,
+  type InsertBounceAchievement,
+  type UserBounceAchievement,
+  type InsertUserBounceAchievement,
+  type BounceLeaderboardEntry,
+  type InsertBounceLeaderboardEntry
+} from './schema/bounce-achievements';
+
 // Import Community schema (PKL-278651-COMM-0006-HUB - Community Hub Implementation)
 import {
   communities,
@@ -434,6 +454,26 @@ export {
   type InsertBounceSchedule,
   type BounceInteraction,
   type InsertBounceInteraction
+};
+
+// Re-export Bounce Gamification components
+export {
+  bounceAchievements,
+  userBounceAchievements,
+  bounceLeaderboard,
+  bounceAchievementsRelations,
+  userBounceAchievementsRelations,
+  bounceLeaderboardRelations,
+  insertBounceAchievementSchema,
+  insertUserBounceAchievementSchema,
+  insertBounceLeaderboardSchema,
+  BounceAchievementType,
+  type BounceAchievement,
+  type InsertBounceAchievement,
+  type UserBounceAchievement,
+  type InsertUserBounceAchievement,
+  type BounceLeaderboardEntry,
+  type InsertBounceLeaderboardEntry
 };
 
 // User achievements table
