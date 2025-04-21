@@ -14,7 +14,7 @@ import { registerBounceGamificationRoutes } from '../../routes/bounce-gamificati
 import { registerBounceXpRoutes } from '../../routes/bounce-xp-routes';
 import { registerBounceAdminRoutes } from '../../routes/admin-bounce-routes';
 import { setupBounceAchievements } from '../../services/bounce-achievements-setup';
-import { ServerEventBus } from '../../core/events/server-event-bus';
+import { getEventBus } from '../../core/events/server-event-bus';
 
 let moduleInitialized = false;
 
@@ -42,7 +42,8 @@ export async function initializeBounceModule(app: express.Express): Promise<void
     await setupBounceAchievements();
     
     // Publish module initialized event
-    ServerEventBus.publish('module:bounce:initialized', {
+    const eventBus = getEventBus();
+    eventBus.publish('module:bounce:initialized', {
       timestamp: new Date(),
       message: 'Bounce module initialized successfully'
     });
