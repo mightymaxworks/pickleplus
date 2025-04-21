@@ -44,9 +44,10 @@ export const eventRegistrations = pgTable('event_registrations', {
   id: serial('id').primaryKey(),
   eventId: integer('event_id').notNull().references(() => events.id),
   userId: integer('user_id').notNull().references(() => users.id),
-  registrationTime: timestamp('registration_time').defaultNow().notNull(),
+  registrationDate: timestamp('registration_date').defaultNow().notNull(),
   status: text('status').default('confirmed').notNull(), // 'pending', 'confirmed', 'cancelled', 'waitlisted'
   notes: text('notes'), // For any special requests or information
+  isAutoRegistered: boolean('is_auto_registered').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -141,7 +142,7 @@ export const insertEventCheckInSchema = createInsertSchema(eventCheckIns).omit({
 
 export const insertEventRegistrationSchema = createInsertSchema(eventRegistrations).omit({
   id: true,
-  registrationTime: true,
+  registrationDate: true,
   createdAt: true,
   updatedAt: true,
 });
