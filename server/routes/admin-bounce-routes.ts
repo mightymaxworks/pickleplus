@@ -118,6 +118,25 @@ export function registerBounceAdminRoutes(app: express.Express): void {
     res.status(result.success ? 200 : 500).json(result);
   });
   
+  // Get findings metadata (areas, components) for filtering
+  app.get('/api/admin/bounce/findings/metadata', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+    try {
+      // This would typically come from a database query, but for now we'll return some static values
+      const metadata = {
+        success: true,
+        areas: ['UI/UX', 'Backend', 'Authentication', 'Database', 'Performance', 'Mobile', 'Responsive Design'],
+        components: ['Login', 'Profile', 'Matches', 'Tournaments', 'Communities', 'Events', 'Dashboard', 'Settings'],
+        severities: ['critical', 'high', 'medium', 'low'],
+        statuses: ['open', 'in_progress', 'resolved', 'wont_fix', 'duplicate']
+      };
+      
+      res.status(200).json(metadata);
+    } catch (error) {
+      console.error('Error fetching findings metadata:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch findings metadata' });
+    }
+  });
+  
   // Add evidence to a finding
   app.post('/api/admin/bounce/findings/:id/evidence', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
     const idParam = req.params.id;
