@@ -10,7 +10,7 @@
  * @lastModified 2025-04-20
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useMedia, MediaFilter } from "@/lib/hooks/useMedia";
 import { Media, MediaType } from "@shared/schema/media";
 import {
@@ -96,12 +96,12 @@ export function MediaGallery({
   // Initialize filter with props if provided
   useEffect(() => {
     if (initialFilter) {
-      setFilter({
-        ...filter,
+      setFilter(prevFilter => ({
+        ...prevFilter,
         ...initialFilter,
-      });
+      }));
     }
-  }, [initialFilter, filter]);
+  }, [initialFilter, setFilter]);
 
   // Filter media by search term
   const filteredMedia = useMemo(() => {
@@ -166,18 +166,18 @@ export function MediaGallery({
 
   // Handle filter changes
   const handleFilterChange = (type: MediaType | "all") => {
-    setFilter({
-      ...filter,
+    setFilter(prevFilter => ({
+      ...prevFilter,
       mediaType: type === "all" ? undefined : type,
-    });
+    }));
   };
 
   // Handle sort change
   const handleSortChange = (sort: "newest" | "oldest" | "featured") => {
-    setFilter({
-      ...filter,
+    setFilter(prevFilter => ({
+      ...prevFilter,
       sort,
-    });
+    }));
   };
 
   return (
