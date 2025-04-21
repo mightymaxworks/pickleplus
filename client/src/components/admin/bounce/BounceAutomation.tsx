@@ -137,9 +137,17 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 // Templates Tab
 const TemplatesTab = () => {
-  const { data: templates, isLoading } = useQuery({
+  const { data: templates, isLoading, isError } = useQuery({
     queryKey: ['/api/admin/bounce/templates'],
-    retry: false
+    retry: false,
+    onError: (error) => {
+      console.error('Error fetching templates:', error);
+      toast({
+        title: 'Error loading templates',
+        description: error instanceof Error ? error.message : 'An error occurred',
+        variant: 'destructive'
+      });
+    }
   });
   
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
@@ -378,14 +386,25 @@ const TemplatesTab = () => {
 
 // Schedules Tab
 const SchedulesTab = () => {
-  const { data: schedules, isLoading } = useQuery({
+  const { data: schedules, isLoading, isError } = useQuery({
     queryKey: ['/api/admin/bounce/schedules'],
-    retry: false
+    retry: false,
+    onError: (error) => {
+      console.error('Error fetching schedules:', error);
+      toast({
+        title: 'Error loading schedules',
+        description: error instanceof Error ? error.message : 'An error occurred',
+        variant: 'destructive'
+      });
+    }
   });
   
   const { data: templates } = useQuery({
     queryKey: ['/api/admin/bounce/templates'],
-    retry: false
+    retry: false,
+    onError: (error) => {
+      console.error('Error fetching templates:', error);
+    }
   });
   
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
@@ -737,8 +756,16 @@ const SchedulesTab = () => {
 
 // Status tab
 const StatusTab = () => {
-  const { data: status, isLoading } = useQuery({
+  const { data: status, isLoading, isError } = useQuery({
     queryKey: ['/api/admin/bounce/automation/status'],
+    onError: (error) => {
+      console.error('Error fetching automation status:', error);
+      toast({
+        title: 'Error loading status',
+        description: error instanceof Error ? error.message : 'Failed to load automation status',
+        variant: 'destructive'
+      });
+    },
     retry: false,
     refetchInterval: 30000 // Refresh every 30 seconds
   });
