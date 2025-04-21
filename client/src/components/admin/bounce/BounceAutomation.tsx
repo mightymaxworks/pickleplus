@@ -1239,7 +1239,7 @@ const BounceAutomation = () => {
               value="status"
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-2 px-3"
             >
-              <Pulse className="h-4 w-4 mr-2" />
+              <Activity className="h-4 w-4 mr-2" />
               Status
             </TabsTrigger>
           </TabsList>
