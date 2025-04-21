@@ -6,6 +6,7 @@ import * as http from 'http';
 import * as path from 'path';
 import { setupAuth } from './auth';
 import { setupSecurity } from './security';
+import { initializeBounceModule } from './modules/bounce';
 
 const app = express();
 app.use(express.json());
@@ -90,6 +91,14 @@ app.use((req, res, next) => {
     console.log("[API][CRITICAL] Special routes registered successfully");
   } catch (error) {
     console.error("[API][CRITICAL] Error registering special routes:", error);
+  }
+
+  // Initialize Bounce module
+  try {
+    await initializeBounceModule(app);
+    console.log("[Module] Bounce module initialized successfully");
+  } catch (error) {
+    console.error("[Module] Error initializing Bounce module:", error);
   }
 
   // Server API Routes and get the HTTP server that will also handle WebSockets

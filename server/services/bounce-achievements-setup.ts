@@ -10,124 +10,122 @@
  */
 
 import { db } from '../db';
+import { bounceAchievements } from '@shared/schema';
 import { eq } from 'drizzle-orm';
-import { 
-  bounceAchievements, 
-  BounceAchievementType,
-  type InsertBounceAchievement
-} from '@shared/schema';
 
 /**
  * Default achievement data for the Bounce system
  */
-const defaultAchievements: InsertBounceAchievement[] = [
-  // Tester Participation Achievements
+const DEFAULT_ACHIEVEMENTS = [
   {
-    name: "Test Explorer",
-    description: "Participate in Bounce testing for at least 30 minutes.",
-    type: BounceAchievementType.TESTER_PARTICIPATION,
-    icon: "award",
-    badgeImageUrl: "/assets/badges/bounce/test-explorer.png",
-    requiredPoints: 30, // 30 minutes
-    xpReward: 15,
-    isActive: true
+    name: 'First Time Tester',
+    code: 'first_time_tester',
+    description: 'Completed your first Bounce test session',
+    xpValue: 25,
+    iconPath: '/assets/bounce/badges/first_time.svg',
+    displayOrder: 1,
+    category: 'Participation',
+    isActive: true,
+    rarity: 'Common'
   },
   {
-    name: "Test Enthusiast",
-    description: "Spend 2 hours testing with Bounce.",
-    type: BounceAchievementType.TESTER_PARTICIPATION,
-    icon: "award",
-    badgeImageUrl: "/assets/badges/bounce/test-enthusiast.png",
-    requiredPoints: 120, // 2 hours
-    xpReward: 25,
-    isActive: true
+    name: 'Bug Hunter',
+    code: 'bug_hunter',
+    description: 'Reported 5 findings through Bounce',
+    xpValue: 50,
+    iconPath: '/assets/bounce/badges/bug_hunter.svg',
+    displayOrder: 2,
+    category: 'Findings',
+    isActive: true,
+    rarity: 'Uncommon'
   },
   {
-    name: "Test Champion",
-    description: "Dedicate 5 hours to Bounce testing sessions.",
-    type: BounceAchievementType.TESTER_PARTICIPATION,
-    icon: "award",
-    badgeImageUrl: "/assets/badges/bounce/test-champion.png",
-    requiredPoints: 300, // 5 hours
-    xpReward: 50,
-    isActive: true
-  },
-  
-  // Issue Discovery Achievements
-  {
-    name: "Bug Spotter",
-    description: "Find your first issue with Bounce.",
-    type: BounceAchievementType.ISSUE_DISCOVERY,
-    icon: "bug",
-    badgeImageUrl: "/assets/badges/bounce/bug-spotter.png",
-    requiredInteractions: 1,
-    xpReward: 10,
-    isActive: true
+    name: 'First Finding',
+    code: 'first_finding',
+    description: 'Reported your first issue through Bounce',
+    xpValue: 25,
+    iconPath: '/assets/bounce/badges/first_finding.svg',
+    displayOrder: 3,
+    category: 'Findings',
+    isActive: true,
+    rarity: 'Common'
   },
   {
-    name: "Bug Hunter",
-    description: "Discover 5 issues with Bounce.",
-    type: BounceAchievementType.ISSUE_DISCOVERY,
-    icon: "search",
-    badgeImageUrl: "/assets/badges/bounce/bug-hunter.png",
-    requiredInteractions: 5,
-    xpReward: 25,
-    isActive: true
+    name: 'Master Hunter',
+    code: 'master_hunter',
+    description: 'Reported 20 findings through Bounce',
+    xpValue: 100,
+    iconPath: '/assets/bounce/badges/master_hunter.svg',
+    displayOrder: 4,
+    category: 'Findings',
+    isActive: true,
+    rarity: 'Rare'
   },
   {
-    name: "Bug Exterminator",
-    description: "Report 15 issues with Bounce.",
-    type: BounceAchievementType.ISSUE_DISCOVERY,
-    icon: "zap",
-    badgeImageUrl: "/assets/badges/bounce/bug-exterminator.png",
-    requiredInteractions: 15,
-    xpReward: 50,
-    isActive: true
-  },
-  
-  // Verification Achievements
-  {
-    name: "Verification Rookie",
-    description: "Verify your first Bounce finding from another tester.",
-    type: BounceAchievementType.VERIFICATION,
-    icon: "check",
-    badgeImageUrl: "/assets/badges/bounce/verification-rookie.png",
-    requiredInteractions: 1,
-    xpReward: 5,
-    isActive: true
+    name: 'Consistent Tester',
+    code: 'consistent_tester',
+    description: 'Tested for 5 days in a row',
+    xpValue: 75,
+    iconPath: '/assets/bounce/badges/consistent_tester.svg',
+    displayOrder: 5,
+    category: 'Participation',
+    isActive: true,
+    rarity: 'Rare'
   },
   {
-    name: "Verification Expert",
-    description: "Verify 10 Bounce findings from other testers.",
-    type: BounceAchievementType.VERIFICATION,
-    icon: "check-square",
-    badgeImageUrl: "/assets/badges/bounce/verification-expert.png",
-    requiredInteractions: 10,
-    xpReward: 20,
-    isActive: true
+    name: 'Verifier',
+    code: 'verifier',
+    description: 'Verified 5 findings reported by others',
+    xpValue: 50,
+    iconPath: '/assets/bounce/badges/verifier.svg',
+    displayOrder: 6,
+    category: 'Verification',
+    isActive: true,
+    rarity: 'Uncommon'
   },
-  
-  // Feedback Achievements
   {
-    name: "Feedback Provider",
-    description: "Submit detailed feedback on 3 Bounce findings.",
-    type: BounceAchievementType.FEEDBACK,
-    icon: "message-square",
-    badgeImageUrl: "/assets/badges/bounce/feedback-provider.png",
-    requiredInteractions: 3,
-    xpReward: 15,
-    isActive: true
+    name: 'Master Verifier',
+    code: 'master_verifier',
+    description: 'Verified 20 findings reported by others',
+    xpValue: 100,
+    iconPath: '/assets/bounce/badges/master_verifier.svg',
+    displayOrder: 7,
+    category: 'Verification',
+    isActive: true,
+    rarity: 'Rare'
   },
-  
-  // Milestone Achievements
   {
-    name: "Founding Tester",
-    description: "Join the Bounce testing program in its early days.",
-    type: BounceAchievementType.MILESTONE,
-    icon: "star",
-    badgeImageUrl: "/assets/badges/bounce/founding-tester.png",
-    xpReward: 50,
-    isActive: true
+    name: 'Bounce Enthusiast',
+    code: 'bounce_enthusiast',
+    description: 'Participated in 10 Bounce testing sessions',
+    xpValue: 50,
+    iconPath: '/assets/bounce/badges/enthusiast.svg',
+    displayOrder: 8,
+    category: 'Participation',
+    isActive: true,
+    rarity: 'Uncommon'
+  },
+  {
+    name: 'Bounce Veteran',
+    code: 'bounce_veteran',
+    description: 'Participated in 30 Bounce testing sessions',
+    xpValue: 100,
+    iconPath: '/assets/bounce/badges/veteran.svg',
+    displayOrder: 9,
+    category: 'Participation',
+    isActive: true,
+    rarity: 'Rare'
+  },
+  {
+    name: 'Critical Bug Catcher',
+    code: 'critical_bug',
+    description: 'Found a critical bug that could have caused major issues',
+    xpValue: 150,
+    iconPath: '/assets/bounce/badges/critical_bug.svg',
+    displayOrder: 10,
+    category: 'Findings',
+    isActive: true,
+    rarity: 'Epic'
   }
 ];
 
@@ -136,39 +134,42 @@ const defaultAchievements: InsertBounceAchievement[] = [
  */
 export async function setupBounceAchievements(): Promise<void> {
   try {
-    console.log('[Bounce] Setting up default achievements...');
+    console.log('[Bounce Achievements Setup] Starting achievement setup...');
     
-    // Check if any achievements already exist
-    const existingAchievements = await db.select().from(bounceAchievements);
+    // Check if achievements already exist
+    const existingAchievements = await db
+      .select({ code: bounceAchievements.code })
+      .from(bounceAchievements);
     
-    if (existingAchievements.length === 0) {
-      // Insert all default achievements
-      await db.insert(bounceAchievements).values(defaultAchievements);
-      console.log(`[Bounce] Created ${defaultAchievements.length} default achievements.`);
-    } else {
-      console.log(`[Bounce] Found ${existingAchievements.length} existing achievements.`);
-      
-      // Check each default achievement and add it if missing
-      let addedCount = 0;
-      
-      for (const achievement of defaultAchievements) {
-        // Check if achievement with this name already exists
-        const existingAchievement = existingAchievements.find(a => a.name === achievement.name);
-        
-        if (!existingAchievement) {
-          await db.insert(bounceAchievements).values(achievement);
-          addedCount++;
-        }
-      }
-      
-      if (addedCount > 0) {
-        console.log(`[Bounce] Added ${addedCount} missing achievements.`);
-      } else {
-        console.log('[Bounce] All default achievements already exist.');
-      }
+    const existingCodes = new Set(existingAchievements.map(a => a.code));
+    
+    // Filter out achievements that already exist
+    const achievementsToAdd = DEFAULT_ACHIEVEMENTS.filter(a => !existingCodes.has(a.code));
+    
+    // If no new achievements to add, we're done
+    if (achievementsToAdd.length === 0) {
+      console.log('[Bounce Achievements Setup] All achievements already exist, skipping setup');
+      return;
     }
+    
+    // Add missing achievements
+    console.log(`[Bounce Achievements Setup] Adding ${achievementsToAdd.length} new achievements...`);
+    
+    const now = new Date();
+    
+    // Add each achievement with createdAt and updatedAt timestamps
+    for (const achievement of achievementsToAdd) {
+      await db.insert(bounceAchievements).values({
+        ...achievement,
+        createdAt: now,
+        updatedAt: now
+      });
+    }
+    
+    console.log('[Bounce Achievements Setup] Achievement setup complete');
   } catch (error) {
-    console.error('[Bounce] Error setting up achievements:', error);
+    console.error('[Bounce Achievements Setup] Error setting up achievements:', error);
+    throw error;
   }
 }
 
@@ -177,10 +178,49 @@ export async function setupBounceAchievements(): Promise<void> {
  */
 export async function updateBounceAchievements(): Promise<void> {
   try {
-    // This function could be expanded to update existing achievements
-    // For example, updating icons, descriptions, or XP rewards
-    console.log('[Bounce] Achievement updates complete.');
+    console.log('[Bounce Achievements Setup] Starting achievement updates...');
+    
+    // Update each achievement that already exists
+    for (const achievement of DEFAULT_ACHIEVEMENTS) {
+      const [existing] = await db
+        .select()
+        .from(bounceAchievements)
+        .where(eq(bounceAchievements.code, achievement.code));
+      
+      if (existing) {
+        // Check if there are differences
+        if (
+          existing.name !== achievement.name ||
+          existing.description !== achievement.description ||
+          existing.xpValue !== achievement.xpValue ||
+          existing.iconPath !== achievement.iconPath ||
+          existing.displayOrder !== achievement.displayOrder ||
+          existing.category !== achievement.category ||
+          existing.rarity !== achievement.rarity
+        ) {
+          // Update the achievement
+          await db
+            .update(bounceAchievements)
+            .set({
+              name: achievement.name,
+              description: achievement.description,
+              xpValue: achievement.xpValue,
+              iconPath: achievement.iconPath,
+              displayOrder: achievement.displayOrder,
+              category: achievement.category,
+              rarity: achievement.rarity,
+              updatedAt: new Date()
+            })
+            .where(eq(bounceAchievements.code, achievement.code));
+            
+          console.log(`[Bounce Achievements Setup] Updated achievement: ${achievement.name}`);
+        }
+      }
+    }
+    
+    console.log('[Bounce Achievements Setup] Achievement updates complete');
   } catch (error) {
-    console.error('[Bounce] Error updating achievements:', error);
+    console.error('[Bounce Achievements Setup] Error updating achievements:', error);
+    throw error;
   }
 }

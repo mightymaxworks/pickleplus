@@ -15,8 +15,12 @@ import { ServerEventBus } from '../../core/events/server-event-bus';
 import { eq, desc, asc, sql, and, gte } from 'drizzle-orm';
 import { 
   xpTransactions, 
-  xpLevelThresholds,
-  users
+  xpServiceLevels,
+  userXpLevels,
+  users,
+  XP_SOURCE_TYPE,
+  XP_SOURCE,
+  XP_SERVICE_LEVEL
 } from '@shared/schema';
 
 export interface AwardXpParams {
@@ -319,3 +323,6 @@ export class XpService {
     }
   }
 }
+
+// Create and export an instance of the XpService
+export const xpService = new XpService();

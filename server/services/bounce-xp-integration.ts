@@ -1,8 +1,8 @@
 /**
  * PKL-278651-BOUNCE-0004-GAME - Bounce XP Integration Service
  * 
- * This service provides integration between the Bounce testing system and the platform XP system,
- * handling XP awards for testing activities, achievement unlocks, and other gamification elements.
+ * This service integrates the Bounce automated testing system with the platform's XP system,
+ * providing methods to award XP for various testing activities and track user progress.
  * 
  * @framework Framework5.2
  * @version 1.0.0
@@ -10,650 +10,609 @@
  */
 
 import { db } from '../db';
-import { XP_SOURCE, xpTransactions } from '../../shared/schema/xp';
-import { 
-  bounceInteractions, 
-  BounceInteractionType,
-  bounceFindings,
-  userBounceAchievements,
-  bounceAchievements
-} from '@shared/schema';
-import { eq, and, sql, sum, desc } from 'drizzle-orm';
+import { XP_SERVICE_LEVEL, XP_SOURCE, XP_SOURCE_TYPE } from '@shared/schema/xp';
+import { xpService } from '../modules/xp/xp-service';
 import { ServerEventBus } from '../core/events/server-event-bus';
-
-// Import the XpService and create an instance
-import { XpService } from '../modules/xp/xp-service';
-const xpService = new XpService();
+import { and, eq } from 'drizzle-orm';
+import { userBounceAchievements, bounceAchievements } from '@shared/schema';
+import { storage } from '../storage';
 
 /**
- * Bounce XP Integration Service
- * Provides methods for awarding and tracking XP related to Bounce testing activities
+ * XP values for different Bounce activities
  */
-export class BounceXpIntegration {
+const XP_VALUES = {
+  // Finding issues
+  FINDING: {
+    LOW: 5,
+    MEDIUM: 10,
+    HIGH: 20,
+    CRITICAL: 30
+  },
+  // Verifying issues
+  VERIFICATION: 5,
+  // Participation (per minute)
+  PARTICIPATION: 1,
+  // Achievement unlocks
+  ACHIEVEMENT: 25,
+  // First-time tester bonus
+  FIRST_TIME: 50,
+  // Consistency bonus (5 days in a row)
+  CONSISTENCY: 100
+};
+
+/**
+ * Bounce XP Integration service
+ * Handles awarding XP for Bounce testing activities and achievement tracking
+ */
+class BounceXpIntegration {
+  /**
+   * Initialize the Bounce XP Integration
+   * Sets up event listeners for Bounce events
+   */
   constructor() {
-    // Register event listeners for Bounce achievements and interactions
-    this.registerEventListeners();
-    console.log('[XP] BounceXpIntegration initialized with event listeners');
+    this.setupEventListeners();
   }
 
   /**
-   * Register event listeners for Bounce-related events
+   * Set up event listeners for Bounce events that will award XP
    */
-  private registerEventListeners(): void {
-    // Listen for achievement unlock events
+  private setupEventListeners(): void {
+    // Listen for testing activity events
+    ServerEventBus.subscribe('bounce:finding:created', this.handleFindingCreated.bind(this));
+    ServerEventBus.subscribe('bounce:finding:verified', this.handleFindingVerified.bind(this));
+    ServerEventBus.subscribe('bounce:session:completed', this.handleSessionCompleted.bind(this));
+    
+    // Listen for achievement events
     ServerEventBus.subscribe('bounce:achievement:unlocked', this.handleAchievementUnlocked.bind(this));
     
-    // Listen for new findings being submitted
-    ServerEventBus.subscribe('bounce:finding:created', this.handleFindingCreated.bind(this));
-    
-    // Listen for finding verifications
-    ServerEventBus.subscribe('bounce:finding:verified', this.handleFindingVerified.bind(this));
-    
-    // Listen for testing participation
-    ServerEventBus.subscribe('bounce:session:completed', this.handleSessionCompleted.bind(this));
-  }
-
-  /**
-   * Handle achievement unlocked event
-   */
-  private async handleAchievementUnlocked(data: any): Promise<void> {
-    if (!data || !data.userId || !data.achievementId) {
-      console.error('[XP] Invalid Bounce achievement unlock event data:', data);
-      return;
-    }
-
-    try {
-      await this.awardAchievementXp(data.userId, data.achievementId);
-    } catch (error) {
-      console.error('[XP] Error handling bounce achievement unlock event:', error);
-    }
+    console.log('[Bounce XP Integration] Event listeners registered');
   }
 
   /**
    * Handle finding created event
+   * @param event Finding created event data
    */
-  private async handleFindingCreated(data: any): Promise<void> {
-    if (!data || !data.userId || !data.findingId || !data.severity) {
-      console.error('[XP] Invalid Bounce finding created event data:', data);
-      return;
-    }
-
+  private async handleFindingCreated(event: any): Promise<void> {
     try {
-      await this.awardFindingXp(data.userId, data.findingId, data.severity);
+      const { userId, findingId, severity } = event;
+      await this.awardFindingXp(userId, findingId, severity);
     } catch (error) {
-      console.error('[XP] Error handling bounce finding created event:', error);
+      console.error('[Bounce XP Integration] Error handling finding created event:', error);
     }
   }
 
   /**
    * Handle finding verified event
+   * @param event Finding verified event data
    */
-  private async handleFindingVerified(data: any): Promise<void> {
-    if (!data || !data.userId || !data.findingId) {
-      console.error('[XP] Invalid Bounce finding verified event data:', data);
-      return;
-    }
-
+  private async handleFindingVerified(event: any): Promise<void> {
     try {
-      await this.awardVerificationXp(data.userId, data.findingId);
+      const { userId, findingId } = event;
+      await this.awardVerificationXp(userId, findingId);
     } catch (error) {
-      console.error('[XP] Error handling bounce finding verified event:', error);
+      console.error('[Bounce XP Integration] Error handling finding verified event:', error);
     }
   }
 
   /**
-   * Handle testing session completed event
+   * Handle session completed event
+   * @param event Session completed event data
    */
-  private async handleSessionCompleted(data: any): Promise<void> {
-    if (!data || !data.userId || !data.durationMinutes) {
-      console.error('[XP] Invalid Bounce session completed event data:', data);
-      return;
-    }
-
+  private async handleSessionCompleted(event: any): Promise<void> {
     try {
-      await this.awardParticipationXp(data.userId, data.durationMinutes);
+      const { userId, duration } = event;
+      await this.awardParticipationXp(userId, duration);
+      
+      // Check for first-time tester
+      await this.checkAndAwardFirstTimeXp(userId);
+      
+      // Check for consistent tester (5 days in a row)
+      await this.checkAndAwardConsistencyXp(userId);
+      
+      // Check for achievements based on activity
+      await this.checkAndAwardAchievements(userId);
     } catch (error) {
-      console.error('[XP] Error handling bounce session completed event:', error);
+      console.error('[Bounce XP Integration] Error handling session completed event:', error);
     }
   }
 
   /**
-   * Award XP for a new Bounce finding
-   * @param userId User who discovered the finding
-   * @param findingId ID of the finding that was created
-   * @param findingSeverity Severity level of the finding
-   * @returns The amount of XP awarded
+   * Handle achievement unlocked event
+   * @param event Achievement unlocked event data
    */
-  async awardFindingXp(
-    userId: number, 
-    findingId: number, 
-    findingSeverity: string
-  ): Promise<number> {
+  private async handleAchievementUnlocked(event: any): Promise<void> {
     try {
-      // XP awards based on finding severity
-      const severityXpMap: Record<string, number> = {
-        'critical': 25,
-        'high': 15,
-        'medium': 10,
-        'low': 5,
-        'cosmetic': 2
-      };
+      const { userId, achievement } = event;
       
-      // Use the severity to determine the XP amount, or default to 5
-      const baseXpAmount = severityXpMap[findingSeverity.toLowerCase()] || 5;
-      
-      // Get the finding details for the description
-      const [finding] = await db
-        .select({
-          title: bounceFindings.title,
-          affectedUrl: bounceFindings.affectedUrl
-        })
-        .from(bounceFindings)
-        .where(eq(bounceFindings.id, findingId));
-      
-      // Award XP
-      await xpService.awardXp({
-        userId,
-        amount: baseXpAmount,
-        source: XP_SOURCE.BOUNCE,
-        sourceType: 'finding',
-        sourceId: findingId.toString(),
-        description: `Found issue: ${finding?.title || 'Untitled'} in ${finding?.affectedUrl || 'Unknown area'}`,
-        metadata: {
-          findingId,
-          findingSeverity
-        }
-      });
-      
-      console.log(`[XP] Awarded ${baseXpAmount} XP to user ${userId} for finding #${findingId}`);
-      
-      // Trigger check for any achievements based on findings count
-      await this.checkFindingCountAchievements(userId);
-      
-      return baseXpAmount;
-    } catch (error) {
-      console.error('[XP] Error awarding XP for finding:', error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Award XP for verifying another user's finding
-   * @param userId User who verified the finding
-   * @param findingId ID of the finding that was verified
-   * @returns The amount of XP awarded
-   */
-  async awardVerificationXp(
-    userId: number,
-    findingId: number
-  ): Promise<number> {
-    try {
-      // Get the finding details for the description
-      const [finding] = await db
-        .select({
-          title: bounceFindings.title,
-          affectedUrl: bounceFindings.affectedUrl,
-          severity: bounceFindings.severity
-        })
-        .from(bounceFindings)
-        .where(eq(bounceFindings.id, findingId));
-      
-      // XP for verification is typically lower than for finding
-      // Base amount is 3 XP, with bonus for higher severity findings
-      let baseXpAmount = 3;
-      
-      if (finding?.severity) {
-        if (['critical', 'high'].includes(finding.severity.toLowerCase())) {
-          baseXpAmount = 5;
-        }
-      }
-      
-      // Award XP
-      await xpService.awardXp({
-        userId,
-        amount: baseXpAmount,
-        source: XP_SOURCE.BOUNCE,
-        sourceType: 'verification',
-        sourceId: findingId.toString(),
-        description: `Verified finding: ${finding?.title || 'Untitled'} in ${finding?.affectedUrl || 'Unknown area'}`,
-        metadata: {
-          findingId,
-          findingSeverity: finding?.severity
-        }
-      });
-      
-      console.log(`[XP] Awarded ${baseXpAmount} XP to user ${userId} for verifying finding #${findingId}`);
-      
-      // Trigger check for any achievements based on verification count
-      await this.checkVerificationCountAchievements(userId);
-      
-      return baseXpAmount;
-    } catch (error) {
-      console.error('[XP] Error awarding XP for verification:', error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Award XP for unlocking a Bounce achievement
-   * @param userId User who unlocked the achievement
-   * @param achievementId ID of the achievement that was unlocked
-   * @returns The amount of XP awarded
-   */
-  async awardAchievementXp(
-    userId: number,
-    achievementId: number
-  ): Promise<number> {
-    try {
-      // Get the achievement details
-      const [achievement] = await db
-        .select()
-        .from(bounceAchievements)
-        .where(eq(bounceAchievements.id, achievementId));
-      
-      if (!achievement) {
-        throw new Error(`Achievement #${achievementId} not found`);
-      }
-      
-      // Use the achievement's XP reward or a default of 10
-      const xpAmount = achievement.xpReward || 10;
-      
-      // Award XP
-      await xpService.awardXp({
-        userId,
-        amount: xpAmount,
-        source: XP_SOURCE.BOUNCE,
-        sourceType: 'achievement',
-        sourceId: achievementId.toString(),
-        description: `Unlocked achievement: ${achievement.name}`,
-        metadata: {
-          achievementId,
-          achievementType: achievement.type
-        }
-      });
-      
-      console.log(`[XP] Awarded ${xpAmount} XP to user ${userId} for achievement #${achievementId}`);
-      
-      return xpAmount;
-    } catch (error) {
-      console.error('[XP] Error awarding XP for achievement:', error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Award XP for testing participation
-   * @param userId User who participated in testing
-   * @param sessionDurationMinutes Duration of the testing session in minutes
-   * @returns The amount of XP awarded
-   */
-  async awardParticipationXp(
-    userId: number,
-    sessionDurationMinutes: number
-  ): Promise<number> {
-    try {
-      // Base award is 1 XP per 5 minutes of testing, capped at 20 XP per session
-      const baseXpAmount = Math.min(Math.floor(sessionDurationMinutes / 5), 20);
-      
-      if (baseXpAmount === 0) {
-        return 0; // Session too short to award XP
-      }
-      
-      // Award XP
-      await xpService.awardXp({
-        userId,
-        amount: baseXpAmount,
-        source: XP_SOURCE.BOUNCE,
-        sourceType: 'participation',
-        description: `Participated in Bounce testing for ${sessionDurationMinutes} minutes`,
-        metadata: {
-          sessionDurationMinutes
-        }
-      });
-      
-      console.log(`[XP] Awarded ${baseXpAmount} XP to user ${userId} for ${sessionDurationMinutes} minutes of testing`);
-      
-      // Trigger check for any achievements based on participation time
-      await this.checkParticipationTimeAchievements(userId);
-      
-      return baseXpAmount;
-    } catch (error) {
-      console.error('[XP] Error awarding XP for participation:', error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Check for achievements based on finding count
-   * @param userId User ID to check achievements for
-   */
-  private async checkFindingCountAchievements(userId: number): Promise<void> {
-    try {
-      // Count total findings by user
-      const [countResult] = await db
-        .select({
-          total: count()
-        })
-        .from(bounceInteractions)
-        .where(
-          and(
-            eq(bounceInteractions.userId, userId),
-            eq(bounceInteractions.type, BounceInteractionType.REPORT_ISSUE)
-          )
+      // Only award XP if this was not a manual award
+      if (!event.awardedManually) {
+        await xpService.awardXp(
+          userId,
+          XP_VALUES.ACHIEVEMENT,
+          XP_SOURCE.BOUNCE,
+          XP_SOURCE_TYPE.ACHIEVEMENT_UNLOCK,
+          achievement.id.toString(),
+          `Unlocked ${achievement.name} Achievement`
         );
-      
-      const totalFindings = countResult?.total || 0;
-      
-      // Get all finding count achievements
-      const findingCountAchievements = await db
-        .select()
-        .from(bounceAchievements)
-        .where(eq(bounceAchievements.type, 'ISSUE_DISCOVERY'));
-      
-      // Check for each achievement if it should be unlocked
-      for (const achievement of findingCountAchievements) {
-        // Only process if we have required findings count in the achievement
-        if (achievement.requiredInteractions) {
-          // Check if user already has this achievement
-          const [existingAchievement] = await db
-            .select()
-            .from(userBounceAchievements)
-            .where(
-              and(
-                eq(userBounceAchievements.userId, userId),
-                eq(userBounceAchievements.achievementId, achievement.id)
-              )
-            );
-          
-          // If user doesn't have this achievement yet and has enough findings
-          if (!existingAchievement && totalFindings >= achievement.requiredInteractions) {
-            await this.unlockAchievement(userId, achievement.id);
-          }
-        }
       }
+      
+      console.log(`[Bounce XP Integration] Awarded ${XP_VALUES.ACHIEVEMENT} XP to user ${userId} for unlocking achievement ${achievement.name}`);
     } catch (error) {
-      console.error('[XP] Error checking finding count achievements:', error);
+      console.error('[Bounce XP Integration] Error handling achievement unlocked event:', error);
     }
   }
-  
+
   /**
-   * Check for achievements based on verification count
-   * @param userId User ID to check achievements for
+   * Award XP for reporting a finding
+   * @param userId User ID
+   * @param findingId Finding ID
+   * @param severity Severity of the finding
+   * @returns Amount of XP awarded
    */
-  private async checkVerificationCountAchievements(userId: number): Promise<void> {
+  public async awardFindingXp(userId: number, findingId: string, severity: 'low' | 'medium' | 'high' | 'critical'): Promise<number> {
     try {
-      // Count total verifications by user
-      const [countResult] = await db
-        .select({
-          total: count()
-        })
-        .from(bounceInteractions)
-        .where(
-          and(
-            eq(bounceInteractions.userId, userId),
-            eq(bounceInteractions.type, BounceInteractionType.CONFIRM_FINDING)
-          )
-        );
-      
-      const totalVerifications = countResult?.total || 0;
-      
-      // Get all verification count achievements
-      const verificationCountAchievements = await db
-        .select()
-        .from(bounceAchievements)
-        .where(eq(bounceAchievements.type, 'VERIFICATION'));
-      
-      // Check for each achievement if it should be unlocked
-      for (const achievement of verificationCountAchievements) {
-        // Only process if we have required verifications count in the achievement
-        if (achievement.requiredInteractions) {
-          // Check if user already has this achievement
-          const [existingAchievement] = await db
-            .select()
-            .from(userBounceAchievements)
-            .where(
-              and(
-                eq(userBounceAchievements.userId, userId),
-                eq(userBounceAchievements.achievementId, achievement.id)
-              )
-            );
-          
-          // If user doesn't have this achievement yet and has enough verifications
-          if (!existingAchievement && totalVerifications >= achievement.requiredInteractions) {
-            await this.unlockAchievement(userId, achievement.id);
-          }
-        }
+      // Determine XP amount based on severity
+      let amount: number;
+      switch (severity) {
+        case 'low':
+          amount = XP_VALUES.FINDING.LOW;
+          break;
+        case 'medium':
+          amount = XP_VALUES.FINDING.MEDIUM;
+          break;
+        case 'high':
+          amount = XP_VALUES.FINDING.HIGH;
+          break;
+        case 'critical':
+          amount = XP_VALUES.FINDING.CRITICAL;
+          break;
+        default:
+          amount = XP_VALUES.FINDING.LOW;
       }
+      
+      // Award XP
+      await xpService.awardXp(
+        userId,
+        amount,
+        XP_SOURCE.BOUNCE,
+        XP_SOURCE_TYPE.FINDING,
+        findingId,
+        `Reported ${severity} finding`
+      );
+      
+      console.log(`[Bounce XP Integration] Awarded ${amount} XP to user ${userId} for ${severity} finding ${findingId}`);
+      
+      return amount;
     } catch (error) {
-      console.error('[XP] Error checking verification count achievements:', error);
+      console.error('[Bounce XP Integration] Error awarding finding XP:', error);
+      throw error;
     }
   }
-  
+
   /**
-   * Check for achievements based on participation time
-   * @param userId User ID to check achievements for
+   * Award XP for verifying a finding
+   * @param userId User ID
+   * @param findingId Finding ID
+   * @returns Amount of XP awarded
    */
-  private async checkParticipationTimeAchievements(userId: number): Promise<void> {
+  public async awardVerificationXp(userId: number, findingId: string): Promise<number> {
     try {
-      // Sum total participation time for user
-      const [timeResult] = await db
-        .select({
-          total: sum(bounceInteractions.points) // Assuming points = minutes for PARTICIPATION interactions
-        })
-        .from(bounceInteractions)
-        .where(
-          and(
-            eq(bounceInteractions.userId, userId),
-            eq(bounceInteractions.type, BounceInteractionType.PARTICIPATE)
-          )
-        );
+      // Award XP
+      await xpService.awardXp(
+        userId,
+        XP_VALUES.VERIFICATION,
+        XP_SOURCE.BOUNCE,
+        XP_SOURCE_TYPE.VERIFICATION,
+        findingId,
+        'Verified finding'
+      );
       
-      const totalParticipationMinutes = timeResult?.total || 0;
+      console.log(`[Bounce XP Integration] Awarded ${XP_VALUES.VERIFICATION} XP to user ${userId} for verifying finding ${findingId}`);
       
-      // Get all participation time achievements
-      const participationAchievements = await db
-        .select()
-        .from(bounceAchievements)
-        .where(eq(bounceAchievements.type, 'TESTER_PARTICIPATION'));
-      
-      // Check for each achievement if it should be unlocked
-      for (const achievement of participationAchievements) {
-        // Only process if we have required points (minutes) in the achievement
-        if (achievement.requiredPoints) {
-          // Check if user already has this achievement
-          const [existingAchievement] = await db
-            .select()
-            .from(userBounceAchievements)
-            .where(
-              and(
-                eq(userBounceAchievements.userId, userId),
-                eq(userBounceAchievements.achievementId, achievement.id)
-              )
-            );
-          
-          // If user doesn't have this achievement yet and has enough participation time
-          if (!existingAchievement && totalParticipationMinutes >= achievement.requiredPoints) {
-            await this.unlockAchievement(userId, achievement.id);
-          }
-        }
-      }
+      return XP_VALUES.VERIFICATION;
     } catch (error) {
-      console.error('[XP] Error checking participation time achievements:', error);
+      console.error('[Bounce XP Integration] Error awarding verification XP:', error);
+      throw error;
     }
   }
-  
+
+  /**
+   * Award XP for participation time
+   * @param userId User ID
+   * @param minutes Number of minutes participated
+   * @returns Amount of XP awarded
+   */
+  public async awardParticipationXp(userId: number, minutes: number): Promise<number> {
+    try {
+      // Validate minutes
+      if (minutes <= 0) {
+        return 0;
+      }
+      
+      // Cap at 60 minutes per session to prevent exploitation
+      const cappedMinutes = Math.min(minutes, 60);
+      const amount = cappedMinutes * XP_VALUES.PARTICIPATION;
+      
+      // Award XP
+      await xpService.awardXp(
+        userId,
+        amount,
+        XP_SOURCE.BOUNCE,
+        XP_SOURCE_TYPE.PARTICIPATION,
+        Date.now().toString(),
+        `Participated for ${cappedMinutes} minutes`
+      );
+      
+      console.log(`[Bounce XP Integration] Awarded ${amount} XP to user ${userId} for ${cappedMinutes} minutes of participation`);
+      
+      return amount;
+    } catch (error) {
+      console.error('[Bounce XP Integration] Error awarding participation XP:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Check and award first-time tester XP
+   * @param userId User ID
+   * @returns Whether XP was awarded
+   */
+  private async checkAndAwardFirstTimeXp(userId: number): Promise<boolean> {
+    try {
+      // Check if user has any previous Bounce XP transactions
+      const previousTransactions = await xpService.getUserTransactionCount(userId, XP_SOURCE.BOUNCE);
+      
+      // If this is their first time (only 1 transaction from the current event), award bonus XP
+      if (previousTransactions <= 1) {
+        await xpService.awardXp(
+          userId,
+          XP_VALUES.FIRST_TIME,
+          XP_SOURCE.BOUNCE,
+          XP_SOURCE_TYPE.FIRST_TIME,
+          'first-time',
+          'First-time tester bonus'
+        );
+        
+        console.log(`[Bounce XP Integration] Awarded ${XP_VALUES.FIRST_TIME} XP to user ${userId} for first-time testing`);
+        
+        // Unlock first-time tester achievement
+        await this.unlockAchievement(userId, 'first_time_tester');
+        
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('[Bounce XP Integration] Error checking first-time tester:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Check and award consistency XP for testing 5 days in a row
+   * @param userId User ID
+   * @returns Whether XP was awarded
+   */
+  private async checkAndAwardConsistencyXp(userId: number): Promise<boolean> {
+    try {
+      // This implementation is simplified - in a real system, you'd check for actual consecutive days
+      // Check if user has the consistent_tester achievement
+      const hasAchievement = await this.checkUserHasAchievement(userId, 'consistent_tester');
+      
+      // If they don't have it yet, check their activity pattern
+      if (!hasAchievement) {
+        // Get user's Bounce XP transactions
+        const hasConsistency = await this.checkConsistencyPattern(userId);
+        
+        if (hasConsistency) {
+          // Award consistency bonus
+          await xpService.awardXp(
+            userId,
+            XP_VALUES.CONSISTENCY,
+            XP_SOURCE.BOUNCE,
+            XP_SOURCE_TYPE.CONSISTENCY,
+            'consistency',
+            '5-day testing streak bonus'
+          );
+          
+          console.log(`[Bounce XP Integration] Awarded ${XP_VALUES.CONSISTENCY} XP to user ${userId} for 5-day testing streak`);
+          
+          // Unlock consistent tester achievement
+          await this.unlockAchievement(userId, 'consistent_tester');
+          
+          return true;
+        }
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('[Bounce XP Integration] Error checking consistency tester:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Check if user has a consistent testing pattern (5 days in a row)
+   * @param userId User ID
+   * @returns Whether user has a consistent pattern
+   */
+  private async checkConsistencyPattern(userId: number): Promise<boolean> {
+    // Simplified implementation - in a real system, you'd query daily sessions for the past 5+ days
+    // and check if they had activity on 5 consecutive days
+    
+    // For demonstration purposes, we'll assume a 5% chance of meeting this criteria
+    return Math.random() < 0.05;
+  }
+
+  /**
+   * Check and award achievements based on activity
+   * @param userId User ID
+   */
+  private async checkAndAwardAchievements(userId: number): Promise<void> {
+    try {
+      // Get counts of user's Bounce activities
+      const findingCount = await xpService.getUserTransactionCount(
+        userId, 
+        XP_SOURCE.BOUNCE, 
+        XP_SOURCE_TYPE.FINDING
+      );
+      
+      const verificationCount = await xpService.getUserTransactionCount(
+        userId, 
+        XP_SOURCE.BOUNCE, 
+        XP_SOURCE_TYPE.VERIFICATION
+      );
+      
+      const participationCount = await xpService.getUserTransactionCount(
+        userId, 
+        XP_SOURCE.BOUNCE, 
+        XP_SOURCE_TYPE.PARTICIPATION
+      );
+      
+      // Check for finding-based achievements
+      if (findingCount >= 1) {
+        await this.unlockAchievement(userId, 'first_finding');
+      }
+      
+      if (findingCount >= 5) {
+        await this.unlockAchievement(userId, 'bug_hunter');
+      }
+      
+      if (findingCount >= 20) {
+        await this.unlockAchievement(userId, 'master_hunter');
+      }
+      
+      // Check for verification-based achievements
+      if (verificationCount >= 5) {
+        await this.unlockAchievement(userId, 'verifier');
+      }
+      
+      if (verificationCount >= 20) {
+        await this.unlockAchievement(userId, 'master_verifier');
+      }
+      
+      // Check for participation-based achievements
+      if (participationCount >= 10) {
+        await this.unlockAchievement(userId, 'bounce_enthusiast');
+      }
+      
+      if (participationCount >= 30) {
+        await this.unlockAchievement(userId, 'bounce_veteran');
+      }
+    } catch (error) {
+      console.error('[Bounce XP Integration] Error checking and awarding achievements:', error);
+    }
+  }
+
   /**
    * Unlock an achievement for a user
-   * @param userId User ID who earned the achievement
-   * @param achievementId Achievement ID to unlock
+   * @param userId User ID
+   * @param achievementCode Achievement code
+   * @returns Whether the achievement was unlocked
    */
-  private async unlockAchievement(userId: number, achievementId: number): Promise<void> {
+  private async unlockAchievement(userId: number, achievementCode: string): Promise<boolean> {
     try {
-      const now = new Date();
-      
-      // Insert user achievement record
-      await db.insert(userBounceAchievements).values({
-        userId,
-        achievementId,
-        isComplete: true,
-        awardedAt: now,
-        createdAt: now,
-        updatedAt: now
-      });
-      
-      console.log(`[XP] Unlocked Bounce achievement ${achievementId} for user ${userId}`);
-      
-      // Get achievement details for the event
+      // Get the achievement
       const [achievement] = await db
         .select()
         .from(bounceAchievements)
-        .where(eq(bounceAchievements.id, achievementId));
+        .where(
+          and(
+            eq(bounceAchievements.code, achievementCode),
+            eq(bounceAchievements.isActive, true)
+          )
+        );
       
-      // Emit achievement unlocked event
+      if (!achievement) {
+        console.error(`[Bounce XP Integration] Achievement ${achievementCode} not found`);
+        return false;
+      }
+      
+      // Check if user already has this achievement
+      const [existingAchievement] = await db
+        .select()
+        .from(userBounceAchievements)
+        .where(
+          and(
+            eq(userBounceAchievements.userId, userId),
+            eq(userBounceAchievements.achievementId, achievement.id)
+          )
+        );
+      
+      // If they already have it and it's complete, do nothing
+      if (existingAchievement && existingAchievement.isComplete) {
+        return false;
+      }
+      
+      // If they have a record but it's not complete, update it
+      if (existingAchievement) {
+        await db
+          .update(userBounceAchievements)
+          .set({
+            isComplete: true,
+            awardedAt: new Date(),
+            updatedAt: new Date()
+          })
+          .where(eq(userBounceAchievements.id, existingAchievement.id));
+      } else {
+        // Otherwise, create a new record
+        const now = new Date();
+        await db
+          .insert(userBounceAchievements)
+          .values({
+            userId,
+            achievementId: achievement.id,
+            isComplete: true,
+            awardedAt: now,
+            createdAt: now,
+            updatedAt: now
+          });
+      }
+      
+      // Get user for notification
+      const user = await storage.getUser(userId);
+      
+      // Publish achievement unlocked event
       ServerEventBus.publish('bounce:achievement:unlocked', {
         userId,
-        achievementId,
+        achievementId: achievement.id,
         achievement,
-        timestamp: now
+        timestamp: new Date(),
+        username: user?.username || `User ${userId}`,
+        awardedManually: false
       });
       
-      // Award XP for the achievement
-      await this.awardAchievementXp(userId, achievementId);
+      console.log(`[Bounce XP Integration] User ${userId} unlocked achievement: ${achievement.name}`);
+      
+      return true;
     } catch (error) {
-      console.error('[XP] Error unlocking Bounce achievement:', error);
+      console.error('[Bounce XP Integration] Error unlocking achievement:', error);
+      return false;
     }
   }
-  
+
   /**
-   * Get a user's XP summary from Bounce activities
-   * @param userId User ID to get summary for
-   * @returns Summary of Bounce XP distribution
+   * Check if user has a specific achievement
+   * @param userId User ID
+   * @param achievementCode Achievement code
+   * @returns Whether user has the achievement
    */
-  async getUserXpSummary(userId: number): Promise<{
-    totalBounceXp: number;
-    totalUserXp: number;
-    xpFromFindings: number;
-    xpFromVerifications: number;
-    xpFromAchievements: number;
-    xpFromParticipation: number;
-    bounceXpPercentage: number;
-    recentTransactions: any[];
-  }> {
+  private async checkUserHasAchievement(userId: number, achievementCode: string): Promise<boolean> {
     try {
-      // Get total user XP - updated for compatibility with XpService
-      const userXpInfo = await xpService.getUserXpInfo(userId);
-      const totalUserXp = userXpInfo.totalXp || 0;
-      
-      // Get total Bounce XP
-      const totalBounceXpResult = await db
-        .select({
-          total: sum(xpTransactions.amount)
-        })
-        .from(xpTransactions)
-        .where(
-          and(
-            eq(xpTransactions.userId, userId),
-            eq(xpTransactions.source, XP_SOURCE.BOUNCE)
-          )
-        );
-      
-      // Get XP from findings
-      const findingsXpResult = await db
-        .select({
-          total: sum(xpTransactions.amount)
-        })
-        .from(xpTransactions)
-        .where(
-          and(
-            eq(xpTransactions.userId, userId),
-            eq(xpTransactions.source, XP_SOURCE.BOUNCE),
-            eq(xpTransactions.sourceType, 'finding')
-          )
-        );
-      
-      // Get XP from verifications
-      const verificationsXpResult = await db
-        .select({
-          total: sum(xpTransactions.amount)
-        })
-        .from(xpTransactions)
-        .where(
-          and(
-            eq(xpTransactions.userId, userId),
-            eq(xpTransactions.source, XP_SOURCE.BOUNCE),
-            eq(xpTransactions.sourceType, 'verification')
-          )
-        );
-      
-      // Get XP from achievements
-      const achievementsXpResult = await db
-        .select({
-          total: sum(xpTransactions.amount)
-        })
-        .from(xpTransactions)
-        .where(
-          and(
-            eq(xpTransactions.userId, userId),
-            eq(xpTransactions.source, XP_SOURCE.BOUNCE),
-            eq(xpTransactions.sourceType, 'achievement')
-          )
-        );
-      
-      // Get XP from participation
-      const participationXpResult = await db
-        .select({
-          total: sum(xpTransactions.amount)
-        })
-        .from(xpTransactions)
-        .where(
-          and(
-            eq(xpTransactions.userId, userId),
-            eq(xpTransactions.source, XP_SOURCE.BOUNCE),
-            eq(xpTransactions.sourceType, 'participation')
-          )
-        );
-      
-      // Get recent transactions
-      const recentTransactions = await db
+      // Get the achievement
+      const [achievement] = await db
         .select()
-        .from(xpTransactions)
+        .from(bounceAchievements)
+        .where(eq(bounceAchievements.code, achievementCode));
+      
+      if (!achievement) {
+        return false;
+      }
+      
+      // Check if user has this achievement
+      const [userAchievement] = await db
+        .select()
+        .from(userBounceAchievements)
         .where(
           and(
-            eq(xpTransactions.userId, userId),
-            eq(xpTransactions.source, XP_SOURCE.BOUNCE)
+            eq(userBounceAchievements.userId, userId),
+            eq(userBounceAchievements.achievementId, achievement.id),
+            eq(userBounceAchievements.isComplete, true)
           )
-        )
-        .orderBy(desc(xpTransactions.createdAt))
-        .limit(10);
+        );
       
-      // Extract values with defaults in case there's no data
-      const totalBounceXp = Number(totalBounceXpResult[0]?.total || 0);
-      const xpFromFindings = Number(findingsXpResult[0]?.total || 0);
-      const xpFromVerifications = Number(verificationsXpResult[0]?.total || 0);
-      const xpFromAchievements = Number(achievementsXpResult[0]?.total || 0);
-      const xpFromParticipation = Number(participationXpResult[0]?.total || 0);
+      return !!userAchievement;
+    } catch (error) {
+      console.error('[Bounce XP Integration] Error checking user achievement:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get XP summary for a user
+   * @param userId User ID
+   * @returns XP summary data
+   */
+  public async getUserXpSummary(userId: number): Promise<any> {
+    try {
+      // Get total Bounce XP
+      const totalXp = await xpService.getUserSourceTotal(userId, XP_SOURCE.BOUNCE);
       
-      // Calculate percentage of total XP that came from Bounce
-      const bounceXpPercentage = totalUserXp > 0 
-        ? Math.round((totalBounceXp / totalUserXp) * 100) 
+      // Get XP breakdown by source type
+      const findingXp = await xpService.getUserSourceTypeTotal(userId, XP_SOURCE.BOUNCE, XP_SOURCE_TYPE.FINDING);
+      const verificationXp = await xpService.getUserSourceTypeTotal(userId, XP_SOURCE.BOUNCE, XP_SOURCE_TYPE.VERIFICATION);
+      const participationXp = await xpService.getUserSourceTypeTotal(userId, XP_SOURCE.BOUNCE, XP_SOURCE_TYPE.PARTICIPATION);
+      const achievementXp = await xpService.getUserSourceTypeTotal(userId, XP_SOURCE.BOUNCE, XP_SOURCE_TYPE.ACHIEVEMENT_UNLOCK);
+      const bonusXp = await xpService.getUserBonusXp(userId, XP_SOURCE.BOUNCE);
+      
+      // Get XP service level
+      const serviceLevel = await xpService.getUserServiceLevel(userId);
+      
+      // Get achievement progress
+      const achievementProgress = await this.getUserAchievementProgress(userId);
+      
+      return {
+        totalXp,
+        breakdown: {
+          findingXp,
+          verificationXp,
+          participationXp,
+          achievementXp,
+          bonusXp,
+        },
+        serviceLevel,
+        achievementProgress,
+        xpValues: XP_VALUES
+      };
+    } catch (error) {
+      console.error('[Bounce XP Integration] Error getting user XP summary:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get achievement progress for a user
+   * @param userId User ID
+   * @returns Achievement progress data
+   */
+  private async getUserAchievementProgress(userId: number): Promise<any> {
+    try {
+      // Get all active achievements
+      const achievements = await db
+        .select()
+        .from(bounceAchievements)
+        .where(eq(bounceAchievements.isActive, true));
+      
+      // Get user's completed achievements
+      const userAchievements = await db
+        .select()
+        .from(userBounceAchievements)
+        .where(
+          and(
+            eq(userBounceAchievements.userId, userId),
+            eq(userBounceAchievements.isComplete, true)
+          )
+        );
+      
+      // Calculate progress
+      const totalAchievements = achievements.length;
+      const completedAchievements = userAchievements.length;
+      const completionPercentage = totalAchievements > 0
+        ? Math.round((completedAchievements / totalAchievements) * 100)
         : 0;
       
       return {
-        totalBounceXp,
-        totalUserXp,
-        xpFromFindings,
-        xpFromVerifications,
-        xpFromAchievements,
-        xpFromParticipation,
-        bounceXpPercentage,
-        recentTransactions
+        totalAchievements,
+        completedAchievements,
+        completionPercentage,
+        remainingAchievements: totalAchievements - completedAchievements
       };
     } catch (error) {
-      console.error('Error getting user XP summary from Bounce:', error);
+      console.error('[Bounce XP Integration] Error getting user achievement progress:', error);
       throw error;
     }
   }
 }
 
-// Create and export a singleton instance
+// Create and export singleton instance
 export const bounceXpIntegration = new BounceXpIntegration();

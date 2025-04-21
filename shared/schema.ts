@@ -48,6 +48,42 @@ import './match-statistics-schema';
 import { events, eventCheckIns, eventRegistrations, passportVerifications } from './schema/events';
 
 // Import event templates schema (PKL-278651-COMM-0035-EVENT - Enhanced Event Display and Management)
+
+// Import Bounce achievements schema (PKL-278651-BOUNCE-0004-GAME - Bounce Gamification)
+import {
+  bounceAchievements,
+  userBounceAchievements,
+  bounceAchievementsRelations,
+  userBounceAchievementsRelations,
+  insertBounceAchievementSchema,
+  insertUserBounceAchievementSchema,
+  type BounceAchievement,
+  type InsertBounceAchievement,
+  type UserBounceAchievement,
+  type InsertUserBounceAchievement
+} from './schema/bounce-achievements';
+
+// Import XP system schema (PKL-278651-BOUNCE-0004-GAME - Bounce Gamification)
+import {
+  xpTransactions,
+  xpServiceLevels,
+  userXpLevels,
+  xpTransactionsRelations,
+  xpServiceLevelsRelations,
+  userXpLevelsRelations,
+  insertXpTransactionSchema,
+  insertXpServiceLevelSchema,
+  insertUserXpLevelSchema,
+  type XpTransaction,
+  type InsertXpTransaction,
+  type XpServiceLevel,
+  type InsertXpServiceLevel,
+  type UserXpLevel,
+  type InsertUserXpLevel,
+  XP_SOURCE,
+  XP_SOURCE_TYPE,
+  XP_SERVICE_LEVEL
+} from './schema/xp';
 import { 
   eventTemplates,
   eventTemplatesRelations,
@@ -79,27 +115,22 @@ import {
   type GalleryWithRelations
 } from './schema/media';
 
-// Import XP system schema (PKL-278651-XP-0001-FOUND - XP System Foundation)
+// Import original XP system schema (PKL-278651-XP-0001-FOUND - XP System Foundation)
 import {
-  xpTransactions,
   xpLevelThresholds,
   activityMultipliers,
   multiplierRecalibrations,
-  XP_SOURCE,
-  insertXpTransactionSchema,
   insertXpLevelThresholdSchema,
   insertActivityMultiplierSchema,
   insertMultiplierRecalibrationSchema,
   type XpSource,
-  type XpTransaction,
-  type InsertXpTransaction,
   type XpLevelThreshold,
   type InsertXpLevelThreshold,
   type ActivityMultiplier,
   type InsertActivityMultiplier,
   type MultiplierRecalibration,
   type InsertMultiplierRecalibration
-} from './schema/xp';
+} from './schema/xp-original';
 
 // Import API Gateway schema (PKL-278651-API-0001-GATEWAY - API Gateway & Developer Portal)
 import {
@@ -150,20 +181,14 @@ import {
 import {
   bounceAchievements,
   userBounceAchievements,
-  bounceLeaderboard,
   bounceAchievementsRelations,
   userBounceAchievementsRelations,
-  bounceLeaderboardRelations,
   insertBounceAchievementSchema,
   insertUserBounceAchievementSchema,
-  insertBounceLeaderboardSchema,
-  BounceAchievementType,
   type BounceAchievement,
   type InsertBounceAchievement,
   type UserBounceAchievement,
-  type InsertUserBounceAchievement,
-  type BounceLeaderboardEntry,
-  type InsertBounceLeaderboardEntry
+  type InsertUserBounceAchievement
 } from './schema/bounce-achievements';
 
 // Import Community schema (PKL-278651-COMM-0006-HUB - Community Hub Implementation)
@@ -460,20 +485,14 @@ export {
 export {
   bounceAchievements,
   userBounceAchievements,
-  bounceLeaderboard,
   bounceAchievementsRelations,
   userBounceAchievementsRelations,
-  bounceLeaderboardRelations,
   insertBounceAchievementSchema,
   insertUserBounceAchievementSchema,
-  insertBounceLeaderboardSchema,
-  BounceAchievementType,
   type BounceAchievement,
   type InsertBounceAchievement,
   type UserBounceAchievement,
-  type InsertUserBounceAchievement,
-  type BounceLeaderboardEntry,
-  type InsertBounceLeaderboardEntry
+  type InsertUserBounceAchievement
 };
 
 // User achievements table
@@ -1127,12 +1146,8 @@ export type UserDailyMatches = typeof userDailyMatches.$inferSelect;
 export type InsertUserDailyMatches = z.infer<typeof insertUserDailyMatchesSchema>;
 
 // Relations for XP and Ranking tables
-export const xpTransactionRelations = relations(xpTransactions, ({ one }) => ({
-  user: one(users, { fields: [xpTransactions.userId], references: [users.id] }),
-  match: one(matches, { fields: [xpTransactions.matchId], references: [matches.id] }),
-  tournament: one(tournaments, { fields: [xpTransactions.tournamentId], references: [tournaments.id] }),
-  achievement: one(achievements, { fields: [xpTransactions.achievementId], references: [achievements.id] })
-}));
+// NOTE: We are using the relations from the xp schema directly
+// The relations are defined there to match the actual schema
 
 export const rankingTransactionRelations = relations(rankingTransactions, ({ one }) => ({
   user: one(users, { fields: [rankingTransactions.userId], references: [users.id] }),
@@ -1201,23 +1216,23 @@ export {
 // Import and re-export XP system schema (PKL-278651-XP-0001-FOUND - XP System Foundation)
 export {
   xpTransactions,
-  xpLevelThresholds,
-  activityMultipliers,
-  multiplierRecalibrations,
+  xpServiceLevels,
+  userXpLevels,
+  xpTransactionsRelations,
+  xpServiceLevelsRelations,
+  userXpLevelsRelations,
   insertXpTransactionSchema,
-  insertXpLevelThresholdSchema,
-  insertActivityMultiplierSchema,
-  insertMultiplierRecalibrationSchema,
+  insertXpServiceLevelSchema,
+  insertUserXpLevelSchema,
   XP_SOURCE,
+  XP_SOURCE_TYPE,
+  XP_SERVICE_LEVEL,
   type XpTransaction,
   type InsertXpTransaction,
-  type XpSource,
-  type XpLevelThreshold,
-  type InsertXpLevelThreshold,
-  type ActivityMultiplier,
-  type InsertActivityMultiplier,
-  type MultiplierRecalibration,
-  type InsertMultiplierRecalibration
+  type XpServiceLevel,
+  type InsertXpServiceLevel,
+  type UserXpLevel,
+  type InsertUserXpLevel
 } from './schema/xp';
 
 // Add additional core schema exports here as the system grows
