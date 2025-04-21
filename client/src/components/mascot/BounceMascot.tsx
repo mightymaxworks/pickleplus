@@ -151,6 +151,9 @@ const BounceMascot: React.FC<BounceMascotProps> = ({
       setMessage(BOUNCE_MESSAGES[randomMessageIndex]);
       setPosition(POSITIONS[randomPositionIndex]);
       
+      // Auto-expand the message when showing on mount
+      setExpanded(true);
+      
       // Set timeout to hide after display duration
       disappearTimeoutRef.current = setTimeout(() => {
         setVisible(false);
@@ -250,20 +253,21 @@ const BounceMascot: React.FC<BounceMascotProps> = ({
               </TooltipProvider>
               
               <div 
-                className="relative cursor-pointer bg-yellow-300 p-3 rounded-full shadow-md overflow-hidden"
+                className="relative cursor-pointer"
                 onClick={handleToggleExpand}
-                style={{ width: '100px', height: '100px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
               >
-                <div className="absolute inset-0 flex justify-center items-center">
-                  <div className="text-4xl font-bold">🎾</div>
-                </div>
                 <img 
-                  src={customImagePath || "/pickleball-mascot.svg"} 
+                  src={customImagePath || "/bounce-original.svg"} 
                   alt="Bounce Mascot" 
-                  className="h-24 w-24 object-contain relative z-10"
+                  className="h-32 w-32 object-contain drop-shadow-lg transition-all duration-300 hover:scale-105"
+                  style={{ filter: 'drop-shadow(0px 4px 5px rgba(0, 0, 0, 0.2))' }}
                   onError={(e) => {
-                    // If image fails to load, hide it and show emoji fallback
-                    e.currentTarget.style.display = 'none';
+                    // If image fails to load, show a text fallback
+                    const parent = e.currentTarget.parentElement;
+                    if (parent) {
+                      parent.innerHTML = '<div class="bg-primary text-white p-3 rounded-full shadow-md">Bounce</div>';
+                    }
                   }}
                 />
                 

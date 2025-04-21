@@ -160,7 +160,7 @@ export default function App() {
                     
                     {/* Add Bounce Mascot (PKL-278651-MASCOT-0001-CORE) */}
                     <BounceMascot 
-                      customImagePath="/pickleball-mascot.svg"
+                      customImagePath="/bounce-original.svg"
                       showOnMount={true}
                       minDelay={100}
                       maxDelay={500}
