@@ -1,557 +1,677 @@
 /**
- * PKL-278651-COMM-0036-MEDIA-COST
- * Media Uploader Component with Cost Control
+ * PKL-278651-COMM-0036-MEDIA-UPLOAD
+ * Enhanced Media Uploader Component
  * 
- * Component for uploading media files to community galleries
- * with drag and drop support, previews, progress indicators,
- * strict file size/type restrictions, and client-side image
- * compression to maximize storage efficiency.
+ * Upload interface with client-side image compression, drag-and-drop support,
+ * and real-time progress tracking.
  * 
  * @framework Framework5.2
- * @version 1.2.0
+ * @version 1.0.0
  * @lastModified 2025-04-21
  */
 
-import { useState, useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { useMedia } from "@/lib/hooks/useMedia";
-import {
-  UploadCloud,
-  X,
-  Loader2,
-  Image as ImageIcon,
+import React, { useState, useRef, useCallback } from 'react';
+import { 
+  UploadCloud, 
+  X, 
+  AlertCircle, 
+  Check, 
   FileText,
-  Video,
-  File,
-  AlertCircle,
-  Info,
-  ZoomIn
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { MediaType } from "@shared/schema/media";
-import { compressImages } from "@/lib/utils/compressImage";
-
-// File type size limits (in bytes) - must match server restrictions
-const FILE_SIZE_LIMITS = {
-  image: 2 * 1024 * 1024, // 2MB for images
-  video: 10 * 1024 * 1024, // 10MB for videos
-  document: 5 * 1024 * 1024, // 5MB for documents
-  default: 2 * 1024 * 1024 // Default 2MB limit
-};
+  Image as ImageIcon,
+  Film,
+  Loader2
+} from 'lucide-react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { 
+  Form, 
+  FormControl, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+  DrawerFooter,
+} from '@/components/ui/drawer';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { useMediaQuery } from '@/hooks/use-media-query';
+import { useMediaMutations, MediaUploadProgress } from '@/lib/hooks/useMedia';
+import { useStorageQuota } from '@/lib/hooks/useMedia';
+import { formatBytes, formatSizeWithDifference, calculatePercentUsed } from '@/lib/utils/quotaUtils';
+import { compressImage, shouldCompressImage } from '@/lib/utils/compressImage';
 
 interface MediaUploaderProps {
   communityId: number;
-  maxFiles?: number;
-  allowedTypes?: string[];
-  onUploadComplete?: () => void;
+  onUploadSuccess?: () => void;
+  trigger?: React.ReactNode;
 }
 
-export function MediaUploader({
-  communityId,
-  maxFiles = 5, // Reduced from 10 to 5 files per upload
-  allowedTypes = ["image/*", "video/*", "application/pdf"],
-  onUploadComplete
+// Form schema for media upload
+const mediaUploadSchema = z.object({
+  title: z.string().optional(),
+  description: z.string().optional(),
+  tags: z.string().optional(),
+  files: z.any().refine(
+    (files) => files?.length > 0,
+    'At least one file is required'
+  )
+});
+
+type MediaUploadFormValues = z.infer<typeof mediaUploadSchema>;
+
+export function MediaUploader({ 
+  communityId, 
+  onUploadSuccess,
+  trigger
 }: MediaUploaderProps) {
-  const [files, setFiles] = useState<File[]>([]);
-  const [isDragOver, setIsDragOver] = useState(false);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [tags, setTags] = useState("");
-  const [oversizedFiles, setOversizedFiles] = useState<string[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const { uploadMediaMutation, handleFileUpload } = useMedia(communityId);
-  const isUploading = uploadMediaMutation.isPending;
-
-  // Check if file size is within the limit for its type
-  const isValidFileSize = (file: File): boolean => {
-    let sizeLimit = FILE_SIZE_LIMITS.default;
+  const [open, setOpen] = useState(false);
+  const isMobile = useMediaQuery("(max-width: 640px)");
+  const uploadButtonRef = useRef<HTMLButtonElement>(null);
+  
+  const { data: quota } = useStorageQuota(communityId);
+  const { 
+    uploadProgress, 
+    setUploadProgress, 
+    uploadMediaMutation 
+  } = useMediaMutations(communityId);
+  
+  const [dragging, setDragging] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<'upload' | 'progress'>('upload');
+  
+  // Set up form with validation
+  const form = useForm<MediaUploadFormValues>({
+    resolver: zodResolver(mediaUploadSchema),
+    defaultValues: {
+      title: '',
+      description: '',
+      tags: '',
+      files: undefined
+    }
+  });
+  
+  // Check if quota limit is reached
+  const isQuotaExceeded = quota && quota.percentUsed >= 95;
+  
+  // Generate preview URLs for selected files
+  const generatePreviews = useCallback((files: File[]) => {
+    // Revoke any existing preview URLs to avoid memory leaks
+    previewUrls.forEach(url => URL.revokeObjectURL(url));
     
-    if (file.type.startsWith('image/')) {
-      sizeLimit = FILE_SIZE_LIMITS.image;
-    } else if (file.type.startsWith('video/')) {
-      sizeLimit = FILE_SIZE_LIMITS.video;
-    } else if (file.type === 'application/pdf') {
-      sizeLimit = FILE_SIZE_LIMITS.document;
+    // Create new preview URLs
+    const newPreviews = Array.from(files).map(file => {
+      return URL.createObjectURL(file);
+    });
+    
+    setPreviewUrls(newPreviews);
+  }, [previewUrls]);
+  
+  // Handle file drop
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const droppedFiles = Array.from(e.dataTransfer.files);
+      setSelectedFiles(droppedFiles);
+      generatePreviews(droppedFiles);
+      
+      // Update form value
+      form.setValue('files', droppedFiles);
+    }
+  }, [form, generatePreviews]);
+  
+  // Handle file selection via input
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const selectedFiles = Array.from(e.target.files);
+      setSelectedFiles(selectedFiles);
+      generatePreviews(selectedFiles);
+      
+      // Update form value
+      form.setValue('files', selectedFiles);
+    }
+  }, [form, generatePreviews]);
+  
+  // Remove a selected file
+  const removeFile = useCallback((index: number) => {
+    setSelectedFiles(prev => {
+      const updatedFiles = [...prev];
+      updatedFiles.splice(index, 1);
+      
+      // Update form value
+      form.setValue('files', updatedFiles.length > 0 ? updatedFiles : undefined);
+      
+      return updatedFiles;
+    });
+    
+    setPreviewUrls(prev => {
+      const updatedUrls = [...prev];
+      
+      // Revoke the URL to free up memory
+      URL.revokeObjectURL(updatedUrls[index]);
+      updatedUrls.splice(index, 1);
+      
+      return updatedUrls;
+    });
+  }, [form]);
+  
+  // Clear all selected files
+  const clearFiles = useCallback(() => {
+    // Revoke all preview URLs to avoid memory leaks
+    previewUrls.forEach(url => URL.revokeObjectURL(url));
+    
+    setSelectedFiles([]);
+    setPreviewUrls([]);
+    form.setValue('files', undefined);
+  }, [form, previewUrls]);
+  
+  // Process files for upload (with compression for images)
+  const processFiles = async (files: File[]): Promise<File[]> => {
+    if (!files || files.length === 0) return [];
+    
+    const processedFiles: File[] = [];
+    const newProgress: MediaUploadProgress[] = [];
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      
+      // Set initial progress state
+      newProgress.push({
+        loaded: 0,
+        total: file.size,
+        percentage: 0,
+        status: 'compressing',
+        filename: file.name
+      });
+      
+      // Apply compression for eligible images
+      if (shouldCompressImage(file)) {
+        try {
+          // Update progress
+          setUploadProgress([...newProgress]);
+          
+          // Apply compression
+          const compressionResult = await compressImage(file, {
+            maxWidth: 1920,
+            maxHeight: 1080,
+            quality: 0.8,
+            adaptiveCompression: true
+          });
+          
+          // Update progress with compression stats
+          newProgress[i] = {
+            ...newProgress[i],
+            compressedSize: compressionResult.compressedSize,
+            originalSize: compressionResult.originalSize,
+            compressionRatio: compressionResult.compressionRatio,
+            status: 'uploading'
+          };
+          
+          setUploadProgress([...newProgress]);
+          
+          // Add compressed file
+          processedFiles.push(compressionResult.file);
+        } catch (error) {
+          console.error('Compression failed:', error);
+          
+          // Update progress with error
+          newProgress[i] = {
+            ...newProgress[i],
+            status: 'error',
+            error: 'Compression failed'
+          };
+          
+          setUploadProgress([...newProgress]);
+          
+          // Fall back to original file
+          processedFiles.push(file);
+        }
+      } else {
+        // For non-image files, just pass through
+        newProgress[i] = {
+          ...newProgress[i],
+          status: 'uploading'
+        };
+        
+        setUploadProgress([...newProgress]);
+        processedFiles.push(file);
+      }
     }
     
-    return file.size <= sizeLimit;
+    return processedFiles;
   };
   
-  // Get the size limit for display
-  const getFileSizeLimit = (fileType: string): string => {
-    if (fileType.startsWith('image/')) {
-      return '2MB';
-    } else if (fileType.startsWith('video/')) {
-      return '10MB';
-    } else if (fileType === 'application/pdf') {
-      return '5MB';
-    }
-    return '2MB';
-  };
-
-  // Check for files exceeding size limits
-  useEffect(() => {
-    const oversized = files
-      .filter(file => !isValidFileSize(file))
-      .map(file => file.name);
-    
-    setOversizedFiles(oversized);
-  }, [files]);
-
-  // Handle file selection
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const newFiles = Array.from(event.target.files);
-      
-      // Check if adding would exceed maximum
-      if (files.length + newFiles.length > maxFiles) {
-        alert(`You can only upload up to ${maxFiles} files at a time.`);
-        return;
-      }
-      
-      // Check file sizes and warn about large files
-      const oversizedNewFiles = newFiles.filter(file => !isValidFileSize(file));
-      if (oversizedNewFiles.length > 0) {
-        const fileNames = oversizedNewFiles.map(f => f.name).join(', ');
-        alert(`The following files exceed size limits and may be rejected by the server: ${fileNames}`);
-      }
-      
-      setFiles(prev => [...prev, ...newFiles]);
-    }
-  };
-
-  // Handle file drop
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    setIsDragOver(false);
-    
-    if (event.dataTransfer.files) {
-      const newFiles = Array.from(event.dataTransfer.files);
-      
-      // Check if adding would exceed maximum
-      if (files.length + newFiles.length > maxFiles) {
-        alert(`You can only upload up to ${maxFiles} files at a time.`);
-        return;
-      }
-      
-      // Filter by allowed types
-      const validFiles = newFiles.filter(file => {
-        return allowedTypes.some(type => {
-          if (type.endsWith('/*')) {
-            const baseType = type.split('/')[0];
-            return file.type.startsWith(`${baseType}/`);
-          }
-          return type === file.type;
-        });
-      });
-      
-      if (validFiles.length !== newFiles.length) {
-        alert("Some files were not added because they're not of an allowed type.");
-      }
-      
-      // Check file sizes and warn about large files
-      const oversizedNewFiles = validFiles.filter(file => !isValidFileSize(file));
-      if (oversizedNewFiles.length > 0) {
-        const fileNames = oversizedNewFiles.map(f => f.name).join(', ');
-        alert(`The following files exceed size limits and may be rejected by the server: ${fileNames}`);
-      }
-      
-      setFiles(prev => [...prev, ...validFiles]);
-    }
-  };
-
-  // Remove a file from the queue
-  const removeFile = (index: number) => {
-    setFiles(prev => prev.filter((_, i) => i !== index));
-  };
-
-  // Status indicator for compression process
-  const [isCompressing, setIsCompressing] = useState(false);
-  const [compressionStatus, setCompressionStatus] = useState<string | null>(null);
-  const [compressionStats, setCompressionStats] = useState<{originalSize: number, compressedSize: number} | null>(null);
-
-  // Handle form submission with image compression
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (files.length === 0) {
-      alert("Please select at least one file to upload.");
+  // Handle form submission
+  const onSubmit = async (data: MediaUploadFormValues) => {
+    if (!data.files || data.files.length === 0) {
       return;
     }
-
+    
     try {
-      // Start compression if there are images
-      const hasImages = files.some(file => file.type.startsWith('image/'));
-      let processedFiles = [...files];
+      setActiveTab('progress');
       
-      if (hasImages) {
-        setIsCompressing(true);
-        setCompressionStatus("Compressing images...");
-        
-        // Track original file sizes
-        const originalSize = files.reduce((sum, file) => sum + file.size, 0);
-        
-        // Compress images with optimized settings for mobile uploads
-        processedFiles = await compressImages(files, {
-          maxWidth: 1920,  // Full HD resolution is sufficient for most uses
-          maxHeight: 1080,
-          quality: 0.85,   // Good balance between quality and file size
-          targetSizeKB: 1800 // Try to get images under 1.8MB
-        });
-        
-        // Calculate compression stats
-        const compressedSize = processedFiles.reduce((sum, file) => sum + file.size, 0);
-        const savedPercentage = Math.round((1 - compressedSize / originalSize) * 100);
-        
-        setCompressionStats({
-          originalSize: originalSize,
-          compressedSize: compressedSize
-        });
-        
-        setCompressionStatus(
-          savedPercentage > 0 
-            ? `Compressed images, saved ${savedPercentage}% (${((originalSize - compressedSize) / (1024 * 1024)).toFixed(1)}MB)`
-            : "Images already optimized"
-        );
-      }
-
-      const formData = new FormData();
+      // Process files (compression etc.)
+      const processedFiles = await processFiles(data.files);
       
-      // Add all processed files
-      processedFiles.forEach(file => {
-        formData.append("files", file);
+      // Prepare tags
+      const tags = data.tags ? 
+        data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : 
+        undefined;
+      
+      // Upload files
+      await uploadMediaMutation.mutateAsync({
+        files: processedFiles,
+        title: data.title,
+        description: data.description,
+        tags
       });
       
-      // Add metadata
-      if (title) formData.append("title", title);
-      if (description) formData.append("description", description);
-      if (tags) formData.append("tags", tags);
+      // Clear form on success
+      form.reset();
+      clearFiles();
       
-      // Upload the files
-      await uploadMediaMutation.mutateAsync(formData);
+      // Allow some time to see completion state
+      setTimeout(() => {
+        setActiveTab('upload');
+        setOpen(false);
+        
+        // Notify parent component
+        if (onUploadSuccess) {
+          onUploadSuccess();
+        }
+      }, 1500);
       
-      // Reset form on success
-      setFiles([]);
-      setTitle("");
-      setDescription("");
-      setTags("");
-      setCompressionStatus(null);
-      setCompressionStats(null);
-      if (onUploadComplete) onUploadComplete();
     } catch (error) {
-      console.error("Upload failed:", error);
-    } finally {
-      setIsCompressing(false);
+      console.error('Upload failed:', error);
+      // Keep on progress tab to show errors
     }
   };
-
-  // Get file icon based on type
+  
+  // Get icon for file type
   const getFileIcon = (file: File) => {
-    if (file.type.startsWith("image/")) {
+    if (file.type.startsWith('image/')) {
       return <ImageIcon className="h-6 w-6 text-blue-500" />;
-    } else if (file.type.startsWith("video/")) {
-      return <Video className="h-6 w-6 text-purple-500" />;
-    } else if (file.type === "application/pdf") {
-      return <FileText className="h-6 w-6 text-red-500" />;
+    } else if (file.type.startsWith('video/')) {
+      return <Film className="h-6 w-6 text-red-500" />;
     } else {
-      return <File className="h-6 w-6 text-gray-500" />;
+      return <FileText className="h-6 w-6 text-yellow-500" />;
     }
   };
-
-  // Create file previews with mobile optimizations
-  const renderPreviews = () => {
-    return files.map((file, index) => (
-      <div
-        key={`${file.name}-${index}`}
-        className="relative rounded-md border border-border p-2 flex items-center gap-2 group"
-      >
-        {getFileIcon(file)}
-        <div className="flex-1 truncate">
-          <p className="text-xs sm:text-sm font-medium truncate max-w-[150px] sm:max-w-none">
-            {file.name.length > 25 && window.innerWidth <= 640 
-              ? file.name.substring(0, 20) + '...' + file.name.substring(file.name.lastIndexOf('.')) 
-              : file.name}
-          </p>
-          <p className="text-[10px] sm:text-xs text-muted-foreground">
-            {(file.size / 1024 / 1024).toFixed(2)} MB
-          </p>
-        </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn(
-            "h-7 w-7 sm:h-8 sm:w-8", 
-            window.innerWidth <= 640 
-              ? "opacity-100" // Always visible on mobile
-              : "opacity-0 group-hover:opacity-100 transition-opacity absolute right-1 top-1/2 -translate-y-1/2"
-          )}
-          onClick={() => removeFile(index)}
-          disabled={isUploading}
-        >
-          <X className="h-3 w-3 sm:h-4 sm:w-4" />
-          <span className="sr-only">Remove</span>
-        </Button>
-      </div>
-    ));
+  
+  // Cancel active uploads
+  const cancelUpload = () => {
+    // This is a simplified version. In a real app, you would need to abort the fetch/XHR
+    setUploadProgress([]);
+    setActiveTab('upload');
   };
-
-  return (
-    <Card>
-      <CardContent className="pt-6">
-        <form onSubmit={handleSubmit}>
-          {/* Mobile-optimized Upload Area */}
-          <div
-            className={cn(
-              "border-2 border-dashed rounded-lg p-4 text-center mb-4 transition-colors",
-              isDragOver 
-                ? "border-primary bg-primary/10" 
-                : "border-border hover:border-primary/50",
-              window.innerWidth <= 640 ? "active:bg-primary/5" : "cursor-pointer"
-            )}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setIsDragOver(true);
-            }}
-            onDragLeave={() => setIsDragOver(false)}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              className="hidden"
-              onChange={handleFileChange}
-              accept={allowedTypes.join(",")}
-              disabled={isUploading}
-              capture={window.innerWidth <= 640 ? "environment" : undefined}
+  
+  // Total files size
+  const totalSize = selectedFiles.reduce((sum, file) => sum + file.size, 0);
+  
+  // Create a component that works for both dialog and drawer
+  const UploadContent = () => (
+    <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'upload' | 'progress')}>
+      {/* Display storage quota */}
+      {quota && (
+        <div className="p-4 bg-muted rounded-md mb-4">
+          <div className="flex justify-between mb-1">
+            <span className="text-sm font-medium">Storage used</span>
+            <span className="text-sm">{formatBytes(quota.bytesUsed)} / {formatBytes(quota.quotaBytes)}</span>
+          </div>
+          <Progress 
+            value={quota.percentUsed} 
+            className="h-2"
+            aria-label="Storage quota" 
+          />
+          <div className="mt-1 flex justify-between text-xs text-muted-foreground">
+            <span>{quota.fileCount} files</span>
+            <span>{quota.percentUsed}% used</span>
+          </div>
+        </div>
+      )}
+      
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="upload">Upload Files</TabsTrigger>
+        <TabsTrigger value="progress">Progress</TabsTrigger>
+      </TabsList>
+      
+      <TabsContent value="upload" className="space-y-4 py-4">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* File drop zone */}
+            <FormField
+              control={form.control}
+              name="files"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Files</FormLabel>
+                  <FormControl>
+                    <div
+                      className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors
+                        ${dragging ? 'border-primary bg-primary/5' : 'border-input'} 
+                        ${isQuotaExceeded ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        if (!isQuotaExceeded) setDragging(true);
+                      }}
+                      onDragLeave={() => setDragging(false)}
+                      onDrop={isQuotaExceeded ? (e) => e.preventDefault() : handleDrop}
+                      onClick={() => {
+                        if (!isQuotaExceeded && uploadButtonRef.current) {
+                          uploadButtonRef.current.click();
+                        }
+                      }}
+                    >
+                      {isQuotaExceeded ? (
+                        <div className="flex flex-col items-center text-destructive">
+                          <AlertCircle className="mb-2 h-10 w-10" />
+                          <p className="text-sm font-medium">Storage quota exceeded</p>
+                          <p className="text-xs mt-1">Please delete some files before uploading more.</p>
+                        </div>
+                      ) : (
+                        <>
+                          <UploadCloud className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+                          <p className="text-sm font-medium">
+                            Drag & drop files here or click to browse
+                          </p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Supported formats: JPG, PNG, GIF, MP4, PDF
+                          </p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Maximum file size: 10MB
+                          </p>
+                          <input
+                            ref={uploadButtonRef as any}
+                            type="file"
+                            multiple
+                            onChange={handleFileChange}
+                            className="hidden"
+                            disabled={isQuotaExceeded}
+                          />
+                        </>
+                      )}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
             
-            {/* Mobile camera button for direct photo capture */}
-            <div className="sm:hidden mb-2 flex justify-center">
-              <Button 
-                type="button"
-                variant="outline"
-                size="sm"
-                className="rounded-full h-12 w-12 p-0 flex items-center justify-center border-primary shadow-sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  // Create a special input for camera capture only
-                  const tempInput = document.createElement('input');
-                  tempInput.type = 'file';
-                  tempInput.accept = 'image/*';
-                  tempInput.capture = 'environment';
-                  tempInput.onchange = (e) => handleFileChange(e as any);
-                  tempInput.click();
-                }}
+            {/* Selected files preview */}
+            {selectedFiles.length > 0 && (
+              <div className="border rounded-md p-3">
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="text-sm font-medium">Selected Files ({selectedFiles.length})</h4>
+                  <Button type="button" variant="ghost" size="sm" onClick={clearFiles}>
+                    Clear All
+                  </Button>
+                </div>
+                
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {selectedFiles.map((file, index) => (
+                    <div
+                      key={`${file.name}-${index}`}
+                      className="flex items-center justify-between py-2 px-3 bg-muted rounded-md"
+                    >
+                      <div className="flex items-center space-x-3 overflow-hidden">
+                        {getFileIcon(file)}
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{file.name}</p>
+                          <p className="text-xs text-muted-foreground">{formatBytes(file.size)}</p>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeFile(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="mt-2 text-xs text-muted-foreground">
+                  Total size: {formatBytes(totalSize)}
+                </div>
+              </div>
+            )}
+            
+            {/* Title and description fields */}
+            <div className="grid gap-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title (optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter a title for your upload" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description (optional)</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Enter a description for your upload" 
+                        className="resize-none"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="tags"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tags (optional)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Enter tags separated by commas" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div className="flex justify-end">
+              <Button
+                type="submit"
+                disabled={selectedFiles.length === 0 || uploadMediaMutation.isPending || isQuotaExceeded}
               >
-                <ImageIcon className="h-5 w-5 text-primary" />
+                {uploadMediaMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  'Upload Files'
+                )}
               </Button>
             </div>
+          </form>
+        </Form>
+      </TabsContent>
+      
+      <TabsContent value="progress" className="py-4">
+        {uploadProgress.length > 0 ? (
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Upload Progress</h3>
             
-            <UploadCloud className="h-8 w-8 sm:h-10 sm:w-10 mx-auto text-muted-foreground mb-2" />
-            <p className="text-sm font-medium">
-              {window.innerWidth <= 640 ? "Tap to upload files" : "Drag and drop files here or click to browse"}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Upload up to {maxFiles} files
-              <span className="hidden sm:inline"> (images, videos, or PDFs)</span>
-            </p>
-            
-            {/* Mobile-specific guidance */}
-            <p className="text-xs text-primary mt-2 sm:hidden">
-              Use the camera button to take a photo directly
-            </p>
-          </div>
-
-          {/* File size limits information */}
-          <Alert className="mb-4 bg-muted/40 p-3">
-            <Info className="h-4 w-4" />
-            <AlertTitle className="text-xs sm:text-sm font-medium">File Size Limits</AlertTitle>
-            <AlertDescription className="text-xs text-muted-foreground">
-              <ul className="list-disc pl-4 pt-1 space-y-1">
-                <li>Images: max 2MB</li>
-                <li>Videos: max 10MB</li>
-                <li>Documents: max 5MB</li>
-              </ul>
-            </AlertDescription>
-          </Alert>
-
-          {files.length > 0 && (
-            <div className="grid gap-2 mb-4">
-              <div className="flex items-center justify-between">
-                <Label>Selected Files</Label>
-                <span className="text-xs text-muted-foreground">
-                  {files.length}/{maxFiles} files
-                </span>
-              </div>
-              <div className="grid gap-2 max-h-60 overflow-y-auto p-1">
-                {renderPreviews()}
-              </div>
-              
-              {/* File size indicator */}
-              <div className="mt-1">
-                <div className="flex justify-between items-center text-xs mb-1">
-                  <span>{(files.reduce((total, file) => total + file.size, 0) / (1024 * 1024)).toFixed(1)} MB total</span>
-                  {files.some(file => !isValidFileSize(file)) && (
-                    <span className="text-destructive font-medium flex items-center">
-                      <AlertCircle className="h-3 w-3 mr-1 inline" />
-                      Some files exceed limits
-                    </span>
-                  )}
-                </div>
-                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className={cn(
-                      "h-full transition-all",
-                      oversizedFiles.length > 0 
-                        ? "bg-destructive/70" 
-                        : "bg-primary/70"
-                    )}
-                    style={{ 
-                      width: `${Math.min(100, (files.reduce((total, file) => total + file.size, 0) / (10 * 1024 * 1024)) * 100)}%` 
-                    }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Warning for oversized files */}
-          {oversizedFiles.length > 0 && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>File size exceeded</AlertTitle>
-              <AlertDescription className="text-xs">
-                The following files exceed the size limits and may be rejected:
-                <ul className="list-disc pl-4 mt-1">
-                  {oversizedFiles.map((name, i) => (
-                    <li key={i} className="truncate">{name}</li>
-                  ))}
-                </ul>
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {/* Mobile-optimized Form Layout */}
-          <div className="grid gap-3 sm:gap-4">
-            {/* Mobile-specific file count indicator */}
-            {files.length > 0 && (
-              <div className="sm:hidden px-2 py-1 bg-muted/50 rounded-md text-center">
-                <p className="text-xs text-muted-foreground">
-                  {files.length} file{files.length !== 1 ? 's' : ''} selected 
-                  {files.length > 0 && ` (${(files.reduce((total, file) => total + file.size, 0) / (1024 * 1024)).toFixed(1)} MB total)`}
-                </p>
-              </div>
-            )}
-            
-            <div className="grid gap-1 sm:gap-2">
-              <Label htmlFor="title" className="text-xs sm:text-sm">Title (optional)</Label>
-              <Input
-                id="title"
-                placeholder="Media title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                disabled={isUploading}
-                className="h-8 sm:h-10 text-sm"
-              />
-            </div>
-            
-            <div className="grid gap-1 sm:gap-2">
-              <Label htmlFor="description" className="text-xs sm:text-sm">Description (optional)</Label>
-              <Textarea
-                id="description"
-                placeholder="Add a description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                disabled={isUploading}
-                className="min-h-[60px] sm:min-h-[80px] text-sm"
-              />
-            </div>
-            
-            <div className="grid gap-1 sm:gap-2">
-              <Label htmlFor="tags" className="text-xs sm:text-sm">Tags (comma-separated, optional)</Label>
-              <Input
-                id="tags"
-                placeholder="event, tournament, practice"
-                value={tags}
-                onChange={(e) => setTags(e.target.value)}
-                disabled={isUploading || isCompressing}
-                className="h-8 sm:h-10 text-sm"
-              />
-            </div>
-
-            {/* Compression status indicator */}
-            {compressionStatus && (
-              <Alert className="mt-2 bg-primary/10 border-primary/20">
-                <div className="flex items-center">
-                  {isCompressing ? (
-                    <Loader2 className="h-4 w-4 text-primary mr-2 animate-spin" />
-                  ) : (
-                    <ZoomIn className="h-4 w-4 text-primary mr-2" />
-                  )}
-                  <div>
-                    <AlertTitle className="text-xs sm:text-sm font-medium">Image Compression</AlertTitle>
-                    <AlertDescription className="text-xs text-muted-foreground">
-                      {compressionStatus}
-                      {compressionStats && compressionStats.originalSize !== compressionStats.compressedSize && (
-                        <div className="mt-1 text-xs flex items-center">
-                          <span className="font-medium text-primary">
-                            Original: {(compressionStats.originalSize / (1024 * 1024)).toFixed(1)}MB → 
-                            Compressed: {(compressionStats.compressedSize / (1024 * 1024)).toFixed(1)}MB
-                          </span>
-                        </div>
-                      )}
-                    </AlertDescription>
-                  </div>
-                </div>
-              </Alert>
-            )}
-
-            <Button
-              type="submit"
-              className="w-full mt-2 h-10 sm:h-11"
-              disabled={files.length === 0 || isUploading || isCompressing}
-            >
-              {isUploading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  <span className="text-sm">Uploading...</span>
-                </>
-              ) : isCompressing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  <span className="text-sm">Compressing...</span>
-                </>
-              ) : (
-                <>
-                  <UploadCloud className="mr-2 h-4 w-4" />
-                  <span className="text-sm">Upload {files.length > 0 ? `${files.length} File${files.length !== 1 ? 's' : ''}` : 'Files'}</span>
-                </>
-              )}
-            </Button>
-            
-            {/* Mobile upload progress indicator */}
-            {(isUploading || isCompressing) && (
-              <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
+            <div className="space-y-3">
+              {uploadProgress.map((progress, index) => (
                 <div 
-                  className={cn(
-                    "h-full animate-pulse",
-                    isCompressing ? "bg-primary/60" : "bg-primary"
-                  )} 
-                  style={{ width: '100%' }}
-                ></div>
-              </div>
-            )}
+                  key={`progress-${index}`} 
+                  className="border rounded-md p-3"
+                >
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-sm font-medium truncate max-w-[250px]">
+                      {progress.filename}
+                    </span>
+                    <span className="text-xs">
+                      {progress.status === 'compressing' ? (
+                        <Badge variant="outline" className="bg-amber-100 text-amber-800">
+                          Compressing
+                        </Badge>
+                      ) : progress.status === 'uploading' ? (
+                        <Badge variant="outline" className="bg-blue-100 text-blue-800">
+                          Uploading
+                        </Badge>
+                      ) : progress.status === 'done' ? (
+                        <Badge variant="outline" className="bg-green-100 text-green-800">
+                          Complete
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-red-100 text-red-800">
+                          Error
+                        </Badge>
+                      )}
+                    </span>
+                  </div>
+                  
+                  <Progress 
+                    value={progress.percentage} 
+                    className="h-2 mb-1"
+                    aria-label={`Upload progress for ${progress.filename}`}
+                  />
+                  
+                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                    <span>
+                      {progress.status === 'done' 
+                        ? 'Complete' 
+                        : progress.status === 'error'
+                        ? progress.error || 'Failed'
+                        : `${progress.percentage}%`}
+                    </span>
+                    {progress.originalSize && progress.compressedSize && (
+                      <span className="text-xs text-muted-foreground">
+                        Compression: {Math.round(100 - (progress.compressedSize / progress.originalSize * 100))}%
+                      </span>
+                    )}
+                  </div>
+                  
+                  {/* Compression stats */}
+                  {progress.originalSize && progress.compressedSize && (
+                    <div className="mt-2 text-xs">
+                      <span className="text-muted-foreground">
+                        {formatSizeWithDifference(progress.originalSize, progress.compressedSize)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            
+            <div className="flex justify-end space-x-2">
+              {uploadMediaMutation.isPending ? (
+                <Button variant="outline" onClick={cancelUpload}>
+                  Cancel
+                </Button>
+              ) : (
+                <Button onClick={() => setActiveTab('upload')}>
+                  Back
+                </Button>
+              )}
+            </div>
           </div>
-        </form>
-      </CardContent>
-    </Card>
+        ) : (
+          <div className="text-center py-6">
+            <p className="text-muted-foreground">No active uploads</p>
+            <Button 
+              className="mt-4" 
+              variant="outline" 
+              onClick={() => setActiveTab('upload')}
+            >
+              Back to Upload
+            </Button>
+          </div>
+        )}
+      </TabsContent>
+    </Tabs>
+  );
+  
+  // Use either dialog (desktop) or drawer (mobile)
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerTrigger asChild>
+          {trigger || (
+            <Button>
+              <UploadCloud className="mr-2 h-4 w-4" />
+              Upload Media
+            </Button>
+          )}
+        </DrawerTrigger>
+        <DrawerContent>
+          <DrawerHeader className="text-left">
+            <DrawerTitle>Upload Media</DrawerTitle>
+          </DrawerHeader>
+          <div className="px-4 pb-4">
+            <UploadContent />
+          </div>
+          <DrawerFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Close
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+  
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {trigger || (
+          <Button>
+            <UploadCloud className="mr-2 h-4 w-4" />
+            Upload Media
+          </Button>
+        )}
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[525px]">
+        <DialogHeader>
+          <DialogTitle>Upload Media</DialogTitle>
+        </DialogHeader>
+        <UploadContent />
+      </DialogContent>
+    </Dialog>
   );
 }
