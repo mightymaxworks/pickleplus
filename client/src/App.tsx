@@ -68,7 +68,8 @@ import NotificationPreferencesPage from './pages/NotificationPreferencesPage'
 // Import custom test login page to help with loading issues
 import TestLoginPage from './pages/test-login-page'
 
-// Icons test page removed for production (PKL-278651-UIFIX-0003-CLEANUP)
+// Import icons test page (PKL-278651-COMM-0007-ICONS)
+import IconsPage from './pages/icons'
 
 // Keep imports for non-lazy loaded pages
 import TestAuthPage from './pages/TestAuthPage'
@@ -416,7 +417,10 @@ export default function App() {
                     }} path="/community/v2" />}
                   </Route>
                   
-                  {/* Icons test page removed for production (PKL-278651-UIFIX-0003-CLEANUP) */}
+                  {/* PKL-278651-COMM-0007-ICONS - Custom Icons Showcase */}
+                  <Route path="/icons">
+                    {(params) => <ProtectedRoute component={IconsPage} path="/icons" />}
+                  </Route>
                   
                   {/* PKL-278651-COMM-0028-NOTIF - Notifications Page */}
                   <Route path="/notifications">

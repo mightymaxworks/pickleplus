@@ -1,10 +1,10 @@
 /**
  * PKL-278651-GAME-0002-TUT
- * Tutorial Provider Component (DISABLED)
+ * Tutorial Provider Component
  * 
- * PKL-278651-UIFIX-0003-CLEANUP: Tutorial component has been disabled for production.
- * The tutorial provider context remains available for backwards compatibility but
- * no longer shows the tutorial to any users.
+ * This component manages the first-time user tutorial experience.
+ * It determines when to show the tutorial based on user login status
+ * and whether they have seen the tutorial before.
  */
 
 import React, { useState, useEffect, createContext, useContext } from 'react';
@@ -46,20 +46,24 @@ const TutorialProvider: React.FC<TutorialProviderProps> = ({ children }) => {
   // Local storage key for tracking tutorial completion
   const TUTORIAL_STORAGE_KEY = 'pickle_plus_tutorial_completed';
   
-  // PKL-278651-UIFIX-0003-CLEANUP: Tutorial disabled for production
+  // Check if user has completed tutorial on mount
   useEffect(() => {
     if (user && !isLoading && !isInitialized) {
       setIsInitialized(true);
+      // If we have a user ID, use a user-specific key
+      const storageKey = user?.id 
+        ? `${TUTORIAL_STORAGE_KEY}_${user.id}` 
+        : TUTORIAL_STORAGE_KEY;
+        
+      const completedStatus = localStorage.getItem(storageKey);
+      const hasCompleted = completedStatus === 'true';
       
-      // Mark all users as having completed the tutorial
-      if (user?.id) {
-        const storageKey = `${TUTORIAL_STORAGE_KEY}_${user.id}`;
-        localStorage.setItem(storageKey, 'true');
+      setHasCompletedTutorial(hasCompleted);
+      
+      // Show tutorial for first-time authenticated users who haven't completed it
+      if (!hasCompleted && user?.id) {
+        setShowTutorial(true);
       }
-      
-      // Always mark as completed, never show the tutorial
-      setHasCompletedTutorial(true);
-      setShowTutorial(false);
     }
   }, [isLoading, user, isInitialized]);
   
@@ -73,13 +77,14 @@ const TutorialProvider: React.FC<TutorialProviderProps> = ({ children }) => {
     }
   };
   
-  // Reset tutorial function (disabled for production)
+  // Reset tutorial for testing purposes
   const resetTutorial = () => {
-    // PKL-278651-UIFIX-0003-CLEANUP: No-op for production
-    console.log('Tutorial reset attempted but disabled for production');
-    // Always maintain completed status
-    setHasCompletedTutorial(true);
-    setShowTutorial(false);
+    if (user?.id) {
+      const storageKey = `${TUTORIAL_STORAGE_KEY}_${user.id}`;
+      localStorage.removeItem(storageKey);
+      setHasCompletedTutorial(false);
+      setShowTutorial(true);
+    }
   };
   
   // Skip tutorial
