@@ -1,8 +1,9 @@
 /**
- * PKL-278651-COMM-0028-NOTIF - Updated AppHeader Component
+ * PKL-278651-COMM-0028-NOTIF - Primary Navigation Header Component
  * Implementation timestamp: 2025-04-21 04:00 ET
  * 
- * AppHeader updated to be standardized across all routes
+ * Primary application navigation header standardized across all routes.
+ * This is the main navigation component for the application.
  * 
  * Framework 5.2 compliant implementation
  */
