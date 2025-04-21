@@ -99,7 +99,67 @@ const upload = multer({
   }
 });
 
+// Import the quota service
+import { 
+  getCommunityStorageUsage, 
+  checkQuotaForUpload, 
+  updateStorageUsage,
+  recalculateStorageUsage
+} from './storage-quota-service';
+
 const mediaRouter = Router();
+
+/**
+ * Get storage quota usage for a community
+ * GET /api/community/:communityId/media/quota
+ */
+mediaRouter.get(
+  '/:communityId/media/quota',
+  isAuthenticated,
+  isCommunityMember,
+  async (req, res) => {
+    try {
+      const communityId = parseInt(req.params.communityId);
+      
+      // Get storage usage and quota information
+      const quota = await getCommunityStorageUsage(communityId);
+      
+      res.status(200).json(quota);
+    } catch (error) {
+      console.error('Error getting storage quota:', error);
+      res.status(500).json({ message: 'Failed to get storage quota information' });
+    }
+  }
+);
+
+/**
+ * Recalculate storage usage for a community
+ * POST /api/community/:communityId/media/recalculate-quota
+ */
+mediaRouter.post(
+  '/:communityId/media/recalculate-quota',
+  isAuthenticated,
+  isCommunityAdmin, // Only admins can force recalculation
+  async (req, res) => {
+    try {
+      const communityId = parseInt(req.params.communityId);
+      
+      // Recalculate storage usage from scratch
+      await recalculateStorageUsage(communityId);
+      
+      // Get updated quota information
+      const quota = await getCommunityStorageUsage(communityId);
+      
+      res.status(200).json({
+        message: 'Storage usage recalculated successfully',
+        quota
+      });
+    } catch (error) {
+      console.error('Error recalculating storage usage:', error);
+      res.status(500).json({ message: 'Failed to recalculate storage usage' });
+    }
+  }
+);
 
 /**
  * Upload media to a community
@@ -109,7 +169,40 @@ mediaRouter.post(
   '/:communityId/media',
   isAuthenticated,
   isCommunityMember,
-  upload.array('files', 10), // Allow up to 10 files
+  // Quota pre-check middleware
+  async (req, res, next) => {
+    try {
+      const communityId = parseInt(req.params.communityId);
+      
+      // Get estimated total file size from content-length header
+      const contentLength = parseInt(req.headers['content-length'] || '0', 10);
+      
+      // Skip quota check if we can't determine size (fallback to post-upload check)
+      if (!contentLength) {
+        return next();
+      }
+      
+      // Estimate actual file payload size (accounting for form metadata)
+      const estimatedFileSize = contentLength * 0.8; // 80% of content-length is a reasonable estimate
+      
+      // Check if upload would exceed quota
+      const quotaCheck = await checkQuotaForUpload(communityId, estimatedFileSize);
+      
+      if (!quotaCheck.canUpload) {
+        return res.status(413).json({
+          message: 'Storage quota exceeded',
+          quota: quotaCheck
+        });
+      }
+      
+      next();
+    } catch (error) {
+      console.error('Error in quota pre-check:', error);
+      // Continue even if quota check fails
+      next();
+    }
+  },
+  upload.array('files', 5), // Reduced to 5 files per upload
   async (req, res) => {
     try {
       const communityId = parseInt(req.params.communityId);
@@ -118,6 +211,27 @@ mediaRouter.post(
       
       if (!files || files.length === 0) {
         return res.status(400).json({ message: 'No files uploaded' });
+      }
+      
+      // Calculate total size of uploaded files
+      const totalUploadSize = files.reduce((sum, file) => sum + file.size, 0);
+      
+      // Check quota after files are received (more accurate than pre-check)
+      const quotaCheck = await checkQuotaForUpload(communityId, totalUploadSize);
+      
+      if (!quotaCheck.canUpload) {
+        // Clean up uploaded files
+        files.forEach(file => {
+          const filePath = path.join(process.cwd(), 'uploads', 'community-media', path.basename(file.path));
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
+        });
+        
+        return res.status(413).json({
+          message: 'Storage quota exceeded',
+          quota: quotaCheck
+        });
       }
       
       // Get metadata from request body
@@ -332,6 +446,9 @@ mediaRouter.delete(
           fs.unlinkSync(thumbnailPath);
         }
       }
+      
+      // Update storage usage after deletion
+      await updateStorageUsage(communityId, -media.fileSizeBytes, -1);
       
       res.status(200).json({ message: 'Media deleted successfully' });
     } catch (error) {
