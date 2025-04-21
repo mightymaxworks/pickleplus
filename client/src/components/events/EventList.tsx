@@ -148,7 +148,7 @@ export function EventList({
    * PKL-278651-CONN-0012-SYNC - Event Status Synchronization
    * Set up real-time WebSocket connection for event status updates
    */
-  const { isConnected } = useEventStatusSync({
+  const { isConnected, isEnabled } = useEventStatusSync({
     eventIds,
     onStatusChange: (update) => {
       console.log(`[WebSocket] Received update for event ${update.eventId}:`, update);
@@ -401,7 +401,7 @@ export function EventList({
   return (
     <div className={cn("space-y-8", className)}>
       {/* PKL-278651-CONN-0012-SYNC - WebSocket connection status indicator */}
-      {showEnhancedStatus && (
+      {showEnhancedStatus && isEnabled && (
         <div className="flex items-center justify-end text-xs mb-1">
           <div className={cn(
             "flex items-center",

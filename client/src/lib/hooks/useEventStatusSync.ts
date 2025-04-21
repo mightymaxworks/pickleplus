@@ -7,7 +7,8 @@
  * Framework5.2 compliant with defensive programming and proper error handling.
  * 
  * @implementation Framework5.2
- * @lastModified 2025-04-20
+ * @lastModified 2025-04-21
+ * @bugfix Added graceful degradation for WebSocket connection failures
  */
 
 import { useEffect, useState, useRef, useCallback } from 'react';
@@ -51,29 +52,61 @@ export function useEventStatusSync({
   const queryClient = useQueryClient();
   const reconnectTimeoutRef = useRef<number | null>(null);
   const reconnectAttemptsRef = useRef(0);
-  const MAX_RECONNECT_ATTEMPTS = 5;
-  const RECONNECT_DELAY = 3000; // 3 seconds
+  const websocketEnabledRef = useRef<boolean>(true);
+  const MAX_RECONNECT_ATTEMPTS = 3;  // Reduced to prevent too many attempts
+  const RECONNECT_DELAY = 5000; // Increased to 5 seconds
 
   /**
    * Establish WebSocket connection to listen for event status updates
    * Framework5.2 compliant with proper connection error handling
    */
   const connectWebSocket = useCallback(() => {
-    if (!user?.id) return;
+    // Bail early if no user ID or websockets have been disabled
+    if (!user?.id || !websocketEnabledRef.current) return;
 
     try {
       // Close existing connection if any
-      if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-        socketRef.current.close();
+      if (socketRef.current) {
+        try {
+          // Only attempt to close if it's open
+          if (socketRef.current.readyState === WebSocket.OPEN) {
+            socketRef.current.close();
+          }
+        } catch (closeError) {
+          console.error('Error closing WebSocket:', closeError);
+        }
       }
 
       // Create WebSocket URL with proper protocol detection
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const wsUrl = `${protocol}//${window.location.host}/ws`;
-      const socket = new WebSocket(wsUrl);
-      socketRef.current = socket;
+      
+      // Create new WebSocket with try-catch to handle any connection errors
+      let socket: WebSocket;
+      try {
+        socket = new WebSocket(wsUrl);
+        socketRef.current = socket;
+      } catch (wsError) {
+        console.error('WebSocket creation error:', wsError);
+        websocketEnabledRef.current = false; // Disable WebSocket functionality
+        setIsConnected(false);
+        return;
+      }
+
+      // Set timeout to catch hanging connections
+      const connectionTimeout = setTimeout(() => {
+        if (socket.readyState !== WebSocket.OPEN) {
+          console.log('WebSocket connection timeout');
+          try {
+            socket.close();
+          } catch (e) {
+            // Ignore errors when closing timed out socket
+          }
+        }
+      }, 10000); // 10 second timeout
 
       socket.onopen = () => {
+        clearTimeout(connectionTimeout); // Clear timeout when connection succeeds
         setIsConnected(true);
         reconnectAttemptsRef.current = 0;
         
@@ -88,8 +121,12 @@ export function useEventStatusSync({
           }
         };
         
-        if (socket.readyState === WebSocket.OPEN) {
-          socket.send(JSON.stringify(subscribeMessage));
+        try {
+          if (socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify(subscribeMessage));
+          }
+        } catch (sendError) {
+          console.error('Error sending subscription message:', sendError);
         }
       };
 
@@ -128,33 +165,56 @@ export function useEventStatusSync({
       socket.onerror = (error) => {
         console.error('WebSocket error:', error);
         setIsConnected(false);
+        
+        // If we get an error, increment the attempt counter
+        reconnectAttemptsRef.current += 1;
+        
+        // If we've hit the max attempts, disable WebSockets
+        if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
+          websocketEnabledRef.current = false;
+          
+          // Clear any pending reconnection timeouts
+          if (reconnectTimeoutRef.current) {
+            clearTimeout(reconnectTimeoutRef.current);
+            reconnectTimeoutRef.current = null;
+          }
+        }
       };
 
       socket.onclose = (event) => {
+        clearTimeout(connectionTimeout); // Clear timeout on close too
         setIsConnected(false);
         
-        // Only attempt reconnection if not a clean close and within max attempts
-        if (!event.wasClean && reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
+        // Only attempt reconnection if:
+        // 1. Not a clean close AND
+        // 2. Within max attempts AND
+        // 3. WebSockets are still enabled
+        if (!event.wasClean && 
+            reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS && 
+            websocketEnabledRef.current) {
+            
+          // Clear any existing reconnection timeout
           if (reconnectTimeoutRef.current) {
-            window.clearTimeout(reconnectTimeoutRef.current);
+            clearTimeout(reconnectTimeoutRef.current);
           }
           
-          reconnectAttemptsRef.current += 1;
+          // Set a new reconnection timeout
           // @ts-ignore - setTimeout returns number in browser
-          reconnectTimeoutRef.current = window.setTimeout(() => {
+          reconnectTimeoutRef.current = setTimeout(() => {
             connectWebSocket();
           }, RECONNECT_DELAY);
-        } else if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
-          toast({
-            title: 'Connection Issues',
-            description: 'Unable to receive real-time event updates. Please refresh the page.',
-            variant: 'destructive'
-          });
+        } 
+        // If we've hit the max attempts, disable WebSockets silently
+        else if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
+          websocketEnabledRef.current = false;
+          console.log('WebSocket reconnection disabled after max attempts');
+          // We don't show a toast to avoid disturbing the user
         }
       };
     } catch (error) {
-      console.error('Failed to establish WebSocket connection:', error);
+      console.error('Unexpected error in WebSocket setup:', error);
       setIsConnected(false);
+      websocketEnabledRef.current = false; // Disable WebSockets on unexpected errors
     }
   }, [eventIds, myEventsOnly, user, queryClient, toast, onStatusChange]);
 
@@ -178,6 +238,8 @@ export function useEventStatusSync({
 
   // Update subscription if event IDs change
   useEffect(() => {
+    if (!websocketEnabledRef.current) return; // Skip if websockets are disabled
+    
     const socket = socketRef.current;
     if (socket && socket.readyState === WebSocket.OPEN && user?.id) {
       const updateMessage = {
@@ -190,12 +252,18 @@ export function useEventStatusSync({
         }
       };
       
-      socket.send(JSON.stringify(updateMessage));
+      try {
+        socket.send(JSON.stringify(updateMessage));
+      } catch (error) {
+        console.error('Error updating subscription:', error);
+        // Don't disable websockets on update failure as it's not critical
+      }
     }
   }, [eventIds, myEventsOnly, user?.id]);
 
   return {
     isConnected,
+    isEnabled: websocketEnabledRef.current,
     reconnect: connectWebSocket
   };
 }
