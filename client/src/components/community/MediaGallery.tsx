@@ -52,6 +52,8 @@ import {
   Filter,
   RefreshCw,
   Search,
+  Play,
+  Check
 } from "lucide-react";
 import { Input } from "@/components/ui/input"; 
 import { Badge } from "@/components/ui/badge";
@@ -92,14 +94,14 @@ export function MediaGallery({
   } = useMedia(communityId);
 
   // Initialize filter with props if provided
-  useState(() => {
+  useEffect(() => {
     if (initialFilter) {
       setFilter({
         ...filter,
         ...initialFilter,
       });
     }
-  });
+  }, [initialFilter, filter]);
 
   // Filter media by search term
   const filteredMedia = useMemo(() => {
@@ -484,4 +486,3 @@ export function MediaGallery({
   );
 }
 
-import { Check, Play } from "lucide-react";

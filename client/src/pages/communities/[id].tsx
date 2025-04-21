@@ -70,6 +70,7 @@ import {
 import { JoinRequestManagement } from "@/components/community/JoinRequestManagement";
 import { CommunityAdminFAB } from "@/components/community/CommunityAdminFAB";
 import { CommunityMemberRole } from "@/types/community";
+import { MediaGallery } from "@/components/community/MediaGallery";
 
 export default function CommunityDetailPage() {
   // Get community ID from URL
