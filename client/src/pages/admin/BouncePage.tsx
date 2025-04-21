@@ -19,6 +19,7 @@ import BounceFindings from '@/components/admin/bounce/BounceFindings';
 import BounceTestRunner from '@/components/admin/bounce/BounceTestRunner';
 import BounceExecutiveReport from '@/components/admin/bounce/BounceExecutiveReport';
 import BounceAchievements from '@/components/admin/bounce/BounceAchievements';
+import BounceXpIntegration from '@/components/admin/bounce/BounceXpIntegration';
 import { AdminLayout } from '@/modules/admin/components/AdminLayout';
 import {
   Bot,
@@ -30,7 +31,8 @@ import {
   BarChart3,
   Play,
   FileText,
-  Award
+  Award,
+  Zap
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
@@ -93,6 +95,14 @@ const BouncePage: React.FC = () => {
                 <Badge className="ml-1 bg-green-500 hover:bg-green-600">New</Badge>
               </TabsTrigger>
               <TabsTrigger 
+                value="xp-integration" 
+                className="flex items-center gap-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-2 px-3"
+              >
+                <Zap className="h-4 w-4" />
+                XP Integration
+                <Badge className="ml-1 bg-yellow-500 hover:bg-yellow-600">New</Badge>
+              </TabsTrigger>
+              <TabsTrigger 
                 value="schedules" 
                 className="flex items-center gap-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-2 px-3"
                 disabled
@@ -130,6 +140,10 @@ const BouncePage: React.FC = () => {
             
             <TabsContent value="achievements" className="p-0 mt-0">
               <BounceAchievements />
+            </TabsContent>
+            
+            <TabsContent value="xp-integration" className="p-0 mt-0">
+              <BounceXpIntegration />
             </TabsContent>
             
             <TabsContent value="schedules" className="p-0 mt-0">
