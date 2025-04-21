@@ -491,21 +491,30 @@ export function ModernUniversalPassport({
               />
             </div>
             
-            {/* QR Code Display with enhanced animations */}
+            {/* Enhanced QR Code Display with premium styling */}
             <motion.div
               className={cn(
-                "p-4 rounded-2xl border-2 shadow-lg bg-white relative z-10",
+                "p-5 rounded-3xl border shadow-xl relative z-10 overflow-hidden",
                 highlightCode 
-                  ? "border-primary shadow-lg shadow-primary/10" 
-                  : "border-primary/5 shadow-lg shadow-black/5"
+                  ? isFoundingMember
+                    ? "border-amber-300 shadow-amber-200/30"
+                    : "border-primary/30 shadow-primary/20" 
+                  : isFoundingMember
+                    ? "border-amber-200/50 shadow-amber-100/20"
+                    : "border-primary/10 shadow-primary/10",
+                "backdrop-blur-sm"
               )}
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ 
                 scale: 1, 
                 opacity: 1,
                 boxShadow: highlightCode 
-                  ? '0 0 20px 5px rgba(255, 87, 34, 0.15)' 
-                  : '0 10px 30px rgba(0, 0, 0, 0.05)'
+                  ? isFoundingMember
+                    ? '0 10px 40px 5px rgba(212, 160, 23, 0.2)' 
+                    : '0 10px 40px 5px rgba(255, 87, 34, 0.15)' 
+                  : isFoundingMember
+                    ? '0 10px 30px rgba(212, 160, 23, 0.1)'
+                    : '0 10px 30px rgba(0, 0, 0, 0.06)'
               }}
               transition={{ 
                 duration: 0.6, 
@@ -513,29 +522,110 @@ export function ModernUniversalPassport({
               }}
               whileHover={{ 
                 scale: 1.02,
-                boxShadow: '0 15px 35px rgba(255, 87, 34, 0.12)'
+                boxShadow: isFoundingMember
+                  ? '0 15px 45px rgba(212, 160, 23, 0.2)'
+                  : '0 15px 45px rgba(255, 87, 34, 0.15)'
+              }}
+              style={{
+                background: isFoundingMember
+                  ? 'linear-gradient(135deg, rgba(255, 250, 230, 0.9) 0%, rgba(255, 255, 255, 0.95) 50%, rgba(255, 248, 225, 0.85) 100%)'
+                  : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.98) 50%, rgba(248, 250, 252, 0.9) 100%)'
               }}
             >
-              {/* QR Code corners - more subtle and modern */}
-              <div className="absolute top-0 left-0 w-12 h-12">
-                <motion.svg viewBox="0 0 48 48" className="w-full h-full" initial={{ opacity: 0 }} animate={{ opacity: 0.9 }} transition={{ delay: 0.3 }}>
-                  <path d="M2 2 L12 2 L2 12 Z" fill="none" stroke={isFoundingMember ? "#D4A017" : "#FF5722"} strokeWidth={isFoundingMember ? 3 : 2} />
+              {/* Enhanced corner elements with more elegant design */}
+              <div className="absolute top-0 left-0 w-16 h-16">
+                <motion.svg 
+                  viewBox="0 0 64 64" 
+                  className="w-full h-full" 
+                  initial={{ opacity: 0, rotate: -10 }} 
+                  animate={{ opacity: 1, rotate: 0 }} 
+                  transition={{ delay: 0.3, duration: 0.5 }}
+                >
+                  <path 
+                    d="M4 4 C4 20 4 24 20 24 C4 24 4 20 4 4" 
+                    fill="none" 
+                    stroke={isFoundingMember ? "#D4A017" : "#FF5722"} 
+                    strokeWidth={isFoundingMember ? 3 : 2.5} 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                  />
                 </motion.svg>
               </div>
-              <div className="absolute top-0 right-0 w-12 h-12">
-                <motion.svg viewBox="0 0 48 48" className="w-full h-full" initial={{ opacity: 0 }} animate={{ opacity: 0.9 }} transition={{ delay: 0.4 }}>
-                  <path d="M46 2 L36 2 L46 12 Z" fill="none" stroke={isFoundingMember ? "#D4A017" : "#FF5722"} strokeWidth={isFoundingMember ? 3 : 2} />
+              
+              <div className="absolute top-0 right-0 w-16 h-16">
+                <motion.svg 
+                  viewBox="0 0 64 64" 
+                  className="w-full h-full" 
+                  initial={{ opacity: 0, rotate: 10 }} 
+                  animate={{ opacity: 1, rotate: 0 }} 
+                  transition={{ delay: 0.4, duration: 0.5 }}
+                >
+                  <path 
+                    d="M60 4 C60 20 60 24 44 24 C60 24 60 20 60 4" 
+                    fill="none" 
+                    stroke={isFoundingMember ? "#D4A017" : "#FF5722"} 
+                    strokeWidth={isFoundingMember ? 3 : 2.5} 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                  />
                 </motion.svg>
               </div>
-              <div className="absolute bottom-0 left-0 w-12 h-12">
-                <motion.svg viewBox="0 0 48 48" className="w-full h-full" initial={{ opacity: 0 }} animate={{ opacity: 0.9 }} transition={{ delay: 0.5 }}>
-                  <path d="M2 46 L12 46 L2 36 Z" fill="none" stroke={isFoundingMember ? "#D4A017" : "#FF5722"} strokeWidth={isFoundingMember ? 3 : 2} />
+              
+              <div className="absolute bottom-0 left-0 w-16 h-16">
+                <motion.svg 
+                  viewBox="0 0 64 64" 
+                  className="w-full h-full" 
+                  initial={{ opacity: 0, rotate: 10 }} 
+                  animate={{ opacity: 1, rotate: 0 }} 
+                  transition={{ delay: 0.5, duration: 0.5 }}
+                >
+                  <path 
+                    d="M4 60 C4 44 4 40 20 40 C4 40 4 44 4 60" 
+                    fill="none" 
+                    stroke={isFoundingMember ? "#D4A017" : "#FF5722"} 
+                    strokeWidth={isFoundingMember ? 3 : 2.5} 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                  />
                 </motion.svg>
               </div>
-              <div className="absolute bottom-0 right-0 w-12 h-12">
-                <motion.svg viewBox="0 0 48 48" className="w-full h-full" initial={{ opacity: 0 }} animate={{ opacity: 0.9 }} transition={{ delay: 0.6 }}>
-                  <path d="M46 46 L36 46 L46 36 Z" fill="none" stroke={isFoundingMember ? "#D4A017" : "#FF5722"} strokeWidth={isFoundingMember ? 3 : 2} />
+              
+              <div className="absolute bottom-0 right-0 w-16 h-16">
+                <motion.svg 
+                  viewBox="0 0 64 64" 
+                  className="w-full h-full" 
+                  initial={{ opacity: 0, rotate: -10 }} 
+                  animate={{ opacity: 1, rotate: 0 }} 
+                  transition={{ delay: 0.6, duration: 0.5 }}
+                >
+                  <path 
+                    d="M60 60 C60 44 60 40 44 40 C60 40 60 44 60 60" 
+                    fill="none" 
+                    stroke={isFoundingMember ? "#D4A017" : "#FF5722"} 
+                    strokeWidth={isFoundingMember ? 3 : 2.5} 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                  />
                 </motion.svg>
+              </div>
+              
+              {/* Enhanced background pattern */}
+              <div className="absolute inset-0 opacity-5 pointer-events-none overflow-hidden">
+                {isFoundingMember ? (
+                  <svg width="100%" height="100%" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <pattern id="goldPattern" width="10" height="10" patternUnits="userSpaceOnUse">
+                      <circle cx="5" cy="5" r="1" fill="#D4A017" />
+                    </pattern>
+                    <rect width="100%" height="100%" fill="url(#goldPattern)" />
+                  </svg>
+                ) : (
+                  <svg width="100%" height="100%" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <pattern id="primaryPattern" width="10" height="10" patternUnits="userSpaceOnUse">
+                      <circle cx="5" cy="5" r="1" fill="#FF5722" />
+                    </pattern>
+                    <rect width="100%" height="100%" fill="url(#primaryPattern)" />
+                  </svg>
+                )}
               </div>
               
               {/* Gold sparkle effect for founding members */}
@@ -546,31 +636,45 @@ export function ModernUniversalPassport({
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.8, delay: 0.7 }}
                 >
-                  <div className="absolute top-0 right-0">
+                  <div className="absolute top-4 right-4">
                     <SparklesIcon className="h-5 w-5 text-amber-400" />
                   </div>
-                  <div className="absolute bottom-0 left-0">
+                  <div className="absolute bottom-4 left-4">
                     <SparklesIcon className="h-5 w-5 text-amber-400" />
                   </div>
                 </motion.div>
               )}
               
-              {passportCode && (
-                <QRCodeSVG
-                  value={`PICKLEPLUSKP-${passportCode}`}
-                  size={240}
-                  level="H"
-                  includeMargin={true}
-                  fgColor={isFoundingMember ? "#D4A017" : "#000000"}
-                  bgColor="#FFFFFF"
-                  imageSettings={{
-                    src: "/src/assets/pickle-plus-logo.png",
-                    height: 44,
-                    width: 44,
-                    excavate: true,
-                  }}
+              {/* Premium QR code with custom styling */}
+              <div className="relative">
+                {/* Subtle glow effect behind QR */}
+                <div 
+                  className={cn(
+                    "absolute inset-0 blur-lg rounded-full opacity-20",
+                    isFoundingMember ? "bg-amber-300" : "bg-primary/70"
+                  )}
+                  style={{ transform: 'scale(0.7)' }}
                 />
-              )}
+                
+                {passportCode && (
+                  <div className="relative">
+                    <QRCodeSVG
+                      value={`PICKLEPLUSKP-${passportCode}`}
+                      size={240}
+                      level="H"
+                      includeMargin={true}
+                      fgColor={isFoundingMember ? "#D4A017" : "#2583E4"} // Changed to blue for regular members
+                      bgColor="transparent"
+                      imageSettings={{
+                        src: "/src/assets/pickle-plus-emblem.png", // Updated to use new emblem
+                        height: 60,
+                        width: 60,
+                        excavate: true,
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
             </motion.div>
             
             {/* Passport code display with improved design */}
