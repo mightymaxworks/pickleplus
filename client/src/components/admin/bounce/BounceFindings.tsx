@@ -55,7 +55,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { BounceFindingSeverity, BounceFindingStatus } from '@shared/schema';
+import { BounceFindingSeverity, BounceFindingStatus } from '@shared/schema/bounce';
 import { apiRequest } from '@/lib/queryClient';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -66,8 +66,8 @@ interface Finding {
   id: number;
   title: string;
   description: string;
-  severity: 'critical' | 'high' | 'medium' | 'low';
-  status: 'open' | 'in_progress' | 'resolved' | 'wont_fix' | 'duplicate';
+  severity: BounceFindingSeverity;
+  status: BounceFindingStatus;
   elementSelector?: string;
   screenshot?: string;
   testRunId: number;
