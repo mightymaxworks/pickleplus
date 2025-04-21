@@ -44,7 +44,15 @@ export function registerBounceAdminRoutes(app: express.Express): void {
 
   // Get specific finding and its evidence
   app.get('/api/admin/bounce/findings/:id', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
-    const findingId = parseInt(req.params.id);
+    // Safely parse the ID and validate it's a valid number
+    const idParam = req.params.id;
+    const findingId = parseInt(idParam);
+    
+    // Check if the parsed ID is valid
+    if (isNaN(findingId) || findingId <= 0) {
+      console.error(`Invalid finding ID requested: ${idParam}`);
+      return res.status(400).json({ success: false, error: 'Invalid finding ID' });
+    }
     
     // Get the finding details
     const findingResult = await bounceApi.getFindingById(findingId);
@@ -64,7 +72,15 @@ export function registerBounceAdminRoutes(app: express.Express): void {
 
   // Update finding status
   app.patch('/api/admin/bounce/findings/:id/status', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
-    const findingId = parseInt(req.params.id);
+    const idParam = req.params.id;
+    const findingId = parseInt(idParam);
+    
+    // Check if the parsed ID is valid
+    if (isNaN(findingId) || findingId <= 0) {
+      console.error(`Invalid finding ID for status update: ${idParam}`);
+      return res.status(400).json({ success: false, error: 'Invalid finding ID' });
+    }
+    
     const { status, assignedToUserId } = req.body;
     
     if (!status) {
@@ -104,7 +120,15 @@ export function registerBounceAdminRoutes(app: express.Express): void {
   
   // Add evidence to a finding
   app.post('/api/admin/bounce/findings/:id/evidence', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
-    const findingId = parseInt(req.params.id);
+    const idParam = req.params.id;
+    const findingId = parseInt(idParam);
+    
+    // Check if the parsed ID is valid
+    if (isNaN(findingId) || findingId <= 0) {
+      console.error(`Invalid finding ID for evidence upload: ${idParam}`);
+      return res.status(400).json({ success: false, error: 'Invalid finding ID' });
+    }
+    
     const { type, content, metadata } = req.body;
     
     if (!content) {
@@ -129,9 +153,16 @@ export function registerBounceAdminRoutes(app: express.Express): void {
       return res.status(400).json({ success: false, error: 'FindingId and type are required' });
     }
     
+    // Check if the findingId is valid
+    const findingIdNum = parseInt(findingId);
+    if (isNaN(findingIdNum) || findingIdNum <= 0) {
+      console.error(`Invalid finding ID for interaction: ${findingId}`);
+      return res.status(400).json({ success: false, error: 'Invalid finding ID' });
+    }
+    
     const result = await bounceApi.recordUserInteraction({
       userId: req.user!.id,
-      findingId,
+      findingId: findingIdNum,
       type,
       points,
       metadata
