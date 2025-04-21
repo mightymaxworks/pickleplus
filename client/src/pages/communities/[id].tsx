@@ -65,7 +65,8 @@ import {
   ShieldAlert,
   Shield,
   UserPlus,
-  Image
+  Image,
+  Plus
 } from "lucide-react";
 import { JoinRequestManagement } from "@/components/community/JoinRequestManagement";
 import { CommunityAdminFAB } from "@/components/community/CommunityAdminFAB";
@@ -438,10 +439,14 @@ export default function CommunityDetailPage() {
                   <p className="text-sm text-muted-foreground">
                     Browse media or visit the media management page to upload and organize content.
                   </p>
-                  <Button variant="outline" size="icon" asChild>
-                    <a href={`/communities/${communityId}/media`} title="Media Management" target="_blank" rel="noopener noreferrer">
-                      <Image className="h-5 w-5" />
-                    </a>
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    onClick={() => window.open(`/communities/${communityId}/media`, '_blank')}
+                    className="flex items-center gap-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>Add Media</span>
                   </Button>
                 </div>
                 
