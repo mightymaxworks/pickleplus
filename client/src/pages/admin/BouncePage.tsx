@@ -20,6 +20,7 @@ import BounceTestRunner from '@/components/admin/bounce/BounceTestRunner';
 import BounceExecutiveReport from '@/components/admin/bounce/BounceExecutiveReport';
 import BounceAchievements from '@/components/admin/bounce/BounceAchievements';
 import BounceXpIntegration from '@/components/admin/bounce/BounceXpIntegration';
+import { BounceAutomation } from '@/components/admin/bounce/BounceAutomation';
 import { AdminLayout } from '@/modules/admin/components/AdminLayout';
 import {
   Bot,
@@ -103,13 +104,12 @@ const BouncePage: React.FC = () => {
                 <Badge className="ml-1 bg-yellow-500 hover:bg-yellow-600">New</Badge>
               </TabsTrigger>
               <TabsTrigger 
-                value="schedules" 
+                value="automation" 
                 className="flex items-center gap-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-2 px-3"
-                disabled
               >
                 <CalendarClock className="h-4 w-4" />
-                Schedules
-                <Badge className="ml-1 bg-blue-500 hover:bg-blue-600" variant="outline">Sprint 4</Badge>
+                Automation
+                <Badge className="ml-1 bg-green-500 hover:bg-green-600">New</Badge>
               </TabsTrigger>
               <TabsTrigger 
                 value="settings" 
@@ -146,15 +146,8 @@ const BouncePage: React.FC = () => {
               <BounceXpIntegration />
             </TabsContent>
             
-            <TabsContent value="schedules" className="p-0 mt-0">
-              <div className="p-8 text-center text-muted-foreground">
-                <CalendarClock className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                <h3 className="text-lg font-medium mb-2">Test Scheduling</h3>
-                <p className="max-w-md mx-auto">
-                  This feature will be available in Sprint 4. It will allow you to schedule automated test runs
-                  on a recurring basis or trigger them based on specific events.
-                </p>
-              </div>
+            <TabsContent value="automation" className="p-0 mt-0">
+              <BounceAutomation />
             </TabsContent>
             
             <TabsContent value="settings" className="p-0 mt-0">
