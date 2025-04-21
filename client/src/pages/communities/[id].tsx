@@ -620,6 +620,13 @@ export default function CommunityDetailPage() {
 
 
       </div>
+      
+      {/* Media Upload Modal */}
+      <MediaUploadModal
+        isOpen={showMediaUploadModal}
+        onClose={() => setShowMediaUploadModal(false)}
+        communityId={communityId}
+      />
     </DashboardLayout>
   );
 }
