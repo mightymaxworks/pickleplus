@@ -181,7 +181,7 @@ export default function EventDiscoveryWrapper() {
               <EventList 
                 showViewButton={true}
                 onEventClick={handleEventClick}
-                showEnhancedStatus={true}
+                showEnhancedStatus={false}
               />
             </TabsContent>
             
