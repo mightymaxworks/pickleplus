@@ -193,11 +193,17 @@ export function registerAdminDashboardRoutes(
         // Create a cache key based on the time period and date range
         const cacheKey = `dashboard_${timePeriod}_${startDate || ''}_${endDate || ''}`;
         
-        // Check if we have cached data
-        const cachedDashboard = dashboardCache.get(cacheKey);
-        if (cachedDashboard) {
-          console.log(`[API] Returning cached dashboard for ${timePeriod}`);
-          return res.status(200).json(cachedDashboard);
+        // Check for nocache parameter to bypass cache for debugging
+        const skipCache = req.query.nocache === 'true';
+        if (skipCache) {
+          console.log(`[API] Bypassing cache due to nocache=true parameter`);
+        } else {
+          // Check if we have cached data
+          const cachedDashboard = dashboardCache.get(cacheKey);
+          if (cachedDashboard) {
+            console.log(`[API] Returning cached dashboard for ${timePeriod}`);
+            return res.status(200).json(cachedDashboard);
+          }
         }
 
         // Get dashboard data

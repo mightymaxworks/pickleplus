@@ -75,7 +75,7 @@ export default function ResponsiveAdminDashboard() {
     queryFn: async ({ queryKey }) => {
       const [_path, period, startDate, endDate] = queryKey as [string, DashboardTimePeriod, Date | undefined, Date | undefined];
       
-      let url = `/api/admin/dashboard?timePeriod=${period}`;
+      let url = `/api/admin/dashboard?timePeriod=${period}&nocache=true`;
       
       // Add start and end dates for custom period
       if (period === DashboardTimePeriod.CUSTOM) {
@@ -89,13 +89,13 @@ export default function ResponsiveAdminDashboard() {
         url += `&startDate=${formattedStartDate}&endDate=${formattedEndDate}`;
       }
       
-      console.log(`[PERF][Mobile] Fetching dashboard data for period: ${period}`);
+      console.log(`[PERF][Mobile] Fetching dashboard data for period: ${period} (with nocache=true)`);
       const startTime = performance.now();
       
-      // Use the enhanced apiRequest with caching support
+      // Force fresh data with the nocache parameter
       const response = await apiRequest('GET', url, undefined, {
-        cacheDuration: 60, // Cache for 60 seconds
-        forceFresh: false  // Use cache if available
+        cacheDuration: 0, // Don't cache
+        forceFresh: true  // Always get fresh data
       });
       
       if (!response.ok) {
