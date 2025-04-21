@@ -11,8 +11,9 @@
  */
 
 import React, { useEffect } from 'react';
-import { Bot, Settings } from 'lucide-react';
+import { Bot, Settings, ServerCog } from 'lucide-react';
 import { adminComponentRegistry } from '../../services/adminComponentRegistry';
+import { NavCategory } from '../../hooks/useAdminComponents';
 
 /**
  * Component that directly registers system tools in the admin navigation
@@ -26,9 +27,29 @@ const SystemToolsNavItems: React.FC = () => {
       label: 'Bounce Testing',
       path: '/admin/bounce',
       icon: <Bot className="h-4 w-4" />,
-      group: 'system',
+      group: NavCategory.SYSTEM,
       description: 'Automated testing system',
       priority: 15,
+      metadata: {
+        category: NavCategory.SYSTEM
+      },
+      order: 10,
+    });
+
+    // Register a System Tools header if not already present
+    adminComponentRegistry.registerNavItemDirect({
+      id: 'system-tools-header',
+      label: 'System Tools',
+      path: '', // Empty path for headers
+      icon: <ServerCog className="h-4 w-4" />,
+      group: NavCategory.SYSTEM,
+      description: 'System administration and monitoring tools',
+      priority: 10,
+      isHeader: true,
+      metadata: {
+        category: NavCategory.SYSTEM
+      },
+      order: 1,
     });
 
     console.log('[Admin] System tools navigation items registered directly');

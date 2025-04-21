@@ -5,6 +5,7 @@
  * This service registers admin components from various modules
  */
 
+import React from 'react';
 import { adminComponentRegistry } from './adminComponentRegistry';
 import { 
   AdminPassportNavItem,
@@ -16,6 +17,7 @@ import { AdminUserManagementNavItem } from '../components/user-management';
 import { registerReportingComponents } from './reportingComponentRegistration';
 import { registerFeedbackComponents } from './feedbackComponentRegistration';
 import BounceAdminNavItem from '../components/bounce/BounceAdminNavItem';
+import { SystemToolsNavItems } from '../components/system'; // PKL-278651-ADMIN-0016-SYS-TOOLS
 // Import settings module to register its components
 import '../components/settings';
 
@@ -64,6 +66,31 @@ export function registerBounceComponents() {
 }
 
 /**
+ * Register system tools components
+ * PKL-278651-ADMIN-0016-SYS-TOOLS
+ */
+export function registerSystemToolsComponents() {
+  // We'll insert the SystemToolsNavItems component into the admin app
+  // This component will register direct navigation items when mounted
+  
+  // Create a provider that will render the SystemToolsNavItems component
+  const renderSystemToolsProvider = () => {
+    return React.createElement(SystemToolsNavItems, {});
+  };
+  
+  // Register the provider as a special admin view that's always active
+  adminComponentRegistry.registerAdminView('system', {
+    id: 'system-tools-provider',
+    path: '',  // Empty path ensures it's always rendered
+    component: renderSystemToolsProvider,
+    label: 'System Tools Provider',
+    hidden: true  // Hidden from navigation
+  });
+  
+  console.log('[Admin] System tools components initialized');
+}
+
+/**
  * Register all admin components
  */
 export function registerAllAdminComponents() {
@@ -76,6 +103,7 @@ export function registerAllAdminComponents() {
   registerFeedbackComponents();
   registerUserManagementComponents(); // Added User Management
   registerBounceComponents(); // Added Bounce Testing System
+  registerSystemToolsComponents(); // Added System Tools
   
   console.log('[Admin] Admin components registered');
 }
