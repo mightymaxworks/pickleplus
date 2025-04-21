@@ -10,3 +10,4 @@
  */
 
 export { SystemToolsNavItems } from './SystemToolsNavItems';
+export { initSystemTools } from './initSystemTools';
