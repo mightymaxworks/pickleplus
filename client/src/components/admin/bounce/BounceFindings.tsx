@@ -49,20 +49,25 @@ import {
   Search, 
   ExternalLink,
   AlertTriangle,
-  Info
+  Info,
+  Eye
 } from 'lucide-react';
 import { 
   BounceFindingSeverity, 
   BounceFindingStatus
 } from '@shared/schema';
 import { apiRequest } from '@/lib/queryClient';
+import BounceFindingDetail from './BounceFindingDetail';
+import { useToast } from '@/hooks/use-toast';
 
 const BounceFindings: React.FC = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [page, setPage] = useState(1);
   const [severity, setSeverity] = useState<string>('');
   const [status, setStatus] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFindingId, setSelectedFindingId] = useState<number | null>(null);
 
   // Build query key dynamically based on filters
   const queryKey = ['/api/admin/bounce/findings', { page, severity, status, searchQuery }];
@@ -80,7 +85,7 @@ const BounceFindings: React.FC = () => {
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      return apiRequest<any>(`/api/admin/bounce/findings/${id}`, {
+      return apiRequest<any>(`/api/admin/bounce/findings/${id}/status`, {
         method: 'PATCH',
         body: JSON.stringify({ status }),
         headers: { 'Content-Type': 'application/json' }
@@ -89,6 +94,17 @@ const BounceFindings: React.FC = () => {
     onSuccess: () => {
       // Invalidate the findings query to refresh the data
       queryClient.invalidateQueries({ queryKey: ['/api/admin/bounce/findings'] });
+      toast({
+        title: "Status updated",
+        description: "The finding status has been updated successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Update failed",
+        description: "Failed to update the finding status. Please try again.",
+        variant: "destructive",
+      });
     }
   });
 
@@ -106,6 +122,16 @@ const BounceFindings: React.FC = () => {
     updateStatusMutation.mutate({ id, status: newStatus });
   };
 
+  const handleViewFinding = (id: number) => {
+    setSelectedFindingId(id);
+  };
+
+  const handleBackToList = () => {
+    setSelectedFindingId(null);
+    // Refresh the findings list
+    queryClient.invalidateQueries({ queryKey: ['/api/admin/bounce/findings'] });
+  };
+
   const renderSeverityBadge = (severity: string) => {
     switch (severity) {
       case BounceFindingSeverity.CRITICAL:
@@ -115,16 +141,23 @@ const BounceFindings: React.FC = () => {
             Critical
           </Badge>
         );
-      case BounceFindingSeverity.MODERATE:
+      case BounceFindingSeverity.HIGH:
         return (
           <Badge className="bg-orange-500 hover:bg-orange-600">
             <AlertTriangle className="h-3 w-3 mr-1" />
-            Moderate
+            High
+          </Badge>
+        );
+      case BounceFindingSeverity.MEDIUM:
+        return (
+          <Badge className="bg-yellow-500 hover:bg-yellow-600">
+            <AlertTriangle className="h-3 w-3 mr-1" />
+            Medium
           </Badge>
         );
       case BounceFindingSeverity.LOW:
         return (
-          <Badge className="bg-yellow-500 hover:bg-yellow-600">
+          <Badge className="bg-blue-500 hover:bg-blue-600">
             <Info className="h-3 w-3 mr-1" />
             Low
           </Badge>
@@ -136,18 +169,34 @@ const BounceFindings: React.FC = () => {
 
   const renderStatusBadge = (status: string) => {
     switch (status) {
-      case BounceFindingStatus.OPEN:
-        return <Badge className="bg-red-500 hover:bg-red-600">Open</Badge>;
+      case BounceFindingStatus.NEW:
+        return <Badge className="bg-blue-500 hover:bg-blue-600">New</Badge>;
+      case BounceFindingStatus.TRIAGE:
+        return <Badge className="bg-purple-500 hover:bg-purple-600">Triage</Badge>;
+      case BounceFindingStatus.CONFIRMED:
+        return <Badge className="bg-orange-500 hover:bg-orange-600">Confirmed</Badge>;
       case BounceFindingStatus.IN_PROGRESS:
-        return <Badge className="bg-blue-500 hover:bg-blue-600">In Progress</Badge>;
+        return <Badge className="bg-yellow-500 hover:bg-yellow-600">In Progress</Badge>;
       case BounceFindingStatus.FIXED:
         return <Badge className="bg-green-500 hover:bg-green-600">Fixed</Badge>;
-      case BounceFindingStatus.VERIFIED:
-        return <Badge className="bg-purple-500 hover:bg-purple-600">Verified</Badge>;
+      case BounceFindingStatus.WONT_FIX:
+        return <Badge className="bg-gray-500 hover:bg-gray-600">Won't Fix</Badge>;
+      case BounceFindingStatus.DUPLICATE:
+        return <Badge className="bg-gray-500 hover:bg-gray-600">Duplicate</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
   };
+
+  // If a finding is selected, show the detail view
+  if (selectedFindingId) {
+    return (
+      <BounceFindingDetail 
+        findingId={selectedFindingId} 
+        onBack={handleBackToList} 
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -178,7 +227,8 @@ const BounceFindings: React.FC = () => {
                 <SelectContent>
                   <SelectItem value="">All Severities</SelectItem>
                   <SelectItem value={BounceFindingSeverity.CRITICAL}>Critical</SelectItem>
-                  <SelectItem value={BounceFindingSeverity.MODERATE}>Moderate</SelectItem>
+                  <SelectItem value={BounceFindingSeverity.HIGH}>High</SelectItem>
+                  <SelectItem value={BounceFindingSeverity.MEDIUM}>Medium</SelectItem>
                   <SelectItem value={BounceFindingSeverity.LOW}>Low</SelectItem>
                 </SelectContent>
               </Select>
@@ -189,10 +239,13 @@ const BounceFindings: React.FC = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">All Statuses</SelectItem>
-                  <SelectItem value={BounceFindingStatus.OPEN}>Open</SelectItem>
+                  <SelectItem value={BounceFindingStatus.NEW}>New</SelectItem>
+                  <SelectItem value={BounceFindingStatus.TRIAGE}>Triage</SelectItem>
+                  <SelectItem value={BounceFindingStatus.CONFIRMED}>Confirmed</SelectItem>
                   <SelectItem value={BounceFindingStatus.IN_PROGRESS}>In Progress</SelectItem>
                   <SelectItem value={BounceFindingStatus.FIXED}>Fixed</SelectItem>
-                  <SelectItem value={BounceFindingStatus.VERIFIED}>Verified</SelectItem>
+                  <SelectItem value={BounceFindingStatus.WONT_FIX}>Won't Fix</SelectItem>
+                  <SelectItem value={BounceFindingStatus.DUPLICATE}>Duplicate</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -203,8 +256,7 @@ const BounceFindings: React.FC = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>ID</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Area</TableHead>
+                  <TableHead>Title</TableHead>
                   <TableHead>Severity</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Browser</TableHead>
@@ -215,50 +267,73 @@ const BounceFindings: React.FC = () => {
                 {isLoading ? (
                   Array(5).fill(0).map((_, i) => (
                     <TableRow key={i}>
-                      <TableCell colSpan={7} className="h-16 text-center text-muted-foreground">
+                      <TableCell colSpan={6} className="h-16 text-center text-muted-foreground">
                         Loading findings...
                       </TableCell>
                     </TableRow>
                   ))
                 ) : data?.findings?.length ? (
                   data.findings.map((finding: any) => (
-                    <TableRow key={finding.id}>
-                      <TableCell className="font-medium">{finding.findingId}</TableCell>
+                    <TableRow key={finding.id} className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800" onClick={() => handleViewFinding(finding.id)}>
+                      <TableCell className="font-medium">{finding.id}</TableCell>
                       <TableCell className="max-w-md truncate">
-                        {finding.description}
+                        {finding.title}
                       </TableCell>
-                      <TableCell>{finding.area}</TableCell>
                       <TableCell>{renderSeverityBadge(finding.severity)}</TableCell>
                       <TableCell>{renderStatusBadge(finding.status)}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{finding.browser}</Badge>
+                        <Badge variant="outline">{finding.browserInfo?.name || "Unknown"}</Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewFinding(finding.id);
+                            }}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View
+                          </Button>
                           <Select 
                             defaultValue={finding.status} 
-                            onValueChange={(value) => handleUpdateStatus(finding.id, value)}
+                            onValueChange={(value) => {
+                              handleUpdateStatus(finding.id, value);
+                            }}
+                            onOpenChange={(open) => {
+                              if (open) {
+                                // Prevent row click when opening the select
+                                document.addEventListener('click', (e) => {
+                                  e.stopPropagation();
+                                }, { once: true });
+                              }
+                            }}
                           >
-                            <SelectTrigger className="w-[130px]">
+                            <SelectTrigger 
+                              className="w-[130px]"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               <SelectValue placeholder="Update Status" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value={BounceFindingStatus.OPEN}>Open</SelectItem>
+                              <SelectItem value={BounceFindingStatus.NEW}>New</SelectItem>
+                              <SelectItem value={BounceFindingStatus.TRIAGE}>Triage</SelectItem>
+                              <SelectItem value={BounceFindingStatus.CONFIRMED}>Confirmed</SelectItem>
                               <SelectItem value={BounceFindingStatus.IN_PROGRESS}>In Progress</SelectItem>
                               <SelectItem value={BounceFindingStatus.FIXED}>Fixed</SelectItem>
-                              <SelectItem value={BounceFindingStatus.VERIFIED}>Verified</SelectItem>
+                              <SelectItem value={BounceFindingStatus.WONT_FIX}>Won't Fix</SelectItem>
+                              <SelectItem value={BounceFindingStatus.DUPLICATE}>Duplicate</SelectItem>
                             </SelectContent>
                           </Select>
-                          <Button variant="outline" size="icon">
-                            <ExternalLink className="h-4 w-4" />
-                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-16 text-center text-muted-foreground">
+                    <TableCell colSpan={6} className="h-16 text-center text-muted-foreground">
                       No findings match the current filters
                     </TableCell>
                   </TableRow>
