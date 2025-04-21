@@ -108,6 +108,18 @@ export default function ResponsiveAdminDashboard() {
       const duration = performance.now() - startTime;
       console.log(`[PERF][Mobile] Dashboard data fetched in ${duration.toFixed(2)}ms`);
       
+      // Debug logging for dashboard data
+      console.log('[DEBUG] Dashboard data response:', data);
+      if (data.totalUsers !== undefined) {
+        console.log('[DEBUG] Total users:', data.totalUsers, 'type:', typeof data.totalUsers);
+      }
+      if (data.totalMatches !== undefined) {
+        console.log('[DEBUG] Total matches:', data.totalMatches, 'type:', typeof data.totalMatches);
+      }
+      if (data.totalEvents !== undefined) {
+        console.log('[DEBUG] Total events:', data.totalEvents, 'type:', typeof data.totalEvents);
+      }
+      
       return data;
     },
     // Performance optimized settings for mobile
