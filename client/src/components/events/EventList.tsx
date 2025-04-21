@@ -147,6 +147,7 @@ export function EventList({
   /**
    * PKL-278651-CONN-0012-SYNC - Event Status Synchronization
    * Set up real-time WebSocket connection for event status updates
+   * with graceful fallback to polling when WebSockets aren't available
    */
   const { isConnected, isEnabled } = useEventStatusSync({
     eventIds,
@@ -172,6 +173,27 @@ export function EventList({
       }
     }
   });
+  
+  // Add fallback polling mechanism when WebSockets are disabled or not working
+  useEffect(() => {
+    // Only set up polling if we have events and WebSockets aren't working properly
+    if (!isEnabled && eventIds.length > 0) {
+      console.log("[EventList] WebSockets disabled, setting up fallback polling mechanism");
+      
+      // Set up a 30-second polling interval for registration status updates
+      const interval = setInterval(() => {
+        // Refetch registration status
+        queryClient.invalidateQueries({ 
+          queryKey: ['/api/events/registration-status', eventIds.join(',')]
+        });
+      }, 30000); // 30 seconds
+      
+      return () => {
+        console.log("[EventList] Cleaning up fallback polling mechanism");
+        clearInterval(interval);
+      };
+    }
+  }, [isEnabled, eventIds, queryClient]);
 
   const eventsWithRegistrationStatus = Array.isArray(events) 
     ? events.map(event => {
@@ -400,19 +422,26 @@ export function EventList({
   // Render events list grouped by date
   return (
     <div className={cn("space-y-8", className)}>
-      {/* PKL-278651-CONN-0012-SYNC - WebSocket connection status indicator */}
-      {showEnhancedStatus && isEnabled && (
+      {/* PKL-278651-CONN-0012-SYNC - WebSocket/Polling connection status indicator */}
+      {showEnhancedStatus && (
         <div className="flex items-center justify-end text-xs mb-1">
-          <div className={cn(
-            "flex items-center",
-            isConnected ? "text-green-600" : "text-amber-600"
-          )}>
+          {isEnabled ? (
             <div className={cn(
-              "h-2 w-2 rounded-full mr-1",
-              isConnected ? "bg-green-500 animate-pulse" : "bg-amber-500"
-            )} />
-            {isConnected ? "Real-time updates active" : "Connecting..."}
-          </div>
+              "flex items-center",
+              isConnected ? "text-green-600" : "text-amber-600"
+            )}>
+              <div className={cn(
+                "h-2 w-2 rounded-full mr-1",
+                isConnected ? "bg-green-500 animate-pulse" : "bg-amber-500"
+              )} />
+              {isConnected ? "Real-time updates active" : "Connecting..."}
+            </div>
+          ) : (
+            <div className="flex items-center text-blue-600">
+              <div className="h-2 w-2 rounded-full mr-1 bg-blue-500" />
+              Polling for updates
+            </div>
+          )}
         </div>
       )}
       
