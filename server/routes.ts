@@ -3,6 +3,7 @@ import { Server } from "http";
 import * as http from "http";
 import { storage } from "./storage";
 import { registerAdminRoutes } from "./routes/admin-routes";
+import { setupAdminDashboardRoutes } from "./routes/admin-dashboard-routes"; // Added for PKL-278651-ADMIN-0012-PERF
 import { registerCommunityRoutes } from "./routes/community-routes";
 import { registerEventRoutes } from "./routes/event-routes";
 import { registerUserRoutes } from "./routes/user-routes";
@@ -21,6 +22,7 @@ import { isAuthenticated } from "./middleware/auth";
 export async function registerRoutes(app: express.Express): Promise<Server> {
   // Register route groups
   registerAdminRoutes(app);
+  setupAdminDashboardRoutes(app); // Added for PKL-278651-ADMIN-0012-PERF
   registerCommunityRoutes(app);
   registerEventRoutes(app);
   registerUserRoutes(app);
