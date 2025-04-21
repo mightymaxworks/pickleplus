@@ -83,7 +83,11 @@ export const PassportFAB = () => {
             <XIcon className="h-4 w-4" />
           </button>
           
-          <ModernUniversalPassport />
+          <ModernUniversalPassport 
+            onViewRegisteredEvents={() => {
+              setShowPassport(false);
+            }}
+          />
         </DialogContent>
       </Dialog>
     </>

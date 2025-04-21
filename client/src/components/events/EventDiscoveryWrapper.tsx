@@ -394,6 +394,8 @@ export default function EventDiscoveryWrapper() {
   return (
     <StandardLayout>
       {content}
+      {/* Add the PassportFAB for quick access to the Universal Passport */}
+      <PassportFAB />
     </StandardLayout>
   );
 }
