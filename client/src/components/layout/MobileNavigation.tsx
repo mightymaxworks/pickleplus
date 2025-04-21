@@ -1,135 +1,67 @@
+/**
+ * PKL-278651-UI-0001-MOBNAV
+ * Mobile Navigation Component
+ * 
+ * A bottom navigation bar for mobile devices that provides quick access
+ * to the most important parts of the application.
+ * 
+ * @framework Framework5.2
+ * @version 1.0.0
+ * @lastModified 2025-04-21
+ */
+
 import React from 'react';
 import { useLocation } from 'wouter';
-import { Pencil, LogOut, Shield, Ticket } from 'lucide-react';
-import { User } from '@shared/schema';
 import { motion } from 'framer-motion';
-import { useMediaQuery } from '../../hooks/useMediaQuery';
+import { Home, Calendar, Users, Award, User } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
-interface MobileNavigationProps {
-  user: User;
-}
+// No props needed as we get the user from useAuth hook
 
-export function MobileNavigation({ user }: MobileNavigationProps) {
+export function MobileNavigation() {
   const [location, navigate] = useLocation();
-  const isExtraSmallScreen = useMediaQuery('(max-width: 480px)');
-  const { logoutMutation } = useAuth();
+  const { user } = useAuth();
 
-  const handleLogout = () => {
-    logoutMutation.mutate();
-  };
+  const navItems = [
+    { icon: <Home size={20} />, label: 'Home', path: '/dashboard' },
+    { icon: <Calendar size={20} />, label: 'Matches', path: '/matches' },
+    { icon: <Users size={20} />, label: 'Communities', path: '/communities' },
+    { icon: <Award size={20} />, label: 'Mastery', path: '/mastery-paths' },
+    { icon: <User size={20} />, label: 'Profile', path: '/profile' },
+  ];
 
   return (
-    <motion.div
-      className="fixed bottom-0 left-0 right-0 z-50"
-      initial={{ y: 100 }}
-      animate={{ y: 0 }}
-      transition={{ type: 'spring', damping: 20, stiffness: 200, delay: 0.5 }}
-    >
-      {/* PicklePass button - positioned at the bottom left */}
-      <motion.button
-        onClick={() => navigate('/events')}
-        className="absolute -top-14 left-4 w-12 h-12 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center shadow-md border border-gray-200 dark:border-gray-700"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        title="PicklePass™ Events"
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.8 }}
-      >
-        <Ticket size={20} className="text-green-500 dark:text-green-400" />
-      </motion.button>
-
-      {/* Admin button - positioned at the bottom right for admins */}
-      {user.isAdmin && (
-        <motion.button
-          onClick={() => navigate('/admin')}
-          className="absolute -top-14 right-16 w-12 h-12 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center shadow-md border border-gray-200 dark:border-gray-700"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          title="Admin Panel"
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.8 }}
-        >
-          <Shield size={20} className="text-purple-600 dark:text-purple-400" />
-        </motion.button>
-      )}
-      
-      {/* Logout button - positioned at the bottom right */}
-      <motion.button
-        onClick={handleLogout}
-        className="absolute -top-14 right-4 w-12 h-12 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center shadow-md border border-gray-200 dark:border-gray-700"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        title="Logout"
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.8 }}
-      >
-        <LogOut size={20} className="text-gray-600 dark:text-gray-300" />
-      </motion.button>
-
-      {/* Full-width Record Match Button for all screen sizes */}
-      <motion.button
-        onClick={() => navigate('/record-match')}
-        className="w-full h-16 bg-gradient-to-r from-[#FF5722] to-[#FF9800] text-white font-bold text-lg flex items-center justify-center shadow-lg"
-        whileHover={{ y: -2 }}
-        whileTap={{ scale: 0.98 }}
-      >
-        <motion.div
-          initial={{ scale: 1 }}
-          animate={{ scale: [1, 1.05, 1] }}
-          transition={{ duration: 2, repeat: Infinity, repeatType: 'reverse' }}
-          className="relative flex items-center"
-        >
-          <Pencil className="mr-3 h-6 w-6" />
-          RECORD MATCH
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 md:hidden">
+      <div className="flex justify-around items-center h-16">
+        {navItems.map((item) => {
+          const isActive = location === item.path;
           
-          {/* Glowing effect */}
-          <motion.div
-            className="absolute -inset-4 rounded-full bg-white/5"
-            animate={{ 
-              scale: [1, 1.2, 1],
-              opacity: [0.1, 0.2, 0.1]
-            }}
-            transition={{ duration: 2, repeat: Infinity }}
-          />
-          
-          {/* Particle effects */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {[...Array(8)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute rounded-full bg-white/30"
-                initial={{
-                  x: -20,
-                  y: Math.random() * 60 - 30,
-                  opacity: 0,
-                  scale: 0
-                }}
-                animate={{
-                  x: [null, '120%'],
-                  opacity: [0, 0.7, 0],
-                  scale: [0, 1, 0.5]
-                }}
-                transition={{
-                  duration: 1.5 + Math.random() * 2,
-                  repeat: Infinity,
-                  delay: i * 0.4
-                }}
-                style={{
-                  width: Math.random() * 6 + 2,
-                  height: Math.random() * 6 + 2
-                }}
-              />
-            ))}
-          </div>
-        </motion.div>
-      </motion.button>
-      
-      {/* Top edge glow effect */}
-      <div className="absolute -top-1 left-0 right-0 h-4 bg-gradient-to-t from-[#FF5722]/0 to-[#FF5722]/20 -z-10 blur-md"></div>
-    </motion.div>
+          return (
+            <motion.button
+              key={item.path}
+              className="flex flex-col items-center justify-center w-full h-full"
+              whileTap={{ scale: 0.9 }}
+              onClick={() => navigate(item.path)}
+            >
+              <div 
+                className={`flex flex-col items-center justify-center ${
+                  isActive ? 'text-[#FF5722]' : 'text-gray-500 dark:text-gray-400'
+                }`}
+              >
+                {item.icon}
+                <span className="text-xs mt-1">{item.label}</span>
+                
+                {isActive && (
+                  <motion.div 
+                    className="absolute bottom-0 w-6 h-1 bg-[#FF5722] rounded-t-full"
+                    layoutId="mobileNavIndicator"
+                  />
+                )}
+              </div>
+            </motion.button>
+          );
+        })}
+      </div>
+    </div>
   );
 }

@@ -11,6 +11,7 @@ import { CommunityProvider } from '@/lib/providers/CommunityProvider' // PKL-278
 import { LazyLoadingFallback, lazyLoad } from '@/utils/lazyLoad' // PKL-278651-PERF-0001.2-SPLIT
 import { moduleRegistry } from '@/core/modules/moduleRegistry' // For feedback module
 import { SimpleBugReportButton } from '@/components/bug-report/BugReportButton' // Simplified bug report button
+import { ProtectedRouteWithLayout } from './lib/protected-route-with-layout' // PKL-278651-UI-0001-STDROUTE
 
 
 // Import module initializations
@@ -167,16 +168,22 @@ export default function App() {
                   <Route path="/landing-test" component={LandingPageTest} />
                   <Route path="/test-login" component={TestLoginPage} />
                 
-                  {/* Protected Routes */}
-                  <Route path="/dashboard">
-                    {(params) => <ProtectedRoute component={LazyDashboardPage} path="/dashboard" />}
-                  </Route>
-                  <Route path="/matches">
-                    {(params) => <ProtectedRoute component={LazyMatchesPage} path="/matches" />}
-                  </Route>
-                  <Route path="/tournaments">
-                    {(params) => <ProtectedRoute component={LazyTournamentDiscoveryPage} path="/tournaments" />}
-                  </Route>
+                  {/* Protected Routes - Now using StandardLayout */}
+                  <ProtectedRouteWithLayout 
+                    path="/dashboard" 
+                    component={LazyDashboardPage} 
+                    pageTitle="Dashboard"
+                  />
+                  <ProtectedRouteWithLayout 
+                    path="/matches" 
+                    component={LazyMatchesPage} 
+                    pageTitle="Your Matches"
+                  />
+                  <ProtectedRouteWithLayout 
+                    path="/tournaments" 
+                    component={LazyTournamentDiscoveryPage} 
+                    pageTitle="Tournaments"
+                  />
                   <Route path="/admin/tournaments">
                     {(params) => (
                       <AdminProtectedRoute>
@@ -400,9 +407,11 @@ export default function App() {
                     }}
                   </Route>
                   
-                  <Route path="/communities">
-                    {(params) => <ProtectedRoute component={CommunitiesPage} path="/communities" />}
-                  </Route>
+                  <ProtectedRouteWithLayout 
+                    path="/communities" 
+                    component={CommunitiesPage} 
+                    pageTitle="Communities"
+                  />
                   
                   {/* PKL-278651-COMM-0022-DISC - Enhanced Community Discovery */}
                   <Route path="/communities/discover">
