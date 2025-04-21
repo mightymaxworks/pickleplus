@@ -2284,7 +2284,7 @@ export class DatabaseStorage implements IStorage {
       const registrations = await db.select()
         .from(eventRegistrations)
         .where(eq(eventRegistrations.eventId, numericEventId))
-        .orderBy(desc(eventRegistrations.registrationTime))
+        .orderBy(desc(eventRegistrations.registrationDate))
         .limit(limit)
         .offset(offset);
       
@@ -2309,7 +2309,7 @@ export class DatabaseStorage implements IStorage {
       const registrations = await db.select()
         .from(eventRegistrations)
         .where(eq(eventRegistrations.userId, numericUserId))
-        .orderBy(desc(eventRegistrations.registrationTime))
+        .orderBy(desc(eventRegistrations.registrationDate))
         .limit(limit)
         .offset(offset);
       
