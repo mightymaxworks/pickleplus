@@ -1,17 +1,20 @@
 /**
- * PKL-278651-COMM-0019-MOBILE
+ * PKL-278651-COMM-0036-MEDIA-MOBILE
  * Media Query Hook
  * 
- * This hook provides a way to check if a media query matches.
- * It's useful for responsive design in React components.
+ * Custom hook for responsive design that returns whether a media query matches
+ * 
+ * @framework Framework5.2
+ * @version 1.0.0
+ * @lastModified 2025-04-21
  */
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from 'react';
 
 export function useMediaQuery(query: string): boolean {
   const getMatches = (query: string): boolean => {
     // Prevents SSR issues
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       return window.matchMedia(query).matches;
     }
     return false;
@@ -19,22 +22,23 @@ export function useMediaQuery(query: string): boolean {
 
   const [matches, setMatches] = useState<boolean>(getMatches(query));
 
-  function handleChange() {
-    setMatches(getMatches(query));
-  }
-
   useEffect(() => {
-    const matchMedia = window.matchMedia(query);
-
+    const mediaQuery = window.matchMedia(query);
+    
     // Initial check
-    handleChange();
-
-    // Listen for changes
-    matchMedia.addEventListener("change", handleChange);
-
+    setMatches(mediaQuery.matches);
+    
+    // Create listener function
+    const handleChange = (event: MediaQueryListEvent) => {
+      setMatches(event.matches);
+    };
+    
+    // Add the callback function as a listener for changes to the media query
+    mediaQuery.addEventListener('change', handleChange);
+    
     // Clean up
     return () => {
-      matchMedia.removeEventListener("change", handleChange);
+      mediaQuery.removeEventListener('change', handleChange);
     };
   }, [query]);
 

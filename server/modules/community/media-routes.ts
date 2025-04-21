@@ -9,8 +9,8 @@
  * - Retrieve media and galleries
  * 
  * @framework Framework5.2
- * @version 1.0.0
- * @lastModified 2025-04-20
+ * @version 1.0.1
+ * @lastModified 2025-04-21
  */
 
 import { Router } from 'express';
@@ -31,6 +31,7 @@ import {
 } from '../../../shared/schema/media';
 import { z } from 'zod';
 import { isAuthenticated, isCommunityAdmin, isCommunityMember } from '../../middleware/community-auth';
+import { mediaCacheControl, mediaResizeMiddleware } from './media-cache-middleware';
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({

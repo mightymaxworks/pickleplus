@@ -1,306 +1,351 @@
 /**
  * PKL-278651-COMM-0036-MEDIA
- * Community Media Management Hook
+ * Media Hook
  * 
- * Custom hook for managing community media uploads, listings, and operations.
+ * Provides data access and operations for community media items
  * 
  * @framework Framework5.2
  * @version 1.0.0
- * @lastModified 2025-04-20
+ * @lastModified 2025-04-21
  */
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { mediaService } from "@/lib/api/community/media-service";
-import { communityKeys } from "@/lib/api/community/keys";
-import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
-import { MediaType, GalleryPrivacyLevel } from "@shared/schema/media";
+import { useState } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { queryClient, apiRequest } from '@/lib/queryClient';
+import { toast } from '@/hooks/use-toast';
 
-export type MediaFilter = {
+export enum MediaType {
+  IMAGE = 'image',
+  VIDEO = 'video',
+  DOCUMENT = 'document',
+  OTHER = 'other'
+}
+
+export interface Media {
+  id: number;
+  communityId: number;
+  createdByUserId: number;
+  title: string;
+  description: string | null;
+  mediaType: MediaType;
+  filePath: string;
+  thumbnailPath: string | null;
+  fileSizeBytes: number;
+  isFeatured: boolean;
+  tags: string[];
+  metadata: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MediaUploadProgress {
+  loaded: number;
+  total: number;
+  percentage: number;
+  status: 'compressing' | 'uploading' | 'done' | 'error';
+  filename: string;
+  error?: string;
+  compressedSize?: number;
+  originalSize?: number;
+  compressionRatio?: number;
+}
+
+export interface MediaQueryOptions {
   mediaType?: MediaType;
   limit?: number;
   offset?: number;
-  sort?: "newest" | "oldest" | "featured";
-};
+  sort?: 'newest' | 'oldest' | 'featured';
+}
 
-export const useMedia = (communityId: number) => {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-  const [filter, setFilter] = useState<MediaFilter>({
-    limit: 20,
-    offset: 0,
-    sort: "newest",
+export interface StorageQuota {
+  bytesUsed: number;
+  fileCount: number;
+  quotaBytes: number;
+  tier: string;
+  percentUsed: number;
+  lastCalculated: string;
+}
+
+export function useMedia(communityId: number, options: MediaQueryOptions = {}) {
+  const { mediaType, limit = 20, offset = 0, sort = 'newest' } = options;
+  
+  // Create the query string
+  const queryParams = new URLSearchParams();
+  if (mediaType) queryParams.append('mediaType', mediaType);
+  queryParams.append('limit', limit.toString());
+  queryParams.append('offset', offset.toString());
+  queryParams.append('sort', sort);
+  
+  // Query for media items
+  return useQuery<Media[]>({
+    queryKey: [`/api/community/${communityId}/media`, mediaType, limit, offset, sort],
+    queryFn: async () => {
+      const response = await fetch(`/api/community/${communityId}/media?${queryParams.toString()}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch media');
+      }
+      return response.json();
+    },
+    enabled: !!communityId
   });
+}
 
-  // Get media with filtering
-  const {
-    data: media,
-    isLoading: isLoadingMedia,
-    error: mediaError,
-    refetch: refetchMedia,
-  } = useQuery({
-    queryKey: [...communityKeys.media(communityId), filter],
-    queryFn: () => mediaService.getMedia(communityId, filter),
-    enabled: !!communityId,
+export function useMediaItem(communityId: number, mediaId: number | null) {
+  // Query for a specific media item
+  return useQuery<Media>({
+    queryKey: [`/api/community/${communityId}/media/${mediaId}`],
+    enabled: !!communityId && !!mediaId
   });
+}
 
-  // Upload media mutation
+export function useStorageQuota(communityId: number) {
+  // Query for storage quota information
+  return useQuery<StorageQuota>({
+    queryKey: [`/api/community/${communityId}/media/quota`],
+    enabled: !!communityId
+  });
+}
+
+export function useMediaMutations(communityId: number) {
+  const [uploadProgress, setUploadProgress] = useState<MediaUploadProgress[]>([]);
+  
+  // Upload media items
   const uploadMediaMutation = useMutation({
-    mutationFn: (formData: FormData) => {
-      return mediaService.uploadMedia(communityId, formData);
+    mutationFn: async ({ files, title, description, tags }: { 
+      files: File[]; 
+      title?: string; 
+      description?: string; 
+      tags?: string[];
+    }) => {
+      // Create a FormData object
+      const formData = new FormData();
+      
+      // Set the progress trackers for each file
+      const newProgress: MediaUploadProgress[] = files.map(file => ({
+        loaded: 0,
+        total: file.size,
+        percentage: 0,
+        status: 'compressing',
+        filename: file.name
+      }));
+      setUploadProgress(newProgress);
+      
+      // Add additional metadata
+      if (title) formData.append('title', title);
+      if (description) formData.append('description', description);
+      if (tags && tags.length > 0) formData.append('tags', tags.join(','));
+      
+      // Add files to form data
+      files.forEach(file => {
+        formData.append('files', file);
+      });
+      
+      // Create custom fetch with upload progress tracking
+      const xhr = new XMLHttpRequest();
+      
+      const uploadPromise = new Promise<Media[]>((resolve, reject) => {
+        xhr.open('POST', `/api/community/${communityId}/media`);
+        
+        // Add auth header from current session
+        // This assumes your app has a way to get the current auth token
+        // If not using a token-based auth, this may not be needed
+        const authToken = localStorage.getItem('authToken');
+        if (authToken) {
+          xhr.setRequestHeader('Authorization', `Bearer ${authToken}`);
+        }
+        
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const allFilesProgress = newProgress.map(item => ({
+              ...item,
+              status: 'uploading' as const,
+              loaded: (event.loaded / event.total) * item.total,
+              percentage: Math.round((event.loaded / event.total) * 100)
+            }));
+            setUploadProgress(allFilesProgress);
+          }
+        };
+        
+        xhr.onload = function() {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            const allFilesProgress = newProgress.map(item => ({
+              ...item,
+              status: 'done' as const,
+              loaded: item.total,
+              percentage: 100
+            }));
+            setUploadProgress(allFilesProgress);
+            try {
+              const response = JSON.parse(xhr.responseText);
+              resolve(response);
+            } catch (e) {
+              reject(new Error('Invalid response format'));
+            }
+          } else {
+            const allFilesProgress = newProgress.map(item => ({
+              ...item,
+              status: 'error' as const,
+              error: `Upload failed with status ${xhr.status}`
+            }));
+            setUploadProgress(allFilesProgress);
+            reject(new Error(`Upload failed with status ${xhr.status}`));
+          }
+        };
+        
+        xhr.onerror = function() {
+          const allFilesProgress = newProgress.map(item => ({
+            ...item,
+            status: 'error' as const,
+            error: 'Network error occurred'
+          }));
+          setUploadProgress(allFilesProgress);
+          reject(new Error('Network error occurred'));
+        };
+        
+        xhr.send(formData);
+      });
+      
+      return uploadPromise;
     },
     onSuccess: () => {
+      // Invalidate media list and quota queries
+      queryClient.invalidateQueries({ queryKey: [`/api/community/${communityId}/media`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/community/${communityId}/media/quota`] });
+      
       toast({
         title: "Media uploaded",
-        description: "Your media has been uploaded successfully.",
-      });
-      // Invalidate media cache to refresh the list
-      queryClient.invalidateQueries({
-        queryKey: communityKeys.media(communityId),
+        description: "Your media has been uploaded successfully",
       });
     },
     onError: (error: Error) => {
       toast({
         title: "Upload failed",
-        description: error.message || "Failed to upload media. Please try again.",
+        description: error.message,
         variant: "destructive",
       });
-    },
+    }
   });
-
-  // Delete media mutation
+  
+  // Delete a media item
   const deleteMediaMutation = useMutation({
-    mutationFn: (mediaId: number) => {
-      return mediaService.deleteMedia(communityId, mediaId);
+    mutationFn: async (mediaId: number) => {
+      await apiRequest('DELETE', `/api/community/${communityId}/media/${mediaId}`);
     },
     onSuccess: () => {
+      // Invalidate media list and quota queries
+      queryClient.invalidateQueries({ queryKey: [`/api/community/${communityId}/media`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/community/${communityId}/media/quota`] });
+      
       toast({
         title: "Media deleted",
-        description: "The media has been deleted successfully.",
-      });
-      // Invalidate media cache to refresh the list
-      queryClient.invalidateQueries({
-        queryKey: communityKeys.media(communityId),
+        description: "The media item has been deleted successfully",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Deletion failed",
-        description: error.message || "Failed to delete media. Please try again.",
+        title: "Failed to delete media",
+        description: error.message,
         variant: "destructive",
       });
-    },
-  });
-
-  // Create gallery mutation
-  const createGalleryMutation = useMutation({
-    mutationFn: (galleryData: { title: string; description?: string; privacyLevel?: GalleryPrivacyLevel; communityId: number; coverMediaId?: number; eventId?: number }) => {
-      return mediaService.createGallery(communityId, {
-        name: galleryData.title, // Title maps to name in the gallery schema
-        description: galleryData.description,
-        privacyLevel: galleryData.privacyLevel as GalleryPrivacyLevel,
-        coverImageId: galleryData.coverMediaId, // coverMediaId maps to coverImageId in the gallery schema
-        eventId: galleryData.eventId
-      });
-    },
-    onSuccess: () => {
-      // Invalidate galleries cache to refresh the list
-      queryClient.invalidateQueries({
-        queryKey: communityKeys.galleries(communityId),
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Gallery creation failed",
-        description: error.message || "Failed to create gallery. Please try again.",
-        variant: "destructive",
-      });
-    },
+    }
   });
   
-  // Update gallery mutation
-  const updateGalleryMutation = useMutation({
-    mutationFn: (params: { 
-      galleryId: number; 
-      data: { 
-        title: string; 
-        description?: string; 
-        privacyLevel?: GalleryPrivacyLevel; 
-        communityId: number;
-        coverMediaId?: number;
-        eventId?: number;
-      } 
+  // Update a media item
+  const updateMediaMutation = useMutation({
+    mutationFn: async ({ mediaId, data }: { 
+      mediaId: number; 
+      data: { title?: string; description?: string; tags?: string[]; isFeatured?: boolean } 
     }) => {
-      return mediaService.updateGallery(
-        communityId, 
-        params.galleryId, 
-        {
-          name: params.data.title, // Title maps to name in the gallery schema
-          description: params.data.description,
-          privacyLevel: params.data.privacyLevel as GalleryPrivacyLevel,
-          coverImageId: params.data.coverMediaId, // coverMediaId maps to coverImageId in the gallery schema
-          eventId: params.data.eventId
-        }
-      );
+      const res = await apiRequest('PATCH', `/api/community/${communityId}/media/${mediaId}`, data);
+      return await res.json();
     },
     onSuccess: (_, variables) => {
-      // Invalidate specific gallery and galleries list
-      queryClient.invalidateQueries({
-        queryKey: communityKeys.gallery(communityId, variables.galleryId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: communityKeys.galleries(communityId),
+      // Invalidate specific media item and potentially the list
+      queryClient.invalidateQueries({ queryKey: [`/api/community/${communityId}/media/${variables.mediaId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/community/${communityId}/media`] });
+      
+      toast({
+        title: "Media updated",
+        description: "The media item has been updated successfully",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Gallery update failed",
-        description: error.message || "Failed to update gallery. Please try again.",
+        title: "Failed to update media",
+        description: error.message,
         variant: "destructive",
       });
-    },
+    }
   });
   
-  // Delete gallery mutation
-  const deleteGalleryMutation = useMutation({
-    mutationFn: (galleryId: number) => {
-      return mediaService.deleteGallery(communityId, galleryId);
+  // Recalculate storage quota
+  const recalculateQuotaMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest('POST', `/api/community/${communityId}/media/recalculate-quota`);
+      return await res.json();
     },
     onSuccess: () => {
-      // Invalidate galleries cache to refresh the list
-      queryClient.invalidateQueries({
-        queryKey: communityKeys.galleries(communityId),
+      queryClient.invalidateQueries({ queryKey: [`/api/community/${communityId}/media/quota`] });
+      
+      toast({
+        title: "Storage quota recalculated",
+        description: "The storage quota has been recalculated successfully",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Gallery deletion failed",
-        description: error.message || "Failed to delete gallery. Please try again.",
+        title: "Failed to recalculate quota",
+        description: error.message,
         variant: "destructive",
       });
-    },
+    }
   });
-
-  // Gallery queries
-  const {
-    data: galleries,
-    isLoading: isLoadingGalleries,
-    error: galleriesError,
-  } = useQuery({
-    queryKey: communityKeys.galleries(communityId),
-    queryFn: () => mediaService.getGalleries(communityId),
-    enabled: !!communityId,
-  });
-
-  // Add media to gallery mutation
-  const addToGalleryMutation = useMutation({
-    mutationFn: (params: { galleryId: number; mediaId: number; displayOrder?: number; caption?: string }) => {
-      return mediaService.addMediaToGallery(
-        communityId,
-        params.galleryId,
-        {
-          mediaId: params.mediaId,
-          displayOrder: params.displayOrder,
-          caption: params.caption,
-        }
-      );
+  
+  // Add media to a gallery
+  const addMediaToGalleryMutation = useMutation({
+    mutationFn: async ({ 
+      galleryId, 
+      mediaId, 
+      displayOrder, 
+      caption 
+    }: { 
+      galleryId: number; 
+      mediaId: number; 
+      displayOrder?: number; 
+      caption?: string;
+    }) => {
+      const res = await apiRequest('POST', `/api/community/${communityId}/galleries/${galleryId}/items`, {
+        mediaId,
+        displayOrder,
+        caption
+      });
+      return await res.json();
     },
     onSuccess: (_, variables) => {
+      // Invalidate specific gallery
+      queryClient.invalidateQueries({ queryKey: [`/api/community/${communityId}/galleries/${variables.galleryId}`] });
+      
       toast({
-        title: "Media added to gallery",
-        description: "The media has been added to the gallery successfully.",
-      });
-      // Invalidate specific gallery to refresh its media items
-      queryClient.invalidateQueries({
-        queryKey: communityKeys.gallery(communityId, variables.galleryId),
+        title: "Added to gallery",
+        description: "The media item has been added to the gallery",
       });
     },
     onError: (error: Error) => {
       toast({
         title: "Failed to add to gallery",
-        description: error.message || "Failed to add media to gallery. Please try again.",
+        description: error.message,
         variant: "destructive",
-      });
-    },
-  });
-
-  // Utility function to handle file upload
-  const handleFileUpload = async (files: FileList | null, extraData?: Record<string, string>) => {
-    if (!files || files.length === 0) {
-      toast({
-        title: "No files selected",
-        description: "Please select at least one file to upload.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const formData = new FormData();
-    
-    // Append all files
-    Array.from(files).forEach((file) => {
-      formData.append("files", file);
-    });
-    
-    // Append extra data if provided
-    if (extraData) {
-      Object.entries(extraData).forEach(([key, value]) => {
-        formData.append(key, value);
       });
     }
-    
-    // Execute the upload mutation
-    await uploadMediaMutation.mutateAsync(formData);
-  };
-
-  // Remove media from gallery mutation
-  const removeFromGalleryMutation = useMutation({
-    mutationFn: (params: { galleryId: number; mediaId: number }) => {
-      return mediaService.removeMediaFromGallery(
-        communityId,
-        params.galleryId,
-        params.mediaId
-      );
-    },
-    onSuccess: (_, variables) => {
-      // Invalidate specific gallery to refresh its media items
-      queryClient.invalidateQueries({
-        queryKey: communityKeys.gallery(communityId, variables.galleryId),
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to remove from gallery",
-        description: error.message || "Failed to remove media from gallery. Please try again.",
-        variant: "destructive",
-      });
-    },
   });
-
+  
   return {
-    // Media data and state
-    media,
-    isLoadingMedia,
-    mediaError,
-    refetchMedia,
-    filter,
-    setFilter,
-    
-    // Galleries data and state
-    galleries,
-    isLoadingGalleries,
-    galleriesError,
-    
-    // Mutations
+    uploadProgress,
+    setUploadProgress,
     uploadMediaMutation,
     deleteMediaMutation,
-    createGalleryMutation,
-    updateGalleryMutation,
-    deleteGalleryMutation,
-    addToGalleryMutation,
-    removeFromGalleryMutation,
-    
-    // Helper functions
-    handleFileUpload,
+    updateMediaMutation,
+    recalculateQuotaMutation,
+    addMediaToGalleryMutation
   };
-};
+}
