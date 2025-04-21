@@ -98,6 +98,7 @@ const BounceMascot: React.FC<BounceMascotProps> = ({
   const [message, setMessage] = useState(BOUNCE_MESSAGES[0]);
   const [position, setPosition] = useState(POSITIONS[0]);
   const [expanded, setExpanded] = useState(false);
+  const [isCustomImage] = useState(!!customImagePath);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const disappearTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -249,13 +250,13 @@ const BounceMascot: React.FC<BounceMascotProps> = ({
               </TooltipProvider>
               
               <div 
-                className="relative cursor-pointer" 
+                className={`relative cursor-pointer ${isCustomImage ? 'bg-white p-3 rounded-lg shadow-md' : ''}`}
                 onClick={handleToggleExpand}
               >
                 <img 
                   src={customImagePath || "/bounce-mascot.svg"} 
                   alt="Bounce Mascot" 
-                  className="h-20 w-20 object-contain"
+                  className={`${isCustomImage ? 'h-16 w-auto' : 'h-20 w-20'} object-contain`}
                 />
                 
                 {!expanded && (
