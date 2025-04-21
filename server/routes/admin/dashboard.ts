@@ -211,41 +211,47 @@ export function registerAdminDashboardRoutes(
 
         // Get counts for dashboard metrics
         console.log("[API] Fetching dashboard metrics counts");
-        const totalUsers = await storage.getUserCount();
-        console.log("[API] Total users count from storage:", totalUsers);
+        let totalUsers = await storage.getUserCount();
+        // Additional check to ensure totalUsers is a number
+        totalUsers = typeof totalUsers === 'number' ? totalUsers : Number(totalUsers) || 0;
+        console.log("[API] Total users count from storage:", totalUsers, "type:", typeof totalUsers);
         
         const totalMatches = await db.select({ count: sql`count(*)` })
           .from(matches)
           .execute()
           .then(result => {
             console.log("[API] Raw matches count result:", result);
-            return Number(result[0]?.count) || 0;
+            const countValue = Number(result[0]?.count) || 0;
+            console.log("[API] Parsed matches count:", countValue, "type:", typeof countValue);
+            return countValue;
           })
           .catch((err) => {
             console.error("[API] Error getting match count:", err);
             return 0;
           });
-        console.log("[API] Total matches count:", totalMatches);
+        console.log("[API] Total matches count:", totalMatches, "type:", typeof totalMatches);
         
         const totalEvents = await db.select({ count: sql`count(*)` })
           .from(events)
           .execute()
           .then(result => {
             console.log("[API] Raw events count result:", result);
-            return Number(result[0]?.count) || 0;
+            const countValue = Number(result[0]?.count) || 0;
+            console.log("[API] Parsed events count:", countValue, "type:", typeof countValue);
+            return countValue;
           })
           .catch((err) => {
             console.error("[API] Error getting event count:", err);
             return 0;
           });
-        console.log("[API] Total events count:", totalEvents);
+        console.log("[API] Total events count:", totalEvents, "type:", typeof totalEvents);
           
         // Create response object
         const responseData = {
           layout: dashboard,
-          totalUsers,
-          totalMatches,
-          totalEvents,
+          totalUsers: Number(totalUsers),  // Explicit conversion
+          totalMatches: Number(totalMatches), // Explicit conversion
+          totalEvents: Number(totalEvents), // Explicit conversion
           lastUpdated: new Date().toISOString()
         };
         
