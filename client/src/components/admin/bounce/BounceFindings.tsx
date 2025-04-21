@@ -23,7 +23,8 @@ import {
   Flag, 
   ExternalLink, 
   FileText, 
-  Check
+  Check,
+  Copy
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -344,7 +345,7 @@ const BounceFindings: React.FC = () => {
         variant="outline" 
         className="mt-4"
         onClick={() => {
-          setFilters({ severity: [], status: ['open', 'in_progress'] });
+          setFilters({ severity: [], status: [BounceFindingStatus.NEW, BounceFindingStatus.IN_PROGRESS] });
           setSearchQuery('');
           setViewTab('all');
         }}
@@ -443,6 +444,9 @@ const BounceFindings: React.FC = () => {
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleStatusChange(finding, BounceFindingStatus.WONT_FIX)}>
                       <X className="h-4 w-4 mr-2 text-gray-500" /> Won't Fix
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleStatusChange(finding, BounceFindingStatus.DUPLICATE)}>
+                      <Copy className="h-4 w-4 mr-2 text-purple-500" /> Mark Duplicate
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => handleAssignToMe(finding)}>
@@ -741,7 +745,7 @@ const BounceFindings: React.FC = () => {
                       <X className="h-4 w-4 mr-2 text-gray-500" /> Won't Fix
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleStatusChange(selectedFinding, BounceFindingStatus.DUPLICATE)}>
-                      <i className="h-4 w-4 mr-2 text-purple-500">⎘</i> Duplicate
+                      <Copy className="h-4 w-4 mr-2 text-purple-500" /> Duplicate
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
