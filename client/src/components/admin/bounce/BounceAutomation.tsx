@@ -404,6 +404,11 @@ const SchedulesTab = () => {
     retry: false,
     onError: (error) => {
       console.error('Error fetching templates:', error);
+      toast({
+        title: 'Error loading templates',
+        description: error instanceof Error ? error.message : 'Failed to load test templates',
+        variant: 'destructive'
+      });
     }
   });
   

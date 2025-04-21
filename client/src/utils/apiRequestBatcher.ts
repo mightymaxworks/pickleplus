@@ -114,9 +114,9 @@ export async function batchedApiRequest<T>(url: string, options: RequestInit = {
 }
 
 /**
- * Process all pending requests as a batch
+ * Process all pending requests as a batch with retries and enhanced error handling
  */
-async function processBatch(): Promise<void> {
+async function processBatch(retryCount = 0): Promise<void> {
   // Get all pending requests
   const requests = [...pendingRequests];
   pendingRequests = [];
@@ -127,22 +127,86 @@ async function processBatch(): Promise<void> {
     console.log(`[API] Processing batch of ${requests.length} requests`);
     
     // Make the batch request
-    const response = await fetch('/api/batch', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        requests: requests.map(r => r.request),
-      }),
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Batch request failed: ${response.status} ${errorText}`);
+    let response: Response;
+    try {
+      response = await fetch('/api/batch', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          requests: requests.map(r => r.request),
+        }),
+      });
+    } catch (fetchError) {
+      // Handle network errors for the batch request
+      console.error('[API] Network error during batch request:', fetchError);
+      
+      // If we have retries left, try again with exponential backoff
+      if (retryCount < 2) {
+        console.warn(`[API] Retrying batch request (${retryCount + 1}/2)...`);
+        // Add the requests back to the queue
+        pendingRequests = [...requests, ...pendingRequests];
+        // Wait with exponential backoff before retrying
+        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount)));
+        return processBatch(retryCount + 1);
+      }
+      
+      // If we're out of retries, reject all requests
+      const error = new Error('Network error: Could not connect to server. Please check your connection.');
+      requests.forEach(({ reject }) => reject(error));
+      return;
     }
     
-    const batchResponse: BatchResponse = await response.json();
+    // Handle server errors (502, 503, 504) with retries
+    if (response.status >= 502 && response.status <= 504) {
+      if (retryCount < 2) {
+        console.warn(`[API] Server error (${response.status}) for batch request, retrying... (${retryCount + 1}/2)`);
+        // Add the requests back to the queue
+        pendingRequests = [...requests, ...pendingRequests];
+        // Wait with exponential backoff before retrying
+        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount)));
+        return processBatch(retryCount + 1);
+      }
+    }
+    
+    if (!response.ok) {
+      let errorMessage: string;
+      try {
+        // Try to parse as JSON first
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || `HTTP error ${response.status}`;
+      } catch {
+        // If not JSON, get as text
+        const errorText = await response.text();
+        errorMessage = errorText || `HTTP error ${response.status}`;
+      }
+      
+      throw new Error(`Batch request failed: ${response.status} ${errorMessage}`);
+    }
+    
+    // Parse the response
+    let batchResponse: BatchResponse;
+    try {
+      batchResponse = await response.json();
+    } catch (parseError) {
+      console.error('[API] Failed to parse batch response:', parseError);
+      
+      // If we have retries left, try again
+      if (retryCount < 1) {
+        console.warn('[API] Invalid JSON in batch response, retrying...');
+        // Add the requests back to the queue
+        pendingRequests = [...requests, ...pendingRequests];
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return processBatch(retryCount + 1);
+      }
+      
+      // If we're out of retries, reject all requests
+      const error = new Error(`Failed to parse batch response: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+      requests.forEach(({ reject }) => reject(error));
+      return;
+    }
     
     // Process each result
     batchResponse.results.forEach((result, index) => {
@@ -165,17 +229,53 @@ async function processBatch(): Promise<void> {
 }
 
 /**
- * Make a regular (non-batched) API request
+ * Make a regular (non-batched) API request with enhanced error handling and retries
  */
-async function regularApiRequest<T>(url: string, options: RequestInit = {}): Promise<T> {
-  const response = await fetch(url, options);
-  
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`API request failed: ${response.status} ${errorText}`);
+async function regularApiRequest<T>(url: string, options: RequestInit = {}, retryCount = 0): Promise<T> {
+  try {
+    const response = await fetch(url, options);
+    
+    // Handle server errors (502, 503, 504) with retries
+    if (response.status >= 502 && response.status <= 504) {
+      if (retryCount < 2) { // Maximum 2 retries
+        console.warn(`[API] Server error (${response.status}) for ${url}, retrying... (${retryCount + 1}/2)`);
+        // Exponential backoff: 500ms, then 1500ms
+        await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(3, retryCount)));
+        return regularApiRequest<T>(url, options, retryCount + 1);
+      }
+    }
+    
+    if (!response.ok) {
+      let errorMessage: string;
+      try {
+        // Try to parse as JSON first
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || `HTTP error ${response.status}`;
+      } catch {
+        // If not JSON, get as text
+        const errorText = await response.text();
+        errorMessage = errorText || `HTTP error ${response.status}`;
+      }
+      
+      console.error(`[API] Request to ${url} failed with status ${response.status}: ${errorMessage}`);
+      throw new Error(`API request failed: ${response.status} ${errorMessage}`);
+    }
+    
+    // Parse the response
+    try {
+      return await response.json();
+    } catch (error) {
+      console.error(`[API] Failed to parse JSON response from ${url}:`, error);
+      throw new Error(`Failed to parse API response as JSON: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  } catch (error) {
+    // Handle network errors
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      console.error(`[API] Network error when requesting ${url}:`, error);
+      throw new Error(`Network error: Could not connect to server. Please check your connection.`);
+    }
+    throw error;
   }
-  
-  return response.json();
 }
 
 /**

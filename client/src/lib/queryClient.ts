@@ -71,6 +71,9 @@ export async function fetchCSRFToken(): Promise<string | null> {
   }
 }
 
+/**
+ * Enhanced API request function with improved error handling and retries
+ */
 export async function apiRequest(
   method: RequestMethod,
   url: string,
@@ -78,83 +81,120 @@ export async function apiRequest(
   cacheOptions?: {
     forceFresh?: boolean;
     cacheDuration?: number; // in seconds
-  }
+  },
+  retryCount = 0
 ): Promise<Response> {
-  // Determine if we should use caching based on the URL and method
-  const isCacheable = 
-    method === "GET" && 
-    CACHEABLE_ENDPOINTS.some(endpoint => url.startsWith(endpoint)) &&
-    !(cacheOptions?.forceFresh);
-    
-  const options: RequestInit = {
-    method,
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include", // Critical for cookie-based auth
-  };
-  
-  // Apply different cache settings based on the request type
-  if (isCacheable) {
-    // For GET requests to cacheable endpoints, allow browser caching
-    const maxAge = cacheOptions?.cacheDuration || 60; // 60 seconds default
-    options.headers = {
-      ...options.headers,
-      "Cache-Control": `max-age=${maxAge}`,
+  try {
+    // Determine if we should use caching based on the URL and method
+    const isCacheable = 
+      method === "GET" && 
+      CACHEABLE_ENDPOINTS.some(endpoint => url.startsWith(endpoint)) &&
+      !(cacheOptions?.forceFresh);
+      
+    const options: RequestInit = {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include", // Critical for cookie-based auth
     };
-    options.cache = "default";
     
-    console.log(`[PERF] Using cacheable request for ${url} with max-age=${maxAge}`);
-  } else {
-    // For all other requests, use no-cache approach
-    options.headers = {
-      ...options.headers,
-      "Cache-Control": "no-cache, no-store",
-      "Pragma": "no-cache",
-    };
-    options.cache = "no-store";
-  }
-  
-  // For non-GET requests, add CSRF token
-  if (method !== "GET") {
-    try {
-      // Always get a fresh CSRF token for mutation requests
-      csrfToken = null; // Reset to force fetch
-      const token = await fetchCSRFToken();
-      if (token) {
-        // Cast to string to satisfy TypeScript
-        const csrfHeaderValue: string = token;
-        options.headers = {
-          ...options.headers,
-          "X-CSRF-Token": csrfHeaderValue,
-        };
-        console.log(`[SEC] Adding CSRF token to ${method} request`);
+    // Apply different cache settings based on the request type
+    if (isCacheable) {
+      // For GET requests to cacheable endpoints, allow browser caching
+      const maxAge = cacheOptions?.cacheDuration || 60; // 60 seconds default
+      options.headers = {
+        ...options.headers,
+        "Cache-Control": `max-age=${maxAge}`,
+      };
+      options.cache = "default";
+      
+      console.log(`[PERF] Using cacheable request for ${url} with max-age=${maxAge}`);
+    } else {
+      // For all other requests, use no-cache approach
+      options.headers = {
+        ...options.headers,
+        "Cache-Control": "no-cache, no-store",
+        "Pragma": "no-cache",
+      };
+      options.cache = "no-store";
+    }
+    
+    // For non-GET requests, add CSRF token
+    if (method !== "GET") {
+      try {
+        // Always get a fresh CSRF token for mutation requests
+        csrfToken = null; // Reset to force fetch
+        const token = await fetchCSRFToken();
+        if (token) {
+          // Cast to string to satisfy TypeScript
+          const csrfHeaderValue: string = token;
+          options.headers = {
+            ...options.headers,
+            "X-CSRF-Token": csrfHeaderValue,
+          };
+          console.log(`[SEC] Adding CSRF token to ${method} request`);
+        }
+      } catch (error) {
+        console.error("Failed to add CSRF token to request:", error);
       }
-    } catch (error) {
-      console.error("Failed to add CSRF token to request:", error);
     }
-  }
-
-  // Prepare body data with token
-  if (data || method !== "GET") {
-    const dataWithToken = data ? { ...data } : {};
+  
+    // Prepare body data with token
+    if (data || method !== "GET") {
+      const dataWithToken = data ? { ...data } : {};
+      
+      // Always include CSRF token if this is a non-GET request
+      if (method !== "GET" && csrfToken) {
+        dataWithToken._csrf = csrfToken;
+      }
+      
+      options.body = JSON.stringify(dataWithToken);
+    }
+  
+    console.log(`Making ${method} request to ${url} with credentials included`);
     
-    // Always include CSRF token if this is a non-GET request
-    if (method !== "GET" && csrfToken) {
-      dataWithToken._csrf = csrfToken;
+    // Make the actual fetch request
+    let response: Response;
+    try {
+      response = await fetch(url, options);
+    } catch (fetchError) {
+      // Handle network errors
+      console.error(`[API] Network error when requesting ${url}:`, fetchError);
+      
+      // If we have retries left, try again with exponential backoff
+      if (retryCount < 2) {
+        console.warn(`[API] Retrying ${method} request to ${url} (${retryCount + 1}/2)...`);
+        // Wait with exponential backoff before retrying
+        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount)));
+        return apiRequest(method, url, data, cacheOptions, retryCount + 1);
+      }
+      
+      // If we're out of retries, throw a user-friendly error
+      throw new Error('Network error: Could not connect to server. Please check your connection.');
     }
     
-    options.body = JSON.stringify(dataWithToken);
+    // Handle server errors (502, 503, 504) with retries
+    if (response.status >= 502 && response.status <= 504) {
+      if (retryCount < 2) {
+        console.warn(`[API] Server error (${response.status}) for ${url}, retrying... (${retryCount + 1}/2)`);
+        // Wait with exponential backoff before retrying
+        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount)));
+        return apiRequest(method, url, data, cacheOptions, retryCount + 1);
+      }
+    }
+    
+    // Log the cookies that were sent with the request (will show in browser console for debugging)
+    console.log(`${method} ${url} response status:`, response.status);
+    console.log("Response cookies present:", document.cookie ? "Yes" : "No");
+    
+    return response;
+  } catch (error) {
+    // Log the error for debugging 
+    console.error(`[API] Error in apiRequest for ${method} ${url}:`, error);
+    // Rethrow the error to be handled by the caller
+    throw error;
   }
-
-  console.log(`Making ${method} request to ${url} with credentials included`);
-  const response = await fetch(url, options);
-  
-  // Log the cookies that were sent with the request (will show in browser console for debugging)
-  console.log(`${method} ${url} response status:`, response.status);
-  console.log("Response cookies present:", document.cookie ? "Yes" : "No");
-  
-  return response;
 }
 
 /**
@@ -180,93 +220,126 @@ export function getQueryFn(options: GetQueryFnOptions = {}) {
   
   return async ({ queryKey }: { queryKey: string[] }) => {
     const [url] = queryKey;
+    let retryCount = 0;
+    const maxRetries = 2;
     
-    try {
-      // Use cache-aware apiRequest
-      const response = await apiRequest("GET", url, undefined, { 
-        cacheDuration, 
-        forceFresh 
-      });
-      
-      if (response.status === 401) {
-        if (on401 === "returnNull") {
+    // Enhanced retry logic with exponential backoff
+    const executeWithRetry = async (): Promise<any> => {
+      try {
+        // Use cache-aware apiRequest with built-in retry for network/server errors
+        const response = await apiRequest("GET", url, undefined, { 
+          cacheDuration, 
+          forceFresh 
+        });
+        
+        // Handle specific status codes with custom behavior
+        if (response.status === 401) {
+          if (on401 === "returnNull") {
+            console.log(`[API] Unauthorized access to ${url}, returning null as configured`);
+            return null;
+          }
+          throw new Error("Unauthorized: You need to log in to access this resource");
+        }
+        
+        if (response.status === 403) {
+          throw new Error("Forbidden: You don't have permission to access this resource");
+        }
+        
+        if (response.status === 404) {
+          console.warn(`[API] Resource not found: ${url}`);
+          return null; // Return null for not found resources instead of throwing
+        }
+        
+        if (response.status === 429) {
+          if (retryCount < maxRetries) {
+            console.warn(`[API] Rate limited (429), retrying in ${Math.pow(2, retryCount + 1)}s...`);
+            retryCount++;
+            // Exponential backoff with jitter for rate limiting
+            const delay = Math.pow(2, retryCount) * 1000 + Math.random() * 500;
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return executeWithRetry(); // Recursive retry
+          }
+          throw new Error("Rate limit exceeded. Please try again later.");
+        }
+        
+        // Handle other non-2xx responses
+        if (!response.ok) {
+          // Try to extract error message from response
+          let errorMessage: string;
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.message || errorData.error || `HTTP error ${response.status}`;
+          } catch {
+            errorMessage = `API Error: ${response.status}`;
+          }
+          throw new Error(errorMessage);
+        }
+        
+        // Get the text first so we can inspect it
+        const text = await response.text();
+        
+        // Check if it's HTML instead of expected JSON
+        if (handleHTMLResponse && 
+            (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html'))) {
+          console.warn(`[API] Received HTML response for ${url} instead of expected JSON`);
+          
+          // For API endpoints, return empty array or object rather than throwing
+          // This prevents UI crashes while still showing empty state
+          if (url.startsWith('/api/')) {
+            // Check if endpoint typically returns an array
+            if (
+              url.includes('/list') || 
+              url.includes('/all') || 
+              url.includes('history') || 
+              url.endsWith('s') // Plurals often indicate arrays
+            ) {
+              return [];
+            }
+            return {};
+          }
+          
           return null;
         }
-        throw new Error("Unauthorized");
-      }
-      
-      if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
-      }
-      
-      // Get the text first so we can inspect it
-      const text = await response.text();
-      
-      // Check if it's HTML
-      if (handleHTMLResponse && 
-          (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html'))) {
-        console.log(`Received HTML response for ${url} instead of JSON`);
         
-        // Handle specific endpoints with mock data for development
-        if (url === '/api/match/recent') {
-          console.log("Returning mock match data for match/recent endpoint");
-          return [{
-            id: 1001,
-            date: new Date().toISOString(),
-            formatType: 'singles',
-            scoringSystem: 'traditional',
-            pointsToWin: 11,
-            matchType: 'casual',
-            eventTier: 'local',
-            players: [
-              {
-                userId: 1, // Current user
-                score: "11",
-                isWinner: true
-              },
-              {
-                userId: 6, // Opponent
-                score: "4",
-                isWinner: false
-              }
-            ],
-            gameScores: [
-              {
-                playerOneScore: 11,
-                playerTwoScore: 4
-              }
-            ],
-            playerNames: {
-              1: {
-                displayName: "You",
-                username: "PickleballPro",
-                avatarInitials: "YP"
-              },
-              6: {
-                displayName: "Johnny Pickleball",
-                username: "johnny_pickle",
-                avatarInitials: "JP"
-              }
-            },
-            validationStatus: 'validated'
-          }];
+        // Try to parse the text as JSON
+        try {
+          const result = JSON.parse(text);
+          return result;
+        } catch (err) {
+          console.error(`[API] Failed to parse JSON from ${url}:`, err);
+          
+          // If we still have retries left and this might be a temporary issue, retry
+          if (retryCount < maxRetries) {
+            console.warn(`[API] Invalid JSON, retrying (${retryCount + 1}/${maxRetries})...`);
+            retryCount++;
+            await new Promise(resolve => setTimeout(resolve, 500 * retryCount));
+            return executeWithRetry();
+          }
+          
+          throw new Error(`Invalid JSON response from ${url}`);
+        }
+      } catch (error) {
+        // Check if this is a network/connection error that hasn't been handled by apiRequest retries
+        if (
+          error instanceof Error && 
+          (error.message.includes('NetworkError') || 
+           error.message.includes('network') || 
+           error.message.includes('connection'))
+        ) {
+          if (retryCount < maxRetries) {
+            console.warn(`[API] Network issue, retrying ${url} (${retryCount + 1}/${maxRetries})...`);
+            retryCount++;
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+            return executeWithRetry();
+          }
         }
         
-        // For other endpoints, return an empty result
-        return [];
+        console.error(`[API] Error fetching ${url}:`, error);
+        throw error;
       }
-      
-      // Try to parse the text as JSON
-      try {
-        const result = JSON.parse(text);
-        return result;
-      } catch (err) {
-        console.error(`Failed to parse JSON from ${url}:`, err);
-        throw new Error(`Invalid JSON response from ${url}`);
-      }
-    } catch (error) {
-      console.error(`Error fetching ${url}:`, error);
-      throw error;
-    }
+    };
+    
+    // Start the retry logic
+    return executeWithRetry();
   };
 }
