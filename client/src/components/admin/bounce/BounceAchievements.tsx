@@ -133,7 +133,15 @@ const BounceAchievements = () => {
     data: userPositionData,
     isLoading: isLoadingPosition,
     error: positionError
-  } = useQuery({
+  } = useQuery<{
+    success: boolean;
+    data: {
+      found: boolean;
+      rank?: number;
+      totalPoints?: number;
+      totalUsers?: number;
+    }
+  }>({
     queryKey: ['/api/bounce/gamification/my-position'],
     enabled: currentTab === 'leaderboard'
   });
@@ -141,7 +149,7 @@ const BounceAchievements = () => {
   /**
    * Get icon component based on name
    */
-  const getIconComponent = (iconName: string | null) => {
+  const getIconComponent = (iconName: string | null | undefined) => {
     switch (iconName) {
       case 'User':
         return <User className="h-6 w-6" />;
@@ -435,7 +443,7 @@ const BounceAchievements = () => {
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
                           <div className="flex items-start gap-3">
                             <div className="mt-1">
-                              {getIconComponent(item.achievementIcon)}
+                              {getIconComponent(item.achievementIcon || null)}
                             </div>
                             <div>
                               <h4 className="font-semibold">{item.achievementName}</h4>
