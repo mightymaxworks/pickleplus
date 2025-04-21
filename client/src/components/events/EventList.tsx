@@ -422,26 +422,14 @@ export function EventList({
   // Render events list grouped by date
   return (
     <div className={cn("space-y-8", className)}>
-      {/* PKL-278651-CONN-0012-SYNC - WebSocket/Polling connection status indicator */}
+      {/* PKL-278651-CONN-0012-SYNC - Enhanced WebSocket connection indicator */}
       {showEnhancedStatus && (
         <div className="flex items-center justify-end text-xs mb-1">
-          {isEnabled ? (
-            <div className={cn(
-              "flex items-center",
-              isConnected ? "text-green-600" : "text-amber-600"
-            )}>
-              <div className={cn(
-                "h-2 w-2 rounded-full mr-1",
-                isConnected ? "bg-green-500 animate-pulse" : "bg-amber-500"
-              )} />
-              {isConnected ? "Real-time updates active" : "Connecting..."}
-            </div>
-          ) : (
-            <div className="flex items-center text-blue-600">
-              <div className="h-2 w-2 rounded-full mr-1 bg-blue-500" />
-              Polling for updates
-            </div>
-          )}
+          <ConnectionStatusIndicator 
+            isConnected={isConnected} 
+            isEnabled={isEnabled}
+            showLabel={true}
+          />
         </div>
       )}
       
