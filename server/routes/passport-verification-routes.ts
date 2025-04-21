@@ -131,6 +131,57 @@ router.get("/logs/user/:userId", isAuthenticated, isAdmin, async (req: Request, 
   }
 });
 
+// Route to get the current user's passport code (authenticated users only)
+router.get("/code", isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: "User not authenticated" });
+    }
+    
+    // Get the user's passport ID/code from their profile
+    const user = await storage.getUser(req.user.id);
+    
+    if (!user || !user.passportId) {
+      return res.status(404).json({ error: "User passport code not found" });
+    }
+    
+    // Format the passport code (remove PKL- prefix and dashes)
+    const formattedCode = user.passportId.replace(/^PKL-/, '').replace(/-/g, '');
+    
+    res.json({ code: formattedCode });
+  } catch (error) {
+    console.error("[API] Error getting user passport code:", error);
+    res.status(500).json({ error: "Server error getting passport code" });
+  }
+});
+
+// Route to get the current user's passport QR code (authenticated users only)
+router.get("/qr", isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: "User not authenticated" });
+    }
+    
+    // Get the user's passport ID/code from their profile
+    const user = await storage.getUser(req.user.id);
+    
+    if (!user || !user.passportId) {
+      return res.status(404).json({ error: "User passport code not found" });
+    }
+    
+    // Format the passport code (remove PKL- prefix and dashes)
+    const formattedCode = user.passportId.replace(/^PKL-/, '').replace(/-/g, '');
+    
+    // Create a QR code format for the passport
+    const qrContent = `PICKLEPLUSKP-${formattedCode}`;
+    
+    res.json({ qrCode: qrContent });
+  } catch (error) {
+    console.error("[API] Error getting user passport QR code:", error);
+    res.status(500).json({ error: "Server error getting passport QR code" });
+  }
+});
+
 export function registerPassportVerificationRoutes(app: express.Express) {
   console.log("[API] Registering Passport Verification routes (PKL-278651-CONN-0004-PASS-ADMIN)");
   app.use("/api/passport", router);
