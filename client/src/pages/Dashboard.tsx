@@ -1,69 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { PlayerPassport } from '@/components/dashboard/PlayerPassport';
-import { PCPRankings } from '@/components/dashboard/PCPRankings';
-import MasteryPathsDisplay from '@/components/mastery/MasteryPathsDisplay';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { motion } from 'framer-motion';
-import { Bolt, BarChart3, Trophy, Award, Star, TrendingUp, Activity, Copy, Check, Loader2, AlertCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { useMatchStatistics } from '@/hooks/use-match-statistics';
-import { useCourtIQPerformance } from '@/hooks/use-courtiq-performance';
+/**
+ * PKL-278651-UI-0001-STDLAYOUT-DASH
+ * Dashboard Page Component
+ * 
+ * Updated to use the DashboardContent component with the standard layout system
+ * to prevent header duplication and maintain standard layout behavior.
+ * 
+ * @framework Framework5.2
+ * @version 1.0.0
+ * @lastModified 2025-04-21
+ */
+
+import React from 'react';
+import DashboardContent from '@/components/dashboard/DashboardContent';
 
 export default function Dashboard() {
-  const { user } = useAuth();
-  const [isLoaded, setIsLoaded] = useState(false);
-  const { toast } = useToast();
-  const [codeCopied, setCodeCopied] = useState(false);
-  
-  // Fetch match statistics and CourtIQ performance data
-  const { data: matchStats, isLoading: isMatchStatsLoading } = useMatchStatistics({ 
-    userId: user?.id,
-    enabled: !!user
-  });
-  const { data: courtIQData, isLoading: isCourtIQLoading } = useCourtIQPerformance({
-    userId: user?.id,
-    enabled: !!user
-  });
-  
-  // Animate elements in sequence after initial load
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoaded(true);
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }, []);
-  
-  if (!user) return null;
-  
-  // Dynamic stats for animations
-  const xpPercentage = Math.min((user.xp || 520) / 10, 100);
-  const winRate = matchStats?.winRate || 
-    (user.totalMatches ? Math.round((user.matchesWon || 16) / (user.totalMatches || 24) * 100) : 67);
-  
-  return (
-    <DashboardLayout>
-      {/* Background with subtle particle effect */}
-      <div className="fixed inset-0 pointer-events-none z-0 opacity-20">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-purple-900/10"></div>
-        <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-blue-500/5 to-transparent"></div>
-        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-purple-500/5 to-transparent"></div>
-        {[...Array(20)].map((_, i) => (
-          <div 
-            key={i}
-            className="absolute rounded-full bg-white/20"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              width: `${Math.random() * 4 + 1}px`,
-              height: `${Math.random() * 4 + 1}px`,
-              animation: `float ${Math.random() * 10 + 20}s linear infinite`
-            }}
-          ></div>
-        ))}
-      </div>
+  return <DashboardContent />;
       
       {/* Main content with animated entrance */}
       <motion.div 
@@ -779,6 +730,6 @@ export default function Dashboard() {
       </motion.div>
       
       {/* CSS Animation is now in index.css */}
-    </DashboardLayout>
+    </div>
   );
 }
