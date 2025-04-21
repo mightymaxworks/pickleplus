@@ -15,7 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import BounceDashboard from '@/components/admin/bounce/BounceDashboard';
 import BounceFindings from '@/components/admin/bounce/BounceFindings';
-import AdminLayout from '@/modules/admin/components/AdminLayout';
+import { AdminLayout } from '@/modules/admin/components/AdminLayout';
 import { Bot, Bug, Database, LineChart, CalendarClock, Settings } from 'lucide-react';
 
 const BouncePage: React.FC = () => {

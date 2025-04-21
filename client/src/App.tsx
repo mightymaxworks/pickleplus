@@ -43,6 +43,7 @@ import {
   LazySettingsPage,
   LazyMobileTestPage,
   LazyBugReportDashboard,
+  LazyBouncePage, // PKL-278651-BOUNCE-0001-CORE
   LazyUserDetailsPage, // PKL-278651-ADMIN-0015-USER
   LazyUsersPage, // PKL-278651-ADMIN-0015-USER
   LazyNotFoundPage,
