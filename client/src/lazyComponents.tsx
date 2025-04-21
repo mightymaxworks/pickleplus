@@ -50,8 +50,17 @@ export const LazyLeaderboardPage = lazyLoad(() =>
 export const LazyMasteryPathsPage = lazyLoad(() => import('./pages/MasteryPathsPage'));
 
 // Event related pages
-export const LazyEventDiscoveryPage = lazyLoad(() => import('./pages/events/EventDiscoveryPage'));
-export const LazyMyEventsPage = lazyLoad(() => import('./pages/events/MyEventsPage'));
+// Using modernized components for PicklePass™ UI Enhancement (PKL-278651-CONN-0008-UX-MOD)
+export const LazyEventDiscoveryPage = lazyLoad(() => 
+  import('./pages/events/ModernEventComponents').then(
+    module => ({ default: module.ModernEventDiscoveryPage })
+  )
+);
+export const LazyMyEventsPage = lazyLoad(() => 
+  import('./pages/events/ModernEventComponents').then(
+    module => ({ default: module.ModernMyEventsPage })
+  )
+);
 
 // Admin related pages
 export const LazyAdminDashboardPage = lazyLoad(() => import('./pages/AdminDashboardPage'));
