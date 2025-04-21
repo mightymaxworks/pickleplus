@@ -528,7 +528,7 @@ export function ModernUniversalPassport({
               }}
               style={{
                 background: isFoundingMember
-                  ? 'linear-gradient(135deg, rgba(255, 250, 230, 0.9) 0%, rgba(255, 255, 255, 0.95) 50%, rgba(255, 248, 225, 0.85) 100%)'
+                  ? 'linear-gradient(135deg, rgba(253, 230, 138, 0.2) 0%, rgba(252, 240, 195, 0.3) 50%, rgba(255, 236, 168, 0.2) 100%)'
                   : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.98) 50%, rgba(248, 250, 252, 0.9) 100%)'
               }}
             >
@@ -663,7 +663,7 @@ export function ModernUniversalPassport({
                       size={240}
                       level="H"
                       includeMargin={true}
-                      fgColor={isFoundingMember ? "#D4A017" : "#2583E4"} // Changed to blue for regular members
+                      fgColor={isFoundingMember ? "#D4A017" : "#2583E4"} // Gold for founding members, blue for regular members
                       bgColor="transparent"
                       imageSettings={{
                         src: "/src/assets/pickle-plus-emblem.png", // Updated to use new emblem
@@ -672,6 +672,16 @@ export function ModernUniversalPassport({
                         excavate: true,
                       }}
                     />
+                    
+                    {/* Additional gold accent elements for founding members */}
+                    {isFoundingMember && (
+                      <div className="absolute inset-0 pointer-events-none">
+                        <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-amber-400 rounded-tl-lg opacity-30"></div>
+                        <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-amber-400 rounded-tr-lg opacity-30"></div>
+                        <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-amber-400 rounded-bl-lg opacity-30"></div>
+                        <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-amber-400 rounded-br-lg opacity-30"></div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
