@@ -1,17 +1,17 @@
 /**
- * PKL-278651-BOUNCE-0001-CORE
- * Bounce Testing System API Routes
+ * PKL-278651-BOUNCE-0001-CORE - Bounce Automated Testing System
+ * API Handlers
  * 
- * This file defines the API routes for the Bounce automated testing system.
+ * This module provides the database access layer for the Bounce testing system.
  * 
- * @framework Framework5.2
  * @version 1.0.0
+ * @framework Framework5.2
  * @lastModified 2025-04-21
  */
 
-import express, { Request, Response } from 'express';
 import { db } from '../../db';
-import {
+import { eq, desc, and, sql, count } from 'drizzle-orm';
+import { 
   bounceTestRuns,
   bounceFindings,
   bounceEvidence,
@@ -22,357 +22,416 @@ import {
   BounceFindingStatus,
   BounceInteractionType
 } from '@shared/schema';
-import { eq, desc, and, sql } from 'drizzle-orm';
-import { isAuthenticated, isAdmin } from '../../middleware/auth';
-
-const router = express.Router();
 
 /**
- * GET /api/admin/bounce/test-runs
- * Get all test runs with pagination
+ * Creates a new test run in the database
+ * @param testRunData The test run data to create
+ * @returns The created test run record
  */
-router.get('/test-runs', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+export async function createTestRun(testRunData: any) {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-    const offset = (page - 1) * limit;
+    const [newTestRun] = await db.insert(bounceTestRuns)
+      .values({
+        name: testRunData.name,
+        description: testRunData.description,
+        status: BounceTestRunStatus.PLANNED,
+        targetUrl: testRunData.targetUrl,
+        testConfig: testRunData.testConfig,
+        userId: testRunData.userId
+      })
+      .returning();
     
+    return { success: true, testRun: newTestRun };
+  } catch (error) {
+    console.error('Error creating test run:', error);
+    return { success: false, error: 'Failed to create test run' };
+  }
+}
+
+/**
+ * Retrieves all test runs from the database
+ * @param limit Optional limit on the number of records to return
+ * @param offset Optional offset for pagination
+ * @returns List of test runs
+ */
+export async function getTestRuns(limit = 10, offset = 0) {
+  try {
     const testRuns = await db.select()
       .from(bounceTestRuns)
       .orderBy(desc(bounceTestRuns.createdAt))
       .limit(limit)
       .offset(offset);
     
-    const countResult = await db.select({ count: sql<number>`count(*)` })
-      .from(bounceTestRuns);
-    
-    const totalCount = countResult[0].count;
-    
-    res.status(200).json({
-      testRuns,
-      pagination: {
-        totalCount,
-        currentPage: page,
-        totalPages: Math.ceil(totalCount / limit),
-        pageSize: limit
-      }
-    });
+    return { success: true, testRuns };
   } catch (error) {
-    console.error('Error getting test runs:', error);
-    res.status(500).json({ error: 'Failed to get test runs' });
+    console.error('Error retrieving test runs:', error);
+    return { success: false, error: 'Failed to retrieve test runs' };
   }
-});
+}
 
 /**
- * GET /api/admin/bounce/test-runs/:id
- * Get a specific test run by ID with its findings
+ * Retrieves a specific test run by ID
+ * @param id The test run ID
+ * @returns The test run record
  */
-router.get('/test-runs/:id', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+export async function getTestRunById(id: number) {
   try {
-    const testRunId = parseInt(req.params.id);
-    
-    const testRun = await db.select()
+    const [testRun] = await db.select()
       .from(bounceTestRuns)
-      .where(eq(bounceTestRuns.id, testRunId))
-      .limit(1);
+      .where(eq(bounceTestRuns.id, id));
     
-    if (testRun.length === 0) {
-      return res.status(404).json({ error: 'Test run not found' });
+    if (!testRun) {
+      return { success: false, error: 'Test run not found' };
     }
     
-    const findings = await db.select()
-      .from(bounceFindings)
-      .where(eq(bounceFindings.testRunId, testRunId))
-      .orderBy(desc(bounceFindings.createdAt));
-    
-    res.status(200).json({
-      testRun: testRun[0],
-      findings
-    });
+    return { success: true, testRun };
   } catch (error) {
-    console.error('Error getting test run:', error);
-    res.status(500).json({ error: 'Failed to get test run' });
+    console.error(`Error retrieving test run with ID ${id}:`, error);
+    return { success: false, error: 'Failed to retrieve test run' };
   }
-});
+}
 
 /**
- * GET /api/admin/bounce/findings
- * Get all findings with filters and pagination
+ * Updates the status of a test run
+ * @param id The test run ID
+ * @param status The new status
+ * @returns The updated test run
  */
-router.get('/findings', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+export async function updateTestRunStatus(id: number, status: BounceTestRunStatus) {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 20;
-    const offset = (page - 1) * limit;
-    const status = req.query.status as string;
-    const severity = req.query.severity as string;
+    const [updatedTestRun] = await db.update(bounceTestRuns)
+      .set({ 
+        status,
+        ...(status === BounceTestRunStatus.RUNNING ? { startedAt: new Date() } : {}),
+        ...(status === BounceTestRunStatus.COMPLETED || status === BounceTestRunStatus.FAILED ? { completedAt: new Date() } : {})
+      })
+      .where(eq(bounceTestRuns.id, id))
+      .returning();
     
-    let query = db.select().from(bounceFindings);
+    if (!updatedTestRun) {
+      return { success: false, error: 'Test run not found' };
+    }
     
-    // Apply filters
-    if (status) {
-      query = query.where(eq(bounceFindings.status, status));
+    return { success: true, testRun: updatedTestRun };
+  } catch (error) {
+    console.error(`Error updating test run status for ID ${id}:`, error);
+    return { success: false, error: 'Failed to update test run status' };
+  }
+}
+
+/**
+ * Creates a new finding in the database
+ * @param findingData The finding data to create
+ * @returns The created finding record
+ */
+export async function createFinding(findingData: any) {
+  try {
+    const [newFinding] = await db.insert(bounceFindings)
+      .values({
+        testRunId: findingData.testRunId,
+        title: findingData.title,
+        description: findingData.description,
+        severity: findingData.severity || BounceFindingSeverity.MEDIUM,
+        status: findingData.status || BounceFindingStatus.NEW,
+        reproducibleSteps: findingData.reproducibleSteps,
+        affectedUrl: findingData.affectedUrl,
+        browserInfo: findingData.browserInfo,
+        reportedByUserId: findingData.reportedByUserId
+      })
+      .returning();
+    
+    // Update the test run's finding count
+    await updateTestRunFindingCount(findingData.testRunId);
+    
+    return { success: true, finding: newFinding };
+  } catch (error) {
+    console.error('Error creating finding:', error);
+    return { success: false, error: 'Failed to create finding' };
+  }
+}
+
+/**
+ * Updates the total findings count for a test run
+ * @param testRunId The test run ID
+ */
+async function updateTestRunFindingCount(testRunId: number) {
+  try {
+    // Count findings for this test run
+    const [result] = await db.select({ count: count() })
+      .from(bounceFindings)
+      .where(eq(bounceFindings.testRunId, testRunId));
+    
+    // Update the test run with the count
+    await db.update(bounceTestRuns)
+      .set({ totalFindings: result.count })
+      .where(eq(bounceTestRuns.id, testRunId));
+  } catch (error) {
+    console.error(`Error updating finding count for test run ${testRunId}:`, error);
+  }
+}
+
+/**
+ * Retrieves findings with pagination and filtering options
+ * @param options Filtering and pagination options
+ * @returns List of findings and pagination metadata
+ */
+export async function getFindings(options: {
+  testRunId?: number;
+  severity?: BounceFindingSeverity;
+  status?: BounceFindingStatus;
+  limit?: number;
+  offset?: number;
+}) {
+  try {
+    const { testRunId, severity, status, limit = 10, offset = 0 } = options;
+    
+    // Build where clauses
+    let whereClause = true as any;
+    
+    if (testRunId) {
+      whereClause = and(whereClause, eq(bounceFindings.testRunId, testRunId));
     }
     
     if (severity) {
-      query = query.where(eq(bounceFindings.severity, severity));
+      whereClause = and(whereClause, eq(bounceFindings.severity, severity));
     }
     
-    const findings = await query
+    if (status) {
+      whereClause = and(whereClause, eq(bounceFindings.status, status));
+    }
+    
+    // Get findings with pagination
+    const findings = await db.select()
+      .from(bounceFindings)
+      .where(whereClause)
       .orderBy(desc(bounceFindings.createdAt))
       .limit(limit)
       .offset(offset);
     
-    // Get total count with the same filters
-    let countQuery = db.select({ count: sql<number>`count(*)` }).from(bounceFindings);
+    // Get total count for pagination
+    const [totalCount] = await db.select({ count: count() })
+      .from(bounceFindings)
+      .where(whereClause);
     
-    if (status) {
-      countQuery = countQuery.where(eq(bounceFindings.status, status));
-    }
-    
-    if (severity) {
-      countQuery = countQuery.where(eq(bounceFindings.severity, severity));
-    }
-    
-    const countResult = await countQuery;
-    const totalCount = countResult[0].count;
-    
-    res.status(200).json({
+    return { 
+      success: true, 
       findings,
       pagination: {
-        totalCount,
-        currentPage: page,
-        totalPages: Math.ceil(totalCount / limit),
-        pageSize: limit
+        totalItems: totalCount.count,
+        totalPages: Math.ceil(totalCount.count / limit),
+        currentPage: Math.floor(offset / limit) + 1,
+        itemsPerPage: limit
       }
-    });
+    };
   } catch (error) {
-    console.error('Error getting findings:', error);
-    res.status(500).json({ error: 'Failed to get findings' });
+    console.error('Error retrieving findings:', error);
+    return { success: false, error: 'Failed to retrieve findings' };
   }
-});
+}
 
 /**
- * GET /api/admin/bounce/findings/:id
- * Get a specific finding by ID with its evidence
+ * Updates the status of a finding
+ * @param id The finding ID
+ * @param status The new status
+ * @param assignedToUserId Optional user ID to assign the finding to
+ * @returns The updated finding
  */
-router.get('/findings/:id', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+export async function updateFindingStatus(id: number, status: BounceFindingStatus, assignedToUserId?: number) {
   try {
-    const findingId = parseInt(req.params.id);
-    
-    const finding = await db.select()
-      .from(bounceFindings)
-      .where(eq(bounceFindings.id, findingId))
-      .limit(1);
-    
-    if (finding.length === 0) {
-      return res.status(404).json({ error: 'Finding not found' });
-    }
-    
-    const evidence = await db.select()
-      .from(bounceEvidence)
-      .where(eq(bounceEvidence.findingId, findingId));
-    
-    res.status(200).json({
-      finding: finding[0],
-      evidence
-    });
-  } catch (error) {
-    console.error('Error getting finding:', error);
-    res.status(500).json({ error: 'Failed to get finding' });
-  }
-});
-
-/**
- * PATCH /api/admin/bounce/findings/:id
- * Update a finding's status
- */
-router.patch('/findings/:id', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
-  try {
-    const findingId = parseInt(req.params.id);
-    const { status, assignedTo } = req.body;
-    
-    if (!status && !assignedTo) {
-      return res.status(400).json({ error: 'No update parameters provided' });
-    }
-    
-    const updateData: any = {};
-    
-    if (status) {
-      // Validate status
-      if (!Object.values(BounceFindingStatus).includes(status as BounceFindingStatus)) {
-        return res.status(400).json({ error: 'Invalid status value' });
-      }
-      updateData.status = status;
-      
-      // If status is fixed, set fixedAt
-      if (status === BounceFindingStatus.FIXED) {
-        updateData.fixedAt = new Date();
-      }
-    }
-    
-    if (assignedTo !== undefined) {
-      updateData.assignedTo = assignedTo || null;
-    }
-    
-    const result = await db.update(bounceFindings)
-      .set(updateData)
-      .where(eq(bounceFindings.id, findingId))
+    const [updatedFinding] = await db.update(bounceFindings)
+      .set({ 
+        status,
+        ...(assignedToUserId ? { assignedToUserId } : {}),
+        ...(status === BounceFindingStatus.FIXED ? { fixedAt: new Date() } : {})
+      })
+      .where(eq(bounceFindings.id, id))
       .returning();
     
-    if (result.length === 0) {
-      return res.status(404).json({ error: 'Finding not found' });
+    if (!updatedFinding) {
+      return { success: false, error: 'Finding not found' };
     }
     
-    res.status(200).json(result[0]);
+    return { success: true, finding: updatedFinding };
   } catch (error) {
-    console.error('Error updating finding:', error);
-    res.status(500).json({ error: 'Failed to update finding' });
+    console.error(`Error updating finding status for ID ${id}:`, error);
+    return { success: false, error: 'Failed to update finding status' };
   }
-});
+}
 
 /**
- * GET /api/admin/bounce/schedules
- * Get all test schedules
+ * Creates a new evidence record for a finding
+ * @param evidenceData The evidence data to create
+ * @returns The created evidence record
  */
-router.get('/schedules', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+export async function createEvidence(evidenceData: any) {
   try {
-    const schedules = await db.select()
-      .from(bounceSchedules)
-      .orderBy(desc(bounceSchedules.createdAt));
-    
-    res.status(200).json(schedules);
-  } catch (error) {
-    console.error('Error getting schedules:', error);
-    res.status(500).json({ error: 'Failed to get schedules' });
-  }
-});
-
-/**
- * POST /api/admin/bounce/schedules
- * Create a new test schedule
- */
-router.post('/schedules', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
-  try {
-    const { name, cronExpression, browsers, testTypes } = req.body;
-    
-    if (!name || !cronExpression || !browsers || !testTypes) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-    
-    const result = await db.insert(bounceSchedules)
+    const [newEvidence] = await db.insert(bounceEvidence)
       .values({
-        name,
-        cronExpression,
-        browsers,
-        testTypes,
-        isActive: true
+        findingId: evidenceData.findingId,
+        type: evidenceData.type || 'screenshot',
+        content: evidenceData.content,
+        metadata: evidenceData.metadata
       })
       .returning();
     
-    res.status(201).json(result[0]);
+    return { success: true, evidence: newEvidence };
   } catch (error) {
-    console.error('Error creating schedule:', error);
-    res.status(500).json({ error: 'Failed to create schedule' });
+    console.error('Error creating evidence:', error);
+    return { success: false, error: 'Failed to create evidence' };
   }
-});
+}
 
 /**
- * PATCH /api/admin/bounce/schedules/:id
- * Update a test schedule
+ * Retrieves evidence for a specific finding
+ * @param findingId The finding ID
+ * @returns List of evidence for the finding
  */
-router.patch('/schedules/:id', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+export async function getEvidenceForFinding(findingId: number) {
   try {
-    const scheduleId = parseInt(req.params.id);
-    const { name, cronExpression, browsers, testTypes, isActive } = req.body;
+    const evidence = await db.select()
+      .from(bounceEvidence)
+      .where(eq(bounceEvidence.findingId, findingId))
+      .orderBy(bounceEvidence.createdAt);
     
-    const updateData: any = {};
-    
-    if (name !== undefined) updateData.name = name;
-    if (cronExpression !== undefined) updateData.cronExpression = cronExpression;
-    if (browsers !== undefined) updateData.browsers = browsers;
-    if (testTypes !== undefined) updateData.testTypes = testTypes;
-    if (isActive !== undefined) updateData.isActive = isActive;
-    
-    if (Object.keys(updateData).length === 0) {
-      return res.status(400).json({ error: 'No update parameters provided' });
-    }
-    
-    const result = await db.update(bounceSchedules)
-      .set(updateData)
-      .where(eq(bounceSchedules.id, scheduleId))
+    return { success: true, evidence };
+  } catch (error) {
+    console.error(`Error retrieving evidence for finding ${findingId}:`, error);
+    return { success: false, error: 'Failed to retrieve evidence' };
+  }
+}
+
+/**
+ * Creates a new test schedule
+ * @param scheduleData The schedule data to create
+ * @returns The created schedule record
+ */
+export async function createTestSchedule(scheduleData: any) {
+  try {
+    const [newSchedule] = await db.insert(bounceSchedules)
+      .values({
+        name: scheduleData.name,
+        description: scheduleData.description,
+        cronExpression: scheduleData.cronExpression,
+        testConfig: scheduleData.testConfig,
+        isActive: scheduleData.isActive !== undefined ? scheduleData.isActive : true
+      })
       .returning();
     
-    if (result.length === 0) {
-      return res.status(404).json({ error: 'Schedule not found' });
-    }
-    
-    res.status(200).json(result[0]);
+    return { success: true, schedule: newSchedule };
   } catch (error) {
-    console.error('Error updating schedule:', error);
-    res.status(500).json({ error: 'Failed to update schedule' });
+    console.error('Error creating test schedule:', error);
+    return { success: false, error: 'Failed to create test schedule' };
   }
-});
+}
 
 /**
- * DELETE /api/admin/bounce/schedules/:id
- * Delete a test schedule
+ * Records a user interaction with a finding for gamification
+ * @param interactionData The interaction data to record
+ * @returns The created interaction record
  */
-router.delete('/schedules/:id', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+export async function recordUserInteraction(interactionData: any) {
   try {
-    const scheduleId = parseInt(req.params.id);
-    
-    const result = await db.delete(bounceSchedules)
-      .where(eq(bounceSchedules.id, scheduleId))
+    const [newInteraction] = await db.insert(bounceInteractions)
+      .values({
+        userId: interactionData.userId,
+        findingId: interactionData.findingId,
+        type: interactionData.type || BounceInteractionType.VIEW_REPORT,
+        points: interactionData.points || getDefaultPointsForInteraction(interactionData.type),
+        metadata: interactionData.metadata
+      })
       .returning();
     
-    if (result.length === 0) {
-      return res.status(404).json({ error: 'Schedule not found' });
-    }
-    
-    res.status(200).json({ message: 'Schedule deleted successfully' });
+    return { success: true, interaction: newInteraction };
   } catch (error) {
-    console.error('Error deleting schedule:', error);
-    res.status(500).json({ error: 'Failed to delete schedule' });
+    console.error('Error recording user interaction:', error);
+    return { success: false, error: 'Failed to record user interaction' };
   }
-});
+}
 
 /**
- * GET /api/admin/bounce/interactions
- * Get gamification interactions with user data
+ * Gets the default points value for an interaction type
+ * @param type The interaction type
+ * @returns The default points value
  */
-router.get('/interactions', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+function getDefaultPointsForInteraction(type: BounceInteractionType): number {
+  switch (type) {
+    case BounceInteractionType.REPORT_ISSUE:
+      return 50;
+    case BounceInteractionType.CONFIRM_FINDING:
+      return 25;
+    case BounceInteractionType.DISPUTE_FINDING:
+      return 10;
+    case BounceInteractionType.PROVIDE_FEEDBACK:
+      return 30;
+    case BounceInteractionType.VIEW_REPORT:
+      return 5;
+    default:
+      return 10;
+  }
+}
+
+/**
+ * Gets statistics about the Bounce system
+ * @returns Various statistics about test runs and findings
+ */
+export async function getSystemStatistics() {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 20;
-    const offset = (page - 1) * limit;
+    // Get total test runs
+    const [testRunsCount] = await db.select({ count: count() })
+      .from(bounceTestRuns);
     
-    // This query would typically join with users to get user information
-    // Simplified version for demonstration
-    const interactions = await db.select()
-      .from(bounceInteractions)
-      .orderBy(desc(bounceInteractions.createdAt))
-      .limit(limit)
-      .offset(offset);
+    // Get total findings
+    const [findingsCount] = await db.select({ count: count() })
+      .from(bounceFindings);
     
-    const countResult = await db.select({ count: sql<number>`count(*)` })
-      .from(bounceInteractions);
+    // Get counts by severity
+    const severityCounts = await Promise.all([
+      db.select({ count: count() })
+        .from(bounceFindings)
+        .where(eq(bounceFindings.severity, BounceFindingSeverity.CRITICAL)),
+      db.select({ count: count() })
+        .from(bounceFindings)
+        .where(eq(bounceFindings.severity, BounceFindingSeverity.HIGH)),
+      db.select({ count: count() })
+        .from(bounceFindings)
+        .where(eq(bounceFindings.severity, BounceFindingSeverity.MEDIUM)),
+      db.select({ count: count() })
+        .from(bounceFindings)
+        .where(eq(bounceFindings.severity, BounceFindingSeverity.LOW))
+    ]);
     
-    const totalCount = countResult[0].count;
+    // Get findings in triage
+    const [triageFindingsCount] = await db.select({ count: count() })
+      .from(bounceFindings)
+      .where(eq(bounceFindings.status, BounceFindingStatus.TRIAGE));
     
-    res.status(200).json({
-      interactions,
-      pagination: {
-        totalCount,
-        currentPage: page,
-        totalPages: Math.ceil(totalCount / limit),
-        pageSize: limit
+    // Get fixed findings
+    const [fixedFindingsCount] = await db.select({ count: count() })
+      .from(bounceFindings)
+      .where(eq(bounceFindings.status, BounceFindingStatus.FIXED));
+    
+    // Get the most recent test run
+    const [lastTestRun] = await db.select()
+      .from(bounceTestRuns)
+      .orderBy(desc(bounceTestRuns.createdAt))
+      .limit(1);
+    
+    return { 
+      success: true, 
+      statistics: {
+        totalTestRuns: testRunsCount.count,
+        totalFindings: findingsCount.count,
+        criticalFindings: severityCounts[0][0].count,
+        highFindings: severityCounts[1][0].count,
+        mediumFindings: severityCounts[2][0].count,
+        lowFindings: severityCounts[3][0].count,
+        triageFindings: triageFindingsCount.count,
+        fixedFindings: fixedFindingsCount.count,
+        lastTestRun
       }
-    });
+    };
   } catch (error) {
-    console.error('Error getting interactions:', error);
-    res.status(500).json({ error: 'Failed to get interactions' });
+    console.error('Error getting system statistics:', error);
+    return { success: false, error: 'Failed to retrieve system statistics' };
   }
-});
-
-export default router;
+}

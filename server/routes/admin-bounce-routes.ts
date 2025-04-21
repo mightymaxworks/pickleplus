@@ -12,74 +12,160 @@ import { isAuthenticated, isAdmin } from '../middleware/auth';
 export function registerBounceAdminRoutes(app: express.Express): void {
   console.log("[API] Registering Bounce Admin API routes");
   
-  // Get test runs
-  app.get('/api/admin/bounce/test-runs', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
-    // Temporary stub implementation
-    res.status(200).json({ 
-      success: true,
-      testRuns: [] 
+  // Import API handlers
+  import('../api/bounce').then((bounceApi) => {
+    // Get test runs
+    app.get('/api/admin/bounce/test-runs', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
+      
+      const result = await bounceApi.getTestRuns(limit, offset);
+      res.status(result.success ? 200 : 500).json(result);
     });
-  });
 
-  // Get findings
-  app.get('/api/admin/bounce/findings', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
-    // Temporary stub implementation
-    res.status(200).json({ 
-      success: true,
-      findings: [],
-      pagination: {
-        totalItems: 0,
-        totalPages: 1,
-        currentPage: 1,
-        itemsPerPage: 10
+    // Get findings with filtering
+    app.get('/api/admin/bounce/findings', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+      // Extract query parameters
+      const testRunId = req.query.testRunId ? parseInt(req.query.testRunId as string) : undefined;
+      const severity = req.query.severity as any;
+      const status = req.query.status as any;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
+      
+      const result = await bounceApi.getFindings({
+        testRunId,
+        severity,
+        status,
+        limit,
+        offset
+      });
+      
+      res.status(result.success ? 200 : 500).json(result);
+    });
+
+    // Get specific finding and its evidence
+    app.get('/api/admin/bounce/findings/:id', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+      const findingId = parseInt(req.params.id);
+      
+      // Get the finding details
+      const findingResult = await bounceApi.getTestRunById(findingId);
+      if (!findingResult.success) {
+        return res.status(404).json({ success: false, error: 'Finding not found' });
       }
+      
+      // Get evidence for the finding
+      const evidenceResult = await bounceApi.getEvidenceForFinding(findingId);
+      
+      res.status(200).json({ 
+        success: true,
+        finding: findingResult.testRun,
+        evidence: evidenceResult.success ? evidenceResult.evidence : []
+      });
     });
-  });
 
-  // Get specific finding
-  app.get('/api/admin/bounce/findings/:id', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
-    // Temporary stub implementation
-    res.status(200).json({ 
-      success: true,
-      finding: null
-    });
-  });
-
-  // Update finding status
-  app.patch('/api/admin/bounce/findings/:id/status', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
-    // Temporary stub implementation
-    res.status(200).json({ 
-      success: true,
-      message: 'Finding status updated successfully'
-    });
-  });
-
-  // Create a new test run
-  app.post('/api/admin/bounce/test-runs', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
-    // Temporary stub implementation
-    res.status(201).json({ 
-      success: true,
-      message: 'Test run created successfully',
-      testRunId: 1
-    });
-  });
-
-  // Get statistics
-  app.get('/api/admin/bounce/statistics', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
-    // Temporary stub implementation
-    res.status(200).json({ 
-      success: true,
-      statistics: {
-        totalTestRuns: 0,
-        totalFindings: 0,
-        criticalFindings: 0,
-        highFindings: 0,
-        mediumFindings: 0,
-        lowFindings: 0,
-        triageFindings: 0,
-        fixedFindings: 0,
-        lastTestRun: null
+    // Update finding status
+    app.patch('/api/admin/bounce/findings/:id/status', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+      const findingId = parseInt(req.params.id);
+      const { status, assignedToUserId } = req.body;
+      
+      if (!status) {
+        return res.status(400).json({ success: false, error: 'Status is required' });
       }
+      
+      const result = await bounceApi.updateFindingStatus(findingId, status, assignedToUserId);
+      res.status(result.success ? 200 : 404).json(result);
     });
+
+    // Create a new test run
+    app.post('/api/admin/bounce/test-runs', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+      // Validate required fields
+      const { name, targetUrl, testConfig } = req.body;
+      
+      if (!name || !targetUrl || !testConfig) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Missing required fields: name, targetUrl, or testConfig' 
+        });
+      }
+      
+      // Create the test run
+      const result = await bounceApi.createTestRun({
+        ...req.body,
+        userId: req.user!.id
+      });
+      
+      res.status(result.success ? 201 : 500).json(result);
+    });
+
+    // Get statistics
+    app.get('/api/admin/bounce/statistics', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+      const result = await bounceApi.getSystemStatistics();
+      res.status(result.success ? 200 : 500).json(result);
+    });
+    
+    // Add evidence to a finding
+    app.post('/api/admin/bounce/findings/:id/evidence', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+      const findingId = parseInt(req.params.id);
+      const { type, content, metadata } = req.body;
+      
+      if (!content) {
+        return res.status(400).json({ success: false, error: 'Content is required' });
+      }
+      
+      const result = await bounceApi.createEvidence({
+        findingId,
+        type,
+        content,
+        metadata
+      });
+      
+      res.status(result.success ? 201 : 500).json(result);
+    });
+    
+    // Record a user interaction with a finding
+    app.post('/api/admin/bounce/interactions', isAuthenticated, async (req: Request, res: Response) => {
+      const { findingId, type, points, metadata } = req.body;
+      
+      if (!findingId || !type) {
+        return res.status(400).json({ success: false, error: 'FindingId and type are required' });
+      }
+      
+      const result = await bounceApi.recordUserInteraction({
+        userId: req.user!.id,
+        findingId,
+        type,
+        points,
+        metadata
+      });
+      
+      res.status(result.success ? 201 : 500).json(result);
+    });
+    
+    // Get test schedules - temporarily just returning an empty array
+    app.get('/api/admin/bounce/schedules', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+      // In the future, we can implement a getSchedules method in the bounceApi
+      res.status(200).json({ 
+        success: true, 
+        schedules: [] 
+      });
+    });
+    
+    // Create a test schedule
+    app.post('/api/admin/bounce/schedules', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+      const { name, cronExpression, testConfig } = req.body;
+      
+      if (!name || !testConfig) {
+        return res.status(400).json({ success: false, error: 'Name and testConfig are required' });
+      }
+      
+      const result = await bounceApi.createTestSchedule(req.body);
+      res.status(result.success ? 201 : 500).json(result);
+    });
+    
+    console.log("[API] Bounce Admin API routes registered successfully");
+  }).catch(err => {
+    console.error("[API] Error loading Bounce API handlers:", err);
   });
+  
+  // Import statements for database access will be handled by the bounce API module
 }
