@@ -230,6 +230,28 @@ export async function getFindings(options: {
 }
 
 /**
+ * Retrieves a specific finding by ID
+ * @param id The finding ID
+ * @returns The finding
+ */
+export async function getFindingById(id: number) {
+  try {
+    const [finding] = await db.select()
+      .from(bounceFindings)
+      .where(eq(bounceFindings.id, id));
+    
+    if (!finding) {
+      return { success: false, error: 'Finding not found' };
+    }
+    
+    return { success: true, finding };
+  } catch (error) {
+    console.error(`Error retrieving finding with ID ${id}:`, error);
+    return { success: false, error: 'Failed to retrieve finding' };
+  }
+}
+
+/**
  * Updates the status of a finding
  * @param id The finding ID
  * @param status The new status

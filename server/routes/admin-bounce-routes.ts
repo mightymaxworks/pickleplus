@@ -47,7 +47,7 @@ export function registerBounceAdminRoutes(app: express.Express): void {
     const findingId = parseInt(req.params.id);
     
     // Get the finding details
-    const findingResult = await bounceApi.getTestRunById(findingId);
+    const findingResult = await bounceApi.getFindingById(findingId);
     if (!findingResult.success) {
       return res.status(404).json({ success: false, error: 'Finding not found' });
     }
@@ -57,7 +57,7 @@ export function registerBounceAdminRoutes(app: express.Express): void {
     
     res.status(200).json({ 
       success: true,
-      finding: findingResult.testRun,
+      finding: findingResult.finding,
       evidence: evidenceResult.success ? evidenceResult.evidence : []
     });
   });
