@@ -1235,6 +1235,43 @@ export {
   type InsertUserXpLevel
 } from './schema/xp';
 
+// Import and re-export Bounce automation schema (PKL-278651-BOUNCE-0005-AUTO - Bounce Automation)
+export {
+  testTemplates,
+  scheduledTests,
+  cicdIntegrations,
+  deploymentRecords,
+  autoHealRules,
+  autoHealHistory,
+  testTemplatesRelations,
+  scheduledTestsRelations,
+  cicdIntegrationsRelations,
+  deploymentRecordsRelations,
+  autoHealRulesRelations,
+  autoHealHistoryRelations,
+  insertTestTemplateSchema,
+  insertScheduledTestSchema,
+  insertCicdIntegrationSchema,
+  insertDeploymentRecordSchema,
+  insertAutoHealRuleSchema,
+  insertAutoHealHistorySchema,
+  SCHEDULE_FREQUENCY,
+  TEST_RUN_TRIGGER,
+  AUTO_HEAL_STATUS,
+  type TestTemplate,
+  type InsertTestTemplate,
+  type ScheduledTest,
+  type InsertScheduledTest,
+  type CicdIntegration,
+  type InsertCicdIntegration,
+  type DeploymentRecord,
+  type InsertDeploymentRecord,
+  type AutoHealRule,
+  type InsertAutoHealRule,
+  type AutoHealHistory,
+  type InsertAutoHealHistory
+} from './schema/bounce-automation';
+
 // Add additional core schema exports here as the system grows
 
 // Export community moderation schemas (PKL-278651-COMM-0029-MOD)
