@@ -355,7 +355,53 @@ export const BounceTestRunner: React.FC = () => {
     }
   });
   
-  // Function to start a test run with enhanced error handling
+  // Function to validate a test configuration
+  const validateTestConfig = (config: TestConfig): { isValid: boolean; errorMessage?: string } => {
+    // Check if flows are specified
+    if (!config.flows.length) {
+      return { 
+        isValid: false, 
+        errorMessage: "At least one test flow must be selected" 
+      };
+    }
+    
+    // Check if browsers are specified
+    if (!config.browsers.length) {
+      return { 
+        isValid: false, 
+        errorMessage: "At least one browser must be selected" 
+      };
+    }
+    
+    // Validate name length to avoid extremely long names
+    if (config.name.length > 100) {
+      return { 
+        isValid: false, 
+        errorMessage: "Test configuration name is too long" 
+      };
+    }
+    
+    // Validate there's at least a description
+    if (!config.description || config.description.trim().length < 5) {
+      return { 
+        isValid: false, 
+        errorMessage: "Please provide a meaningful description for your test configuration" 
+      };
+    }
+    
+    // Check for high-risk combinations
+    if (!config.isNonDestructive && config.flows.includes('tournament-registration')) {
+      return { 
+        isValid: false, 
+        errorMessage: "Destructive testing on tournament registration may cause data issues. Please enable non-destructive mode." 
+      };
+    }
+    
+    // All validations passed
+    return { isValid: true };
+  };
+  
+  // Function to start a test run with enhanced error handling and validation
   const startTestRun = () => {
     try {
       // Validate selected config exists before starting
@@ -383,17 +429,27 @@ export const BounceTestRunner: React.FC = () => {
         return;
       }
       
-      // Validate minimum requirements for custom config
-      if (selectedConfig === 'custom' && 
-          (!customConfig.flows.length || !customConfig.browsers.length)) {
+      // Validate test configuration
+      const validation = validateTestConfig(config);
+      if (!validation.isValid) {
         toast({
           title: "Invalid Configuration",
-          description: "Please select at least one flow and browser for testing.",
+          description: validation.errorMessage || "The test configuration is invalid.",
           variant: "destructive"
         });
         return;
       }
-    
+      
+      // Perform additional environment checks
+      if (testRunStatus !== TestRunStatus.IDLE) {
+        toast({
+          title: "Test Already Running",
+          description: "Please wait for the current test to complete or stop it before starting a new one.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
       console.log(`[Bounce] Starting test run with config: ${config.name}`);
       startTestRunMutation.mutate(config);
       
@@ -552,16 +608,28 @@ export const BounceTestRunner: React.FC = () => {
     });
   };
   
-  // Effect to poll for test run status updates with enhanced error handling
+  // Effect to poll for test run status updates with enhanced error handling and adaptive polling
   useEffect(() => {
     let interval: NodeJS.Timeout;
     let failedAttempts = 0;
     const MAX_FAILED_ATTEMPTS = 3;
     
-    if (testRunStatus === TestRunStatus.RUNNING && currentTestRun) {
-      console.log(`[Bounce] Starting status polling for test run #${currentTestRun.id}`);
+    // Adaptive polling intervals based on test status
+    const RUNNING_POLL_INTERVAL = 3000; // 3 seconds when running for responsive updates
+    const PAUSED_POLL_INTERVAL = 10000; // 10 seconds when paused to reduce resource usage
+    const RECOVERY_POLL_INTERVAL = 7000; // 7 seconds after a failed attempt
+    
+    // Calculate the appropriate interval based on status
+    const getPollInterval = () => {
+      if (failedAttempts > 0) return RECOVERY_POLL_INTERVAL;
+      return testRunStatus === TestRunStatus.PAUSED ? PAUSED_POLL_INTERVAL : RUNNING_POLL_INTERVAL;
+    };
+    
+    // Only poll if we have an active test (running or paused)
+    if ((testRunStatus === TestRunStatus.RUNNING || testRunStatus === TestRunStatus.PAUSED) && currentTestRun) {
+      console.log(`[Bounce] Starting status polling for test run #${currentTestRun.id} (${testRunStatus})`);
       
-      interval = setInterval(async () => {
+      const pollStatus = async () => {
         try {
           // Attempt to fetch test run status
           const response = await fetch(`/api/admin/bounce/status/${currentTestRun.id}`);
@@ -581,6 +649,9 @@ export const BounceTestRunner: React.FC = () => {
                 variant: 'destructive'
               });
             }
+            
+            // Schedule next attempt with recovery interval
+            interval = setTimeout(pollStatus, RECOVERY_POLL_INTERVAL);
             return;
           }
           
@@ -588,11 +659,22 @@ export const BounceTestRunner: React.FC = () => {
           failedAttempts = 0;
           
           const data = await response.json();
-          console.log(`[Bounce] Status update: ${data.status}, progress: ${data.progress}%`);
           
+          // Log only when there's a change to reduce console noise
+          if (data.status !== testRunStatus || data.progress !== currentTestRun.progress) {
+            console.log(`[Bounce] Status update: ${data.status}, progress: ${data.progress}%`);
+          }
+          
+          // Check if there are new findings
+          const hasNewFinding = data.lastFinding && 
+            (!currentTestRun.lastFinding || 
+             data.lastFinding.id !== currentTestRun.lastFinding.id);
+          
+          // Update the current test run with new data
           setCurrentTestRun(data);
           
-          if (data.status === 'completed') {
+          // Handle test status transitions
+          if (data.status === 'completed' && testRunStatus !== TestRunStatus.COMPLETED) {
             setTestRunStatus(TestRunStatus.COMPLETED);
             clearInterval(interval);
             console.log(`[Bounce] Test run #${currentTestRun.id} completed successfully`);
@@ -601,7 +683,8 @@ export const BounceTestRunner: React.FC = () => {
               description: `Completed with ${data.findingsCount} findings`,
               variant: 'default'
             });
-          } else if (data.status === 'failed') {
+            return; // Exit polling
+          } else if (data.status === 'failed' && testRunStatus !== TestRunStatus.FAILED) {
             setTestRunStatus(TestRunStatus.FAILED);
             clearInterval(interval);
             console.error(`[Bounce] Test run #${currentTestRun.id} failed`);
@@ -610,16 +693,33 @@ export const BounceTestRunner: React.FC = () => {
               description: 'An error occurred during the test run',
               variant: 'destructive'
             });
-          } else if (data.status === 'paused') {
+            return; // Exit polling
+          } else if (data.status === 'paused' && testRunStatus !== TestRunStatus.PAUSED) {
             setTestRunStatus(TestRunStatus.PAUSED);
-            // Don't clear interval to continue checking for status changes
             console.log(`[Bounce] Test run #${currentTestRun.id} paused`);
             toast({
               title: 'Test Run Paused',
               description: 'The test run has been paused',
               variant: 'default'
             });
+          } else if (data.status === 'running' && testRunStatus !== TestRunStatus.RUNNING) {
+            setTestRunStatus(TestRunStatus.RUNNING);
+            console.log(`[Bounce] Test run #${currentTestRun.id} resumed`);
           }
+          
+          // Notify for new findings
+          if (hasNewFinding && data.lastFinding) {
+            console.log(`[Bounce] New finding: ${data.lastFinding.title}`);
+            toast({
+              title: `New ${data.lastFinding.severity} finding`,
+              description: data.lastFinding.title,
+              variant: data.lastFinding.severity === 'critical' ? 'destructive' : 'default'
+            });
+          }
+          
+          // Schedule next poll with adaptive interval
+          interval = setTimeout(pollStatus, getPollInterval());
+          
         } catch (error) {
           failedAttempts++;
           console.error(`[Bounce] Failed to fetch test run status (attempt ${failedAttempts}):`, error);
@@ -632,15 +732,22 @@ export const BounceTestRunner: React.FC = () => {
               description: 'Failed to connect to the test runner after multiple attempts',
               variant: 'destructive'
             });
+            return; // Exit polling
           }
+          
+          // Schedule retry with backoff
+          interval = setTimeout(pollStatus, RECOVERY_POLL_INTERVAL);
         }
-      }, 5000); // Poll every 5 seconds
+      };
+      
+      // Initial call to start polling
+      interval = setTimeout(pollStatus, 500); // Start almost immediately
     }
     
     return () => {
       if (interval) {
         console.log('[Bounce] Stopping status polling');
-        clearInterval(interval);
+        clearTimeout(interval);
       }
     };
   }, [testRunStatus, currentTestRun, toast]);
@@ -989,6 +1096,29 @@ export const BounceTestRunner: React.FC = () => {
                         <Card>
                           <CardContent className="pt-6">
                             <div className="space-y-3">
+                              {/* Real-time Status */}
+                              <div className="mb-4">
+                                <div className={`text-sm p-2 mb-3 rounded ${
+                                  testRunStatus === TestRunStatus.RUNNING ? 'bg-blue-50 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                                  testRunStatus === TestRunStatus.PAUSED ? 'bg-yellow-50 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                                  testRunStatus === TestRunStatus.COMPLETED ? 'bg-green-50 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                                  'bg-red-50 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                }`}>
+                                  <div className="flex items-center">
+                                    {testRunStatus === TestRunStatus.RUNNING && <RefreshCw className="mr-2 h-4 w-4 animate-spin" />}
+                                    {testRunStatus === TestRunStatus.PAUSED && <Pause className="mr-2 h-4 w-4" />}
+                                    {testRunStatus === TestRunStatus.COMPLETED && <CheckCircle className="mr-2 h-4 w-4" />}
+                                    {testRunStatus === TestRunStatus.FAILED && <AlertCircle className="mr-2 h-4 w-4" />}
+                                    <span>
+                                      {testRunStatus === TestRunStatus.RUNNING && 'Test is running...'}
+                                      {testRunStatus === TestRunStatus.PAUSED && 'Test is paused'}
+                                      {testRunStatus === TestRunStatus.COMPLETED && 'Test completed successfully'}
+                                      {testRunStatus === TestRunStatus.FAILED && 'Test failed to complete'}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              
                               <div>
                                 <div className="flex justify-between text-xs">
                                   <span className="text-muted-foreground">Current Flow</span>
@@ -1017,6 +1147,15 @@ export const BounceTestRunner: React.FC = () => {
                                 </div>
                               </div>
                               
+                              <div>
+                                <div className="flex justify-between text-xs">
+                                  <span className="text-muted-foreground">Running Time</span>
+                                  <span className="font-medium">
+                                    {Math.floor((Date.now() - new Date(currentTestRun.startedAt).getTime()) / 60000)} min
+                                  </span>
+                                </div>
+                              </div>
+                              
                               {currentTestRun.lastFinding && (
                                 <div className="mt-3 pt-3 border-t">
                                   <span className="text-xs text-muted-foreground block mb-1">Latest Finding:</span>
@@ -1027,6 +1166,9 @@ export const BounceTestRunner: React.FC = () => {
                                   }`}>
                                     {currentTestRun.lastFinding.title || 'No findings yet'}
                                   </div>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {new Date(currentTestRun.lastFinding.createdAt).toLocaleTimeString()}
+                                  </p>
                                 </div>
                               )}
                             </div>
