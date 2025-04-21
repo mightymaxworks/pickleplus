@@ -112,12 +112,12 @@ export function AppHeader({
     { label: 'Matches', icon: <Calendar size={18} />, path: '/matches' },
     { label: 'Tournaments', icon: <Award size={18} />, path: '/tournaments' },
     { label: 'Communities', icon: <Users size={18} />, path: '/communities' },
-    { label: 'Mastery Paths', icon: <Award size={18} />, path: '/mastery-paths' },
+    // Temporarily disabled until MasteryPathsPage is implemented
+    // { label: 'Mastery Paths', icon: <Award size={18} />, path: '/mastery-paths' },
     { label: 'PicklePass™', icon: <Ticket size={18} />, path: '/events' },
     { label: 'Profile', icon: <UserIcon size={18} />, path: '/profile' },
     { label: 'Settings', icon: <Settings size={18} />, path: '/settings' },
-    /* PKL-278651-COMM-0007-ICONS - Custom Icons Test */
-    { label: 'Icons Test', icon: <Palette size={18} />, path: '/icons' },
+    // Removed Icons Test per user request (2025-04-21)
     ...(user?.isAdmin ? [{ label: 'Admin Panel', icon: <Shield size={18} />, path: '/admin' }] : [])
   ];
 
