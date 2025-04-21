@@ -78,6 +78,12 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
 
   // Create a navigation item component to avoid duplication
   const NavItem = ({ item, isMobile = false }: { item: any, isMobile?: boolean }) => {
+    // Guard against incomplete or malformed nav items
+    if (!item || !item.path) {
+      console.warn('Incomplete navigation item detected:', item);
+      return null;
+    }
+    
     const isActive = location === item.path;
     
     return (
@@ -96,8 +102,8 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
           if (isMobile) setSidebarOpen(false);
         }}
       >
-        <span className={`${isMobile ? 'mr-1' : 'mr-3'}`}>{item.icon}</span>
-        <span>{item.label}</span>
+        <span className={`${isMobile ? 'mr-1' : 'mr-3'}`}>{item.icon || <Shield size={18} />}</span>
+        <span>{item.label || 'Menu Item'}</span>
         
         {isActive && !isMobile && (
           <motion.div 

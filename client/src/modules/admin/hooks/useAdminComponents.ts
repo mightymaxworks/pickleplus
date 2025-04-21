@@ -38,8 +38,8 @@ export function getCategoryForNavItem(item: AdminNavItem): NavCategory {
     }
   }
   
-  const path = item.path.toLowerCase();
-  const label = item.label.toLowerCase();
+  const path = item.path ? item.path.toLowerCase() : '';
+  const label = item.label ? item.label.toLowerCase() : '';
   
   if (path === '/admin' || path.includes('dashboard')) {
     return NavCategory.DASHBOARD;
