@@ -1,32 +1,45 @@
 /**
  * PKL-278651-BOUNCE-0004-GAME - Bounce XP Integration Component
  * 
- * This component shows the integration between Bounce testing activities and the 
- * XP system, displaying XP earned from Bounce testing and achievements.
+ * Displays the connection between Bounce testing activities and XP rewards,
+ * showing users how their testing efforts contribute to their overall XP.
  * 
  * @framework Framework5.2
  * @version 1.0.0
  * @lastModified 2025-04-21
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle,
+import {
+  Card,
+  CardContent,
   CardDescription,
-  CardFooter 
+  CardFooter,
+  CardHeader,
+  CardTitle
 } from '@/components/ui/card';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
+} from '@/components/ui/tabs';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Award, Star, TrendingUp, Zap, AlertCircle, Trophy } from 'lucide-react';
-import { apiRequest } from '@/lib/queryClient';
+import { AlertCircle, Award, Zap, CheckCircle, Clock, Activity } from 'lucide-react';
+import { format } from 'date-fns';
 
-// Types
 interface XpSummary {
   totalBounceXp: number;
   totalUserXp: number;
@@ -36,6 +49,7 @@ interface XpSummary {
   bounceXpPercentage: number;
   recentTransactions: Array<{
     id: number;
+    userId: number;
     amount: number;
     source: string;
     sourceType: string;
@@ -44,272 +58,332 @@ interface XpSummary {
   }>;
 }
 
-interface XpSummaryResponse {
-  success: boolean;
-  data: XpSummary;
-  error?: string;
-}
-
 /**
- * BounceXpIntegration Component
+ * BounceXpIntegration component
+ * Displays how Bounce testing activities contribute to the user's XP
  */
-const BounceXpIntegration: React.FC = () => {
-  const [activeTab, setActiveTab] = React.useState('summary');
+export const BounceXpIntegration: React.FC = () => {
+  const [activeTab, setActiveTab] = useState('summary');
   
-  // Query XP summary data
-  const {
-    data: xpSummaryData,
-    isLoading: isLoadingXpSummary,
-    error: xpSummaryError
-  } = useQuery<XpSummaryResponse>({
+  // Fetch the user's XP summary from Bounce activities
+  const { data, isLoading, error } = useQuery<XpSummary>({
     queryKey: ['/api/bounce/gamification/xp-summary'],
-    refetchOnWindowFocus: false
+    retry: 1
   });
-
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  // Format XP source for display
-  const formatSource = (source: string, sourceType: string) => {
-    switch (sourceType) {
-      case 'finding':
-        return 'Finding Discovery';
-      case 'verification':
-        return 'Finding Verification';
-      case 'achievement':
-        return 'Bounce Achievement';
-      case 'participation':
-        return 'Testing Participation';
-      default:
-        return source.split('_').map(word => 
-          word.charAt(0).toUpperCase() + word.slice(1)
-        ).join(' ');
-    }
-  };
-
-  // Get color based on XP source
-  const getSourceColor = (sourceType: string) => {
-    switch (sourceType) {
-      case 'finding':
-        return 'bg-red-100 text-red-800';
-      case 'verification':
-        return 'bg-green-100 text-green-800';
-      case 'achievement':
-        return 'bg-blue-100 text-blue-800';
-      case 'participation':
-        return 'bg-purple-100 text-purple-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  // Get icon based on XP source
-  const getSourceIcon = (sourceType: string) => {
-    switch (sourceType) {
-      case 'finding':
-        return <AlertCircle className="h-4 w-4" />;
-      case 'verification':
-        return <Zap className="h-4 w-4" />;
-      case 'achievement':
-        return <Award className="h-4 w-4" />;
-      case 'participation':
-        return <Star className="h-4 w-4" />;
-      default:
-        return <TrendingUp className="h-4 w-4" />;
-    }
-  };
-
-  return (
-    <div className="space-y-4">
+  
+  if (isLoading) {
+    return (
       <Card className="w-full">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-6 w-6" />
-            Bounce XP Integration
+          <CardTitle>
+            <Skeleton className="h-8 w-1/3" />
           </CardTitle>
           <CardDescription>
-            Track the XP you've earned from Bounce testing activities
+            <Skeleton className="h-4 w-2/3" />
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="summary">XP Summary</TabsTrigger>
-              <TabsTrigger value="history">XP History</TabsTrigger>
-            </TabsList>
-            
-            {/* Summary Tab */}
-            <TabsContent value="summary" className="pt-4">
-              {isLoadingXpSummary ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-20 w-full" />
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Skeleton className="h-28 w-full" />
-                    <Skeleton className="h-28 w-full" />
-                    <Skeleton className="h-28 w-full" />
-                  </div>
-                </div>
-              ) : xpSummaryError ? (
-                <div className="p-4 text-red-500 bg-red-50 rounded-md">
-                  Error loading XP summary. Please try again later.
-                </div>
-              ) : xpSummaryData?.success ? (
-                <>
-                  {/* Main XP Progress */}
-                  <div className="bg-slate-50 p-4 rounded-lg mb-6">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                      <div>
-                        <h3 className="text-lg font-semibold">Bounce Contribution to Total XP</h3>
-                        <p className="text-sm text-slate-600">
-                          {xpSummaryData.data.totalBounceXp} of {xpSummaryData.data.totalUserXp} total XP ({xpSummaryData.data.bounceXpPercentage}%)
-                        </p>
-                      </div>
-                      <div className="w-full md:w-1/2 space-y-2">
-                        <Progress value={xpSummaryData.data.bounceXpPercentage} className="h-2" />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* XP Breakdown Cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    {/* Findings XP */}
-                    <Card className="border-red-100">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-base flex items-center gap-2">
-                          <AlertCircle className="h-4 w-4 text-red-500" />
-                          Findings XP
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="pb-2">
-                        <div className="flex items-end justify-between">
-                          <span className="text-2xl font-bold">{xpSummaryData.data.xpFromFindings}</span>
-                          <Badge variant="outline" className="bg-red-50 text-red-700">
-                            {Math.round((xpSummaryData.data.xpFromFindings / xpSummaryData.data.totalBounceXp) * 100)}% of Bounce XP
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-slate-500 mt-1">Earned by discovering issues</p>
-                      </CardContent>
-                    </Card>
-                    
-                    {/* Verification XP */}
-                    <Card className="border-green-100">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-base flex items-center gap-2">
-                          <Zap className="h-4 w-4 text-green-500" />
-                          Verification XP
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="pb-2">
-                        <div className="flex items-end justify-between">
-                          <span className="text-2xl font-bold">{xpSummaryData.data.xpFromVerifications}</span>
-                          <Badge variant="outline" className="bg-green-50 text-green-700">
-                            {Math.round((xpSummaryData.data.xpFromVerifications / xpSummaryData.data.totalBounceXp) * 100)}% of Bounce XP
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-slate-500 mt-1">Earned by verifying findings</p>
-                      </CardContent>
-                    </Card>
-                    
-                    {/* Achievements XP */}
-                    <Card className="border-blue-100">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-base flex items-center gap-2">
-                          <Trophy className="h-4 w-4 text-blue-500" />
-                          Achievement XP
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="pb-2">
-                        <div className="flex items-end justify-between">
-                          <span className="text-2xl font-bold">{xpSummaryData.data.xpFromAchievements}</span>
-                          <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                            {Math.round((xpSummaryData.data.xpFromAchievements / xpSummaryData.data.totalBounceXp) * 100)}% of Bounce XP
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-slate-500 mt-1">Earned through achievements</p>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </>
-              ) : (
-                <div className="p-4 text-amber-500 bg-amber-50 rounded-md">
-                  No XP data available. Start testing with Bounce to earn XP!
-                </div>
-              )}
-            </TabsContent>
-            
-            {/* History Tab */}
-            <TabsContent value="history" className="pt-4">
-              {isLoadingXpSummary ? (
-                <div className="space-y-4">
-                  {[1, 2, 3, 4, 5].map(i => (
-                    <Skeleton key={i} className="h-16 w-full" />
-                  ))}
-                </div>
-              ) : xpSummaryError ? (
-                <div className="p-4 text-red-500 bg-red-50 rounded-md">
-                  Error loading XP history. Please try again later.
-                </div>
-              ) : xpSummaryData?.success && xpSummaryData.data.recentTransactions.length > 0 ? (
-                <div className="space-y-3">
-                  {xpSummaryData.data.recentTransactions.map((transaction) => (
-                    <Card key={transaction.id} className="border-slate-100">
-                      <CardContent className="py-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-full ${getSourceColor(transaction.sourceType).replace('bg-', 'bg-').replace('text-', '')}`}>
-                              {getSourceIcon(transaction.sourceType)}
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium">{formatSource(transaction.source, transaction.sourceType)}</span>
-                                <Badge className={`${getSourceColor(transaction.sourceType)}`}>
-                                  +{transaction.amount} XP
-                                </Badge>
-                              </div>
-                              <p className="text-sm text-slate-500">{transaction.description}</p>
-                            </div>
-                          </div>
-                          <div className="text-xs text-slate-400">
-                            {formatDate(transaction.createdAt)}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                  
-                  <div className="text-center pt-2">
-                    <a href="/xp-dashboard" className="text-sm text-primary hover:underline">
-                      View all XP history
-                    </a>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-4 text-amber-500 bg-amber-50 rounded-md">
-                  No XP history available. Start testing with Bounce to earn XP!
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-        <CardFooter className="text-sm text-slate-500 border-t pt-4">
-          <div className="flex flex-col space-y-1">
-            <p>Earning Bounce XP contributes to your overall XP level and unlocks platform-wide rewards.</p>
-            <a href="/xp-dashboard" className="text-primary hover:underline">
-              View your complete XP dashboard
-            </a>
+          <div className="space-y-4">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-40 w-full" />
           </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  if (error) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-red-500">
+            <AlertCircle className="h-5 w-5" />
+            Error Loading XP Integration
+          </CardTitle>
+          <CardDescription>
+            Could not load Bounce XP integration data. Please try again later.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            Error details: {(error as Error).message}
+          </p>
+        </CardContent>
+        <CardFooter>
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            Retry
+          </Button>
         </CardFooter>
       </Card>
-    </div>
+    );
+  }
+  
+  if (!data) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>No XP Data Available</CardTitle>
+          <CardDescription>
+            You haven't earned any XP from Bounce testing activities yet.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            Start participating in testing activities to earn XP.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  return (
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Zap className="h-6 w-6 text-yellow-500" />
+          Bounce XP Integration
+        </CardTitle>
+        <CardDescription>
+          See how your Bounce testing activities contribute to your overall XP
+        </CardDescription>
+      </CardHeader>
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <div className="px-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="summary">Summary</TabsTrigger>
+            <TabsTrigger value="breakdown">XP Breakdown</TabsTrigger>
+            <TabsTrigger value="history">Recent Activity</TabsTrigger>
+          </TabsList>
+        </div>
+        
+        <CardContent className="pt-6">
+          <TabsContent value="summary" className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-lg border p-4">
+                <h3 className="mb-2 font-semibold">Total XP from Bounce</h3>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-bold">{data.totalBounceXp}</span>
+                  <span className="text-sm text-muted-foreground">XP points</span>
+                </div>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {data.bounceXpPercentage}% of your total {data.totalUserXp} XP
+                </p>
+                <Progress 
+                  className="mt-3" 
+                  value={data.bounceXpPercentage} 
+                  max={100}
+                />
+              </div>
+              
+              <div className="rounded-lg border p-4">
+                <h3 className="mb-2 font-semibold">XP Distribution</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="flex items-center gap-1">
+                      <AlertCircle className="h-4 w-4 text-red-500" /> Findings
+                    </span>
+                    <span className="font-medium">{data.xpFromFindings} XP</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="flex items-center gap-1">
+                      <CheckCircle className="h-4 w-4 text-green-500" /> Verifications
+                    </span>
+                    <span className="font-medium">{data.xpFromVerifications} XP</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="flex items-center gap-1">
+                      <Award className="h-4 w-4 text-yellow-500" /> Achievements
+                    </span>
+                    <span className="font-medium">{data.xpFromAchievements} XP</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-4 w-4 text-blue-500" /> Participation
+                    </span>
+                    <span className="font-medium">
+                      {data.totalBounceXp - data.xpFromFindings - data.xpFromVerifications - data.xpFromAchievements} XP
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="rounded-lg border p-4">
+              <h3 className="mb-3 font-semibold">XP Benefits</h3>
+              <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                <div className="rounded-md bg-primary/10 p-3">
+                  <div className="mb-1 font-medium">Faster Level Progression</div>
+                  <p className="text-sm text-muted-foreground">Testing activities provide a consistent source of XP</p>
+                </div>
+                <div className="rounded-md bg-primary/10 p-3">
+                  <div className="mb-1 font-medium">Exclusive Rewards</div>
+                  <p className="text-sm text-muted-foreground">Unlock special items by finding critical issues</p>
+                </div>
+                <div className="rounded-md bg-primary/10 p-3">
+                  <div className="mb-1 font-medium">Community Recognition</div>
+                  <p className="text-sm text-muted-foreground">Appear on the Bounce leaderboard for your contributions</p>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="breakdown" className="space-y-4">
+            <div className="rounded-lg border p-4">
+              <h3 className="mb-3 font-semibold">XP By Activity Type</h3>
+              <div className="space-y-4">
+                <div>
+                  <div className="mb-1 flex justify-between">
+                    <span className="text-sm font-medium">Findings ({Math.round(data.xpFromFindings / data.totalBounceXp * 100)}%)</span>
+                    <span className="text-sm text-muted-foreground">{data.xpFromFindings} XP</span>
+                  </div>
+                  <Progress value={data.xpFromFindings} max={data.totalBounceXp} className="h-2" />
+                </div>
+                <div>
+                  <div className="mb-1 flex justify-between">
+                    <span className="text-sm font-medium">Verifications ({Math.round(data.xpFromVerifications / data.totalBounceXp * 100)}%)</span>
+                    <span className="text-sm text-muted-foreground">{data.xpFromVerifications} XP</span>
+                  </div>
+                  <Progress value={data.xpFromVerifications} max={data.totalBounceXp} className="h-2" />
+                </div>
+                <div>
+                  <div className="mb-1 flex justify-between">
+                    <span className="text-sm font-medium">Achievements ({Math.round(data.xpFromAchievements / data.totalBounceXp * 100)}%)</span>
+                    <span className="text-sm text-muted-foreground">{data.xpFromAchievements} XP</span>
+                  </div>
+                  <Progress value={data.xpFromAchievements} max={data.totalBounceXp} className="h-2" />
+                </div>
+                <div>
+                  <div className="mb-1 flex justify-between">
+                    <span className="text-sm font-medium">
+                      Participation ({Math.round((data.totalBounceXp - data.xpFromFindings - data.xpFromVerifications - data.xpFromAchievements) / data.totalBounceXp * 100)}%)
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      {data.totalBounceXp - data.xpFromFindings - data.xpFromVerifications - data.xpFromAchievements} XP
+                    </span>
+                  </div>
+                  <Progress 
+                    value={data.totalBounceXp - data.xpFromFindings - data.xpFromVerifications - data.xpFromAchievements} 
+                    max={data.totalBounceXp} 
+                    className="h-2" 
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="rounded-lg border p-4">
+              <h3 className="mb-3 font-semibold">XP Rewards by Activity</h3>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <div className="flex justify-between rounded-md border p-2">
+                    <span className="text-sm">Finding (Critical)</span>
+                    <Badge variant="outline">25 XP</Badge>
+                  </div>
+                  <div className="flex justify-between rounded-md border p-2">
+                    <span className="text-sm">Finding (High)</span>
+                    <Badge variant="outline">15 XP</Badge>
+                  </div>
+                  <div className="flex justify-between rounded-md border p-2">
+                    <span className="text-sm">Finding (Medium)</span>
+                    <Badge variant="outline">10 XP</Badge>
+                  </div>
+                  <div className="flex justify-between rounded-md border p-2">
+                    <span className="text-sm">Finding (Low)</span>
+                    <Badge variant="outline">5 XP</Badge>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between rounded-md border p-2">
+                    <span className="text-sm">Verification (Critical/High)</span>
+                    <Badge variant="outline">5 XP</Badge>
+                  </div>
+                  <div className="flex justify-between rounded-md border p-2">
+                    <span className="text-sm">Verification (Other)</span>
+                    <Badge variant="outline">3 XP</Badge>
+                  </div>
+                  <div className="flex justify-between rounded-md border p-2">
+                    <span className="text-sm">Achievements</span>
+                    <Badge variant="outline">5-25 XP</Badge>
+                  </div>
+                  <div className="flex justify-between rounded-md border p-2">
+                    <span className="text-sm">Participation</span>
+                    <Badge variant="outline">1 XP / 5 min</Badge>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="history">
+            <div className="rounded-lg border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Activity</TableHead>
+                    <TableHead>XP</TableHead>
+                    <TableHead className="hidden md:table-cell">Type</TableHead>
+                    <TableHead className="hidden md:table-cell">Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.recentTransactions.length > 0 ? (
+                    data.recentTransactions.map((transaction) => (
+                      <TableRow key={transaction.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex flex-col">
+                            <span>{transaction.description}</span>
+                            <span className="md:hidden text-xs text-muted-foreground">
+                              {format(new Date(transaction.createdAt), 'MMM d, yyyy')}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="bg-primary/10">
+                            +{transaction.amount} XP
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          <Badge variant="secondary">
+                            {transaction.sourceType}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-muted-foreground">
+                          {format(new Date(transaction.createdAt), 'MMM d, yyyy h:mm a')}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center h-24 text-muted-foreground">
+                        No recent XP transactions from Bounce activities
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
+        </CardContent>
+      </Tabs>
+      
+      <CardFooter className="border-t px-6 py-4">
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">
+              {data.totalBounceXp > 0 
+                ? `Last activity: ${data.recentTransactions[0] 
+                    ? format(new Date(data.recentTransactions[0].createdAt), 'MMM d, yyyy') 
+                    : 'Unknown'}`
+                : 'No activity yet'}
+            </span>
+          </div>
+          <Button variant="outline" size="sm">
+            View All Activities
+          </Button>
+        </div>
+      </CardFooter>
+    </Card>
   );
 };
 

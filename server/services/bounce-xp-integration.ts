@@ -19,7 +19,7 @@ import {
   userBounceAchievements,
   bounceAchievements
 } from '@shared/schema';
-import { eq, and, count, sum, desc } from 'drizzle-orm';
+import { eq, and, sql, sum, desc } from 'drizzle-orm';
 
 /**
  * Bounce XP Integration Service
@@ -55,7 +55,7 @@ export class BounceXpIntegration {
       const [finding] = await db
         .select({
           title: bounceFindings.title,
-          area: bounceFindings.area
+          affectedUrl: bounceFindings.affectedUrl
         })
         .from(bounceFindings)
         .where(eq(bounceFindings.id, findingId));
@@ -67,7 +67,7 @@ export class BounceXpIntegration {
         source: XP_SOURCE.BOUNCE,
         sourceType: 'finding',
         sourceId: findingId,
-        description: `Found issue: ${finding?.title || 'Untitled'} in ${finding?.area || 'Unknown area'}`,
+        description: `Found issue: ${finding?.title || 'Untitled'} in ${finding?.affectedUrl || 'Unknown area'}`,
         metadata: {
           findingId,
           findingSeverity
@@ -98,7 +98,7 @@ export class BounceXpIntegration {
       const [finding] = await db
         .select({
           title: bounceFindings.title,
-          area: bounceFindings.area,
+          affectedUrl: bounceFindings.affectedUrl,
           severity: bounceFindings.severity
         })
         .from(bounceFindings)
@@ -121,7 +121,7 @@ export class BounceXpIntegration {
         source: XP_SOURCE.BOUNCE,
         sourceType: 'verification',
         sourceId: findingId,
-        description: `Verified finding: ${finding?.title || 'Untitled'} in ${finding?.area || 'Unknown area'}`,
+        description: `Verified finding: ${finding?.title || 'Untitled'} in ${finding?.affectedUrl || 'Unknown area'}`,
         metadata: {
           findingId,
           findingSeverity: finding?.severity
@@ -242,34 +242,58 @@ export class BounceXpIntegration {
       // Get total user XP
       const totalUserXp = await xpService.getTotalUserXp(userId);
       
-      // Get Bounce-specific XP totals
-      const bounceXpTotals = await db
+      // Get total Bounce XP
+      const totalBounceXpResult = await db
         .select({
-          totalBounceXp: sum(xpTransactions.amount),
-          xpFromFindings: sum(
-            and(
-              eq(xpTransactions.sourceType, 'finding'),
-              eq(xpTransactions.userId, userId)
-            ) ? xpTransactions.amount : 0
-          ),
-          xpFromVerifications: sum(
-            and(
-              eq(xpTransactions.sourceType, 'verification'),
-              eq(xpTransactions.userId, userId)
-            ) ? xpTransactions.amount : 0
-          ),
-          xpFromAchievements: sum(
-            and(
-              eq(xpTransactions.sourceType, 'achievement'),
-              eq(xpTransactions.userId, userId)
-            ) ? xpTransactions.amount : 0
-          )
+          total: sum(xpTransactions.amount)
         })
         .from(xpTransactions)
         .where(
           and(
             eq(xpTransactions.userId, userId),
             eq(xpTransactions.source, XP_SOURCE.BOUNCE)
+          )
+        );
+      
+      // Get XP from findings
+      const findingsXpResult = await db
+        .select({
+          total: sum(xpTransactions.amount)
+        })
+        .from(xpTransactions)
+        .where(
+          and(
+            eq(xpTransactions.userId, userId),
+            eq(xpTransactions.source, XP_SOURCE.BOUNCE),
+            eq(xpTransactions.sourceType, 'finding')
+          )
+        );
+      
+      // Get XP from verifications
+      const verificationsXpResult = await db
+        .select({
+          total: sum(xpTransactions.amount)
+        })
+        .from(xpTransactions)
+        .where(
+          and(
+            eq(xpTransactions.userId, userId),
+            eq(xpTransactions.source, XP_SOURCE.BOUNCE),
+            eq(xpTransactions.sourceType, 'verification')
+          )
+        );
+      
+      // Get XP from achievements
+      const achievementsXpResult = await db
+        .select({
+          total: sum(xpTransactions.amount)
+        })
+        .from(xpTransactions)
+        .where(
+          and(
+            eq(xpTransactions.userId, userId),
+            eq(xpTransactions.source, XP_SOURCE.BOUNCE),
+            eq(xpTransactions.sourceType, 'achievement')
           )
         );
       
@@ -286,11 +310,11 @@ export class BounceXpIntegration {
         .orderBy(desc(xpTransactions.createdAt))
         .limit(10);
       
-      // Default values in case there's no data
-      const totalBounceXp = Number(bounceXpTotals[0]?.totalBounceXp || 0);
-      const xpFromFindings = Number(bounceXpTotals[0]?.xpFromFindings || 0);
-      const xpFromVerifications = Number(bounceXpTotals[0]?.xpFromVerifications || 0);
-      const xpFromAchievements = Number(bounceXpTotals[0]?.xpFromAchievements || 0);
+      // Extract values with defaults in case there's no data
+      const totalBounceXp = Number(totalBounceXpResult[0]?.total || 0);
+      const xpFromFindings = Number(findingsXpResult[0]?.total || 0);
+      const xpFromVerifications = Number(verificationsXpResult[0]?.total || 0);
+      const xpFromAchievements = Number(achievementsXpResult[0]?.total || 0);
       
       // Calculate percentage of total XP that came from Bounce
       const bounceXpPercentage = totalUserXp > 0 
