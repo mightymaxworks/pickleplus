@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
+import ConnectionStatusIndicator from './ConnectionStatusIndicator';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import useEventStatusSync from '@/lib/hooks/useEventStatusSync';
 import { motion, AnimatePresence } from 'framer-motion';
