@@ -199,8 +199,8 @@ const BounceMascot: React.FC<BounceMascotProps> = ({
     <AnimatePresence>
       {visible && (
         <motion.div
-          className="fixed z-50"
-          style={position}
+          className="fixed z-[9999]"
+          style={{ bottom: '20px', right: '20px' }}
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0, opacity: 0 }}
@@ -250,13 +250,21 @@ const BounceMascot: React.FC<BounceMascotProps> = ({
               </TooltipProvider>
               
               <div 
-                className="relative cursor-pointer bg-white p-3 rounded-full shadow-md"
+                className="relative cursor-pointer bg-yellow-300 p-3 rounded-full shadow-md overflow-hidden"
                 onClick={handleToggleExpand}
+                style={{ width: '100px', height: '100px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
               >
+                <div className="absolute inset-0 flex justify-center items-center">
+                  <div className="text-4xl font-bold">🎾</div>
+                </div>
                 <img 
-                  src={customImagePath || "/bounce-mascot.svg"} 
+                  src={customImagePath || "/pickleball-mascot.svg"} 
                   alt="Bounce Mascot" 
-                  className="h-20 w-20 object-contain"
+                  className="h-24 w-24 object-contain relative z-10"
+                  onError={(e) => {
+                    // If image fails to load, hide it and show emoji fallback
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
                 
                 {!expanded && (
