@@ -100,7 +100,7 @@ const BounceFindings: React.FC = () => {
   // State for filtering and detail view
   const [filters, setFilters] = useState<FindingFilters>({
     severity: [],
-    status: ['open', 'in_progress']
+    status: [BounceFindingStatus.NEW, BounceFindingStatus.IN_PROGRESS]
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFinding, setSelectedFinding] = useState<Finding | null>(null);
@@ -234,16 +234,20 @@ const BounceFindings: React.FC = () => {
   // Utility functions
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'open':
-        return <Badge variant="outline" className="bg-red-50 text-red-800 dark:bg-red-900 dark:text-red-200">Open</Badge>;
-      case 'in_progress':
+      case BounceFindingStatus.NEW:
+        return <Badge variant="outline" className="bg-red-50 text-red-800 dark:bg-red-900 dark:text-red-200">New</Badge>;
+      case BounceFindingStatus.IN_PROGRESS:
         return <Badge variant="outline" className="bg-blue-50 text-blue-800 dark:bg-blue-900 dark:text-blue-200">In Progress</Badge>;
-      case 'resolved':
-        return <Badge variant="outline" className="bg-green-50 text-green-800 dark:bg-green-900 dark:text-green-200">Resolved</Badge>;
-      case 'wont_fix':
+      case BounceFindingStatus.FIXED:
+        return <Badge variant="outline" className="bg-green-50 text-green-800 dark:bg-green-900 dark:text-green-200">Fixed</Badge>;
+      case BounceFindingStatus.WONT_FIX:
         return <Badge variant="outline" className="bg-gray-50 text-gray-800 dark:bg-gray-700 dark:text-gray-200">Won't Fix</Badge>;
-      case 'duplicate':
+      case BounceFindingStatus.DUPLICATE:
         return <Badge variant="outline" className="bg-purple-50 text-purple-800 dark:bg-purple-900 dark:text-purple-200">Duplicate</Badge>;
+      case BounceFindingStatus.TRIAGE:
+        return <Badge variant="outline" className="bg-orange-50 text-orange-800 dark:bg-orange-900 dark:text-orange-200">Triage</Badge>;
+      case BounceFindingStatus.CONFIRMED:
+        return <Badge variant="outline" className="bg-yellow-50 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">Confirmed</Badge>;
       default:
         return <Badge variant="outline">Unknown</Badge>;
     }
@@ -370,8 +374,8 @@ const BounceFindings: React.FC = () => {
               key={finding.id} 
               className={cn(
                 finding.severity === 'critical' ? 'bg-red-50 dark:bg-red-900/10' : '',
-                finding.status === 'open' ? 'border-l-2 border-l-red-500' : '',
-                finding.status === 'in_progress' ? 'border-l-2 border-l-blue-500' : ''
+                finding.status === BounceFindingStatus.NEW ? 'border-l-2 border-l-red-500' : '',
+                finding.status === BounceFindingStatus.IN_PROGRESS ? 'border-l-2 border-l-blue-500' : ''
               )}
             >
               <TableCell>
@@ -428,16 +432,16 @@ const BounceFindings: React.FC = () => {
                       <FileText className="h-4 w-4 mr-2" /> View Details
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => handleStatusChange(finding, 'open')}>
-                      <AlertCircle className="h-4 w-4 mr-2 text-red-500" /> Mark Open
+                    <DropdownMenuItem onClick={() => handleStatusChange(finding, BounceFindingStatus.NEW)}>
+                      <AlertCircle className="h-4 w-4 mr-2 text-red-500" /> Mark New
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleStatusChange(finding, 'in_progress')}>
+                    <DropdownMenuItem onClick={() => handleStatusChange(finding, BounceFindingStatus.IN_PROGRESS)}>
                       <AlertTriangle className="h-4 w-4 mr-2 text-blue-500" /> Mark In Progress
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleStatusChange(finding, 'resolved')}>
-                      <Check className="h-4 w-4 mr-2 text-green-500" /> Mark Resolved
+                    <DropdownMenuItem onClick={() => handleStatusChange(finding, BounceFindingStatus.FIXED)}>
+                      <Check className="h-4 w-4 mr-2 text-green-500" /> Mark Fixed
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleStatusChange(finding, 'wont_fix')}>
+                    <DropdownMenuItem onClick={() => handleStatusChange(finding, BounceFindingStatus.WONT_FIX)}>
                       <X className="h-4 w-4 mr-2 text-gray-500" /> Won't Fix
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
@@ -501,16 +505,16 @@ const BounceFindings: React.FC = () => {
                 High
               </Button>
               <Button
-                variant={filters.status.includes('open') ? "default" : "outline"}
+                variant={filters.status.includes(BounceFindingStatus.NEW) ? "default" : "outline"}
                 size="sm"
-                onClick={() => toggleStatusFilter('open')}
+                onClick={() => toggleStatusFilter(BounceFindingStatus.NEW)}
               >
-                Open
+                New
               </Button>
               <Button
-                variant={filters.status.includes('in_progress') ? "default" : "outline"}
+                variant={filters.status.includes(BounceFindingStatus.IN_PROGRESS) ? "default" : "outline"}
                 size="sm"
-                onClick={() => toggleStatusFilter('in_progress')}
+                onClick={() => toggleStatusFilter(BounceFindingStatus.IN_PROGRESS)}
               >
                 In Progress
               </Button>
@@ -724,20 +728,20 @@ const BounceFindings: React.FC = () => {
                   <DropdownMenuContent>
                     <DropdownMenuLabel>Change Status</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => handleStatusChange(selectedFinding, 'open')}>
-                      <AlertCircle className="h-4 w-4 mr-2 text-red-500" /> Open
+                    <DropdownMenuItem onClick={() => handleStatusChange(selectedFinding, BounceFindingStatus.NEW)}>
+                      <AlertCircle className="h-4 w-4 mr-2 text-red-500" /> New
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleStatusChange(selectedFinding, 'in_progress')}>
+                    <DropdownMenuItem onClick={() => handleStatusChange(selectedFinding, BounceFindingStatus.IN_PROGRESS)}>
                       <AlertTriangle className="h-4 w-4 mr-2 text-blue-500" /> In Progress
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleStatusChange(selectedFinding, 'resolved')}>
-                      <Check className="h-4 w-4 mr-2 text-green-500" /> Resolved
+                    <DropdownMenuItem onClick={() => handleStatusChange(selectedFinding, BounceFindingStatus.FIXED)}>
+                      <Check className="h-4 w-4 mr-2 text-green-500" /> Fixed
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleStatusChange(selectedFinding, 'wont_fix')}>
+                    <DropdownMenuItem onClick={() => handleStatusChange(selectedFinding, BounceFindingStatus.WONT_FIX)}>
                       <X className="h-4 w-4 mr-2 text-gray-500" /> Won't Fix
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleStatusChange(selectedFinding, 'duplicate')}>
-                      <Copy className="h-4 w-4 mr-2 text-purple-500" /> Duplicate
+                    <DropdownMenuItem onClick={() => handleStatusChange(selectedFinding, BounceFindingStatus.DUPLICATE)}>
+                      <i className="h-4 w-4 mr-2 text-purple-500">⎘</i> Duplicate
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
