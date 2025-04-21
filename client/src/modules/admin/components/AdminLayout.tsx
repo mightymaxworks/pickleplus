@@ -185,7 +185,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
                               </h3>
                               <div className="space-y-1">
                                 {categorizedNavItems[NavCategory.USER_MANAGEMENT].map((item) => (
-                                  <NavItem key={item.path} item={item} isMobile={true} />
+                                  <NavItem key={item.path || `user-mgmt-mobile-${item.label || Math.random().toString(36).substring(2, 9)}`} item={item} isMobile={true} />
                                 ))}
                               </div>
                             </div>
@@ -198,7 +198,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
                               </h3>
                               <div className="space-y-1">
                                 {categorizedNavItems[NavCategory.EVENTS].map((item) => (
-                                  <NavItem key={item.path} item={item} isMobile={true} />
+                                  <NavItem key={item.path || `events-mobile-${item.label || Math.random().toString(36).substring(2, 9)}`} item={item} isMobile={true} />
                                 ))}
                               </div>
                             </div>
@@ -211,7 +211,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
                               </h3>
                               <div className="space-y-1">
                                 {categorizedNavItems[NavCategory.GAME].map((item) => (
-                                  <NavItem key={item.path} item={item} isMobile={true} />
+                                  <NavItem key={item.path || `game-mobile-${item.label || Math.random().toString(36).substring(2, 9)}`} item={item} isMobile={true} />
                                 ))}
                               </div>
                             </div>
@@ -224,7 +224,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
                               </h3>
                               <div className="space-y-1">
                                 {categorizedNavItems[NavCategory.CONTENT].map((item) => (
-                                  <NavItem key={item.path} item={item} isMobile={true} />
+                                  <NavItem key={item.path || `content-mobile-${item.label || Math.random().toString(36).substring(2, 9)}`} item={item} isMobile={true} />
                                 ))}
                               </div>
                             </div>
@@ -237,7 +237,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
                               </h3>
                               <div className="space-y-1">
                                 {categorizedNavItems[NavCategory.OTHER].map((item) => (
-                                  <NavItem key={item.path} item={item} isMobile={true} />
+                                  <NavItem key={item.path || `other-mobile-${item.label || Math.random().toString(36).substring(2, 9)}`} item={item} isMobile={true} />
                                 ))}
                               </div>
                             </div>
@@ -392,7 +392,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
                         {categorizedNavItems[NavCategory.DASHBOARD]
                           .filter(item => !item.metadata?.desktopVisible === false)
                           .map((item) => (
-                            <NavItem key={item.path} item={item} />
+                            <NavItem key={item.path || `dashboard-desktop-${item.label || Math.random().toString(36).substring(2, 9)}`} item={item} />
                           ))
                         }
                       </div>
@@ -406,7 +406,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
                       </h3>
                       <div className="space-y-1">
                         {categorizedNavItems[NavCategory.USER_MANAGEMENT].map((item) => (
-                          <NavItem key={item.path} item={item} />
+                          <NavItem key={item.path || `user-mgmt-desktop-${item.label || Math.random().toString(36).substring(2, 9)}`} item={item} />
                         ))}
                       </div>
                     </div>
@@ -421,7 +421,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
                         {categorizedNavItems[NavCategory.EVENTS]
                           .filter(item => !item.metadata?.desktopVisible === false)
                           .map((item) => (
-                            <NavItem key={item.path} item={item} />
+                            <NavItem key={item.path || `events-desktop-${item.label || Math.random().toString(36).substring(2, 9)}`} item={item} />
                           ))
                         }
                       </div>
@@ -435,7 +435,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
                       </h3>
                       <div className="space-y-1">
                         {categorizedNavItems[NavCategory.GAME].map((item) => (
-                          <NavItem key={item.path} item={item} />
+                          <NavItem key={item.path || `game-desktop-${item.label || Math.random().toString(36).substring(2, 9)}`} item={item} />
                         ))}
                       </div>
                     </div>
