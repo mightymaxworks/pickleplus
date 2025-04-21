@@ -13,7 +13,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { ChevronRight, Plus, Clock, Trophy, AlertCircle, AlertTriangle, CheckCircle, Users } from "lucide-react";
+import { ChevronRight, Plus, Clock, Trophy, AlertCircle, AlertTriangle, CheckCircle, Users, Star } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { motion } from "framer-motion";
 
@@ -343,8 +343,8 @@ export default function MatchesContent() {
                                   <span className="text-muted-foreground">CourtIQ Rating</span>
                                 </div>
                                 <div className="flex items-center">
-                                  <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${match.ratingChange && match.ratingChange > 0 ? 'text-green-600 bg-green-100 dark:bg-green-900/20 dark:text-green-400' : 'text-red-600 bg-red-100 dark:bg-red-900/20 dark:text-red-400'}`}>
-                                    {match.ratingChange && match.ratingChange > 0 ? '+' : ''}{match.ratingChange || '0'} pts
+                                  <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${(match.pointsAwarded || 0) > 0 ? 'text-green-600 bg-green-100 dark:bg-green-900/20 dark:text-green-400' : 'text-red-600 bg-red-100 dark:bg-red-900/20 dark:text-red-400'}`}>
+                                    {(match.pointsAwarded || 0) > 0 ? '+' : ''}{match.pointsAwarded || '0'} pts
                                   </div>
                                 </div>
                               </div>
@@ -352,7 +352,7 @@ export default function MatchesContent() {
                               {/* Points/XP gained */}
                               <div className="flex items-center justify-between text-sm">
                                 <div className="flex items-center gap-1">
-                                  <Sparkles className="h-4 w-4 text-purple-500" />
+                                  <Star className="h-4 w-4 text-purple-500" />
                                   <span className="text-muted-foreground">XP Earned</span>
                                 </div>
                                 <div className="flex items-center gap-1">
@@ -369,7 +369,7 @@ export default function MatchesContent() {
                                   <span className="text-muted-foreground">Match Status</span>
                                 </div>
                                 <div className="flex items-center">
-                                  {match.isVerified ? (
+                                  {match.isVerified || match.validationStatus === 'validated' ? (
                                     <div className="px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-xs font-medium flex items-center gap-1">
                                       <CheckCircle className="h-3 w-3" />
                                       Verified
