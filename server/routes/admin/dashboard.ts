@@ -204,17 +204,35 @@ export function registerAdminDashboardRoutes(
         const dashboard = await dashboardGenerator.getDashboard(timePeriod, startDate, endDate);
 
         // Get counts for dashboard metrics
+        console.log("[API] Fetching dashboard metrics counts");
         const totalUsers = await storage.getUserCount();
+        console.log("[API] Total users count from storage:", totalUsers);
+        
         const totalMatches = await db.select({ count: sql`count(*)` })
           .from(matches)
           .execute()
-          .then(result => Number(result[0]?.count) || 0)
-          .catch(() => 0);
+          .then(result => {
+            console.log("[API] Raw matches count result:", result);
+            return Number(result[0]?.count) || 0;
+          })
+          .catch((err) => {
+            console.error("[API] Error getting match count:", err);
+            return 0;
+          });
+        console.log("[API] Total matches count:", totalMatches);
+        
         const totalEvents = await db.select({ count: sql`count(*)` })
           .from(events)
           .execute()
-          .then(result => Number(result[0]?.count) || 0)
-          .catch(() => 0);
+          .then(result => {
+            console.log("[API] Raw events count result:", result);
+            return Number(result[0]?.count) || 0;
+          })
+          .catch((err) => {
+            console.error("[API] Error getting event count:", err);
+            return 0;
+          });
+        console.log("[API] Total events count:", totalEvents);
           
         // Create response object
         const responseData = {
@@ -224,6 +242,12 @@ export function registerAdminDashboardRoutes(
           totalEvents,
           lastUpdated: new Date().toISOString()
         };
+        
+        console.log("[API] Response data metrics:", {
+          totalUsers,
+          totalMatches,
+          totalEvents
+        });
         
         // Cache the result
         dashboardCache.set(cacheKey, responseData);
