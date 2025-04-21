@@ -73,10 +73,15 @@ export async function fetchCSRFToken(): Promise<string | null> {
 
 /**
  * Enhanced API request function with improved error handling and retries
+ * 
+ * PKL-278651-API-0002-ADAPT - Framework5.2 compliance update
+ * This function supports two calling methods for backward compatibility:
+ * 1. apiRequest(method, url, data, cacheOptions, retryCount)
+ * 2. apiRequest(url, options) - For React Query and other legacy code
  */
 export async function apiRequest(
-  method: RequestMethod,
-  url: string,
+  methodOrUrl: RequestMethod | string,
+  urlOrOptions?: string | RequestInit,
   data?: any,
   cacheOptions?: {
     forceFresh?: boolean;
@@ -84,6 +89,27 @@ export async function apiRequest(
   },
   retryCount = 0
 ): Promise<Response> {
+  // Handle both calling conventions
+  let method: RequestMethod;
+  let url: string;
+  let options: RequestInit | undefined;
+  
+  // Determine which calling convention is being used
+  if (typeof methodOrUrl === 'string' && !['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].includes(methodOrUrl)) {
+    // First param is URL (legacy React Query style)
+    url = methodOrUrl;
+    options = urlOrOptions as RequestInit;
+    method = options?.method as RequestMethod || 'GET';
+    data = options?.body ? 
+      (typeof options.body === 'string' ? JSON.parse(options.body) : options.body) : 
+      undefined;
+    retryCount = 0; // Reset retry count for this calling pattern
+  } else {
+    // First param is method (new style)
+    method = methodOrUrl as RequestMethod;
+    url = urlOrOptions as string;
+    options = undefined;
+  }
   try {
     // Determine if we should use caching based on the URL and method
     const isCacheable = 
@@ -91,13 +117,13 @@ export async function apiRequest(
       CACHEABLE_ENDPOINTS.some(endpoint => url.startsWith(endpoint)) &&
       !(cacheOptions?.forceFresh);
       
-    const options: RequestInit = {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include", // Critical for cookie-based auth
+    // Create or update options
+    options = options || {};
+    options.method = method;
+    options.headers = options.headers || {
+      "Content-Type": "application/json",
     };
+    options.credentials = "include"; // Critical for cookie-based auth
     
     // Apply different cache settings based on the request type
     if (isCacheable) {
@@ -167,7 +193,12 @@ export async function apiRequest(
         console.warn(`[API] Retrying ${method} request to ${url} (${retryCount + 1}/2)...`);
         // Wait with exponential backoff before retrying
         await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount)));
-        return apiRequest(method, url, data, cacheOptions, retryCount + 1);
+        // Use the same calling convention for retry
+        if (typeof methodOrUrl === 'string' && !['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].includes(methodOrUrl)) {
+          return apiRequest(methodOrUrl, urlOrOptions);
+        } else {
+          return apiRequest(method, url, data, cacheOptions, retryCount + 1);
+        }
       }
       
       // If we're out of retries, throw a user-friendly error
@@ -180,7 +211,12 @@ export async function apiRequest(
         console.warn(`[API] Server error (${response.status}) for ${url}, retrying... (${retryCount + 1}/2)`);
         // Wait with exponential backoff before retrying
         await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount)));
-        return apiRequest(method, url, data, cacheOptions, retryCount + 1);
+        // Use the same calling convention for retry
+        if (typeof methodOrUrl === 'string' && !['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].includes(methodOrUrl)) {
+          return apiRequest(methodOrUrl, urlOrOptions);
+        } else {
+          return apiRequest(method, url, data, cacheOptions, retryCount + 1);
+        }
       }
     }
     
