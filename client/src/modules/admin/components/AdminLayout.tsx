@@ -78,6 +78,18 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
 
   // Create a navigation item component to avoid duplication
   const NavItem = ({ item, isMobile = false }: { item: any, isMobile?: boolean }) => {
+    // Handle header items differently (PKL-278651-ADMIN-0016-SYS-TOOLS)
+    if (item.isHeader) {
+      return (
+        <div className="px-3 py-1 mt-4 mb-1 first:mt-0">
+          <div className="flex items-center font-medium text-sm text-gray-500 dark:text-gray-400">
+            <span className="mr-2">{item.icon}</span>
+            <span>{item.label}</span>
+          </div>
+        </div>
+      );
+    }
+    
     // Guard against incomplete or malformed nav items
     if (!item || !item.path) {
       console.warn('Incomplete navigation item detected:', item);
