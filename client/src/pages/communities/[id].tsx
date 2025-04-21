@@ -72,6 +72,7 @@ import { JoinRequestManagement } from "@/components/community/JoinRequestManagem
 import { CommunityAdminFAB } from "@/components/community/CommunityAdminFAB";
 import { CommunityMemberRole } from "@/types/community";
 import { MediaGallery } from "@/components/community/MediaGallery";
+import { MediaUploadModal } from "@/components/community/MediaUploadModal";
 
 export default function CommunityDetailPage() {
   // Get community ID from URL
@@ -85,6 +86,9 @@ export default function CommunityDetailPage() {
   
   // Current active tab - use URL parameter if present
   const [activeTab, setActiveTab] = useState(tabParam || "about");
+  
+  // Media upload modal state
+  const [showMediaUploadModal, setShowMediaUploadModal] = useState(false);
   
   // Update the URL when tab changes
   const handleTabChange = (tab: string) => {
@@ -442,11 +446,7 @@ export default function CommunityDetailPage() {
                   <Button 
                     variant="default" 
                     size="icon" 
-                    onClick={() => {
-                      // Instead of opening a new page, we should implement a modal here
-                      // For now, just open the media management in the same tab
-                      window.location.href = `/communities/${communityId}/media`;
-                    }}
+                    onClick={() => setShowMediaUploadModal(true)}
                     className="bg-primary text-primary-foreground hover:bg-primary/90"
                     title="Add Media"
                     aria-label="Add Media"
