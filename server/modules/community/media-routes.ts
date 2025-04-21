@@ -63,7 +63,7 @@ const storage = multer.diskStorage({
  */
 const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   // Define allowed file types with size limits in bytes
-  const allowedTypes = {
+  const allowedTypes: Record<string, number> = {
     // Images - 2MB limit
     'image/jpeg': 2 * 1024 * 1024,
     'image/png': 2 * 1024 * 1024,
@@ -78,7 +78,8 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
   
   if (file.mimetype in allowedTypes) {
     // Check file size against type-specific limit
-    if (file.size && file.size > allowedTypes[file.mimetype]) {
+    const sizeLimit = allowedTypes[file.mimetype];
+    if (file.size && file.size > sizeLimit) {
       cb(new Error(`File size exceeds the limit for ${file.mimetype.split('/')[0]} files`));
     } else {
       cb(null, true);

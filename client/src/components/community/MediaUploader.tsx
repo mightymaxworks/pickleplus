@@ -1,21 +1,24 @@
 /**
- * PKL-278651-COMM-0036-MEDIA
- * Media Uploader Component
+ * PKL-278651-COMM-0036-MEDIA-COST
+ * Media Uploader Component with Cost Control
  * 
  * Component for uploading media files to community galleries
- * with drag and drop support, previews, and progress indicators.
+ * with drag and drop support, previews, progress indicators,
+ * and strict file size/type restrictions to control costs.
  * 
  * @framework Framework5.2
- * @version 1.0.0
- * @lastModified 2025-04-20
+ * @version 1.1.0
+ * @lastModified 2025-04-21
  */
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { useMedia } from "@/lib/hooks/useMedia";
 import {
   UploadCloud,
@@ -24,10 +27,20 @@ import {
   Image as ImageIcon,
   FileText,
   Video,
-  File
+  File,
+  AlertCircle,
+  Info
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MediaType } from "@shared/schema/media";
+
+// File type size limits (in bytes) - must match server restrictions
+const FILE_SIZE_LIMITS = {
+  image: 2 * 1024 * 1024, // 2MB for images
+  video: 10 * 1024 * 1024, // 10MB for videos
+  document: 5 * 1024 * 1024, // 5MB for documents
+  default: 2 * 1024 * 1024 // Default 2MB limit
+};
 
 interface MediaUploaderProps {
   communityId: number;
@@ -38,7 +51,7 @@ interface MediaUploaderProps {
 
 export function MediaUploader({
   communityId,
-  maxFiles = 10,
+  maxFiles = 5, // Reduced from 10 to 5 files per upload
   allowedTypes = ["image/*", "video/*", "application/pdf"],
   onUploadComplete
 }: MediaUploaderProps) {
@@ -47,23 +60,67 @@ export function MediaUploader({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [tags, setTags] = useState("");
+  const [oversizedFiles, setOversizedFiles] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { uploadMediaMutation, handleFileUpload } = useMedia(communityId);
   const isUploading = uploadMediaMutation.isPending;
 
+  // Check if file size is within the limit for its type
+  const isValidFileSize = (file: File): boolean => {
+    let sizeLimit = FILE_SIZE_LIMITS.default;
+    
+    if (file.type.startsWith('image/')) {
+      sizeLimit = FILE_SIZE_LIMITS.image;
+    } else if (file.type.startsWith('video/')) {
+      sizeLimit = FILE_SIZE_LIMITS.video;
+    } else if (file.type === 'application/pdf') {
+      sizeLimit = FILE_SIZE_LIMITS.document;
+    }
+    
+    return file.size <= sizeLimit;
+  };
+  
+  // Get the size limit for display
+  const getFileSizeLimit = (fileType: string): string => {
+    if (fileType.startsWith('image/')) {
+      return '2MB';
+    } else if (fileType.startsWith('video/')) {
+      return '10MB';
+    } else if (fileType === 'application/pdf') {
+      return '5MB';
+    }
+    return '2MB';
+  };
+
+  // Check for files exceeding size limits
+  useEffect(() => {
+    const oversized = files
+      .filter(file => !isValidFileSize(file))
+      .map(file => file.name);
+    
+    setOversizedFiles(oversized);
+  }, [files]);
+
   // Handle file selection
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const newFiles = Array.from(event.target.files);
-      setFiles(prev => {
-        // Check if adding would exceed maximum
-        if (prev.length + newFiles.length > maxFiles) {
-          alert(`You can only upload up to ${maxFiles} files at a time.`);
-          return prev;
-        }
-        return [...prev, ...newFiles];
-      });
+      
+      // Check if adding would exceed maximum
+      if (files.length + newFiles.length > maxFiles) {
+        alert(`You can only upload up to ${maxFiles} files at a time.`);
+        return;
+      }
+      
+      // Check file sizes and warn about large files
+      const oversizedNewFiles = newFiles.filter(file => !isValidFileSize(file));
+      if (oversizedNewFiles.length > 0) {
+        const fileNames = oversizedNewFiles.map(f => f.name).join(', ');
+        alert(`The following files exceed size limits and may be rejected by the server: ${fileNames}`);
+      }
+      
+      setFiles(prev => [...prev, ...newFiles]);
     }
   };
 
@@ -94,6 +151,13 @@ export function MediaUploader({
       
       if (validFiles.length !== newFiles.length) {
         alert("Some files were not added because they're not of an allowed type.");
+      }
+      
+      // Check file sizes and warn about large files
+      const oversizedNewFiles = validFiles.filter(file => !isValidFileSize(file));
+      if (oversizedNewFiles.length > 0) {
+        const fileNames = oversizedNewFiles.map(f => f.name).join(', ');
+        alert(`The following files exceed size limits and may be rejected by the server: ${fileNames}`);
       }
       
       setFiles(prev => [...prev, ...validFiles]);
@@ -257,13 +321,73 @@ export function MediaUploader({
             </p>
           </div>
 
+          {/* File size limits information */}
+          <Alert className="mb-4 bg-muted/40 p-3">
+            <Info className="h-4 w-4" />
+            <AlertTitle className="text-xs sm:text-sm font-medium">File Size Limits</AlertTitle>
+            <AlertDescription className="text-xs text-muted-foreground">
+              <ul className="list-disc pl-4 pt-1 space-y-1">
+                <li>Images: max 2MB</li>
+                <li>Videos: max 10MB</li>
+                <li>Documents: max 5MB</li>
+              </ul>
+            </AlertDescription>
+          </Alert>
+
           {files.length > 0 && (
             <div className="grid gap-2 mb-4">
-              <Label>Selected Files</Label>
+              <div className="flex items-center justify-between">
+                <Label>Selected Files</Label>
+                <span className="text-xs text-muted-foreground">
+                  {files.length}/{maxFiles} files
+                </span>
+              </div>
               <div className="grid gap-2 max-h-60 overflow-y-auto p-1">
                 {renderPreviews()}
               </div>
+              
+              {/* File size indicator */}
+              <div className="mt-1">
+                <div className="flex justify-between items-center text-xs mb-1">
+                  <span>{(files.reduce((total, file) => total + file.size, 0) / (1024 * 1024)).toFixed(1)} MB total</span>
+                  {files.some(file => !isValidFileSize(file)) && (
+                    <span className="text-destructive font-medium flex items-center">
+                      <AlertCircle className="h-3 w-3 mr-1 inline" />
+                      Some files exceed limits
+                    </span>
+                  )}
+                </div>
+                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                  <div 
+                    className={cn(
+                      "h-full transition-all",
+                      oversizedFiles.length > 0 
+                        ? "bg-destructive/70" 
+                        : "bg-primary/70"
+                    )}
+                    style={{ 
+                      width: `${Math.min(100, (files.reduce((total, file) => total + file.size, 0) / (10 * 1024 * 1024)) * 100)}%` 
+                    }}
+                  ></div>
+                </div>
+              </div>
             </div>
+          )}
+
+          {/* Warning for oversized files */}
+          {oversizedFiles.length > 0 && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>File size exceeded</AlertTitle>
+              <AlertDescription className="text-xs">
+                The following files exceed the size limits and may be rejected:
+                <ul className="list-disc pl-4 mt-1">
+                  {oversizedFiles.map((name, i) => (
+                    <li key={i} className="truncate">{name}</li>
+                  ))}
+                </ul>
+              </AlertDescription>
+            </Alert>
           )}
 
           {/* Mobile-optimized Form Layout */}
