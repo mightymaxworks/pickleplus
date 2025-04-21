@@ -129,83 +129,12 @@ function getOpponentAvatarInitials(match: RecordedMatch, currentUserId: number |
 }
 
 export function MatchesPage() {
-  const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("recent");
-  const [isLoaded, setIsLoaded] = useState(false);
-  
-  // Animate elements in sequence after initial load
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoaded(true);
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }, []);
-  
-  // Fetch recent matches
-  const { data: recentMatches, isLoading } = useQuery({
-    queryKey: ["/api/match/recent"],
-    queryFn: async () => {
-      const matches = await getRecentMatches();
-      console.log("Fetched recent matches:", matches);
-      return matches || [];
-    }
-  });
-  
   return (
-    <DashboardLayout>
-      <div className="container max-w-5xl py-4 px-4 md:py-8 md:px-0">
-        {/* Animated background elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-          <motion.div 
-            className="absolute top-0 -right-40 w-80 h-80 bg-[#FF5722]/5 rounded-full"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: isLoaded ? 1 : 0, scale: isLoaded ? 1 : 0.8 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            style={{ filter: 'blur(100px)' }}
-          />
-          <motion.div 
-            className="absolute -top-20 -left-20 w-80 h-80 bg-[#2196F3]/5 rounded-full"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: isLoaded ? 1 : 0, scale: isLoaded ? 1 : 0.8 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            style={{ filter: 'blur(100px)' }}
-          />
-        </div>
-      
-        <motion.div 
-          className="flex items-center justify-between mb-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
-          transition={{ duration: 0.5 }}
-        >
-          <h1 className="text-2xl font-bold tracking-tight">Match Center</h1>
-          <Button asChild size="sm" className="bg-gradient-to-r from-[#FF5722] to-[#FF8A65] hover:from-[#FF5722] hover:to-[#FF7043]">
-            <Link href="/record-match" className="whitespace-nowrap">
-              <Plus className="h-4 w-4 mr-1 md:inline-block hidden" />
-              Record Match
-            </Link>
-          </Button>
-        </motion.div>
-        
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <Tabs defaultValue="recent" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="mb-6 bg-gradient-to-r from-background/80 to-background border">
-              <TabsTrigger value="recent">Recent Matches</TabsTrigger>
-              <TabsTrigger value="history">History</TabsTrigger>
-              <TabsTrigger value="stats">Stats</TabsTrigger>
-            </TabsList>
-          
-            <TabsContent value="recent" className="space-y-6">
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: isLoaded && activeTab === 'recent' ? 1 : 0, y: isLoaded && activeTab === 'recent' ? 0 : 10 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
-              >
+    <div className="w-full">
+      <MatchesContent />
+    </div>
+  );
+}
                 <Card>
                   <CardHeader className="pb-3">
                     <CardTitle>Recent Matches</CardTitle>
