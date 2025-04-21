@@ -27,7 +27,7 @@ import {
 } from '../utils/cron-helpers';
 import { generateUuidV4 } from '../utils/uuid-helpers';
 import { eq, and } from 'drizzle-orm';
-import { EventBus } from '../core/events/server-event-bus';
+import { getEventBus } from '../core/events/server-event-bus';
 
 // Singleton instance
 let instance: BounceSchedulerService | null = null;
