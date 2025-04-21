@@ -1682,27 +1682,67 @@ export class DatabaseStorage implements IStorage {
       const isAdmin = requestingUserId ? await this.isUserAdmin(requestingUserId) : false;
       console.log(`[Storage] getEvent - isAdmin check for user ${requestingUserId || 'none'}: ${isAdmin}`);
       
-      // Build the query
-      const query = db.select()
-        .from(events)
-        .where(eq(events.id, numericId));
+      // PKL-278651-CONN-0005-DEFEVT compatibility update
+      // Using safe SQL with column name aliasing and COALESCE for missing columns
+      try {
+        const result = await db.execute(sql`
+          SELECT 
+            id, name, description, location, 
+            start_date_time as "startDateTime", 
+            end_date_time as "endDateTime", 
+            max_attendees as "maxAttendees", 
+            current_attendees as "currentAttendees", 
+            organizer_id as "organizerId",
+            is_private as "isPrivate", 
+            requires_check_in as "requiresCheckIn", 
+            check_in_code as "checkInCode",
+            event_type as "eventType", 
+            is_test_data as "isTestData", 
+            status,
+            COALESCE(is_default, false) as "isDefault",
+            COALESCE(hide_participant_count, false) as "hideParticipantCount",
+            created_at as "createdAt", 
+            updated_at as "updatedAt"
+          FROM events 
+          WHERE id = ${numericId}
+          ${!isAdmin ? sql`AND (is_test_data = FALSE OR is_test_data IS NULL)` : sql``}
+        `);
+        
+        const [event] = result;
+        
+        if (event) {
+          console.log(`[Storage] getEvent - Retrieved event ${event.id} (filtered by test data visibility: ${!isAdmin})`);
+        } else {
+          // This could be due to either the event not existing or being test data for a non-admin user
+          console.log(`[Storage] getEvent - No event found with ID ${numericId} (filtered by test data visibility: ${!isAdmin})`);
+        }
+        
+        return event;
+      } catch (sqlError) {
+        console.error('[Storage] getEvent SQL error:', sqlError);
+        
+        // Fallback to standard query if the SQL fails due to missing columns
+        const query = db.select()
+          .from(events)
+          .where(eq(events.id, numericId));
+        
+        // PKL-278651-SEC-0002-TESTVIS - Test Data Visibility Control
+        // Apply test data filter for non-admins
+        if (!isAdmin) {
+          query.where(sql`(${events.isTestData} = FALSE OR ${events.isTestData} IS NULL)`);
+        }
+        
+        const [event] = await query;
       
-      // PKL-278651-SEC-0002-TESTVIS - Test Data Visibility Control
-      // Apply test data filter for non-admins
-      if (!isAdmin) {
-        query.where(sql`(${events.isTestData} = FALSE OR ${events.isTestData} IS NULL)`);
+        if (event) {
+          console.log(`[Storage] getEvent - Retrieved event ${event.id} (filtered by test data visibility: ${!isAdmin})`);
+        } else {
+          // This could be due to either the event not existing or being test data for a non-admin user
+          console.log(`[Storage] getEvent - No event found with ID ${numericId} (filtered by test data visibility: ${!isAdmin})`);
+        }
+        
+        return event;
       }
-      
-      const [event] = await query;
-      
-      if (event) {
-        console.log(`[Storage] getEvent - Retrieved event ${event.id} (filtered by test data visibility: ${!isAdmin})`);
-      } else {
-        // This could be due to either the event not existing or being test data for a non-admin user
-        console.log(`[Storage] getEvent - No event found with ID ${numericId} (filtered by test data visibility: ${!isAdmin})`);
-      }
-      
-      return event;
     } catch (error) {
       console.error('[Storage] getEvent error:', error);
       return undefined;

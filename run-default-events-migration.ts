@@ -15,11 +15,42 @@
  */
 
 import "dotenv/config";
-import { getDatabase } from "./server/database";
+import { db } from "./server/db";
 
-// If you're running this directly, you might need to call the server/database.ts file instead
-// Uncomment the line below if you encounter import errors
-// import { getDatabase } from "./server/database.ts";
+// Define a simplified getDatabase function to maintain compatibility
+const getDatabase = () => {
+  return {
+    query: async (text: string, params: any[] = []) => {
+      try {
+        // In our execute function, parameters are incorporated directly in the query
+        // Replace placeholders with actual values (very basic implementation)
+        let finalQuery = text;
+        
+        // Format parameters if provided
+        if (params && params.length > 0) {
+          // Replace $1, $2, etc. with actual values
+          params.forEach((param, index) => {
+            const placeholder = `$${index + 1}`;
+            const paramValue = typeof param === 'string' ? `'${param}'` : param;
+            finalQuery = finalQuery.replace(placeholder, paramValue);
+          });
+        }
+        
+        // Execute the query using the db client
+        const result = await db.execute(finalQuery);
+        
+        // Format the result to match the expected PostgreSQL client response format
+        return {
+          rows: result || [],
+          rowCount: Array.isArray(result) ? result.length : 0
+        };
+      } catch (error) {
+        console.error("Database query error:", error);
+        throw error;
+      }
+    }
+  };
+};
 
 /**
  * Helper function to check if a table exists
@@ -34,7 +65,7 @@ async function checkTableExists(tableName: string): Promise<boolean> {
     )
   `, [tableName]);
   
-  return result.rows[0].exists;
+  return Boolean(result.rows[0]?.exists);
 }
 
 /**
@@ -51,7 +82,7 @@ async function checkColumnExists(tableName: string, columnName: string): Promise
     )
   `, [tableName, columnName]);
   
-  return result.rows[0].exists;
+  return Boolean(result.rows[0]?.exists);
 }
 
 /**
