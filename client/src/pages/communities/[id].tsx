@@ -438,10 +438,9 @@ export default function CommunityDetailPage() {
                   <p className="text-sm text-muted-foreground">
                     Browse media or visit the media management page to upload and organize content.
                   </p>
-                  <Button asChild>
-                    <a href={`/communities/${communityId}/media`} target="_blank" rel="noopener noreferrer">
-                      <Image className="mr-2 h-4 w-4" />
-                      Media Management
+                  <Button variant="outline" size="icon" asChild>
+                    <a href={`/communities/${communityId}/media`} title="Media Management" target="_blank" rel="noopener noreferrer">
+                      <Image className="h-5 w-5" />
                     </a>
                   </Button>
                 </div>
