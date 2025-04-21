@@ -50,17 +50,8 @@ export function StandardLayout({
         {...headerProps}
       />
       
-      {/* Page Title (Optional) */}
-      {pageTitle && (
-        <div className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-800 mt-16 pt-4 pb-3">
-          <div className="container mx-auto px-4 sm:px-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{pageTitle}</h1>
-          </div>
-        </div>
-      )}
-      
       {/* Main Content */}
-      <main className={`container mx-auto px-4 sm:px-6 py-6 relative z-10 flex-1 ${pageTitle ? '' : 'mt-16'}`}>
+      <main className="container mx-auto px-4 sm:px-6 py-6 relative z-10 flex-1 mt-16">
         {children}
       </main>
       
