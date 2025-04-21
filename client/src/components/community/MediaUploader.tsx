@@ -4,10 +4,11 @@
  * 
  * Component for uploading media files to community galleries
  * with drag and drop support, previews, progress indicators,
- * and strict file size/type restrictions to control costs.
+ * strict file size/type restrictions, and client-side image
+ * compression to maximize storage efficiency.
  * 
  * @framework Framework5.2
- * @version 1.1.0
+ * @version 1.2.0
  * @lastModified 2025-04-21
  */
 
@@ -29,10 +30,12 @@ import {
   Video,
   File,
   AlertCircle,
-  Info
+  Info,
+  ZoomIn
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MediaType } from "@shared/schema/media";
+import { compressImages } from "@/lib/utils/compressImage";
 
 // File type size limits (in bytes) - must match server restrictions
 const FILE_SIZE_LIMITS = {
@@ -169,7 +172,12 @@ export function MediaUploader({
     setFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Handle form submission
+  // Status indicator for compression process
+  const [isCompressing, setIsCompressing] = useState(false);
+  const [compressionStatus, setCompressionStatus] = useState<string | null>(null);
+  const [compressionStats, setCompressionStats] = useState<{originalSize: number, compressedSize: number} | null>(null);
+
+  // Handle form submission with image compression
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (files.length === 0) {
@@ -177,28 +185,69 @@ export function MediaUploader({
       return;
     }
 
-    const formData = new FormData();
-    
-    // Add all files
-    files.forEach(file => {
-      formData.append("files", file);
-    });
-    
-    // Add metadata
-    if (title) formData.append("title", title);
-    if (description) formData.append("description", description);
-    if (tags) formData.append("tags", tags);
-    
     try {
+      // Start compression if there are images
+      const hasImages = files.some(file => file.type.startsWith('image/'));
+      let processedFiles = [...files];
+      
+      if (hasImages) {
+        setIsCompressing(true);
+        setCompressionStatus("Compressing images...");
+        
+        // Track original file sizes
+        const originalSize = files.reduce((sum, file) => sum + file.size, 0);
+        
+        // Compress images with optimized settings for mobile uploads
+        processedFiles = await compressImages(files, {
+          maxWidth: 1920,  // Full HD resolution is sufficient for most uses
+          maxHeight: 1080,
+          quality: 0.85,   // Good balance between quality and file size
+          targetSizeKB: 1800 // Try to get images under 1.8MB
+        });
+        
+        // Calculate compression stats
+        const compressedSize = processedFiles.reduce((sum, file) => sum + file.size, 0);
+        const savedPercentage = Math.round((1 - compressedSize / originalSize) * 100);
+        
+        setCompressionStats({
+          originalSize: originalSize,
+          compressedSize: compressedSize
+        });
+        
+        setCompressionStatus(
+          savedPercentage > 0 
+            ? `Compressed images, saved ${savedPercentage}% (${((originalSize - compressedSize) / (1024 * 1024)).toFixed(1)}MB)`
+            : "Images already optimized"
+        );
+      }
+
+      const formData = new FormData();
+      
+      // Add all processed files
+      processedFiles.forEach(file => {
+        formData.append("files", file);
+      });
+      
+      // Add metadata
+      if (title) formData.append("title", title);
+      if (description) formData.append("description", description);
+      if (tags) formData.append("tags", tags);
+      
+      // Upload the files
       await uploadMediaMutation.mutateAsync(formData);
+      
       // Reset form on success
       setFiles([]);
       setTitle("");
       setDescription("");
       setTags("");
+      setCompressionStatus(null);
+      setCompressionStats(null);
       if (onUploadComplete) onUploadComplete();
     } catch (error) {
       console.error("Upload failed:", error);
+    } finally {
+      setIsCompressing(false);
     }
   };
 
@@ -433,20 +482,52 @@ export function MediaUploader({
                 placeholder="event, tournament, practice"
                 value={tags}
                 onChange={(e) => setTags(e.target.value)}
-                disabled={isUploading}
+                disabled={isUploading || isCompressing}
                 className="h-8 sm:h-10 text-sm"
               />
             </div>
 
+            {/* Compression status indicator */}
+            {compressionStatus && (
+              <Alert className="mt-2 bg-primary/10 border-primary/20">
+                <div className="flex items-center">
+                  {isCompressing ? (
+                    <Loader2 className="h-4 w-4 text-primary mr-2 animate-spin" />
+                  ) : (
+                    <ZoomIn className="h-4 w-4 text-primary mr-2" />
+                  )}
+                  <div>
+                    <AlertTitle className="text-xs sm:text-sm font-medium">Image Compression</AlertTitle>
+                    <AlertDescription className="text-xs text-muted-foreground">
+                      {compressionStatus}
+                      {compressionStats && compressionStats.originalSize !== compressionStats.compressedSize && (
+                        <div className="mt-1 text-xs flex items-center">
+                          <span className="font-medium text-primary">
+                            Original: {(compressionStats.originalSize / (1024 * 1024)).toFixed(1)}MB → 
+                            Compressed: {(compressionStats.compressedSize / (1024 * 1024)).toFixed(1)}MB
+                          </span>
+                        </div>
+                      )}
+                    </AlertDescription>
+                  </div>
+                </div>
+              </Alert>
+            )}
+
             <Button
               type="submit"
               className="w-full mt-2 h-10 sm:h-11"
-              disabled={files.length === 0 || isUploading}
+              disabled={files.length === 0 || isUploading || isCompressing}
             >
               {isUploading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   <span className="text-sm">Uploading...</span>
+                </>
+              ) : isCompressing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <span className="text-sm">Compressing...</span>
                 </>
               ) : (
                 <>
@@ -457,9 +538,15 @@ export function MediaUploader({
             </Button>
             
             {/* Mobile upload progress indicator */}
-            {isUploading && (
+            {(isUploading || isCompressing) && (
               <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-primary animate-pulse" style={{ width: '100%' }}></div>
+                <div 
+                  className={cn(
+                    "h-full animate-pulse",
+                    isCompressing ? "bg-primary/60" : "bg-primary"
+                  )} 
+                  style={{ width: '100%' }}
+                ></div>
               </div>
             )}
           </div>
