@@ -250,13 +250,13 @@ const BounceMascot: React.FC<BounceMascotProps> = ({
               </TooltipProvider>
               
               <div 
-                className={`relative cursor-pointer ${isCustomImage ? 'bg-white p-3 rounded-lg shadow-md' : ''}`}
+                className="relative cursor-pointer bg-white p-3 rounded-full shadow-md"
                 onClick={handleToggleExpand}
               >
                 <img 
                   src={customImagePath || "/bounce-mascot.svg"} 
                   alt="Bounce Mascot" 
-                  className={`${isCustomImage ? 'h-16 w-auto' : 'h-20 w-20'} object-contain`}
+                  className="h-20 w-20 object-contain"
                 />
                 
                 {!expanded && (
