@@ -172,7 +172,7 @@ export default function ResponsiveAdminDashboard() {
   
   // Filter widgets by category
   const getFilteredWidgets = () => {
-    if (!data?.layout) return [];
+    if (!data?.layout?.widgets) return [];
     
     if (selectedCategory === 'all') {
       return data.layout.widgets;
@@ -353,7 +353,9 @@ export default function ResponsiveAdminDashboard() {
                 <Users className="h-4 w-4 text-primary" />
                 <CardTitle className="text-xs font-medium">Users</CardTitle>
               </div>
-              <p className="text-xl font-bold mt-1">{data.totalUsers.toLocaleString()}</p>
+              <p className="text-xl font-bold mt-1">
+                {data.totalUsers !== undefined ? data.totalUsers.toLocaleString() : "—"}
+              </p>
             </CardContent>
           </Card>
           
@@ -363,7 +365,9 @@ export default function ResponsiveAdminDashboard() {
                 <Activity className="h-4 w-4 text-primary" />
                 <CardTitle className="text-xs font-medium">Matches</CardTitle>
               </div>
-              <p className="text-xl font-bold mt-1">{data.totalMatches.toLocaleString()}</p>
+              <p className="text-xl font-bold mt-1">
+                {data.totalMatches !== undefined ? data.totalMatches.toLocaleString() : "—"}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -397,9 +401,9 @@ export default function ResponsiveAdminDashboard() {
           {selectedCategory === 'all' && (
             <Accordion type="single" collapsible className="w-full">
               {Object.values(DashboardMetricCategory).map(category => {
-                const categoryWidgets = data?.layout.widgets.filter(
+                const categoryWidgets = data?.layout?.widgets?.filter(
                   (w: DashboardWidget) => w.category === category && w.widgetType !== DashboardWidgetType.METRIC_CARD
-                );
+                ) || [];
                 
                 if (!categoryWidgets || categoryWidgets.length === 0) return null;
                 
