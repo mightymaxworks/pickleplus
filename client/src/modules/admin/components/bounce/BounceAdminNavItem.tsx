@@ -2,7 +2,7 @@
  * PKL-278651-BOUNCE-0001-CORE
  * Bounce Admin Navigation Item Component
  * 
- * This component registers the Bounce testing system in the admin navigation.
+ * This component registers the Bounce testing system in the admin navigation sidebar.
  * 
  * @framework Framework5.2
  * @version 1.0.0
@@ -10,30 +10,32 @@
  */
 
 import React, { useEffect } from 'react';
-import { useAdminNavRegistry } from '@/modules/admin/hooks/useAdminRegistry';
-import { BoxSelect } from 'lucide-react';
+import { Bot } from 'lucide-react';
+import { useAdminRegistry } from '../../hooks/useAdminRegistry';
 
-export function BounceAdminNavItem() {
-  const { registerNavItem } = useAdminNavRegistry();
-  
+/**
+ * Component that registers itself with the admin registry to appear in the admin sidebar
+ */
+const BounceAdminNavItem: React.FC = () => {
+  const { registerNavItem } = useAdminRegistry();
+
   useEffect(() => {
-    console.log('[Bounce] Registering Bounce admin navigation item');
-    
-    // Register the Bounce nav item with the admin registry
+    // Register this module in the admin navigation
     registerNavItem({
+      id: 'bounce',
       label: 'Bounce Testing',
       path: '/admin/bounce',
-      icon: <BoxSelect className="h-5 w-5" />,
-      priority: 500, // Position in the navigation
+      icon: <Bot className="h-4 w-4" />,
+      group: 'tools',
+      description: 'Automated testing system',
+      priority: 45, // Position between Bug Reports (50) and Mobile Test (40)
     });
-    
-    console.log('[Bounce] Admin navigation item registered');
-    
-    // No cleanup needed; the registry handles nav item removal
+
+    console.log('[Admin] Bounce testing navigation item registered');
   }, [registerNavItem]);
-  
-  // This component doesn't render anything directly
+
+  // This component doesn't render anything itself
   return null;
-}
+};
 
 export default BounceAdminNavItem;

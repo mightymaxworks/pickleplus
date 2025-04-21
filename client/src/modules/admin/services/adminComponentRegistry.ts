@@ -33,6 +33,40 @@ class AdminComponentRegistry {
     // Publish event for navigation update
     eventBus.publish(Events.ADMIN_NAV_UPDATED, { added: navItem });
   }
+  
+  /**
+   * Directly register a navigation item with the admin module
+   * Used by the useAdminRegistry hook for React components
+   * @param navItemData Navigation item data to register
+   */
+  registerNavItemDirect(navItemData: any): void {
+    // Use Bounce as the moduleId for direct registrations
+    const moduleId = navItemData.id || 'bounce';
+    
+    // Create a compatible nav item that matches the AdminNavItem interface
+    const compatibleNavItem: AdminNavItem = {
+      label: navItemData.label,
+      path: navItemData.path,
+      icon: navItemData.icon || null,
+      order: navItemData.priority || 50,
+      permission: navItemData.permission,
+      metadata: {
+        description: navItemData.description,
+        category: navItemData.group || 'tools'
+      }
+    };
+    
+    this.registrations.push({
+      moduleId,
+      type: AdminComponentType.NAV_ITEM,
+      component: compatibleNavItem
+    });
+
+    // Publish event for navigation update
+    eventBus.publish(Events.ADMIN_NAV_UPDATED, { added: compatibleNavItem });
+    
+    console.log(`[Admin] Registered nav item: ${compatibleNavItem.label}`);
+  }
 
   /**
    * Register a dashboard card with the admin module
@@ -167,6 +201,28 @@ class AdminComponentRegistry {
       case AdminComponentType.ADMIN_ACTION:
         eventBus.publish(Events.ADMIN_ACTIONS_UPDATED, { cleared: true });
         break;
+    }
+  }
+  
+  /**
+   * Unregister a specific navigation item by label
+   * @param navItemLabel Label of the navigation item to unregister
+   */
+  unregisterNavItem(navItemLabel: string): void {
+    const navItemToRemove = this.registrations.find(
+      reg => reg.type === AdminComponentType.NAV_ITEM && 
+             (reg.component as AdminNavItem).label === navItemLabel
+    );
+    
+    if (navItemToRemove) {
+      this.registrations = this.registrations.filter(
+        reg => !(reg.type === AdminComponentType.NAV_ITEM && 
+                (reg.component as AdminNavItem).label === navItemLabel)
+      );
+      
+      // Publish event for navigation update
+      eventBus.publish(Events.ADMIN_NAV_UPDATED, { removed: navItemToRemove.component });
+      console.log(`[Admin] Unregistered nav item: ${(navItemToRemove.component as AdminNavItem).label}`);
     }
   }
   

@@ -15,6 +15,7 @@ import { AdminMobileTestNavItem } from '../components/mobile-test';
 import { AdminUserManagementNavItem } from '../components/user-management';
 import { registerReportingComponents } from './reportingComponentRegistration';
 import { registerFeedbackComponents } from './feedbackComponentRegistration';
+import BounceAdminNavItem from '../components/bounce/BounceAdminNavItem';
 // Import settings module to register its components
 import '../components/settings';
 
@@ -52,6 +53,17 @@ export function registerUserManagementComponents() {
 }
 
 /**
+ * Register Bounce testing system components
+ * PKL-278651-BOUNCE-0001-CORE
+ */
+export function registerBounceComponents() {
+  // Register Bounce admin nav item
+  adminComponentRegistry.registerNavItem('bounce', BounceAdminNavItem);
+  
+  console.log('[Admin] Bounce testing components registered');
+}
+
+/**
  * Register all admin components
  */
 export function registerAllAdminComponents() {
@@ -63,6 +75,7 @@ export function registerAllAdminComponents() {
   registerReportingComponents();
   registerFeedbackComponents();
   registerUserManagementComponents(); // Added User Management
+  registerBounceComponents(); // Added Bounce Testing System
   
   console.log('[Admin] Admin components registered');
 }

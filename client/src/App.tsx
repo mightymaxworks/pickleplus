@@ -334,6 +334,14 @@ export default function App() {
                       </AdminProtectedRoute>
                     )}
                   </Route>
+                  {/* PKL-278651-BOUNCE-0001-CORE: Bounce Testing System Route */}
+                  <Route path="/admin/bounce">
+                    {(params) => (
+                      <AdminProtectedRoute>
+                        <LazyBouncePage />
+                      </AdminProtectedRoute>
+                    )}
+                  </Route>
                   <Route path="/settings">
                     {(params) => <ProtectedRoute component={SettingsPage} path="/settings" />}
                   </Route>
