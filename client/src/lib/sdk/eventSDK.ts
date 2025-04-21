@@ -24,7 +24,13 @@ export async function getUpcomingEvents(limit: number = 10): Promise<Event[]> {
   if (!text) return [];
   
   try {
-    return JSON.parse(text);
+    const parsedResponse = JSON.parse(text);
+    // Check if response has rows property (PostgreSQL direct response)
+    if (parsedResponse && parsedResponse.rows) {
+      return parsedResponse.rows;
+    }
+    // Otherwise assume it's already the expected array format
+    return Array.isArray(parsedResponse) ? parsedResponse : [];
   } catch (error) {
     console.error('Error parsing upcoming events response:', error);
     return [];
@@ -73,7 +79,13 @@ export async function getMyOrganizedEvents(limit?: number, offset?: number): Pro
   if (!text) return [];
   
   try {
-    return JSON.parse(text);
+    const parsedResponse = JSON.parse(text);
+    // Check if response has rows property (PostgreSQL direct response)
+    if (parsedResponse && parsedResponse.rows) {
+      return parsedResponse.rows;
+    }
+    // Otherwise assume it's already the expected array format
+    return Array.isArray(parsedResponse) ? parsedResponse : [];
   } catch (error) {
     console.error('Error parsing organized events response:', error);
     return [];
@@ -106,7 +118,13 @@ export async function getMyAttendedEvents(limit?: number, offset?: number): Prom
   if (!text) return [];
   
   try {
-    return JSON.parse(text);
+    const parsedResponse = JSON.parse(text);
+    // Check if response has rows property (PostgreSQL direct response)
+    if (parsedResponse && parsedResponse.rows) {
+      return parsedResponse.rows;
+    }
+    // Otherwise assume it's already the expected array format
+    return Array.isArray(parsedResponse) ? parsedResponse : [];
   } catch (error) {
     console.error('Error parsing attended events response:', error);
     return [];
@@ -269,7 +287,13 @@ export async function getEventAttendees(eventId: number, limit?: number, offset?
   if (!text) return [];
   
   try {
-    return JSON.parse(text);
+    const parsedResponse = JSON.parse(text);
+    // Check if response has rows property (PostgreSQL direct response)
+    if (parsedResponse && parsedResponse.rows) {
+      return parsedResponse.rows;
+    }
+    // Otherwise assume it's already the expected array format
+    return Array.isArray(parsedResponse) ? parsedResponse : [];
   } catch (error) {
     console.error('Error parsing event attendees response:', error);
     return [];
@@ -303,7 +327,13 @@ export async function getMyRegisteredEvents(limit?: number, offset?: number): Pr
   if (!text) return [];
   
   try {
-    return JSON.parse(text);
+    const parsedResponse = JSON.parse(text);
+    // Check if response has rows property (PostgreSQL direct response)
+    if (parsedResponse && parsedResponse.rows) {
+      return parsedResponse.rows;
+    }
+    // Otherwise assume it's already the expected array format
+    return Array.isArray(parsedResponse) ? parsedResponse : [];
   } catch (error) {
     console.error('Error parsing registered events response:', error);
     return [];
