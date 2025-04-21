@@ -84,7 +84,7 @@ const TournamentDiscoveryPage: React.FC = () => {
   
   // Countdown timer to tournament launch
   useEffect(() => {
-    const launchDate = new Date('April 30, 2025 00:00:00').getTime();
+    const launchDate = new Date('May 31, 2025 00:00:00').getTime();
     
     const updateCountdown = () => {
       const now = new Date().getTime();
@@ -336,7 +336,7 @@ const TournamentDiscoveryPage: React.FC = () => {
           <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg p-4 border border-orange-100 max-w-lg mx-auto">
             <div className="flex items-center justify-center mb-2">
               <Clock className="text-orange-500 mr-2" size={20} />
-              <h3 className="font-medium text-orange-800">Tournament Launch Countdown</h3>
+              <h3 className="font-medium text-orange-800">Tournament Launch: May 31, 2025</h3>
             </div>
             <div className="grid grid-cols-4 gap-2 mb-2">
               <div className="bg-white rounded p-2 text-center shadow-sm">
