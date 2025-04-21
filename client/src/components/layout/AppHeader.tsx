@@ -5,8 +5,18 @@
  * A reusable header component that provides consistent navigation, notifications,
  * and user profile access across the application.
  * 
+ * Important updates:
+ * - 2025-04-21: Fixed mobile menu scroll issue by adding max-height and overflow-y-auto
+ *   to allow scrolling when there are many menu items.
+ * 
+ * Menu behavior:
+ * - Menu opens when clicking on the user avatar button
+ * - Menu has a max height of 60% of viewport and becomes scrollable if content exceeds this
+ * - Menu animates open/closed with framer-motion
+ * - Selected items are highlighted with an orange indicator
+ * 
  * @framework Framework5.2
- * @version 1.0.0
+ * @version 1.0.1
  * @lastModified 2025-04-21
  */
 
@@ -199,7 +209,7 @@ export function AppHeader({
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
           >
-            <div className="p-4 space-y-3">
+            <div className="p-4 space-y-3 max-h-[60vh] overflow-y-auto">
               {/* Navigation Items */}
               {navigationItems.map((item, i) => {
                 const isActive = location === item.path;
