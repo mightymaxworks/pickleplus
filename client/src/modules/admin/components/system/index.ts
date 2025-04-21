@@ -1,12 +1,12 @@
 /**
- * PKL-278651-ADMIN-0016-SYS-TOOLS
- * System Tools Components Exports
+ * PKL-278651-ADMIN-0016-SYS-TOOLS - System Tools Exports
  * 
- * This file exports all system tools components for easy importing.
+ * This file exports components related to system tools and administration
+ * for easy importing throughout the application.
  * 
- * @framework Framework5.2
  * @version 1.0.0
+ * @framework Framework5.2
  * @lastModified 2025-04-21
  */
 
-export { default as SystemToolsNavItems } from './SystemToolsNavItems';
+export { SystemToolsNavItems } from './SystemToolsNavItems';

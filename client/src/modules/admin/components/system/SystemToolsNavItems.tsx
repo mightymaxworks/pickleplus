@@ -1,61 +1,59 @@
 /**
- * PKL-278651-ADMIN-0016-SYS-TOOLS
- * System Tools Navigation Items Component
+ * PKL-278651-ADMIN-0016-SYS-TOOLS - System Tools Navigation Component
  * 
- * This component registers system tools in the admin navigation sidebar
- * to ensure they appear in the mobile navigation.
+ * This component registers system-related navigation items including Bounce Testing
+ * to ensure they appear in both desktop and mobile navigation.
  * 
- * @framework Framework5.2
  * @version 1.0.0
+ * @framework Framework5.2
  * @lastModified 2025-04-21
  */
 
 import React, { useEffect } from 'react';
-import { Bot, Settings, ServerCog } from 'lucide-react';
-import { adminComponentRegistry } from '../../services/adminComponentRegistry';
+import { Activity, Bot, Server } from 'lucide-react';
+import { useAdminRegistry } from '../../hooks/useAdminRegistry';
 import { NavCategory } from '../../hooks/useAdminComponents';
 
 /**
- * Component that directly registers system tools in the admin navigation
+ * SystemToolsNavItems component that registers system-related navigation items
+ * Must match SystemNavRegistration interface
  */
-const SystemToolsNavItems: React.FC = () => {
-  useEffect(() => {
-    // Directly register Bounce in the admin navigation
-    // This ensures it appears in both desktop and mobile navigation
-    adminComponentRegistry.registerNavItemDirect({
-      id: 'bounce-direct',
-      label: 'Bounce Testing',
-      path: '/admin/bounce',
-      icon: <Bot className="h-4 w-4" />,
-      group: NavCategory.SYSTEM,
-      description: 'Automated testing system',
-      priority: 15,
-      metadata: {
-        category: NavCategory.SYSTEM
-      },
-      order: 10,
-    });
+export const SystemToolsNavItems: React.FC = () => {
+  const { registerNavItem } = useAdminRegistry();
 
-    // Register a System Tools header if not already present
-    adminComponentRegistry.registerNavItemDirect({
-      id: 'system-tools-header',
+  useEffect(() => {
+    // Register a header for the System Tools section
+    registerNavItem({
       label: 'System Tools',
       path: '', // Empty path for headers
-      icon: <ServerCog className="h-4 w-4" />,
+      icon: <Server size={18} />,
       group: NavCategory.SYSTEM,
-      description: 'System administration and monitoring tools',
       priority: 10,
-      isHeader: true,
-      metadata: {
-        category: NavCategory.SYSTEM
-      },
-      order: 1,
+      description: 'System administration tools'
     });
 
-    console.log('[Admin] System tools navigation items registered directly');
-  }, []);
+    // Register Bounce Testing navigation item
+    registerNavItem({
+      path: '/admin/bounce',
+      label: 'Bounce Testing',
+      icon: <Bot size={18} />,
+      group: NavCategory.SYSTEM,
+      priority: 11,
+      description: 'Automated testing system'
+    });
 
-  // This component doesn't render anything itself
+    // Register System Activity Monitor
+    registerNavItem({
+      path: '/admin/system-activity',
+      label: 'Activity Monitor',
+      icon: <Activity size={18} />,
+      group: NavCategory.SYSTEM,
+      priority: 12,
+      description: 'System activity monitoring'
+    });
+  }, [registerNavItem]);
+
+  // This component doesn't render anything visible
   return null;
 };
 
