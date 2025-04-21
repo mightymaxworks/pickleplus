@@ -220,21 +220,31 @@ export default function App() {
                   <Route path="/passport">
                     {(params) => <ProtectedRoute component={LazyDashboardPage} path="/passport" />}
                   </Route>
-                  <Route path="/profile">
-                    {(params) => <ProtectedRoute component={LazyProfilePage} path="/profile" />}
-                  </Route>
-                  <Route path="/profile/enhanced">
-                    {(params) => <ProtectedRoute component={EnhancedProfilePage} path="/profile/enhanced" />}
-                  </Route>
-                  <Route path="/profile/contextual">
-                    {(params) => <ProtectedRoute component={ContextualEnhancedProfile} path="/profile/contextual" />}
-                  </Route>
-                  <Route path="/profile/edit">
-                    {(params) => <ProtectedRoute component={LazyProfileEditPage} path="/profile/edit" />}
-                  </Route>
-                  <Route path="/profile/streamlined">
-                    {(params) => <ProtectedRoute component={LazyProfilePage} path="/profile/streamlined" />}
-                  </Route>
+                  <ProtectedRouteWithLayout
+                    path="/profile"
+                    component={LazyProfilePage}
+                    pageTitle="Your Profile"
+                  />
+                  <ProtectedRouteWithLayout
+                    path="/profile/enhanced"
+                    component={EnhancedProfilePage}
+                    pageTitle="Enhanced Profile"
+                  />
+                  <ProtectedRouteWithLayout
+                    path="/profile/contextual"
+                    component={ContextualEnhancedProfile}
+                    pageTitle="Contextual Profile"
+                  />
+                  <ProtectedRouteWithLayout
+                    path="/profile/edit"
+                    component={LazyProfileEditPage}
+                    pageTitle="Edit Profile"
+                  />
+                  <ProtectedRouteWithLayout
+                    path="/profile/streamlined"
+                    component={LazyProfilePage}
+                    pageTitle="Streamlined Profile"
+                  />
                   <Route path="/record-match">
                     {(params) => <ProtectedRoute component={LazyRecordMatchPage} path="/record-match" />}
                   </Route>
@@ -326,20 +336,28 @@ export default function App() {
                   <Route path="/settings">
                     {(params) => <ProtectedRoute component={SettingsPage} path="/settings" />}
                   </Route>
-                  <Route path="/leaderboard">
-                    {(params) => <ProtectedRoute component={LazyLeaderboardPage} path="/leaderboard" />}
-                  </Route>
-                  <Route path="/mastery-paths">
-                    {(params) => <ProtectedRoute component={LazyMasteryPathsPage} path="/mastery-paths" />}
-                  </Route>
+                  <ProtectedRouteWithLayout
+                    path="/leaderboard"
+                    component={LazyLeaderboardPage}
+                    pageTitle="Leaderboard"
+                  />
+                  <ProtectedRouteWithLayout
+                    path="/mastery-paths"
+                    component={LazyMasteryPathsPage}
+                    pageTitle="Mastery Paths"
+                  />
                   
                   {/* PKL-278651-COMM-0028-NOTIF - Notifications Page */}
-                  <Route path="/notifications">
-                    {(params) => <ProtectedRoute component={NotificationsPage} path="/notifications" />}
-                  </Route>
-                  <Route path="/notifications/preferences">
-                    {(params) => <ProtectedRoute component={NotificationPreferencesPage} path="/notifications/preferences" />}
-                  </Route>
+                  <ProtectedRouteWithLayout
+                    path="/notifications"
+                    component={NotificationsPage}
+                    pageTitle="Notifications"
+                  />
+                  <ProtectedRouteWithLayout
+                    path="/notifications/preferences"
+                    component={NotificationPreferencesPage}
+                    pageTitle="Notification Preferences"
+                  />
                   <Route path="/demo/match-reward" component={MatchRewardDemo} />
                   <Route path="/dev/qr-test" component={QRTestPage} />
                   <Route path="/events">
@@ -427,14 +445,11 @@ export default function App() {
                   </Route>
                   
                   {/* PKL-278651-COMM-0007-ICONS - Custom Icons Showcase */}
-                  <Route path="/icons">
-                    {(params) => <ProtectedRoute component={IconsPage} path="/icons" />}
-                  </Route>
-                  
-                  {/* PKL-278651-COMM-0028-NOTIF - Notifications Page */}
-                  <Route path="/notifications">
-                    {(params) => <ProtectedRoute component={NotificationsPage} path="/notifications" />}
-                  </Route>
+                  <ProtectedRouteWithLayout
+                    path="/icons"
+                    component={IconsPage}
+                    pageTitle="Icons"
+                  />
                   
                   {/* Test Login Page for easier testing */}
                   <Route path="/test-login">

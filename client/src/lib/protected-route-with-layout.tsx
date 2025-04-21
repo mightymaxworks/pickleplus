@@ -16,11 +16,22 @@ import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { StandardLayout, StandardLayoutProps } from '@/components/layout/StandardLayout';
 
-interface ProtectedRouteWithLayoutProps extends StandardLayoutProps {
+interface ProtectedRouteWithLayoutProps {
   path: string;
   component: React.ComponentType<any>;
-  layoutProps?: StandardLayoutProps;
+  layoutProps?: Omit<StandardLayoutProps, 'children'>;
   exact?: boolean;
+  pageTitle?: string;
+  hideSearch?: boolean;
+  hideNotifications?: boolean;
+  customNavItems?: Array<{
+    label: string;
+    icon: React.ReactNode;
+    path: string;
+  }>;
+  hideMobileNav?: boolean;
+  onLogout?: () => void;
+  headerProps?: Record<string, any>;
 }
 
 export function ProtectedRouteWithLayout({
