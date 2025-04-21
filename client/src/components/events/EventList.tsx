@@ -517,27 +517,33 @@ export function EventList({
                                 <div className="flex items-center mb-1">
                                   <UsersIcon className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
                                   <span>
-                                    {event.currentAttendees || 0} / {event.maxAttendees} attending
+                                    {event.hideParticipantCount ? 'Registration open' : `${event.currentAttendees || 0} / ${event.maxAttendees} attending`}
                                     {attendanceLevel === 'high' && (
                                       <span className="ml-2 text-amber-600 text-xs">Almost full</span>
                                     )}
                                   </span>
                                 </div>
                                 
-                                {/* Attendance progress bar */}
-                                <div className="h-1.5 rounded-full bg-muted/50 w-full mt-1 overflow-hidden">
-                                  <div 
-                                    className={cn(
-                                      "h-full rounded-full",
-                                      attendanceLevel === 'high' ? "bg-amber-500" : 
-                                      attendanceLevel === 'medium' ? "bg-blue-500" : 
-                                      "bg-green-500"
-                                    )}
-                                    style={{ 
-                                      width: `${Math.min(100, event.maxAttendees ? (event.currentAttendees || 0) / event.maxAttendees * 100 : 0)}%` 
-                                    }}
-                                  />
-                                </div>
+                                {/* Attendance progress bar - hide detailed progress for sensitive events */}
+                                {!event.hideParticipantCount ? (
+                                  <div className="h-1.5 rounded-full bg-muted/50 w-full mt-1 overflow-hidden">
+                                    <div 
+                                      className={cn(
+                                        "h-full rounded-full",
+                                        attendanceLevel === 'high' ? "bg-amber-500" : 
+                                        attendanceLevel === 'medium' ? "bg-blue-500" : 
+                                        "bg-green-500"
+                                      )}
+                                      style={{ 
+                                        width: `${Math.min(100, event.maxAttendees ? (event.currentAttendees || 0) / event.maxAttendees * 100 : 0)}%` 
+                                      }}
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="h-1.5 rounded-full bg-muted/50 w-full mt-1 overflow-hidden">
+                                    <div className="h-full rounded-full bg-primary/60" style={{ width: '40%' }} />
+                                  </div>
+                                )}
                               </div>
                             ) : (
                               <div className="flex items-center text-muted-foreground">

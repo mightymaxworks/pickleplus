@@ -1826,13 +1826,31 @@ export class DatabaseStorage implements IStorage {
         ? "" 
         : "AND (is_test_data = FALSE OR is_test_data IS NULL) ";
       
-      // Use SQL with formatted date string
+      // Use SQL with formatted date string - PKL-278651-CONN-0005-DEFEVT compatibility update
+      // Include default events and add fallback for missing columns
       const upcomingEvents = await db.execute(sql`
-        SELECT * FROM events 
+        SELECT 
+          id, name, description, location, 
+          start_date_time as "startDateTime", 
+          end_date_time as "endDateTime", 
+          max_attendees as "maxAttendees", 
+          current_attendees as "currentAttendees", 
+          organizer_id as "organizerId",
+          is_private as "isPrivate", 
+          requires_check_in as "requiresCheckIn", 
+          check_in_code as "checkInCode",
+          event_type as "eventType", 
+          is_test_data as "isTestData", 
+          status,
+          COALESCE(is_default, false) as "isDefault",
+          COALESCE(hide_participant_count, false) as "hideParticipantCount",
+          created_at as "createdAt", 
+          updated_at as "updatedAt"
+        FROM events 
         WHERE (status = 'upcoming' OR end_date_time >= ${formattedDate}) 
         AND is_private = false 
         ${sql.raw(testDataFilter)}
-        ORDER BY start_date_time ASC 
+        ORDER BY COALESCE(is_default, false) DESC, start_date_time ASC 
         LIMIT ${limit};
       `);
       
