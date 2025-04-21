@@ -41,6 +41,7 @@ import EventCheckInScanner from '@/components/events/EventCheckInScanner';
 import EventList from '@/components/events/EventList';
 import { MyEventsTab } from '@/components/events/MyEventsTab';
 import ModernUniversalPassport from '@/components/events/ModernUniversalPassport';
+import PassportFAB from '@/components/events/PassportFAB';
 
 // Data and types
 import { getEvent } from '@/lib/sdk/eventSDK';
