@@ -246,7 +246,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Register Passport Verification routes (PKL-278651-CONN-0004-PASS-ADMIN)
   registerPassportVerificationRoutes(app);
   
-  // Create and return the HTTP server
+  // Create HTTP server for the application that will also handle WebSockets
   const httpServer = createServer(app);
   
   // Set up WebSocket server for real-time event status updates (PKL-278651-CONN-0012-SYNC)
@@ -1592,6 +1592,6 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     process.exit(0);
   });
 
-  // Server is started in index.ts, so we just need to return null here
-  return null as unknown as Server;
+  // Return the HTTP server for use in index.ts
+  return httpServer;
 }

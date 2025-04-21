@@ -63,16 +63,10 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Create HTTP server
-  const serverHttp = http.createServer(app);
-  
   // Add a health check route before any Vite middleware
   app.get("/api/health", (req: Request, res: Response) => {
     res.json({ status: "ok", time: new Date().toISOString() });
   });
-  
-  // Make the HTTP server available for routes to use
-  app.set('httpServer', serverHttp);
   
   // Serve static files from uploads directory
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
@@ -98,8 +92,8 @@ app.use((req, res, next) => {
     console.error("[API][CRITICAL] Error registering special routes:", error);
   }
 
-  // Server API Routes
-  await registerRoutes(app);
+  // Server API Routes and get the HTTP server that will also handle WebSockets
+  const serverHttp = await registerRoutes(app);
   
   // Error handler should come after routes but before Vite
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
