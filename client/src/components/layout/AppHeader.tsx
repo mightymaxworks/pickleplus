@@ -1,8 +1,8 @@
 /**
  * PKL-278651-COMM-0028-NOTIF - Updated AppHeader Component
- * Implementation timestamp: 2025-04-19 15:05 ET
+ * Implementation timestamp: 2025-04-21 04:00 ET
  * 
- * AppHeader updated to include new NotificationBell component
+ * AppHeader updated to be standardized across all routes
  * 
  * Framework 5.2 compliant implementation
  */
@@ -10,7 +10,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
-import { Menu, X, User, Home, LogOut, Settings, Calendar, Shield, Activity, Trophy, Award } from 'lucide-react';
+import { Menu, X, User, Home, LogOut, Settings, Calendar, Shield, Activity, Trophy, Award, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PicklePlusNewLogo } from '../icons/PicklePlusNewLogo';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
@@ -23,6 +23,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 export function AppHeader() {
   const { user, logoutMutation } = useAuth();
@@ -83,6 +84,16 @@ export function AppHeader() {
         
         {/* Right side actions */}
         <div className="flex items-center justify-end gap-1 sm:gap-3">
+          {/* Search Bar - Only visible on larger screens */}
+          <div className="hidden md:flex relative mr-2">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <input 
+              type="search" 
+              placeholder="Search players, communities..." 
+              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 pl-8 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:w-[180px] lg:w-[240px]" 
+            />
+          </div>
+          
           {/* Notifications Dropdown */}
           <NotificationsDropdown />
           
