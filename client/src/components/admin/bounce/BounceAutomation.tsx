@@ -14,7 +14,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@lib/queryClient';
+import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
 import {
@@ -73,6 +73,7 @@ import {
   TableRow
 } from '@/components/ui/table';
 import {
+  Activity,
   AlertCircle,
   Calendar,
   Check,
@@ -85,7 +86,6 @@ import {
   MoreHorizontal,
   Play,
   Plus,
-  Pulse,
   Trash2,
   XCircle
 } from 'lucide-react';
@@ -904,7 +904,7 @@ const StatusTab = () => {
                   </ScrollArea>
                 ) : (
                   <div className="p-8 text-center text-muted-foreground">
-                    <Pulse className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                    <Activity className="h-12 w-12 mx-auto mb-4 opacity-20" />
                     <h3 className="text-lg font-medium mb-2">No Recent Tests</h3>
                     <p className="max-w-md mx-auto">
                       Run a test to see results here.
