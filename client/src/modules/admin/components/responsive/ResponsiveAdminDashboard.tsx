@@ -112,10 +112,11 @@ export default function ResponsiveAdminDashboard() {
       console.log('[DEBUG] Full raw dashboard response data:', JSON.stringify(data));
       
       // Just for testing - if we get a message instead of real data, create hardcoded test data
+      let responseData = data;
       if (data.message && !data.totalUsers) {
         console.log('[DEBUG] Received message-only response, adding hardcoded data');
         // Get the actual user count from storage and use it here
-        data = {
+        responseData = {
           ...data,
           totalUsers: 110,
           totalMatches: 250,
@@ -125,17 +126,17 @@ export default function ResponsiveAdminDashboard() {
       }
       
       // Debug each field
-      if (data.totalUsers !== undefined) {
-        console.log('[DEBUG] Total users:', data.totalUsers, 'type:', typeof data.totalUsers);
+      if (responseData.totalUsers !== undefined) {
+        console.log('[DEBUG] Total users:', responseData.totalUsers, 'type:', typeof responseData.totalUsers);
       }
-      if (data.totalMatches !== undefined) {
-        console.log('[DEBUG] Total matches:', data.totalMatches, 'type:', typeof data.totalMatches);
+      if (responseData.totalMatches !== undefined) {
+        console.log('[DEBUG] Total matches:', responseData.totalMatches, 'type:', typeof responseData.totalMatches);
       }
-      if (data.totalEvents !== undefined) {
-        console.log('[DEBUG] Total events:', data.totalEvents, 'type:', typeof data.totalEvents);
+      if (responseData.totalEvents !== undefined) {
+        console.log('[DEBUG] Total events:', responseData.totalEvents, 'type:', typeof responseData.totalEvents);
       }
       
-      return data;
+      return responseData;
     },
     // Performance optimized settings for mobile
     staleTime: 3 * 60 * 1000, // Consider fresh for 3 minutes (longer for mobile to reduce battery usage)
@@ -381,7 +382,9 @@ export default function ResponsiveAdminDashboard() {
                 <CardTitle className="text-xs font-medium">Users</CardTitle>
               </div>
               <p className="text-xl font-bold mt-1">
-                {data.totalUsers !== undefined ? data.totalUsers.toLocaleString() : "—"}
+                {data.totalUsers !== undefined ? data.totalUsers.toLocaleString() : (
+                  responseData.totalUsers !== undefined ? responseData.totalUsers.toLocaleString() : "—"
+                )}
               </p>
             </CardContent>
           </Card>
@@ -393,7 +396,9 @@ export default function ResponsiveAdminDashboard() {
                 <CardTitle className="text-xs font-medium">Matches</CardTitle>
               </div>
               <p className="text-xl font-bold mt-1">
-                {data.totalMatches !== undefined ? data.totalMatches.toLocaleString() : "—"}
+                {data.totalMatches !== undefined ? data.totalMatches.toLocaleString() : (
+                  responseData.totalMatches !== undefined ? responseData.totalMatches.toLocaleString() : "—"
+                )}
               </p>
             </CardContent>
           </Card>
