@@ -91,8 +91,13 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
     }
     
     // Guard against incomplete or malformed nav items
-    if (!item || !item.path) {
-      console.warn('Incomplete navigation item detected:', item);
+    if (!item) {
+      console.warn('Navigation item is undefined or null');
+      return null;
+    }
+    
+    if (!item.path && !item.label) {
+      console.warn('Incomplete navigation item detected (missing both path and label):', item);
       return null;
     }
     
@@ -167,7 +172,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
                               </h3>
                               <div className="space-y-1">
                                 {categorizedNavItems[NavCategory.DASHBOARD].map((item) => (
-                                  <NavItem key={item.path} item={item} isMobile={true} />
+                                  <NavItem key={item.path || `dashboard-mobile-${item.label || Math.random().toString(36).substring(2, 9)}`} item={item} isMobile={true} />
                                 ))}
                               </div>
                             </div>
