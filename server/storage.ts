@@ -967,8 +967,12 @@ export class DatabaseStorage implements IStorage {
   
   async getUserCount(): Promise<number> {
     try {
-      const result = await db.select({ count: sql<number>`count(*)` }).from(users);
-      return result[0].count;
+      const result = await db.select({ count: sql`count(*)` }).from(users);
+      console.log('[Storage] getUserCount result:', result);
+      // Convert the count to a number explicitly (PostgreSQL returns count as string)
+      const count = Number(result[0]?.count) || 0;
+      console.log('[Storage] getUserCount converted count:', count);
+      return count;
     } catch (error) {
       console.error('[storage] getUserCount error:', error);
       return 0;
@@ -981,11 +985,15 @@ export class DatabaseStorage implements IStorage {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
-      const result = await db.select({ count: sql<number>`count(*)` })
+      const result = await db.select({ count: sql`count(*)` })
         .from(users)
         .where(sql`${users.lastMatchDate} > ${thirtyDaysAgo}`);
       
-      return result[0].count;
+      console.log('[Storage] getActiveUserCount result:', result);
+      // Convert the count to a number explicitly
+      const count = Number(result[0]?.count) || 0;
+      console.log('[Storage] getActiveUserCount converted count:', count);
+      return count;
     } catch (error) {
       console.error('[storage] getActiveUserCount error:', error);
       return 0;
