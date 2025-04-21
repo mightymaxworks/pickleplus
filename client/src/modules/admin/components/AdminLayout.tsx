@@ -100,7 +100,6 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
     
     return (
       <Button
-        key={item.path}
         variant="ghost"
         className={`
           justify-start w-full px-4 py-3 rounded-md transition-colors
@@ -354,7 +353,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
               <div className="container mx-auto px-4 py-2">
                 <div className="flex items-center text-sm">
                   {breadcrumbs.map((item, index) => (
-                    <React.Fragment key={item.href}>
+                    <div key={item.href} className="flex items-center">
                       {index > 0 && (
                         <ChevronRight className="h-4 w-4 mx-2 text-gray-400" />
                       )}
@@ -365,7 +364,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
                       >
                         {item.label}
                       </Button>
-                    </React.Fragment>
+                    </div>
                   ))}
                 </div>
               </div>
