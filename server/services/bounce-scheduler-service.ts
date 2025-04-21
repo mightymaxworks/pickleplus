@@ -44,7 +44,7 @@ export class BounceSchedulerService {
   }> = new Map();
   
   private checkInterval: NodeJS.Timeout | null = null;
-  private eventBus: EventBus;
+  private eventBus: any; // Using 'any' temporarily to resolve EventBus import issues
   private isInitialized = false;
   
   /**
@@ -55,7 +55,7 @@ export class BounceSchedulerService {
       return instance;
     }
     
-    this.eventBus = EventBus.getInstance();
+    this.eventBus = getEventBus();
     instance = this;
   }
   
