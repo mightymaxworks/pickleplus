@@ -16,10 +16,18 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TicketIcon, X as XIcon } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogOverlay,
+  DialogPortal
+} from '@/components/ui/dialog';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
-import ModernUniversalPassport from './ModernUniversalPassport';
+import { ModernUniversalPassport } from './ModernUniversalPassport';
 
 export const PassportFAB = () => {
   const { user } = useAuth();
@@ -41,7 +49,7 @@ export const PassportFAB = () => {
   };
   
   return (
-    <>
+    <div className="passport-fab-wrapper">
       {/* Floating Action Button */}
       <motion.div
         className="fixed bottom-6 right-6 z-50"
@@ -66,31 +74,34 @@ export const PassportFAB = () => {
       
       {/* Passport Dialog */}
       <Dialog open={showPassport} onOpenChange={setShowPassport}>
-        <DialogContent className="sm:max-w-md p-0 overflow-hidden rounded-xl border-primary/10 shadow-xl relative">
-          <DialogHeader className="sr-only">
-            <DialogTitle>PicklePass™ Universal Passport</DialogTitle>
-            <DialogDescription>
-              Your universal passport works for all PicklePass™ events
-            </DialogDescription>
-          </DialogHeader>
-          
-          {/* Custom close button for better visibility */}
-          <button 
-            className="absolute top-2 right-2 z-50 bg-muted/80 hover:bg-muted p-1.5 rounded-full backdrop-blur-sm text-muted-foreground" 
-            onClick={() => setShowPassport(false)}
-            aria-label="Close"
-          >
-            <XIcon className="h-4 w-4" />
-          </button>
-          
-          <ModernUniversalPassport 
-            onViewRegisteredEvents={() => {
-              setShowPassport(false);
-            }}
-          />
-        </DialogContent>
+        <DialogPortal>
+          <DialogOverlay className="bg-black/50 backdrop-blur-sm" />
+          <DialogContent className="sm:max-w-md p-0 overflow-hidden rounded-xl border-primary/10 shadow-xl fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 z-[100]">
+            <DialogHeader className="sr-only">
+              <DialogTitle>PicklePass™ Universal Passport</DialogTitle>
+              <DialogDescription>
+                Your universal passport works for all PicklePass™ events
+              </DialogDescription>
+            </DialogHeader>
+            
+            {/* Custom close button for better visibility */}
+            <button 
+              className="absolute top-2 right-2 z-50 bg-muted/80 hover:bg-muted p-1.5 rounded-full backdrop-blur-sm text-muted-foreground" 
+              onClick={() => setShowPassport(false)}
+              aria-label="Close"
+            >
+              <XIcon className="h-4 w-4" />
+            </button>
+            
+            <ModernUniversalPassport 
+              onViewRegisteredEvents={() => {
+                setShowPassport(false);
+              }}
+            />
+          </DialogContent>
+        </DialogPortal>
       </Dialog>
-    </>
+    </div>
   );
 };
 
