@@ -6,7 +6,7 @@
  * UI components and data hooks developed for the Community Hub.
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRoute, useLocation } from "wouter";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { 
