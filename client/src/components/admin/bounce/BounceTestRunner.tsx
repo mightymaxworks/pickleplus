@@ -47,9 +47,23 @@ interface TestConfig {
   stopOnFirstFailure: boolean;
 }
 
+// Finding interface
+interface Finding {
+  id: number;
+  title: string;
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  status: string;
+  description?: string;
+  elementSelector?: string;
+  screenshot?: string;
+  testId: string;
+  createdAt: string;
+}
+
 // Test result interface
 interface TestResult {
   id: number;
+  name?: string;
   status: string;
   progress: number;
   findingsCount: number;
@@ -58,6 +72,13 @@ interface TestResult {
   testsTotal: number;
   startedAt: string;
   completedAt?: string;
+  currentFlow?: string;
+  currentTest?: string;
+  browser?: string; 
+  environment?: string;
+  config?: TestConfig;
+  lastFinding?: Finding;
+  findings?: Finding[];
 }
 
 /**
@@ -79,9 +100,10 @@ export const BounceTestRunner: React.FC = () => {
     stopOnFirstFailure: false
   });
   
-  // State for current test run
+  // State for current test run and history detail view
   const [testRunStatus, setTestRunStatus] = useState<TestRunStatus>(TestRunStatus.IDLE);
   const [currentTestRun, setCurrentTestRun] = useState<TestResult | null>(null);
+  const [selectedHistoryRun, setSelectedHistoryRun] = useState<TestResult | null>(null);
   
   // Default test configs
   const defaultTestConfigs = [
@@ -109,18 +131,36 @@ export const BounceTestRunner: React.FC = () => {
     }
   ];
   
+  // Test configuration interface with ID field
+  interface TestConfigWithId extends TestConfig {
+    id: string;
+  }
+  
   // Query for test configurations
-  const { data: testConfigs = defaultTestConfigs, isLoading: isLoadingConfigs } = useQuery({
+  const { data: testConfigs = defaultTestConfigs as TestConfigWithId[], isLoading: isLoadingConfigs } = useQuery<TestConfigWithId[]>({
     queryKey: ['/api/admin/bounce/configs'],
     retry: false,
     enabled: testRunStatus !== TestRunStatus.RUNNING,
     throwOnError: false
   });
   
+  // Sample finding for demo
+  const sampleFinding: Finding = {
+    id: 1,
+    title: "Navigation menu not accessible via keyboard",
+    severity: "high",
+    status: "open",
+    description: "The main navigation menu cannot be accessed using tab navigation, making it inaccessible to keyboard-only users.",
+    elementSelector: "nav.main-navigation",
+    testId: "accessibility-nav-test",
+    createdAt: new Date(Date.now() - 3550000).toISOString()
+  };
+
   // Default test runs
-  const defaultRecentRuns = [
+  const defaultRecentRuns: TestResult[] = [
     {
       id: 1,
+      name: "Standard Regression Test",
       status: 'completed',
       progress: 100,
       findingsCount: 3,
@@ -128,22 +168,67 @@ export const BounceTestRunner: React.FC = () => {
       testsCompleted: 15,
       testsTotal: 15,
       startedAt: new Date(Date.now() - 3600000).toISOString(),
-      completedAt: new Date(Date.now() - 3540000).toISOString()
+      completedAt: new Date(Date.now() - 3540000).toISOString(),
+      browser: "Chrome",
+      environment: "Production",
+      currentFlow: "Profile Management",
+      currentTest: "Profile Edit Validation",
+      findings: [
+        sampleFinding,
+        {
+          id: 2,
+          title: "Profile image upload fails on mobile",
+          severity: "medium",
+          status: "open",
+          description: "Profile image upload consistently fails on mobile devices with error 'Unable to process image'",
+          elementSelector: "input#profile-image-upload",
+          testId: "profile-edit-test",
+          createdAt: new Date(Date.now() - 3545000).toISOString()
+        }
+      ],
+      lastFinding: sampleFinding
     },
     {
       id: 2,
+      name: "Quick Check",
       status: 'failed',
       progress: 42,
       findingsCount: 2,
       criticalCount: 1,
       testsCompleted: 5,
       testsTotal: 12,
-      startedAt: new Date(Date.now() - 7200000).toISOString()
+      browser: "Firefox",
+      environment: "Staging",
+      currentFlow: "Match Recording",
+      currentTest: "Score Validation",
+      startedAt: new Date(Date.now() - 7200000).toISOString(),
+      findings: [
+        {
+          id: 3,
+          title: "Server error on match submission",
+          severity: "critical",
+          status: "open",
+          description: "Server returns 500 error when submitting match with more than 3 games",
+          elementSelector: "button#submit-match",
+          testId: "match-recording-test",
+          createdAt: new Date(Date.now() - 7000000).toISOString()
+        }
+      ],
+      lastFinding: {
+        id: 3,
+        title: "Server error on match submission",
+        severity: "critical",
+        status: "open",
+        description: "Server returns 500 error when submitting match with more than 3 games",
+        elementSelector: "button#submit-match",
+        testId: "match-recording-test",
+        createdAt: new Date(Date.now() - 7000000).toISOString()
+      }
     }
   ];
   
   // Query for previous test runs
-  const { data: recentRuns = defaultRecentRuns, isLoading: isLoadingRuns } = useQuery({
+  const { data: recentRuns = defaultRecentRuns as TestResult[], isLoading: isLoadingRuns } = useQuery<TestResult[]>({
     queryKey: ['/api/admin/bounce/runs'],
     retry: false,
     enabled: true,
@@ -319,21 +404,50 @@ export const BounceTestRunner: React.FC = () => {
     });
   };
   
-  // Effect to poll for test run status updates
+  // Effect to poll for test run status updates with enhanced error handling
   useEffect(() => {
     let interval: NodeJS.Timeout;
+    let failedAttempts = 0;
+    const MAX_FAILED_ATTEMPTS = 3;
     
     if (testRunStatus === TestRunStatus.RUNNING && currentTestRun) {
+      console.log(`[Bounce] Starting status polling for test run #${currentTestRun.id}`);
+      
       interval = setInterval(async () => {
         try {
+          // Attempt to fetch test run status
           const response = await fetch(`/api/admin/bounce/status/${currentTestRun.id}`);
+          
+          // Handle non-200 responses
+          if (!response.ok) {
+            failedAttempts++;
+            console.warn(`[Bounce] Status API returned ${response.status}, attempt ${failedAttempts} of ${MAX_FAILED_ATTEMPTS}`);
+            
+            if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
+              // After multiple failed attempts, mark as failed
+              setTestRunStatus(TestRunStatus.FAILED);
+              clearInterval(interval);
+              toast({
+                title: 'Status Tracking Failed',
+                description: 'Unable to track test run status after multiple attempts. The test may still be running.',
+                variant: 'destructive'
+              });
+            }
+            return;
+          }
+          
+          // Reset failed attempts counter on success
+          failedAttempts = 0;
+          
           const data = await response.json();
+          console.log(`[Bounce] Status update: ${data.status}, progress: ${data.progress}%`);
           
           setCurrentTestRun(data);
           
           if (data.status === 'completed') {
             setTestRunStatus(TestRunStatus.COMPLETED);
             clearInterval(interval);
+            console.log(`[Bounce] Test run #${currentTestRun.id} completed successfully`);
             toast({
               title: 'Test Run Completed',
               description: `Completed with ${data.findingsCount} findings`,
@@ -342,22 +456,46 @@ export const BounceTestRunner: React.FC = () => {
           } else if (data.status === 'failed') {
             setTestRunStatus(TestRunStatus.FAILED);
             clearInterval(interval);
+            console.error(`[Bounce] Test run #${currentTestRun.id} failed`);
             toast({
               title: 'Test Run Failed',
               description: 'An error occurred during the test run',
               variant: 'destructive'
             });
+          } else if (data.status === 'paused') {
+            setTestRunStatus(TestRunStatus.PAUSED);
+            // Don't clear interval to continue checking for status changes
+            console.log(`[Bounce] Test run #${currentTestRun.id} paused`);
+            toast({
+              title: 'Test Run Paused',
+              description: 'The test run has been paused',
+              variant: 'default'
+            });
           }
         } catch (error) {
-          console.error('Failed to fetch test run status', error);
+          failedAttempts++;
+          console.error(`[Bounce] Failed to fetch test run status (attempt ${failedAttempts}):`, error);
+          
+          if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
+            setTestRunStatus(TestRunStatus.FAILED);
+            clearInterval(interval);
+            toast({
+              title: 'Connection Error',
+              description: 'Failed to connect to the test runner after multiple attempts',
+              variant: 'destructive'
+            });
+          }
         }
       }, 5000); // Poll every 5 seconds
     }
     
     return () => {
-      if (interval) clearInterval(interval);
+      if (interval) {
+        console.log('[Bounce] Stopping status polling');
+        clearInterval(interval);
+      }
     };
-  }, [testRunStatus, currentTestRun]);
+  }, [testRunStatus, currentTestRun, toast]);
   
   // Available flows for testing
   const availableFlows = [
@@ -616,7 +754,7 @@ export const BounceTestRunner: React.FC = () => {
                         <Card>
                           <CardContent className="pt-6">
                             <div className="text-center">
-                              <div className="text-2xl font-bold">
+                              <div className={`text-2xl font-bold ${currentTestRun.findingsCount > 0 ? 'text-amber-600' : ''}`}>
                                 {currentTestRun.findingsCount}
                               </div>
                               <p className="text-xs text-muted-foreground mt-1">
@@ -629,7 +767,7 @@ export const BounceTestRunner: React.FC = () => {
                         <Card>
                           <CardContent className="pt-6">
                             <div className="text-center">
-                              <div className="text-2xl font-bold text-red-600">
+                              <div className={`text-2xl font-bold ${currentTestRun.criticalCount > 0 ? 'text-red-600' : ''}`}>
                                 {currentTestRun.criticalCount}
                               </div>
                               <p className="text-xs text-muted-foreground mt-1">
@@ -648,6 +786,57 @@ export const BounceTestRunner: React.FC = () => {
                               <p className="text-xs text-muted-foreground mt-1">
                                 Test Duration
                               </p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                      
+                      {/* Test Run Details */}
+                      <div className="mt-6">
+                        <h3 className="text-sm font-medium mb-2">Current Activity</h3>
+                        <Card>
+                          <CardContent className="pt-6">
+                            <div className="space-y-3">
+                              <div>
+                                <div className="flex justify-between text-xs">
+                                  <span className="text-muted-foreground">Current Flow</span>
+                                  <span className="font-medium">{currentTestRun.currentFlow || 'Initializing...'}</span>
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <div className="flex justify-between text-xs">
+                                  <span className="text-muted-foreground">Current Test</span>
+                                  <span className="font-medium">{currentTestRun.currentTest || 'Preparing...'}</span>
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <div className="flex justify-between text-xs">
+                                  <span className="text-muted-foreground">Browser</span>
+                                  <span className="font-medium">{currentTestRun.browser || 'Chrome'}</span>
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <div className="flex justify-between text-xs">
+                                  <span className="text-muted-foreground">Test Environment</span>
+                                  <span className="font-medium">{currentTestRun.environment || 'Production'}</span>
+                                </div>
+                              </div>
+                              
+                              {currentTestRun.lastFinding && (
+                                <div className="mt-3 pt-3 border-t">
+                                  <span className="text-xs text-muted-foreground block mb-1">Latest Finding:</span>
+                                  <div className={`text-sm p-2 rounded ${
+                                    currentTestRun.lastFinding.severity === 'critical' ? 'bg-red-50 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                                    currentTestRun.lastFinding.severity === 'high' ? 'bg-orange-50 text-orange-800 dark:bg-orange-900 dark:text-orange-200' : 
+                                    'bg-blue-50 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                                  }`}>
+                                    {currentTestRun.lastFinding.title || 'No findings yet'}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </CardContent>
                         </Card>
@@ -672,7 +861,7 @@ export const BounceTestRunner: React.FC = () => {
                         </div>
                       ) : recentRuns && recentRuns.length > 0 ? (
                         <div className="space-y-4">
-                          {recentRuns.map((run: TestResult) => (
+                          {recentRuns.map((run) => (
                             <Card key={run.id} className="overflow-hidden">
                               <CardHeader className="pb-2">
                                 <div className="flex justify-between items-center">
@@ -700,7 +889,16 @@ export const BounceTestRunner: React.FC = () => {
                                 </div>
                               </CardContent>
                               <CardFooter className="pb-4 pt-2">
-                                <Button variant="ghost" size="sm" className="ml-auto">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="ml-auto"
+                                  onClick={() => {
+                                    // Fetch test details (in real app this would make an API call)
+                                    console.log(`[Bounce] Viewing test run details for #${run.id}`);
+                                    setSelectedHistoryRun(run);
+                                  }}
+                                >
                                   View Details
                                 </Button>
                               </CardFooter>
