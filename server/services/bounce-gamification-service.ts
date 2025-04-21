@@ -53,11 +53,11 @@ export class BounceGamificationService {
         findingId,
         type: interactionType,
         points,
-        metadata
+        metadata: JSON.stringify(metadata)
       });
       
       // 2. Award XP based on points (1 point = 1 XP)
-      await xpService.awardXp(userId, points, "Bounce Testing");
+      await xpService.awardXp(userId, points, { reason: "Bounce Testing" });
       
       // 3. Update the user's leaderboard entry
       await this.updateLeaderboard(userId);
@@ -211,8 +211,7 @@ export class BounceGamificationService {
         .from(bounceAchievements)
         .where(
           and(
-            sql`${bounceAchievements.requiredInteractionTypes}::jsonb @> $1::jsonb`,
-            [JSON.stringify([interactionType])],
+            sql`${bounceAchievements.requiredInteractionTypes}::jsonb @> '${JSON.stringify([interactionType])}'::jsonb`,
             eq(bounceAchievements.isActive, true)
           )
         );
@@ -303,7 +302,7 @@ export class BounceGamificationService {
               await xpService.awardXp(
                 userId,
                 achievement.xpReward,
-                `Achievement: ${achievement.name}`
+                { reason: `Achievement: ${achievement.name}` }
               );
             }
             
@@ -342,7 +341,7 @@ export class BounceGamificationService {
             await xpService.awardXp(
               userId,
               achievement.xpReward,
-              `Achievement: ${achievement.name}`
+              { reason: `Achievement: ${achievement.name}` }
             );
           }
           
