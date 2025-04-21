@@ -31,7 +31,8 @@ import {
   CalendarIcon,
   CheckCircleIcon,
   XCircleIcon,
-  ArrowDownIcon
+  ArrowDownIcon,
+  SparklesIcon
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';

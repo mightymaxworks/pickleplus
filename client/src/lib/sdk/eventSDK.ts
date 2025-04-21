@@ -463,21 +463,31 @@ export async function getUserPassportQR(): Promise<string> {
  * Get user's passport code (the 7-character code)
  * @returns Promise with passport code
  */
-export async function getUserPassportCode(): Promise<string> {
+/**
+ * Get user passport code and founding member status
+ * PKL-278651-CONN-0008-UX - PicklePass™ UI/UX Enhancement
+ * @returns Object with code and isFoundingMember flag
+ */
+export async function getUserPassportCode(): Promise<{ code: string, isFoundingMember: boolean }> {
   const response = await apiRequest('GET', '/api/user/passport/code');
   
   if (!response.ok) {
-    throw new Error(`Failed to fetch passport code: ${response.status}`);
+    console.error(`Failed to fetch passport code: ${response.status}`);
+    return { code: '', isFoundingMember: false };
   }
   
   const text = await response.text();
-  if (!text) return '';
+  if (!text) return { code: '', isFoundingMember: false };
   
   try {
-    return JSON.parse(text).code;
+    const data = JSON.parse(text);
+    return {
+      code: data.code || '',
+      isFoundingMember: !!data.isFoundingMember
+    };
   } catch (error) {
     console.error('Error parsing passport code response:', error);
-    return '';
+    return { code: '', isFoundingMember: false };
   }
 }
 
