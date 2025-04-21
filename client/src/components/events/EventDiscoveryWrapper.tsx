@@ -36,6 +36,9 @@ import {
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
 
+// Import the PicklePass logo
+import picklePassLogo from '@/assets/pickle-pass-logo.png';
+
 // Components
 import EventCheckInScanner from '@/components/events/EventCheckInScanner';
 import EventList from '@/components/events/EventList';
@@ -119,10 +122,13 @@ export default function EventDiscoveryWrapper() {
   const content = (
     <div className="py-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2 flex items-center">
-          <TicketIcon className="h-7 w-7 mr-2 text-primary/80" />
-          PicklePass™ Events
-        </h1>
+        <div className="mb-2 flex items-center">
+          <img 
+            src={picklePassLogo} 
+            alt="PicklePass™" 
+            className="h-10 mb-1"
+          />
+        </div>
         <p className="text-muted-foreground">
           Discover and register for events
         </p>
