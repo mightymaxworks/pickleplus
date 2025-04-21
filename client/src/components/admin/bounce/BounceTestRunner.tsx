@@ -12,7 +12,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Play, Pause, RefreshCw, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { 
+  Play, Pause, RefreshCw, CheckCircle, XCircle, AlertCircle, 
+  ChevronLeft, AlertTriangle, Bug, Monitor, Shield, X
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,6 +28,16 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose
+} from "@/components/ui/dialog";
+import { Separator } from '@/components/ui/separator';
 
 // Test runner status and types
 enum TestRunStatus {
@@ -920,6 +933,191 @@ export const BounceTestRunner: React.FC = () => {
           </Tabs>
         </CardContent>
       </Card>
+      
+      {/* Test Run Detail Dialog */}
+      <Dialog open={!!selectedHistoryRun} onOpenChange={(open) => !open && setSelectedHistoryRun(null)}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-xl flex items-center gap-2">
+                <Button 
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSelectedHistoryRun(null)}
+                  className="h-8 w-8 mr-1"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                Test Run #{selectedHistoryRun?.id}
+                {selectedHistoryRun?.status === 'completed' && (
+                  <Badge variant="outline" className="bg-green-50 text-green-600 ml-2">Completed</Badge>
+                )}
+                {selectedHistoryRun?.status === 'failed' && (
+                  <Badge variant="outline" className="bg-red-50 text-red-600 ml-2">Failed</Badge>
+                )}
+              </DialogTitle>
+              <DialogClose asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <X className="h-4 w-4" />
+                </Button>
+              </DialogClose>
+            </div>
+            <DialogDescription>
+              Run on {selectedHistoryRun && new Date(selectedHistoryRun.startedAt).toLocaleString()}
+              {selectedHistoryRun?.completedAt && ` • Completed ${new Date(selectedHistoryRun.completedAt).toLocaleString()}`}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedHistoryRun && (
+            <div className="overflow-y-auto flex-1 pr-2">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold">
+                        {selectedHistoryRun.testsCompleted}/{selectedHistoryRun.testsTotal}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Tests Completed
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <div className={`text-2xl font-bold ${selectedHistoryRun.findingsCount > 0 ? 'text-amber-600' : ''}`}>
+                        {selectedHistoryRun.findingsCount}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Total Findings
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <div className={`text-2xl font-bold ${selectedHistoryRun.criticalCount > 0 ? 'text-red-600' : ''}`}>
+                        {selectedHistoryRun.criticalCount}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Critical Findings
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold">
+                        {selectedHistoryRun.completedAt 
+                          ? Math.floor((new Date(selectedHistoryRun.completedAt).getTime() - new Date(selectedHistoryRun.startedAt).getTime()) / 60000) 
+                          : '—'} min
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Test Duration
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div className="mt-6">
+                <h3 className="text-sm font-medium mb-2">Test Configuration</h3>
+                <Card>
+                  <CardContent className="pt-4 pb-3">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-xs text-muted-foreground mb-1">Name</div>
+                        <div className="text-sm">{selectedHistoryRun.name || 'Default Test Run'}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground mb-1">Browser</div>
+                        <div className="text-sm">{selectedHistoryRun.browser || 'Chrome'}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground mb-1">Environment</div>
+                        <div className="text-sm">{selectedHistoryRun.environment || 'Production'}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground mb-1">Last Flow</div>
+                        <div className="text-sm">{selectedHistoryRun.currentFlow || 'Not specified'}</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div className="mt-6">
+                <h3 className="text-sm font-medium mb-2">Findings</h3>
+                {selectedHistoryRun.findings && selectedHistoryRun.findings.length > 0 ? (
+                  <div className="space-y-4">
+                    {selectedHistoryRun.findings.map((finding) => (
+                      <Card key={finding.id}>
+                        <CardContent className="pt-4 pb-3">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                {finding.severity === 'critical' && (
+                                  <AlertTriangle className="h-4 w-4 text-red-500" />
+                                )}
+                                {finding.severity === 'high' && (
+                                  <AlertCircle className="h-4 w-4 text-amber-500" />
+                                )}
+                                {finding.severity === 'medium' && (
+                                  <AlertCircle className="h-4 w-4 text-yellow-500" />
+                                )}
+                                {finding.severity === 'low' && (
+                                  <AlertCircle className="h-4 w-4 text-blue-500" />
+                                )}
+                                <span className="font-medium text-sm">{finding.title}</span>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-2">{finding.description}</p>
+                              
+                              {finding.elementSelector && (
+                                <div className="mt-2 text-xs">
+                                  <span className="text-muted-foreground">Element: </span>
+                                  <code className="bg-muted px-1 py-0.5 rounded text-xs">{finding.elementSelector}</code>
+                                </div>
+                              )}
+                            </div>
+                            <Badge variant={
+                              finding.severity === 'critical' ? 'destructive' :
+                              finding.severity === 'high' ? 'default' :
+                              finding.severity === 'medium' ? 'secondary' :
+                              'outline'
+                            }>
+                              {finding.severity}
+                            </Badge>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <Card>
+                    <CardContent className="pt-4 pb-3 text-center">
+                      <p className="text-muted-foreground text-sm">No findings reported</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter className="mt-4 border-t pt-4">
+            <Button variant="outline" onClick={() => setSelectedHistoryRun(null)}>Close</Button>
+            <Button>
+              <Bug className="mr-2 h-4 w-4" />
+              Download Report
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
