@@ -1,8 +1,8 @@
 /**
- * PKL-278651-BOUNCE-0001-CORE
- * Bounce Testing System Findings Component
+ * PKL-278651-BOUNCE-0003-ADMIN - Bounce Findings Management
  * 
- * This component displays and manages the findings discovered by the Bounce testing system.
+ * This component provides the interface for triaging and managing test findings
+ * discovered by the Bounce automated testing system.
  * 
  * @framework Framework5.2
  * @version 1.0.0
@@ -12,15 +12,24 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
+  AlertCircle, 
+  AlertTriangle, 
+  Info, 
+  CheckCircle, 
+  Search, 
+  Filter, 
+  Trash2, 
+  X, 
+  Flag, 
+  ExternalLink, 
+  FileText, 
+  Check
+} from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { 
   Select, 
   SelectContent, 
@@ -29,188 +38,441 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter 
+} from '@/components/ui/dialog';
 import { 
-  Pagination, 
-  PaginationContent, 
-  PaginationItem, 
-  PaginationNext, 
-  PaginationPrevious 
-} from '@/components/ui/pagination';
-import { 
-  AlertCircle, 
-  Filter, 
-  Search, 
-  ExternalLink,
-  AlertTriangle,
-  Info,
-  Eye
-} from 'lucide-react';
-import { 
-  BounceFindingSeverity, 
-  BounceFindingStatus
-} from '@shared/schema';
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { BounceFindingSeverity, BounceFindingStatus } from '@shared/schema';
 import { apiRequest } from '@/lib/queryClient';
-import BounceFindingDetail from './BounceFindingDetail';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+// Types for findings data
+interface Finding {
+  id: number;
+  title: string;
+  description: string;
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  status: 'open' | 'in_progress' | 'resolved' | 'wont_fix' | 'duplicate';
+  elementSelector?: string;
+  screenshot?: string;
+  testRunId: number;
+  testId: string;
+  createdAt: string;
+  assignedTo?: string;
+  priority?: number;
+  steps?: string[];
+  area?: string;
+  component?: string;
+}
+
+// Type for filtering options
+interface FindingFilters {
+  severity: string[];
+  status: string[];
+  area?: string;
+  component?: string;
+  search?: string;
+  dateRange?: {
+    from: Date | null;
+    to: Date | null;
+  };
+}
+
+// BounceFindings Component
 const BounceFindings: React.FC = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
-  const [page, setPage] = useState(1);
-  const [severity, setSeverity] = useState<string>('');
-  const [status, setStatus] = useState<string>('');
+  
+  // State for filtering and detail view
+  const [filters, setFilters] = useState<FindingFilters>({
+    severity: [],
+    status: ['open', 'in_progress']
+  });
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFindingId, setSelectedFindingId] = useState<number | null>(null);
-
-  // Build query key dynamically based on filters
-  const queryKey = ['/api/admin/bounce/findings', { page, severity, status, searchQuery }];
-
-  const { data, isLoading } = useQuery({
-    queryKey,
+  const [selectedFinding, setSelectedFinding] = useState<Finding | null>(null);
+  const [viewTab, setViewTab] = useState<'all' | 'critical' | 'assigned'>('all');
+  const [statusUpdateDialogOpen, setStatusUpdateDialogOpen] = useState(false);
+  const [newStatus, setNewStatus] = useState<BounceFindingStatus | ''>('');
+  
+  // Get findings data with filters applied
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['/api/admin/bounce/findings', filters, viewTab],
     queryFn: async () => {
-      let url = `/api/admin/bounce/findings?page=${page}`;
-      if (severity) url += `&severity=${severity}`;
-      if (status) url += `&status=${status}`;
-      if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
-      return apiRequest<any>(url);
+      const queryParams = new URLSearchParams();
+      
+      if (filters.severity.length > 0) {
+        queryParams.append('severity', filters.severity.join(','));
+      }
+      
+      if (filters.status.length > 0) {
+        queryParams.append('status', filters.status.join(','));
+      }
+      
+      if (filters.area) {
+        queryParams.append('area', filters.area);
+      }
+      
+      if (filters.component) {
+        queryParams.append('component', filters.component);
+      }
+      
+      if (searchQuery) {
+        queryParams.append('search', searchQuery);
+      }
+      
+      if (viewTab === 'critical') {
+        queryParams.append('severity', 'critical');
+      } else if (viewTab === 'assigned') {
+        queryParams.append('assigned', 'true');
+      }
+      
+      return apiRequest<{ findings: Finding[] }>(`/api/admin/bounce/findings?${queryParams.toString()}`);
     }
   });
-
-  const updateStatusMutation = useMutation({
+  
+  // Get areas and components for filtering
+  const { data: metaData } = useQuery({
+    queryKey: ['/api/admin/bounce/findings/metadata'],
+    queryFn: async () => {
+      return apiRequest<{ areas: string[]; components: string[] }>('/api/admin/bounce/findings/metadata');
+    }
+  });
+  
+  // Update finding status mutation
+  const updateFindingMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      return apiRequest<any>(`/api/admin/bounce/findings/${id}/status`, {
+      return apiRequest<Finding>(`/api/admin/bounce/findings/${id}/status`, {
         method: 'PATCH',
-        body: JSON.stringify({ status }),
-        headers: { 'Content-Type': 'application/json' }
+        body: JSON.stringify({ status })
       });
     },
     onSuccess: () => {
-      // Invalidate the findings query to refresh the data
       queryClient.invalidateQueries({ queryKey: ['/api/admin/bounce/findings'] });
       toast({
-        title: "Status updated",
-        description: "The finding status has been updated successfully.",
+        title: 'Status updated',
+        description: 'The finding status has been updated successfully.',
+        variant: 'default'
       });
+      setStatusUpdateDialogOpen(false);
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Failed to update finding status:', error);
       toast({
-        title: "Update failed",
-        description: "Failed to update the finding status. Please try again.",
-        variant: "destructive",
+        title: 'Update failed',
+        description: 'Failed to update the finding status. Please try again.',
+        variant: 'destructive'
       });
     }
   });
-
-  const handlePrevPage = () => {
-    if (page > 1) setPage(page - 1);
-  };
-
-  const handleNextPage = () => {
-    if (data?.pagination && page < data.pagination.totalPages) {
-      setPage(page + 1);
+  
+  // Assign finding mutation
+  const assignFindingMutation = useMutation({
+    mutationFn: async ({ id, assignee }: { id: number; assignee: string }) => {
+      return apiRequest<Finding>(`/api/admin/bounce/findings/${id}/assign`, {
+        method: 'PATCH',
+        body: JSON.stringify({ assignee })
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/bounce/findings'] });
+      toast({
+        title: 'Finding assigned',
+        description: 'The finding has been assigned successfully.',
+        variant: 'default'
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to assign finding:', error);
+      toast({
+        title: 'Assignment failed',
+        description: 'Failed to assign the finding. Please try again.',
+        variant: 'destructive'
+      });
     }
-  };
-
-  const handleUpdateStatus = (id: number, newStatus: string) => {
-    updateStatusMutation.mutate({ id, status: newStatus });
-  };
-
-  const handleViewFinding = (id: number) => {
-    setSelectedFindingId(id);
-  };
-
-  const handleBackToList = () => {
-    setSelectedFindingId(null);
-    // Refresh the findings list
-    queryClient.invalidateQueries({ queryKey: ['/api/admin/bounce/findings'] });
-  };
-
-  const renderSeverityBadge = (severity: string) => {
-    switch (severity) {
-      case BounceFindingSeverity.CRITICAL:
-        return (
-          <Badge className="bg-red-500 hover:bg-red-600">
-            <AlertCircle className="h-3 w-3 mr-1" />
-            Critical
-          </Badge>
-        );
-      case BounceFindingSeverity.HIGH:
-        return (
-          <Badge className="bg-orange-500 hover:bg-orange-600">
-            <AlertTriangle className="h-3 w-3 mr-1" />
-            High
-          </Badge>
-        );
-      case BounceFindingSeverity.MEDIUM:
-        return (
-          <Badge className="bg-yellow-500 hover:bg-yellow-600">
-            <AlertTriangle className="h-3 w-3 mr-1" />
-            Medium
-          </Badge>
-        );
-      case BounceFindingSeverity.LOW:
-        return (
-          <Badge className="bg-blue-500 hover:bg-blue-600">
-            <Info className="h-3 w-3 mr-1" />
-            Low
-          </Badge>
-        );
-      default:
-        return <Badge>{severity}</Badge>;
+  });
+  
+  // Priority update mutation
+  const updatePriorityMutation = useMutation({
+    mutationFn: async ({ id, priority }: { id: number; priority: number }) => {
+      return apiRequest<Finding>(`/api/admin/bounce/findings/${id}/priority`, {
+        method: 'PATCH',
+        body: JSON.stringify({ priority })
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/bounce/findings'] });
+      toast({
+        title: 'Priority updated',
+        description: 'The finding priority has been updated successfully.',
+        variant: 'default'
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to update finding priority:', error);
+      toast({
+        title: 'Update failed',
+        description: 'Failed to update the finding priority. Please try again.',
+        variant: 'destructive'
+      });
     }
-  };
-
-  const renderStatusBadge = (status: string) => {
+  });
+  
+  // Utility functions
+  const getStatusBadge = (status: string) => {
     switch (status) {
-      case BounceFindingStatus.NEW:
-        return <Badge className="bg-blue-500 hover:bg-blue-600">New</Badge>;
-      case BounceFindingStatus.TRIAGE:
-        return <Badge className="bg-purple-500 hover:bg-purple-600">Triage</Badge>;
-      case BounceFindingStatus.CONFIRMED:
-        return <Badge className="bg-orange-500 hover:bg-orange-600">Confirmed</Badge>;
-      case BounceFindingStatus.IN_PROGRESS:
-        return <Badge className="bg-yellow-500 hover:bg-yellow-600">In Progress</Badge>;
-      case BounceFindingStatus.FIXED:
-        return <Badge className="bg-green-500 hover:bg-green-600">Fixed</Badge>;
-      case BounceFindingStatus.WONT_FIX:
-        return <Badge className="bg-gray-500 hover:bg-gray-600">Won't Fix</Badge>;
-      case BounceFindingStatus.DUPLICATE:
-        return <Badge className="bg-gray-500 hover:bg-gray-600">Duplicate</Badge>;
+      case 'open':
+        return <Badge variant="outline" className="bg-red-50 text-red-800 dark:bg-red-900 dark:text-red-200">Open</Badge>;
+      case 'in_progress':
+        return <Badge variant="outline" className="bg-blue-50 text-blue-800 dark:bg-blue-900 dark:text-blue-200">In Progress</Badge>;
+      case 'resolved':
+        return <Badge variant="outline" className="bg-green-50 text-green-800 dark:bg-green-900 dark:text-green-200">Resolved</Badge>;
+      case 'wont_fix':
+        return <Badge variant="outline" className="bg-gray-50 text-gray-800 dark:bg-gray-700 dark:text-gray-200">Won't Fix</Badge>;
+      case 'duplicate':
+        return <Badge variant="outline" className="bg-purple-50 text-purple-800 dark:bg-purple-900 dark:text-purple-200">Duplicate</Badge>;
       default:
-        return <Badge>{status}</Badge>;
+        return <Badge variant="outline">Unknown</Badge>;
     }
   };
-
-  // If a finding is selected, show the detail view
-  if (selectedFindingId) {
-    return (
-      <BounceFindingDetail 
-        findingId={selectedFindingId} 
-        onBack={handleBackToList} 
-      />
-    );
-  }
-
+  
+  const getSeverityIcon = (severity: string) => {
+    switch (severity) {
+      case 'critical':
+        return <AlertCircle className="h-4 w-4 text-red-500" />;
+      case 'high':
+        return <AlertTriangle className="h-4 w-4 text-orange-500" />;
+      case 'medium':
+        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+      case 'low':
+        return <Info className="h-4 w-4 text-blue-500" />;
+      default:
+        return <Info className="h-4 w-4" />;
+    }
+  };
+  
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString();
+  };
+  
+  const handleStatusChange = (finding: Finding, status: BounceFindingStatus) => {
+    setSelectedFinding(finding);
+    setNewStatus(status);
+    setStatusUpdateDialogOpen(true);
+  };
+  
+  const confirmStatusChange = () => {
+    if (selectedFinding && newStatus) {
+      updateFindingMutation.mutate({
+        id: selectedFinding.id,
+        status: newStatus
+      });
+    }
+  };
+  
+  const handleAssignToMe = (finding: Finding) => {
+    // In a real implementation, this would use the current user's ID/name
+    assignFindingMutation.mutate({
+      id: finding.id,
+      assignee: 'current-user' // Placeholder - would use actual user ID
+    });
+  };
+  
+  const handlePriorityChange = (finding: Finding, priority: number) => {
+    updatePriorityMutation.mutate({
+      id: finding.id,
+      priority
+    });
+  };
+  
+  const toggleSeverityFilter = (severity: string) => {
+    if (filters.severity.includes(severity)) {
+      setFilters({
+        ...filters,
+        severity: filters.severity.filter(s => s !== severity)
+      });
+    } else {
+      setFilters({
+        ...filters,
+        severity: [...filters.severity, severity]
+      });
+    }
+  };
+  
+  const toggleStatusFilter = (status: string) => {
+    if (filters.status.includes(status)) {
+      setFilters({
+        ...filters,
+        status: filters.status.filter(s => s !== status)
+      });
+    } else {
+      setFilters({
+        ...filters,
+        status: [...filters.status, status]
+      });
+    }
+  };
+  
+  // Render empty state
+  const renderEmptyState = () => (
+    <div className="text-center py-10">
+      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
+        <CheckCircle className="h-8 w-8 text-green-500" />
+      </div>
+      <h3 className="text-lg font-medium mb-1">No findings match your filters</h3>
+      <p className="text-muted-foreground">
+        Try adjusting your filters or search query to see more results.
+      </p>
+      <Button 
+        variant="outline" 
+        className="mt-4"
+        onClick={() => {
+          setFilters({ severity: [], status: ['open', 'in_progress'] });
+          setSearchQuery('');
+          setViewTab('all');
+        }}
+      >
+        Reset filters
+      </Button>
+    </div>
+  );
+  
+  // Render findings table
+  const renderFindingsTable = () => (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead className="w-[100px]">Severity</TableHead>
+          <TableHead>Finding</TableHead>
+          <TableHead>Area</TableHead>
+          <TableHead className="w-[150px]">Status</TableHead>
+          <TableHead className="w-[150px]">Found</TableHead>
+          <TableHead className="w-[80px]">Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {data?.findings && data.findings.length > 0 ? (
+          data.findings.map((finding) => (
+            <TableRow 
+              key={finding.id} 
+              className={cn(
+                finding.severity === 'critical' ? 'bg-red-50 dark:bg-red-900/10' : '',
+                finding.status === 'open' ? 'border-l-2 border-l-red-500' : '',
+                finding.status === 'in_progress' ? 'border-l-2 border-l-blue-500' : ''
+              )}
+            >
+              <TableCell>
+                <div className="flex items-center">
+                  {getSeverityIcon(finding.severity)}
+                  <span className="ml-2 text-xs capitalize">
+                    {finding.severity}
+                  </span>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div>
+                  <div 
+                    className="font-medium cursor-pointer hover:underline"
+                    onClick={() => setSelectedFinding(finding)}
+                  >
+                    {finding.title}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                    {finding.description}
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="text-sm">{finding.area || 'General'}</div>
+                {finding.component && (
+                  <div className="text-xs text-muted-foreground">{finding.component}</div>
+                )}
+              </TableCell>
+              <TableCell>
+                {getStatusBadge(finding.status)}
+                {finding.assignedTo && (
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Assigned: {finding.assignedTo}
+                  </div>
+                )}
+              </TableCell>
+              <TableCell>
+                <div className="text-xs">
+                  {formatDate(finding.createdAt)}
+                </div>
+              </TableCell>
+              <TableCell>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <Filter className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setSelectedFinding(finding)}>
+                      <FileText className="h-4 w-4 mr-2" /> View Details
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => handleStatusChange(finding, 'open')}>
+                      <AlertCircle className="h-4 w-4 mr-2 text-red-500" /> Mark Open
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleStatusChange(finding, 'in_progress')}>
+                      <AlertTriangle className="h-4 w-4 mr-2 text-blue-500" /> Mark In Progress
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleStatusChange(finding, 'resolved')}>
+                      <Check className="h-4 w-4 mr-2 text-green-500" /> Mark Resolved
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleStatusChange(finding, 'wont_fix')}>
+                      <X className="h-4 w-4 mr-2 text-gray-500" /> Won't Fix
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => handleAssignToMe(finding)}>
+                      <Flag className="h-4 w-4 mr-2" /> Assign to Me
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
+            </TableRow>
+          ))
+        ) : (
+          <TableRow>
+            <TableCell colSpan={6} className="h-24 text-center">
+              No findings found.
+            </TableCell>
+          </TableRow>
+        )}
+      </TableBody>
+    </Table>
+  );
+  
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Bounce Test Findings</CardTitle>
+          <CardTitle>Findings Management</CardTitle>
           <CardDescription>
-            Review and manage issues discovered by automated testing
+            Review and triage issues discovered by the Bounce automated testing system
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-2 top-3 h-4 w-4 text-muted-foreground" />
+        <CardContent className="space-y-4">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative w-full md:w-1/3">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search findings..."
                 className="pl-8"
@@ -218,157 +480,328 @@ const BounceFindings: React.FC = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <div className="flex gap-2">
-              <Select value={severity} onValueChange={setSeverity}>
-                <SelectTrigger className="w-[150px]">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Severity" />
+            
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={filters.severity.includes('critical') ? "default" : "outline"}
+                size="sm"
+                onClick={() => toggleSeverityFilter('critical')}
+                className={filters.severity.includes('critical') ? "bg-red-500 hover:bg-red-600" : ""}
+              >
+                <AlertCircle className="h-3.5 w-3.5 mr-1" />
+                Critical
+              </Button>
+              <Button
+                variant={filters.severity.includes('high') ? "default" : "outline"}
+                size="sm"
+                onClick={() => toggleSeverityFilter('high')}
+                className={filters.severity.includes('high') ? "bg-orange-500 hover:bg-orange-600" : ""}
+              >
+                <AlertTriangle className="h-3.5 w-3.5 mr-1" />
+                High
+              </Button>
+              <Button
+                variant={filters.status.includes('open') ? "default" : "outline"}
+                size="sm"
+                onClick={() => toggleStatusFilter('open')}
+              >
+                Open
+              </Button>
+              <Button
+                variant={filters.status.includes('in_progress') ? "default" : "outline"}
+                size="sm"
+                onClick={() => toggleStatusFilter('in_progress')}
+              >
+                In Progress
+              </Button>
+            </div>
+            
+            <div className="flex-grow flex justify-end">
+              <Select
+                value={filters.area || ""}
+                onValueChange={(value) => setFilters({ ...filters, area: value || undefined })}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by area" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Severities</SelectItem>
-                  <SelectItem value={BounceFindingSeverity.CRITICAL}>Critical</SelectItem>
-                  <SelectItem value={BounceFindingSeverity.HIGH}>High</SelectItem>
-                  <SelectItem value={BounceFindingSeverity.MEDIUM}>Medium</SelectItem>
-                  <SelectItem value={BounceFindingSeverity.LOW}>Low</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger className="w-[150px]">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All Statuses</SelectItem>
-                  <SelectItem value={BounceFindingStatus.NEW}>New</SelectItem>
-                  <SelectItem value={BounceFindingStatus.TRIAGE}>Triage</SelectItem>
-                  <SelectItem value={BounceFindingStatus.CONFIRMED}>Confirmed</SelectItem>
-                  <SelectItem value={BounceFindingStatus.IN_PROGRESS}>In Progress</SelectItem>
-                  <SelectItem value={BounceFindingStatus.FIXED}>Fixed</SelectItem>
-                  <SelectItem value={BounceFindingStatus.WONT_FIX}>Won't Fix</SelectItem>
-                  <SelectItem value={BounceFindingStatus.DUPLICATE}>Duplicate</SelectItem>
+                  <SelectItem value="">All Areas</SelectItem>
+                  {metaData?.areas?.map((area) => (
+                    <SelectItem key={area} value={area}>{area}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
-
-          <div className="border rounded-md">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Severity</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Browser</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  Array(5).fill(0).map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell colSpan={6} className="h-16 text-center text-muted-foreground">
-                        Loading findings...
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : data?.findings?.length ? (
-                  data.findings.map((finding: any) => (
-                    <TableRow key={finding.id} className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800" onClick={() => handleViewFinding(finding.id)}>
-                      <TableCell className="font-medium">{finding.id}</TableCell>
-                      <TableCell className="max-w-md truncate">
-                        {finding.title}
-                      </TableCell>
-                      <TableCell>{renderSeverityBadge(finding.severity)}</TableCell>
-                      <TableCell>{renderStatusBadge(finding.status)}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{finding.browserInfo?.name || "Unknown"}</Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleViewFinding(finding.id);
-                            }}
-                          >
-                            <Eye className="h-4 w-4 mr-2" />
-                            View
-                          </Button>
-                          <Select 
-                            defaultValue={finding.status} 
-                            onValueChange={(value) => {
-                              handleUpdateStatus(finding.id, value);
-                            }}
-                            onOpenChange={(open) => {
-                              if (open) {
-                                // Prevent row click when opening the select
-                                document.addEventListener('click', (e) => {
-                                  e.stopPropagation();
-                                }, { once: true });
-                              }
-                            }}
-                          >
-                            <SelectTrigger 
-                              className="w-[130px]"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <SelectValue placeholder="Update Status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value={BounceFindingStatus.NEW}>New</SelectItem>
-                              <SelectItem value={BounceFindingStatus.TRIAGE}>Triage</SelectItem>
-                              <SelectItem value={BounceFindingStatus.CONFIRMED}>Confirmed</SelectItem>
-                              <SelectItem value={BounceFindingStatus.IN_PROGRESS}>In Progress</SelectItem>
-                              <SelectItem value={BounceFindingStatus.FIXED}>Fixed</SelectItem>
-                              <SelectItem value={BounceFindingStatus.WONT_FIX}>Won't Fix</SelectItem>
-                              <SelectItem value={BounceFindingStatus.DUPLICATE}>Duplicate</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} className="h-16 text-center text-muted-foreground">
-                      No findings match the current filters
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          {data?.pagination && (
-            <div className="mt-4">
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious 
-                      onClick={handlePrevPage} 
-                      disabled={page <= 1}
-                    />
-                  </PaginationItem>
-                  <PaginationItem>
-                    <span className="text-sm text-muted-foreground">
-                      Page {page} of {data.pagination.totalPages}
-                    </span>
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationNext 
-                      onClick={handleNextPage} 
-                      disabled={page >= data.pagination.totalPages}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
-          )}
+          
+          <Tabs 
+            defaultValue="all" 
+            value={viewTab} 
+            onValueChange={(value) => setViewTab(value as 'all' | 'critical' | 'assigned')}
+            className="w-full"
+          >
+            <TabsList>
+              <TabsTrigger value="all">All Findings</TabsTrigger>
+              <TabsTrigger value="critical">
+                Critical Issues
+                <Badge variant="destructive" className="ml-2 bg-red-500">
+                  {data?.findings?.filter(f => f.severity === 'critical').length || 0}
+                </Badge>
+              </TabsTrigger>
+              <TabsTrigger value="assigned">Assigned to Me</TabsTrigger>
+            </TabsList>
+            <TabsContent value="all" className="pt-4">
+              {isLoading ? (
+                <div className="space-y-4">
+                  {Array(5).fill(0).map((_, i) => (
+                    <Skeleton key={i} className="h-12 w-full" />
+                  ))}
+                </div>
+              ) : error ? (
+                <div className="py-8 text-center">
+                  <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
+                  <h3 className="text-lg font-medium">Error loading findings</h3>
+                  <p className="text-muted-foreground">
+                    There was a problem loading findings. Please try again.
+                  </p>
+                </div>
+              ) : data?.findings?.length === 0 ? (
+                renderEmptyState()
+              ) : (
+                <div className="border rounded-md">
+                  <ScrollArea className="h-[450px]">
+                    {renderFindingsTable()}
+                  </ScrollArea>
+                </div>
+              )}
+            </TabsContent>
+            <TabsContent value="critical" className="pt-4">
+              {isLoading ? (
+                <div className="space-y-4">
+                  {Array(3).fill(0).map((_, i) => (
+                    <Skeleton key={i} className="h-12 w-full" />
+                  ))}
+                </div>
+              ) : data?.findings?.filter(f => f.severity === 'critical').length === 0 ? (
+                <div className="text-center py-10">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-50 dark:bg-green-900/20 mb-4">
+                    <CheckCircle className="h-8 w-8 text-green-500" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-1">No critical findings!</h3>
+                  <p className="text-muted-foreground">
+                    Great job! There are no critical issues to address.
+                  </p>
+                </div>
+              ) : (
+                <div className="border rounded-md">
+                  <ScrollArea className="h-[450px]">
+                    {renderFindingsTable()}
+                  </ScrollArea>
+                </div>
+              )}
+            </TabsContent>
+            <TabsContent value="assigned" className="pt-4">
+              {isLoading ? (
+                <div className="space-y-4">
+                  {Array(3).fill(0).map((_, i) => (
+                    <Skeleton key={i} className="h-12 w-full" />
+                  ))}
+                </div>
+              ) : (
+                <div className="border rounded-md">
+                  <ScrollArea className="h-[450px]">
+                    {renderFindingsTable()}
+                  </ScrollArea>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </CardContent>
+        <CardFooter>
+          <div className="text-xs text-muted-foreground">
+            Showing {data?.findings?.length || 0} findings
+          </div>
+        </CardFooter>
       </Card>
+      
+      {/* Finding Detail Dialog */}
+      {selectedFinding && (
+        <Dialog open={!!selectedFinding} onOpenChange={(open) => !open && setSelectedFinding(null)}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+            <DialogHeader>
+              <div className="flex items-center gap-2">
+                {getSeverityIcon(selectedFinding.severity)}
+                <DialogTitle>{selectedFinding.title}</DialogTitle>
+              </div>
+              <DialogDescription>
+                Found during test run #{selectedFinding.testRunId} on {formatDate(selectedFinding.createdAt)}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="flex-grow overflow-auto">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+                <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
+                  <div className="text-sm font-medium mb-1">Status</div>
+                  <div>{getStatusBadge(selectedFinding.status)}</div>
+                </div>
+                
+                <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
+                  <div className="text-sm font-medium mb-1">Area</div>
+                  <div className="text-sm">{selectedFinding.area || 'General'}</div>
+                  {selectedFinding.component && (
+                    <div className="text-xs text-muted-foreground mt-1">{selectedFinding.component}</div>
+                  )}
+                </div>
+                
+                <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
+                  <div className="text-sm font-medium mb-1">Assigned To</div>
+                  <div className="text-sm">
+                    {selectedFinding.assignedTo || 'Unassigned'}
+                    {!selectedFinding.assignedTo && (
+                      <Button 
+                        variant="link" 
+                        className="p-0 h-auto text-xs"
+                        onClick={() => handleAssignToMe(selectedFinding)}
+                      >
+                        Assign to me
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Description</h4>
+                  <div className="text-sm bg-gray-50 dark:bg-gray-800 p-3 rounded-md whitespace-pre-line">
+                    {selectedFinding.description}
+                  </div>
+                </div>
+                
+                {selectedFinding.steps && selectedFinding.steps.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium mb-2">Reproduction Steps</h4>
+                    <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
+                      <ol className="list-decimal list-inside space-y-1">
+                        {selectedFinding.steps.map((step, index) => (
+                          <li key={index} className="text-sm">{step}</li>
+                        ))}
+                      </ol>
+                    </div>
+                  </div>
+                )}
+                
+                {selectedFinding.elementSelector && (
+                  <div>
+                    <h4 className="text-sm font-medium mb-2">Element Selector</h4>
+                    <code className="block bg-gray-50 dark:bg-gray-800 p-3 rounded-md text-xs overflow-x-auto">
+                      {selectedFinding.elementSelector}
+                    </code>
+                  </div>
+                )}
+                
+                {selectedFinding.screenshot && (
+                  <div>
+                    <h4 className="text-sm font-medium mb-2">Screenshot</h4>
+                    <div className="border rounded-md overflow-hidden">
+                      <img 
+                        src={selectedFinding.screenshot} 
+                        alt="Finding Screenshot" 
+                        className="w-full h-auto"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <DialogFooter className="flex items-center justify-between">
+              <div className="flex gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline">{selectedFinding.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} ▾</Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuLabel>Change Status</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => handleStatusChange(selectedFinding, 'open')}>
+                      <AlertCircle className="h-4 w-4 mr-2 text-red-500" /> Open
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleStatusChange(selectedFinding, 'in_progress')}>
+                      <AlertTriangle className="h-4 w-4 mr-2 text-blue-500" /> In Progress
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleStatusChange(selectedFinding, 'resolved')}>
+                      <Check className="h-4 w-4 mr-2 text-green-500" /> Resolved
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleStatusChange(selectedFinding, 'wont_fix')}>
+                      <X className="h-4 w-4 mr-2 text-gray-500" /> Won't Fix
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleStatusChange(selectedFinding, 'duplicate')}>
+                      <Copy className="h-4 w-4 mr-2 text-purple-500" /> Duplicate
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                
+                <Button variant="outline" onClick={() => handleAssignToMe(selectedFinding)}>
+                  Assign to Me
+                </Button>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline">Priority {selectedFinding.priority || 0} ▾</Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuLabel>Set Priority</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {[1, 2, 3, 4, 5].map((priority) => (
+                      <DropdownMenuItem 
+                        key={priority}
+                        onClick={() => handlePriorityChange(selectedFinding, priority)}
+                      >
+                        {priority} - {
+                          priority === 1 ? 'Highest' :
+                          priority === 2 ? 'High' :
+                          priority === 3 ? 'Medium' :
+                          priority === 4 ? 'Low' :
+                          'Lowest'
+                        }
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              
+              <Button variant="default" onClick={() => setSelectedFinding(null)}>
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+      
+      {/* Status Update Dialog */}
+      <Dialog open={statusUpdateDialogOpen} onOpenChange={setStatusUpdateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Finding Status</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to change the status of this finding to {newStatus.replace('_', ' ')}?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm font-medium">Finding:</p>
+            <p className="text-sm">{selectedFinding?.title}</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setStatusUpdateDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={confirmStatusChange}>
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
