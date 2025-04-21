@@ -1,147 +1,120 @@
 /**
- * PKL-278651-COMM-0022-XP
- * Server Event Bus
+ * PKL-278651-BOUNCE-0005-AUTO - Server Event Bus
  * 
- * This module provides a centralized event bus for server-side modules
- * to communicate with each other using a publish/subscribe pattern.
+ * This file provides a simple event bus for server-side component communication.
+ * It allows components to publish events and subscribe to them without direct dependencies.
  * 
- * @framework Framework5.1
+ * @framework Framework5.2
  * @version 1.0.0
- * @lastModified 2025-04-19
+ * @lastModified 2025-04-21
  */
 
-export type EventHandler = (data: any) => void | Promise<void>;
-
-/**
- * Server event types
- */
-export enum ServerEvents {
-  // User events
-  USER_CREATED = 'user:created',
-  USER_UPDATED = 'user:updated',
-  USER_LOGIN = 'user:login',
-  USER_LOGOUT = 'user:logout',
-  
-  // Match events
-  MATCH_RECORDED = 'match:recorded',
-  MATCH_UPDATED = 'match:updated',
-  MATCH_DELETED = 'match:deleted',
-  
-  // Tournament events
-  TOURNAMENT_CREATED = 'tournament:created',
-  TOURNAMENT_UPDATED = 'tournament:updated',
-  TOURNAMENT_COMPLETED = 'tournament:completed',
-  
-  // Achievement events
-  ACHIEVEMENT_UNLOCKED = 'achievement:unlocked',
-  ACHIEVEMENT_PROGRESS = 'achievement:progress',
-  
-  // XP events
-  XP_AWARDED = 'xp:awarded',
-  XP_LEVEL_UP = 'xp:level_up',
-  
-  // Community events
-  COMMUNITY_CREATED = 'community:created',
-  COMMUNITY_UPDATED = 'community:updated',
-  COMMUNITY_DELETED = 'community:deleted',
-  COMMUNITY_JOINED = 'community:joined',
-  COMMUNITY_LEFT = 'community:left',
-  COMMUNITY_POST_CREATED = 'community:post:created',
-  COMMUNITY_POST_UPDATED = 'community:post:updated',
-  COMMUNITY_POST_DELETED = 'community:post:deleted',
-  COMMUNITY_COMMENT_CREATED = 'community:comment:created',
-  COMMUNITY_COMMENT_UPDATED = 'community:comment:updated',
-  COMMUNITY_COMMENT_DELETED = 'community:comment:deleted',
-  COMMUNITY_EVENT_CREATED = 'community:event:created',
-  COMMUNITY_EVENT_UPDATED = 'community:event:updated',
-  COMMUNITY_EVENT_DELETED = 'community:event:deleted',
-  COMMUNITY_EVENT_JOINED = 'community:event:joined',
-  COMMUNITY_EVENT_LEFT = 'community:event:left',
-  COMMUNITY_EVENT_ATTENDED = 'community:event:attended',
-  COMMUNITY_ACTIVITY_CREATED = 'community:activity:created',
-  
-  // Redemption events
-  REDEMPTION_CODE_USED = 'redemption:code:used',
-  
-  // CourtIQ events
-  COURTIQ_TIER_CHANGED = 'courtiq:tier:changed',
-  
-  // PicklePulse events
-  PICKLE_PULSE_RECALIBRATED = 'pickle_pulse:recalibrated'
-}
+// Define event listener type
+type EventListener = (data: any) => void;
 
 /**
- * Event Bus implementation
+ * Server-side event bus for component communication
  */
-class EventBus {
-  private handlers: Map<string, Set<EventHandler>> = new Map();
+export class ServerEventBus {
+  // Map of event names to arrays of listeners
+  private static listeners: Map<string, EventListener[]> = new Map();
   
   /**
    * Subscribe to an event
+   * @param eventName Event name
+   * @param listener Function to call when the event is published
+   * @returns Function to unsubscribe
    */
-  subscribe(event: ServerEvents, handler: EventHandler): () => void {
-    if (!this.handlers.has(event)) {
-      this.handlers.set(event, new Set());
-    }
+  static subscribe(eventName: string, listener: EventListener): () => void {
+    // Get or create the listener array for this event
+    const listeners = this.listeners.get(eventName) || [];
     
-    this.handlers.get(event)!.add(handler);
+    // Add the listener
+    listeners.push(listener);
     
-    // Return unsubscribe function
+    // Update the listeners map
+    this.listeners.set(eventName, listeners);
+    
+    // Return a function to unsubscribe
     return () => {
-      const handlers = this.handlers.get(event);
-      if (handlers) {
-        handlers.delete(handler);
-        if (handlers.size === 0) {
-          this.handlers.delete(event);
-        }
-      }
+      this.unsubscribe(eventName, listener);
     };
   }
   
   /**
-   * Emit an event
+   * Unsubscribe from an event
+   * @param eventName Event name
+   * @param listener Listener to remove
    */
-  async emit(event: ServerEvents, data: any = {}): Promise<void> {
-    const handlers = this.handlers.get(event);
-    if (!handlers) return;
+  static unsubscribe(eventName: string, listener: EventListener): void {
+    // Get the listeners for this event
+    const listeners = this.listeners.get(eventName);
     
-    // Convert Set to Array for compatibility with older JS environments
-    const handlersArray = Array.from(handlers);
+    // If there are no listeners, return
+    if (!listeners) {
+      return;
+    }
     
-    // Execute all handlers
-    await Promise.all(
-      handlersArray.map(handler => {
-        try {
-          return Promise.resolve(handler(data));
-        } catch (error) {
-          console.error(`Error in event handler for ${event}:`, error);
-          return Promise.resolve();
-        }
-      })
-    );
+    // Remove the listener
+    const index = listeners.indexOf(listener);
+    if (index !== -1) {
+      listeners.splice(index, 1);
+    }
+    
+    // Update the listeners map
+    if (listeners.length === 0) {
+      this.listeners.delete(eventName);
+    } else {
+      this.listeners.set(eventName, listeners);
+    }
   }
   
   /**
-   * Check if an event has subscribers
+   * Publish an event
+   * @param eventName Event name
+   * @param data Data to pass to listeners
    */
-  hasSubscribers(event: ServerEvents): boolean {
-    const handlers = this.handlers.get(event);
-    return !!handlers && handlers.size > 0;
+  static publish(eventName: string, data: any): void {
+    // Get the listeners for this event
+    const listeners = this.listeners.get(eventName);
+    
+    // If there are no listeners, return
+    if (!listeners) {
+      return;
+    }
+    
+    // Call each listener with the data
+    for (const listener of listeners) {
+      try {
+        listener(data);
+      } catch (error) {
+        console.error(`Error in event listener for ${eventName}:`, error);
+      }
+    }
   }
   
   /**
-   * Get all registered events
+   * Remove all listeners for an event
+   * @param eventName Event name
    */
-  getRegisteredEvents(): ServerEvents[] {
-    return Array.from(this.handlers.keys()) as ServerEvents[];
+  static clearEvent(eventName: string): void {
+    this.listeners.delete(eventName);
   }
   
   /**
-   * Clear all handlers for testing purposes
+   * Remove all listeners for all events
    */
-  clear(): void {
-    this.handlers.clear();
+  static clearAllEvents(): void {
+    this.listeners.clear();
+  }
+  
+  /**
+   * Get the number of listeners for an event
+   * @param eventName Event name
+   * @returns Number of listeners
+   */
+  static getListenerCount(eventName: string): number {
+    const listeners = this.listeners.get(eventName);
+    return listeners ? listeners.length : 0;
   }
 }
-
-export const ServerEventBus = new EventBus();

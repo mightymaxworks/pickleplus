@@ -1,8 +1,7 @@
 /**
  * PKL-278651-BOUNCE-0005-AUTO - Bounce Scheduler Service
  * 
- * This service provides functionality for scheduling and executing automated tests
- * as part of the Bounce automation capabilities.
+ * This service handles the scheduling and management of automated tests for the Bounce system.
  * 
  * @framework Framework5.2
  * @version 1.0.0
@@ -10,276 +9,171 @@
  */
 
 import { db } from '../db';
-import { eq, gte, lte, sql } from 'drizzle-orm';
-import { 
-  scheduledTests, 
-  testTemplates,
-  SCHEDULE_FREQUENCY,
-  TEST_RUN_TRIGGER
-} from '@shared/schema';
+import { eq, and, desc, asc, isNull, gte, sql } from 'drizzle-orm';
+import { scheduledTests, testTemplates, SCHEDULE_FREQUENCY } from '@shared/schema';
+import { cronExpressionFromFrequency, getNextRunDate } from '../utils/cron-helpers';
 import { BounceTestRunnerService } from './bounce-test-runner-service';
+import { TEST_RUN_TRIGGER } from '@shared/schema';
 import { ServerEventBus } from '../core/events/server-event-bus';
-import cron from 'node-cron';
-import { getNextRunDate, cronExpressionFromFrequency } from '../utils/cron-helpers';
 
-export class BounceSchedulerService {
-  private scheduledJobs: Map<number, cron.ScheduledTask> = new Map();
+class BounceSchedulerService {
   private testRunnerService: BounceTestRunnerService;
+  private activeSchedules: Map<number, NodeJS.Timeout> = new Map();
   
-  constructor() {
-    this.testRunnerService = new BounceTestRunnerService();
+  constructor(testRunnerService: BounceTestRunnerService) {
+    this.testRunnerService = testRunnerService;
+    this.setupEventListeners();
   }
-
+  
   /**
-   * Initialize the scheduler and load all active scheduled tests
+   * Initialize the scheduler service
    */
   async initialize(): Promise<void> {
-    console.log('[BounceScheduler] Initializing scheduler service');
-    
     try {
-      // Get all active scheduled tests
-      const activeSchedules = await db.query.scheduledTests.findMany({
-        where: eq(scheduledTests.isActive, true),
-        with: {
-          template: true
-        }
-      });
+      console.log('[BounceScheduler] Initializing scheduler service');
       
-      console.log(`[BounceScheduler] Found ${activeSchedules.length} active scheduled tests`);
+      // Load all active scheduled tests
+      const schedules = await this.getAllScheduledTests(true);
       
       // Schedule each active test
-      for (const schedule of activeSchedules) {
+      for (const schedule of schedules) {
         await this.scheduleTest(schedule.id);
       }
       
-      // Set up listeners for scheduled test changes
-      this.setupEventListeners();
-      
-      // Check for and run any missed schedules
-      await this.checkForMissedSchedules();
-      
-      console.log('[BounceScheduler] Scheduler service initialized successfully');
+      console.log(`[BounceScheduler] Initialized ${schedules.length} scheduled tests`);
     } catch (error) {
       console.error('[BounceScheduler] Error initializing scheduler service:', error);
     }
   }
   
   /**
-   * Set up event listeners for scheduled test changes
+   * Set up event listeners
    */
   private setupEventListeners(): void {
-    // Listen for scheduled test creation
-    ServerEventBus.subscribe('scheduledTest:created', async (data: { id: number }) => {
-      await this.scheduleTest(data.id);
-    });
-    
-    // Listen for scheduled test updates
-    ServerEventBus.subscribe('scheduledTest:updated', async (data: { id: number }) => {
-      // Unschedule existing job if exists
-      this.unscheduleTest(data.id);
-      
-      // Reschedule if active
-      const schedule = await db.query.scheduledTests.findFirst({
-        where: eq(scheduledTests.id, data.id)
-      });
-      
-      if (schedule && schedule.isActive) {
-        await this.scheduleTest(data.id);
+    // Listen for scheduled test run completion
+    ServerEventBus.subscribe('testRun:completed', async (data: { runId: string, triggerId?: string }) => {
+      if (data.triggerId) {
+        try {
+          const scheduleId = parseInt(data.triggerId);
+          
+          if (!isNaN(scheduleId)) {
+            // Update the last run time for the schedule
+            await db.update(scheduledTests)
+              .set({
+                lastRunAt: new Date(),
+                updatedAt: new Date()
+              })
+              .where(eq(scheduledTests.id, scheduleId));
+            
+            console.log(`[BounceScheduler] Updated lastRunAt for schedule ${scheduleId}`);
+          }
+        } catch (error) {
+          console.error(`[BounceScheduler] Error updating lastRunAt for schedule:`, error);
+        }
       }
-    });
-    
-    // Listen for scheduled test deletion
-    ServerEventBus.subscribe('scheduledTest:deleted', (data: { id: number }) => {
-      this.unscheduleTest(data.id);
     });
   }
   
   /**
-   * Check for and run any missed schedules
+   * Get all scheduled tests
    */
-  private async checkForMissedSchedules(): Promise<void> {
+  async getAllScheduledTests(activeOnly: boolean = false): Promise<any[]> {
     try {
-      const now = new Date();
+      let query = db.select()
+        .from(scheduledTests)
+        .leftJoin(testTemplates, eq(scheduledTests.templateId, testTemplates.id))
+        .orderBy(desc(scheduledTests.updatedAt));
       
-      // Find scheduled tests that have missed their run time
-      const missedSchedules = await db.query.scheduledTests.findMany({
-        where: (fields, { and }) => 
-          and(
-            eq(fields.isActive, true),
-            lte(fields.nextRun, now),
-            sql`${fields.lastRun} IS NULL OR ${fields.lastRun} < ${fields.nextRun}`
-          ),
-        with: {
-          template: true
-        }
-      });
-      
-      console.log(`[BounceScheduler] Found ${missedSchedules.length} missed scheduled tests`);
-      
-      // Run each missed schedule
-      for (const schedule of missedSchedules) {
-        console.log(`[BounceScheduler] Running missed scheduled test: ${schedule.name} (ID: ${schedule.id})`);
-        
-        await this.runScheduledTest(schedule.id);
+      if (activeOnly) {
+        query = query.where(eq(scheduledTests.isActive, true));
       }
+      
+      const results = await query;
+      
+      // Transform the results
+      return results.map(row => ({
+        id: row.scheduled_tests.id,
+        name: row.scheduled_tests.name,
+        description: row.scheduled_tests.description,
+        frequency: row.scheduled_tests.frequency,
+        cronExpression: row.scheduled_tests.cronExpression,
+        isActive: row.scheduled_tests.isActive,
+        createdAt: row.scheduled_tests.createdAt,
+        updatedAt: row.scheduled_tests.updatedAt,
+        lastRunAt: row.scheduled_tests.lastRunAt,
+        nextRunAt: row.scheduled_tests.nextRunAt,
+        createdBy: row.scheduled_tests.createdBy,
+        templateId: row.scheduled_tests.templateId,
+        notifyOnCompletion: row.scheduled_tests.notifyOnCompletion,
+        notifyOnIssue: row.scheduled_tests.notifyOnIssue,
+        template: row.test_templates ? {
+          id: row.test_templates.id,
+          name: row.test_templates.name,
+          description: row.test_templates.description,
+          configuration: row.test_templates.configuration,
+          isActive: row.test_templates.isActive,
+          createdAt: row.test_templates.createdAt,
+          updatedAt: row.test_templates.updatedAt,
+          createdBy: row.test_templates.createdBy
+        } : null
+      }));
     } catch (error) {
-      console.error('[BounceScheduler] Error checking for missed schedules:', error);
+      console.error('[BounceScheduler] Error getting scheduled tests:', error);
+      return [];
     }
   }
   
   /**
-   * Schedule a test to run based on its configuration
+   * Get a specific scheduled test
    */
-  async scheduleTest(scheduleId: number): Promise<boolean> {
+  async getScheduledTest(id: number): Promise<any | null> {
     try {
-      // Get schedule details
-      const schedule = await db.query.scheduledTests.findFirst({
-        where: eq(scheduledTests.id, scheduleId),
-        with: {
-          template: true
-        }
-      });
+      const [result] = await db.select()
+        .from(scheduledTests)
+        .leftJoin(testTemplates, eq(scheduledTests.templateId, testTemplates.id))
+        .where(eq(scheduledTests.id, id));
       
-      if (!schedule) {
-        console.error(`[BounceScheduler] Scheduled test with ID ${scheduleId} not found`);
-        return false;
+      if (!result) {
+        return null;
       }
       
-      if (!schedule.isActive) {
-        console.log(`[BounceScheduler] Scheduled test '${schedule.name}' (ID: ${scheduleId}) is inactive`);
-        return false;
-      }
-      
-      // Unschedule any existing job
-      this.unscheduleTest(scheduleId);
-      
-      // Get cron expression
-      let cronExpression: string | null = null;
-      
-      if (schedule.frequency === SCHEDULE_FREQUENCY.CUSTOM && schedule.cronExpression) {
-        cronExpression = schedule.cronExpression;
-      } else {
-        cronExpression = cronExpressionFromFrequency(schedule.frequency);
-      }
-      
-      if (!cronExpression) {
-        console.error(`[BounceScheduler] Invalid cron expression for scheduled test ${scheduleId}`);
-        return false;
-      }
-      
-      // Schedule the job
-      const job = cron.schedule(cronExpression, async () => {
-        await this.runScheduledTest(scheduleId);
-      });
-      
-      // Store the job
-      this.scheduledJobs.set(scheduleId, job);
-      
-      // Calculate and update next run date if not set
-      if (!schedule.nextRun) {
-        const nextRun = getNextRunDate(cronExpression);
-        
-        await db.update(scheduledTests)
-          .set({ nextRun })
-          .where(eq(scheduledTests.id, scheduleId));
-      }
-      
-      console.log(`[BounceScheduler] Scheduled test '${schedule.name}' (ID: ${scheduleId}) with cron: ${cronExpression}`);
-      return true;
+      // Transform the result
+      return {
+        id: result.scheduled_tests.id,
+        name: result.scheduled_tests.name,
+        description: result.scheduled_tests.description,
+        frequency: result.scheduled_tests.frequency,
+        cronExpression: result.scheduled_tests.cronExpression,
+        isActive: result.scheduled_tests.isActive,
+        createdAt: result.scheduled_tests.createdAt,
+        updatedAt: result.scheduled_tests.updatedAt,
+        lastRunAt: result.scheduled_tests.lastRunAt,
+        nextRunAt: result.scheduled_tests.nextRunAt,
+        createdBy: result.scheduled_tests.createdBy,
+        templateId: result.scheduled_tests.templateId,
+        notifyOnCompletion: result.scheduled_tests.notifyOnCompletion,
+        notifyOnIssue: result.scheduled_tests.notifyOnIssue,
+        template: result.test_templates ? {
+          id: result.test_templates.id,
+          name: result.test_templates.name,
+          description: result.test_templates.description,
+          configuration: result.test_templates.configuration,
+          isActive: result.test_templates.isActive,
+          createdAt: result.test_templates.createdAt,
+          updatedAt: result.test_templates.updatedAt,
+          createdBy: result.test_templates.createdBy
+        } : null
+      };
     } catch (error) {
-      console.error(`[BounceScheduler] Error scheduling test ${scheduleId}:`, error);
-      return false;
-    }
-  }
-  
-  /**
-   * Unschedule a previously scheduled test
-   */
-  unscheduleTest(scheduleId: number): void {
-    const job = this.scheduledJobs.get(scheduleId);
-    
-    if (job) {
-      job.stop();
-      this.scheduledJobs.delete(scheduleId);
-      console.log(`[BounceScheduler] Unscheduled test with ID ${scheduleId}`);
-    }
-  }
-  
-  /**
-   * Run a scheduled test immediately
-   */
-  async runScheduledTest(scheduleId: number): Promise<boolean> {
-    try {
-      // Get schedule details
-      const schedule = await db.query.scheduledTests.findFirst({
-        where: eq(scheduledTests.id, scheduleId),
-        with: {
-          template: true
-        }
-      });
-      
-      if (!schedule || !schedule.template) {
-        console.error(`[BounceScheduler] Scheduled test or template not found for ID ${scheduleId}`);
-        return false;
-      }
-      
-      console.log(`[BounceScheduler] Running scheduled test: ${schedule.name} (ID: ${scheduleId})`);
-      
-      // Get the test configuration from the template
-      const testConfig = schedule.template.configuration;
-      
-      // Run the test
-      const testRunId = await this.testRunnerService.startTestRun({
-        templateId: schedule.templateId,
-        features: testConfig.features,
-        params: testConfig.params,
-        settings: testConfig.settings,
-        trigger: TEST_RUN_TRIGGER.SCHEDULED,
-        triggerId: scheduleId.toString()
-      });
-      
-      if (!testRunId) {
-        console.error(`[BounceScheduler] Failed to start test run for scheduled test ${scheduleId}`);
-        return false;
-      }
-      
-      const now = new Date();
-      
-      // Update the last run time and calculate next run
-      const nextRun = schedule.cronExpression 
-        ? getNextRunDate(schedule.cronExpression) 
-        : getNextRunDate(cronExpressionFromFrequency(schedule.frequency));
-      
-      await db.update(scheduledTests)
-        .set({ 
-          lastRun: now,
-          nextRun
-        })
-        .where(eq(scheduledTests.id, scheduleId));
-      
-      console.log(`[BounceScheduler] Scheduled test ${scheduleId} run successfully, next run: ${nextRun}`);
-      
-      // Send notifications if configured
-      if (schedule.notifyOnCompletion) {
-        ServerEventBus.publish('scheduledTest:ran', {
-          scheduleId,
-          testRunId,
-          name: schedule.name,
-          timestamp: now
-        });
-      }
-      
-      return true;
-    } catch (error) {
-      console.error(`[BounceScheduler] Error running scheduled test ${scheduleId}:`, error);
-      return false;
+      console.error(`[BounceScheduler] Error getting scheduled test ${id}:`, error);
+      return null;
     }
   }
   
   /**
    * Create a new scheduled test
    */
-  async createScheduledTest(scheduleData: {
+  async createScheduledTest(data: {
     name: string;
     description?: string;
     templateId: number;
@@ -292,55 +186,55 @@ export class BounceSchedulerService {
     try {
       // Validate the template exists
       const template = await db.query.testTemplates.findFirst({
-        where: eq(testTemplates.id, scheduleData.templateId)
+        where: eq(testTemplates.id, data.templateId)
       });
       
       if (!template) {
-        console.error(`[BounceScheduler] Template not found for ID ${scheduleData.templateId}`);
+        console.error(`[BounceScheduler] Template ${data.templateId} not found`);
         return null;
       }
       
-      // Calculate next run date
-      let cronExpression = scheduleData.cronExpression;
+      // Generate cron expression if not provided
+      let cronExpression = data.cronExpression;
       
-      if (!cronExpression && scheduleData.frequency !== SCHEDULE_FREQUENCY.CUSTOM) {
-        cronExpression = cronExpressionFromFrequency(scheduleData.frequency);
+      if (!cronExpression && data.frequency !== SCHEDULE_FREQUENCY.CUSTOM) {
+        cronExpression = cronExpressionFromFrequency(data.frequency);
       }
       
       if (!cronExpression) {
-        console.error('[BounceScheduler] No valid cron expression provided');
+        console.error(`[BounceScheduler] Cron expression is required for custom frequency`);
         return null;
       }
       
-      const nextRun = getNextRunDate(cronExpression);
+      // Calculate next run time
+      const nextRunAt = getNextRunDate(cronExpression);
       
-      // Insert scheduled test
-      const [newSchedule] = await db.insert(scheduledTests)
+      // Create the scheduled test
+      const [result] = await db.insert(scheduledTests)
         .values({
-          name: scheduleData.name,
-          description: scheduleData.description || null,
-          templateId: scheduleData.templateId,
-          frequency: scheduleData.frequency,
-          cronExpression: scheduleData.cronExpression || null,
-          nextRun,
-          createdBy: scheduleData.createdBy,
-          notifyOnCompletion: scheduleData.notifyOnCompletion ?? true,
-          notifyOnIssue: scheduleData.notifyOnIssue ?? true,
+          name: data.name,
+          description: data.description || null,
+          templateId: data.templateId,
+          frequency: data.frequency,
+          cronExpression,
           isActive: true,
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
+          nextRunAt,
+          createdBy: data.createdBy,
+          notifyOnCompletion: data.notifyOnCompletion || false,
+          notifyOnIssue: data.notifyOnIssue || false
         })
-        .returning();
+        .returning({ id: scheduledTests.id });
+      
+      const scheduleId = result.id;
       
       // Schedule the test
-      await this.scheduleTest(newSchedule.id);
+      await this.scheduleTest(scheduleId);
       
-      // Publish event
-      ServerEventBus.publish('scheduledTest:created', {
-        id: newSchedule.id
-      });
+      console.log(`[BounceScheduler] Created scheduled test ${scheduleId} with next run at ${nextRunAt}`);
       
-      return newSchedule.id;
+      return scheduleId;
     } catch (error) {
       console.error('[BounceScheduler] Error creating scheduled test:', error);
       return null;
@@ -348,69 +242,114 @@ export class BounceSchedulerService {
   }
   
   /**
-   * Update an existing scheduled test
+   * Update a scheduled test
    */
-  async updateScheduledTest(
-    scheduleId: number,
-    updates: Partial<{
-      name: string;
-      description: string | null;
-      templateId: number;
-      frequency: SCHEDULE_FREQUENCY;
-      cronExpression: string | null;
-      isActive: boolean;
-      notifyOnCompletion: boolean;
-      notifyOnIssue: boolean;
-    }>
-  ): Promise<boolean> {
+  async updateScheduledTest(id: number, data: {
+    name?: string;
+    description?: string | null;
+    templateId?: number;
+    frequency?: SCHEDULE_FREQUENCY;
+    cronExpression?: string | null;
+    isActive?: boolean;
+    notifyOnCompletion?: boolean;
+    notifyOnIssue?: boolean;
+  }): Promise<boolean> {
     try {
-      // Get current schedule
-      const currentSchedule = await db.query.scheduledTests.findFirst({
-        where: eq(scheduledTests.id, scheduleId)
-      });
+      // Get the current scheduled test
+      const currentSchedule = await this.getScheduledTest(id);
       
       if (!currentSchedule) {
-        console.error(`[BounceScheduler] Scheduled test not found for ID ${scheduleId}`);
+        console.error(`[BounceScheduler] Scheduled test ${id} not found`);
         return false;
       }
       
-      // Calculate next run date if frequency or cron changed
-      let nextRun = currentSchedule.nextRun;
+      // Build the update object
+      const updateData: any = {
+        updatedAt: new Date()
+      };
       
-      if (
-        (updates.frequency && updates.frequency !== currentSchedule.frequency) ||
-        (updates.cronExpression !== undefined && updates.cronExpression !== currentSchedule.cronExpression)
-      ) {
-        let cronExpression = updates.cronExpression || null;
+      if (data.name !== undefined) {
+        updateData.name = data.name;
+      }
+      
+      if (data.description !== undefined) {
+        updateData.description = data.description;
+      }
+      
+      if (data.templateId !== undefined) {
+        // Validate the template exists
+        const template = await db.query.testTemplates.findFirst({
+          where: eq(testTemplates.id, data.templateId)
+        });
         
-        if (!cronExpression && updates.frequency && updates.frequency !== SCHEDULE_FREQUENCY.CUSTOM) {
-          cronExpression = cronExpressionFromFrequency(updates.frequency);
-        } else if (!cronExpression && currentSchedule.frequency !== SCHEDULE_FREQUENCY.CUSTOM) {
-          cronExpression = cronExpressionFromFrequency(currentSchedule.frequency);
+        if (!template) {
+          console.error(`[BounceScheduler] Template ${data.templateId} not found`);
+          return false;
         }
+        
+        updateData.templateId = data.templateId;
+      }
+      
+      // Handle frequency and cron expression
+      if (data.frequency !== undefined) {
+        updateData.frequency = data.frequency;
+        
+        // Generate cron expression if not provided and not custom
+        if (data.frequency !== SCHEDULE_FREQUENCY.CUSTOM) {
+          updateData.cronExpression = cronExpressionFromFrequency(data.frequency);
+        }
+      }
+      
+      if (data.cronExpression !== undefined) {
+        updateData.cronExpression = data.cronExpression;
+      }
+      
+      if (data.notifyOnCompletion !== undefined) {
+        updateData.notifyOnCompletion = data.notifyOnCompletion;
+      }
+      
+      if (data.notifyOnIssue !== undefined) {
+        updateData.notifyOnIssue = data.notifyOnIssue;
+      }
+      
+      // Calculate next run time if frequency or cron expression changed
+      if (updateData.cronExpression !== undefined || data.frequency !== undefined) {
+        const cronExpression = updateData.cronExpression || currentSchedule.cronExpression;
         
         if (cronExpression) {
-          nextRun = getNextRunDate(cronExpression);
+          updateData.nextRunAt = getNextRunDate(cronExpression);
         }
+      }
+      
+      // Handle active state
+      if (data.isActive !== undefined) {
+        updateData.isActive = data.isActive;
       }
       
       // Update the scheduled test
       await db.update(scheduledTests)
-        .set({
-          ...updates,
-          nextRun,
-          updatedAt: new Date()
-        })
-        .where(eq(scheduledTests.id, scheduleId));
+        .set(updateData)
+        .where(eq(scheduledTests.id, id));
       
-      // Publish event
-      ServerEventBus.publish('scheduledTest:updated', {
-        id: scheduleId
-      });
+      // Reschedule or unschedule the test if needed
+      if (data.isActive !== undefined || updateData.nextRunAt !== undefined) {
+        if (this.activeSchedules.has(id)) {
+          // Clear existing schedule
+          clearTimeout(this.activeSchedules.get(id)!);
+          this.activeSchedules.delete(id);
+        }
+        
+        // Schedule if active
+        if (data.isActive === true || (data.isActive === undefined && currentSchedule.isActive)) {
+          await this.scheduleTest(id);
+        }
+      }
+      
+      console.log(`[BounceScheduler] Updated scheduled test ${id}`);
       
       return true;
     } catch (error) {
-      console.error(`[BounceScheduler] Error updating scheduled test ${scheduleId}:`, error);
+      console.error(`[BounceScheduler] Error updating scheduled test ${id}:`, error);
       return false;
     }
   }
@@ -418,94 +357,185 @@ export class BounceSchedulerService {
   /**
    * Delete a scheduled test
    */
-  async deleteScheduledTest(scheduleId: number): Promise<boolean> {
+  async deleteScheduledTest(id: number): Promise<boolean> {
     try {
-      // Unschedule the test
-      this.unscheduleTest(scheduleId);
+      // Check if the scheduled test exists
+      const schedule = await this.getScheduledTest(id);
       
-      // Delete from database
+      if (!schedule) {
+        console.error(`[BounceScheduler] Scheduled test ${id} not found`);
+        return false;
+      }
+      
+      // Clear any active schedule
+      if (this.activeSchedules.has(id)) {
+        clearTimeout(this.activeSchedules.get(id)!);
+        this.activeSchedules.delete(id);
+      }
+      
+      // Delete the scheduled test
       await db.delete(scheduledTests)
-        .where(eq(scheduledTests.id, scheduleId));
+        .where(eq(scheduledTests.id, id));
       
-      // Publish event
-      ServerEventBus.publish('scheduledTest:deleted', {
-        id: scheduleId
-      });
+      console.log(`[BounceScheduler] Deleted scheduled test ${id}`);
       
       return true;
     } catch (error) {
-      console.error(`[BounceScheduler] Error deleting scheduled test ${scheduleId}:`, error);
+      console.error(`[BounceScheduler] Error deleting scheduled test ${id}:`, error);
       return false;
     }
   }
   
   /**
-   * Get all scheduled tests
+   * Schedule a test to run at its next run time
    */
-  async getAllScheduledTests(activeOnly = false): Promise<any[]> {
+  private async scheduleTest(id: number): Promise<boolean> {
     try {
-      // Build query
-      const query = activeOnly 
-        ? db.query.scheduledTests.findMany({
-            where: eq(scheduledTests.isActive, true),
-            with: {
-              template: true,
-              creator: {
-                columns: {
-                  id: true,
-                  username: true,
-                  displayName: true
-                }
-              }
-            },
-            orderBy: (fields, { desc }) => [desc(fields.createdAt)]
-          })
-        : db.query.scheduledTests.findMany({
-            with: {
-              template: true,
-              creator: {
-                columns: {
-                  id: true,
-                  username: true,
-                  displayName: true
-                }
-              }
-            },
-            orderBy: (fields, { desc }) => [desc(fields.createdAt)]
-          });
+      // Get the scheduled test
+      const schedule = await this.getScheduledTest(id);
       
-      // Execute query
-      return await query;
+      if (!schedule || !schedule.isActive) {
+        return false;
+      }
+      
+      // Clear any existing schedule
+      if (this.activeSchedules.has(id)) {
+        clearTimeout(this.activeSchedules.get(id)!);
+        this.activeSchedules.delete(id);
+      }
+      
+      // Calculate the delay until the next run
+      const now = new Date();
+      const nextRun = schedule.nextRunAt || getNextRunDate(schedule.cronExpression);
+      
+      let delay = nextRun.getTime() - now.getTime();
+      
+      // If the next run is in the past, schedule it for the next occurrence
+      if (delay < 0) {
+        const newNextRun = getNextRunDate(schedule.cronExpression);
+        
+        delay = newNextRun.getTime() - now.getTime();
+        
+        // Update the next run time in the database
+        await db.update(scheduledTests)
+          .set({
+            nextRunAt: newNextRun,
+            updatedAt: new Date()
+          })
+          .where(eq(scheduledTests.id, id));
+      }
+      
+      // Schedule the test run
+      const timeout = setTimeout(async () => {
+        await this.runScheduledTest(id);
+      }, delay);
+      
+      // Store the timeout
+      this.activeSchedules.set(id, timeout);
+      
+      console.log(`[BounceScheduler] Scheduled test ${id} to run at ${nextRun} (in ${Math.floor(delay / 1000 / 60)} minutes)`);
+      
+      return true;
     } catch (error) {
-      console.error('[BounceScheduler] Error getting scheduled tests:', error);
-      return [];
+      console.error(`[BounceScheduler] Error scheduling test ${id}:`, error);
+      return false;
     }
   }
   
   /**
-   * Get details for a specific scheduled test
+   * Run a scheduled test immediately
    */
-  async getScheduledTest(scheduleId: number): Promise<any | null> {
+  async runScheduledTest(id: number): Promise<boolean> {
     try {
-      return await db.query.scheduledTests.findFirst({
-        where: eq(scheduledTests.id, scheduleId),
-        with: {
-          template: true,
-          creator: {
-            columns: {
-              id: true,
-              username: true,
-              displayName: true
-            }
-          }
-        }
+      // Get the scheduled test with template
+      const schedule = await this.getScheduledTest(id);
+      
+      if (!schedule || !schedule.template) {
+        console.error(`[BounceScheduler] Scheduled test ${id} or its template not found`);
+        return false;
+      }
+      
+      // Start the test run
+      const runId = await this.testRunnerService.startTestRun({
+        features: schedule.template.configuration.features,
+        params: schedule.template.configuration.params || {},
+        settings: schedule.template.configuration.settings || {},
+        trigger: TEST_RUN_TRIGGER.SCHEDULED,
+        triggerId: id.toString(),
+        templateId: schedule.templateId
       });
+      
+      if (!runId) {
+        console.error(`[BounceScheduler] Failed to start test run for scheduled test ${id}`);
+        return false;
+      }
+      
+      // Calculate and set the next run time
+      const nextRunAt = getNextRunDate(schedule.cronExpression);
+      
+      await db.update(scheduledTests)
+        .set({
+          lastRunAt: new Date(),
+          nextRunAt,
+          updatedAt: new Date()
+        })
+        .where(eq(scheduledTests.id, id));
+      
+      // Schedule the next run
+      await this.scheduleTest(id);
+      
+      console.log(`[BounceScheduler] Started test run ${runId} for scheduled test ${id}`);
+      
+      return true;
     } catch (error) {
-      console.error(`[BounceScheduler] Error getting scheduled test ${scheduleId}:`, error);
-      return null;
+      console.error(`[BounceScheduler] Error running scheduled test ${id}:`, error);
+      return false;
+    }
+  }
+  
+  /**
+   * Check for scheduled tests that are due to run
+   * This is a safety check to ensure tests run even if the process was restarted
+   */
+  async checkForDueScheduledTests(): Promise<void> {
+    try {
+      const now = new Date();
+      
+      // Find active scheduled tests that are due to run
+      const dueSchedules = await db.select()
+        .from(scheduledTests)
+        .where(
+          and(
+            eq(scheduledTests.isActive, true),
+            gte(scheduledTests.nextRunAt, now)
+          )
+        );
+      
+      // Run each due schedule
+      for (const schedule of dueSchedules) {
+        await this.runScheduledTest(schedule.id);
+      }
+    } catch (error) {
+      console.error('[BounceScheduler] Error checking for due scheduled tests:', error);
     }
   }
 }
 
-// Create and export a singleton instance
-export const bounceSchedulerService = new BounceSchedulerService();
+// Create a singleton instance of the test runner service
+const bounceTestRunnerService = new BounceTestRunnerService();
+
+// Create a singleton instance of the scheduler service
+const bounceSchedulerService = new BounceSchedulerService(bounceTestRunnerService);
+
+// Initialize the scheduler service when the server starts
+(async () => {
+  await bounceSchedulerService.initialize();
+  
+  // Set up periodic checks for due scheduled tests
+  // This ensures tests run even if the process was restarted
+  setInterval(async () => {
+    await bounceSchedulerService.checkForDueScheduledTests();
+  }, 15 * 60 * 1000); // Every 15 minutes
+})();
+
+export { bounceSchedulerService };

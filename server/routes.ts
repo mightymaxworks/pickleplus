@@ -12,6 +12,8 @@ import { registerTournamentRoutes } from "./routes/tournament-routes";
 import { registerBounceAdminRoutes } from "./routes/admin-bounce-routes";
 import { registerBounceGamificationRoutes } from "./routes/bounce-gamification-routes";
 import { registerBounceXpRoutes } from "./routes/bounce-xp-routes";
+import { registerBounceAutomationRoutes } from "./routes/admin-bounce-automation-routes";
+import securityRoutes from "./routes/security-routes";
 import { isAuthenticated } from "./middleware/auth";
 
 /**
@@ -31,6 +33,10 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   registerBounceAdminRoutes(app); // Add Bounce admin routes
   registerBounceGamificationRoutes(app); // Add Bounce gamification routes
   registerBounceXpRoutes(app); // Add Bounce XP integration routes
+  registerBounceAutomationRoutes(app); // Add Bounce automation routes
+  
+  // Mount security routes
+  app.use('/api/security', securityRoutes);
   
   // Basic user info endpoint
   app.get("/api/me", isAuthenticated, async (req: Request, res: Response) => {
