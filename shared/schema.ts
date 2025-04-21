@@ -1237,39 +1237,12 @@ export {
 
 // Import and re-export Bounce automation schema (PKL-278651-BOUNCE-0005-AUTO - Bounce Automation)
 export {
-  testTemplates,
-  scheduledTests,
-  cicdIntegrations,
-  deploymentRecords,
-  autoHealRules,
-  autoHealHistory,
-  testTemplatesRelations,
-  scheduledTestsRelations,
-  cicdIntegrationsRelations,
-  deploymentRecordsRelations,
-  autoHealRulesRelations,
-  autoHealHistoryRelations,
-  insertTestTemplateSchema,
-  insertScheduledTestSchema,
-  insertCicdIntegrationSchema,
-  insertDeploymentRecordSchema,
-  insertAutoHealRuleSchema,
-  insertAutoHealHistorySchema,
+  bounceTestTemplates,
+  bounceTestTemplatesRelations,
+  insertBounceTestTemplateSchema,
   SCHEDULE_FREQUENCY,
-  TEST_RUN_TRIGGER,
-  AUTO_HEAL_STATUS,
-  type TestTemplate,
-  type InsertTestTemplate,
-  type ScheduledTest,
-  type InsertScheduledTest,
-  type CicdIntegration,
-  type InsertCicdIntegration,
-  type DeploymentRecord,
-  type InsertDeploymentRecord,
-  type AutoHealRule,
-  type InsertAutoHealRule,
-  type AutoHealHistory,
-  type InsertAutoHealHistory
+  type BounceTestTemplate,
+  type InsertBounceTestTemplate
 } from './schema/bounce-automation';
 
 // Add additional core schema exports here as the system grows
