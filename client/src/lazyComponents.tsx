@@ -78,6 +78,9 @@ export const LazyUsersPage = lazyLoad(() => import('./pages/admin/UsersPage')); 
 export const LazyNotFoundPage = lazyLoad(() => import('./pages/not-found'));
 export const LazyDashboardPage = lazyLoad(() => import('./pages/Dashboard'));
 
+// Passport page (PKL-278651-CONN-0008-UX-MOD2)
+export const LazyPassportPage = lazyLoad(() => import('./pages/PassportPage'));
+
 // Preloading functions by route group
 export const preloadProfilePages = () => {
   LazyProfilePage.preload();

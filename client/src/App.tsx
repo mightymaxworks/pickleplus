@@ -219,7 +219,7 @@ export default function App() {
                     }}
                   </Route>
                   <Route path="/passport">
-                    {(params) => <ProtectedRoute component={LazyDashboardPage} path="/passport" />}
+                    {(params) => <ProtectedRoute component={LazyPassportPage} path="/passport" />}
                   </Route>
                   <ProtectedRouteWithLayout
                     path="/profile"

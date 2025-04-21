@@ -40,8 +40,8 @@ import { useToast } from '@/hooks/use-toast';
 import EventCheckInScanner from '@/components/events/EventCheckInScanner';
 import EventList from '@/components/events/EventList';
 import { MyEventsTab } from '@/components/events/MyEventsTab';
-import ModernUniversalPassport from '@/components/events/ModernUniversalPassport';
-import PassportFAB from '@/components/events/PassportFAB';
+import { ModernUniversalPassport } from '@/components/events/ModernUniversalPassport';
+import SimplePassportFAB from '@/components/events/SimplePassportFAB';
 
 // Data and types
 import { getEvent } from '@/lib/sdk/eventSDK';
@@ -342,8 +342,8 @@ export default function EventDiscoveryWrapper() {
   return (
     <StandardLayout>
       {content}
-      {/* Add the PassportFAB for quick access to the Universal Passport */}
-      <PassportFAB />
+      {/* Add the SimplePassportFAB for quick access to the Universal Passport */}
+      <SimplePassportFAB />
     </StandardLayout>
   );
 }
