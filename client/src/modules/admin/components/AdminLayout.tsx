@@ -13,7 +13,7 @@ import { useLocation, Link } from 'wouter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/lib/auth';
 import { Separator } from '@/components/ui/separator';
-import { Shield, Settings, LogOut, Home, ArrowLeft, Menu, X, HelpCircle } from 'lucide-react';
+import { Shield, Settings, LogOut, Home, ArrowLeft, Menu, X, HelpCircle, ChevronRight } from 'lucide-react';
 import { useAdminNavItems, useCategorizedNavItems, NavCategory } from '../hooks/useAdminComponents';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -26,12 +26,18 @@ import {
   AccessibilityControls 
 } from './ui';
 
+interface BreadcrumbItem {
+  label: string;
+  href: string;
+}
+
 interface AdminLayoutProps {
   children: ReactNode;
   title?: string;
+  breadcrumbs?: BreadcrumbItem[];
 }
 
-export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayoutProps) {
+export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs = [] }: AdminLayoutProps) {
   const { user, logoutMutation } = useAuth();
   const [location, navigate] = useLocation();
   const adminNavItems = useAdminNavItems();
@@ -323,6 +329,30 @@ export function AdminLayout({ children, title = 'Admin Dashboard' }: AdminLayout
               </div>
             )}
           </header>
+          
+          {/* Breadcrumbs - Show when available */}
+          {breadcrumbs.length > 0 && (
+            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+              <div className="container mx-auto px-4 py-2">
+                <div className="flex items-center text-sm">
+                  {breadcrumbs.map((item, index) => (
+                    <React.Fragment key={item.href}>
+                      {index > 0 && (
+                        <ChevronRight className="h-4 w-4 mx-2 text-gray-400" />
+                      )}
+                      <Button
+                        variant="link"
+                        className="p-0 h-auto text-sm font-medium"
+                        onClick={() => navigate(item.href)}
+                      >
+                        {item.label}
+                      </Button>
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
           
           {/* Main Content with Sidebar */}
           <div className="flex flex-1 container mx-auto px-2 sm:px-4 py-3 sm:py-4">
