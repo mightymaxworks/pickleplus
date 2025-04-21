@@ -488,7 +488,7 @@ const TournamentDiscoveryPage: React.FC = () => {
                 <div className="text-sm text-gray-600 space-y-3">
                   <p>
                     <span className="font-medium">Launch Date:</span>{" "}
-                    <span className="text-orange-600">April 15, 2025</span>
+                    <span className="text-orange-600">May 31, 2025</span>
                   </p>
                   <p>
                     <span className="font-medium">Current Tier:</span>{" "}

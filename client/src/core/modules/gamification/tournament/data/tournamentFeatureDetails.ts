@@ -42,7 +42,7 @@ export const tournamentFeatureDetails: Record<string, TournamentFeatureDetail> =
       'Share your tournament progress with friends and followers',
       'Review past match data to prepare for upcoming opponents'
     ],
-    launchDate: 'April 30, 2025',
+    launchDate: 'May 31, 2025',
     demoAvailable: true
   },
   
@@ -61,7 +61,7 @@ export const tournamentFeatureDetails: Record<string, TournamentFeatureDetail> =
       'Compare your performance metrics against higher-rated players',
       'Track your rating evolution through tournament participation'
     ],
-    launchDate: 'April 30, 2025',
+    launchDate: 'May 31, 2025',
     demoAvailable: false
   },
   
@@ -80,7 +80,7 @@ export const tournamentFeatureDetails: Record<string, TournamentFeatureDetail> =
       'Priority registration access for active CourtIQ™ participants',
       'Track upcoming tournaments on your personalized tournament calendar'
     ],
-    launchDate: 'April 30, 2025',
+    launchDate: 'June 5, 2025',
     demoAvailable: true
   },
   

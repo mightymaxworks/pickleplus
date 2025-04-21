@@ -223,8 +223,11 @@ export function AppHeader({
                         : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
                     } shadow-sm`}
                     onClick={() => {
-                      navigate(item.path);
+                      // Close menu first before navigation to ensure UI is updated properly
                       setMobileMenuOpen(false);
+                      // Use setTimeout to ensure the menu close animation completes
+                      // before navigating, preventing UI conflicts
+                      setTimeout(() => navigate(item.path), 300);
                     }}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
