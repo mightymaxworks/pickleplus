@@ -30,38 +30,7 @@ export function MobileNavigation() {
     { icon: <User size={20} />, label: 'Profile', path: '/profile' },
   ];
 
-  return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 md:hidden">
-      <div className="flex justify-around items-center h-16">
-        {navItems.map((item) => {
-          const isActive = location === item.path;
-          
-          return (
-            <motion.button
-              key={item.path}
-              className="flex flex-col items-center justify-center w-full h-full"
-              whileTap={{ scale: 0.9 }}
-              onClick={() => navigate(item.path)}
-            >
-              <div 
-                className={`flex flex-col items-center justify-center ${
-                  isActive ? 'text-[#FF5722]' : 'text-gray-500 dark:text-gray-400'
-                }`}
-              >
-                {item.icon}
-                <span className="text-xs mt-1">{item.label}</span>
-                
-                {isActive && (
-                  <motion.div 
-                    className="absolute bottom-0 w-6 h-1 bg-[#FF5722] rounded-t-full"
-                    layoutId="mobileNavIndicator"
-                  />
-                )}
-              </div>
-            </motion.button>
-          );
-        })}
-      </div>
-    </div>
-  );
+  // Mobile navigation bar removed as per user request
+  // The Floating Action Button (PassportFAB) is now used for universal passport access
+  return null;
 }
