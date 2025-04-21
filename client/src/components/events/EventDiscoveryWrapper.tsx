@@ -118,34 +118,14 @@ export default function EventDiscoveryWrapper() {
   // The modernized content section of the page
   const content = (
     <div className="py-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-bold mb-2 flex items-center">
-            <TicketIcon className="h-7 w-7 mr-2 text-primary/80" />
-            PicklePass™ Events
-          </h1>
-          <p className="text-muted-foreground">
-            Discover and register for events, view your universal passport
-          </p>
-        </div>
-        
-        <Button 
-          variant="default"
-          className="bg-primary hover:bg-primary/90 transition-all duration-300"
-          onClick={handleViewPassportClick}
-        >
-          {!user ? (
-            <>
-              <LockIcon className="mr-2 h-4 w-4" />
-              Login to View Passport
-            </>
-          ) : (
-            <>
-              <TicketIcon className="mr-2 h-4 w-4" />
-              Show My Universal Passport
-            </>
-          )}
-        </Button>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2 flex items-center">
+          <TicketIcon className="h-7 w-7 mr-2 text-primary/80" />
+          PicklePass™ Events
+        </h1>
+        <p className="text-muted-foreground">
+          Discover and register for events
+        </p>
       </div>
     
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -298,23 +278,7 @@ export default function EventDiscoveryWrapper() {
                   <Separator className="my-2" />
                   
                   <div className="flex flex-wrap gap-3">
-                    <Button 
-                      variant="default"
-                      className="bg-primary hover:bg-primary/90 transition-all duration-300"
-                      onClick={handleViewPassportClick}
-                    >
-                      {!user ? (
-                        <>
-                          <LockIcon className="mr-2 h-4 w-4" />
-                          Login to View Passport
-                        </>
-                      ) : (
-                        <>
-                          <TicketIcon className="mr-2 h-4 w-4" />
-                          Show My Universal Passport
-                        </>
-                      )}
-                    </Button>
+
                   </div>
                 </div>
               </CardContent>
@@ -330,25 +294,9 @@ export default function EventDiscoveryWrapper() {
                     <h2 className="text-xl font-semibold mb-3">Welcome to PicklePass™</h2>
                     <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                       Select an event from the list to view details and options. With PicklePass™, 
-                      you can register and check in to events seamlessly.
+                      you can register and check in to events seamlessly. Use the floating passport 
+                      button to access your Universal Passport anytime.
                     </p>
-                    <Button 
-                      variant="default"
-                      onClick={handleViewPassportClick}
-                      className="bg-primary/90 hover:bg-primary transition-all duration-300 px-6 py-5 rounded-lg"
-                    >
-                      {!user ? (
-                        <>
-                          <LockIcon className="mr-2 h-5 w-5" />
-                          Login to View Passport
-                        </>
-                      ) : (
-                        <>
-                          <TicketIcon className="mr-2 h-5 w-5" />
-                          View My Universal Passport
-                        </>
-                      )}
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
