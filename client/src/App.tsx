@@ -158,15 +158,8 @@ export default function App() {
                     {/* Add Simplified Bug Report Button (PKL-278651-FEED-0001-BUG) */}
                     <SimpleBugReportButton position="bottom-right" />
                     
-                    {/* Add Bounce Mascot (PKL-278651-MASCOT-0001-CORE) */}
-                    <BounceMascot 
-                      customImagePath="/bounce-original.svg"
-                      showOnMount={true}
-                      minDelay={100}
-                      maxDelay={500}
-                      displayDuration={30000}  
-                      appearProbability={1.0}
-                    />
+                    {/* Bounce Mascot disabled for now (PKL-278651-MASCOT-0001-CORE) */}
+                    {/* Removed to focus on launch priorities */}
                     
                     {/* Community navigation commented out for now */}
                     
