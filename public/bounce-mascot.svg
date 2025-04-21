@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="240" height="240" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Bounce Mascot - Pickle+ Testing Bot -->
+  
+  <!-- Main body (bouncy ball) -->
+  <circle cx="120" cy="120" r="90" fill="#4ECDC4">
+    <animate attributeName="cy" values="120;110;120" dur="1s" repeatCount="indefinite" />
+    <animate attributeName="r" values="90;95;90" dur="1s" repeatCount="indefinite" />
+  </circle>
+  
+  <!-- Glossy highlight -->
+  <ellipse cx="90" cy="85" rx="25" ry="20" fill="white" opacity="0.6">
+    <animate attributeName="cy" values="85;75;85" dur="1s" repeatCount="indefinite" />
+  </ellipse>
+  
+  <!-- Eyes -->
+  <g>
+    <!-- Left eye -->
+    <circle cx="90" cy="100" r="18" fill="white">
+      <animate attributeName="cy" values="100;90;100" dur="1s" repeatCount="indefinite" />
+    </circle>
+    <circle cx="90" cy="100" r="10" fill="#264653">
+      <animate attributeName="cy" values="100;90;100" dur="1s" repeatCount="indefinite" />
+    </circle>
+    <circle cx="86" cy="96" r="4" fill="white">
+      <animate attributeName="cy" values="96;86;96" dur="1s" repeatCount="indefinite" />
+    </circle>
+    
+    <!-- Right eye -->
+    <circle cx="150" cy="100" r="18" fill="white">
+      <animate attributeName="cy" values="100;90;100" dur="1s" repeatCount="indefinite" />
+    </circle>
+    <circle cx="150" cy="100" r="10" fill="#264653">
+      <animate attributeName="cy" values="100;90;100" dur="1s" repeatCount="indefinite" />
+    </circle>
+    <circle cx="146" cy="96" r="4" fill="white">
+      <animate attributeName="cy" values="96;86;96" dur="1s" repeatCount="indefinite" />
+    </circle>
+  </g>
+  
+  <!-- Smile -->
+  <path d="M90 140 Q120 170 150 140" stroke="#264653" stroke-width="6" stroke-linecap="round" fill="none">
+    <animate attributeName="d" values="M90 140 Q120 170 150 140;M90 130 Q120 160 150 130;M90 140 Q120 170 150 140" dur="1s" repeatCount="indefinite" />
+  </path>
+  
+  <!-- Antenna -->
+  <line x1="120" y1="30" x2="120" y2="5" stroke="#264653" stroke-width="4">
+    <animate attributeName="y1" values="30;20;30" dur="1s" repeatCount="indefinite" />
+    <animate attributeName="y2" values="5;-5;5" dur="1s" repeatCount="indefinite" />
+  </line>
+  <circle cx="120" cy="3" r="8" fill="#FF6B6B">
+    <animate attributeName="cy" values="3;-7;3" dur="1s" repeatCount="indefinite" />
+    <animate attributeName="r" values="8;9;8" dur="1s" repeatCount="indefinite" />
+  </circle>
+  
+  <!-- Testing-related icons that appear randomly -->
+  <g opacity="0.9">
+    <!-- Checkmark -->
+    <g transform="translate(40, 175) scale(0.7)">
+      <circle cx="0" cy="0" r="20" fill="#2A9D8F" />
+      <path d="M-10 0 L-3 10 L10 -10" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+      <animateTransform attributeName="transform" type="translate" values="40,175;40,165;40,175" dur="1.5s" repeatCount="indefinite" additive="sum" />
+    </g>
+    
+    <!-- Bug icon -->
+    <g transform="translate(200, 175) scale(0.7)">
+      <circle cx="0" cy="0" r="20" fill="#E76F51" />
+      <circle cx="-6" cy="-6" r="4" fill="white" />
+      <circle cx="6" cy="-6" r="4" fill="white" />
+      <path d="M-10 5 Q0 15 10 5" stroke="white" stroke-width="3" stroke-linecap="round" fill="none" />
+      <animateTransform attributeName="transform" type="translate" values="200,175;200,165;200,175" dur="2s" repeatCount="indefinite" additive="sum" />
+    </g>
+  </g>
+  
+  <!-- Small shadow -->
+  <ellipse cx="120" cy="220" rx="70" ry="10" fill="#264653" opacity="0.2">
+    <animate attributeName="rx" values="70;75;70" dur="1s" repeatCount="indefinite" />
+    <animate attributeName="opacity" values="0.2;0.25;0.2" dur="1s" repeatCount="indefinite" />
+  </ellipse>
+</svg>
