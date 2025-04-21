@@ -1,8 +1,9 @@
 /**
  * PKL-278651-BOUNCE-0005-AUTO - Bounce Scheduler Service
  * 
- * This service manages the scheduling and execution of automated Bounce tests.
- * It uses the server event bus to coordinate with other system components.
+ * This service provides functionality for scheduling and managing automated tests.
+ * It integrates with the event bus for loose coupling and uses a dependency-free
+ * cron implementation for scheduling.
  * 
  * @framework Framework5.2
  * @version 1.0.0
@@ -10,253 +11,294 @@
  */
 
 import { db } from '../db';
-import {
-  bounceSchedules,
-  bounceTestRuns,
+import { 
+  bounceSchedules, 
   bounceTestTemplates,
+  bounceTestRuns,
   type BounceSchedule,
-  type BounceTestTemplate,
-  SCHEDULE_FREQUENCY
-} from '@shared/schema';
-import { eq, and, gt, or, isNull, desc } from 'drizzle-orm';
-import { ServerEventBus } from '../core/events/server-event-bus';
-import { getNextRunDate, formatCronExpression } from '../utils/cron-helpers';
-import { v4 as uuidv4 } from '../utils/uuid-helpers'; // Dependency-free UUID implementation
+  type BounceTestRun,
+  type InsertBounceTestRun
+} from '../../shared/schema/bounce-automation';
+import { 
+  matchesCronSchedule, 
+  calculateNextRunTime, 
+  parseCronExpression, 
+  type CronSchedule 
+} from '../utils/cron-helpers';
+import { generateUuidV4 } from '../utils/uuid-helpers';
+import { eq, and } from 'drizzle-orm';
+import { EventBus } from '../core/events/server-event-bus';
 
-// Define event names
-const EVENTS = {
-  SCHEDULE_CREATED: 'bounce:schedule:created',
-  SCHEDULE_UPDATED: 'bounce:schedule:updated',
-  SCHEDULE_DELETED: 'bounce:schedule:deleted',
-  TEMPLATE_UPDATED: 'bounce:template:updated',
-  TEST_RUN_STARTED: 'bounce:test-run:started',
-  TEST_RUN_COMPLETED: 'bounce:test-run:completed',
-  TEST_RUN_FAILED: 'bounce:test-run:failed'
-};
-
-// Define a timer map to track scheduled tasks
-interface ScheduledTask {
-  scheduleId: number;
-  timerId: NodeJS.Timeout;
-}
+// Singleton instance
+let instance: BounceSchedulerService | null = null;
 
 /**
- * Bounce scheduler service for managing automated test runs
+ * Service for scheduling and managing automated tests
  */
 export class BounceSchedulerService {
-  private scheduledTasks: Map<number, ScheduledTask> = new Map();
-  private isInitialized: boolean = false;
+  private scheduleMap: Map<number, {
+    schedule: BounceSchedule;
+    cronSchedule: CronSchedule | null;
+    nextRunTime: Date;
+    timeoutId: NodeJS.Timeout | null;
+  }> = new Map();
+  
+  private checkInterval: NodeJS.Timeout | null = null;
+  private eventBus: EventBus;
+  private isInitialized = false;
   
   /**
-   * Initialize the service
+   * Create a new instance of the scheduler service
+   */
+  constructor() {
+    if (instance) {
+      return instance;
+    }
+    
+    this.eventBus = EventBus.getInstance();
+    instance = this;
+  }
+  
+  /**
+   * Initialize the scheduler service
+   * Loads all active schedules from the database and sets up the check interval
    */
   public async initialize(): Promise<void> {
     if (this.isInitialized) {
       return;
     }
     
-    console.log('[BounceSchedulerService] Initializing...');
-    
-    // Set up event listeners
-    this.registerEventListeners();
-    
-    // Load active schedules from the database
-    await this.loadActiveSchedules();
-    
-    this.isInitialized = true;
-    console.log('[BounceSchedulerService] Initialized successfully');
-  }
-  
-  /**
-   * Register event listeners
-   */
-  private registerEventListeners(): void {
-    // Schedule lifecycle events
-    ServerEventBus.subscribe(EVENTS.SCHEDULE_CREATED, this.handleScheduleCreated.bind(this));
-    ServerEventBus.subscribe(EVENTS.SCHEDULE_UPDATED, this.handleScheduleUpdated.bind(this));
-    ServerEventBus.subscribe(EVENTS.SCHEDULE_DELETED, this.handleScheduleDeleted.bind(this));
-    
-    // Template events
-    ServerEventBus.subscribe(EVENTS.TEMPLATE_UPDATED, this.handleTemplateUpdated.bind(this));
-  }
-  
-  /**
-   * Load active schedules from the database
-   */
-  private async loadActiveSchedules(): Promise<void> {
     try {
-      console.log('[BounceSchedulerService] Loading active schedules...');
+      console.log('BounceSchedulerService: Initializing');
       
+      // Load all active schedules
       const activeSchedules = await db.select()
         .from(bounceSchedules)
-        .where(
-          and(
-            eq(bounceSchedules.isActive, true),
-            eq(bounceSchedules.isDeleted, false)
-          )
-        );
+        .where(eq(bounceSchedules.isActive, true));
       
-      console.log(`[BounceSchedulerService] Found ${activeSchedules.length} active schedules`);
+      console.log(`BounceSchedulerService: Loaded ${activeSchedules.length} active schedules`);
       
       // Schedule each active schedule
       for (const schedule of activeSchedules) {
         await this.scheduleTest(schedule);
       }
+      
+      // Set up the check interval to run every minute
+      this.checkInterval = setInterval(() => this.checkSchedules(), 60 * 1000);
+      
+      this.isInitialized = true;
+      console.log('BounceSchedulerService: Initialized');
     } catch (error) {
-      console.error('[BounceSchedulerService] Error loading active schedules:', error);
+      console.error('BounceSchedulerService: Error initializing', error);
     }
   }
   
   /**
-   * Schedule a test based on its configuration
-   * @param schedule The schedule to set up
+   * Check all schedules to see if any need to be run
+   * This is a safeguard in case the scheduled timeouts are missed
    */
-  public async scheduleTest(schedule: BounceSchedule): Promise<void> {
-    try {
-      // Cancel any existing scheduled task for this schedule
-      this.cancelSchedule(schedule.id);
-      
-      if (!schedule.isActive || schedule.isDeleted) {
-        console.log(`[BounceSchedulerService] Schedule ${schedule.id} is inactive or deleted, not scheduling`);
-        return;
-      }
-      
-      let cronExpression = schedule.customCronExpression;
-      
-      // If no custom cron expression is specified, generate one based on the frequency
-      if (!cronExpression && schedule.frequency) {
+  private async checkSchedules(): Promise<void> {
+    const now = new Date();
+    
+    for (const [id, { schedule, nextRunTime }] of this.scheduleMap.entries()) {
+      // If the next run time has passed, execute the schedule
+      if (nextRunTime && nextRunTime <= now) {
         try {
-          cronExpression = bounceSchedules.schema.frequency.enum[schedule.frequency];
-        } catch (e) {
-          console.error(`[BounceSchedulerService] Invalid frequency: ${schedule.frequency}`, e);
-          return;
+          console.log(`BounceSchedulerService: Running schedule ${id} (${schedule.name})`);
+          
+          // Run the schedule
+          await this.executeSchedule(schedule);
+          
+          // Calculate the next run time
+          await this.updateNextRunTime(schedule);
+        } catch (error) {
+          console.error(`BounceSchedulerService: Error executing schedule ${id}`, error);
         }
       }
+    }
+  }
+  
+  /**
+   * Schedule a test to run
+   * @param schedule Schedule to run
+   * @returns Whether the schedule was successfully scheduled
+   */
+  public async scheduleTest(schedule: BounceSchedule): Promise<boolean> {
+    try {
+      // Check if the schedule is already scheduled
+      const existing = this.scheduleMap.get(schedule.id);
       
-      if (!cronExpression) {
-        console.error(`[BounceSchedulerService] No cron expression or frequency for schedule ${schedule.id}`);
-        return;
+      if (existing) {
+        // Remove the existing schedule
+        if (existing.timeoutId) {
+          clearTimeout(existing.timeoutId);
+        }
+        
+        this.scheduleMap.delete(schedule.id);
+      }
+      
+      // Parse the schedule's cron expression
+      let cronSchedule: CronSchedule | null = null;
+      
+      switch (schedule.frequency) {
+        case 'CUSTOM':
+          if (schedule.customCronExpression) {
+            cronSchedule = parseCronExpression(schedule.customCronExpression);
+          }
+          break;
+        case 'HOURLY':
+          cronSchedule = parseCronExpression('0 * * * *');
+          break;
+        case 'DAILY':
+          cronSchedule = parseCronExpression('0 0 * * *');
+          break;
+        case 'WEEKLY':
+          cronSchedule = parseCronExpression('0 0 * * 0');
+          break;
+        case 'MONTHLY':
+          cronSchedule = parseCronExpression('0 0 1 * *');
+          break;
+        case 'QUARTERLY':
+          cronSchedule = parseCronExpression('0 0 1 1,4,7,10 *');
+          break;
+        default:
+          console.error(`BounceSchedulerService: Unknown frequency ${schedule.frequency}`);
+          return false;
+      }
+      
+      if (!cronSchedule) {
+        console.error(`BounceSchedulerService: Failed to parse cron expression for schedule ${schedule.id}`);
+        return false;
       }
       
       // Calculate the next run time
-      let nextRunTime: Date;
-      try {
-        nextRunTime = getNextRunDate(cronExpression);
-      } catch (e) {
-        console.error(`[BounceSchedulerService] Invalid cron expression for schedule ${schedule.id}: ${cronExpression}`, e);
-        return;
-      }
-      
-      // Calculate milliseconds until next run
       const now = new Date();
-      const timeUntilRun = nextRunTime.getTime() - now.getTime();
+      const nextRunTime = schedule.nextRunTime && schedule.nextRunTime > now 
+        ? schedule.nextRunTime 
+        : calculateNextRunTime(cronSchedule, now);
       
-      if (timeUntilRun < 0) {
-        console.error(`[BounceSchedulerService] Next run time for schedule ${schedule.id} is in the past: ${nextRunTime}`);
-        return;
-      }
+      console.log(`BounceSchedulerService: Scheduling ${schedule.name} to run at ${nextRunTime.toISOString()}`);
       
-      // Schedule the test run
-      console.log(`[BounceSchedulerService] Scheduling test for schedule ${schedule.id} at ${nextRunTime} (in ${Math.round(timeUntilRun / 1000)} seconds)`);
+      // Calculate the timeout duration in milliseconds
+      const timeoutDuration = nextRunTime.getTime() - now.getTime();
       
-      // Update the schedule in the database
-      await db.update(bounceSchedules)
-        .set({
-          nextRunTime,
-          updatedAt: new Date()
-        })
-        .where(eq(bounceSchedules.id, schedule.id));
-      
-      // Set a timer to run the test
-      const timerId = setTimeout(async () => {
+      // Schedule the test to run at the next run time
+      const timeoutId = setTimeout(async () => {
         try {
-          await this.executeScheduledTest(schedule);
+          // Execute the schedule
+          await this.executeSchedule(schedule);
           
-          // Re-schedule for the next run
-          const updatedSchedule = await db.select()
-            .from(bounceSchedules)
-            .where(eq(bounceSchedules.id, schedule.id))
-            .then(rows => rows[0]);
-          
-          if (updatedSchedule) {
-            await this.scheduleTest(updatedSchedule);
-          }
+          // Update the next run time
+          await this.updateNextRunTime(schedule);
         } catch (error) {
-          console.error(`[BounceSchedulerService] Error executing test for schedule ${schedule.id}:`, error);
-          
-          // Update the schedule with the error
-          await db.update(bounceSchedules)
-            .set({
-              lastError: String(error),
-              lastErrorTime: new Date(),
-              updatedAt: new Date()
-            })
-            .where(eq(bounceSchedules.id, schedule.id));
-          
-          // Re-schedule anyway to keep the schedule alive
-          const updatedSchedule = await db.select()
-            .from(bounceSchedules)
-            .where(eq(bounceSchedules.id, schedule.id))
-            .then(rows => rows[0]);
-          
-          if (updatedSchedule) {
-            await this.scheduleTest(updatedSchedule);
-          }
+          console.error(`BounceSchedulerService: Error executing schedule ${schedule.id}`, error);
         }
-      }, timeUntilRun);
+      }, timeoutDuration);
       
-      // Store the timer ID
-      this.scheduledTasks.set(schedule.id, {
-        scheduleId: schedule.id,
-        timerId
+      // Add the schedule to the map
+      this.scheduleMap.set(schedule.id, {
+        schedule,
+        cronSchedule,
+        nextRunTime,
+        timeoutId
       });
       
-      console.log(`[BounceSchedulerService] Schedule ${schedule.id} configured to run at ${nextRunTime.toISOString()}`);
+      // Update the schedule's next run time in the database
+      if (!schedule.nextRunTime || schedule.nextRunTime.getTime() !== nextRunTime.getTime()) {
+        await db.update(bounceSchedules)
+          .set({ nextRunTime })
+          .where(eq(bounceSchedules.id, schedule.id));
+      }
+      
+      return true;
     } catch (error) {
-      console.error(`[BounceSchedulerService] Error scheduling test for schedule ${schedule.id}:`, error);
+      console.error(`BounceSchedulerService: Error scheduling test ${schedule.id}`, error);
+      return false;
     }
   }
   
   /**
-   * Execute a scheduled test
-   * @param schedule The schedule to execute
+   * Remove a schedule
+   * @param scheduleId ID of the schedule to remove
+   * @returns Whether the schedule was successfully removed
    */
-  private async executeScheduledTest(schedule: BounceSchedule): Promise<void> {
+  public async removeSchedule(scheduleId: number): Promise<boolean> {
     try {
-      console.log(`[BounceSchedulerService] Executing scheduled test for schedule ${schedule.id}`);
+      // Get the schedule from the map
+      const scheduleEntry = this.scheduleMap.get(scheduleId);
       
-      // Get the test template if specified
-      let template: BounceTestTemplate | undefined;
-      if (schedule.templateId) {
-        template = await db.select()
-          .from(bounceTestTemplates)
-          .where(eq(bounceTestTemplates.id, schedule.templateId))
-          .then(rows => rows[0]);
+      if (!scheduleEntry) {
+        return false;
       }
       
-      // Create a test run record
-      const testRun = await db.insert(bounceTestRuns)
-        .values({
-          uuid: uuidv4(),
-          name: `${schedule.name} - ${new Date().toISOString()}`,
-          description: schedule.description || '',
-          status: 'PENDING',
-          startedAt: new Date(),
-          scheduleId: schedule.id,
-          templateId: template?.id,
-          userId: schedule.createdBy,
-          configuration: schedule.configuration || {},
-          isAutomated: true
-        })
+      // Clear the timeout
+      if (scheduleEntry.timeoutId) {
+        clearTimeout(scheduleEntry.timeoutId);
+      }
+      
+      // Remove the schedule from the map
+      this.scheduleMap.delete(scheduleId);
+      
+      return true;
+    } catch (error) {
+      console.error(`BounceSchedulerService: Error removing schedule ${scheduleId}`, error);
+      return false;
+    }
+  }
+  
+  /**
+   * Execute a schedule
+   * @param schedule Schedule to execute
+   * @returns Test run created for the schedule
+   */
+  private async executeSchedule(schedule: BounceSchedule): Promise<BounceTestRun> {
+    try {
+      // Get the template configuration if available
+      let templateConfig: Record<string, any> = {};
+      
+      if (schedule.templateId) {
+        const [template] = await db.select()
+          .from(bounceTestTemplates)
+          .where(
+            and(
+              eq(bounceTestTemplates.id, schedule.templateId),
+              eq(bounceTestTemplates.isDeleted, false)
+            )
+          );
+        
+        if (template) {
+          templateConfig = template.configuration as Record<string, any>;
+        }
+      }
+      
+      // Merge template and schedule configurations
+      const configuration = {
+        ...templateConfig,
+        ...(schedule.configuration as Record<string, any>)
+      };
+      
+      // Create a test run
+      const runName = `${schedule.name} (${new Date().toISOString()})`;
+      
+      const insertData: InsertBounceTestRun = {
+        name: runName,
+        scheduleId: schedule.id,
+        templateId: schedule.templateId,
+        configuration,
+        status: 'RUNNING',
+        results: {},
+        metadata: {
+          scheduleName: schedule.name,
+          scheduleFrequency: schedule.frequency,
+          executionId: generateUuidV4()
+        }
+      };
+      
+      const [testRun] = await db.insert(bounceTestRuns)
+        .values(insertData)
         .returning();
       
-      if (!testRun.length) {
-        throw new Error(`Failed to create test run for schedule ${schedule.id}`);
-      }
-      
-      const newTestRun = testRun[0];
-      
-      // Update the schedule last run time
+      // Update the schedule's last run time
       await db.update(bounceSchedules)
         .set({
           lastRunTime: new Date(),
@@ -264,171 +306,206 @@ export class BounceSchedulerService {
         })
         .where(eq(bounceSchedules.id, schedule.id));
       
-      // Publish test run started event
-      await ServerEventBus.publish(EVENTS.TEST_RUN_STARTED, {
-        testRun: newTestRun,
-        schedule,
-        template
+      // Publish an event for the test run
+      this.eventBus.publish('bounce:testRun:started', {
+        testRun,
+        schedule
       });
       
-      console.log(`[BounceSchedulerService] Started test run ${newTestRun.id} for schedule ${schedule.id}`);
+      // Execute the test (simulated for now)
+      this.simulateTestExecution(testRun);
       
-      // Note: The actual test execution is handled by subscribers to the TEST_RUN_STARTED event
+      return testRun;
     } catch (error) {
-      console.error(`[BounceSchedulerService] Error executing test for schedule ${schedule.id}:`, error);
+      console.error(`BounceSchedulerService: Error executing schedule ${schedule.id}`, error);
       throw error;
     }
   }
   
   /**
-   * Cancel a scheduled test
-   * @param scheduleId The schedule ID to cancel
+   * Simulate test execution (placeholder for actual test execution)
+   * @param testRun Test run to execute
    */
-  public cancelSchedule(scheduleId: number): void {
-    const task = this.scheduledTasks.get(scheduleId);
-    if (task) {
-      console.log(`[BounceSchedulerService] Cancelling scheduled task for schedule ${scheduleId}`);
-      clearTimeout(task.timerId);
-      this.scheduledTasks.delete(scheduleId);
-    }
+  private simulateTestExecution(testRun: BounceTestRun): void {
+    // In a real implementation, this would initiate the actual test execution
+    // For now, we'll simulate completion after a short delay
+    
+    setTimeout(async () => {
+      try {
+        // Simulate test completion
+        const findingsCount = Math.floor(Math.random() * 5); // Random findings count (0-4)
+        
+        // Generate sample findings
+        const findings = Array.from({ length: findingsCount }, (_, i) => ({
+          id: `finding-${i + 1}`,
+          title: `Test Finding ${i + 1}`,
+          description: `This is a simulated finding #${i + 1} for test run ${testRun.id}`,
+          severity: i === 0 ? 'HIGH' : i === 1 ? 'MEDIUM' : 'LOW',
+          location: `/somewhere/in/the/app/${i + 1}`,
+          timestamp: new Date().toISOString()
+        }));
+        
+        // Update the test run
+        const [updatedTestRun] = await db.update(bounceTestRuns)
+          .set({
+            status: 'COMPLETED',
+            completedAt: new Date(),
+            findingsCount,
+            results: {
+              findings,
+              summary: {
+                totalTests: 10,
+                passedTests: 10 - findingsCount,
+                failedTests: findingsCount,
+                duration: Math.floor(Math.random() * 10000) + 5000 // Random duration between 5-15 seconds
+              }
+            }
+          })
+          .where(eq(bounceTestRuns.id, testRun.id))
+          .returning();
+        
+        // Publish an event for the test run completion
+        this.eventBus.publish('bounce:testRun:completed', {
+          testRun: updatedTestRun
+        });
+      } catch (error) {
+        console.error(`BounceSchedulerService: Error completing test run ${testRun.id}`, error);
+        
+        // Update the test run with error
+        await db.update(bounceTestRuns)
+          .set({
+            status: 'FAILED',
+            completedAt: new Date(),
+            errorMessage: error instanceof Error ? error.message : 'Unknown error'
+          })
+          .where(eq(bounceTestRuns.id, testRun.id));
+      }
+    }, 5000); // Simulate 5-second test execution
   }
   
   /**
-   * Trigger an immediate run of a scheduled test
-   * @param scheduleId The schedule ID to run immediately
+   * Update the next run time for a schedule
+   * @param schedule Schedule to update
+   * @returns Whether the next run time was successfully updated
    */
-  public async triggerScheduleNow(scheduleId: number): Promise<void> {
+  private async updateNextRunTime(schedule: BounceSchedule): Promise<boolean> {
     try {
-      console.log(`[BounceSchedulerService] Triggering immediate run for schedule ${scheduleId}`);
+      // Get the schedule from the map
+      const scheduleEntry = this.scheduleMap.get(schedule.id);
       
-      const schedule = await db.select()
-        .from(bounceSchedules)
-        .where(eq(bounceSchedules.id, scheduleId))
-        .then(rows => rows[0]);
-      
-      if (!schedule) {
-        throw new Error(`Schedule not found: ${scheduleId}`);
+      if (!scheduleEntry || !scheduleEntry.cronSchedule) {
+        return false;
       }
       
-      await this.executeScheduledTest(schedule);
+      // Calculate the next run time
+      const now = new Date();
+      const nextRunTime = calculateNextRunTime(scheduleEntry.cronSchedule, now);
       
-      // Re-schedule for the next run
-      await this.scheduleTest(schedule);
+      console.log(`BounceSchedulerService: Next run time for ${schedule.name} is ${nextRunTime.toISOString()}`);
+      
+      // Calculate the timeout duration in milliseconds
+      const timeoutDuration = nextRunTime.getTime() - now.getTime();
+      
+      // Schedule the test to run at the next run time
+      const timeoutId = setTimeout(async () => {
+        try {
+          // Execute the schedule
+          await this.executeSchedule(schedule);
+          
+          // Update the next run time
+          await this.updateNextRunTime(schedule);
+        } catch (error) {
+          console.error(`BounceSchedulerService: Error executing schedule ${schedule.id}`, error);
+        }
+      }, timeoutDuration);
+      
+      // Update the schedule entry in the map
+      this.scheduleMap.set(schedule.id, {
+        ...scheduleEntry,
+        nextRunTime,
+        timeoutId
+      });
+      
+      // Update the schedule's next run time in the database
+      await db.update(bounceSchedules)
+        .set({ nextRunTime })
+        .where(eq(bounceSchedules.id, schedule.id));
+      
+      return true;
     } catch (error) {
-      console.error(`[BounceSchedulerService] Error triggering schedule ${scheduleId}:`, error);
+      console.error(`BounceSchedulerService: Error updating next run time for schedule ${schedule.id}`, error);
+      return false;
+    }
+  }
+  
+  /**
+   * Run a schedule now, regardless of its next scheduled run time
+   * @param schedule Schedule to run
+   * @returns Test run created for the schedule
+   */
+  public async runScheduleNow(schedule: BounceSchedule): Promise<BounceTestRun> {
+    try {
+      return await this.executeSchedule(schedule);
+    } catch (error) {
+      console.error(`BounceSchedulerService: Error running schedule ${schedule.id} now`, error);
       throw error;
     }
   }
   
   /**
-   * Get the schedule status
+   * Get the number of active schedules
+   * @returns Number of active schedules
    */
-  public async getScheduleStatus(): Promise<any> {
-    const scheduledCount = this.scheduledTasks.size;
-    const activeSchedules = await db.select()
-      .from(bounceSchedules)
-      .where(
-        and(
-          eq(bounceSchedules.isActive, true),
-          eq(bounceSchedules.isDeleted, false)
-        )
-      );
-      
-    const recentRuns = await db.select()
-      .from(bounceTestRuns)
-      .where(
-        eq(bounceTestRuns.isAutomated, true)
-      )
-      .orderBy(desc(bounceTestRuns.startedAt))
-      .limit(10);
+  public getScheduleCount(): number {
+    return this.scheduleMap.size;
+  }
+  
+  /**
+   * Get all scheduled test runs
+   * @returns Map of schedule IDs to next run times
+   */
+  public getScheduledRuns(): Map<number, Date> {
+    const result = new Map<number, Date>();
     
-    return {
-      scheduledTasks: scheduledCount,
-      activeSchedules: activeSchedules.length,
-      nextRuns: activeSchedules.map(schedule => ({
-        id: schedule.id,
-        name: schedule.name,
-        nextRunTime: schedule.nextRunTime,
-        lastRunTime: schedule.lastRunTime,
-        lastError: schedule.lastError,
-        lastErrorTime: schedule.lastErrorTime
-      })),
-      recentRuns: recentRuns.map(run => ({
-        id: run.id,
-        name: run.name,
-        status: run.status,
-        startedAt: run.startedAt,
-        completedAt: run.completedAt,
-        scheduleId: run.scheduleId
-      }))
-    };
-  }
-  
-  /**
-   * Handle schedule created event
-   */
-  private async handleScheduleCreated(data: { schedule: BounceSchedule }): Promise<void> {
-    console.log(`[BounceSchedulerService] Schedule created: ${data.schedule.id}`);
-    await this.scheduleTest(data.schedule);
-  }
-  
-  /**
-   * Handle schedule updated event
-   */
-  private async handleScheduleUpdated(data: { schedule: BounceSchedule }): Promise<void> {
-    console.log(`[BounceSchedulerService] Schedule updated: ${data.schedule.id}`);
-    await this.scheduleTest(data.schedule);
-  }
-  
-  /**
-   * Handle schedule deleted event
-   */
-  private async handleScheduleDeleted(data: { scheduleId: number }): Promise<void> {
-    console.log(`[BounceSchedulerService] Schedule deleted: ${data.scheduleId}`);
-    this.cancelSchedule(data.scheduleId);
-  }
-  
-  /**
-   * Handle template updated event
-   */
-  private async handleTemplateUpdated(data: { template: BounceTestTemplate }): Promise<void> {
-    console.log(`[BounceSchedulerService] Template updated: ${data.template.id}`);
-    
-    // Get all schedules that use this template
-    const affectedSchedules = await db.select()
-      .from(bounceSchedules)
-      .where(
-        and(
-          eq(bounceSchedules.templateId, data.template.id),
-          eq(bounceSchedules.isActive, true),
-          eq(bounceSchedules.isDeleted, false)
-        )
-      );
-    
-    // Reschedule each affected schedule
-    for (const schedule of affectedSchedules) {
-      await this.scheduleTest(schedule);
-    }
-  }
-  
-  /**
-   * Shutdown the service gracefully
-   */
-  public shutdown(): void {
-    console.log('[BounceSchedulerService] Shutting down...');
-    
-    // Cancel all scheduled tasks
-    for (const [scheduleId, task] of this.scheduledTasks.entries()) {
-      console.log(`[BounceSchedulerService] Cancelling scheduled task for schedule ${scheduleId}`);
-      clearTimeout(task.timerId);
+    for (const [id, { nextRunTime }] of this.scheduleMap.entries()) {
+      result.set(id, nextRunTime);
     }
     
-    // Clear the tasks map
-    this.scheduledTasks.clear();
+    return result;
+  }
+  
+  /**
+   * Get the singleton instance of the scheduler service
+   * @returns The singleton instance
+   */
+  public static getInstance(): BounceSchedulerService {
+    if (!instance) {
+      instance = new BounceSchedulerService();
+    }
     
-    console.log('[BounceSchedulerService] Shutdown complete');
+    return instance;
   }
 }
 
-// Create a singleton instance
-export const bounceSchedulerService = new BounceSchedulerService();
+/**
+ * Get the singleton instance of the scheduler service
+ * Initializes the service if it hasn't been initialized yet
+ * 
+ * @returns The singleton instance
+ */
+export function getBounceSchedulerService(): BounceSchedulerService {
+  const service = BounceSchedulerService.getInstance();
+  
+  // Initialize the service if it hasn't been initialized yet
+  if (!service["isInitialized"]) {
+    // Initialize asynchronously
+    service.initialize().catch(error => {
+      console.error('Failed to initialize BounceSchedulerService', error);
+    });
+  }
+  
+  return service;
+}
+
+// Export the service instance
+export default getBounceSchedulerService;

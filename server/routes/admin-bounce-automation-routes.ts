@@ -1,652 +1,677 @@
 /**
- * PKL-278651-BOUNCE-0005-AUTO - Admin Bounce Automation Routes
+ * PKL-278651-BOUNCE-0005-AUTO - Bounce Automation Routes
  * 
- * This file defines the routes for managing Bounce automated testing schedules
- * and templates from the admin interface.
+ * This file contains the API routes for managing Bounce automated test
+ * templates, schedules, and status information.
  * 
  * @framework Framework5.2
  * @version 1.0.0
  * @lastModified 2025-04-21
  */
 
-import * as express from 'express';
-import { Request, Response } from 'express';
-import { z } from 'zod';
+import { Router, Request, Response } from 'express';
 import { db } from '../db';
+import { isAdmin, isAuthenticated } from '../middleware/admin';
 import { 
-  bounceTestTemplates,
-  bounceSchedules,
+  bounceTestTemplates, 
+  bounceSchedules, 
   bounceTestRuns,
   insertBounceTestTemplateSchema,
-  SCHEDULE_FREQUENCY,
-  type BounceTestTemplate
-} from '@shared/schema';
-import { eq, and, desc, asc, or } from 'drizzle-orm';
-import { bounceSchedulerService } from '../services/bounce-scheduler-service';
-import { isAuthenticated, isAdmin } from '../middleware/auth';
-import { csrfProtection } from '../middleware/csrf';
-import { ServerEventBus } from '../core/events/server-event-bus';
+  insertBounceScheduleSchema,
+  insertBounceTestRunSchema,
+  TEST_RUN_STATUS
+} from '../../shared/schema/bounce-automation';
+import { getBounceSchedulerService } from '../services/bounce-scheduler-service';
+import { eq, desc, and, asc } from 'drizzle-orm';
+import { z } from 'zod';
 
-// Define validation schemas
-const templateSchema = z.object({
-  name: z.string().min(3).max(100),
-  description: z.string().optional(),
-  configuration: z.record(z.any()).default({})
+const router = Router();
+
+// Create bounce test template
+router.post('/templates', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+  try {
+    // Validate request body
+    const validation = insertBounceTestTemplateSchema.safeParse(req.body);
+    
+    if (!validation.success) {
+      return res.status(400).json({ 
+        error: 'Invalid template data', 
+        details: validation.error.format() 
+      });
+    }
+    
+    const templateData = validation.data;
+    
+    // Add createdBy from session
+    templateData.createdBy = req.session.userId!;
+    
+    // Insert template
+    const [template] = await db.insert(bounceTestTemplates)
+      .values(templateData)
+      .returning();
+    
+    return res.status(201).json(template);
+  } catch (error) {
+    console.error('Error creating bounce test template:', error);
+    return res.status(500).json({ error: 'Failed to create template' });
+  }
 });
 
-const scheduleSchema = z.object({
-  name: z.string().min(3).max(100),
-  description: z.string().optional(),
-  frequency: z.nativeEnum(SCHEDULE_FREQUENCY),
-  customCronExpression: z.string().optional(),
-  templateId: z.number().optional(),
-  isActive: z.boolean().default(true),
-  configuration: z.record(z.any()).optional().default({})
+// Get all bounce test templates
+router.get('/templates', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+  try {
+    const templates = await db.select()
+      .from(bounceTestTemplates)
+      .where(eq(bounceTestTemplates.isDeleted, false))
+      .orderBy(desc(bounceTestTemplates.createdAt));
+    
+    return res.json(templates);
+  } catch (error) {
+    console.error('Error getting bounce test templates:', error);
+    return res.status(500).json({ error: 'Failed to get templates' });
+  }
 });
 
-/**
- * Register Bounce automation routes with the Express app
- * @param app Express application
- */
-export function registerBounceAutomationRoutes(app: express.Express): void {
-  const router = express.Router();
-  
-  // Apply security middleware
-  router.use(isAuthenticated);
-  router.use(isAdmin);
-  router.use(csrfProtection);
-  
-  // Template routes
-  router.get('/templates', async (req: Request, res: Response) => {
-    try {
-      const templates = await db.select()
-        .from(bounceTestTemplates)
-        .where(eq(bounceTestTemplates.isDeleted, false))
-        .orderBy(asc(bounceTestTemplates.name));
-      
-      res.json(templates);
-    } catch (error) {
-      console.error('[API] Error fetching templates:', error);
-      res.status(500).json({ message: 'Failed to fetch templates' });
+// Get a specific bounce test template
+router.get('/templates/:id', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid template ID' });
     }
-  });
-  
-  router.get('/templates/:id', async (req: Request, res: Response) => {
-    try {
-      const templateId = parseInt(req.params.id);
-      if (isNaN(templateId)) {
-        return res.status(400).json({ message: 'Invalid template ID' });
-      }
-      
-      const template = await db.select()
-        .from(bounceTestTemplates)
-        .where(
-          and(
-            eq(bounceTestTemplates.id, templateId),
-            eq(bounceTestTemplates.isDeleted, false)
-          )
+    
+    const [template] = await db.select()
+      .from(bounceTestTemplates)
+      .where(
+        and(
+          eq(bounceTestTemplates.id, id),
+          eq(bounceTestTemplates.isDeleted, false)
         )
-        .then(rows => rows[0]);
-      
-      if (!template) {
-        return res.status(404).json({ message: 'Template not found' });
-      }
-      
-      res.json(template);
-    } catch (error) {
-      console.error(`[API] Error fetching template ${req.params.id}:`, error);
-      res.status(500).json({ message: 'Failed to fetch template' });
+      );
+    
+    if (!template) {
+      return res.status(404).json({ error: 'Template not found' });
     }
-  });
-  
-  router.post('/templates', async (req: Request, res: Response) => {
-    try {
-      const validatedData = templateSchema.parse(req.body);
-      
-      const newTemplate = await db.insert(bounceTestTemplates)
-        .values({
-          name: validatedData.name,
-          description: validatedData.description,
-          configuration: validatedData.configuration,
-          createdBy: req.user.id,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          isDeleted: false
-        })
-        .returning();
-      
-      if (!newTemplate.length) {
-        return res.status(500).json({ message: 'Failed to create template' });
-      }
-      
-      // Publish event for template created
-      await ServerEventBus.publish('bounce:template:created', { template: newTemplate[0] });
-      
-      res.status(201).json(newTemplate[0]);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: 'Invalid template data', 
-          errors: error.errors 
-        });
-      }
-      
-      console.error('[API] Error creating template:', error);
-      res.status(500).json({ message: 'Failed to create template' });
+    
+    return res.json(template);
+  } catch (error) {
+    console.error('Error getting bounce test template:', error);
+    return res.status(500).json({ error: 'Failed to get template' });
+  }
+});
+
+// Update a bounce test template
+router.put('/templates/:id', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid template ID' });
     }
-  });
-  
-  router.put('/templates/:id', async (req: Request, res: Response) => {
-    try {
-      const templateId = parseInt(req.params.id);
-      if (isNaN(templateId)) {
-        return res.status(400).json({ message: 'Invalid template ID' });
-      }
-      
-      const validatedData = templateSchema.parse(req.body);
-      
-      // Check if the template exists
-      const existingTemplate = await db.select()
+    
+    // Validate request body
+    const updateSchema = insertBounceTestTemplateSchema.extend({
+      id: z.number().optional(),
+      createdAt: z.date().optional(),
+      updatedAt: z.date().optional(),
+      isDeleted: z.boolean().optional()
+    });
+    
+    const validation = updateSchema.safeParse(req.body);
+    
+    if (!validation.success) {
+      return res.status(400).json({ 
+        error: 'Invalid template data', 
+        details: validation.error.format() 
+      });
+    }
+    
+    // Check if template exists
+    const [existingTemplate] = await db.select()
+      .from(bounceTestTemplates)
+      .where(
+        and(
+          eq(bounceTestTemplates.id, id),
+          eq(bounceTestTemplates.isDeleted, false)
+        )
+      );
+    
+    if (!existingTemplate) {
+      return res.status(404).json({ error: 'Template not found' });
+    }
+    
+    // Update template
+    const updateData = {
+      ...validation.data,
+      updatedAt: new Date()
+    };
+    
+    // Remove immutable fields
+    delete updateData.id;
+    delete updateData.createdAt;
+    delete updateData.isDeleted;
+    
+    const [updatedTemplate] = await db.update(bounceTestTemplates)
+      .set(updateData)
+      .where(eq(bounceTestTemplates.id, id))
+      .returning();
+    
+    return res.json(updatedTemplate);
+  } catch (error) {
+    console.error('Error updating bounce test template:', error);
+    return res.status(500).json({ error: 'Failed to update template' });
+  }
+});
+
+// Delete a bounce test template (soft delete)
+router.delete('/templates/:id', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid template ID' });
+    }
+    
+    // Check if template exists
+    const [existingTemplate] = await db.select()
+      .from(bounceTestTemplates)
+      .where(
+        and(
+          eq(bounceTestTemplates.id, id),
+          eq(bounceTestTemplates.isDeleted, false)
+        )
+      );
+    
+    if (!existingTemplate) {
+      return res.status(404).json({ error: 'Template not found' });
+    }
+    
+    // Soft delete template
+    await db.update(bounceTestTemplates)
+      .set({ 
+        isDeleted: true,
+        updatedAt: new Date()
+      })
+      .where(eq(bounceTestTemplates.id, id));
+    
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting bounce test template:', error);
+    return res.status(500).json({ error: 'Failed to delete template' });
+  }
+});
+
+// Create bounce schedule
+router.post('/schedules', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+  try {
+    // Validate request body
+    const validation = insertBounceScheduleSchema.safeParse(req.body);
+    
+    if (!validation.success) {
+      return res.status(400).json({ 
+        error: 'Invalid schedule data', 
+        details: validation.error.format() 
+      });
+    }
+    
+    const scheduleData = validation.data;
+    
+    // Add createdBy from session
+    scheduleData.createdBy = req.session.userId!;
+    
+    // If templateId is provided, check if template exists
+    if (scheduleData.templateId) {
+      const [template] = await db.select()
         .from(bounceTestTemplates)
         .where(
           and(
-            eq(bounceTestTemplates.id, templateId),
+            eq(bounceTestTemplates.id, scheduleData.templateId),
             eq(bounceTestTemplates.isDeleted, false)
-          )
-        )
-        .then(rows => rows[0]);
-      
-      if (!existingTemplate) {
-        return res.status(404).json({ message: 'Template not found' });
-      }
-      
-      // Update the template
-      const updatedTemplate = await db.update(bounceTestTemplates)
-        .set({
-          name: validatedData.name,
-          description: validatedData.description,
-          configuration: validatedData.configuration,
-          updatedAt: new Date()
-        })
-        .where(eq(bounceTestTemplates.id, templateId))
-        .returning();
-      
-      if (!updatedTemplate.length) {
-        return res.status(500).json({ message: 'Failed to update template' });
-      }
-      
-      // Publish event for template updated
-      await ServerEventBus.publish('bounce:template:updated', { template: updatedTemplate[0] });
-      
-      res.json(updatedTemplate[0]);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: 'Invalid template data', 
-          errors: error.errors 
-        });
-      }
-      
-      console.error(`[API] Error updating template ${req.params.id}:`, error);
-      res.status(500).json({ message: 'Failed to update template' });
-    }
-  });
-  
-  router.delete('/templates/:id', async (req: Request, res: Response) => {
-    try {
-      const templateId = parseInt(req.params.id);
-      if (isNaN(templateId)) {
-        return res.status(400).json({ message: 'Invalid template ID' });
-      }
-      
-      // Check if the template exists
-      const existingTemplate = await db.select()
-        .from(bounceTestTemplates)
-        .where(
-          and(
-            eq(bounceTestTemplates.id, templateId),
-            eq(bounceTestTemplates.isDeleted, false)
-          )
-        )
-        .then(rows => rows[0]);
-      
-      if (!existingTemplate) {
-        return res.status(404).json({ message: 'Template not found' });
-      }
-      
-      // Check if there are any active schedules using this template
-      const activeSchedules = await db.select({ count: bounceSchedules.id })
-        .from(bounceSchedules)
-        .where(
-          and(
-            eq(bounceSchedules.templateId, templateId),
-            eq(bounceSchedules.isActive, true),
-            eq(bounceSchedules.isDeleted, false)
           )
         );
       
-      if (activeSchedules.length > 0 && activeSchedules[0].count > 0) {
-        return res.status(400).json({ 
-          message: 'Cannot delete a template that is being used by active schedules',
-          activeSchedules: activeSchedules[0].count
-        });
+      if (!template) {
+        return res.status(400).json({ error: 'Template not found' });
       }
-      
-      // Soft delete the template
-      const deletedTemplate = await db.update(bounceTestTemplates)
-        .set({
-          isDeleted: true,
-          updatedAt: new Date()
-        })
-        .where(eq(bounceTestTemplates.id, templateId))
-        .returning();
-      
-      if (!deletedTemplate.length) {
-        return res.status(500).json({ message: 'Failed to delete template' });
-      }
-      
-      // Publish event for template deleted
-      await ServerEventBus.publish('bounce:template:deleted', { templateId });
-      
-      res.json({ message: 'Template deleted successfully' });
-    } catch (error) {
-      console.error(`[API] Error deleting template ${req.params.id}:`, error);
-      res.status(500).json({ message: 'Failed to delete template' });
     }
-  });
-  
-  // Schedule routes
-  router.get('/schedules', async (req: Request, res: Response) => {
-    try {
-      const schedules = await db.select({
-        id: bounceSchedules.id,
-        name: bounceSchedules.name,
-        description: bounceSchedules.description,
-        frequency: bounceSchedules.frequency,
-        customCronExpression: bounceSchedules.customCronExpression,
-        isActive: bounceSchedules.isActive,
-        lastRunTime: bounceSchedules.lastRunTime,
-        nextRunTime: bounceSchedules.nextRunTime,
-        lastError: bounceSchedules.lastError,
-        lastErrorTime: bounceSchedules.lastErrorTime,
-        templateId: bounceSchedules.templateId,
-        configuration: bounceSchedules.configuration,
-        createdBy: bounceSchedules.createdBy,
-        createdAt: bounceSchedules.createdAt,
-        updatedAt: bounceSchedules.updatedAt,
-        templateName: bounceTestTemplates.name
-      })
-        .from(bounceSchedules)
-        .leftJoin(
-          bounceTestTemplates,
-          eq(bounceSchedules.templateId, bounceTestTemplates.id)
-        )
-        .where(eq(bounceSchedules.isDeleted, false))
-        .orderBy(asc(bounceSchedules.name));
-      
-      res.json(schedules);
-    } catch (error) {
-      console.error('[API] Error fetching schedules:', error);
-      res.status(500).json({ message: 'Failed to fetch schedules' });
+    
+    // Insert schedule
+    const [schedule] = await db.insert(bounceSchedules)
+      .values(scheduleData)
+      .returning();
+    
+    // Schedule the test
+    if (schedule.isActive) {
+      try {
+        const schedulerService = getBounceSchedulerService();
+        await schedulerService.scheduleTest(schedule);
+      } catch (error) {
+        console.error('Error scheduling test:', error);
+      }
     }
-  });
-  
-  router.get('/schedules/:id', async (req: Request, res: Response) => {
-    try {
-      const scheduleId = parseInt(req.params.id);
-      if (isNaN(scheduleId)) {
-        return res.status(400).json({ message: 'Invalid schedule ID' });
-      }
-      
-      const schedule = await db.select({
-        id: bounceSchedules.id,
-        name: bounceSchedules.name,
-        description: bounceSchedules.description,
-        frequency: bounceSchedules.frequency,
-        customCronExpression: bounceSchedules.customCronExpression,
-        isActive: bounceSchedules.isActive,
-        lastRunTime: bounceSchedules.lastRunTime,
-        nextRunTime: bounceSchedules.nextRunTime,
-        lastError: bounceSchedules.lastError,
-        lastErrorTime: bounceSchedules.lastErrorTime,
-        templateId: bounceSchedules.templateId,
-        configuration: bounceSchedules.configuration,
-        createdBy: bounceSchedules.createdBy,
-        createdAt: bounceSchedules.createdAt,
-        updatedAt: bounceSchedules.updatedAt,
-        templateName: bounceTestTemplates.name
-      })
-        .from(bounceSchedules)
-        .leftJoin(
-          bounceTestTemplates,
-          eq(bounceSchedules.templateId, bounceTestTemplates.id)
-        )
-        .where(
-          and(
-            eq(bounceSchedules.id, scheduleId),
-            eq(bounceSchedules.isDeleted, false)
-          )
-        )
-        .then(rows => rows[0]);
-      
-      if (!schedule) {
-        return res.status(404).json({ message: 'Schedule not found' });
-      }
-      
-      // Get recent runs for this schedule
-      const recentRuns = await db.select()
-        .from(bounceTestRuns)
-        .where(eq(bounceTestRuns.scheduleId, scheduleId))
-        .orderBy(desc(bounceTestRuns.startedAt))
-        .limit(5);
-      
-      res.json({
-        ...schedule,
-        recentRuns
+    
+    return res.status(201).json(schedule);
+  } catch (error) {
+    console.error('Error creating bounce schedule:', error);
+    return res.status(500).json({ error: 'Failed to create schedule' });
+  }
+});
+
+// Get all bounce schedules
+router.get('/schedules', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+  try {
+    // Join with templates to get template name
+    const schedules = await db.select({
+      ...bounceSchedules,
+      templateName: bounceTestTemplates.name
+    })
+    .from(bounceSchedules)
+    .leftJoin(
+      bounceTestTemplates,
+      eq(bounceSchedules.templateId, bounceTestTemplates.id)
+    )
+    .orderBy(desc(bounceSchedules.createdAt));
+    
+    return res.json(schedules);
+  } catch (error) {
+    console.error('Error getting bounce schedules:', error);
+    return res.status(500).json({ error: 'Failed to get schedules' });
+  }
+});
+
+// Get a specific bounce schedule
+router.get('/schedules/:id', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid schedule ID' });
+    }
+    
+    const [schedule] = await db.select({
+      ...bounceSchedules,
+      templateName: bounceTestTemplates.name
+    })
+    .from(bounceSchedules)
+    .leftJoin(
+      bounceTestTemplates,
+      eq(bounceSchedules.templateId, bounceTestTemplates.id)
+    )
+    .where(eq(bounceSchedules.id, id));
+    
+    if (!schedule) {
+      return res.status(404).json({ error: 'Schedule not found' });
+    }
+    
+    return res.json(schedule);
+  } catch (error) {
+    console.error('Error getting bounce schedule:', error);
+    return res.status(500).json({ error: 'Failed to get schedule' });
+  }
+});
+
+// Update a bounce schedule
+router.put('/schedules/:id', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid schedule ID' });
+    }
+    
+    // Validate request body
+    const updateSchema = insertBounceScheduleSchema.extend({
+      id: z.number().optional(),
+      lastRunTime: z.date().optional(),
+      nextRunTime: z.date().optional(),
+      lastError: z.string().optional(),
+      lastErrorTime: z.date().optional(),
+      createdAt: z.date().optional(),
+      updatedAt: z.date().optional()
+    });
+    
+    const validation = updateSchema.safeParse(req.body);
+    
+    if (!validation.success) {
+      return res.status(400).json({ 
+        error: 'Invalid schedule data', 
+        details: validation.error.format() 
       });
-    } catch (error) {
-      console.error(`[API] Error fetching schedule ${req.params.id}:`, error);
-      res.status(500).json({ message: 'Failed to fetch schedule' });
     }
-  });
-  
-  router.post('/schedules', async (req: Request, res: Response) => {
-    try {
-      const validatedData = scheduleSchema.parse(req.body);
-      
-      const newSchedule = await db.insert(bounceSchedules)
-        .values({
-          name: validatedData.name,
-          description: validatedData.description,
-          frequency: validatedData.frequency,
-          customCronExpression: validatedData.customCronExpression,
-          isActive: validatedData.isActive,
-          templateId: validatedData.templateId,
-          configuration: validatedData.configuration,
-          createdBy: req.user.id,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          isDeleted: false
-        })
-        .returning();
-      
-      if (!newSchedule.length) {
-        return res.status(500).json({ message: 'Failed to create schedule' });
-      }
-      
-      // Publish event for schedule created
-      await ServerEventBus.publish('bounce:schedule:created', { schedule: newSchedule[0] });
-      
-      res.status(201).json(newSchedule[0]);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: 'Invalid schedule data', 
-          errors: error.errors 
-        });
-      }
-      
-      console.error('[API] Error creating schedule:', error);
-      res.status(500).json({ message: 'Failed to create schedule' });
+    
+    // Check if schedule exists
+    const [existingSchedule] = await db.select()
+      .from(bounceSchedules)
+      .where(eq(bounceSchedules.id, id));
+    
+    if (!existingSchedule) {
+      return res.status(404).json({ error: 'Schedule not found' });
     }
-  });
-  
-  router.put('/schedules/:id', async (req: Request, res: Response) => {
-    try {
-      const scheduleId = parseInt(req.params.id);
-      if (isNaN(scheduleId)) {
-        return res.status(400).json({ message: 'Invalid schedule ID' });
-      }
-      
-      const validatedData = scheduleSchema.parse(req.body);
-      
-      // Check if the schedule exists
-      const existingSchedule = await db.select()
-        .from(bounceSchedules)
+    
+    // If templateId is provided, check if template exists
+    if (validation.data.templateId) {
+      const [template] = await db.select()
+        .from(bounceTestTemplates)
         .where(
           and(
-            eq(bounceSchedules.id, scheduleId),
-            eq(bounceSchedules.isDeleted, false)
+            eq(bounceTestTemplates.id, validation.data.templateId),
+            eq(bounceTestTemplates.isDeleted, false)
           )
-        )
-        .then(rows => rows[0]);
+        );
       
-      if (!existingSchedule) {
-        return res.status(404).json({ message: 'Schedule not found' });
+      if (!template) {
+        return res.status(400).json({ error: 'Template not found' });
       }
-      
-      // Update the schedule
-      const updatedSchedule = await db.update(bounceSchedules)
-        .set({
-          name: validatedData.name,
-          description: validatedData.description,
-          frequency: validatedData.frequency,
-          customCronExpression: validatedData.customCronExpression,
-          isActive: validatedData.isActive,
-          templateId: validatedData.templateId,
-          configuration: validatedData.configuration,
-          updatedAt: new Date()
-        })
-        .where(eq(bounceSchedules.id, scheduleId))
-        .returning();
-      
-      if (!updatedSchedule.length) {
-        return res.status(500).json({ message: 'Failed to update schedule' });
-      }
-      
-      // Publish event for schedule updated
-      await ServerEventBus.publish('bounce:schedule:updated', { schedule: updatedSchedule[0] });
-      
-      res.json(updatedSchedule[0]);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: 'Invalid schedule data', 
-          errors: error.errors 
-        });
-      }
-      
-      console.error(`[API] Error updating schedule ${req.params.id}:`, error);
-      res.status(500).json({ message: 'Failed to update schedule' });
     }
-  });
-  
-  router.delete('/schedules/:id', async (req: Request, res: Response) => {
-    try {
-      const scheduleId = parseInt(req.params.id);
-      if (isNaN(scheduleId)) {
-        return res.status(400).json({ message: 'Invalid schedule ID' });
+    
+    // Update schedule
+    const updateData = {
+      ...validation.data,
+      updatedAt: new Date()
+    };
+    
+    // Remove immutable fields
+    delete updateData.id;
+    delete updateData.lastRunTime;
+    delete updateData.nextRunTime;
+    delete updateData.lastError;
+    delete updateData.lastErrorTime;
+    delete updateData.createdAt;
+    
+    const [updatedSchedule] = await db.update(bounceSchedules)
+      .set(updateData)
+      .where(eq(bounceSchedules.id, id))
+      .returning();
+    
+    // Update the scheduler if active state or schedule changed
+    const activeStateChanged = existingSchedule.isActive !== updatedSchedule.isActive;
+    const scheduleChanged = 
+      existingSchedule.frequency !== updatedSchedule.frequency ||
+      existingSchedule.customCronExpression !== updatedSchedule.customCronExpression;
+    
+    if (activeStateChanged || scheduleChanged) {
+      const schedulerService = getBounceSchedulerService();
+      
+      if (updatedSchedule.isActive) {
+        // Schedule or reschedule the test
+        await schedulerService.scheduleTest(updatedSchedule);
+      } else {
+        // Remove the schedule
+        await schedulerService.removeSchedule(updatedSchedule.id);
       }
-      
-      // Check if the schedule exists
-      const existingSchedule = await db.select()
-        .from(bounceSchedules)
-        .where(
-          and(
-            eq(bounceSchedules.id, scheduleId),
-            eq(bounceSchedules.isDeleted, false)
-          )
-        )
-        .then(rows => rows[0]);
-      
-      if (!existingSchedule) {
-        return res.status(404).json({ message: 'Schedule not found' });
-      }
-      
-      // Soft delete the schedule
-      const deletedSchedule = await db.update(bounceSchedules)
-        .set({
-          isDeleted: true,
-          isActive: false,
-          updatedAt: new Date()
-        })
-        .where(eq(bounceSchedules.id, scheduleId))
-        .returning();
-      
-      if (!deletedSchedule.length) {
-        return res.status(500).json({ message: 'Failed to delete schedule' });
-      }
-      
-      // Publish event for schedule deleted
-      await ServerEventBus.publish('bounce:schedule:deleted', { scheduleId });
-      
-      res.json({ message: 'Schedule deleted successfully' });
-    } catch (error) {
-      console.error(`[API] Error deleting schedule ${req.params.id}:`, error);
-      res.status(500).json({ message: 'Failed to delete schedule' });
     }
-  });
-  
-  router.post('/schedules/:id/trigger', async (req: Request, res: Response) => {
-    try {
-      const scheduleId = parseInt(req.params.id);
-      if (isNaN(scheduleId)) {
-        return res.status(400).json({ message: 'Invalid schedule ID' });
-      }
-      
-      // Check if the schedule exists and is active
-      const existingSchedule = await db.select()
-        .from(bounceSchedules)
-        .where(
-          and(
-            eq(bounceSchedules.id, scheduleId),
-            eq(bounceSchedules.isDeleted, false)
-          )
-        )
-        .then(rows => rows[0]);
-      
-      if (!existingSchedule) {
-        return res.status(404).json({ message: 'Schedule not found' });
-      }
-      
-      if (!existingSchedule.isActive) {
-        return res.status(400).json({ message: 'Cannot trigger an inactive schedule' });
-      }
-      
-      // Trigger the schedule
-      await bounceSchedulerService.triggerScheduleNow(scheduleId);
-      
-      res.json({ message: 'Schedule triggered successfully' });
-    } catch (error) {
-      console.error(`[API] Error triggering schedule ${req.params.id}:`, error);
-      res.status(500).json({ message: 'Failed to trigger schedule' });
+    
+    return res.json(updatedSchedule);
+  } catch (error) {
+    console.error('Error updating bounce schedule:', error);
+    return res.status(500).json({ error: 'Failed to update schedule' });
+  }
+});
+
+// Delete a bounce schedule
+router.delete('/schedules/:id', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid schedule ID' });
     }
-  });
-  
-  router.post('/schedules/:id/pause', async (req: Request, res: Response) => {
-    try {
-      const scheduleId = parseInt(req.params.id);
-      if (isNaN(scheduleId)) {
-        return res.status(400).json({ message: 'Invalid schedule ID' });
-      }
-      
-      // Check if the schedule exists
-      const existingSchedule = await db.select()
-        .from(bounceSchedules)
-        .where(
-          and(
-            eq(bounceSchedules.id, scheduleId),
-            eq(bounceSchedules.isDeleted, false)
-          )
-        )
-        .then(rows => rows[0]);
-      
-      if (!existingSchedule) {
-        return res.status(404).json({ message: 'Schedule not found' });
-      }
-      
-      if (!existingSchedule.isActive) {
-        return res.status(400).json({ message: 'Schedule is already paused' });
-      }
-      
-      // Pause the schedule
-      const pausedSchedule = await db.update(bounceSchedules)
-        .set({
-          isActive: false,
-          updatedAt: new Date()
-        })
-        .where(eq(bounceSchedules.id, scheduleId))
-        .returning();
-      
-      if (!pausedSchedule.length) {
-        return res.status(500).json({ message: 'Failed to pause schedule' });
-      }
-      
-      // Publish event for schedule updated
-      await ServerEventBus.publish('bounce:schedule:updated', { schedule: pausedSchedule[0] });
-      
-      res.json({ message: 'Schedule paused successfully' });
-    } catch (error) {
-      console.error(`[API] Error pausing schedule ${req.params.id}:`, error);
-      res.status(500).json({ message: 'Failed to pause schedule' });
+    
+    // Check if schedule exists
+    const [existingSchedule] = await db.select()
+      .from(bounceSchedules)
+      .where(eq(bounceSchedules.id, id));
+    
+    if (!existingSchedule) {
+      return res.status(404).json({ error: 'Schedule not found' });
     }
-  });
-  
-  router.post('/schedules/:id/resume', async (req: Request, res: Response) => {
-    try {
-      const scheduleId = parseInt(req.params.id);
-      if (isNaN(scheduleId)) {
-        return res.status(400).json({ message: 'Invalid schedule ID' });
-      }
-      
-      // Check if the schedule exists
-      const existingSchedule = await db.select()
-        .from(bounceSchedules)
-        .where(
-          and(
-            eq(bounceSchedules.id, scheduleId),
-            eq(bounceSchedules.isDeleted, false)
-          )
-        )
-        .then(rows => rows[0]);
-      
-      if (!existingSchedule) {
-        return res.status(404).json({ message: 'Schedule not found' });
-      }
-      
-      if (existingSchedule.isActive) {
-        return res.status(400).json({ message: 'Schedule is already active' });
-      }
-      
-      // Resume the schedule
-      const resumedSchedule = await db.update(bounceSchedules)
-        .set({
-          isActive: true,
-          updatedAt: new Date()
-        })
-        .where(eq(bounceSchedules.id, scheduleId))
-        .returning();
-      
-      if (!resumedSchedule.length) {
-        return res.status(500).json({ message: 'Failed to resume schedule' });
-      }
-      
-      // Publish event for schedule updated
-      await ServerEventBus.publish('bounce:schedule:updated', { schedule: resumedSchedule[0] });
-      
-      res.json({ message: 'Schedule resumed successfully' });
-    } catch (error) {
-      console.error(`[API] Error resuming schedule ${req.params.id}:`, error);
-      res.status(500).json({ message: 'Failed to resume schedule' });
+    
+    // Remove the schedule from the scheduler
+    const schedulerService = getBounceSchedulerService();
+    await schedulerService.removeSchedule(id);
+    
+    // Delete the schedule
+    await db.delete(bounceSchedules)
+      .where(eq(bounceSchedules.id, id));
+    
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting bounce schedule:', error);
+    return res.status(500).json({ error: 'Failed to delete schedule' });
+  }
+});
+
+// Trigger a bounce schedule to run immediately
+router.post('/schedules/:id/trigger', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid schedule ID' });
     }
-  });
-  
-  // Status endpoint
-  router.get('/automation/status', async (req: Request, res: Response) => {
-    try {
-      const status = await bounceSchedulerService.getScheduleStatus();
-      res.json(status);
-    } catch (error) {
-      console.error('[API] Error fetching automation status:', error);
-      res.status(500).json({ message: 'Failed to fetch automation status' });
+    
+    // Check if schedule exists
+    const [schedule] = await db.select()
+      .from(bounceSchedules)
+      .where(eq(bounceSchedules.id, id));
+    
+    if (!schedule) {
+      return res.status(404).json({ error: 'Schedule not found' });
     }
-  });
-  
-  // Register all routes with /api/admin prefix
-  app.use('/api/admin/bounce', router);
-  
-  // Make sure the scheduler service is initialized
-  bounceSchedulerService.initialize().catch(error => {
-    console.error('[API] Error initializing bounce scheduler service:', error);
-  });
-};
+    
+    // Trigger the schedule
+    const schedulerService = getBounceSchedulerService();
+    const testRun = await schedulerService.runScheduleNow(schedule);
+    
+    return res.json(testRun);
+  } catch (error) {
+    console.error('Error triggering bounce schedule:', error);
+    return res.status(500).json({ error: 'Failed to trigger schedule' });
+  }
+});
+
+// Pause a bounce schedule
+router.post('/schedules/:id/pause', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid schedule ID' });
+    }
+    
+    // Check if schedule exists
+    const [schedule] = await db.select()
+      .from(bounceSchedules)
+      .where(eq(bounceSchedules.id, id));
+    
+    if (!schedule) {
+      return res.status(404).json({ error: 'Schedule not found' });
+    }
+    
+    // Remove the schedule from the scheduler
+    const schedulerService = getBounceSchedulerService();
+    await schedulerService.removeSchedule(id);
+    
+    // Update the schedule
+    const [updatedSchedule] = await db.update(bounceSchedules)
+      .set({
+        isActive: false,
+        updatedAt: new Date()
+      })
+      .where(eq(bounceSchedules.id, id))
+      .returning();
+    
+    return res.json(updatedSchedule);
+  } catch (error) {
+    console.error('Error pausing bounce schedule:', error);
+    return res.status(500).json({ error: 'Failed to pause schedule' });
+  }
+});
+
+// Resume a bounce schedule
+router.post('/schedules/:id/resume', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid schedule ID' });
+    }
+    
+    // Check if schedule exists
+    const [schedule] = await db.select()
+      .from(bounceSchedules)
+      .where(eq(bounceSchedules.id, id));
+    
+    if (!schedule) {
+      return res.status(404).json({ error: 'Schedule not found' });
+    }
+    
+    // Update the schedule
+    const [updatedSchedule] = await db.update(bounceSchedules)
+      .set({
+        isActive: true,
+        updatedAt: new Date()
+      })
+      .where(eq(bounceSchedules.id, id))
+      .returning();
+    
+    // Schedule the test
+    const schedulerService = getBounceSchedulerService();
+    await schedulerService.scheduleTest(updatedSchedule);
+    
+    return res.json(updatedSchedule);
+  } catch (error) {
+    console.error('Error resuming bounce schedule:', error);
+    return res.status(500).json({ error: 'Failed to resume schedule' });
+  }
+});
+
+// Get test runs for a schedule
+router.get('/schedules/:id/runs', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid schedule ID' });
+    }
+    
+    // Get test runs for the schedule
+    const runs = await db.select()
+      .from(bounceTestRuns)
+      .where(eq(bounceTestRuns.scheduleId, id))
+      .orderBy(desc(bounceTestRuns.startedAt));
+    
+    return res.json(runs);
+  } catch (error) {
+    console.error('Error getting test runs for schedule:', error);
+    return res.status(500).json({ error: 'Failed to get test runs' });
+  }
+});
+
+// Get all test runs
+router.get('/runs', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 100;
+    const offset = parseInt(req.query.offset as string) || 0;
+    
+    const runs = await db.select({
+      ...bounceTestRuns,
+      templateName: bounceTestTemplates.name,
+      scheduleName: bounceSchedules.name
+    })
+    .from(bounceTestRuns)
+    .leftJoin(
+      bounceTestTemplates,
+      eq(bounceTestRuns.templateId, bounceTestTemplates.id)
+    )
+    .leftJoin(
+      bounceSchedules,
+      eq(bounceTestRuns.scheduleId, bounceSchedules.id)
+    )
+    .orderBy(desc(bounceTestRuns.startedAt))
+    .limit(limit)
+    .offset(offset);
+    
+    return res.json(runs);
+  } catch (error) {
+    console.error('Error getting test runs:', error);
+    return res.status(500).json({ error: 'Failed to get test runs' });
+  }
+});
+
+// Get automation status information
+router.get('/automation/status', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+  try {
+    // Get the scheduler service
+    const schedulerService = getBounceSchedulerService();
+    
+    // Get active schedules
+    const activeSchedules = await db.select()
+      .from(bounceSchedules)
+      .where(eq(bounceSchedules.isActive, true));
+    
+    // Get next scheduled runs
+    const nextRuns = await db.select({
+      ...bounceSchedules,
+      templateName: bounceTestTemplates.name
+    })
+    .from(bounceSchedules)
+    .leftJoin(
+      bounceTestTemplates,
+      eq(bounceSchedules.templateId, bounceTestTemplates.id)
+    )
+    .where(
+      and(
+        eq(bounceSchedules.isActive, true),
+        bounceSchedules.nextRunTime.isNotNull()
+      )
+    )
+    .orderBy(asc(bounceSchedules.nextRunTime))
+    .limit(5);
+    
+    // Get recent test runs
+    const recentRuns = await db.select({
+      ...bounceTestRuns,
+      templateName: bounceTestTemplates.name,
+      scheduleName: bounceSchedules.name
+    })
+    .from(bounceTestRuns)
+    .leftJoin(
+      bounceTestTemplates,
+      eq(bounceTestRuns.templateId, bounceTestTemplates.id)
+    )
+    .leftJoin(
+      bounceSchedules,
+      eq(bounceTestRuns.scheduleId, bounceSchedules.id)
+    )
+    .orderBy(desc(bounceTestRuns.startedAt))
+    .limit(10);
+    
+    // Compile status information
+    const status = {
+      activeSchedules: activeSchedules.length,
+      scheduledTasks: schedulerService.getScheduleCount(),
+      nextRuns,
+      recentRuns,
+      // Other potentially useful status info
+      currentTime: new Date(),
+      systemStatus: 'healthy'
+    };
+    
+    return res.json(status);
+  } catch (error) {
+    console.error('Error getting automation status:', error);
+    return res.status(500).json({ error: 'Failed to get automation status' });
+  }
+});
+
+/**
+ * Register all Bounce automation routes with the Express app
+ * @param app Express application
+ */
+export function registerBounceAutomationRoutes(app: express.Express): void {
+  app.use('/api/admin/bounce/automation', router);
+}
+
+export default router;

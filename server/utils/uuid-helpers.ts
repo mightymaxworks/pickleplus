@@ -1,8 +1,7 @@
 /**
  * PKL-278651-BOUNCE-0005-AUTO - UUID Helpers
  * 
- * This file provides a dependency-free UUID v4, specifically for environments
- * where external libraries are not available or desired.
+ * This file provides utilities for generating UUIDs without external dependencies.
  * 
  * @framework Framework5.2
  * @version 1.0.0
@@ -10,99 +9,103 @@
  */
 
 /**
- * Generate a random hexadecimal string of the specified length
- * @param length Length of the string to generate
- * @returns Random hexadecimal string
+ * Generate a RFC4122 version 4 UUID
+ * This is a dependency-free implementation
+ * 
+ * @returns A UUID v4 string
  */
-function randomHex(length: number): string {
-  let result = '';
-  const characters = '0123456789abcdef';
+export function generateUuidV4(): string {
+  // Create array of random bytes
+  const randomBytes = new Uint8Array(16);
+  crypto.getRandomValues(randomBytes);
   
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  // Set the version (4) and variant (RFC4122) bits
+  randomBytes[6] = (randomBytes[6] & 0x0f) | 0x40; // version 4
+  randomBytes[8] = (randomBytes[8] & 0x3f) | 0x80; // variant RFC4122
+  
+  // Convert to hex strings
+  const byteToHex: string[] = [];
+  for (let i = 0; i < 256; i++) {
+    byteToHex[i] = (i + 0x100).toString(16).substring(1);
   }
   
-  return result;
+  // Format as UUID string (8-4-4-4-12)
+  return (
+    byteToHex[randomBytes[0]] +
+    byteToHex[randomBytes[1]] +
+    byteToHex[randomBytes[2]] +
+    byteToHex[randomBytes[3]] +
+    '-' +
+    byteToHex[randomBytes[4]] +
+    byteToHex[randomBytes[5]] +
+    '-' +
+    byteToHex[randomBytes[6]] +
+    byteToHex[randomBytes[7]] +
+    '-' +
+    byteToHex[randomBytes[8]] +
+    byteToHex[randomBytes[9]] +
+    '-' +
+    byteToHex[randomBytes[10]] +
+    byteToHex[randomBytes[11]] +
+    byteToHex[randomBytes[12]] +
+    byteToHex[randomBytes[13]] +
+    byteToHex[randomBytes[14]] +
+    byteToHex[randomBytes[15]]
+  );
 }
 
 /**
- * Generate a UUID v4 (random) without dependencies
- * @returns UUID v4 string
- */
-export function v4(): string {
-  // Format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
-  // Where y is 8, 9, a, or b
-  
-  const part1 = randomHex(8);
-  const part2 = randomHex(4);
-  
-  // Use '4' for the version
-  let part3 = '4' + randomHex(3);
-  
-  // Use '8', '9', 'a', or 'b' for the variant
-  const variantChar = ['8', '9', 'a', 'b'][Math.floor(Math.random() * 4)];
-  const part4 = variantChar + randomHex(3);
-  
-  const part5 = randomHex(12);
-  
-  return `${part1}-${part2}-${part3}-${part4}-${part5}`;
-}
-
-/**
- * Validate a UUID string to ensure it's properly formatted
+ * Validate a UUID v4 string
+ * 
  * @param uuid String to validate
- * @returns Whether the string is a valid UUID
+ * @returns Whether the string is a valid UUID v4
  */
-export function validate(uuid: string): boolean {
-  // UUID format: 8-4-4-4-12 hex digits
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  return uuidRegex.test(uuid);
+export function isValidUuidV4(uuid: string): boolean {
+  const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return regex.test(uuid);
 }
 
 /**
- * Convert a string to a more deterministic UUID-like string
- * Useful for generating IDs based on known strings
- * @param input Input string
- * @returns UUID-like string derived from the input
+ * Generate a time-based UUID with nano precision
+ * This is useful for sorting UUIDs chronologically
+ * 
+ * @returns A time-based UUID string
  */
-export function fromString(input: string): string {
-  // Simple hash function
-  function hash(str: string): number {
-    let h = 0;
-    for (let i = 0; i < str.length; i++) {
-      h = ((h << 5) - h) + str.charCodeAt(i);
-      h |= 0; // Convert to 32bit integer
-    }
-    return Math.abs(h);
+export function generateTimeBasedUuid(): string {
+  // Get current time in milliseconds
+  const now = new Date().getTime();
+  
+  // Generate 6 random bytes (48 bits)
+  const randomBytes = new Uint8Array(6);
+  crypto.getRandomValues(randomBytes);
+  
+  // Convert time to hex (48 bits / 6 bytes)
+  const timeHex = ('0000000000000' + now.toString(16)).slice(-12);
+  
+  // Convert random bytes to hex (48 bits / 6 bytes)
+  let randomHex = '';
+  for (let i = 0; i < 6; i++) {
+    randomHex += ('00' + randomBytes[i].toString(16)).slice(-2);
   }
   
-  const hashValue = hash(input);
-  const timestamp = new Date().getTime();
-  
-  // Create parts based on hash and timestamp
-  const part1 = (hashValue & 0xFFFFFFFF).toString(16).padStart(8, '0');
-  const part2 = ((hashValue >> 16) & 0xFFFF).toString(16).padStart(4, '0');
-  
-  // UUID v4 format with some deterministic parts
-  const part3 = '4' + ((hashValue >> 8) & 0xFFF).toString(16).padStart(3, '0');
-  const part4 = '8' + ((hashValue >> 4) & 0xFFF).toString(16).padStart(3, '0');
-  
-  // Use timestamp for the last part to ensure uniqueness
-  const part5 = timestamp.toString(16).padStart(12, '0');
-  
-  return `${part1}-${part2}-${part3}-${part4}-${part5}`;
+  // Format: first 6 bytes are time-based, last 10 bytes are random
+  // Format as: time(6 bytes)-random(4 bytes)-random(6 bytes)
+  return (
+    timeHex.substring(0, 8) +
+    '-' +
+    timeHex.substring(8, 12) +
+    '-' +
+    randomHex.substring(0, 4) +
+    '-' +
+    randomHex.substring(4, 8) +
+    '-' +
+    randomHex.substring(8, 12) +
+    randomHex.substring(12)
+  );
 }
 
-/**
- * Generate a nil UUID (all zeros)
- * @returns Nil UUID string
- */
-export function nil(): string {
-  return '00000000-0000-0000-0000-000000000000';
-}
-
-// Example usage
-// console.log(v4()); // Random UUID v4
-// console.log(validate('123e4567-e89b-12d3-a456-426614174000')); // true
-// console.log(fromString('example input')); // Deterministic UUID-like string
-// console.log(nil()); // 00000000-0000-0000-0000-000000000000
+export default {
+  generateUuidV4,
+  isValidUuidV4,
+  generateTimeBasedUuid
+};

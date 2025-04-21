@@ -12,7 +12,7 @@
 import { db } from '../db';
 import { XP_SERVICE_LEVEL, XP_SOURCE, XP_SOURCE_TYPE } from '@shared/schema/xp';
 import { xpService } from '../modules/xp/xp-service';
-import { ServerEventBus } from '../core/events/server-event-bus';
+import { getEventBus } from '../core/events/server-event-bus';
 import { and, eq } from 'drizzle-orm';
 import { userBounceAchievements, bounceAchievements } from '@shared/schema';
 import { storage } from '../storage';
@@ -57,13 +57,15 @@ class BounceXpIntegration {
    * Set up event listeners for Bounce events that will award XP
    */
   private setupEventListeners(): void {
+    const eventBus = getEventBus();
+    
     // Listen for testing activity events
-    ServerEventBus.subscribe('bounce:finding:created', this.handleFindingCreated.bind(this));
-    ServerEventBus.subscribe('bounce:finding:verified', this.handleFindingVerified.bind(this));
-    ServerEventBus.subscribe('bounce:session:completed', this.handleSessionCompleted.bind(this));
+    eventBus.subscribe('bounce:finding:created', this.handleFindingCreated.bind(this));
+    eventBus.subscribe('bounce:finding:verified', this.handleFindingVerified.bind(this));
+    eventBus.subscribe('bounce:session:completed', this.handleSessionCompleted.bind(this));
     
     // Listen for achievement events
-    ServerEventBus.subscribe('bounce:achievement:unlocked', this.handleAchievementUnlocked.bind(this));
+    eventBus.subscribe('bounce:achievement:unlocked', this.handleAchievementUnlocked.bind(this));
     
     console.log('[Bounce XP Integration] Event listeners registered');
   }

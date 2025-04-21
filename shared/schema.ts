@@ -1236,14 +1236,46 @@ export {
 } from './schema/xp';
 
 // Import and re-export Bounce automation schema (PKL-278651-BOUNCE-0005-AUTO - Bounce Automation)
+import {
+  bounceTestTemplates,
+  bounceTestTemplatesRelations,
+  insertBounceTestTemplateSchema,
+  SCHEDULE_FREQUENCY,
+  TEST_RUN_STATUS,
+  bounceSchedules as bounceAutomationSchedules,
+  bounceSchedulesRelations as bounceAutomationSchedulesRelations,
+  bounceTestRuns as bounceAutomationTestRuns,
+  bounceTestRunsRelations as bounceAutomationTestRunsRelations,
+  insertBounceScheduleSchema as insertBounceAutomationScheduleSchema,
+  insertBounceTestRunSchema as insertBounceAutomationTestRunSchema,
+  type BounceTestTemplate,
+  type InsertBounceTestTemplate,
+  type BounceSchedule as BounceAutomationSchedule,
+  type InsertBounceSchedule as InsertBounceAutomationSchedule,
+  type BounceTestRun as BounceAutomationTestRun,
+  type InsertBounceTestRun as InsertBounceAutomationTestRun
+} from './schema/bounce-automation';
+
+// Export Bounce automation components with unique names
 export {
   bounceTestTemplates,
   bounceTestTemplatesRelations,
   insertBounceTestTemplateSchema,
   SCHEDULE_FREQUENCY,
+  TEST_RUN_STATUS,
+  bounceAutomationSchedules,
+  bounceAutomationSchedulesRelations,
+  bounceAutomationTestRuns,
+  bounceAutomationTestRunsRelations,
+  insertBounceAutomationScheduleSchema,
+  insertBounceAutomationTestRunSchema,
   type BounceTestTemplate,
-  type InsertBounceTestTemplate
-} from './schema/bounce-automation';
+  type InsertBounceTestTemplate,
+  type BounceAutomationSchedule,
+  type InsertBounceAutomationSchedule,
+  type BounceAutomationTestRun,
+  type InsertBounceAutomationTestRun
+};
 
 // Add additional core schema exports here as the system grows
 

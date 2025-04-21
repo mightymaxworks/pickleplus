@@ -1,115 +1,174 @@
 /**
  * PKL-278651-BOUNCE-0005-AUTO - Server Event Bus
  * 
- * This file provides a simple event bus for server-side component communication.
- * It allows loose coupling between components that need to communicate with each other.
+ * This file provides a simple event bus for server-side component communication
+ * without requiring external dependencies.
  * 
  * @framework Framework5.2
  * @version 1.0.0
  * @lastModified 2025-04-21
  */
 
-type EventCallback = (data: any) => void | Promise<void>;
+// Singleton instance
+let instance: EventBus | null = null;
+
+// Type for event handler
+type EventHandler = (data: any) => void;
 
 /**
- * In-memory event bus for server-side communication
+ * Event bus implementation
+ * Provides a simple pub/sub mechanism for components to communicate
  */
-export class ServerEventBus {
-  private static eventHandlers: Map<string, Set<EventCallback>> = new Map();
+export class EventBus {
+  private events: Map<string, EventHandler[]> = new Map();
+  
+  /**
+   * Create a new instance of the event bus
+   */
+  constructor() {
+    if (instance) {
+      return instance;
+    }
+    
+    instance = this;
+  }
   
   /**
    * Subscribe to an event
-   * @param eventName Event name to subscribe to
-   * @param callback Callback to execute when the event is published
-   * @returns Function to unsubscribe from the event
+   * 
+   * @param event Event name to subscribe to
+   * @param handler Handler function to call when the event is published
+   * @returns Unsubscribe function
    */
-  public static subscribe(eventName: string, callback: EventCallback): () => void {
-    if (!this.eventHandlers.has(eventName)) {
-      this.eventHandlers.set(eventName, new Set());
+  public subscribe(event: string, handler: EventHandler): () => void {
+    // Get or create the event handlers array
+    const handlers = this.events.get(event) || [];
+    
+    // Add the handler
+    handlers.push(handler);
+    
+    // Update the event handlers
+    this.events.set(event, handlers);
+    
+    // Return an unsubscribe function
+    return () => this.unsubscribe(event, handler);
+  }
+  
+  /**
+   * Unsubscribe from an event
+   * 
+   * @param event Event name to unsubscribe from
+   * @param handler Handler function to remove
+   * @returns Whether the handler was removed
+   */
+  public unsubscribe(event: string, handler: EventHandler): boolean {
+    // Get the event handlers
+    const handlers = this.events.get(event);
+    
+    // If no handlers exist, return false
+    if (!handlers) {
+      return false;
     }
     
-    this.eventHandlers.get(eventName)!.add(callback);
+    // Find the handler index
+    const index = handlers.indexOf(handler);
     
-    // Return unsubscribe function
-    return () => {
-      const handlers = this.eventHandlers.get(eventName);
-      if (handlers) {
-        handlers.delete(callback);
-        if (handlers.size === 0) {
-          this.eventHandlers.delete(eventName);
-        }
-      }
-    };
+    // If the handler isn't found, return false
+    if (index === -1) {
+      return false;
+    }
+    
+    // Remove the handler
+    handlers.splice(index, 1);
+    
+    // If no handlers remain, remove the event
+    if (handlers.length === 0) {
+      this.events.delete(event);
+    } else {
+      // Otherwise, update the event handlers
+      this.events.set(event, handlers);
+    }
+    
+    return true;
   }
   
   /**
    * Publish an event
-   * @param eventName Event name to publish
-   * @param data Data to pass to the event handlers
-   * @returns Promise that resolves when all handlers have completed
+   * 
+   * @param event Event name to publish
+   * @param data Data to pass to handlers
+   * @returns Whether the event was published
    */
-  public static async publish(eventName: string, data: any): Promise<void> {
-    const handlers = this.eventHandlers.get(eventName);
-    if (!handlers || handlers.size === 0) {
-      // No handlers for this event
-      return;
+  public publish(event: string, data: any = {}): boolean {
+    // Get the event handlers
+    const handlers = this.events.get(event);
+    
+    // If no handlers exist, return false
+    if (!handlers || handlers.length === 0) {
+      return false;
     }
     
-    const promises: Array<Promise<void> | void> = [];
+    // Add event name to data for context
+    const eventData = {
+      ...data,
+      _event: event,
+      _timestamp: new Date()
+    };
     
-    for (const handler of handlers) {
-      try {
-        const result = handler(data);
-        if (result instanceof Promise) {
-          promises.push(result);
+    // Call all handlers asynchronously
+    setTimeout(() => {
+      for (const handler of handlers) {
+        try {
+          handler(eventData);
+        } catch (error) {
+          console.error(`Error in event handler for ${event}:`, error);
         }
-      } catch (error) {
-        console.error(`Error in event handler for ${eventName}:`, error);
       }
-    }
+    }, 0);
     
-    // Wait for all async handlers to complete
-    if (promises.length > 0) {
-      try {
-        await Promise.all(promises);
-      } catch (error) {
-        console.error(`Error in async event handler for ${eventName}:`, error);
-      }
-    }
+    return true;
   }
   
   /**
-   * Check if an event has any subscribers
-   * @param eventName Event name to check
-   * @returns Whether the event has any subscribers
+   * Get the singleton instance of the event bus
+   * 
+   * @returns The singleton instance
    */
-  public static hasSubscribers(eventName: string): boolean {
-    const handlers = this.eventHandlers.get(eventName);
-    return !!handlers && handlers.size > 0;
+  public static getInstance(): EventBus {
+    if (!instance) {
+      instance = new EventBus();
+    }
+    
+    return instance;
   }
   
   /**
    * Get the number of subscribers for an event
-   * @param eventName Event name to check
+   * 
+   * @param event Event name to check
    * @returns Number of subscribers
    */
-  public static getSubscriberCount(eventName: string): number {
-    const handlers = this.eventHandlers.get(eventName);
-    return handlers ? handlers.size : 0;
+  public getSubscriberCount(event: string): number {
+    const handlers = this.events.get(event);
+    return handlers ? handlers.length : 0;
   }
   
   /**
-   * Remove all subscribers for an event
-   * @param eventName Event name to clear
+   * Get all events with subscribers
+   * 
+   * @returns Array of event names
    */
-  public static clearEvent(eventName: string): void {
-    this.eventHandlers.delete(eventName);
-  }
-  
-  /**
-   * Remove all subscribers for all events
-   */
-  public static clearAllEvents(): void {
-    this.eventHandlers.clear();
+  public getEvents(): string[] {
+    return Array.from(this.events.keys());
   }
 }
+
+// Export a function to get the singleton instance
+export function getEventBus(): EventBus {
+  return EventBus.getInstance();
+}
+
+// Export the EventBus as ServerEventBus for backwards compatibility
+export const ServerEventBus = EventBus;
+
+export default EventBus;

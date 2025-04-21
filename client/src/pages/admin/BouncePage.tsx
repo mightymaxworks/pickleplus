@@ -20,7 +20,7 @@ import BounceTestRunner from '@/components/admin/bounce/BounceTestRunner';
 import BounceExecutiveReport from '@/components/admin/bounce/BounceExecutiveReport';
 import BounceAchievements from '@/components/admin/bounce/BounceAchievements';
 import BounceXpIntegration from '@/components/admin/bounce/BounceXpIntegration';
-import { BounceAutomation } from '@/components/admin/bounce/BounceAutomation';
+import BounceAutomation from '@/components/admin/bounce/BounceAutomation';
 import { AdminLayout } from '@/modules/admin/components/AdminLayout';
 import {
   Bot,
