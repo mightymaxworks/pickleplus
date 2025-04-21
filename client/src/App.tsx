@@ -12,6 +12,7 @@ import { LazyLoadingFallback, lazyLoad } from '@/utils/lazyLoad' // PKL-278651-P
 import { moduleRegistry } from '@/core/modules/moduleRegistry' // For feedback module
 import { SimpleBugReportButton } from '@/components/bug-report/BugReportButton' // Simplified bug report button
 import { ProtectedRouteWithLayout } from './lib/protected-route-with-layout' // PKL-278651-UI-0001-STDROUTE
+import { BounceMascot } from '@/components/mascot' // PKL-278651-MASCOT-0001-CORE
 
 
 // Import module initializations
@@ -156,6 +157,9 @@ export default function App() {
                   <Suspense fallback={<LazyLoadingFallback />}>
                     {/* Add Simplified Bug Report Button (PKL-278651-FEED-0001-BUG) */}
                     <SimpleBugReportButton position="bottom-right" />
+                    
+                    {/* Add Bounce Mascot (PKL-278651-MASCOT-0001-CORE) */}
+                    <BounceMascot />
                     
                     {/* Community navigation commented out for now */}
                     

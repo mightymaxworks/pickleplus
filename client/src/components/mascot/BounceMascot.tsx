@@ -78,6 +78,8 @@ interface BounceMascotProps {
   showOnMount?: boolean;
   /** Probability (0-1) that Bounce will appear after the delay */
   appearProbability?: number;
+  /** Path to a custom image to use for the mascot */
+  customImagePath?: string;
 }
 
 /**
@@ -90,6 +92,7 @@ const BounceMascot: React.FC<BounceMascotProps> = ({
   displayDuration = 12000, // Default: 12 seconds display time
   showOnMount = false, // Default: don't show immediately
   appearProbability = 0.7, // Default: 70% chance to appear
+  customImagePath = undefined, // Default: use SVG
 }) => {
   const [visible, setVisible] = useState(showOnMount);
   const [message, setMessage] = useState(BOUNCE_MESSAGES[0]);
@@ -250,9 +253,9 @@ const BounceMascot: React.FC<BounceMascotProps> = ({
                 onClick={handleToggleExpand}
               >
                 <img 
-                  src="/bounce-mascot.svg" 
+                  src={customImagePath || "/bounce-mascot.svg"} 
                   alt="Bounce Mascot" 
-                  className="h-20 w-20"
+                  className="h-20 w-20 object-contain"
                 />
                 
                 {!expanded && (
