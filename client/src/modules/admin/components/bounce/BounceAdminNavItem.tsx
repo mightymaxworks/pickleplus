@@ -26,9 +26,9 @@ const BounceAdminNavItem: React.FC = () => {
       label: 'Bounce Testing',
       path: '/admin/bounce',
       icon: <Bot className="h-4 w-4" />,
-      group: 'tools',
+      group: 'system', // Categorize as system tool for mobile navigation
       description: 'Automated testing system',
-      priority: 45, // Position between Bug Reports (50) and Mobile Test (40)
+      priority: 15, // High priority in the system category
     });
 
     console.log('[Admin] Bounce testing navigation item registered');
