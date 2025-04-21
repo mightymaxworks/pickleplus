@@ -22,6 +22,7 @@ export interface AdminNavItemInput {
   description?: string;
   priority?: number;
   permission?: string;
+  isHeader?: boolean; // PKL-278651-ADMIN-0016-SYS-TOOLS
 }
 
 /**

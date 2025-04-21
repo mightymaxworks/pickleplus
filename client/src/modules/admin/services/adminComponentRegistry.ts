@@ -56,6 +56,11 @@ class AdminComponentRegistry {
       }
     };
     
+    // PKL-278651-ADMIN-0016-SYS-TOOLS: Handle header items
+    if (navItemData.isHeader) {
+      compatibleNavItem.isHeader = true;
+    }
+    
     this.registrations.push({
       moduleId,
       type: AdminComponentType.NAV_ITEM,
@@ -65,7 +70,7 @@ class AdminComponentRegistry {
     // Publish event for navigation update
     eventBus.publish(Events.ADMIN_NAV_UPDATED, { added: compatibleNavItem });
     
-    console.log(`[Admin] Registered nav item: ${compatibleNavItem.label}`);
+    console.log(`[Admin] Registered nav item: ${compatibleNavItem.label} ${compatibleNavItem.isHeader ? '(Header)' : ''}`);
   }
 
   /**

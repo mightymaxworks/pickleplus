@@ -59,6 +59,7 @@ export interface AdminNavItem {
   children?: AdminNavItem[]; // Optional sub-items for nested navigation
   permission?: string;     // Optional permission key required to view this item
   metadata?: AdminNavItemMetadata; // Additional metadata for the navigation item
+  isHeader?: boolean;      // Whether this item is a section header (PKL-278651-ADMIN-0016-SYS-TOOLS)
 }
 
 /**

@@ -29,7 +29,8 @@ export const SystemToolsNavItems: React.FC = () => {
       icon: <Server size={18} />,
       group: NavCategory.SYSTEM,
       priority: 10,
-      description: 'System administration tools'
+      description: 'System administration tools',
+      isHeader: true // Mark as header item
     });
 
     // Register Bounce Testing navigation item
