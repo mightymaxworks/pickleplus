@@ -1,5 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { Server } from "http";
+import { Server, createServer } from "http";
 import { isAuthenticated, isAdmin, setupAuth } from "./auth";
 import { db } from "./db";
 import { eq, and, or, desc, sql, isNull, lte, gte } from "drizzle-orm";
@@ -246,15 +246,13 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Register Passport Verification routes (PKL-278651-CONN-0004-PASS-ADMIN)
   registerPassportVerificationRoutes(app);
   
+  // Create and return the HTTP server
+  const httpServer = createServer(app);
+  
   // Set up WebSocket server for real-time event status updates (PKL-278651-CONN-0012-SYNC)
   try {
-    const httpServer = app.get('httpServer') as Server;
-    if (httpServer) {
-      setupEventWebSocketRoutes(httpServer);
-      console.log("[API] Event WebSocket server set up successfully");
-    } else {
-      console.error("[API] Failed to set up Event WebSocket server: HTTP server not available");
-    }
+    setupEventWebSocketRoutes(httpServer);
+    console.log("[API] Event WebSocket server set up successfully on /ws path");
   } catch (error) {
     console.error("[API] Error setting up Event WebSocket server:", error);
   }
