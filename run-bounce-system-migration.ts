@@ -104,8 +104,7 @@ async function createBounceSystemTables() {
  */
 async function checkTablesExist(): Promise<boolean> {
   try {
-    // Query to check if both the bounce_test_runs AND achievements tables exist
-    // The achievements table is causing the error, so we need to check for it too
+    // Query to check if the bounce_test_runs table exists
     const bounce_result = await pool.query(`
       SELECT EXISTS (
         SELECT FROM information_schema.tables 
@@ -114,20 +113,12 @@ async function checkTablesExist(): Promise<boolean> {
       );
     `);
     
-    const achievements_result = await pool.query(`
-      SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_name = 'achievements'
-      );
-    `);
-    
-    // If both tables exist, return true
-    return bounce_result.rows[0].exists || achievements_result.rows[0].exists;
+    // Return true if the table exists
+    return bounce_result.rows[0].exists === true;
   } catch (error) {
     console.error('Error checking if tables exist:', error);
-    // If we get an error here, assume tables exist to be safe
-    return true;
+    // If we get an error here, assume tables don't exist to ensure they get created
+    return false;
   }
 }
 
