@@ -357,7 +357,15 @@ export default function EventDiscoveryWrapper() {
       
       {/* Universal Passport Dialog - Using the modernized component */}
       <Dialog open={showPassportDialog} onOpenChange={setShowPassportDialog}>
-        <DialogContent className="sm:max-w-md p-0 overflow-hidden rounded-xl border-primary/10 shadow-xl">
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden rounded-xl border-primary/10 shadow-xl relative">
+          {/* Close button for mobile accessibility */}
+          <button 
+            className="absolute top-2 right-2 z-50 bg-muted/80 hover:bg-muted p-1.5 rounded-full backdrop-blur-sm text-muted-foreground" 
+            onClick={() => setShowPassportDialog(false)}
+            aria-label="Close"
+          >
+            <X className="h-4 w-4" />
+          </button>
           <ModernUniversalPassport 
             onViewRegisteredEvents={() => {
               setShowPassportDialog(false);
