@@ -159,7 +159,14 @@ export default function App() {
                     <SimpleBugReportButton position="bottom-right" />
                     
                     {/* Add Bounce Mascot (PKL-278651-MASCOT-0001-CORE) */}
-                    <BounceMascot customImagePath="/bounce-mascot-custom.svg" />
+                    <BounceMascot 
+                      customImagePath="/bounce-mascot-custom.svg"
+                      showOnMount={true}
+                      minDelay={100}
+                      maxDelay={500}
+                      displayDuration={30000}  
+                      appearProbability={1.0}
+                    />
                     
                     {/* Community navigation commented out for now */}
                     
