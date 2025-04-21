@@ -9,7 +9,7 @@
  * @lastModified 2025-04-21
  */
 
-import { SystemToolsNavItems } from './SystemToolsNavItems';
+import { registerSystemItems } from './SystemToolsNavItems';
 import { eventBus, Events } from '@/core/events/eventBus';
 
 /**
@@ -17,11 +17,8 @@ import { eventBus, Events } from '@/core/events/eventBus';
  */
 export function initSystemTools(): void {
   try {
-    // Create an instance of the SystemToolsNavItems component to register items
-    const systemToolsNavItems = new SystemToolsNavItems({});
-    
-    // Force the useEffect to run by mounting the component
-    systemToolsNavItems.render();
+    // Directly register all system tools navigation items
+    registerSystemItems();
     
     console.log('[Admin] System tools components initialized');
     

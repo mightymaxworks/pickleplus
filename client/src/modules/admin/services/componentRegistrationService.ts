@@ -70,24 +70,15 @@ export function registerBounceComponents() {
  * PKL-278651-ADMIN-0016-SYS-TOOLS
  */
 export function registerSystemToolsComponents() {
-  // We'll insert the SystemToolsNavItems component into the admin app
-  // This component will register direct navigation items when mounted
-  
-  // Create a provider that will render the SystemToolsNavItems component
-  const renderSystemToolsProvider = () => {
-    return React.createElement(SystemToolsNavItems, {});
-  };
-  
-  // Register the provider as a special admin view that's always active
-  adminComponentRegistry.registerAdminView('system', {
-    id: 'system-tools-provider',
-    path: '',  // Empty path ensures it's always rendered
-    component: renderSystemToolsProvider,
-    label: 'System Tools Provider',
-    hidden: true  // Hidden from navigation
-  });
-  
-  console.log('[Admin] System tools components initialized');
+  try {
+    // Import and use the registerSystemItems function to directly register all system nav items
+    const { registerSystemItems } = require('../components/system/SystemToolsNavItems');
+    registerSystemItems();
+    
+    console.log('[Admin] System tools components initialized');
+  } catch (error) {
+    console.error('[Admin] Error registering system tools components:', error);
+  }
 }
 
 /**
