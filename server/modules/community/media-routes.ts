@@ -52,31 +52,49 @@ const storage = multer.diskStorage({
   }
 });
 
-// File filter to only allow specific types
+/**
+ * PKL-278651-COMM-0036-MEDIA-COST
+ * Enhanced file filter with cost control
+ * 
+ * Restricts uploads to specific file types and enforces size limits by type
+ * to control costs while maintaining good user experience.
+ * 
+ * @lastModified 2025-04-21
+ */
 const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  // Accept images, videos, and documents
-  const allowedMimeTypes = [
-    // Images
-    'image/jpeg', 'image/png', 'image/gif', 'image/webp', 
-    // Videos
-    'video/mp4', 'video/webm', 'video/quicktime',
-    // Documents
-    'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-  ];
+  // Define allowed file types with size limits in bytes
+  const allowedTypes = {
+    // Images - 2MB limit
+    'image/jpeg': 2 * 1024 * 1024,
+    'image/png': 2 * 1024 * 1024,
+    'image/webp': 2 * 1024 * 1024,
+    'image/gif': 2 * 1024 * 1024,
+    // Videos - 10MB limit
+    'video/mp4': 10 * 1024 * 1024,
+    'video/webm': 10 * 1024 * 1024,
+    // Documents - 5MB limit
+    'application/pdf': 5 * 1024 * 1024
+  };
   
-  if (allowedMimeTypes.includes(file.mimetype)) {
-    cb(null, true);
+  if (file.mimetype in allowedTypes) {
+    // Check file size against type-specific limit
+    if (file.size && file.size > allowedTypes[file.mimetype]) {
+      cb(new Error(`File size exceeds the limit for ${file.mimetype.split('/')[0]} files`));
+    } else {
+      cb(null, true);
+    }
   } else {
-    cb(new Error('Unsupported file type'));
+    cb(new Error('Unsupported file type. Please upload JPG, PNG, GIF, WEBP, MP4, WEBM, or PDF files.'));
   }
 };
 
+// Configure multer with stricter limits for cost control
 const upload = multer({ 
   storage, 
   fileFilter,
   limits: {
-    fileSize: 25 * 1024 * 1024, // 25MB limit
+    fileSize: 10 * 1024 * 1024, // 10MB maximum for any file type
+    files: 5 // Reduced from 10 to 5 files per upload
   }
 });
 
