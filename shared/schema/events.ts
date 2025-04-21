@@ -30,6 +30,8 @@ export const events = pgTable('events', {
   eventType: text('event_type').default('regular'), // 'regular', 'tournament', 'workshop', etc.
   isTestData: boolean('is_test_data').default(false), // PKL-278651-SEC-0002-TESTVIS - Test data visibility control
   status: text('status').default('upcoming'), // 'upcoming', 'ongoing', 'completed', 'cancelled'
+  isDefault: boolean('is_default').default(false), // PKL-278651-CONN-0005-DEFEVT - Default events shown to all users
+  hideParticipantCount: boolean('hide_participant_count').default(false), // PKL-278651-CONN-0005-DEFEVT - Hide participant count for sensitive events
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
