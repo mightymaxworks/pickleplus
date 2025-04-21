@@ -165,6 +165,25 @@ export class XpService {
       throw error;
     }
   }
+  
+  /**
+   * Get user's total XP amount
+   * @param userId The user ID to check
+   * @returns The total XP earned by the user
+   */
+  async getTotalUserXp(userId: number): Promise<number> {
+    try {
+      const userXpResult = await db
+        .select({ xp: sum(xpTransactions.amount) })
+        .from(xpTransactions)
+        .where(eq(xpTransactions.userId, userId));
+      
+      return Number(userXpResult[0]?.xp || 0);
+    } catch (error) {
+      console.error('Error getting total user XP:', error);
+      throw error;
+    }
+  }
 
   /**
    * Get user's current level and progress to next level

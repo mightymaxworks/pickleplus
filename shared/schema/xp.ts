@@ -23,7 +23,8 @@ export const XP_SOURCE = {
   ACHIEVEMENT: "achievement", 
   TOURNAMENT: "tournament",
   REDEMPTION: "redemption",
-  ADMIN: "admin"
+  ADMIN: "admin",
+  BOUNCE: "bounce"
 } as const;
 
 export type XpSource = typeof XP_SOURCE[keyof typeof XP_SOURCE];
