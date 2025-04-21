@@ -16,7 +16,7 @@ type EventCallback = (data: any) => void | Promise<void>;
  */
 export class ServerEventBus {
   private static eventHandlers: Map<string, Set<EventCallback>> = new Map();
-
+  
   /**
    * Subscribe to an event
    * @param eventName Event name to subscribe to
@@ -30,20 +30,18 @@ export class ServerEventBus {
     
     this.eventHandlers.get(eventName)!.add(callback);
     
-    // Return an unsubscribe function
+    // Return unsubscribe function
     return () => {
       const handlers = this.eventHandlers.get(eventName);
       if (handlers) {
         handlers.delete(callback);
-        
-        // Clean up the event name if there are no more handlers
         if (handlers.size === 0) {
           this.eventHandlers.delete(eventName);
         }
       }
     };
   }
-
+  
   /**
    * Publish an event
    * @param eventName Event name to publish
@@ -52,31 +50,34 @@ export class ServerEventBus {
    */
   public static async publish(eventName: string, data: any): Promise<void> {
     const handlers = this.eventHandlers.get(eventName);
-    if (!handlers) {
+    if (!handlers || handlers.size === 0) {
       // No handlers for this event
       return;
     }
     
-    // Execute all handlers in parallel
-    const promises: Promise<void>[] = [];
+    const promises: Array<Promise<void> | void> = [];
     
-    handlers.forEach(callback => {
+    for (const handler of handlers) {
       try {
-        const result = callback(data);
-        
-        // If the callback returns a promise, add it to the list
+        const result = handler(data);
         if (result instanceof Promise) {
           promises.push(result);
         }
       } catch (error) {
-        console.error(`[ServerEventBus] Error executing handler for event ${eventName}:`, error);
+        console.error(`Error in event handler for ${eventName}:`, error);
       }
-    });
+    }
     
-    // Wait for all promises to resolve
-    await Promise.all(promises);
+    // Wait for all async handlers to complete
+    if (promises.length > 0) {
+      try {
+        await Promise.all(promises);
+      } catch (error) {
+        console.error(`Error in async event handler for ${eventName}:`, error);
+      }
+    }
   }
-
+  
   /**
    * Check if an event has any subscribers
    * @param eventName Event name to check
@@ -84,9 +85,9 @@ export class ServerEventBus {
    */
   public static hasSubscribers(eventName: string): boolean {
     const handlers = this.eventHandlers.get(eventName);
-    return Boolean(handlers && handlers.size > 0);
+    return !!handlers && handlers.size > 0;
   }
-
+  
   /**
    * Get the number of subscribers for an event
    * @param eventName Event name to check
@@ -96,7 +97,7 @@ export class ServerEventBus {
     const handlers = this.eventHandlers.get(eventName);
     return handlers ? handlers.size : 0;
   }
-
+  
   /**
    * Remove all subscribers for an event
    * @param eventName Event name to clear
@@ -104,7 +105,7 @@ export class ServerEventBus {
   public static clearEvent(eventName: string): void {
     this.eventHandlers.delete(eventName);
   }
-
+  
   /**
    * Remove all subscribers for all events
    */

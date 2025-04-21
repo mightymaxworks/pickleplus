@@ -17,21 +17,29 @@ import { SCHEDULE_FREQUENCY } from '@shared/schema';
  * @returns Cron expression
  */
 export function cronExpressionFromFrequency(frequency: SCHEDULE_FREQUENCY): string {
+  // Format: <minute> <hour> <day-of-month> <month> <day-of-week>
   switch (frequency) {
     case SCHEDULE_FREQUENCY.HOURLY:
-      return '0 * * * *'; // Run at minute 0 of every hour
+      return '0 * * * *'; // At minute 0 every hour
+    
     case SCHEDULE_FREQUENCY.DAILY:
-      return '0 0 * * *'; // Run at midnight every day
+      return '0 0 * * *'; // At 00:00 (midnight) every day
+    
     case SCHEDULE_FREQUENCY.WEEKLY:
-      return '0 0 * * 0'; // Run at midnight every Sunday
+      return '0 0 * * 1'; // At 00:00 on Monday
+    
     case SCHEDULE_FREQUENCY.MONTHLY:
-      return '0 0 1 * *'; // Run at midnight on the 1st of every month
+      return '0 0 1 * *'; // At 00:00 on the 1st of every month
+    
     case SCHEDULE_FREQUENCY.QUARTERLY:
-      return '0 0 1 1,4,7,10 *'; // Run at midnight on the 1st of Jan, Apr, Jul, Oct
+      return '0 0 1 1,4,7,10 *'; // At 00:00 on the 1st of Jan, Apr, Jul, Oct
+    
     case SCHEDULE_FREQUENCY.CUSTOM:
-      throw new Error('Custom frequency requires a custom cron expression');
+      // For custom frequency, a specific cron expression should be provided
+      throw new Error('Custom frequency requires a specific cron expression');
+    
     default:
-      throw new Error(`Unknown frequency: ${frequency}`);
+      throw new Error(`Unsupported frequency: ${frequency}`);
   }
 }
 
@@ -42,49 +50,42 @@ export function cronExpressionFromFrequency(frequency: SCHEDULE_FREQUENCY): stri
  */
 export function getNextRunDate(cronExpression: string): Date {
   const now = new Date();
-  
-  // Parse the cron expression into its components
-  // Format: minute hour day month day-of-week
   const parts = cronExpression.trim().split(/\s+/);
+  
   if (parts.length !== 5) {
-    throw new Error(`Invalid cron expression: ${cronExpression}`);
+    throw new Error(`Invalid cron expression: ${cronExpression}. Expected 5 parts but got ${parts.length}.`);
   }
   
-  const [minuteExpr, hourExpr, dayMonthExpr, monthExpr, dayWeekExpr] = parts;
+  const [minutePart, hourPart, dayOfMonthPart, monthPart, dayOfWeekPart] = parts;
   
-  // Start with the current date and time as the candidate
-  let candidate = new Date(now);
-  candidate.setSeconds(0);
-  candidate.setMilliseconds(0);
+  // Start with current date and increment until we find a matching date
+  const result = new Date(now);
+  // Start from the next minute
+  result.setSeconds(0);
+  result.setMilliseconds(0);
+  result.setMinutes(result.getMinutes() + 1);
   
-  // Ensure we're looking at a future date
-  candidate.setMinutes(candidate.getMinutes() + 1);
+  // Maximum iterations to prevent infinite loops (1 year worth of minutes)
+  const maxIterations = 365 * 24 * 60;
+  let iterations = 0;
   
-  // Maximum number of attempts to prevent infinite loops
-  const MAX_ATTEMPTS = 1000;
-  let attempts = 0;
-  
-  while (attempts < MAX_ATTEMPTS) {
-    attempts++;
-    
-    // Check if the candidate matches the cron expression
-    if (
-      matchesCronExpression(
-        candidate.getMinutes(),
-        candidate.getHours(),
-        candidate.getDate(),
-        candidate.getMonth() + 1, // JavaScript months are 0-based
-        candidate.getDay()
-      )
-    ) {
-      return candidate;
+  while (iterations < maxIterations) {
+    if (matchesCronExpression(
+      result.getMinutes(),
+      result.getHours(),
+      result.getDate(),
+      result.getMonth() + 1, // JavaScript months are 0-based
+      result.getDay() === 0 ? 7 : result.getDay() // Convert Sunday (0) to 7 to match cron format
+    )) {
+      return result;
     }
     
     // Move to the next minute
-    candidate.setMinutes(candidate.getMinutes() + 1);
+    result.setMinutes(result.getMinutes() + 1);
+    iterations++;
   }
   
-  throw new Error(`Could not find a matching date for cron expression: ${cronExpression}`);
+  throw new Error(`Failed to find a matching date for cron expression: ${cronExpression} within reasonable iterations`);
   
   /**
    * Check if a date/time matches a cron expression
@@ -103,11 +104,11 @@ export function getNextRunDate(cronExpression: string): Date {
     dayWeek: number
   ): boolean {
     return (
-      fieldMatches(minute, minuteExpr, 0, 59) &&
-      fieldMatches(hour, hourExpr, 0, 23) &&
-      fieldMatches(dayMonth, dayMonthExpr, 1, 31) &&
-      fieldMatches(month, monthExpr, 1, 12) &&
-      fieldMatches(dayWeek, dayWeekExpr, 0, 6)
+      fieldMatches(minute, minutePart, 0, 59) &&
+      fieldMatches(hour, hourPart, 0, 23) &&
+      fieldMatches(dayMonth, dayOfMonthPart, 1, 31) &&
+      fieldMatches(month, monthPart, 1, 12) &&
+      fieldMatches(dayWeek, dayOfWeekPart, 1, 7)
     );
   }
   
@@ -120,23 +121,23 @@ export function getNextRunDate(cronExpression: string): Date {
    * @returns Whether the field matches the expression
    */
   function fieldMatches(value: number, expr: string, min: number, max: number): boolean {
-    // Handle wildcard (every value)
+    // Wildcard
     if (expr === '*') {
       return true;
     }
     
-    // Handle comma-separated values (multiple values)
+    // List of values
     if (expr.includes(',')) {
-      return expr.split(',').some(part => fieldMatches(value, part, min, max));
+      return expr.split(',').some(item => fieldMatches(value, item, min, max));
     }
     
-    // Handle range (value-value)
+    // Range
     if (expr.includes('-')) {
       const [start, end] = expr.split('-').map(Number);
       return value >= start && value <= end;
     }
     
-    // Handle step values (*/step or min-max/step)
+    // Step values
     if (expr.includes('/')) {
       const [range, step] = expr.split('/');
       const stepNum = parseInt(step, 10);
@@ -151,7 +152,7 @@ export function getNextRunDate(cronExpression: string): Date {
       }
     }
     
-    // Handle simple value
+    // Simple value
     return parseInt(expr, 10) === value;
   }
 }
@@ -162,35 +163,96 @@ export function getNextRunDate(cronExpression: string): Date {
  * @returns Human-readable string
  */
 export function formatCronExpression(cronExpression: string): string {
-  // Parse the cron expression
   const parts = cronExpression.trim().split(/\s+/);
   if (parts.length !== 5) {
-    return 'Invalid cron expression';
+    return `Invalid cron expression: ${cronExpression}`;
   }
   
-  const [minute, hour, dayMonth, month, dayWeek] = parts;
+  const [minute, hour, dayOfMonth, month, dayOfWeek] = parts;
   
-  // Check for common patterns
-  if (minute === '0' && hour === '0' && dayMonth === '*' && month === '*' && dayWeek === '*') {
-    return 'Every day at midnight';
+  // Common patterns
+  if (cronExpression === '0 * * * *') {
+    return 'Every hour at the beginning of the hour';
   }
   
-  if (minute === '0' && hour === '*' && dayMonth === '*' && month === '*' && dayWeek === '*') {
-    return 'Every hour on the hour';
+  if (cronExpression === '0 0 * * *') {
+    return 'Daily at midnight';
   }
   
-  if (minute === '0' && hour === '0' && dayMonth === '*' && month === '*' && dayWeek === '0') {
-    return 'Every Sunday at midnight';
+  if (cronExpression === '0 0 * * 1') {
+    return 'Weekly on Monday at midnight';
   }
   
-  if (minute === '0' && hour === '0' && dayMonth === '1' && month === '*' && dayWeek === '*') {
-    return 'First day of every month at midnight';
+  if (cronExpression === '0 0 1 * *') {
+    return 'Monthly on the 1st at midnight';
   }
   
-  if (minute === '0' && hour === '0' && dayMonth === '1' && month === '1,4,7,10' && dayWeek === '*') {
-    return 'First day of each quarter at midnight';
+  if (cronExpression === '0 0 1 1,4,7,10 *') {
+    return 'Quarterly on the 1st of January, April, July, and October at midnight';
   }
   
-  // Fall back to a generic description
-  return 'Custom schedule';
+  // Fallback to a simpler representation
+  let result = '';
+  
+  // Minute
+  if (minute === '*') {
+    result += 'Every minute';
+  } else if (minute.includes('/')) {
+    const [, step] = minute.split('/');
+    result += `Every ${step} minutes`;
+  } else {
+    result += `At minute ${minute}`;
+  }
+  
+  // Hour
+  if (hour === '*') {
+    result += ' of every hour';
+  } else if (hour.includes('/')) {
+    const [, step] = hour.split('/');
+    result += ` every ${step} hours`;
+  } else {
+    result += ` of hour ${hour}`;
+  }
+  
+  // Day of month
+  if (dayOfMonth !== '*') {
+    result += ` on the ${dayOfMonth}${getDaySuffix(parseInt(dayOfMonth, 10))}`;
+  }
+  
+  // Month
+  if (month !== '*') {
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    if (month.includes(',')) {
+      const months = month.split(',').map(m => monthNames[parseInt(m, 10) - 1]);
+      result += ` of ${months.slice(0, -1).join(', ')} and ${months[months.length - 1]}`;
+    } else {
+      result += ` of ${monthNames[parseInt(month, 10) - 1]}`;
+    }
+  }
+  
+  // Day of week
+  if (dayOfWeek !== '*') {
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    if (dayOfWeek.includes(',')) {
+      const days = dayOfWeek.split(',').map(d => dayNames[parseInt(d, 10) % 7]);
+      result += ` on ${days.slice(0, -1).join(', ')} and ${days[days.length - 1]}`;
+    } else {
+      result += ` on ${dayNames[parseInt(dayOfWeek, 10) % 7]}`;
+    }
+  }
+  
+  return result;
+  
+  function getDaySuffix(day: number): string {
+    if (day >= 11 && day <= 13) {
+      return 'th';
+    }
+    
+    switch (day % 10) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
+  }
 }
