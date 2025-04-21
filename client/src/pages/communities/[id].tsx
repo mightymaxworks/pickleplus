@@ -441,12 +441,17 @@ export default function CommunityDetailPage() {
                   </p>
                   <Button 
                     variant="default" 
-                    size="sm" 
-                    onClick={() => window.open(`/communities/${communityId}/media`, '_blank')}
-                    className="flex items-center gap-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                    size="icon" 
+                    onClick={() => {
+                      // Instead of opening a new page, we should implement a modal here
+                      // For now, just open the media management in the same tab
+                      window.location.href = `/communities/${communityId}/media`;
+                    }}
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                    title="Add Media"
+                    aria-label="Add Media"
                   >
                     <Plus className="h-4 w-4" />
-                    <span>Add Media</span>
                   </Button>
                 </div>
                 
