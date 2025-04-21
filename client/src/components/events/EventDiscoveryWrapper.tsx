@@ -30,7 +30,8 @@ import {
   CalendarIcon, 
   CheckIcon,
   MapPinIcon,
-  UsersIcon
+  UsersIcon,
+  X as XIcon
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
@@ -364,7 +365,7 @@ export default function EventDiscoveryWrapper() {
             onClick={() => setShowPassportDialog(false)}
             aria-label="Close"
           >
-            <X className="h-4 w-4" />
+            <XIcon className="h-4 w-4" />
           </button>
           <ModernUniversalPassport 
             onViewRegisteredEvents={() => {
