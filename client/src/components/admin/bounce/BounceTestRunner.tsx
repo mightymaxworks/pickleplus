@@ -204,20 +204,95 @@ export const BounceTestRunner: React.FC = () => {
     }
   });
   
-  // Function to start a test run
+  // Function to start a test run with enhanced error handling
   const startTestRun = () => {
-    // Use selected config or custom config
-    const config = selectedConfig === 'custom' 
-      ? customConfig 
-      : testConfigs?.find(c => c.id === selectedConfig) || customConfig;
+    try {
+      // Validate selected config exists before starting
+      if (!selectedConfig) {
+        toast({
+          title: "Configuration Required",
+          description: "Please select a test configuration before starting the test run.",
+          variant: "destructive"
+        });
+        return;
+      }
     
-    startTestRunMutation.mutate(config);
+      // Use selected config or custom config
+      const config = selectedConfig === 'custom' 
+        ? customConfig 
+        : testConfigs?.find(c => c.id === selectedConfig);
+      
+      // Validate config was found
+      if (!config) {
+        toast({
+          title: "Invalid Configuration",
+          description: "The selected test configuration could not be found.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Validate minimum requirements for custom config
+      if (selectedConfig === 'custom' && 
+          (!customConfig.flows.length || !customConfig.browsers.length)) {
+        toast({
+          title: "Invalid Configuration",
+          description: "Please select at least one flow and browser for testing.",
+          variant: "destructive"
+        });
+        return;
+      }
+    
+      console.log(`[Bounce] Starting test run with config: ${config.name}`);
+      startTestRunMutation.mutate(config);
+      
+      // Track test start in analytics
+      try {
+        // Sample analytics event
+        console.log(`[Analytics] Test run started: ${config.name}`);
+      } catch (analyticsError) {
+        // Non-critical error, just log it
+        console.error("Failed to track test run analytics", analyticsError);
+      }
+    } catch (error) {
+      console.error("Error starting test run:", error);
+      toast({
+        title: "Test Run Error",
+        description: "An unexpected error occurred while starting the test run.",
+        variant: "destructive"
+      });
+    }
   };
   
-  // Function to stop a test run
+  // Function to stop a test run with enhanced error handling
   const stopTestRun = () => {
-    if (currentTestRun) {
+    try {
+      // Verify we have a current test run
+      if (!currentTestRun) {
+        toast({
+          title: "No Active Test Run",
+          description: "There is no active test run to stop.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      console.log(`[Bounce] Stopping test run #${currentTestRun.id}`);
       stopTestRunMutation.mutate(currentTestRun.id);
+      
+      // Track test stop in analytics (non-blocking)
+      try {
+        console.log(`[Analytics] Test run stopped: #${currentTestRun.id}`);
+      } catch (analyticsError) {
+        console.error("Failed to track test stop analytics", analyticsError);
+      }
+    } catch (error) {
+      console.error("Error stopping test run:", error);
+      toast({
+        title: "Stop Test Error",
+        description: "An unexpected error occurred while stopping the test run.",
+        variant: "destructive"
+      });
     }
   };
   
