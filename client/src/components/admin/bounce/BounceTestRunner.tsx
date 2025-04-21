@@ -14,7 +14,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { 
   Play, Pause, RefreshCw, CheckCircle, XCircle, AlertCircle, 
-  ChevronLeft, AlertTriangle, Bug, Monitor, Shield, X
+  ChevronLeft, AlertTriangle, Bug, Monitor, Shield, X, StopCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -302,6 +302,59 @@ export const BounceTestRunner: React.FC = () => {
     }
   });
   
+  // Mutation for pausing a test run
+  const pauseTestRunMutation = useMutation({
+    mutationFn: async (testRunId: number) => {
+      return fetch('/api/admin/bounce/pause', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ testRunId })
+      }).then(res => res.json());
+    },
+    onSuccess: () => {
+      setTestRunStatus(TestRunStatus.PAUSED);
+      toast({
+        title: 'Test Run Paused',
+        description: 'The test run was paused and can be resumed later',
+        variant: 'default'
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Failed to pause test run',
+        description: 'An error occurred while pausing the test run',
+        variant: 'destructive'
+      });
+    }
+  });
+  
+  // Mutation for resuming a test run
+  const resumeTestRunMutation = useMutation({
+    mutationFn: async (testRunId: number) => {
+      return fetch('/api/admin/bounce/resume', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ testRunId })
+      }).then(res => res.json());
+    },
+    onSuccess: (data) => {
+      setTestRunStatus(TestRunStatus.RUNNING);
+      setCurrentTestRun(data);
+      toast({
+        title: 'Test Run Resumed',
+        description: 'The test run was resumed successfully',
+        variant: 'default'
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Failed to resume test run',
+        description: 'An error occurred while resuming the test run',
+        variant: 'destructive'
+      });
+    }
+  });
+  
   // Function to start a test run with enhanced error handling
   const startTestRun = () => {
     try {
@@ -389,6 +442,88 @@ export const BounceTestRunner: React.FC = () => {
       toast({
         title: "Stop Test Error",
         description: "An unexpected error occurred while stopping the test run.",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // Function to pause a test run with enhanced error handling
+  const pauseTestRun = () => {
+    try {
+      // Verify we have a current test run that's running
+      if (!currentTestRun) {
+        toast({
+          title: "No Active Test Run",
+          description: "There is no active test run to pause.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      if (testRunStatus !== TestRunStatus.RUNNING) {
+        toast({
+          title: "Test Not Running",
+          description: "Only running tests can be paused.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      console.log(`[Bounce] Pausing test run #${currentTestRun.id}`);
+      pauseTestRunMutation.mutate(currentTestRun.id);
+      
+      // Track test pause in analytics (non-blocking)
+      try {
+        console.log(`[Analytics] Test run paused: #${currentTestRun.id}`);
+      } catch (analyticsError) {
+        console.error("Failed to track test pause analytics", analyticsError);
+      }
+    } catch (error) {
+      console.error("Error pausing test run:", error);
+      toast({
+        title: "Pause Test Error",
+        description: "An unexpected error occurred while pausing the test run.",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // Function to resume a test run with enhanced error handling
+  const resumeTestRun = () => {
+    try {
+      // Verify we have a current test run that's paused
+      if (!currentTestRun) {
+        toast({
+          title: "No Test Run",
+          description: "There is no test run to resume.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      if (testRunStatus !== TestRunStatus.PAUSED) {
+        toast({
+          title: "Test Not Paused",
+          description: "Only paused tests can be resumed.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      console.log(`[Bounce] Resuming test run #${currentTestRun.id}`);
+      resumeTestRunMutation.mutate(currentTestRun.id);
+      
+      // Track test resume in analytics (non-blocking)
+      try {
+        console.log(`[Analytics] Test run resumed: #${currentTestRun.id}`);
+      } catch (analyticsError) {
+        console.error("Failed to track test resume analytics", analyticsError);
+      }
+    } catch (error) {
+      console.error("Error resuming test run:", error);
+      toast({
+        title: "Resume Test Error",
+        description: "An unexpected error occurred while resuming the test run.",
         variant: "destructive"
       });
     }
@@ -735,8 +870,52 @@ export const BounceTestRunner: React.FC = () => {
                             Started at {new Date(currentTestRun.startedAt).toLocaleString()}
                           </p>
                         </div>
-                        <div>
+                        <div className="flex items-center gap-3">
                           {renderStatusBadge(testRunStatus)}
+                          
+                          {/* Test Control Buttons */}
+                          {testRunStatus === TestRunStatus.RUNNING && (
+                            <div className="flex gap-2">
+                              <Button 
+                                onClick={pauseTestRun} 
+                                variant="outline"
+                                size="sm"
+                              >
+                                <Pause className="mr-2 h-4 w-4" />
+                                Pause
+                              </Button>
+                              <Button 
+                                onClick={stopTestRun} 
+                                variant="destructive"
+                                size="sm"
+                              >
+                                <StopCircle className="mr-2 h-4 w-4" />
+                                Stop
+                              </Button>
+                            </div>
+                          )}
+                          
+                          {/* Resume Button */}
+                          {testRunStatus === TestRunStatus.PAUSED && (
+                            <div className="flex gap-2">
+                              <Button 
+                                onClick={resumeTestRun} 
+                                variant="default"
+                                size="sm"
+                              >
+                                <Play className="mr-2 h-4 w-4" />
+                                Resume
+                              </Button>
+                              <Button 
+                                onClick={stopTestRun} 
+                                variant="destructive"
+                                size="sm"
+                              >
+                                <StopCircle className="mr-2 h-4 w-4" />
+                                Stop
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </div>
                       
