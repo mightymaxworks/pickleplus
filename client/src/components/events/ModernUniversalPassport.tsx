@@ -81,11 +81,15 @@ export function ModernUniversalPassport({
   const [isRegistering, setIsRegistering] = useState(false);
   const [showHowToUse, setShowHowToUse] = useState(false);
 
-  // Fetch passport code
-  const { data: passportCode, isLoading: isLoadingCode } = useQuery({
+  // Fetch passport code and founding member status
+  const { data: passportData, isLoading: isLoadingCode } = useQuery({
     queryKey: ['/api/user/passport/code'],
     queryFn: getUserPassportCode,
   });
+  
+  // Extract passport code and founding member status
+  const passportCode = passportData?.code || '';
+  const isFoundingMember = passportData?.isFoundingMember || false;
 
   // Fetch registered events count
   const { data: registeredEvents } = useQuery({
@@ -401,7 +405,13 @@ export function ModernUniversalPassport({
           className
         )}>
           {/* Top gradient accent */}
-          <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-primary via-primary/70 to-primary/40" />
+          <div className={cn(
+            "absolute top-0 left-0 right-0 h-2", 
+            isFoundingMember 
+              ? "bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300/40" 
+              : "bg-gradient-to-r from-primary via-primary/70 to-primary/40"
+            )} 
+          />
           
           <CardHeader className="pb-2 pt-6 px-6">
             <motion.div
@@ -412,11 +422,24 @@ export function ModernUniversalPassport({
             >
               <div>
                 <CardTitle className="flex items-center text-lg sm:text-xl">
-                  <TicketIcon className="h-5 w-5 mr-2 text-primary" />
-                  PicklePass™ Passport
+                  <TicketIcon className={cn(
+                    "h-5 w-5 mr-2", 
+                    isFoundingMember ? "text-amber-500" : "text-primary"
+                  )} />
+                  {isFoundingMember ? (
+                    <span className="flex items-center">
+                      PicklePass™ Passport
+                      <SparklesIcon className="h-4 w-4 ml-1.5 text-amber-500" />
+                    </span>
+                  ) : (
+                    "PicklePass™ Passport"
+                  )}
                 </CardTitle>
                 <CardDescription>
-                  Your universal event passport
+                  {isFoundingMember 
+                    ? "Founding Member Premium Access" 
+                    : "Your universal event passport"
+                  }
                 </CardDescription>
               </div>
               
@@ -428,10 +451,24 @@ export function ModernUniversalPassport({
               >
                 <Badge 
                   variant="outline" 
-                  className="py-1 px-3 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 flex items-center gap-1.5 shadow-sm"
+                  className={cn(
+                    "py-1 px-3 flex items-center gap-1.5 shadow-sm",
+                    isFoundingMember
+                    ? "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800"
+                    : "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800"
+                  )}
                 >
-                  <ShieldCheckIcon className="h-3 w-3" />
-                  <span className="text-xs font-medium">Verified</span>
+                  {isFoundingMember ? (
+                    <>
+                      <SparklesIcon className="h-3 w-3" />
+                      <span className="text-xs font-medium">Founding Member</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheckIcon className="h-3 w-3" />
+                      <span className="text-xs font-medium">Verified</span>
+                    </>
+                  )}
                 </Badge>
               </motion.div>
             </motion.div>
@@ -482,24 +519,41 @@ export function ModernUniversalPassport({
               {/* QR Code corners - more subtle and modern */}
               <div className="absolute top-0 left-0 w-12 h-12">
                 <motion.svg viewBox="0 0 48 48" className="w-full h-full" initial={{ opacity: 0 }} animate={{ opacity: 0.9 }} transition={{ delay: 0.3 }}>
-                  <path d="M2 2 L12 2 L2 12 Z" fill="none" stroke="#FF5722" strokeWidth="2" />
+                  <path d="M2 2 L12 2 L2 12 Z" fill="none" stroke={isFoundingMember ? "#D4A017" : "#FF5722"} strokeWidth={isFoundingMember ? 3 : 2} />
                 </motion.svg>
               </div>
               <div className="absolute top-0 right-0 w-12 h-12">
                 <motion.svg viewBox="0 0 48 48" className="w-full h-full" initial={{ opacity: 0 }} animate={{ opacity: 0.9 }} transition={{ delay: 0.4 }}>
-                  <path d="M46 2 L36 2 L46 12 Z" fill="none" stroke="#FF5722" strokeWidth="2" />
+                  <path d="M46 2 L36 2 L46 12 Z" fill="none" stroke={isFoundingMember ? "#D4A017" : "#FF5722"} strokeWidth={isFoundingMember ? 3 : 2} />
                 </motion.svg>
               </div>
               <div className="absolute bottom-0 left-0 w-12 h-12">
                 <motion.svg viewBox="0 0 48 48" className="w-full h-full" initial={{ opacity: 0 }} animate={{ opacity: 0.9 }} transition={{ delay: 0.5 }}>
-                  <path d="M2 46 L12 46 L2 36 Z" fill="none" stroke="#FF5722" strokeWidth="2" />
+                  <path d="M2 46 L12 46 L2 36 Z" fill="none" stroke={isFoundingMember ? "#D4A017" : "#FF5722"} strokeWidth={isFoundingMember ? 3 : 2} />
                 </motion.svg>
               </div>
               <div className="absolute bottom-0 right-0 w-12 h-12">
                 <motion.svg viewBox="0 0 48 48" className="w-full h-full" initial={{ opacity: 0 }} animate={{ opacity: 0.9 }} transition={{ delay: 0.6 }}>
-                  <path d="M46 46 L36 46 L46 36 Z" fill="none" stroke="#FF5722" strokeWidth="2" />
+                  <path d="M46 46 L36 46 L46 36 Z" fill="none" stroke={isFoundingMember ? "#D4A017" : "#FF5722"} strokeWidth={isFoundingMember ? 3 : 2} />
                 </motion.svg>
               </div>
+              
+              {/* Gold sparkle effect for founding members */}
+              {isFoundingMember && (
+                <motion.div 
+                  className="absolute inset-0 pointer-events-none"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.8, delay: 0.7 }}
+                >
+                  <div className="absolute top-0 right-0">
+                    <SparklesIcon className="h-5 w-5 text-amber-400" />
+                  </div>
+                  <div className="absolute bottom-0 left-0">
+                    <SparklesIcon className="h-5 w-5 text-amber-400" />
+                  </div>
+                </motion.div>
+              )}
               
               {passportCode && (
                 <QRCodeSVG
@@ -507,6 +561,8 @@ export function ModernUniversalPassport({
                   size={240}
                   level="H"
                   includeMargin={true}
+                  fgColor={isFoundingMember ? "#D4A017" : "#000000"}
+                  bgColor="#FFFFFF"
                   imageSettings={{
                     src: "/src/assets/pickle-plus-logo.png",
                     height: 44,
@@ -526,19 +582,36 @@ export function ModernUniversalPassport({
             >
               <div 
                 className={cn(
-                  "flex items-center justify-center px-5 py-3 rounded-full bg-primary/5 border border-primary/10 shadow-sm w-fit transition-all",
-                  highlightCode && "bg-primary/10 border-primary/20",
-                  "group cursor-pointer hover:bg-primary/10"
+                  "flex items-center justify-center px-5 py-3 rounded-full border shadow-sm w-fit transition-all",
+                  isFoundingMember 
+                    ? highlightCode
+                      ? "bg-amber-100/50 border-amber-300 dark:bg-amber-900/20 dark:border-amber-700/50"
+                      : "bg-amber-50/50 border-amber-200/70 dark:bg-amber-900/10 dark:border-amber-800/30"
+                    : highlightCode
+                      ? "bg-primary/10 border-primary/20"
+                      : "bg-primary/5 border-primary/10",
+                  "group cursor-pointer",
+                  isFoundingMember
+                    ? "hover:bg-amber-100/70 dark:hover:bg-amber-900/30"
+                    : "hover:bg-primary/10"
                 )}
                 onClick={copyPassportCode}
               >
                 <motion.span 
-                  className="font-mono font-medium text-lg text-primary tracking-wide"
+                  className={cn(
+                    "font-mono font-medium text-lg tracking-wide",
+                    isFoundingMember 
+                      ? "text-amber-700 dark:text-amber-400"
+                      : "text-primary"
+                  )}
                   animate={{ scale: highlightCode ? 1.05 : 1 }}
                   transition={{ duration: 0.3 }}
                 >
                   {passportCode ?? 'Loading...'}
                 </motion.span>
+                {isFoundingMember && (
+                  <SparklesIcon className="h-4 w-4 mx-1.5 text-amber-500" />
+                )}
                 <motion.div 
                   className="ml-2 opacity-70 group-hover:opacity-100"
                   whileHover={{ scale: 1.1, opacity: 1 }}
@@ -546,7 +619,10 @@ export function ModernUniversalPassport({
                   {copiedCode ? (
                     <CheckCircleIcon className="h-4 w-4 text-green-500" />
                   ) : (
-                    <Copy className="h-4 w-4 text-primary/80" />
+                    <Copy className={cn(
+                      "h-4 w-4",
+                      isFoundingMember ? "text-amber-500/80" : "text-primary/80"
+                    )} />
                   )}
                 </motion.div>
               </div>
@@ -617,9 +693,17 @@ export function ModernUniversalPassport({
                       variant="outline"
                       size="icon"
                       onClick={sharePassport}
-                      className="flex-shrink-0 bg-white dark:bg-gray-800 hover:bg-primary/5"
+                      className={cn(
+                        "flex-shrink-0 bg-white dark:bg-gray-800",
+                        isFoundingMember 
+                          ? "hover:bg-amber-50 dark:hover:bg-amber-900/20 border-amber-200/50 dark:border-amber-800/30" 
+                          : "hover:bg-primary/5 border-primary/10"
+                      )}
                     >
-                      <ShareIcon className="h-4 w-4 text-primary" />
+                      <ShareIcon className={cn(
+                        "h-4 w-4",
+                        isFoundingMember ? "text-amber-500" : "text-primary"
+                      )} />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -635,9 +719,17 @@ export function ModernUniversalPassport({
                       variant="outline"
                       size="icon"
                       onClick={() => setShowScanDialog(true)}
-                      className="flex-shrink-0 bg-white dark:bg-gray-800 hover:bg-primary/5"
+                      className={cn(
+                        "flex-shrink-0 bg-white dark:bg-gray-800",
+                        isFoundingMember 
+                          ? "hover:bg-amber-50 dark:hover:bg-amber-900/20 border-amber-200/50 dark:border-amber-800/30" 
+                          : "hover:bg-primary/5 border-primary/10"
+                      )}
                     >
-                      <ScanIcon className="h-4 w-4 text-primary" />
+                      <ScanIcon className={cn(
+                        "h-4 w-4",
+                        isFoundingMember ? "text-amber-500" : "text-primary"
+                      )} />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -648,9 +740,17 @@ export function ModernUniversalPassport({
               
               {upcomingEvent && (
                 <Button
-                  className="w-full bg-primary hover:bg-primary/90"
+                  className={cn(
+                    "w-full text-white",
+                    isFoundingMember 
+                      ? "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 border-amber-400" 
+                      : "bg-primary hover:bg-primary/90"
+                  )}
                   onClick={() => setShowQuickRegDialog(true)}
                 >
+                  {isFoundingMember && (
+                    <SparklesIcon className="h-4 w-4 mr-1.5" />
+                  )}
                   <ZapIcon className="mr-2 h-4 w-4" />
                   Quick Register for Event
                 </Button>
@@ -658,9 +758,17 @@ export function ModernUniversalPassport({
               
               {!upcomingEvent && onViewRegisteredEvents && (
                 <Button
-                  className="w-full bg-primary hover:bg-primary/90 text-white"
+                  className={cn(
+                    "w-full text-white",
+                    isFoundingMember 
+                      ? "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 border-amber-400" 
+                      : "bg-primary hover:bg-primary/90"
+                  )}
                   onClick={onViewRegisteredEvents}
                 >
+                  {isFoundingMember && (
+                    <SparklesIcon className="h-4 w-4 mr-1.5" />
+                  )}
                   <CalendarDaysIcon className="mr-2 h-4 w-4" />
                   View My Registered Events
                 </Button>
