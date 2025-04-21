@@ -250,7 +250,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
                               </h3>
                               <div className="space-y-1">
                                 {categorizedNavItems[NavCategory.SYSTEM].map((item) => (
-                                  <NavItem key={item.path || `header-${item.label}`} item={item} isMobile={true} />
+                                  <NavItem key={item.path || `system-mobile-${item.label || Math.random().toString(36).substring(2, 9)}`} item={item} isMobile={true} />
                                 ))}
                               </div>
                             </div>
@@ -448,7 +448,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
                       </h3>
                       <div className="space-y-1">
                         {categorizedNavItems[NavCategory.CONTENT].map((item) => (
-                          <NavItem key={item.path} item={item} />
+                          <NavItem key={item.path || `content-desktop-${item.label || Math.random().toString(36).substring(2, 9)}`} item={item} />
                         ))}
                       </div>
                     </div>
@@ -461,7 +461,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
                       </h3>
                       <div className="space-y-1">
                         {categorizedNavItems[NavCategory.OTHER].map((item) => (
-                          <NavItem key={item.path} item={item} />
+                          <NavItem key={item.path || `other-desktop-${item.label || Math.random().toString(36).substring(2, 9)}`} item={item} />
                         ))}
                       </div>
                     </div>
@@ -474,7 +474,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
                       </h3>
                       <div className="space-y-1">
                         {categorizedNavItems[NavCategory.SYSTEM].map((item) => (
-                          <NavItem key={item.path || `header-${item.label}`} item={item} />
+                          <NavItem key={item.path || `system-desktop-${item.label || Math.random().toString(36).substring(2, 9)}`} item={item} />
                         ))}
                       </div>
                     </div>
