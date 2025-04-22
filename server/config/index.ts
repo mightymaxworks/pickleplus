@@ -10,9 +10,13 @@
  * @lastModified 2025-04-22
  */
 
+// Import configuration dynamically - works in both ESM and CommonJS
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+
 // Import environment-specific configurations
-const defaultConfig = require('../../config/default');
-const productionConfig = require('../../config/production');
+const defaultConfig = require('../../config/default.js');
+const productionConfig = require('../../config/production.js');
 
 // Environment detection
 const env = process.env.NODE_ENV || 'development';

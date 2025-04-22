@@ -1,19 +1,17 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
-import * as schema from "../shared/schema";
-import * as bounceAutomationSchema from "../shared/schema/bounce-automation";
+/**
+ * PKL-278651-DB-0002-SHAL
+ * Database Export Shallowly Re-exports from db-factory
+ * 
+ * This module re-exports the database connection from db-factory
+ * to ensure all database access uses the production-ready connection.
+ * 
+ * @framework Framework5.3
+ * @version 1.0.0
+ * @lastModified 2025-04-22
+ */
 
-neonConfig.webSocketConstructor = ws;
+// Import from the factory to ensure production safeguards
+import { pool, db } from './db-factory';
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
-}
-
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-// Merge all schema objects for a complete database schema
-const mergedSchema = { ...schema, ...bounceAutomationSchema };
-
-export const db = drizzle(pool, { schema: mergedSchema });
+// Re-export for use throughout the application
+export { pool, db };

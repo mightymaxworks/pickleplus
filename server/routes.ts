@@ -20,6 +20,7 @@ import securityRoutes from "./routes/security-routes";
 import multiRankingsRoutes from "./routes/multi-rankings-routes"; // PKL-278651-PRANK-0008-FWK52
 import courtiqRoutes from "./routes/courtiq-routes"; // PKL-278651-CRTIQ-0009-FWK52
 import { isAuthenticated } from "./middleware/auth";
+import { registerReplitHealthRoutes } from "./routes/replit-health-route";
 
 /**
  * Register all application routes with the Express app
@@ -41,7 +42,8 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   registerBounceAutomationRoutes(app); // Add Bounce automation routes
   registerUserSearchRoutes(app); // PKL-278651-SRCH-0001-UNIFD - Player search routes
   registerMasteryPathsRoutes(app); // PKL-278651-RATE-0004-MADV - CourtIQ Mastery Paths
-  registerHealthCheckRoutes(app); // PKL-278651-HEALTH-0002-PROD - Framework 5.3 health checks
+  registerHealthCheckRoutes(app);
+  registerReplitHealthRoutes(app); // Special routes for Replit deployment // PKL-278651-HEALTH-0002-PROD - Framework 5.3 health checks
   
   // Mount security routes
   app.use('/api/security', securityRoutes);
