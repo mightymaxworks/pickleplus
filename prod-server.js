@@ -1,10 +1,5 @@
-/**
- * Production Server Entry Point
- * Framework 5.2 compatible deployment entry point
- */
 
-// Set Node environment to production
+// Simple production server
+// This sets the environment to production and starts the server
 process.env.NODE_ENV = 'production';
-
-// Load the compiled server code
-require('./dist/index.js');
+require('./server/index.js');
