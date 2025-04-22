@@ -65,7 +65,7 @@ const getTierHealthStatus = (healthPercentage: number): { text: string; color: s
 
 const MasteryPathsDisplay: React.FC = () => {
   const { data: tierStatus, isLoading, error } = useMasteryTierStatus();
-  const { data: tierDetails } = useTierByName(tierStatus?.currentTier);
+  const { data: tierDetails } = useTierByName(tierStatus?.currentTierName);
   
   // Loading state
   if (isLoading) {
@@ -115,19 +115,55 @@ const MasteryPathsDisplay: React.FC = () => {
     );
   }
   
+  // If we have status with insufficient_data, show a friendly message
+  if (tierStatus.status === "insufficient_data") {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="text-lg">CourtIQ™ Mastery</CardTitle>
+          <CardDescription>Get started on your mastery journey</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="p-4 bg-blue-50 text-blue-700 rounded-md mb-4">
+            <p className="mb-2 font-semibold">Need more match data</p>
+            <p className="text-sm">Play more matches to unlock your CourtIQ™ Mastery status. This helps us understand your skills and provide personalized insights.</p>
+          </div>
+          <div className="flex justify-between text-sm mb-2">
+            <span>Progress to unlock</span>
+            <span className="font-medium">40%</span>
+          </div>
+          <Progress value={40} className="h-2 mb-4" />
+          <div className="text-sm text-muted-foreground">
+            Complete 3 more matches to see your full mastery status.
+          </div>
+        </CardContent>
+        <CardFooter className="pt-0 justify-between">
+          <Button variant="outline" size="sm" className="text-xs">
+            Learn About CourtIQ™
+          </Button>
+          <Button variant="default" size="sm" className="text-xs">
+            Record a Match
+            <ChevronRight className="ml-1 h-4 w-4" />
+          </Button>
+        </CardFooter>
+      </Card>
+    );
+  }
+  
   // Success state
-  const PathIconComponent = PathIcon[tierStatus.currentPath];
-  const pathColor = getPathColor(tierStatus.currentPath);
-  const healthStatus = getTierHealthStatus(tierStatus.tierHealth);
+  const pathIcon = tierStatus.currentPath || 'Foundation';
+  const PathIconComponent = PathIcon[pathIcon as MasteryPath];
+  const pathColor = getPathColor(pathIcon as MasteryPath);
+  const healthStatus = getTierHealthStatus(tierStatus.tierHealth === 'good' ? 100 : 50);
   
   return (
     <Card className="w-full">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex items-center gap-2">
           <PathIconComponent className={`h-5 w-5 ${pathColor}`} />
-          <span>{tierStatus.currentTier}</span>
+          <span>{tierStatus.currentTierName}</span>
           <Badge variant="outline" className={pathColor}>
-            {tierStatus.currentPath} Path
+            {pathIcon} Path
           </Badge>
         </CardTitle>
         <CardDescription>
@@ -140,9 +176,9 @@ const MasteryPathsDisplay: React.FC = () => {
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Progress to next tier</span>
-              <span className="font-medium">{tierStatus.progressToNextTier}%</span>
+              <span className="font-medium">{tierStatus.progressPercent}%</span>
             </div>
-            <Progress value={tierStatus.progressToNextTier} className="h-2" />
+            <Progress value={tierStatus.progressPercent} className="h-2" />
           </div>
           
           {/* Key stats */}
@@ -152,12 +188,12 @@ const MasteryPathsDisplay: React.FC = () => {
               <div className="font-medium text-lg">{tierStatus.rating.toFixed(1)}</div>
             </div>
             <div className="bg-slate-50 p-2 rounded-md">
-              <div className="text-muted-foreground">Tier Rank</div>
-              <div className="font-medium text-lg">#{tierStatus.tierRank}</div>
+              <div className="text-muted-foreground">Matches</div>
+              <div className="font-medium text-lg">{tierStatus.matchesInTier || 0}</div>
             </div>
             <div className="bg-slate-50 p-2 rounded-md">
-              <div className="text-muted-foreground">Global</div>
-              <div className="font-medium text-lg">#{tierStatus.globalRank}</div>
+              <div className="text-muted-foreground">Next Tier</div>
+              <div className="font-medium text-lg">{tierStatus.pointsToNextTier || "--"}</div>
             </div>
           </div>
           
@@ -168,26 +204,18 @@ const MasteryPathsDisplay: React.FC = () => {
               <span>Tier Health: <span className={`font-medium ${healthStatus.color}`}>{healthStatus.text}</span></span>
             </div>
             <div className="text-sm text-muted-foreground">
-              {tierStatus.matchesInTier} matches in tier
+              {tierStatus.matchesInTier || 0} matches in tier
             </div>
           </div>
           
-          {/* Promotion progress */}
-          {tierStatus.promotionProgress > 0 && (
+          {/* Path progress */}
+          {tierStatus.pathProgressPercent > 0 && (
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Promotion eligibility</span>
-                <span className="font-medium">{Math.min(100, Math.round(tierStatus.promotionProgress))}%</span>
+                <span>Path progress</span>
+                <span className="font-medium">{Math.min(100, Math.round(tierStatus.pathProgressPercent))}%</span>
               </div>
-              <Progress value={Math.min(100, tierStatus.promotionProgress)} className="h-2" />
-            </div>
-          )}
-          
-          {/* Grace period info */}
-          {tierStatus.gracePeriodRemaining > 0 && (
-            <div className="text-sm bg-blue-50 p-2 rounded-md flex items-center gap-2">
-              <Shield className="h-4 w-4 text-blue-500" />
-              <span>Grace period: <span className="font-medium">{tierStatus.gracePeriodRemaining} matches</span> remaining</span>
+              <Progress value={Math.min(100, tierStatus.pathProgressPercent)} className="h-2" />
             </div>
           )}
         </div>

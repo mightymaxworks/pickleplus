@@ -532,7 +532,7 @@ export default function DashboardContent() {
                           </div>
                         ) : (
                           <div className="text-center">
-                            <div className="text-3xl font-extrabold bg-gradient-to-r from-[#673AB7] to-[#9C27B0] text-transparent bg-clip-text">{courtIQData.score}</div>
+                            <div className="text-3xl font-extrabold bg-gradient-to-r from-[#673AB7] to-[#9C27B0] text-transparent bg-clip-text">{courtIQData.overallRating ? Math.round(courtIQData.overallRating / 25) : "--"}</div>
                             <div className="text-xs text-gray-500">of 100</div>
                           </div>
                         )}
@@ -547,7 +547,7 @@ export default function DashboardContent() {
                                   <span className="w-2 h-2 rounded-full bg-purple-500 mr-2"></span>
                                   <span className="text-gray-600">Technique</span>
                                 </div>
-                                <span className="font-medium">{courtIQData.technique}/10</span>
+                                <span className="font-medium">{courtIQData.dimensions?.technique?.score || 0}/10</span>
                               </div>
                               
                               <div className="flex justify-between items-center text-sm">
@@ -555,7 +555,7 @@ export default function DashboardContent() {
                                   <span className="w-2 h-2 rounded-full bg-indigo-500 mr-2"></span>
                                   <span className="text-gray-600">Strategy</span>
                                 </div>
-                                <span className="font-medium">{courtIQData.strategy}/10</span>
+                                <span className="font-medium">{courtIQData.dimensions?.strategy?.score || 0}/10</span>
                               </div>
                               
                               <div className="flex justify-between items-center text-sm">
