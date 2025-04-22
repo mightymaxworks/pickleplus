@@ -69,16 +69,27 @@ export function PCPRankings({ user }: PCPRankingsProps) {
     
     // If we have insufficient data or not ranked status, return default values with flags
     if (hasInsufficientData || isNotRanked) {
+      // Get top players for visibility even if user isn't ranked
+      const topPlayers = Array.isArray(leaderboard) ? leaderboard.slice(0, 3).map(player => ({
+        name: player.displayName || player.username,
+        points: player.pointsTotal || player.rankingPoints || 0,
+        rank: player.position || player.rank || 0,
+        userId: player.userId
+      })) : [];
+      
       return {
         points: 0,
         rank: 0,
         tier: 'Bronze',
         percentile: 0,
         recentGain: 0,
-        topPlayers: [],
+        topPlayers, // Show top players even when user isn't ranked
         hasInsufficientData,
         isNotRanked,
-        showEncouragement: true
+        showEncouragement: true,
+        message: hasInsufficientData 
+          ? "Play a few more matches to receive your initial ranking"
+          : "Complete your first match to join the rankings!"
       };
     }
     
@@ -331,7 +342,7 @@ export function PCPRankings({ user }: PCPRankingsProps) {
                         {rankingData.hasInsufficientData ? "Ready to Climb!" : "Start Your Journey!"}
                       </span>
                       <span className="text-sm font-normal text-gray-500 dark:text-gray-400 mt-1">
-                        Play matches to earn points
+                        {rankingData.message || "Play matches to earn points"}
                       </span>
                     </div>
                   ) : (
