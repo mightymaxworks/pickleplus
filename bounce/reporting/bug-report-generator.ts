@@ -40,7 +40,7 @@ export class BugReportGenerator {
     const findings = await db
       .select()
       .from(bounceFindings)
-      .where(eq(bounceFindings.testRunId, testRunId));
+      .where(eq(bounceFindings.test_run_id, testRunId));
     
     // Generate the report in markdown format
     const dateStr = new Date().toLocaleString();
@@ -50,10 +50,10 @@ export class BugReportGenerator {
     // Add test run information
     markdown += `## Test Run Information\n\n`;
     markdown += `- **Name**: ${testRun.name}\n`;
-    markdown += `- **Started**: ${testRun.startedAt ? new Date(testRun.startedAt).toLocaleString() : 'N/A'}\n`;
-    markdown += `- **Completed**: ${testRun.completedAt ? new Date(testRun.completedAt).toLocaleString() : 'N/A'}\n`;
+    markdown += `- **Started**: ${testRun.started_at ? new Date(testRun.started_at).toLocaleString() : 'N/A'}\n`;
+    markdown += `- **Completed**: ${testRun.completed_at ? new Date(testRun.completed_at).toLocaleString() : 'N/A'}\n`;
     markdown += `- **Status**: ${testRun.status}\n`;
-    markdown += `- **Target URL**: ${testRun.targetUrl || 'N/A'}\n`;
+    markdown += `- **Target URL**: ${testRun.target_url || 'N/A'}\n`;
     markdown += `- **Total Findings**: ${findings.length}\n\n`;
     
     // Group findings by severity
