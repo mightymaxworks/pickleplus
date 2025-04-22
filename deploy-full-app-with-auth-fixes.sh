@@ -8,18 +8,34 @@ echo "🥒 PICKLE+ FULL APP DEPLOYMENT WITH AUTH FIXES 🥒"
 echo "================================================"
 echo "Deploying the full application with authentication fixes"
 
-# Step 1: Build the application
-echo "Step 1: Building the application..."
-npm run build
-
-# Step 2: Create deployment directory
-echo "Step 2: Creating deployment directory structure..."
+# Step 1: Create deployment directory
+echo "Step 1: Creating deployment directory structure..."
 mkdir -p dist
 mkdir -p dist/client
 
-# Step 3: Copy client build
-echo "Step 3: Copying client build..."
-cp -r client/dist/* dist/client/
+# Step 2: Create build directories in order to build properly
+echo "Step 2: Setting up build..."
+rm -rf dist/index.js 2>/dev/null || true
+
+# Step 3: Run the build script
+echo "Step 3: Running build script..."
+npm run build
+
+# Step 4: Copy client build to the dist client directory
+echo "Step 4: Copying client build..."
+if [ -d "client/dist" ]; then
+  cp -r client/dist/* dist/client/
+  echo "✅ Copied client build successfully"
+else
+  echo "⚠️ Client build directory not found, checking for public files..."
+  if [ -d "public" ]; then
+    cp -r public/* dist/client/
+    echo "✅ Copied public files as fallback"
+  else
+    echo "⚠️ Creating minimal index.html as fallback"
+    echo '<!DOCTYPE html><html><head><title>Pickle+</title></head><body><div id="root">Loading Pickle+ application...</div></body></html>' > dist/client/index.html
+  fi
+fi
 
 # Step 4: Create server file with authentication fixes
 echo "Step 4: Creating production server with authentication fixes..."
@@ -279,6 +295,86 @@ function setupRoutes() {
     } catch (error) {
       console.error('Error in /api/user endpoint:', error);
       res.status(500).json({ message: 'Error retrieving user data' });
+    }
+  });
+  
+  // Compatibility with existing application API endpoints
+  app.post('/api/register', async (req, res) => {
+    try {
+      if (!pool) {
+        return res.status(500).json({ message: 'Database not connected' });
+      }
+      
+      const { username, password, email, firstName, lastName } = req.body;
+      
+      // Check if user already exists
+      const existingUser = await pool.query('SELECT * FROM users WHERE username = $1 OR email = $2', [username, email]);
+      if (existingUser.rows.length > 0) {
+        return res.status(400).json({ message: 'Username or email already exists' });
+      }
+      
+      // Hash the password
+      const hashedPassword = await bcryptjs.hash(password, 10);
+      
+      // Insert the new user
+      const result = await pool.query(
+        'INSERT INTO users (username, password, email, first_name, last_name) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+        [username, hashedPassword, email, firstName, lastName]
+      );
+      
+      const newUser = result.rows[0];
+      
+      // Log the user in
+      req.login(newUser, (err) => {
+        if (err) {
+          console.error('Error during login after registration:', err);
+          return res.status(500).json({ message: 'Error logging in after registration' });
+        }
+        
+        const { password, ...userWithoutPassword } = newUser;
+        return res.status(201).json(userWithoutPassword);
+      });
+    } catch (error) {
+      console.error('Error in registration:', error);
+      res.status(500).json({ message: 'Error during registration' });
+    }
+  });
+  
+  // Profile data endpoint
+  app.get('/api/profile', (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
+      res.json(req.user);
+    } catch (error) {
+      console.error('Error in profile endpoint:', error);
+      res.status(500).json({ message: 'Error retrieving profile data' });
+    }
+  });
+  
+  // Match history endpoint (simplified)
+  app.get('/api/matches', async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Not authenticated' });
+      }
+      
+      if (!pool) {
+        return res.status(500).json({ message: 'Database not connected' });
+      }
+      
+      const userId = req.user.id;
+      const result = await pool.query(
+        'SELECT * FROM matches WHERE user_id = $1 OR opponent_id = $1 ORDER BY match_date DESC LIMIT 10',
+        [userId]
+      );
+      
+      res.json(result.rows);
+    } catch (error) {
+      console.error('Error retrieving matches:', error);
+      res.status(500).json({ message: 'Error retrieving match history' });
     }
   });
 }
