@@ -16,22 +16,14 @@ import express, { Request, Response } from 'express';
  * @param app Express application
  */
 export function registerReplitHealthRoutes(app: express.Express): void {
-  // Root health check endpoint for Replit
-  app.get('/', (req: Request, res: Response) => {
-    // Check if request is from browser (has accept header with text/html)
-    const isFromBrowser = req.headers.accept?.includes('text/html');
-    
-    if (isFromBrowser) {
-      // Forward to the SPA
-      res.sendStatus(200);
-    } else {
-      // Simple health check for monitoring services
-      res.status(200).json({
-        status: 'ok',
-        message: 'Pickle+ API is running',
-        timestamp: new Date().toISOString(),
-        version: process.env.APP_VERSION || '0.9.0'
-      });
-    }
+  // Dedicated health check endpoint for Replit deployment
+  app.get('/api/replit-health', (req: Request, res: Response) => {
+    // Simple health check for Replit's deployment monitoring
+    res.status(200).json({
+      status: 'ok',
+      message: 'Pickle+ API is running',
+      timestamp: new Date().toISOString(),
+      version: process.env.APP_VERSION || '0.9.0'
+    });
   });
 }
