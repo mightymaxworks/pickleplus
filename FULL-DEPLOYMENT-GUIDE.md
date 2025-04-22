@@ -1,35 +1,36 @@
-# Pickle+ Full Deployment Guide
+# Pickle+ Full Application Deployment Guide
 
-This guide provides step-by-step instructions for deploying the complete Pickle+ application to production.
+This guide provides step-by-step instructions for deploying the complete Pickle+ platform, including both the frontend and backend components.
 
-## Understanding the Deployment Process
+## About This Deployment
 
-When deploying the full Pickle+ application, we need to:
+The full deployment:
 
-1. **Build the React frontend** - Compile all React components and assets
-2. **Set up the production server** - Configure the Express server for production
-3. **Configure database access** - Ensure the database connection works in production
-4. **Deploy to Cloud Run** - Submit the deployment to Replit's Cloud Run service
+1. Uses ES modules for server-side JavaScript compatibility
+2. Builds and includes the complete React frontend
+3. Connects to the PostgreSQL database with WebSocket support
+4. Properly configures session management
+5. Includes all API routes for full functionality
+6. Sets up proper port configuration (80) for production
 
-## Components of Full Deployment
+## Deployment Instructions
 
-The full deployment uses the following key files:
+### 1. Full Deployment Setup
 
-- `full-deploy.js` - Production-ready Express server that serves the React frontend and APIs
-- `full-deploy-package.json` - Package configuration with minimal dependencies
-- `build-full.sh` - Build script that compiles the React app and organizes files for deployment
-
-## Step-by-Step Deployment Instructions
-
-Follow these steps for a full deployment:
-
-### 1. Prepare the Deployment
-
-Make sure you have run:
+Run the full deployment build script:
 
 ```bash
-chmod +x build-full.sh
+chmod +x es-full-build.sh
+./es-full-build.sh
 ```
+
+This script:
+- Builds the client application (React frontend)
+- Creates a deployment directory with the built client
+- Sets up the ES module-compatible server
+- Copies API routes from the main codebase
+- Installs all required dependencies
+- Configures port 80 for standard HTTP traffic
 
 ### 2. Configure Replit Deployment
 
@@ -37,69 +38,65 @@ In the Replit deployment interface:
 
 - **Build Command**:
   ```
-  ./build-full.sh
+  bash es-full-build.sh
   ```
   
 - **Run Command**:
   ```
-  cd dist && npm start
+  cd dist && node index.js
   ```
 
-### 3. Submit the Deployment
+### 3. Deploy
 
-Click "Deploy" in the Replit interface to start the deployment process.
+Click the "Deploy" button in the Replit interface.
 
-## What Happens During Deployment
+## Technical Details
 
-1. The `build-full.sh` script:
-   - Installs server dependencies
-   - Builds the React frontend (`client` directory)
-   - Creates a deployment directory (`dist`)
-   - Copies the built frontend and server files to the deployment directory
-   - Installs production dependencies in the deployment directory
+### Client Build
 
-2. The `cd dist && npm start` command:
-   - Navigates to the deployment directory
-   - Starts the production server
-   - Serves the compiled React app
-   - Handles API requests
+The client build process:
+- Runs `npm run build` in the client directory
+- Copies the built frontend to the deployment directory
+- Falls back to a simplified placeholder if the build fails
+
+### Server Configuration
+
+The server is configured with:
+- Dynamic loading of additional API routes
+- Proper database connection with WebSocket support
+- Session management with PostgreSQL or in-memory fallback
+- Correct CORS settings for API access
+- Static file serving for the frontend SPA
+
+### Database Connection
+
+The database connection:
+- Uses the Neon PostgreSQL serverless client
+- Configures WebSockets properly
+- Handles connection errors gracefully
+- Falls back to in-memory storage when needed
+
+### Port Configuration
+
+Port configuration:
+- Uses PORT environment variable if set (for Cloud Run)
+- Defaults to port 80 (standard HTTP)
+- Adds Procfile and .env for explicit configuration
 
 ## Troubleshooting
 
-If you encounter issues during deployment:
+If you encounter issues:
 
-### Client Build Issues
+1. **Client Build Fails**: The script will create a placeholder frontend to ensure the server can still be deployed
+2. **Database Connection Issues**: The server will run without database functionality if connection fails
+3. **Port Conflicts**: Verify if port 80 is available; the server automatically uses the PORT environment variable
+4. **Missing API Routes**: Check the console logs to ensure API routes were loaded correctly
 
-- Check that the client build completes successfully
-- Look for any error messages in the build logs
-- Verify that the `client/dist` directory exists after the build
+## Development vs. Production
 
-### Server Issues
+There are a few key differences between development and production:
 
-- Ensure the server is binding to port 8080
-- Verify the database connection is working
-- Check for WebSocket connection issues
-- Ensure all required environment variables are set
-
-### Database Connectivity
-
-- Verify that `DATABASE_URL` environment variable is set
-- Check database credentials and connection string
-- Test the database connection from the local development environment
-
-## Advanced Configuration
-
-For more advanced configuration:
-
-- Edit `full-deploy.js` to add additional API routes
-- Modify `full-deploy-package.json` to add necessary dependencies
-- Update `build-full.sh` to include additional build steps
-
-## Post-Deployment Verification
-
-After deployment:
-
-1. Check the deployed URL to ensure the application loads
-2. Verify that API calls are working 
-3. Test user authentication and database operations
-4. Check for console errors in browser dev tools
+1. **Static File Serving**: Development uses Vite dev server; production serves static built files
+2. **Module System**: Production uses ES modules instead of CommonJS
+3. **Port**: Development runs on 5000; production uses 80
+4. **Cookie Security**: Production cookies are set as secure

@@ -15,6 +15,17 @@ import { fileURLToPath } from 'url';
 import session from 'express-session';
 import { dirname } from 'path';
 
+// Import API routes dynamically when available
+let setupApiRoutes;
+try {
+  const apiRoutes = await import('./api-routes.js');
+  setupApiRoutes = apiRoutes.setupApiRoutes;
+  console.log('API routes loaded successfully');
+} catch (error) {
+  console.log('API routes module not found or invalid, using default routes');
+  setupApiRoutes = null;
+}
+
 // ES module equivalents for __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -169,6 +180,12 @@ function setupRoutes() {
     app.use(express.static(clientDistDir));
   }
   
+  // Apply additional API routes from the api-routes module if available
+  if (setupApiRoutes) {
+    setupApiRoutes(app, db);
+    console.log('Additional API routes applied from api-routes.js');
+  }
+
   // Health check endpoint
   app.get('/api/health', (req, res) => {
     const dbStatus = db ? 'connected' : 'not connected';
@@ -179,7 +196,8 @@ function setupRoutes() {
       environment: process.env.NODE_ENV || 'production',
       database: dbStatus,
       time: new Date().toISOString(),
-      port: PORT
+      port: PORT,
+      apiRoutes: setupApiRoutes ? 'loaded' : 'default'
     });
   });
   
