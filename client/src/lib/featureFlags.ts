@@ -19,7 +19,8 @@ export enum Features {
   EVENT_CHECK_IN = 'event-check-in',
   TOURNAMENTS = 'tournament-registration',
   ACHIEVEMENTS = 'achievements',
-  LEADERBOARD = 'leaderboard'
+  LEADERBOARD = 'leaderboard',
+  GUIDANCE_MASCOT = 'guidance-mascot'
 }
 
 /**

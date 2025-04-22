@@ -119,4 +119,10 @@ featureFlags.registerFeatures([
     enabled: true, // Set to true for testing purposes, will be phased rollout after April 13 launch
     description: 'Check in to events by scanning QR codes',
   },
+  // Guidance-related feature flags
+  {
+    name: 'guidance-mascot',
+    enabled: true,
+    description: 'Show Bounce mascot for interactive guidance',
+  },
 ]);
