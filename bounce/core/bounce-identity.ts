@@ -34,12 +34,12 @@ class BounceIdentity {
     // Insert the test run into the database
     const [createdTestRun] = await db.insert(bounceTestRuns).values({
       name: testRun.name,
-      targetUrl: testRun.targetUrl,
-      testConfig: testRun.testConfig,
-      startedAt: testRun.startedAt,
+      target_url: testRun.targetUrl,
+      test_config: testRun.testConfig,
+      started_at: testRun.startedAt,
       status: testRun.status,
-      totalFindings: 0,
-      createdAt: new Date()
+      total_findings: 0,
+      created_at: new Date()
     }).returning();
     
     if (!createdTestRun || !createdTestRun.id) {
@@ -93,7 +93,7 @@ class BounceIdentity {
     const testRuns = await db
       .select()
       .from(bounceTestRuns)
-      .orderBy(bounceTestRuns.createdAt)
+      .orderBy(bounceTestRuns.created_at)
       .limit(limit)
       .offset(offset);
     

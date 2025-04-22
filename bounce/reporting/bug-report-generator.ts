@@ -157,13 +157,17 @@ export class BugReportGenerator {
     markdown += `**Area**: ${finding.area || 'N/A'}\n\n`;
     markdown += `**Description**:\n${finding.description}\n\n`;
     
-    if (finding.reproducibleSteps) {
-      markdown += `**Steps to Reproduce**:\n${finding.reproducibleSteps}\n\n`;
+    if (finding.reproducible_steps) {
+      markdown += `**Steps to Reproduce**:\n${finding.reproducible_steps}\n\n`;
     }
     
-    if (finding.deviceInfo) {
+    if (finding.affected_url) {
+      markdown += `**Affected URL**: ${finding.affected_url}\n\n`;
+    }
+    
+    if (finding.device_info) {
       try {
-        const deviceInfo = JSON.parse(finding.deviceInfo);
+        const deviceInfo = JSON.parse(finding.device_info);
         markdown += `**Device Info**:\n`;
         
         for (const [key, value] of Object.entries(deviceInfo)) {
@@ -172,7 +176,7 @@ export class BugReportGenerator {
         
         markdown += '\n';
       } catch (error) {
-        markdown += `**Device Info**: ${finding.deviceInfo}\n\n`;
+        markdown += `**Device Info**: ${finding.device_info}\n\n`;
       }
     }
     

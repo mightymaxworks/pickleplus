@@ -94,14 +94,14 @@ export const bounceTestRuns = pgTable('bounce_test_runs', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
   status: text('status').notNull().$type<BounceTestRunStatus>().default(BounceTestRunStatus.PENDING),
-  targetUrl: text('target_url'),
-  testConfig: text('test_config'),
-  startedAt: timestamp('started_at'),
-  completedAt: timestamp('completed_at'),
-  totalFindings: integer('total_findings').default(0),
-  errorMessage: text('error_message'),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at')
+  target_url: text('target_url'),
+  test_config: text('test_config'),
+  started_at: timestamp('started_at'),
+  completed_at: timestamp('completed_at'),
+  total_findings: integer('total_findings').default(0),
+  error_message: text('error_message'),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at')
 });
 
 /**
@@ -109,20 +109,20 @@ export const bounceTestRuns = pgTable('bounce_test_runs', {
  */
 export const bounceFindings = pgTable('bounce_findings', {
   id: serial('id').primaryKey(),
-  testRunId: integer('test_run_id').references(() => bounceTestRuns.id),
+  test_run_id: integer('test_run_id').references(() => bounceTestRuns.id),
   title: text('title').notNull(),
   description: text('description').notNull(),
   severity: text('severity').$type<BounceFindingSeverity>().notNull().default(BounceFindingSeverity.MEDIUM),
   status: text('status').$type<BounceFindingStatus>().notNull().default(BounceFindingStatus.OPEN),
-  reproducibleSteps: text('reproducible_steps'),
-  affectedUrl: text('affected_url'),
-  browserInfo: json('browser_info'),
-  deviceInfo: json('device_info'),
+  reproducible_steps: text('reproducible_steps'),
+  affected_url: text('affected_url'),
+  browser_info: json('browser_info'),
+  device_info: json('device_info'),
   area: text('area'),
-  fixedIn: text('fixed_in'),
-  fixedAt: timestamp('fixed_at'),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at')
+  fixed_in: text('fixed_in'),
+  fixed_at: timestamp('fixed_at'),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at')
 });
 
 /**
@@ -130,11 +130,11 @@ export const bounceFindings = pgTable('bounce_findings', {
  */
 export const bounceEvidence = pgTable('bounce_evidence', {
   id: serial('id').primaryKey(),
-  findingId: integer('finding_id').references(() => bounceFindings.id),
+  finding_id: integer('finding_id').references(() => bounceFindings.id),
   type: text('type').$type<BounceEvidenceType>().notNull().default(BounceEvidenceType.TEXT),
   content: text('content').notNull(),
   metadata: json('metadata'),
-  createdAt: timestamp('created_at').defaultNow()
+  created_at: timestamp('created_at').defaultNow()
 });
 
 /**
@@ -143,14 +143,14 @@ export const bounceEvidence = pgTable('bounce_evidence', {
 export const bounceSchedules = pgTable('bounce_schedules', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
-  targetUrl: text('target_url').notNull(),
+  target_url: text('target_url').notNull(),
   frequency: text('frequency').$type<BounceScheduleFrequency>().notNull(),
-  testConfig: json('test_config'),
-  isActive: boolean('is_active').default(true),
-  lastRunAt: timestamp('last_run_at'),
-  nextRunAt: timestamp('next_run_at'),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at')
+  test_config: json('test_config'),
+  is_active: boolean('is_active').default(true),
+  last_run_at: timestamp('last_run_at'),
+  next_run_at: timestamp('next_run_at'),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at')
 });
 
 /**
@@ -158,8 +158,8 @@ export const bounceSchedules = pgTable('bounce_schedules', {
  */
 export const bounceInteractions = pgTable('bounce_interactions', {
   id: serial('id').primaryKey(),
-  testRunId: integer('test_run_id').references(() => bounceTestRuns.id),
-  findingId: integer('finding_id').references(() => bounceFindings.id),
+  test_run_id: integer('test_run_id').references(() => bounceTestRuns.id),
+  finding_id: integer('finding_id').references(() => bounceFindings.id),
   type: text('type').$type<BounceInteractionType>().notNull(),
   selector: text('selector'),
   value: text('value'),
@@ -167,7 +167,7 @@ export const bounceInteractions = pgTable('bounce_interactions', {
   timestamp: timestamp('timestamp').defaultNow(),
   metadata: json('metadata'),
   screenshot: text('screenshot'),
-  createdAt: timestamp('created_at').defaultNow()
+  created_at: timestamp('created_at').defaultNow()
 });
 
 // Zod schemas
@@ -216,7 +216,7 @@ export const bounceTestRunsRelations = relations(bounceTestRuns, ({ many }) => (
 
 export const bounceFindingsRelations = relations(bounceFindings, ({ one, many }) => ({
   testRun: one(bounceTestRuns, {
-    fields: [bounceFindings.testRunId],
+    fields: [bounceFindings.test_run_id],
     references: [bounceTestRuns.id]
   }),
   evidence: many(bounceEvidence),
@@ -225,18 +225,18 @@ export const bounceFindingsRelations = relations(bounceFindings, ({ one, many })
 
 export const bounceEvidenceRelations = relations(bounceEvidence, ({ one }) => ({
   finding: one(bounceFindings, {
-    fields: [bounceEvidence.findingId],
+    fields: [bounceEvidence.finding_id],
     references: [bounceFindings.id]
   })
 }));
 
 export const bounceInteractionsRelations = relations(bounceInteractions, ({ one }) => ({
   testRun: one(bounceTestRuns, {
-    fields: [bounceInteractions.testRunId],
+    fields: [bounceInteractions.test_run_id],
     references: [bounceTestRuns.id]
   }),
   finding: one(bounceFindings, {
-    fields: [bounceInteractions.findingId],
+    fields: [bounceInteractions.finding_id],
     references: [bounceFindings.id]
   })
 }));
