@@ -474,13 +474,7 @@ const BounceFindings: React.FC = () => {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle>Findings Management</CardTitle>
-          <CardDescription>
-            Review and triage issues discovered by the Bounce automated testing system
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pt-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative w-full md:w-1/3">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
