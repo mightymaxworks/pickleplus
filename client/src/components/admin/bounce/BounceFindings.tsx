@@ -133,6 +133,10 @@ const BounceFindings: React.FC = () => {
     setPageSize(isMobile ? 5 : 10);
   }, [isMobile]);
   
+  // Get total count for pagination
+  const [totalFindings, setTotalFindings] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  
   // Update total pages when data changes
   React.useEffect(() => {
     if (data?.total) {
@@ -144,10 +148,6 @@ const BounceFindings: React.FC = () => {
       setTotalPages(Math.max(1, Math.ceil(data.findings.length / pageSize)));
     }
   }, [data, pageSize]);
-  
-  // Get total count for pagination
-  const [totalFindings, setTotalFindings] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
   
   // Navigation functions for pagination
   const goToPage = (newPage: number) => {
