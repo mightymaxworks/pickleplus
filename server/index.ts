@@ -68,14 +68,14 @@ app.use((req, res, next) => {
   app.get("/api/health", (req: Request, res: Response) => {
     res.json({ status: "ok", time: new Date().toISOString() });
   });
-  
+
   // Serve static files from uploads directory
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
   console.log("[Static Files] Serving uploads directory from:", path.join(process.cwd(), 'uploads'));
-  
+
   // Set up authentication
   setupAuth(app);
-  
+
   // Set up security features (after auth but before routes)
   setupSecurity(app);
 
@@ -85,7 +85,7 @@ app.use((req, res, next) => {
     // Import and register our special routes
     console.log("[API][CRITICAL] Registering special direct routes before standard routes");
     const { specialRouter } = await import('./special-routes');
-    
+
     // Mount the special router at the API base path
     app.use('/api', specialRouter);
     console.log("[API][CRITICAL] Special routes registered successfully");
@@ -103,7 +103,7 @@ app.use((req, res, next) => {
 
   // Server API Routes and get the HTTP server that will also handle WebSockets
   const serverHttp = await registerRoutes(app);
-  
+
   // Error handler should come after routes but before Vite
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -124,8 +124,8 @@ app.use((req, res, next) => {
     console.error("Error setting up frontend serving:", error);
   }
 
-  // Always use port 8080 for Cloud Run
-  const port = process.env.PORT || 8080;
+  // Use port 3000 for Cloud Run
+  const port = process.env.PORT || 3000;
   serverHttp.listen({
     port: Number(port),
     host: "0.0.0.0",
