@@ -49,6 +49,19 @@ interface LeaderboardResponse {
     minRating: number;
     color: string;
   }[];
+  // PKL-278651-RANK-0004-THRESH - Ranking Table Threshold System
+  status?: "active" | "insufficient_players";
+  playerCount?: number;
+  requiredCount?: number;
+  message?: string;
+  guidance?: {
+    title: string;
+    description: string;
+    primaryAction: string;
+    primaryActionPath: string;
+    secondaryAction?: string;
+    secondaryActionPath?: string;
+  };
 }
 
 /**
@@ -217,12 +230,19 @@ export function useMultiDimensionalRankingData(
   const isError = leaderboardQuery.isError || positionQuery.isError || historyQuery.isError || tiersQuery.isError;
   const error = leaderboardQuery.error || positionQuery.error || historyQuery.error || tiersQuery.error;
 
+  // PKL-278651-RANK-0004-THRESH - Ranking Table Threshold System
   return {
     leaderboard: leaderboardQuery.data?.leaderboard || [],
     position: positionQuery.data,
     history: historyQuery.data || [],
     tiers: tiersQuery.data || [],
     categories: leaderboardQuery.data?.categories || [],
+    // New fields for threshold system
+    leaderboardStatus: leaderboardQuery.data?.status || "active",
+    playerCount: leaderboardQuery.data?.playerCount,
+    requiredCount: leaderboardQuery.data?.requiredCount,
+    leaderboardMessage: leaderboardQuery.data?.message,
+    leaderboardGuidance: leaderboardQuery.data?.guidance,
     isLoading,
     isError,
     error,
