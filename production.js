@@ -8,5 +8,5 @@
 // Set NODE_ENV to production
 process.env.NODE_ENV = 'production';
 
-// Import the server
-require('./server/index');
+// Import the server using ES modules (since package.json has "type": "module")
+import './server/index.js';
