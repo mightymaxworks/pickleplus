@@ -5,8 +5,15 @@
  * Sprint: PKL-278651-RATE-0004-MADV-UI
  */
 
+/**
+ * PKL-278651-ROUTE-0001-FIX - Mastery Paths Page
+ * 
+ * Fixed to use direct rendering instead of DashboardLayout to prevent
+ * double header issues. The ProtectedRouteWithLayout will handle
+ * authentication and layout.
+ */
+
 import React, { useState } from 'react';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/hooks/useAuth';
 import MasteryPathsDisplay from '@/components/mastery/MasteryPathsDisplay';
 import TierProgressionHistory from '@/components/mastery/TierProgressionHistory';
@@ -23,7 +30,7 @@ export default function MasteryPathsPage() {
   if (!user) return null;
   
   return (
-    <DashboardLayout>
+    <>
       {/* Page Header */}
       <div className="mb-8">
         <motion.h1 
@@ -195,6 +202,6 @@ export default function MasteryPathsPage() {
           <TierBenefitsCard />
         </TabsContent>
       </Tabs>
-    </DashboardLayout>
+    </>
   );
 }
