@@ -8,6 +8,7 @@
 
 import { useState, useCallback } from 'react';
 import { AlertTriangle } from 'lucide-react';
+import { useLocation } from 'wouter';
 import { 
   Dialog, 
   DialogContent, 
@@ -35,6 +36,7 @@ export function SimpleBugReportButton({ position = 'bottom-right' }: BugReportBu
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const [location] = useLocation();
   
   // Use useCallback to prevent recreating the function on each render
   const toggleDialog = useCallback(() => {
@@ -60,8 +62,21 @@ export function SimpleBugReportButton({ position = 'bottom-right' }: BugReportBu
     }, 1000);
   }, [toast]);
   
-  // Don't show the button if user is not logged in
-  if (!user) {
+  // Only show on specific pages (not on landing, login, register)
+  const shouldShowButton = location.startsWith('/dashboard') || 
+    location.startsWith('/profile') || 
+    location.startsWith('/tournaments') || 
+    location.startsWith('/matches') ||
+    location.startsWith('/admin');
+    
+  // Make sure we're not on landing, login, or register pages
+  const isExcludedPage = location === '/' || 
+    location === '/login' || 
+    location === '/register' || 
+    location === '/auth';
+  
+  // Don't show the button if user is not logged in, we're not on an included page, or we're on an excluded page
+  if (!user || !shouldShowButton || isExcludedPage) {
     return null;
   }
   
