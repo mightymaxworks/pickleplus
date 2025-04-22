@@ -1,0 +1,114 @@
+name: Bounce CI/CD Testing
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to test'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  bounce-test:
+    name: Run Bounce Automated Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install Dependencies
+        run: npm ci
+      
+      - name: Setup PostgreSQL
+        uses: harmon758/postgresql-action@v1
+        with:
+          postgresql version: '14'
+          postgresql db: pickle
+          postgresql user: postgres
+          postgresql password: postgres
+      
+      - name: Set Environment Variables
+        run: |
+          echo "DATABASE_URL=postgres://postgres:postgres@localhost:5432/pickle" >> $GITHUB_ENV
+          echo "SESSION_SECRET=ci-cd-test-secret" >> $GITHUB_ENV
+      
+      - name: Create Bounce Tables
+        run: npx tsx create-bounce-tables.ts
+      
+      - name: Run Bounce Tests
+        id: bounce-tests
+        run: |
+          # Run tests and store exit code
+          NODE_ENV=test npx tsx bounce/ci-cd-integration.ts
+          # Store the exit code
+          echo "BOUNCE_EXIT_CODE=$?" >> $GITHUB_ENV
+      
+      - name: Upload Test Reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: bounce-reports
+          path: reports/
+      
+      - name: Add Test Summary
+        run: |
+          echo "### Bounce Test Results 🧪" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f "reports/cicd-summary-*.md" ]; then
+            cat reports/cicd-summary-*.md >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ No CI/CD summary report found. Tests may have failed to run." >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Check Test Results
+        if: ${{ env.BOUNCE_EXIT_CODE != '0' }}
+        run: |
+          echo "Bounce tests failed with exit code $BOUNCE_EXIT_CODE"
+          # Exit with non-zero code to fail the workflow
+          # You can comment this out if you don't want failing tests to block deployment
+          exit $BOUNCE_EXIT_CODE
+
+  # Optional integration with deployment workflow
+  deploy:
+    name: Deploy Application
+    needs: bounce-test
+    runs-on: ubuntu-latest
+    # Only run if tests pass and we're on main branch
+    if: success() && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install Dependencies
+        run: npm ci
+      
+      - name: Build Application
+        run: npm run build
+      
+      - name: Deploy to Replit
+        run: |
+          echo "Deploying to Replit..."
+          # Add your Replit deployment commands here
+          # This would typically use the Replit CLI or API
