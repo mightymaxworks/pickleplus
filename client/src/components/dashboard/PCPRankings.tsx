@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Medal, ChevronRight, Crown, Award, Filter, ArrowUp, ArrowDown } from 'lucide-react';
+import { TrendingUp, Medal, ChevronRight, Crown, Award, Filter, ArrowUp, ArrowDown, LineChart as ChartLineIcon } from 'lucide-react';
 import { User } from '@shared/schema';
 import { 
   Select,
@@ -33,6 +33,12 @@ export function PCPRankings({ user }: PCPRankingsProps) {
     position,
     history,
     tiers,
+    // PKL-278651-RANK-0004-THRESH - Ranking Table Threshold fields
+    leaderboardStatus,
+    playerCount,
+    requiredCount,
+    leaderboardMessage,
+    leaderboardGuidance,
     isLoading,
     isError,
     error: queryError,
@@ -431,58 +437,99 @@ export function PCPRankings({ user }: PCPRankingsProps) {
                 Top Players • {format.charAt(0).toUpperCase() + format.slice(1)} • {ageDivision === '19plus' ? 'Open' : ageDivision}
               </h4>
               
-              <div className="space-y-2">
-                {rankingData.topPlayers.length > 0 ? (
-                  rankingData.topPlayers.map((player, index) => (
-                    <motion.div 
-                      key={player.rank}
-                      className="flex items-center justify-between border border-gray-200 dark:border-gray-800 rounded-lg p-2"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.15 + 0.5 }}
-                      whileHover={{ x: 3 }}
-                    >
-                      <div className="flex items-center">
-                        <div className="w-6 h-6 rounded-full flex items-center justify-center mr-2"
-                          style={{
-                            background: index === 0 
-                              ? 'linear-gradient(to bottom right, #FFD700, #FFC107)' 
-                              : index === 1 
-                              ? 'linear-gradient(to bottom right, #C0C0C0, #A9A9A9)' 
-                              : 'linear-gradient(to bottom right, #CD7F32, #A47449)'
-                          }}
-                        >
-                          <span className="text-white text-xs font-bold">{player.rank}</span>
-                        </div>
-                        <span className="font-medium text-gray-800 dark:text-gray-200">{player.name}</span>
-                        {/* Highlight if it's current user */}
-                        {player.userId === user.id && (
-                          <span className="ml-2 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded-full">
-                            You
-                          </span>
-                        )}
-                      </div>
-                      <span className="font-bold text-[#FF5722]">{player.points.toLocaleString()}</span>
-                    </motion.div>
-                  ))
-                ) : (
-                  <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
-                    No players found in this category
-                  </div>
-                )}
-              </div>
-              
-              {/* View More Button */}
-              {rankingData.topPlayers.length > 0 && (
-                <motion.a
-                  href={`/leaderboard?format=${format}&division=${ageDivision}`}
-                  className="w-full mt-3 py-2 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center justify-center"
-                  whileHover={{ y: -2 }}
-                  whileTap={{ y: 0 }}
+              {/* PKL-278651-RANK-0004-THRESH - Ranking Table Threshold System */}
+              {leaderboardStatus === "insufficient_players" ? (
+                <motion.div 
+                  className="bg-gray-50 dark:bg-gray-800/40 rounded-xl p-4 text-center space-y-3"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
                 >
-                  View Full Leaderboard
-                  <ChevronRight size={14} className="ml-1" />
-                </motion.a>
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded-lg inline-block">
+                    <ChartLineIcon className="h-8 w-8 text-blue-500 dark:text-blue-400" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">
+                    {leaderboardGuidance?.title || "Coming Soon!"}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">
+                    {leaderboardMessage || `This leaderboard will be available once ${requiredCount || 20} players have competed in this category. Currently ${playerCount || 0} players.`}
+                  </p>
+                  {leaderboardGuidance?.primaryAction && (
+                    <motion.a
+                      href={leaderboardGuidance.primaryActionPath}
+                      className="mt-2 inline-block px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium"
+                      whileHover={{ y: -2 }}
+                      whileTap={{ y: 0 }}
+                    >
+                      {leaderboardGuidance.primaryAction}
+                    </motion.a>
+                  )}
+                  {leaderboardGuidance?.secondaryAction && (
+                    <motion.a
+                      href={leaderboardGuidance.secondaryActionPath}
+                      className="mt-2 block text-blue-500 hover:text-blue-600 text-sm"
+                      whileHover={{ x: 2 }}
+                    >
+                      {leaderboardGuidance.secondaryAction}
+                    </motion.a>
+                  )}
+                </motion.div>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    {rankingData.topPlayers.length > 0 ? (
+                      rankingData.topPlayers.map((player, index) => (
+                        <motion.div 
+                          key={player.rank}
+                          className="flex items-center justify-between border border-gray-200 dark:border-gray-800 rounded-lg p-2"
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.15 + 0.5 }}
+                          whileHover={{ x: 3 }}
+                        >
+                          <div className="flex items-center">
+                            <div className="w-6 h-6 rounded-full flex items-center justify-center mr-2"
+                              style={{
+                                background: index === 0 
+                                  ? 'linear-gradient(to bottom right, #FFD700, #FFC107)' 
+                                  : index === 1 
+                                  ? 'linear-gradient(to bottom right, #C0C0C0, #A9A9A9)' 
+                                  : 'linear-gradient(to bottom right, #CD7F32, #A47449)'
+                              }}
+                            >
+                              <span className="text-white text-xs font-bold">{player.rank}</span>
+                            </div>
+                            <span className="font-medium text-gray-800 dark:text-gray-200">{player.name}</span>
+                            {/* Highlight if it's current user */}
+                            {player.userId === user.id && (
+                              <span className="ml-2 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded-full">
+                                You
+                              </span>
+                            )}
+                          </div>
+                          <span className="font-bold text-[#FF5722]">{player.points.toLocaleString()}</span>
+                        </motion.div>
+                      ))
+                    ) : (
+                      <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
+                        No players found in this category
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* View More Button */}
+                  {rankingData.topPlayers.length > 0 && (
+                    <motion.a
+                      href={`/leaderboard?format=${format}&division=${ageDivision}`}
+                      className="w-full mt-3 py-2 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center justify-center"
+                      whileHover={{ y: -2 }}
+                      whileTap={{ y: 0 }}
+                    >
+                      View Full Leaderboard
+                      <ChevronRight size={14} className="ml-1" />
+                    </motion.a>
+                  )}
+                </>
               )}
             </div>
           </>
