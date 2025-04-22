@@ -215,18 +215,19 @@ export class MasteryPathsService {
    * Get a player's current tier status
    */
   async getPlayerTierStatus(userId: number): Promise<PlayerTierStatus> {
-    // For now, return a mock implementation
-    // In a real implementation, this would retrieve player status from the database
+    // Check if user already has a tier status
+    const existingStatus = await db
+      .select()
+      .from(playerTierStatus)
+      .where(eq(playerTierStatus.userId, userId))
+      .limit(1);
     
-    // Get player rating from users table
-    const userResult = await db.execute(sql`
-      SELECT rating FROM users WHERE id = ${userId}
-    `);
+    if (existingStatus.length > 0) {
+      return existingStatus[0];
+    }
     
-    // Default rating if not found
-    const rating = userResult.length > 0 && userResult[0].rating 
-      ? Number(userResult[0].rating) 
-      : 1000;
+    // If no existing status, create one with default rating of 1000
+    const rating = 1000;
     
     // Find the tier for this rating
     const tiers = await this.getAllTiers();
