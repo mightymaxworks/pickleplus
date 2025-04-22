@@ -518,11 +518,164 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Coming Soon Features Section */}
+      <section className="py-16 sm:py-24 bg-gray-50 overflow-hidden">
+        <div className="container mx-auto px-4 sm:px-6">
+          <motion.div 
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="inline-flex items-center bg-[#673AB7]/10 rounded-full px-4 py-1.5 mb-4">
+              <span className="flex h-2 w-2 rounded-full bg-[#673AB7] mr-2"></span>
+              <span className="text-sm font-medium text-[#673AB7]">Coming in Full Release</span>
+            </div>
+            
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">The Future of Pickle+</h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Our roadmap is filled with innovative features designed to take your pickleball experience to the next level. Here's a preview of what's coming soon.
+            </p>
+          </motion.div>
+          
+          <div className="grid md:grid-cols-3 gap-6 mb-16">
+            <motion.div 
+              className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0 }}
+            >
+              <div className="absolute top-0 right-0">
+                <div className="bg-[#FF5722] text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                  COMING SOON
+                </div>
+              </div>
+              <div className="inline-flex items-center justify-center p-3 rounded-lg mb-4 bg-[#FF5722]/10">
+                <LayoutDashboard className="h-8 w-8 text-[#FF5722]" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">AI Coaching Assistant</h3>
+              <p className="text-gray-600">
+                Get personalized coaching recommendations and drills based on your CourtIQ™ performance data and skill profile.
+              </p>
+            </motion.div>
+            
+            <motion.div 
+              className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <div className="absolute top-0 right-0">
+                <div className="bg-[#2196F3] text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                  COMING SOON
+                </div>
+              </div>
+              <div className="inline-flex items-center justify-center p-3 rounded-lg mb-4 bg-[#2196F3]/10">
+                <Trophy className="h-8 w-8 text-[#2196F3]" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Team Tournaments</h3>
+              <p className="text-gray-600">
+                Create and manage team-based tournaments with advanced brackets, real-time scoring, and team statistics.
+              </p>
+            </motion.div>
+            
+            <motion.div 
+              className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <div className="absolute top-0 right-0">
+                <div className="bg-[#4CAF50] text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                  COMING SOON
+                </div>
+              </div>
+              <div className="inline-flex items-center justify-center p-3 rounded-lg mb-4 bg-[#4CAF50]/10">
+                <Activity className="h-8 w-8 text-[#4CAF50]" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Video Analysis</h3>
+              <p className="text-gray-600">
+                Upload match footage for AI-powered stroke analysis, technique feedback, and improvement recommendations.
+              </p>
+            </motion.div>
+          </div>
+          
+          {/* Early Access Banner */}
+          <motion.div 
+            className="max-w-4xl mx-auto bg-gradient-to-r from-[#673AB7]/5 to-[#2196F3]/5 rounded-xl p-8 border border-[#673AB7]/20"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="flex flex-col md:flex-row gap-6 items-center">
+              <div className="flex-1">
+                <h3 className="text-2xl font-bold mb-2">Get Early Access to v1.0 Features</h3>
+                <p className="text-gray-600 mb-4">
+                  Beta members will be the first to experience new features before they're released to the public. Secure your spot today to join our community of testers.
+                </p>
+                <Button 
+                  onClick={() => navigate("/auth")}
+                  className="bg-[#673AB7] hover:bg-[#5E35B1] text-white"
+                >
+                  Join the Beta Program
+                </Button>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow-md border border-gray-200">
+                <div className="text-sm font-medium text-gray-500 mb-2">Beta Access Includes:</div>
+                <ul className="space-y-2">
+                  <li className="flex items-start">
+                    <div className="flex-shrink-0 h-5 w-5 text-[#4CAF50]">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <span className="ml-2 text-sm text-gray-600">Early feature access</span>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="flex-shrink-0 h-5 w-5 text-[#4CAF50]">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <span className="ml-2 text-sm text-gray-600">Influence future development</span>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="flex-shrink-0 h-5 w-5 text-[#4CAF50]">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <span className="ml-2 text-sm text-gray-600">Exclusive beta tester badge</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Enhanced Changelog is already included above */}
 
       {/* Final CTA Section */}
-      <section className="py-14 sm:py-20 bg-gradient-to-br from-[#2196F3] to-[#1a75c9] text-white overflow-hidden">
-        <div className="container mx-auto px-4 sm:px-6 text-center">
+      <section className="py-14 sm:py-20 bg-gradient-to-br from-[#2196F3] to-[#1a75c9] text-white overflow-hidden relative">
+        {/* Background pattern decoration */}
+        <div className="absolute inset-0 opacity-10">
+          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid)" />
+          </svg>
+        </div>
+        
+        <div className="container relative z-10 mx-auto px-4 sm:px-6 text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
@@ -530,19 +683,25 @@ export default function LandingPage() {
             transition={{ duration: 0.5 }}
             className="max-w-3xl mx-auto"
           >
+            <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6 border border-white/20">
+              <span className="flex h-2 w-2 rounded-full bg-white mr-2"></span>
+              <span className="text-sm font-medium">Final Beta Release - Limited Spots Available</span>
+            </div>
+            
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6 leading-tight">
               Ready to Transform Your Pickleball Experience?
             </h2>
             <p className="text-base sm:text-lg mb-8 sm:mb-10 mx-auto text-white/90 max-w-2xl">
-              Join thousands of players who are already tracking their progress and improving their game with Pickle+
+              Join our community of players who are already tracking their progress and improving their game with data-driven insights from Pickle+
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-sm sm:max-w-md mx-auto">
               <Button 
                 size="lg" 
-                className="bg-white text-[#2196F3] hover:bg-white/90 w-full font-medium text-base sm:text-lg"
+                className="bg-white text-[#2196F3] hover:bg-white/90 w-full font-semibold text-base sm:text-lg shadow-lg relative overflow-hidden group"
                 onClick={() => navigate("/auth")}
               >
-                Create Free Account
+                <span className="relative z-10">Secure Your Beta Spot</span>
+                <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
               </Button>
               <Button 
                 size="lg" 

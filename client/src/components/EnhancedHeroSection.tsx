@@ -29,14 +29,14 @@ export function EnhancedHeroSection() {
             transition={{ duration: 0.8 }}
           >
             <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6 border border-white/20">
-              <span className="flex h-2 w-2 rounded-full bg-white mr-2"></span>
-              <span className="text-sm font-medium">Beta v0.9.0: Experience Pickle+ before official launch</span>
+              <span className="flex h-2 w-2 rounded-full bg-white mr-2 animate-pulse"></span>
+              <span className="text-sm font-medium">Final Beta v0.9.0: Limited Access Available</span>
             </div>
             
             <h1 className="text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 leading-tight tracking-tight">
-              Your Game. Your Journey. <br className="hidden sm:block" />
+              Elevate Your Game with <br className="hidden sm:block" />
               <span className="text-white relative">
-                Your Intelligence.
+                Data-Driven Intelligence
                 <svg className="absolute -bottom-1 left-0 w-full h-3 text-[#FFCCBC]" viewBox="0 0 100 15" preserveAspectRatio="none">
                   <path d="M0,7.5 C15,2.5 35,12.5 50,7.5 C65,2.5 85,12.5 100,7.5 L100,15 L0,15 Z" fill="currentColor"/>
                 </svg>
@@ -44,9 +44,9 @@ export function EnhancedHeroSection() {
             </h1>
             
             <p className="text-lg sm:text-xl md:text-2xl text-white/90 mb-8 sm:mb-10 font-light max-w-3xl">
-              Since February 2025, Pickle+ has transformed player development through 
+              Join our thriving community of players transforming their game through 
               CourtIQ™ analytics, achievement systems, and immersive tournament experiences.
-              <span className="hidden md:inline"> Keep your eyes peeled as you explore.</span>
+              <span className="hidden md:inline"> The final beta is now available before full launch.</span>
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 justify-center md:justify-start">
@@ -64,11 +64,14 @@ export function EnhancedHeroSection() {
                 // Not logged in - show account creation button
                 <Button 
                   size="lg"
-                  className="text-[#FF5722] bg-white hover:bg-white/90 shadow-lg text-base sm:text-lg px-4 sm:px-8 py-4 sm:py-6 h-auto font-medium w-full sm:w-auto"
+                  className="text-[#FF5722] bg-white hover:bg-white/90 shadow-xl text-base sm:text-lg px-4 sm:px-8 py-4 sm:py-6 h-auto font-semibold w-full sm:w-auto relative overflow-hidden group"
                   onClick={() => navigate("/auth")}
                   disabled={isLoading}
                 >
-                  {isLoading ? "Loading..." : "Create Free Account"}
+                  <span className="relative z-10">
+                    {isLoading ? "Loading..." : "Secure Your Beta Spot"}
+                  </span>
+                  <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
                 </Button>
               )}
               
