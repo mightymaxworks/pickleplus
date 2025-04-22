@@ -170,8 +170,10 @@ export default function App() {
                 <CommunityProvider>
                   <GuidedTaskProvider>
                     <Suspense fallback={<LazyLoadingFallback />}>
-                      {/* Add Simplified Bug Report Button (PKL-278651-FEED-0001-BUG) */}
-                      <SimpleBugReportButton position="bottom-right" />
+                      {/* Add Simplified Bug Report Button (PKL-278651-FEED-0001-BUG) - Only for authenticated users */}
+                      <AuthenticationWrapper>
+                        <SimpleBugReportButton position="bottom-right" />
+                      </AuthenticationWrapper>
                       
                       {/* PKL-278651-BOUNCE-0008-ASSIST - Add Bounce Floating Widget */}
                       <BounceFloatingWidget />
