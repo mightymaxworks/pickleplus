@@ -132,7 +132,8 @@ const PathsVisualization: React.FC<PathsVisualizationProps> = ({ compact = false
                 
                 <div className="grid grid-cols-3 gap-2">
                   {tiers.map((tier) => {
-                    const isCurrentTier = playerStatus && playerStatus.currentTier === tier.name;
+                    // PKL-278651-RATE-0004-MADV-FIX - Use currentTierName instead of deprecated currentTier property
+                    const isCurrentTier = playerStatus && playerStatus.currentTierName === tier.name;
                     const colorHex = tier.colorCode || DEFAULT_TIER_COLORS[tier.name] || '#888888';
                     
                     // Extract RGB from hex for background with transparency

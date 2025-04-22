@@ -18,6 +18,7 @@ import MasteryPathsDisplay from '@/components/mastery/MasteryPathsDisplay';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { Bolt, BarChart3, Trophy, Award, Star, TrendingUp, Activity, Copy, Check, Loader2, AlertCircle } from 'lucide-react';
+import CourtIQPerformanceChart from '@/components/dashboard/CourtIQPerformanceChart';
 import { BounceStatusTicker } from '@/components/bounce/BounceStatusTicker';
 import { BounceAssistancePanel } from '@/components/bounce/BounceAssistancePanel';
 import { useToast } from '@/hooks/use-toast';
@@ -462,7 +463,8 @@ export default function DashboardContent() {
                               {isMatchStatsLoading ? (
                                 <Loader2 size={12} className="animate-spin" />
                               ) : (
-                                matchStats?.wins || user.matchesWon || 16
+                                // PKL-278651-STATS-0001-VERIFY - Use verified match data with appropriate fallbacks
+                                matchStats?.matchesWon || user.matchesWon || 0
                               )}
                             </motion.span>
                           </div>
@@ -478,7 +480,8 @@ export default function DashboardContent() {
                               {isMatchStatsLoading ? (
                                 <Loader2 size={12} className="animate-spin" />
                               ) : (
-                                matchStats?.total || user.totalMatches || 24
+                                // PKL-278651-STATS-0001-VERIFY - Use verified match data with appropriate fallbacks
+                                matchStats?.totalMatches || user.totalMatches || 0
                               )}
                             </motion.span>
                           </div>
@@ -539,58 +542,16 @@ export default function DashboardContent() {
                       </div>
                       
                       <div className="flex-1">
+                        {/* PKL-278651-COURT-0005-GRAPH: Replace text-based performance metrics with bar chart */}
                         <div className="space-y-2">
-                          {!isCourtIQLoading && courtIQData && (
-                            <>
-                              <div className="flex justify-between items-center text-sm">
-                                <div className="flex items-center">
-                                  <span className="w-2 h-2 rounded-full bg-purple-500 mr-2"></span>
-                                  <span className="text-gray-600">Technique</span>
-                                </div>
-                                <span className="font-medium">{courtIQData.dimensions?.technique?.score || 0}/10</span>
-                              </div>
-                              
-                              <div className="flex justify-between items-center text-sm">
-                                <div className="flex items-center">
-                                  <span className="w-2 h-2 rounded-full bg-indigo-500 mr-2"></span>
-                                  <span className="text-gray-600">Strategy</span>
-                                </div>
-                                <span className="font-medium">{courtIQData.dimensions?.strategy?.score || 0}/10</span>
-                              </div>
-                              
-                              <div className="flex justify-between items-center text-sm">
-                                <div className="flex items-center">
-                                  <span className="w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
-                                  <span className="text-gray-600">Consistency</span>
-                                </div>
-                                <span className="font-medium">{courtIQData.dimensions?.consistency?.score || 0}/10</span>
-                              </div>
-                              
-                              <div className="flex justify-between items-center text-sm">
-                                <div className="flex items-center">
-                                  <span className="w-2 h-2 rounded-full bg-cyan-500 mr-2"></span>
-                                  <span className="text-gray-600">Focus</span>
-                                </div>
-                                <span className="font-medium">{courtIQData.dimensions?.focus?.score || 0}/10</span>
-                              </div>
-                            </>
-                          )}
+                          {/* Import and use the new CourtIQPerformanceChart component */}
+                          <CourtIQPerformanceChart 
+                            data={courtIQData} 
+                            isLoading={isCourtIQLoading} 
+                            compact={true}
+                          />
                           
-                          {(isCourtIQLoading || !courtIQData) && (
-                            <div className="py-2">
-                              <div className="text-sm text-gray-500 mb-2">
-                                {isCourtIQLoading 
-                                  ? "Loading your performance data..." 
-                                  : "No CourtIQ™ performance data available yet."}
-                              </div>
-                              
-                              {!isCourtIQLoading && !courtIQData && (
-                                <div className="text-xs text-gray-400">
-                                  Record matches to see your CourtIQ™ performance metrics
-                                </div>
-                              )}
-                            </div>
-                          )}
+                          {/* Fallback message when no data is available - handled inside chart component */}
                         </div>
                         
                         {!isCourtIQLoading && courtIQData && (
