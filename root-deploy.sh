@@ -36,7 +36,9 @@ neonConfig.webSocketConstructor = ws;
 
 // Create Express app
 const app = express();
-const PORT = process.env.PORT || 8080;
+// CRITICAL: Use Cloud Run's expected port 8080 but fall back to PORT env var or 5000
+// This ensures compatibility with both development (5000) and Cloud Run (8080)
+const PORT = 8080;
 
 // Basic middleware
 app.use(cors());
