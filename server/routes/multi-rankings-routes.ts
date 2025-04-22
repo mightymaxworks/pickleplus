@@ -11,6 +11,7 @@ import { isAuthenticated } from "../auth";
 const router = Router();
 
 /**
+ * PKL-278651-RANK-0004-THRESH - Ranking Table Threshold System
  * Get multi-dimensional ranking leaderboard
  * GET /api/multi-rankings/leaderboard
  */
@@ -24,10 +25,45 @@ router.get("/leaderboard", async (req: Request, res: Response) => {
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
     const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
     
-    // Return sample leaderboard data
+    // Retrieve actual player count from the database for this category/division
+    // For this implementation, we'll use a hardcoded count for demonstration
+    // In a production environment, you would query the database to get the actual count
+    const playerCount = 5; // Currently only 5 players in this category/division
+    
+    // Check if we meet the threshold (20 players per category/division)
+    const MIN_PLAYERS_THRESHOLD = 20;
+    const hasEnoughPlayers = playerCount >= MIN_PLAYERS_THRESHOLD;
+    
+    // If we don't have enough players, return a special response
+    if (!hasEnoughPlayers) {
+      return res.json({
+        leaderboard: [],
+        categories: ["serve", "return", "dinking", "third_shot", "court_movement", "strategy", "offensive", "defensive"],
+        filterApplied: {
+          format,
+          ageDivision,
+          tier: null,
+          minRating: null,
+          maxRating: null
+        },
+        status: "insufficient_players",
+        playerCount: playerCount,
+        requiredCount: MIN_PLAYERS_THRESHOLD,
+        message: "Rankings will be available when more players join this category",
+        guidance: {
+          title: "Rankings Coming Soon",
+          description: `We need at least ${MIN_PLAYERS_THRESHOLD} players in this category to display rankings. Currently, we have ${playerCount}.`,
+          primaryAction: "Invite Friends",
+          primaryActionPath: "/invite"
+        }
+      });
+    }
+    
+    // For demonstration only - if we have enough players, get the actual leaderboard
+    // In a real implementation, this would fetch data from the DB
     const sampleLeaderboard = [];
     
-    // Generate sample players
+    // Generate sample players (this is just for demonstration)
     for (let i = 0; i < limit; i++) {
       const position = i + 1 + offset;
       sampleLeaderboard.push({
@@ -46,6 +82,8 @@ router.get("/leaderboard", async (req: Request, res: Response) => {
     res.json({
       leaderboard: sampleLeaderboard,
       categories: ["serve", "return", "dinking", "third_shot", "court_movement", "strategy", "offensive", "defensive"],
+      status: "active",
+      playerCount: playerCount,
       filterApplied: {
         format,
         ageDivision,
