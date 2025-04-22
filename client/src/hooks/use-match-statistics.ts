@@ -16,6 +16,8 @@ export interface MatchStatistics {
   avgPointsPerMatch: number;
   longestWinStreak: number;
   currentStreak: number;
+  // Recent performance trend (percentage change)
+  recentPerformance?: number; 
   // Recent matches
   recentMatches: Array<{
     id: number;

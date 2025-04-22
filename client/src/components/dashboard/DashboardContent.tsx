@@ -17,7 +17,7 @@ import { PCPRankings } from '@/components/dashboard/PCPRankings';
 import MasteryPathsDisplay from '@/components/mastery/MasteryPathsDisplay';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
-import { Bolt, BarChart3, Trophy, Award, Star, TrendingUp, Activity, Copy, Check, Loader2, AlertCircle } from 'lucide-react';
+import { Bolt, BarChart3, Trophy, Award, Star, TrendingUp, TrendingDown, Activity, Copy, Check, Loader2, AlertCircle } from 'lucide-react';
 import CourtIQPerformanceChart from '@/components/dashboard/CourtIQPerformanceChart';
 import { BounceStatusTicker } from '@/components/bounce/BounceStatusTicker';
 import { BounceAssistancePanel } from '@/components/bounce/BounceAssistancePanel';
@@ -55,7 +55,7 @@ export default function DashboardContent() {
   // Dynamic stats for animations - PKL-278651-STATS-0001-VERIFY
   const xpPercentage = Math.min((user.xp || 520) / 10, 100);
   // Only calculate winRate when we have real match data
-  const hasMatchData = matchStats?.totalMatches > 0 || (user.totalMatches && user.totalMatches > 0);
+  const hasMatchData = (matchStats && matchStats.totalMatches && matchStats.totalMatches > 0) || (user.totalMatches && user.totalMatches > 0);
   const winRate = hasMatchData 
     ? matchStats?.winRate || (user.totalMatches ? Math.round((user.matchesWon || 0) / (user.totalMatches || 1) * 100) : 0)
     : null;
@@ -495,15 +495,35 @@ export default function DashboardContent() {
                           
                           <div className="flex justify-between items-center text-sm">
                             <span className="text-gray-600">Recent Performance</span>
-                            <motion.span
-                              className="font-medium flex items-center"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: isLoaded ? 1 : 0 }}
-                              transition={{ delay: 1.1, duration: 0.3 }}
-                            >
-                              <TrendingUp size={14} className="mr-1 text-green-500" />
-                              <span className="text-green-500">+2.3%</span>
-                            </motion.span>
+                            {matchStats?.recentPerformance ? (
+                              <motion.span
+                                className="font-medium flex items-center"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: isLoaded ? 1 : 0 }}
+                                transition={{ delay: 1.1, duration: 0.3 }}
+                              >
+                                {matchStats.recentPerformance > 0 ? (
+                                  <>
+                                    <TrendingUp size={14} className="mr-1 text-green-500" />
+                                    <span className="text-green-500">+{matchStats.recentPerformance.toFixed(1)}%</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <TrendingDown size={14} className="mr-1 text-red-500" />
+                                    <span className="text-red-500">{matchStats.recentPerformance.toFixed(1)}%</span>
+                                  </>
+                                )}
+                              </motion.span>
+                            ) : (
+                              <motion.span
+                                className="font-medium"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: isLoaded ? 1 : 0 }}
+                                transition={{ delay: 1.1, duration: 0.3 }}
+                              >
+                                <span className="text-muted-foreground">N/A</span>
+                              </motion.span>
+                            )}
                           </div>
                         </div>
                       </div>
