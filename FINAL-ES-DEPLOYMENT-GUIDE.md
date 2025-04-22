@@ -39,7 +39,9 @@ chmod +x es-build.sh
 This will:
 - Create a deployment directory structure
 - Set up a minimal client for testing API endpoints
-- Copy the ES module compatible server and package.json
+- Copy the ES module compatible server to multiple entry points (index.js, es-deployment.js, server.js)
+- Create a Procfile with proper start command
+- Create a .env file with PORT=80 configuration
 - Install all required dependencies
 
 ### 2. Configure Replit Deployment
@@ -52,6 +54,12 @@ In the Replit deployment interface:
   ```
   
 - **Run Command**:
+  ```
+  cd dist && node index.js
+  ```
+  
+  or alternatively:
+  
   ```
   cd dist && npm start
   ```
