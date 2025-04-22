@@ -20,7 +20,17 @@ export interface CourtIQPerformanceData {
   tierName: string;
   tierColorCode: string;
   
-  // Skill breakdown
+  // Dimensions breakdown (previously named as skills)
+  dimensions?: {
+    technique?: { score: number; };
+    strategy?: { score: number; };
+    consistency?: { score: number; };
+    focus?: { score: number; };
+    power?: { score: number; };
+    speed?: { score: number; };
+  };
+  
+  // For backwards compatibility
   skills: CourtIQSkillRating;
   
   // Trends
@@ -139,6 +149,15 @@ export function useCourtIQPerformance(options: CourtIQPerformanceOptions = {}) {
         tierName: currentTier.name,
         tierColorCode: currentTier.colorCode,
         skills,
+        // Add dimensions in the new format for compatibility with UI changes
+        dimensions: {
+          technique: { score: Math.round(skills.precision / 10) },
+          strategy: { score: Math.round(skills.strategy / 10) },
+          consistency: { score: Math.round(skills.consistency / 10) },
+          focus: { score: Math.round(skills.control / 10) },
+          power: { score: Math.round(skills.power / 10) },
+          speed: { score: Math.round(skills.speed / 10) }
+        },
         recentTrends: ratingData.recentTrends || {
           change: ratingData.recentChange || 0,
           direction: ratingData.recentChange > 0 ? 'up' : ratingData.recentChange < 0 ? 'down' : 'stable',

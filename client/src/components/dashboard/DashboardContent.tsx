@@ -563,7 +563,7 @@ export default function DashboardContent() {
                                   <span className="w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
                                   <span className="text-gray-600">Consistency</span>
                                 </div>
-                                <span className="font-medium">{courtIQData.consistency}/10</span>
+                                <span className="font-medium">{courtIQData.dimensions?.consistency?.score || 0}/10</span>
                               </div>
                               
                               <div className="flex justify-between items-center text-sm">
@@ -571,7 +571,7 @@ export default function DashboardContent() {
                                   <span className="w-2 h-2 rounded-full bg-cyan-500 mr-2"></span>
                                   <span className="text-gray-600">Focus</span>
                                 </div>
-                                <span className="font-medium">{courtIQData.focus}/10</span>
+                                <span className="font-medium">{courtIQData.dimensions?.focus?.score || 0}/10</span>
                               </div>
                             </>
                           )}
@@ -603,7 +603,7 @@ export default function DashboardContent() {
                                     key={i}
                                     size={12}
                                     className={`${
-                                      i < Math.round(courtIQData.score / 20)
+                                      i < Math.round(courtIQData.overallRating / 200)
                                         ? "text-purple-500 fill-purple-500"
                                         : "text-gray-300"
                                     }`}

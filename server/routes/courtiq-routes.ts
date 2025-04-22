@@ -74,10 +74,8 @@ router.get("/performance", (req: Request, res: Response) => {
       format: format,
       division: division,
       overallRating: baseRating,
-      tier: {
-        name: tierName,
-        colorCode: tierColorCode
-      },
+      tierName: tierName,
+      tierColorCode: tierColorCode,
       dimensions: {
         technique: {
           score: Math.floor((powerBase + speedBase + precisionBase) / 3),
@@ -117,6 +115,18 @@ router.get("/performance", (req: Request, res: Response) => {
         direction: 'up',
         matches: 8
       },
+      // Add skills property for compatibility with hook interface
+      skills: {
+        power: powerBase,
+        speed: speedBase,
+        precision: precisionBase,
+        strategy: strategyBase,
+        control: controlBase,
+        consistency: consistencyBase
+      },
+      strongestArea: "consistency",
+      weakestArea: "strategy",
+      percentile: 65,
       strongestSkill: "consistency",
       improvementAreas: ["strategy", "focus"],
       matchesAnalyzed: 15,
