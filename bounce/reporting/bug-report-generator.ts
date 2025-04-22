@@ -95,9 +95,12 @@ interface FindingWithEvidence {
   createdAt: Date | null;
   evidence: {
     id: number;
+    findingId?: number | null;
     type: string;
     content: string;
-    description: string | null;
+    metadata?: unknown;
+    createdAt?: Date | null;
+    description?: string | null;
   }[];
 }
 
@@ -149,14 +152,14 @@ export class BugReportGenerator {
     }
     
     // Count findings by severity
-    const criticalFindings = await db.select({ count: db.count() })
+    const criticalCount = await db.select()
       .from(bounceFindings)
       .where(and(
         eq(bounceFindings.testRunId, testRunId),
         eq(bounceFindings.severity, BounceFindingSeverity.CRITICAL)
       ));
     
-    const highFindings = await db.select({ count: db.count() })
+    const highCount = await db.select()
       .from(bounceFindings)
       .where(and(
         eq(bounceFindings.testRunId, testRunId),
@@ -164,7 +167,7 @@ export class BugReportGenerator {
       ));
     
     // Check both MODERATE and MEDIUM for backward compatibility
-    const moderateFindings = await db.select({ count: db.count() })
+    const moderateCount = await db.select()
       .from(bounceFindings)
       .where(and(
         eq(bounceFindings.testRunId, testRunId),
@@ -174,21 +177,21 @@ export class BugReportGenerator {
         )
       ));
     
-    const lowFindings = await db.select({ count: db.count() })
+    const lowCount = await db.select()
       .from(bounceFindings)
       .where(and(
         eq(bounceFindings.testRunId, testRunId),
         eq(bounceFindings.severity, BounceFindingSeverity.LOW)
       ));
     
-    const infoFindings = await db.select({ count: db.count() })
+    const infoCount = await db.select()
       .from(bounceFindings)
       .where(and(
         eq(bounceFindings.testRunId, testRunId),
         eq(bounceFindings.severity, BounceFindingSeverity.INFO)
       ));
     
-    const totalFindings = await db.select({ count: db.count() })
+    const allFindings = await db.select()
       .from(bounceFindings)
       .where(eq(bounceFindings.testRunId, testRunId));
     
@@ -203,12 +206,12 @@ export class BugReportGenerator {
       browsers: testRun[0].targetUrl || "Unknown", // Using targetUrl for browsers info
       testTypes: "Default", // Not stored in current schema
       coverage: null, // Not stored in current schema
-      totalIssues: Number(totalFindings[0].count) || 0,
-      totalCritical: Number(criticalFindings[0].count) || 0,
-      totalHigh: Number(highFindings[0].count) || 0,
-      totalModerate: Number(moderateFindings[0].count) || 0,
-      totalLow: Number(lowFindings[0].count) || 0,
-      totalInfo: Number(infoFindings[0].count) || 0,
+      totalIssues: allFindings.length,
+      totalCritical: criticalCount.length,
+      totalHigh: highCount.length,
+      totalModerate: moderateCount.length,
+      totalLow: lowCount.length,
+      totalInfo: infoCount.length,
     };
   }
   

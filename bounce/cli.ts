@@ -106,22 +106,23 @@ program
       let reportContent = '';
       let reportPath = '';
       
-      // Use enhanced report generator for buglist format
+      // Use the proper bug report generator for buglist format
       if (options.output === 'buglist') {
         console.log(colors.cyan('\nGenerating detailed bug report with solution prompts...'));
-        reportContent = await enhancedReportGenerator.generateTestRunReport(
+        
+        // Use the dedicated bug report generator which properly handles all severity levels
+        reportContent = await bugReportGenerator.generateBugReport(
           testRunId,
           { 
-            format: 'buglist', 
             includeEvidence: true,
             includeSolutionPrompts: true,
-            sortBySeverity: true 
+            sortBySeverity: true,
+            groupByArea: true
           }
         );
         
-        reportPath = enhancedReportGenerator.saveReportToFile(
+        reportPath = bugReportGenerator.saveReportToFile(
           reportContent,
-          'buglist',
           path.join('reports', `bounce_buglist_${testRunId}.md`)
         );
         
