@@ -1,0 +1,21 @@
+{
+  "name": "pickle-plus",
+  "version": "1.0.0",
+  "description": "Pickle+ Platform Production Deployment",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "express-session": "^1.18.0",
+    "memorystore": "^1.6.7",
+    "passport": "^0.7.0",
+    "passport-local": "^1.0.0",
+    "ws": "^8.14.2"
+  }
+}
