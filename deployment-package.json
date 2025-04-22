@@ -1,0 +1,36 @@
+{
+  "name": "pickle-plus",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx server/index.ts",
+    "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "start": "NODE_ENV=production node dist/index.js",
+    "check": "tsc",
+    "db:push": "drizzle-kit push"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.3.4",
+    "@neondatabase/serverless": "^0.9.0",
+    "@replit/vite-plugin-shadcn-theme-json": "^0.0.0-experimental",
+    "@tanstack/react-query": "^5.25.0",
+    "bcryptjs": "^2.4.3",
+    "connect-pg-simple": "^9.0.1",
+    "cors": "^2.8.5",
+    "drizzle-orm": "^0.29.5",
+    "drizzle-zod": "^0.5.1",
+    "express": "^4.19.1",
+    "express-rate-limit": "^7.2.0",
+    "express-session": "^1.18.0",
+    "memorystore": "^1.6.7",
+    "nanoid": "^5.0.6",
+    "passport": "^0.7.0",
+    "passport-local": "^1.0.0",
+    "postgres": "^3.4.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.50.1",
+    "ws": "^8.16.0",
+    "zod": "^3.22.4"
+  }
+}
