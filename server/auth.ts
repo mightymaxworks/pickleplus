@@ -154,10 +154,27 @@ export function setupAuth(app: Express) {
   
   passport.deserializeUser(async (id: number, done) => {
     try {
+      // Add more robust error handling
+      if (!id || typeof id !== 'number') {
+        console.error('Invalid user ID in deserializeUser:', id);
+        return done(null, false);
+      }
+      
       const user = await storage.getUser(id);
-      done(null, user);
+      
+      // Ensure we found a valid user
+      if (!user) {
+        console.log(`User with ID ${id} not found during deserialization`);
+        return done(null, false);
+      }
+      
+      // Successfully found user
+      return done(null, user);
     } catch (error) {
-      done(error);
+      // Log the error for debugging
+      console.error('Error in deserializeUser:', error);
+      // Return false instead of the error to prevent crash
+      return done(null, false);
     }
   });
 
