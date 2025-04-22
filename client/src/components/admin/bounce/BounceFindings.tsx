@@ -580,7 +580,7 @@ const BounceFindings: React.FC = () => {
                 renderEmptyState()
               ) : isMobile ? (
                 <div className="pt-2">
-                  {data.findings.map((finding) => (
+                  {data?.findings?.map((finding) => (
                     <BounceFindingCard
                       key={finding.id}
                       finding={finding}
@@ -615,6 +615,20 @@ const BounceFindings: React.FC = () => {
                     Great job! There are no critical issues to address.
                   </p>
                 </div>
+              ) : isMobile ? (
+                <div className="pt-2">
+                  {data?.findings
+                    ?.filter(f => f.severity === 'critical')
+                    ?.map((finding) => (
+                      <BounceFindingCard
+                        key={finding.id}
+                        finding={finding}
+                        onViewDetails={() => setSelectedFinding(finding)}
+                        onStatusChange={(status) => handleStatusChange(finding, status)}
+                        onAssign={() => handleAssignToMe(finding)}
+                      />
+                  ))}
+                </div>
               ) : (
                 <div className="border rounded-md">
                   <ScrollArea className="h-[450px]">
@@ -628,6 +642,20 @@ const BounceFindings: React.FC = () => {
                 <div className="space-y-4">
                   {Array(3).fill(0).map((_, i) => (
                     <Skeleton key={i} className="h-12 w-full" />
+                  ))}
+                </div>
+              ) : isMobile ? (
+                <div className="pt-2">
+                  {data?.findings
+                    ?.filter(f => f.assignedTo === 'current-user') // This would use the actual user ID in production
+                    .map((finding) => (
+                      <BounceFindingCard
+                        key={finding.id}
+                        finding={finding}
+                        onViewDetails={() => setSelectedFinding(finding)}
+                        onStatusChange={(status) => handleStatusChange(finding, status)}
+                        onAssign={() => handleAssignToMe(finding)}
+                      />
                   ))}
                 </div>
               ) : (
@@ -650,19 +678,20 @@ const BounceFindings: React.FC = () => {
       {/* Finding Detail Dialog */}
       {selectedFinding && (
         <Dialog open={!!selectedFinding} onOpenChange={(open) => !open && setSelectedFinding(null)}>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogContent className="max-w-4xl max-h-[90vh] sm:max-h-[80vh] overflow-hidden flex flex-col p-4 sm:p-6">
             <DialogHeader>
               <div className="flex items-center gap-2">
                 {getSeverityIcon(selectedFinding.severity)}
-                <DialogTitle>{selectedFinding.title}</DialogTitle>
+                <DialogTitle className="text-base sm:text-lg">{selectedFinding.title}</DialogTitle>
               </div>
-              <DialogDescription>
+              <DialogDescription className="text-xs sm:text-sm">
                 Found during test run #{selectedFinding.testRunId} on {formatDate(selectedFinding.createdAt)}
               </DialogDescription>
             </DialogHeader>
             
             <div className="flex-grow overflow-auto">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+              {/* Mobile-friendly layout that stacks on small screens and uses grid on larger ones */}
+              <div className={`${isMobile ? 'space-y-3' : 'grid grid-cols-1 md:grid-cols-3 gap-6'} mb-4`}>
                 <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
                   <div className="text-sm font-medium mb-1">Status</div>
                   <div>{getStatusBadge(selectedFinding.status)}</div>
@@ -738,11 +767,16 @@ const BounceFindings: React.FC = () => {
               </div>
             </div>
             
-            <DialogFooter className="flex items-center justify-between">
-              <div className="flex gap-2">
+            {/* Mobile-optimized footer that stacks buttons on small screens */}
+            <DialogFooter className={`${isMobile ? 'flex-col items-stretch space-y-2' : 'flex items-center justify-between'} mt-4`}>
+              <div className={`${isMobile ? 'flex flex-col space-y-2' : 'flex gap-2'}`}>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline">{selectedFinding.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} ▾</Button>
+                    <Button variant="outline" className="w-full sm:w-auto">
+                      <span className="truncate">
+                        {selectedFinding.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </span> ▾
+                    </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
                     <DropdownMenuLabel>Change Status</DropdownMenuLabel>
@@ -765,13 +799,17 @@ const BounceFindings: React.FC = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
                 
-                <Button variant="outline" onClick={() => handleAssignToMe(selectedFinding)}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleAssignToMe(selectedFinding)}
+                  className="w-full sm:w-auto"
+                >
                   Assign to Me
                 </Button>
                 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline">Priority {selectedFinding.priority || 0} ▾</Button>
+                    <Button variant="outline" className="w-full sm:w-auto">Priority {selectedFinding.priority || 0} ▾</Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
                     <DropdownMenuLabel>Set Priority</DropdownMenuLabel>
@@ -794,7 +832,11 @@ const BounceFindings: React.FC = () => {
                 </DropdownMenu>
               </div>
               
-              <Button variant="default" onClick={() => setSelectedFinding(null)}>
+              <Button 
+                variant="default" 
+                onClick={() => setSelectedFinding(null)}
+                className={`${isMobile ? 'mt-2' : ''} w-full sm:w-auto`}
+              >
                 Close
               </Button>
             </DialogFooter>
