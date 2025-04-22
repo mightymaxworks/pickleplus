@@ -14,9 +14,9 @@ We've made specific, targeted fixes to the core codebase:
 In the Replit deployment settings:
 1. Click the Deploy button
 2. Choose Cloud Run deployment
-3. Set the following:
-   - **Build Command**: `npm run build`
-   - **Run Command**: `NODE_ENV=production node server/index.js`
+3. Use the default settings:
+   - **Build Command**: Leave as default (`npm run build`)
+   - **Run Command**: Leave as default (`npm start`)
    - Ensure `DATABASE_URL` is set in environment variables
 
 ## 3. Key Fixes for Deployment Success
