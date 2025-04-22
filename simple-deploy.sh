@@ -1,83 +1,104 @@
 #!/bin/bash
+# SIMPLE-DEPLOY.SH
+# The simplest possible deployment script for Pickle+
 
-echo "🚀 Starting simple deployment build..."
+echo "🥒 PICKLE+ SIMPLE DEPLOYMENT 🥒"
 
-# 1. Clean the output directory
-rm -rf dist
-mkdir -p dist/public
+# Build the app
+npm run build
 
-# 2. Create a temporary vite config that excludes Node.js modules
-cat > deploy-vite.config.js << 'EOF'
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import path from "path";
+# Make sure the server is ready for production
+node -e "
+const fs = require('fs');
+const path = require('path');
 
-export default defineConfig({
-  plugins: [react()],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "client", "src"),
-      "@shared": path.resolve(__dirname, "shared"),
-      "@assets": path.resolve(__dirname, "attached_assets"),
-    }
-  },
-  build: {
-    outDir: path.resolve(__dirname, "dist/public"),
-    emptyOutDir: true,
-    rollupOptions: {
-      // Exclude server-only modules
-      external: [
-        'pg', 'pg-native', 'postgres', '@neondatabase/serverless', 'ws',
-        'drizzle-orm', 'drizzle-orm/neon-serverless', 'express', 'http',
-        'fs', 'path', 'os', 'crypto', 'net', 'tls', 'perf_hooks'
-      ]
-    }
-  },
-  define: {
-    'process.env.NODE_ENV': JSON.stringify('production')
+// Create production server file if it doesn't exist
+const serverPath = path.join(process.cwd(), 'server.js');
+if (!fs.existsSync(serverPath)) {
+  console.log('Creating production server.js...');
+  
+  const serverContent = \`
+const express = require('express');
+const path = require('path');
+const { Pool } = require('@neondatabase/serverless');
+const { createServer } = require('http');
+const { WebSocketServer } = require('ws');
+
+// Create app
+const app = express();
+const PORT = process.env.PORT || 8080;
+
+// Basic middleware
+app.use(express.json());
+
+// Database connection check
+let db;
+try {
+  if (process.env.DATABASE_URL) {
+    console.log('Connecting to database...');
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    pool.query('SELECT NOW()').then(res => {
+      console.log('Database connected:', res.rows[0]);
+    });
   }
-});
-EOF
-
-# 3. Build the client
-echo "🔨 Building client for production..."
-npx vite build --config deploy-vite.config.js
-
-# 4. Build the server
-echo "🔨 Building server for production..."
-cat > server-esbuild.js << 'EOF'
-const { build } = require('esbuild');
-
-async function buildServer() {
-  await build({
-    entryPoints: ['server/index.ts'],
-    bundle: true,
-    platform: 'node',
-    target: 'node16',
-    outfile: 'dist/index.js',
-    external: ['pg', 'pg-native', '@neondatabase/serverless', 'ws'],
-    define: {
-      'process.env.NODE_ENV': '"production"'
-    }
-  });
+} catch (err) {
+  console.error('Database connection error:', err);
 }
 
-buildServer().catch(() => process.exit(1));
-EOF
+// API routes
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', time: new Date().toISOString() });
+});
 
-node server-esbuild.js
+// Serve static files from client/dist
+app.use(express.static(path.join(__dirname, 'client/dist')));
 
-# 5. Add port 8080 to the server for Cloud Run
-echo "🔧 Patching server for Cloud Run (port 8080)..."
-sed -i 's/process.env.NODE_ENV === .production. ? 8080 : 5000/8080/g' dist/index.js
-sed -i 's/const port = process\.env\.PORT || 5000/const port = 8080/g' dist/index.js
+// For any other request, send index.html
+app.get('*', (req, res) => {
+  if (!req.path.startsWith('/api')) {
+    res.sendFile(path.join(__dirname, 'client/dist', 'index.html'));
+  }
+});
 
-# 6. Clean up
-rm deploy-vite.config.js server-esbuild.js
+// Create HTTP server
+const httpServer = createServer(app);
 
-echo "✅ Deployment build complete!"
-echo ""
-echo "To deploy this build, click the 'Deploy' button in Replit and use:"
-echo "  Deploy directory: dist"
-echo "  Build command: ./simple-deploy.sh"
-echo "  Run command: node dist/index.js"
+// Set up WebSocket server
+const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+wss.on('connection', (ws) => {
+  console.log('WebSocket client connected');
+});
+
+// Start the server
+httpServer.listen(PORT, '0.0.0.0', () => {
+  console.log(\`🥒 Pickle+ server running on port \${PORT}\`);
+});
+\`;
+
+  fs.writeFileSync(serverPath, serverContent);
+  console.log('Production server.js created successfully');
+}
+
+// Update package.json if needed
+const packagePath = path.join(process.cwd(), 'package.json');
+const packageJson = require(packagePath);
+
+// Make sure we have a start script
+if (!packageJson.scripts || !packageJson.scripts.start || !packageJson.scripts.start.includes('server.js')) {
+  console.log('Updating package.json start script...');
+  packageJson.scripts = packageJson.scripts || {};
+  packageJson.scripts.start = 'node server.js';
+  fs.writeFileSync(packagePath, JSON.stringify(packageJson, null, 2));
+  console.log('Updated package.json');
+}
+
+console.log('Deployment preparation complete');
+"
+
+echo "🥒 DEPLOYMENT READY 🥒"
+echo "To deploy on Replit:"
+echo "1. Click Deploy"
+echo "2. Use these settings:"
+echo "   - Build Command: npm run build"
+echo "   - Run Command: npm start"
+echo "3. Click Deploy"
