@@ -21,6 +21,7 @@ import BounceExecutiveReport from '@/components/admin/bounce/BounceExecutiveRepo
 import BounceAchievements from '@/components/admin/bounce/BounceAchievements';
 import BounceXpIntegration from '@/components/admin/bounce/BounceXpIntegration';
 import BounceAutomation from '@/components/admin/bounce/BounceAutomation';
+import MobileTestExecution from '@/components/admin/bounce/MobileTestExecution';
 import { AdminLayout } from '@/modules/admin/components/AdminLayout';
 import {
   Bot,
@@ -33,7 +34,8 @@ import {
   Play,
   FileText,
   Award,
-  Zap
+  Zap,
+  Smartphone
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
@@ -112,6 +114,14 @@ const BouncePage: React.FC = () => {
                 <Badge className="ml-1 bg-green-500 hover:bg-green-600">New</Badge>
               </TabsTrigger>
               <TabsTrigger 
+                value="mobile-test" 
+                className="flex items-center gap-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-2 px-3"
+              >
+                <Smartphone className="h-4 w-4" />
+                Mobile Test
+                <Badge className="ml-1 bg-orange-500 hover:bg-orange-600">New</Badge>
+              </TabsTrigger>
+              <TabsTrigger 
                 value="settings" 
                 className="flex items-center gap-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-2 px-3"
                 disabled
@@ -148,6 +158,10 @@ const BouncePage: React.FC = () => {
             
             <TabsContent value="automation" className="p-0 mt-0">
               <BounceAutomation />
+            </TabsContent>
+            
+            <TabsContent value="mobile-test" className="p-0 mt-0">
+              <MobileTestExecution />
             </TabsContent>
             
             <TabsContent value="settings" className="p-0 mt-0">
