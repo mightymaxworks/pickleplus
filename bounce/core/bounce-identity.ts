@@ -1,7 +1,7 @@
 /**
- * PKL-278651-BOUNCE-0003-CORE - Bounce Identity
+ * PKL-278651-BOUNCE-0002-CICD - Bounce Identity Core
  * 
- * Manages core identity and state for the Bounce testing system.
+ * Core identity functionality for the Bounce testing system
  * 
  * @framework Framework5.2
  * @version 1.0.0
@@ -9,159 +9,95 @@
  */
 
 import { db } from '../../server/db';
+import { bounceTestRuns, BounceTestRunStatus } from '../../shared/schema/bounce';
 import { eq } from 'drizzle-orm';
-import { 
-  bounceTestRuns, 
-  BounceTestRunStatus, 
-  BounceFindingSeverity, 
-  bounceFindings 
-} from '../../shared/schema/bounce';
 
 /**
- * Class that manages core identity and state for the Bounce testing system
+ * Bounce Identity Service
+ * Manages test run identity and tracking
  */
 class BounceIdentity {
-  private testRunId: number | null = null;
-  
   /**
-   * Start a new test run
-   * @param browser Browser being used
-   * @param deviceType Device type (mobile or desktop)
+   * Create a new test run
+   * @param testRun Test run data
    * @returns ID of the created test run
    */
-  async startTestRun(browser: string, deviceType: string): Promise<number> {
-    console.log(`[Bounce] Starting new test run (${browser}, ${deviceType})`);
+  async createTestRun(testRun: {
+    name: string;
+    targetUrl?: string;
+    testConfig?: string;
+    startedAt: Date;
+    status: BounceTestRunStatus;
+  }): Promise<number> {
+    console.log(`[Bounce] Creating test run: ${testRun.name}`);
     
-    const [testRun] = await db.insert(bounceTestRuns).values({
-      name: `Bounce Test Run - ${browser} - ${deviceType} - ${new Date().toISOString()}`,
-      description: `Automated test run using ${browser} on ${deviceType}`,
-      status: BounceTestRunStatus.RUNNING,
-      startedAt: new Date(),
-      targetUrl: 'http://localhost:3000',
-      testConfig: JSON.stringify({
-        browser,
-        deviceType,
-        timestamp: new Date().toISOString()
-      })
+    // Insert the test run into the database
+    const [createdTestRun] = await db.insert(bounceTestRuns).values({
+      name: testRun.name,
+      targetUrl: testRun.targetUrl,
+      testConfig: testRun.testConfig,
+      startedAt: testRun.startedAt,
+      status: testRun.status,
+      totalFindings: 0,
+      createdAt: new Date()
     }).returning();
     
-    this.testRunId = testRun.id;
-    console.log(`[Bounce] Created test run with ID ${testRun.id}`);
-    
-    return testRun.id;
-  }
-  
-  /**
-   * End a test run with status and finding count
-   * @param status Status of the test run
-   * @param findingCount Number of findings
-   * @param coverage Percentage of code covered (if available)
-   */
-  async endTestRun(
-    status: BounceTestRunStatus,
-    findingCount: number,
-    coverage?: number
-  ): Promise<void> {
-    if (!this.testRunId) {
-      throw new Error('[Bounce] No active test run');
+    if (!createdTestRun || !createdTestRun.id) {
+      throw new Error('Failed to create test run');
     }
     
-    console.log(`[Bounce] Ending test run ${this.testRunId} with status ${status} and ${findingCount} findings`);
+    console.log(`[Bounce] Created test run with ID: ${createdTestRun.id}`);
     
-    const results: Record<string, any> = {
-      findingCount,
-      coverage: coverage || 0,
-      completedAt: new Date().toISOString()
-    };
-    
-    // Get counts by severity
-    const findings = await db
-      .select()
-      .from(bounceFindings)
-      .where(eq(bounceFindings.testRunId, this.testRunId));
-    
-    results.criticalCount = findings.filter(f => f.severity === BounceFindingSeverity.CRITICAL).length;
-    results.highCount = findings.filter(f => f.severity === BounceFindingSeverity.HIGH).length;
-    results.moderateCount = findings.filter(f => 
-      f.severity === BounceFindingSeverity.MODERATE || 
-      f.severity === BounceFindingSeverity.MEDIUM
-    ).length;
-    results.lowCount = findings.filter(f => 
-      f.severity === BounceFindingSeverity.LOW || 
-      f.severity === BounceFindingSeverity.INFO
-    ).length;
-    
-    // Update the test run
-    await db.update(bounceTestRuns)
-      .set({
-        status,
-        completedAt: new Date(),
-        totalFindings: findingCount,
-        results: JSON.stringify(results)
-      })
-      .where(eq(bounceTestRuns.id, this.testRunId));
-    
-    console.log(`[Bounce] Test run ${this.testRunId} completed with status ${status}`);
-    
-    // Reset the test run ID
-    this.testRunId = null;
+    return createdTestRun.id;
   }
-  
+
   /**
-   * Get the current test run ID
-   * @returns Current test run ID
-   */
-  getTestRunId(): number | null {
-    return this.testRunId;
-  }
-  
-  /**
-   * Set the current test run ID manually
-   * @param id Test run ID to set
-   */
-  setTestRunId(id: number): void {
-    this.testRunId = id;
-  }
-  
-  /**
-   * Get information about a test run
+   * Get a test run by ID
    * @param id Test run ID
-   * @returns Test run information
+   * @returns Test run data
    */
-  async getTestRun(id: number): Promise<any> {
+  async getTestRun(id: number) {
     const [testRun] = await db
       .select()
       .from(bounceTestRuns)
       .where(eq(bounceTestRuns.id, id));
     
-    if (!testRun) {
-      throw new Error(`[Bounce] Test run ${id} not found`);
-    }
-    
     return testRun;
   }
-  
+
   /**
-   * Get all test runs
-   * @returns List of all test runs
+   * Update a test run
+   * @param id Test run ID
+   * @param updates Updates to apply
+   * @returns Updated test run
    */
-  async getAllTestRuns(): Promise<any[]> {
-    return db
+  async updateTestRun(id: number, updates: Partial<typeof bounceTestRuns.$inferInsert>) {
+    console.log(`[Bounce] Updating test run ${id}`);
+    
+    const [updatedTestRun] = await db
+      .update(bounceTestRuns)
+      .set(updates)
+      .where(eq(bounceTestRuns.id, id))
+      .returning();
+    
+    return updatedTestRun;
+  }
+
+  /**
+   * List all test runs
+   * @param limit Maximum number of test runs to return
+   * @param offset Offset for pagination
+   * @returns List of test runs
+   */
+  async listTestRuns(limit = 10, offset = 0) {
+    const testRuns = await db
       .select()
       .from(bounceTestRuns)
-      .orderBy(bounceTestRuns.createdAt);
-  }
-  
-  /**
-   * Get all findings for a test run
-   * @param testRunId Test run ID
-   * @returns List of findings
-   */
-  async getFindings(testRunId: number): Promise<any[]> {
-    return db
-      .select()
-      .from(bounceFindings)
-      .where(eq(bounceFindings.testRunId, testRunId));
+      .orderBy(bounceTestRuns.createdAt)
+      .limit(limit)
+      .offset(offset);
+    
+    return testRuns;
   }
 }
 

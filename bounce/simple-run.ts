@@ -1,172 +1,74 @@
 /**
- * PKL-278651-BOUNCE-0011-CICD - Simple Bounce Test Runner
+ * PKL-278651-BOUNCE-0012-CICD - Simple Test Run
  * 
- * This version doesn't require external dependencies like Playwright
- * It generates a sample bug report to demonstrate the reporting functionality
+ * Simplified test run that doesn't require Playwright
+ * Used for demo purposes or quick validation
  * 
  * @framework Framework5.2
  * @version 1.0.0
  * @lastModified 2025-04-22
  */
 
+import { bounceIdentity } from './core/bounce-identity';
+import { testRunner } from './runner/test-runner';
+import { bugReportGenerator } from './reporting';
 import { db } from '../server/db';
 import { eq } from 'drizzle-orm';
-import { 
-  bounceTestRuns, 
-  bounceFindings,
-  bounceEvidence,
-  BounceTestRunStatus,
-  BounceFindingSeverity,
-  BounceEvidenceType
-} from '../shared/schema/bounce';
-import { bugReportGenerator } from './reporting';
-import { actionItemsGenerator } from './action-items-generator';
-import fs from 'fs';
-import path from 'path';
+import { bounceTestRuns, BounceTestRunStatus } from '../shared/schema/bounce';
 
 /**
- * Run a simplified demo of the Bounce testing system
- * @returns The ID of the generated test run
+ * Run a simple demo test
+ * This function performs a mockable test run without requiring Playwright
+ * 
+ * @returns ID of the test run
  */
-async function runSimpleDemo(): Promise<number> {
-  console.log('[Bounce] Starting simple demo run...');
+export async function runSimpleDemo(): Promise<number> {
+  console.log('[Bounce] Running simple demo test...');
   
-  // Create a test run
-  const [testRun] = await db.insert(bounceTestRuns).values({
-    name: `Bounce Simple Demo - ${new Date().toISOString()}`,
-    description: 'A simple demo run that doesn\'t require external dependencies',
-    status: BounceTestRunStatus.RUNNING,
-    startedAt: new Date(),
-    targetUrl: 'http://localhost:3000'
-  }).returning();
+  // Run tests with fallback mode (no Playwright)
+  const testRunId = await testRunner.runTests({
+    baseUrl: 'http://localhost:3000',
+    browser: 'chrome',
+    mobile: false,
+    coverage: 0,
+    headless: true,
+    timeout: 30000
+  });
   
-  console.log(`[Bounce] Created test run ${testRun.id}`);
+  console.log(`[Bounce] Simple demo test completed with ID: ${testRunId}`);
   
-  // Simulate finding issues
-  const findings = [];
+  // Check if the test run was successful
+  const [testRun] = await db
+    .select()
+    .from(bounceTestRuns)
+    .where(eq(bounceTestRuns.id, testRunId));
   
-  // Add some sample findings
-  const [finding1] = await db.insert(bounceFindings).values({
-    testRunId: testRun.id,
-    title: 'Mobile responsive layout issue on community page',
-    description: 'The community page layout breaks on mobile viewport widths below 375px. Text overlaps and buttons become inaccessible.',
-    severity: BounceFindingSeverity.HIGH,
-    area: 'Community',
-    path: '/communities',
-    browser: 'Chrome Mobile',
-    isModifying: false,
-    deviceInfo: JSON.stringify({
-      viewport: '320x568',
-      userAgent: 'Mobile Safari',
-      devicePixelRatio: 2
-    })
-  }).returning();
-  
-  findings.push(finding1);
-  
-  const [finding2] = await db.insert(bounceFindings).values({
-    testRunId: testRun.id,
-    title: 'Authentication persistence issue after browser refresh',
-    description: 'User is logged out when refreshing the profile page. This only happens in Firefox.',
-    severity: BounceFindingSeverity.CRITICAL,
-    area: 'Authentication',
-    path: '/profile',
-    browser: 'Firefox',
-    isModifying: false,
-    deviceInfo: JSON.stringify({
-      viewport: '1280x800',
-      userAgent: 'Firefox/112.0',
-      devicePixelRatio: 1
-    })
-  }).returning();
-  
-  findings.push(finding2);
-  
-  const [finding3] = await db.insert(bounceFindings).values({
-    testRunId: testRun.id,
-    title: 'Tournament bracket rendering incorrectly',
-    description: 'The tournament bracket visualization renders incorrectly when there are more than 16 participants. Some participant names are cut off.',
-    severity: BounceFindingSeverity.MODERATE,
-    area: 'Tournaments',
-    path: '/tournaments/12/bracket',
-    browser: 'Chrome',
-    isModifying: false,
-    deviceInfo: JSON.stringify({
-      viewport: '1920x1080',
-      userAgent: 'Chrome/111.0',
-      devicePixelRatio: 1
-    })
-  }).returning();
-  
-  findings.push(finding3);
-  
-  // Add some evidence
-  for (const finding of findings) {
-    // Create mock screenshot evidence
-    const screenshotDir = path.join(process.cwd(), 'evidence');
+  if (testRun && testRun.status === BounceTestRunStatus.COMPLETED) {
+    console.log('[Bounce] Test run was successful');
     
-    // Ensure directory exists
-    if (!fs.existsSync(screenshotDir)) {
-      fs.mkdirSync(screenshotDir, { recursive: true });
+    // Generate a report
+    try {
+      const reportPath = await bugReportGenerator.generateReport(testRunId);
+      console.log(`[Bounce] Bug report generated: ${reportPath}`);
+    } catch (error) {
+      console.error(`[Bounce] Error generating report: ${(error as Error).message}`);
     }
-    
-    const screenshotPath = path.join(screenshotDir, `finding-${finding.id}-screenshot.png`);
-    
-    // Create an empty file if it doesn't exist
-    if (!fs.existsSync(screenshotPath)) {
-      fs.writeFileSync(screenshotPath, Buffer.from('Mock screenshot data'));
-    }
-    
-    // Store evidence reference in database
-    // This would normally point to actual evidence files
-    await db.insert(bounceEvidence).values({
-      findingId: finding.id,
-      type: 'SCREENSHOT',
-      filePath: screenshotPath,
-      description: 'Screenshot showing the issue'
-    });
+  } else {
+    console.error('[Bounce] Test run failed');
   }
   
-  // Update the test run as completed
-  await db.update(bounceTestRuns)
-    .set({
-      status: BounceTestRunStatus.COMPLETED,
-      completedAt: new Date(),
-      totalFindings: findings.length,
-      results: JSON.stringify({
-        findings: findings.length,
-        criticalIssues: findings.filter(f => f.severity === BounceFindingSeverity.CRITICAL).length,
-        highIssues: findings.filter(f => f.severity === BounceFindingSeverity.HIGH).length,
-        moderateIssues: findings.filter(f => f.severity === BounceFindingSeverity.MODERATE).length,
-        lowIssues: findings.filter(f => f.severity === BounceFindingSeverity.LOW).length
-      })
-    })
-    .where(eq(bounceTestRuns.id, testRun.id));
-  
-  console.log(`[Bounce] Test run completed with ${findings.length} findings`);
-  
-  // Generate the bug report
-  const reportPath = await bugReportGenerator.generateReport(testRun.id);
-  console.log(`[Bounce] Bug report generated: ${reportPath}`);
-  
-  // Generate action items
-  const sprintPath = await actionItemsGenerator.generateActionItems(testRun.id);
-  console.log(`[Bounce] Sprint plan generated: ${sprintPath}`);
-  
-  return testRun.id;
+  return testRunId;
 }
 
-export { runSimpleDemo };
-
-// If this script is run directly
-if (require.main === module) {
+// Direct run if called directly
+// In ESM, we can use import.meta.url to check if this is the main module
+if (import.meta.url.endsWith(process.argv[1])) {
   runSimpleDemo()
     .then((testRunId) => {
-      console.log(`\nSimple demo completed with test run ID: ${testRunId}`);
-      process.exit(0);
+      console.log(`[Bounce] Simple demo completed with test run ID: ${testRunId}`);
     })
     .catch((error) => {
-      console.error('Error running simple demo:', error);
+      console.error(`[Bounce] Error running simple demo: ${error.message}`);
       process.exit(1);
     });
 }

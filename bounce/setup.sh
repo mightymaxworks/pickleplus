@@ -1,69 +1,101 @@
 #!/bin/bash
 
 # PKL-278651-BOUNCE-0010-CICD - Bounce Setup Script
-# 
-# Setup script for the Bounce automated testing system
-# Installs dependencies and configures the testing environment
-# 
+# Installs and configures the Bounce testing system
+#
 # @framework Framework5.2
 # @version 1.0.0
 # @lastModified 2025-04-22
 
-# Make sure we're in the project root
-cd "$(dirname "$0")/.."
+# Ensure script exit on any error
+set -e
 
-echo "=============================="
-echo "Bounce Testing System Setup"
-echo "=============================="
-echo "Setting up the Bounce automated testing system..."
+echo "===== Bounce Testing System Setup ====="
+echo "Framework5.2 Compliance: PKL-278651-BOUNCE-0010-CICD"
+echo "----------------------------------------"
 
 # Create necessary directories
-mkdir -p reports evidence
+echo "Creating necessary directories..."
+mkdir -p reports
+mkdir -p evidence
 
-# Check if playwright is installed
-if ! npx playwright --version &> /dev/null; then
+# Check if Playwright is installed
+if npx playwright --version &> /dev/null; then
+  echo "✅ Playwright is already installed"
+else
   echo "Installing Playwright..."
-  # Install playwright with chromium browser only to reduce size
-  npx playwright install --with-deps chromium
+  npm install -D playwright
+  echo "✅ Playwright installed"
+fi
+
+# Check if database schema exists
+echo "Checking database schema..."
+if node -e "
+const { drizzle } = require('drizzle-orm/neon-serverless');
+const { Pool } = require('@neondatabase/serverless');
+const ws = require('ws');
+const { eq } = require('drizzle-orm');
+
+// Configure neon to use ws
+require('@neondatabase/serverless').neonConfig.webSocketConstructor = ws;
+
+// Check if DATABASE_URL is set
+if (!process.env.DATABASE_URL) {
+  console.error('DATABASE_URL environment variable is not set');
+  process.exit(1);
+}
+
+async function checkSchema() {
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  const db = drizzle(pool);
+  
+  try {
+    // Try to query the bounce_test_runs table
+    await db.execute(sql\`SELECT EXISTS (
+      SELECT FROM information_schema.tables 
+      WHERE table_name = 'bounce_test_runs'
+    )\`);
+    
+    return true;
+  } catch (error) {
+    return false;
+  } finally {
+    await pool.end();
+  }
+}
+
+checkSchema().then(exists => {
+  if (exists) {
+    console.log('true');
+  } else {
+    console.log('false');
+  }
+  process.exit(0);
+}).catch(error => {
+  console.error(error);
+  process.exit(1);
+});
+" | grep -q "true"; then
+  echo "✅ Database schema exists"
 else
-  echo "Playwright is already installed."
+  echo "Creating database schema..."
+  npx tsx create-bounce-tables.ts
+  echo "✅ Database schema created"
 fi
 
-# Check if necessary npm packages are installed
-echo "Checking required npm packages..."
-required_packages=("drizzle-orm" "drizzle-zod" "zod" "playwright")
+# Install other dependencies if needed
+echo "Checking dependencies..."
+npm list drizzle-orm > /dev/null || npm install drizzle-orm
+npm list drizzle-zod > /dev/null || npm install drizzle-zod
 
-for package in "${required_packages[@]}"; do
-  if ! grep -q "\"$package\"" package.json; then
-    echo "Package $package is not in package.json, please install it using:"
-    echo "npm install $package"
-  fi
-done
-
-# Check database connection
-echo "Checking database connection..."
-if [[ -z "${DATABASE_URL}" ]]; then
-  echo "DATABASE_URL environment variable is not set."
-  echo "Please set it to connect to your database."
-else
-  echo "Database URL is configured."
-fi
-
-# Create evidence directory if it doesn't exist
-if [ ! -d "evidence" ]; then
-  mkdir -p evidence
-  echo "Created evidence directory."
-fi
-
-# Create reports directory if it doesn't exist
-if [ ! -d "reports" ]; then
-  mkdir -p reports
-  echo "Created reports directory."
-fi
-
-echo "Setup complete!"
-echo "To run Bounce tests, use: npx tsx bounce/cli.ts run"
-echo "To generate a report, use: npx tsx bounce/cli.ts report <test-run-id>"
-echo "To generate a sprint plan, use: npx tsx bounce/cli.ts plan <test-run-id>"
-echo "For a simple demo run that doesn't require Playwright, use: npx tsx bounce/simple-run.ts"
-echo "=============================="
+echo "----------------------------------------"
+echo "✅ Bounce Testing System Setup Complete!"
+echo "----------------------------------------"
+echo "Usage:"
+echo "  npx tsx bounce/cli.ts help              View CLI help"
+echo "  npx tsx bounce/cli.ts run               Run tests"
+echo "  npx tsx bounce/cli.ts simple            Run a simple demo"
+echo "  npx tsx bounce/cli.ts list              List all test runs"
+echo "  npx tsx bounce/cli.ts report <id>       Generate a bug report"
+echo "  npx tsx bounce/cli.ts plan <id>         Generate a sprint plan"
+echo "----------------------------------------"

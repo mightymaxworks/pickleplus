@@ -9,187 +9,157 @@
  * 
  * @version 1.0.0
  * @framework Framework5.2
- * @lastUpdated 2025-04-21
+ * @lastUpdated 2025-04-22
  */
 
-import { Pool, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import * as bounceSchema from './shared/schema/bounce';
+import { sql as sqlWrapper } from 'drizzle-orm';
 import ws from 'ws';
-import dotenv from 'dotenv';
-import { sql } from 'drizzle-orm';
-import { 
-  bounceTestRuns, 
-  bounceFindings, 
-  bounceEvidence, 
-  bounceSchedules, 
-  bounceInteractions
-} from './shared/schema/bounce';
 
-// Initialize environment variables
-dotenv.config();
-
-// Configure NeonDB to use WebSockets
+// Configure neon to use ws
 neonConfig.webSocketConstructor = ws;
 
-// Validate environment
+// Check if DATABASE_URL is set
 if (!process.env.DATABASE_URL) {
-  console.error('DATABASE_URL environment variable is not set');
+  console.error('DATABASE_URL environment variable must be set');
   process.exit(1);
 }
 
-// Set up PostgreSQL connection
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const db = drizzle(pool);
-
-// Log banner
-console.log('=======================================================');
-console.log('PKL-278651-BOUNCE-0001-CORE - Bounce Automated Testing System');
-console.log('Direct Schema Creation Script');
-console.log('=======================================================');
-
 async function createBounceTables() {
+  console.log("=======================================================");
+  console.log("PKL-278651-BOUNCE-0001-CORE - Bounce Automated Testing System");
+  console.log("Direct Schema Creation Script");
+  console.log("=======================================================");
+  
+  const startTime = new Date();
+  console.log(`[${startTime.toISOString()}] Creating Bounce tables...`);
+  
+  // Create a connection pool to the database
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  const db = drizzle(pool);
+  
   try {
-    const startTime = Date.now();
-    console.log(`[${new Date().toISOString()}] Creating Bounce tables...`);
-
-    // Check if tables exist first
-    const result = await pool.query(`
+    // Check if tables already exist
+    const tableCheck = await db.execute(sql`
       SELECT EXISTS (
         SELECT FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_name = 'bounce_test_runs'
-      );
+        WHERE table_name = 'bounce_test_runs'
+      )
     `);
     
-    const tablesExist = result.rows[0].exists === true;
-    
-    if (tablesExist) {
-      console.log(`[${new Date().toISOString()}] Bounce tables already exist, skipping creation.`);
-    } else {
-      console.log(`[${new Date().toISOString()}] Creating bounce_test_runs table...`);
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS "bounce_test_runs" (
-          "id" SERIAL PRIMARY KEY,
-          "name" VARCHAR(255) NOT NULL,
-          "description" TEXT,
-          "status" VARCHAR(50) NOT NULL DEFAULT 'planned',
-          "started_at" TIMESTAMP,
-          "completed_at" TIMESTAMP,
-          "user_id" INTEGER,
-          "target_url" VARCHAR(255),
-          "test_config" JSONB,
-          "total_findings" INTEGER DEFAULT 0,
-          "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-      
-      console.log(`[${new Date().toISOString()}] Creating bounce_findings table...`);
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS "bounce_findings" (
-          "id" SERIAL PRIMARY KEY,
-          "test_run_id" INTEGER REFERENCES "bounce_test_runs"("id"),
-          "title" VARCHAR(255) NOT NULL,
-          "description" TEXT NOT NULL,
-          "severity" VARCHAR(50) NOT NULL DEFAULT 'medium',
-          "status" VARCHAR(50) NOT NULL DEFAULT 'new',
-          "reproducible_steps" TEXT,
-          "affected_url" VARCHAR(255),
-          "browser_info" JSONB,
-          "assigned_to_user_id" INTEGER,
-          "reported_by_user_id" INTEGER,
-          "fix_commit_hash" VARCHAR(100),
-          "fixed_at" TIMESTAMP,
-          "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-      
-      console.log(`[${new Date().toISOString()}] Creating bounce_evidence table...`);
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS "bounce_evidence" (
-          "id" SERIAL PRIMARY KEY,
-          "finding_id" INTEGER REFERENCES "bounce_findings"("id"),
-          "type" VARCHAR(50) NOT NULL DEFAULT 'screenshot',
-          "content" TEXT NOT NULL,
-          "metadata" JSONB,
-          "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-      
-      console.log(`[${new Date().toISOString()}] Creating bounce_schedules table...`);
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS "bounce_schedules" (
-          "id" SERIAL PRIMARY KEY,
-          "name" VARCHAR(255) NOT NULL,
-          "description" TEXT,
-          "cron_expression" VARCHAR(50),
-          "test_config" JSONB NOT NULL,
-          "is_active" BOOLEAN DEFAULT TRUE,
-          "last_run_at" TIMESTAMP,
-          "next_run_at" TIMESTAMP,
-          "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-      
-      console.log(`[${new Date().toISOString()}] Creating bounce_interactions table...`);
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS "bounce_interactions" (
-          "id" SERIAL PRIMARY KEY,
-          "user_id" INTEGER,
-          "finding_id" INTEGER REFERENCES "bounce_findings"("id"),
-          "type" VARCHAR(50) NOT NULL DEFAULT 'view_report',
-          "points" INTEGER DEFAULT 0,
-          "metadata" JSONB,
-          "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-      
-      console.log(`[${new Date().toISOString()}] Creating indexes...`);
-      // Create indexes for performance
-      await pool.query(`CREATE INDEX IF NOT EXISTS idx_bounce_test_runs_status ON bounce_test_runs(status)`);
-      await pool.query(`CREATE INDEX IF NOT EXISTS idx_bounce_test_runs_user_id ON bounce_test_runs(user_id)`);
-      await pool.query(`CREATE INDEX IF NOT EXISTS idx_bounce_findings_test_run_id ON bounce_findings(test_run_id)`);
-      await pool.query(`CREATE INDEX IF NOT EXISTS idx_bounce_findings_severity ON bounce_findings(severity)`);
-      await pool.query(`CREATE INDEX IF NOT EXISTS idx_bounce_findings_status ON bounce_findings(status)`);
-      await pool.query(`CREATE INDEX IF NOT EXISTS idx_bounce_findings_assigned_to_user_id ON bounce_findings(assigned_to_user_id)`);
-      await pool.query(`CREATE INDEX IF NOT EXISTS idx_bounce_findings_reported_by_user_id ON bounce_findings(reported_by_user_id)`);
-      await pool.query(`CREATE INDEX IF NOT EXISTS idx_bounce_evidence_finding_id ON bounce_evidence(finding_id)`);
-      await pool.query(`CREATE INDEX IF NOT EXISTS idx_bounce_interactions_user_id ON bounce_interactions(user_id)`);
-      await pool.query(`CREATE INDEX IF NOT EXISTS idx_bounce_interactions_finding_id ON bounce_interactions(finding_id)`);
-      await pool.query(`CREATE INDEX IF NOT EXISTS idx_bounce_schedules_is_active ON bounce_schedules(is_active)`);
-      
-      console.log(`[${new Date().toISOString()}] Tables created successfully!`);
+    if (tableCheck[0] && tableCheck[0].exists) {
+      const endTime = new Date();
+      const duration = (endTime.getTime() - startTime.getTime()) / 1000;
+      console.log(`[${endTime.toISOString()}] Bounce tables already exist, skipping creation.`);
+      console.log(`Operation completed in ${duration.toFixed(2)} seconds`);
+      console.log("=======================================================");
+      console.log("Table creation completed successfully");
+      pool.end();
+      return;
     }
-
-    // Calculate execution time
-    const executionTime = (Date.now() - startTime) / 1000;
-    console.log(`Operation completed in ${executionTime.toFixed(2)} seconds`);
-    console.log('=======================================================');
-
-    return true;
+    
+    // Create the tables
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS bounce_test_runs (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'PENDING',
+        target_url TEXT,
+        test_config TEXT,
+        started_at TIMESTAMP,
+        completed_at TIMESTAMP,
+        total_findings INTEGER DEFAULT 0,
+        error_message TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP
+      )
+    `);
+    
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS bounce_findings (
+        id SERIAL PRIMARY KEY,
+        test_run_id INTEGER REFERENCES bounce_test_runs(id),
+        title TEXT NOT NULL,
+        description TEXT NOT NULL,
+        severity TEXT NOT NULL DEFAULT 'MEDIUM',
+        status TEXT NOT NULL DEFAULT 'OPEN',
+        reproducible_steps TEXT,
+        affected_url TEXT,
+        browser_info JSONB,
+        device_info JSONB,
+        area TEXT,
+        fixed_in TEXT,
+        fixed_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP
+      )
+    `);
+    
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS bounce_evidence (
+        id SERIAL PRIMARY KEY,
+        finding_id INTEGER REFERENCES bounce_findings(id),
+        type TEXT NOT NULL DEFAULT 'TEXT',
+        content TEXT NOT NULL,
+        metadata JSONB,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS bounce_schedules (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        target_url TEXT NOT NULL,
+        frequency TEXT NOT NULL,
+        test_config JSONB,
+        is_active BOOLEAN DEFAULT TRUE,
+        last_run_at TIMESTAMP,
+        next_run_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP
+      )
+    `);
+    
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS bounce_interactions (
+        id SERIAL PRIMARY KEY,
+        test_run_id INTEGER REFERENCES bounce_test_runs(id),
+        finding_id INTEGER REFERENCES bounce_findings(id),
+        type TEXT NOT NULL,
+        selector TEXT,
+        value TEXT,
+        url TEXT,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        metadata JSONB,
+        screenshot TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
+    const endTime = new Date();
+    const duration = (endTime.getTime() - startTime.getTime()) / 1000;
+    console.log(`[${endTime.toISOString()}] Bounce tables created successfully.`);
+    console.log(`Operation completed in ${duration.toFixed(2)} seconds`);
+    console.log("=======================================================");
+    console.log("Table creation completed successfully");
   } catch (error) {
-    console.error('Error creating Bounce tables:', error);
-    return false;
+    console.error("Error creating tables:", error);
+    console.log("=======================================================");
+    console.log("Table creation failed");
+    process.exit(1);
   } finally {
-    // Close the database connection
-    await pool.end();
+    pool.end();
   }
 }
 
-// Execute table creation
-createBounceTables()
-  .then(success => {
-    if (success) {
-      console.log('Table creation completed successfully');
-      process.exit(0);
-    } else {
-      console.error('Table creation failed');
-      process.exit(1);
-    }
-  })
-  .catch(error => {
-    console.error('Unhandled error during table creation:', error);
-    process.exit(1);
-  });
+// Use the imported sqlWrapper instead of a custom sql function
+const sql = sqlWrapper;
+
+// Run the function
+createBounceTables().catch(error => {
+  console.error("Fatal error:", error);
+  process.exit(1);
+});

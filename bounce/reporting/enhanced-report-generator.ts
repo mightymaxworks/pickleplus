@@ -1,7 +1,7 @@
 /**
  * PKL-278651-BOUNCE-0015-CICD - Enhanced Report Generator
  * 
- * Generates detailed, categorized bug reports with solution guidance
+ * Generates enhanced reports with additional analytics and insights
  * 
  * @framework Framework5.2
  * @version 1.0.0
@@ -10,16 +10,16 @@
 
 import { db } from '../../server/db';
 import { eq } from 'drizzle-orm';
-import { bounceTestRuns, bounceFindings, bounceEvidence, BounceFindingSeverity } from '../../shared/schema/bounce';
+import { bounceTestRuns, bounceFindings, BounceFindingSeverity } from '../../shared/schema/bounce';
 import fs from 'fs';
 import path from 'path';
 
 /**
- * Enhanced report generator with additional categorization and actionable solution prompts
+ * Enhanced report generator for the bounce testing system
  */
 export class EnhancedReportGenerator {
   /**
-   * Generate an enhanced report for a test run with more structured data
+   * Generate an enhanced report for a test run
    * @param testRunId The test run ID to generate a report for
    * @returns Path to the generated report file
    */
@@ -42,159 +42,260 @@ export class EnhancedReportGenerator {
       .from(bounceFindings)
       .where(eq(bounceFindings.testRunId, testRunId));
     
-    // Count findings by severity
-    const criticalCount = findings.filter(f => f.severity === BounceFindingSeverity.CRITICAL).length;
-    const highCount = findings.filter(f => f.severity === BounceFindingSeverity.HIGH).length;
-    const moderateCount = findings.filter(f => 
-      f.severity === BounceFindingSeverity.MODERATE || 
-      f.severity === BounceFindingSeverity.MEDIUM // For backward compatibility
-    ).length;
-    const lowCount = findings.filter(f => 
-      f.severity === BounceFindingSeverity.LOW || 
-      f.severity === BounceFindingSeverity.INFO
-    ).length;
-    
-    // Generate report header with enhanced styling
-    const dateStr = testRun.completedAt 
-      ? new Date(testRun.completedAt).toLocaleString()
-      : new Date().toLocaleString();
-      
-    let report = `# 🔍 Enhanced Bounce Test Report: ${testRun.name}\n\n`;
-    report += `> 📅 Generated on ${dateStr}\n\n`;
+    // Generate the report in markdown format
+    const dateStr = new Date().toLocaleString();
+    let markdown = `# 🔍 Enhanced Bounce Analysis - Test Run #${testRunId}\n\n`;
+    markdown += `*Generated on: ${dateStr}*\n\n`;
     
     // Add executive summary
-    report += `## 📊 Executive Summary\n\n`;
-    report += `This report contains the findings from automated testing run #${testRun.id}. `;
+    markdown += `## 📋 Executive Summary\n\n`;
     
-    if (criticalCount > 0) {
-      report += `**${criticalCount} critical issues** were identified that require immediate attention. `;
-    }
-    
-    if (highCount > 0) {
-      report += `**${highCount} high priority issues** were found that should be addressed soon. `;
-    }
-    
-    report += `The test run covered the application at ${testRun.targetUrl || 'the target URL'} `;
-    report += `and was completed on ${testRun.completedAt ? new Date(testRun.completedAt).toLocaleString() : 'N/A'}.\n\n`;
-    
-    // Add impact assessment
-    report += `### 🎯 Impact Assessment\n\n`;
-    
-    const totalIssues = criticalCount + highCount + moderateCount + lowCount;
-    
-    if (totalIssues === 0) {
-      report += `✅ No issues were found during this test run. Excellent work!\n\n`;
-    } else if (criticalCount > 0) {
-      report += `⚠️ **Critical Impact**: The application has ${criticalCount} critical issues that are likely blocking key user journeys or presenting security vulnerabilities. These should be addressed immediately.\n\n`;
-    } else if (highCount > 5) {
-      report += `🚨 **High Impact**: While no critical issues were found, there are ${highCount} high priority issues that cumulatively create a significant impact on user experience. These should be addressed in the current sprint.\n\n`;
-    } else if (highCount > 0) {
-      report += `⚠️ **Moderate Impact**: There are ${highCount} high priority issues that should be addressed soon, but they don't appear to block critical user journeys.\n\n`;
+    if (findings.length === 0) {
+      markdown += `No issues were detected during this test run. The application appears to be functioning correctly.\n\n`;
     } else {
-      report += `📝 **Low Impact**: Only minor issues were identified that don't significantly impact the user experience.\n\n`;
-    }
-    
-    // Add statistics
-    report += `### 📈 Test Run Statistics\n\n`;
-    report += `| Metric | Value |\n`;
-    report += `| ------ | ----- |\n`;
-    report += `| Test Run ID | ${testRun.id} |\n`;
-    report += `| Status | ${testRun.status} |\n`;
-    report += `| Started | ${testRun.startedAt ? new Date(testRun.startedAt).toLocaleString() : 'N/A'} |\n`;
-    report += `| Completed | ${testRun.completedAt ? new Date(testRun.completedAt).toLocaleString() : 'N/A'} |\n`;
-    report += `| Target URL | ${testRun.targetUrl || 'N/A'} |\n`;
-    report += `| Total Findings | ${findings.length} |\n`;
-    report += `| Critical Issues | ${criticalCount} |\n`;
-    report += `| High Issues | ${highCount} |\n`;
-    report += `| Moderate Issues | ${moderateCount} |\n`;
-    report += `| Low Issues | ${lowCount} |\n\n`;
-    
-    // Add finding categories summary
-    const areas = new Set<string>();
-    findings.forEach(f => areas.add(f.area || 'General'));
-    
-    report += `### 🏷️ Finding Categories\n\n`;
-    report += `Findings were identified in the following areas:\n\n`;
-    
-    for (const area of areas) {
-      const areaFindings = findings.filter(f => (f.area || 'General') === area);
-      const criticalAreaCount = areaFindings.filter(f => f.severity === BounceFindingSeverity.CRITICAL).length;
-      const highAreaCount = areaFindings.filter(f => f.severity === BounceFindingSeverity.HIGH).length;
-      
-      report += `- **${area}**: ${areaFindings.length} issues`;
-      
-      if (criticalAreaCount > 0) {
-        report += ` (${criticalAreaCount} critical)`;
-      } else if (highAreaCount > 0) {
-        report += ` (${highAreaCount} high priority)`;
-      }
-      
-      report += '\n';
-    }
-    
-    report += '\n';
-    
-    // Add critical findings section
-    if (criticalCount > 0) {
-      report += `## 🔴 Critical Findings\n\n`;
-      
+      // Group findings by severity
       const criticalFindings = findings.filter(f => f.severity === BounceFindingSeverity.CRITICAL);
+      const highFindings = findings.filter(f => f.severity === BounceFindingSeverity.HIGH);
+      const moderateFindings = findings.filter(f => 
+        f.severity === BounceFindingSeverity.MODERATE ||
+        f.severity === BounceFindingSeverity.MEDIUM
+      );
+      const lowFindings = findings.filter(f => 
+        f.severity === BounceFindingSeverity.LOW ||
+        f.severity === BounceFindingSeverity.INFO
+      );
       
-      for (const finding of criticalFindings) {
-        report += this.generateFindingMarkdown(finding, true);
+      let summaryText = `During this test run, Bounce identified **${findings.length} issues** that require attention. `;
+      
+      if (criticalFindings.length > 0) {
+        summaryText += `**${criticalFindings.length} critical ${criticalFindings.length === 1 ? 'issue' : 'issues'}** must be addressed immediately as ${criticalFindings.length === 1 ? 'it affects' : 'they affect'} core functionality. `;
+      }
+      
+      if (highFindings.length > 0) {
+        summaryText += `**${highFindings.length} high priority ${highFindings.length === 1 ? 'issue' : 'issues'}** should be fixed in the current development cycle. `;
+      }
+      
+      if (moderateFindings.length > 0) {
+        summaryText += `There ${moderateFindings.length === 1 ? 'is' : 'are'} **${moderateFindings.length} moderate ${moderateFindings.length === 1 ? 'issue' : 'issues'}** that should be addressed when resources permit. `;
+      }
+      
+      if (lowFindings.length > 0) {
+        summaryText += `The remaining **${lowFindings.length} low priority ${lowFindings.length === 1 ? 'issue' : 'issues'}** can be considered for future improvements.`;
+      }
+      
+      markdown += `${summaryText}\n\n`;
+      
+      // Group findings by area
+      const areaGroups: Record<string, Array<any>> = {};
+      
+      for (const finding of findings) {
+        const area = finding.area || 'General';
+        
+        if (!areaGroups[area]) {
+          areaGroups[area] = [];
+        }
+        
+        areaGroups[area].push(finding);
+      }
+      
+      // Add area breakdown
+      markdown += `### 🔍 Areas Affected\n\n`;
+      
+      const sortedAreas = Object.entries(areaGroups)
+        .sort((a, b) => b[1].length - a[1].length);
+      
+      markdown += `| Area | Issues | Severity Breakdown |\n`;
+      markdown += `| ---- | ------ | ------------------ |\n`;
+      
+      for (const [area, areaFindings] of sortedAreas) {
+        const criticalCount = areaFindings.filter(f => f.severity === BounceFindingSeverity.CRITICAL).length;
+        const highCount = areaFindings.filter(f => f.severity === BounceFindingSeverity.HIGH).length;
+        const moderateCount = areaFindings.filter(f => 
+          f.severity === BounceFindingSeverity.MODERATE || 
+          f.severity === BounceFindingSeverity.MEDIUM
+        ).length;
+        const lowCount = areaFindings.filter(f => 
+          f.severity === BounceFindingSeverity.LOW || 
+          f.severity === BounceFindingSeverity.INFO
+        ).length;
+        
+        let severityBreakdown = '';
+        
+        if (criticalCount > 0) severityBreakdown += `🔴 ${criticalCount} Critical `;
+        if (highCount > 0) severityBreakdown += `🟠 ${highCount} High `;
+        if (moderateCount > 0) severityBreakdown += `🟡 ${moderateCount} Moderate `;
+        if (lowCount > 0) severityBreakdown += `🔵 ${lowCount} Low`;
+        
+        markdown += `| ${area} | ${areaFindings.length} | ${severityBreakdown} |\n`;
+      }
+      
+      markdown += '\n';
+    }
+    
+    // Add test run information
+    markdown += `## 🔄 Test Run Information\n\n`;
+    markdown += `- **Name**: ${testRun.name}\n`;
+    markdown += `- **Started**: ${testRun.startedAt ? new Date(testRun.startedAt).toLocaleString() : 'N/A'}\n`;
+    markdown += `- **Completed**: ${testRun.completedAt ? new Date(testRun.completedAt).toLocaleString() : 'N/A'}\n`;
+    markdown += `- **Status**: ${testRun.status}\n`;
+    markdown += `- **Target URL**: ${testRun.targetUrl || 'N/A'}\n`;
+    
+    if (testRun.testConfig) {
+      try {
+        const config = JSON.parse(testRun.testConfig);
+        markdown += `- **Browser**: ${config.browser || 'N/A'}\n`;
+        markdown += `- **Device Type**: ${config.deviceType || 'N/A'}\n`;
+      } catch (error) {
+        // Ignore parsing errors
       }
     }
     
-    // Add high priority findings section
-    if (highCount > 0) {
-      report += `## 🟠 High Priority Findings\n\n`;
+    markdown += `- **Total Findings**: ${findings.length}\n\n`;
+    
+    // Add detailed findings
+    if (findings.length > 0) {
+      markdown += `## 📊 Detailed Findings\n\n`;
       
-      const highPriorityFindings = findings.filter(f => f.severity === BounceFindingSeverity.HIGH);
+      // Group findings by severity
+      const criticalFindings = findings.filter(f => f.severity === BounceFindingSeverity.CRITICAL);
+      const highFindings = findings.filter(f => f.severity === BounceFindingSeverity.HIGH);
+      const moderateFindings = findings.filter(f => 
+        f.severity === BounceFindingSeverity.MODERATE ||
+        f.severity === BounceFindingSeverity.MEDIUM
+      );
+      const lowFindings = findings.filter(f => 
+        f.severity === BounceFindingSeverity.LOW ||
+        f.severity === BounceFindingSeverity.INFO
+      );
       
-      for (const finding of highPriorityFindings) {
-        report += this.generateFindingMarkdown(finding, false);
+      // Critical findings
+      if (criticalFindings.length > 0) {
+        markdown += `### 🔴 Critical Issues\n\n`;
+        
+        for (const finding of criticalFindings) {
+          // Generate Framework5.2 ticket ID suggestion
+          const areaCode = finding.area ? finding.area.toUpperCase().replace(/\s+/g, '-') : 'GENERAL';
+          const fixId = `PKL-278651-${areaCode}-${String(finding.id).padStart(4, '0')}-FIX`;
+          
+          markdown += `#### ${finding.title} (${fixId})\n\n`;
+          markdown += `**Description**: ${finding.description}\n\n`;
+          
+          if (finding.reproducibleSteps) {
+            markdown += `**Steps to Reproduce**:\n${finding.reproducibleSteps}\n\n`;
+          }
+          
+          // Suggested solution based on the area
+          markdown += `**Suggested Solution**:\n`;
+          
+          if (finding.area === 'Authentication') {
+            markdown += `- Review session management implementation\n`;
+            markdown += `- Verify secure cookie settings\n`;
+            markdown += `- Check token validation logic\n`;
+          } else if (finding.area === 'Community') {
+            markdown += `- Adjust responsive CSS breakpoints\n`;
+            markdown += `- Fix container overflow handling\n`;
+            markdown += `- Implement mobile-specific layout for affected components\n`;
+          } else if (finding.area === 'Tournaments') {
+            markdown += `- Optimize bracket rendering for large participant counts\n`;
+            markdown += `- Implement truncation with tooltips for participant names\n`;
+            markdown += `- Add responsive design adaptations for tournament UI\n`;
+          } else {
+            markdown += `- Conduct thorough analysis of the root cause\n`;
+            markdown += `- Implement a comprehensive fix following best practices\n`;
+            markdown += `- Add automated tests to verify the solution\n`;
+          }
+          
+          markdown += '\n---\n\n';
+        }
+      }
+      
+      // High priority findings with less detail
+      if (highFindings.length > 0) {
+        markdown += `### 🟠 High Priority Issues\n\n`;
+        
+        for (const finding of highFindings) {
+          const areaCode = finding.area ? finding.area.toUpperCase().replace(/\s+/g, '-') : 'GENERAL';
+          const fixId = `PKL-278651-${areaCode}-${String(finding.id).padStart(4, '0')}-FIX`;
+          
+          markdown += `#### ${finding.title} (${fixId})\n\n`;
+          markdown += `**Description**: ${finding.description}\n\n`;
+          
+          if (finding.reproducibleSteps) {
+            markdown += `**Steps to Reproduce**:\n${finding.reproducibleSteps}\n\n`;
+          }
+          
+          markdown += `---\n\n`;
+        }
+      }
+      
+      // Moderate and low findings in collapsed sections
+      if (moderateFindings.length > 0) {
+        markdown += `### 🟡 Moderate Issues\n\n`;
+        markdown += `<details>\n<summary>Click to expand moderate issues (${moderateFindings.length})</summary>\n\n`;
+        
+        for (const finding of moderateFindings) {
+          const areaCode = finding.area ? finding.area.toUpperCase().replace(/\s+/g, '-') : 'GENERAL';
+          const fixId = `PKL-278651-${areaCode}-${String(finding.id).padStart(4, '0')}-FIX`;
+          
+          markdown += `#### ${finding.title} (${fixId})\n\n`;
+          markdown += `**Description**: ${finding.description}\n\n`;
+          
+          if (finding.reproducibleSteps) {
+            markdown += `**Steps to Reproduce**:\n${finding.reproducibleSteps}\n\n`;
+          }
+          
+          markdown += `---\n\n`;
+        }
+        
+        markdown += `</details>\n\n`;
+      }
+      
+      if (lowFindings.length > 0) {
+        markdown += `### 🔵 Low Priority Issues\n\n`;
+        markdown += `<details>\n<summary>Click to expand low priority issues (${lowFindings.length})</summary>\n\n`;
+        
+        for (const finding of lowFindings) {
+          const areaCode = finding.area ? finding.area.toUpperCase().replace(/\s+/g, '-') : 'GENERAL';
+          const fixId = `PKL-278651-${areaCode}-${String(finding.id).padStart(4, '0')}-FIX`;
+          
+          markdown += `#### ${finding.title} (${fixId})\n\n`;
+          markdown += `**Description**: ${finding.description}\n\n`;
+          
+          markdown += `---\n\n`;
+        }
+        
+        markdown += `</details>\n\n`;
       }
     }
     
-    // Add complete findings list
-    report += `## 📋 Complete Findings List\n\n`;
-    report += `| ID | Title | Severity | Area | Browser |\n`;
-    report += `| -- | ----- | -------- | ---- | ------- |\n`;
+    // Add recommendations section
+    markdown += `## 🔧 Recommendations\n\n`;
     
-    // Sort by severity
-    const sortedFindings = [...findings].sort((a, b) => {
-      const severityMap: Record<string, number> = {
-        [BounceFindingSeverity.CRITICAL]: 1,
-        [BounceFindingSeverity.HIGH]: 2,
-        [BounceFindingSeverity.MODERATE]: 3,
-        [BounceFindingSeverity.MEDIUM]: 3, // For backward compatibility
-        [BounceFindingSeverity.LOW]: 4,
-        [BounceFindingSeverity.INFO]: 5
-      };
+    if (findings.length === 0) {
+      markdown += `The application passed all tests successfully. Consider adding more test coverage for edge cases and critical user flows.\n\n`;
+    } else {
+      // Count issues by severity
+      const criticalCount = findings.filter(f => f.severity === BounceFindingSeverity.CRITICAL).length;
+      const highCount = findings.filter(f => f.severity === BounceFindingSeverity.HIGH).length;
       
-      return severityMap[a.severity] - severityMap[b.severity];
-    });
-    
-    for (const finding of sortedFindings) {
-      const severityIcon = this.getSeverityIcon(finding.severity);
-      report += `| ${finding.id} | ${finding.title} | ${severityIcon} ${finding.severity} | ${finding.area || 'General'} | ${finding.browser || 'Not specified'} |\n`;
+      if (criticalCount > 0) {
+        markdown += `1. **Immediately address critical issues** that affect core functionality.\n`;
+      }
+      
+      if (highCount > 0) {
+        markdown += `${criticalCount > 0 ? '2' : '1'}. **Plan fixes for high priority issues** in the current sprint.\n`;
+      }
+      
+      markdown += `${criticalCount > 0 && highCount > 0 ? '3' : criticalCount > 0 || highCount > 0 ? '2' : '1'}. **Review test coverage** to ensure critical paths are being tested.\n`;
+      markdown += `${criticalCount > 0 && highCount > 0 ? '4' : criticalCount > 0 || highCount > 0 ? '3' : '2'}. **Consider implementing automated CI/CD** with Bounce tests to prevent regressions.\n`;
+      markdown += `${criticalCount > 0 && highCount > 0 ? '5' : criticalCount > 0 || highCount > 0 ? '4' : '3'}. **Schedule regular Bounce test runs** to maintain quality.\n\n`;
     }
     
-    report += '\n';
+    // Add footer
+    markdown += `---\n\n`;
+    markdown += `*Generated by Bounce Automated Testing System | Framework5.2 | ${new Date().toISOString()}*\n`;
     
-    // Add next steps
-    report += `## 🚀 Next Steps\n\n`;
-    report += `1. **Prioritize**: Address critical and high priority issues first\n`;
-    report += `2. **Plan**: Generate a sprint plan using \`npx tsx bounce/cli.ts plan ${testRunId}\`\n`;
-    report += `3. **Implement**: Fix the issues following the suggested solutions\n`;
-    report += `4. **Verify**: Re-run tests after fixes are implemented\n`;
-    report += `5. **Monitor**: Keep track of fixed findings and monitor for regressions\n\n`;
-    
-    // Add framework compliance footer
-    report += `---\n\n`;
-    report += `Generated by Bounce Enhanced Reporting System | Framework5.2 | v1.0.0\n`;
-    
-    // Ensure report directory exists
+    // Create reports directory if it doesn't exist
     const reportsDir = path.join(process.cwd(), 'reports');
     if (!fs.existsSync(reportsDir)) {
       fs.mkdirSync(reportsDir, { recursive: true });
@@ -204,99 +305,13 @@ export class EnhancedReportGenerator {
     const fileName = `enhanced-report-${testRunId}-${new Date().toISOString().replace(/:/g, '-')}.md`;
     const filePath = path.join(reportsDir, fileName);
     
-    fs.writeFileSync(filePath, report);
+    fs.writeFileSync(filePath, markdown);
     
     console.log(`[Bounce] Enhanced report generated and saved to ${filePath}`);
     
     return filePath;
   }
-  
-  /**
-   * Generate markdown for a single finding
-   * @param finding The finding to generate markdown for
-   * @param isDetailed Whether to include detailed information
-   * @returns Markdown string for the finding
-   */
-  private generateFindingMarkdown(finding: any, isDetailed: boolean): string {
-    const severityIcon = this.getSeverityIcon(finding.severity);
-    let markdown = `### ${severityIcon} ${finding.title}\n\n`;
-    
-    // Generate Framework5.2 ticket ID suggestion
-    const areaCode = finding.area ? finding.area.toUpperCase().replace(/\\s+/g, '-') : 'GENERAL';
-    const fixId = `PKL-278651-${areaCode}-${String(finding.id).padStart(4, '0')}-FIX`;
-    
-    markdown += `**Framework5.2 ID**: \`${fixId}\`\n\n`;
-    markdown += `**Severity**: ${finding.severity}\n\n`;
-    markdown += `**Area**: ${finding.area || 'General'}\n\n`;
-    markdown += `**Path**: ${finding.path || 'Not specified'}\n\n`;
-    markdown += `**Browser**: ${finding.browser || 'Not specified'}\n\n`;
-    
-    if (finding.deviceInfo && isDetailed) {
-      try {
-        const deviceInfo = JSON.parse(finding.deviceInfo);
-        markdown += `**Device Info**:\n\n`;
-        
-        for (const [key, value] of Object.entries(deviceInfo)) {
-          markdown += `- ${key}: ${value}\n`;
-        }
-        
-        markdown += '\n';
-      } catch (error) {
-        markdown += `**Device Info**: ${finding.deviceInfo}\n\n`;
-      }
-    }
-    
-    markdown += `**Description**:\n\n${finding.description}\n\n`;
-    
-    if (finding.reproducibleSteps) {
-      markdown += `**Steps to Reproduce**:\n\n${finding.reproducibleSteps}\n\n`;
-    }
-    
-    // Add solution guidance
-    markdown += `**Solution Guidance**:\n\n`;
-    
-    if (finding.area === 'Authentication') {
-      markdown += `- Check session management implementation for persistence issues\n`;
-      markdown += `- Verify secure cookie settings and CSRF protection\n`;
-      markdown += `- Ensure token validation is working across page refreshes\n`;
-    } else if (finding.area === 'Community') {
-      markdown += `- Review responsive breakpoints in CSS for mobile layouts\n`;
-      markdown += `- Check flex layouts and container overflow handling\n`;
-      markdown += `- Verify text truncation for long content\n`;
-    } else if (finding.area === 'Tournaments') {
-      markdown += `- Inspect bracket rendering logic for large tournament sizes\n`;
-      markdown += `- Verify data truncation and overflow handling\n`;
-      markdown += `- Check responsive design for tournament brackets\n`;
-    } else {
-      markdown += `- Fix the issue following standard best practices\n`;
-      markdown += `- Ensure proper error handling is implemented\n`;
-      markdown += `- Add tests to verify the fix and prevent regression\n`;
-    }
-    
-    markdown += '\n---\n\n';
-    return markdown;
-  }
-  
-  /**
-   * Get an icon representing severity
-   * @param severity Severity level
-   * @returns Icon string
-   */
-  private getSeverityIcon(severity: string): string {
-    switch (severity) {
-      case BounceFindingSeverity.CRITICAL:
-        return '🔴';
-      case BounceFindingSeverity.HIGH:
-        return '🟠';
-      case BounceFindingSeverity.MODERATE:
-      case BounceFindingSeverity.MEDIUM: // For backward compatibility
-        return '🟡';
-      case BounceFindingSeverity.LOW:
-        return '🟢';
-      case BounceFindingSeverity.INFO:
-        return '🔵';
-      default:
-        return '⚪';
-    }
-  }
 }
+
+// Export singleton instance
+export const enhancedReportGenerator = new EnhancedReportGenerator();
