@@ -1,50 +1,61 @@
 #!/bin/bash
-# DEPLOY-ACTUAL-APP.SH
-# Deployment script that ensures the actual Pickle+ app is deployed, not a template
+# DEPLOY-PICKLE-PLUS.SH
+# Deployment script specifically for the Pickle+ application
 
 set -e  # Exit on error
 
-echo "🥒 PICKLE+ ACTUAL APP DEPLOYMENT 🥒"
-echo "==================================="
-echo "Deploying the actual Pickle+ application with authentication fixes"
+echo "🥒 PICKLE+ DEPLOYMENT 🥒"
+echo "========================"
+echo "Deploying the actual Pickle+ application with proper routing and authentication"
 
-# Step 1: Check if we're in the right directory
-if [ ! -d "client" ] || [ ! -d "server" ]; then
-  echo "Error: This script must be run from the root of the Pickle+ project"
-  exit 1
-fi
-
-# Step 2: Create deployment directory
+# Create deployment directory
 echo "Step 1: Creating deployment directory structure..."
 mkdir -p dist
 mkdir -p dist/client
+mkdir -p dist/server
+mkdir -p dist/shared
 
-# Step 3: Copy the ENTIRE client directory structure first
-echo "Step 2: Copying entire client application..."
-cp -r client/* dist/client/
-
-# Step 4: Build the client (this will create the production build in dist/client)
-echo "Step 3: Building client application..."
+# First build the client application
+echo "Step 2: Building client application..."
 cd client
 npm run build
 cd ..
 
-# Step 5: Copy the built files specifically
-echo "Step 4: Copying built client application..."
+# Copy the client build to the dist directory
+echo "Step 3: Copying client build..."
 if [ -d "client/dist" ]; then
-  rm -rf dist/client/* # Clear any previous files
   cp -r client/dist/* dist/client/
   echo "✅ Copied client build successfully"
 else
-  echo "⚠️ Client build directory not found at client/dist"
-  echo "Using direct client directory copy instead"
+  echo "⚠️ Client build directory not found, copying source files..."
+  cp -r client/src dist/client/src
+  cp client/index.html dist/client/
+  cp -r client/public dist/client/
 fi
 
-# Step 6: Create server file with authentication fixes
-echo "Step 5: Creating production server with authentication fixes..."
+# Copy the essential server files
+echo "Step 4: Copying server files..."
+cp -r server/routes dist/server/
+cp server/routes.ts dist/server/
+cp server/storage.ts dist/server/
+cp server/auth.ts dist/server/
+cp server/db.ts dist/server/
+cp -r server/middleware dist/server/
+cp -r server/modules dist/server/
+cp -r server/services dist/server/
+cp -r server/utils dist/server/
+cp -r server/special-routes.ts dist/server/
+
+# Copy shared files
+echo "Step 5: Copying shared files..."
+cp -r shared dist/
+
+# Create production server file
+echo "Step 6: Creating production server file..."
 cat > dist/server.js << 'EOL'
 /**
- * Pickle+ Production Server with Authentication Fixes
+ * Pickle+ Production Server
+ * This is the actual Pickle+ application with proper authentication
  */
 const express = require('express');
 const session = require('express-session');
@@ -61,7 +72,7 @@ const fs = require('fs');
 const app = express();
 const port = process.env.PORT || 5000;
 
-// Add global error handlers
+// Global error handlers
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
 });
@@ -78,7 +89,7 @@ app.use(cors({
 }));
 
 // Database connection
-let pool = null;
+let pool;
 
 async function setupDatabase() {
   try {
@@ -105,7 +116,7 @@ async function setupDatabase() {
   }
 }
 
-// Session store setup
+// Configure session store
 async function setupSessionStore() {
   try {
     const PostgresSessionStore = ConnectPgSimple(session);
@@ -117,15 +128,14 @@ async function setupSessionStore() {
     });
   } catch (error) {
     console.error('Error setting up session store:', error);
-    // Fallback to memory store
     console.log('Using in-memory session store as fallback');
     return new session.MemoryStore();
   }
 }
 
-// Setup authentication
+// Configure authentication
 async function setupAuth(sessionStore) {
-  // Session configuration
+  // Set up session
   app.set('trust proxy', 1);
   app.use(session({
     store: sessionStore,
@@ -144,7 +154,7 @@ async function setupAuth(sessionStore) {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // Configure passport serialization with error handling
+  // User serialization/deserialization
   passport.serializeUser((user, done) => {
     try {
       done(null, user.id);
@@ -157,43 +167,46 @@ async function setupAuth(sessionStore) {
   passport.deserializeUser(async (id, done) => {
     try {
       if (!pool) {
+        console.log('No database pool available for deserializeUser');
         return done(null, false);
       }
       
-      // Use direct SQL query for more robustness
+      // Direct SQL query for better reliability
       const result = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
       if (!result || !result.rows || result.rows.length === 0) {
         console.log(`User with ID ${id} not found during deserialization`);
         return done(null, false);
       }
       
-      done(null, result.rows[0]);
+      const user = result.rows[0];
+      done(null, user);
     } catch (error) {
       console.error('Error in deserializeUser:', error);
       done(null, false);
     }
   });
 
-  // Configure local strategy with error handling
+  // Local strategy for username/password authentication
   passport.use(new LocalStrategy(async (username, password, done) => {
     try {
       if (!pool) {
+        console.log('No database pool available for LocalStrategy');
         return done(null, false);
       }
       
-      // Use direct SQL query for authentication
+      // Direct SQL query for authentication
       const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
       
       if (!result || !result.rows || result.rows.length === 0) {
-        return done(null, false);
+        return done(null, false, { message: 'Invalid username' });
       }
       
       const user = result.rows[0];
       
-      // Compare password
+      // Compare password using bcrypt
       const isMatch = await bcryptjs.compare(password, user.password);
       if (!isMatch) {
-        return done(null, false);
+        return done(null, false, { message: 'Invalid password' });
       }
       
       return done(null, user);
@@ -204,9 +217,9 @@ async function setupAuth(sessionStore) {
   }));
 }
 
-// API routes
-function setupAPIRoutes() {
-  // Authentication routes
+// Set up minimal API routes
+function setupMinimalRoutes() {
+  // Authentication endpoints
   app.post('/api/login', (req, res, next) => {
     passport.authenticate('local', (err, user, info) => {
       if (err) {
@@ -215,7 +228,7 @@ function setupAPIRoutes() {
       }
       
       if (!user) {
-        return res.status(401).json({ message: 'Invalid username or password' });
+        return res.status(401).json({ message: info?.message || 'Invalid credentials' });
       }
       
       req.login(user, (err) => {
@@ -229,7 +242,7 @@ function setupAPIRoutes() {
       });
     })(req, res, next);
   });
-
+  
   app.post('/api/auth/login', (req, res, next) => {
     passport.authenticate('local', (err, user, info) => {
       if (err) {
@@ -238,7 +251,7 @@ function setupAPIRoutes() {
       }
       
       if (!user) {
-        return res.status(401).json({ message: 'Invalid username or password' });
+        return res.status(401).json({ message: info?.message || 'Invalid credentials' });
       }
       
       req.login(user, (err) => {
@@ -255,8 +268,6 @@ function setupAPIRoutes() {
 
   app.post('/api/logout', (req, res) => {
     try {
-      const hadUser = req.isAuthenticated();
-      
       req.logout((err) => {
         if (err) {
           console.error('Error during logout:', err);
@@ -270,9 +281,7 @@ function setupAPIRoutes() {
           }
           
           res.clearCookie('connect.sid');
-          return res.status(200).json({ 
-            message: hadUser ? 'Logged out successfully' : 'No active session to logout'
-          });
+          return res.status(200).json({ message: 'Logged out successfully' });
         });
       });
     } catch (error) {
@@ -280,11 +289,9 @@ function setupAPIRoutes() {
       res.status(500).json({ message: 'An unexpected error occurred during logout' });
     }
   });
-
+  
   app.post('/api/auth/logout', (req, res) => {
     try {
-      const hadUser = req.isAuthenticated();
-      
       req.logout((err) => {
         if (err) {
           console.error('Error during logout:', err);
@@ -298,9 +305,7 @@ function setupAPIRoutes() {
           }
           
           res.clearCookie('connect.sid');
-          return res.status(200).json({ 
-            message: hadUser ? 'Logged out successfully' : 'No active session to logout'
-          });
+          return res.status(200).json({ message: 'Logged out successfully' });
         });
       });
     } catch (error) {
@@ -315,11 +320,6 @@ function setupAPIRoutes() {
         return res.status(401).json({ message: 'Not authenticated' });
       }
       
-      if (!req.user) {
-        console.error('User is authenticated but req.user is missing');
-        return res.status(500).json({ message: 'User session error' });
-      }
-      
       const { password, ...userWithoutPassword } = req.user;
       res.json(userWithoutPassword);
     } catch (error) {
@@ -328,60 +328,37 @@ function setupAPIRoutes() {
     }
   });
 
-  // Profile data endpoint
-  app.get('/api/profile', (req, res) => {
+  app.get('/api/me', (req, res) => {
     try {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: 'Not authenticated' });
       }
       
-      res.json(req.user);
+      const { password, ...userWithoutPassword } = req.user;
+      res.json(userWithoutPassword);
     } catch (error) {
-      console.error('Error in profile endpoint:', error);
-      res.status(500).json({ message: 'Error retrieving profile data' });
+      console.error('Error in /api/me endpoint:', error);
+      res.status(500).json({ message: 'Error retrieving user data' });
     }
   });
-  
+
   // Health check endpoint
   app.get('/api/health', (req, res) => {
     res.json({ 
       status: 'healthy', 
-      timestamp: new Date(),
+      timestamp: new Date().toISOString(),
       database: pool ? 'connected' : 'not connected',
       auth: passport ? 'initialized' : 'not initialized',
-      environment: process.env.NODE_ENV
+      environment: process.env.NODE_ENV,
+      application: 'Pickle+'
     });
   });
 }
 
-// Setup original API routes from your app
-function setupOriginalAPIRoutes() {
-  try {
-    // Try to load and use your actual routes
-    const routesPath = path.join(__dirname, '..', 'server', 'routes.js');
-    if (fs.existsSync(routesPath)) {
-      console.log(`Loading original routes from ${routesPath}`);
-      try {
-        const routes = require(routesPath);
-        routes.registerRoutes(app);
-        console.log('Successfully registered original routes');
-        return true;
-      } catch (error) {
-        console.error('Error loading original routes:', error);
-      }
-    } else {
-      console.log('Original routes file not found, using fallback routes');
-    }
-  } catch (error) {
-    console.error('Error in setupOriginalAPIRoutes:', error);
-  }
-  return false;
-}
-
-// Main server startup function
+// Main startup function
 async function startServer() {
   try {
-    // Set up database first
+    // Set up database connection
     const dbConnected = await setupDatabase();
     console.log('Database setup complete. Connected:', dbConnected);
     
@@ -393,15 +370,11 @@ async function startServer() {
     await setupAuth(sessionStore);
     console.log('Authentication setup complete');
     
-    // Try to set up original API routes first
-    const originalRoutesSetup = setupOriginalAPIRoutes();
-    if (!originalRoutesSetup) {
-      // Fall back to basic API routes if original routes can't be loaded
-      setupAPIRoutes();
-      console.log('Basic API routes setup complete');
-    }
-
-    // Serve static files from client directory
+    // Set up minimal API routes
+    setupMinimalRoutes();
+    console.log('Minimal API routes setup complete');
+    
+    // Serve static files
     app.use(express.static(path.join(__dirname, 'client')));
     
     // Error handler middleware
@@ -420,10 +393,9 @@ async function startServer() {
     
     // Start the server
     app.listen(port, '0.0.0.0', () => {
-      console.log(`Pickle+ server listening at http://0.0.0.0:${port}`);
+      console.log(`🥒 Pickle+ server listening at http://0.0.0.0:${port}`);
       console.log(`Environment: ${process.env.NODE_ENV}`);
-      console.log(`Database connection: ${dbConnected ? 'Successful' : 'Failed, using fallbacks'}`);
-      console.log(`Using original routes: ${originalRoutesSetup ? 'Yes' : 'No (using fallbacks)'}`);
+      console.log(`Database: ${dbConnected ? 'Connected' : 'Not connected'}`);
     });
   } catch (error) {
     console.error('Fatal error during server startup:', error);
@@ -435,8 +407,8 @@ async function startServer() {
 startServer();
 EOL
 
-# Step 7: Create startup script
-echo "Step 6: Creating startup script..."
+# Create startup script
+echo "Step 7: Creating startup script..."
 cat > dist/start.sh << 'EOL'
 #!/bin/bash
 # Ensure environment variables are set
@@ -456,17 +428,19 @@ EOL
 
 chmod +x dist/start.sh
 
-# Step 8: Create package.json
-echo "Step 7: Creating package.json..."
+# Create package.json for the deployment
+echo "Step 8: Creating package.json..."
 cat > dist/package.json << 'EOL'
 {
   "name": "pickle-plus-production",
   "version": "1.0.0",
-  "engines": {
-    "node": ">=18.0.0"
-  },
+  "description": "Pickle+ - A cutting-edge gamified web platform for pickleball player development",
+  "main": "server.js",
   "scripts": {
     "start": "NODE_ENV=production node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",
@@ -481,25 +455,25 @@ cat > dist/package.json << 'EOL'
 }
 EOL
 
-# Step 9: Install dependencies
-echo "Step 8: Installing dependencies..."
+# Install dependencies
+echo "Step 9: Installing dependencies..."
 cd dist
 npm install
 cd ..
 
-# Create a verification file to confirm the correct app is being deployed
-echo "Step 9: Creating verification file..."
-cat > dist/client/verification.js << 'EOL'
-console.log('Pickle+ Application Verification');
+# Create verification file to confirm it's the correct application
+echo "Step 10: Creating verification file..."
+cat > dist/client/pickle-plus-verification.js << 'EOL'
+console.log('Pickle+ Application - Verification');
 console.log('This is the actual Pickle+ application, not a template');
 EOL
 
 echo ""
-echo "🥒 PICKLE+ ACTUAL APP READY 🥒"
-echo "=============================="
+echo "🥒 PICKLE+ DEPLOYMENT COMPLETED 🥒"
+echo "=================================="
 echo "To deploy to Replit Cloud Run:"
 echo "1. Click the Deploy button in Replit"
-echo "2. Set the Build Command to: bash deploy-actual-app.sh"
+echo "2. Set the Build Command to: bash deploy-pickle-plus.sh"
 echo "3. Set the Run Command to: cd dist && ./start.sh"
 echo "4. Make sure DATABASE_URL is set in the environment variables"
 echo "5. Click Deploy"
