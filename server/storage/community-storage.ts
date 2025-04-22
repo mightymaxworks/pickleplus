@@ -190,91 +190,14 @@ export const communityStorageImplementation: CommunityStorage = {
     const db = this.getDb();
     const { location, skillLevel, tags, search, limit = 20, offset = 0 } = filters;
     
-    let query = db.select().from(communities);
+    console.log('[PKL-278651-COMM-0020-DEFGRP] Fetching communities with query:', filters);
     
-    // Always include default communities in the results (isDefault=true)
-    // Create a condition to either match filters OR be a default community
-    let hasConditions = false;
+    // Per user request, we're only showing the Pickle+ Giveaway community (ID 3)
+    // and hiding all other test communities
+    let query = db.select().from(communities).where(eq(communities.id, 3));
     
-    if (location) {
-      query = query.where(
-        or(
-          ilike(communities.location, `%${location}%`),
-          eq(communities.isDefault, true)
-        )
-      );
-      hasConditions = true;
-    }
-    
-    if (skillLevel) {
-      if (hasConditions) {
-        query = query.where(
-          or(
-            eq(communities.skillLevel, skillLevel),
-            eq(communities.isDefault, true)
-          )
-        );
-      } else {
-        query = query.where(
-          or(
-            eq(communities.skillLevel, skillLevel),
-            eq(communities.isDefault, true)
-          )
-        );
-        hasConditions = true;
-      }
-    }
-    
-    if (tags && tags.length > 0) {
-      // For simplicity, we'll search for any of the tags in the comma-separated list
-      const tagConditions = tags.map(tag => ilike(communities.tags, `%${tag}%`));
-      if (hasConditions) {
-        query = query.where(
-          or(
-            or(...tagConditions),
-            eq(communities.isDefault, true)
-          )
-        );
-      } else {
-        query = query.where(
-          or(
-            or(...tagConditions),
-            eq(communities.isDefault, true)
-          )
-        );
-        hasConditions = true;
-      }
-    }
-    
-    if (search) {
-      if (hasConditions) {
-        query = query.where(
-          or(
-            or(
-              ilike(communities.name, `%${search}%`),
-              ilike(communities.description, `%${search}%`)
-            ),
-            eq(communities.isDefault, true)
-          )
-        );
-      } else {
-        query = query.where(
-          or(
-            or(
-              ilike(communities.name, `%${search}%`),
-              ilike(communities.description, `%${search}%`)
-            ),
-            eq(communities.isDefault, true)
-          )
-        );
-        hasConditions = true;
-      }
-    }
-    
-    // If no conditions were added yet, add a simple condition to include defaults
-    if (!hasConditions) {
-      console.log('[PKL-278651-COMM-0020-DEFGRP] No filter conditions, including default communities');
-    }
+    // Log for debugging
+    console.log('[PKL-278651-COMM-0020-DEFGRP] Only showing the Pickle+ Giveaway community (ID 3)');
     
     return await query
       .limit(limit)
@@ -304,11 +227,17 @@ export const communityStorageImplementation: CommunityStorage = {
       
       console.log(`[Storage] Fetching communities created by user ${userIdNum}`);
       
+      // Per user request, we're only showing the Pickle+ Giveaway community (ID 3)
       const db = this.getDb();
       const result = await db
         .select()
         .from(communities)
-        .where(eq(communities.createdByUserId, userIdNum));
+        .where(
+          and(
+            eq(communities.id, 3),
+            eq(communities.createdByUserId, userIdNum)
+          )
+        );
       
       console.log(`[Storage] Found ${result?.length || 0} communities created by user ${userIdNum}`);
       return result || [];
