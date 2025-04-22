@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { Bolt, BarChart3, Trophy, Award, Star, TrendingUp, Activity, Copy, Check, Loader2, AlertCircle } from 'lucide-react';
 import { BounceStatusTicker } from '@/components/bounce/BounceStatusTicker';
+import { BounceAssistancePanel } from '@/components/bounce/BounceAssistancePanel';
 import { useToast } from '@/hooks/use-toast';
 import { useMatchStatistics } from '@/hooks/use-match-statistics';
 import { useCourtIQPerformance } from '@/hooks/use-courtiq-performance';
@@ -92,6 +93,15 @@ export default function DashboardContent() {
           transition={{ delay: 0.05, duration: 0.5 }}
         >
           <BounceStatusTicker />
+        </motion.div>
+        
+        {/* Bounce Assistance Requests - Display user testing assistance requests */}
+        <motion.div
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.4 }}
+        >
+          <BounceAssistancePanel />
         </motion.div>
         
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
