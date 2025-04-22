@@ -8,7 +8,10 @@ This approach resolves the following issues:
 
 1. **ES Module Error** - The project uses ES modules (`"type": "module"` in package.json) but previous deployment scripts used CommonJS (`require()`).
 2. **Module System Incompatibility** - Now using proper ES module imports/exports throughout the deployment.
-3. **Port Configuration** - Correctly using PORT 8080 for Cloud Run compatibility.
+3. **Port Configuration** - Correctly configured to support multiple port options:
+   - Uses `PORT` environment variable first (set by Cloud Run)
+   - Defaults to port 80 for standard HTTP (required by many deployment platforms)
+   - Added Procfile and .env for explicit port configuration
 
 ## How It Works
 
@@ -98,5 +101,5 @@ If you encounter issues during deployment:
 
 - Check the logs for specific error messages
 - Verify DATABASE_URL is correctly set in environment variables
-- Ensure PORT is set to 8080 (or the port will default to 8080)
+- Ensure PORT is set to 80 (which is the default port for HTTP traffic)
 - Confirm the database connection is working

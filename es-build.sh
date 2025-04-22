@@ -10,6 +10,12 @@ echo "📁 Creating deployment structure..."
 mkdir -p dist
 mkdir -p dist/client/dist
 
+# Add a Procfile for clarity on how to start the server
+echo "web: npm start" > dist/Procfile
+
+# Add a .env file with default port configuration
+echo "PORT=80" > dist/.env 
+
 # Step 2: Create client test file
 echo "📝 Creating fallback client files for testing..."
 cat > dist/client/dist/index.html << 'EOL'
