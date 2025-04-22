@@ -58,7 +58,8 @@ function getFixStrategy(area: string, severity: BounceFindingSeverity): FixStrat
         'Add clear session expiration handling',
         'Implement refresh token pattern',
         'Show user-friendly error messages',
-        'Add auto-redirect to login page on session timeout'
+        'Add auto-redirect to login page on session timeout',
+        'Implement session timeout interceptor in API client'
       ],
       codePatterns: `// Example session timeout handler
 function handleSessionTimeout() {

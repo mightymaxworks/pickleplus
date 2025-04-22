@@ -60,10 +60,11 @@ export async function generateReportWithPrompts(testRunId: number): Promise<stri
   // Add test run information
   report += `## Test Run Information\n\n`;
   report += `- **Name**: ${testRun.name}\n`;
-  report += `- **Started**: ${new Date(testRun.created_at).toLocaleString()}\n`;
-  report += `- **Completed**: ${new Date(testRun.completed_at || testRun.created_at).toLocaleString()}\n`;
+  report += `- **Started**: ${testRun.created_at ? new Date(testRun.created_at).toLocaleString() : new Date().toLocaleString()}\n`;
+  report += `- **Completed**: ${testRun.completed_at ? new Date(testRun.completed_at).toLocaleString() : 
+    (testRun.created_at ? new Date(testRun.created_at).toLocaleString() : new Date().toLocaleString())}\n`;
   report += `- **Status**: ${testRun.status}\n`;
-  report += `- **Target URL**: ${testRun.base_url}\n`;
+  report += `- **Target URL**: ${testRun.target_url || 'Unknown'}\n`;
   report += `- **Total Findings**: ${findings.length}\n\n`;
   
   // Add summary section
@@ -152,7 +153,11 @@ function formatFindingWithPrompts(finding: any, index: number): string {
   const fixPrompt = generateFixPrompt(finding);
   
   let text = `#### Finding #${finding.id}: ${finding.title}\n\n`;
-  text += `**Framework5.2 ID**: \`${finding.framework_id}\`\n\n`;
+  
+  // Format Framework5.2 ID properly if missing
+  const frameworkId = finding.framework_id || `PKL-278651-${finding.area.toUpperCase()}-${String(finding.id).padStart(4, '0')}-FIX`;
+  text += `**Framework5.2 ID**: \`${frameworkId}\`\n\n`;
+  
   text += `**Severity**: ${finding.severity}\n\n`;
   text += `**Area**: ${finding.area}\n\n`;
   text += `**Description**:\n${finding.description}\n\n`;

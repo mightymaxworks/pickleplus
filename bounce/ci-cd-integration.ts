@@ -1,244 +1,165 @@
 /**
- * PKL-278651-BOUNCE-0017-CICD - CI/CD Integration
+ * PKL-278651-BOUNCE-0023-CICD - CI/CD Integration Module
  * 
- * Integrates Bounce testing with CI/CD pipelines
- * Provides functions for automated testing in deployment pipelines
+ * This module provides CI/CD integration for the Bounce testing system,
+ * including summarized reports and proper exit codes.
  * 
  * @framework Framework5.2
  * @version 1.0.0
  * @lastModified 2025-04-22
  */
 
-import { runProductionTests } from './production-run';
-import { bugReportGenerator } from './reporting';
-import { db } from '../server/db';
-import { eq, desc, and, lte, gte } from 'drizzle-orm';
-import { 
-  bounceTestRuns, 
-  bounceFindings, 
-  BounceFindingSeverity, 
-  BounceTestRunStatus 
-} from '../shared/schema/bounce';
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
+import { BounceFindingSeverity } from './types';
+import { getTestRun, getFindings } from './storage';
 
 /**
- * Interface for CI/CD pipeline results
+ * Generate a CI/CD summary report for a test run
+ * @param testRunId The ID of the test run
+ * @returns Path to the generated report
  */
-interface CICDResult {
-  testRunId: number;
-  reportPath: string;
-  success: boolean;
-  criticalCount: number;
-  highCount: number;
-  moderateCount: number;
-  lowCount: number;
-  totalCount: number;
-  exitCode: number;
-}
-
-/**
- * Run tests and determine if CI/CD should proceed
- * @param failOnCritical Whether to fail the build if critical issues are found
- * @param maxHighIssues Maximum number of high issues allowed before failing build
- * @returns CI/CD result object
- */
-export async function runCICDTests(
-  failOnCritical: boolean = true,
-  maxHighIssues: number = 3
-): Promise<CICDResult> {
-  try {
-    console.log('[Bounce CI/CD] Starting automated testing as part of CI/CD pipeline');
-    
-    // Run production tests
-    const testRunId = await runProductionTests();
-    
-    // Get the findings for this test run
-    const findings = await db
-      .select()
-      .from(bounceFindings)
-      .where(eq(bounceFindings.test_run_id, testRunId));
-    
-    // Count by severity
-    const criticalCount = findings.filter(f => f.severity === BounceFindingSeverity.CRITICAL).length;
-    const highCount = findings.filter(f => f.severity === BounceFindingSeverity.HIGH).length;
-    const moderateCount = findings.filter(f => 
-      f.severity === BounceFindingSeverity.MODERATE || 
-      f.severity === BounceFindingSeverity.MEDIUM
-    ).length;
-    const lowCount = findings.filter(f => 
-      f.severity === BounceFindingSeverity.LOW || 
-      f.severity === BounceFindingSeverity.INFO
-    ).length;
-    
-    // Generate report
-    const reportPath = await bugReportGenerator.generateReport(testRunId);
-    
-    // Generate Summary Report for CI/CD
-    const summaryPath = generateCICDSummary(testRunId, findings, criticalCount, highCount, moderateCount, lowCount);
-    
-    // Determine if CI/CD should fail based on finding severity
-    const shouldFail = (failOnCritical && criticalCount > 0) || (highCount > maxHighIssues);
-    
-    console.log(`[Bounce CI/CD] Test run ${testRunId} complete`);
-    console.log(`[Bounce CI/CD] Critical issues: ${criticalCount}`);
-    console.log(`[Bounce CI/CD] High issues: ${highCount}`);
-    console.log(`[Bounce CI/CD] Moderate issues: ${moderateCount}`);
-    console.log(`[Bounce CI/CD] Low issues: ${lowCount}`);
-    console.log(`[Bounce CI/CD] Full report: ${reportPath}`);
-    console.log(`[Bounce CI/CD] CI/CD summary: ${summaryPath}`);
-    console.log(`[Bounce CI/CD] CI/CD result: ${shouldFail ? 'FAIL' : 'PASS'}`);
-    
-    return {
-      testRunId,
-      reportPath,
-      success: !shouldFail,
-      criticalCount,
-      highCount,
-      moderateCount,
-      lowCount,
-      totalCount: findings.length,
-      exitCode: shouldFail ? 1 : 0
-    };
-  } catch (error) {
-    console.error(`[Bounce CI/CD] Error running CI/CD tests: ${(error as Error).message}`);
-    
-    return {
-      testRunId: -1,
-      reportPath: '',
-      success: false,
-      criticalCount: 0,
-      highCount: 0,
-      moderateCount: 0,
-      lowCount: 0,
-      totalCount: 0,
-      exitCode: 2 // Error exit code
-    };
+export async function generateCICDSummary(testRunId: number): Promise<string> {
+  const testRun = await getTestRun(testRunId);
+  if (!testRun) {
+    throw new Error(`Test run ${testRunId} not found`);
   }
-}
 
-/**
- * Generate a summary report specifically for CI/CD
- * @param testRunId The test run ID
- * @param findings The findings from the test run
- * @param criticalCount Number of critical issues
- * @param highCount Number of high priority issues
- * @param moderateCount Number of moderate issues
- * @param lowCount Number of low priority issues
- * @returns Path to the generated summary file
- */
-function generateCICDSummary(
-  testRunId: number,
-  findings: any[],
-  criticalCount: number,
-  highCount: number,
-  moderateCount: number,
-  lowCount: number
-): string {
-  const dateStr = new Date().toLocaleString();
-  let summary = `# Bounce CI/CD Summary - Test Run #${testRunId}\n\n`;
-  summary += `Generated on: ${dateStr}\n\n`;
+  const findings = await getFindings(testRunId);
   
-  // Add summary section
-  summary += `## Summary\n\n`;
-  summary += `- **Critical Issues**: ${criticalCount}\n`;
-  summary += `- **High Priority Issues**: ${highCount}\n`;
-  summary += `- **Moderate Issues**: ${moderateCount}\n`;
-  summary += `- **Low Priority Issues**: ${lowCount}\n`;
-  summary += `- **Total Issues**: ${findings.length}\n\n`;
+  // Count issues by severity
+  const severityCounts = {
+    CRITICAL: 0,
+    HIGH: 0,
+    MODERATE: 0,
+    LOW: 0,
+  };
   
-  // Add CI/CD recommendations
-  summary += `## CI/CD Recommendations\n\n`;
+  findings.forEach(finding => {
+    severityCounts[finding.severity]++;
+  });
   
-  if (criticalCount > 0) {
-    summary += `⚠️ **FAIL**: ${criticalCount} critical issues found. Fix before deploying.\n\n`;
-  } else if (highCount > 3) {
-    summary += `⚠️ **WARN**: ${highCount} high priority issues found. Consider fixing before deploying.\n\n`;
-  } else if (findings.length > 0) {
-    summary += `✅ **PASS**: No critical issues. ${highCount} high priority issues found (within acceptable limits).\n\n`;
-  } else {
-    summary += `✅ **PASS**: No issues found.\n\n`;
+  // Determine if the build should fail based on severity
+  const shouldFail = severityCounts.CRITICAL > 0;
+  
+  // Format timestamp for filename
+  const timestamp = new Date().toISOString().replace(/:/g, '-');
+  
+  // Create the report content
+  let content = `# Bounce CI/CD Summary - Test Run #${testRunId}\n\n`;
+  content += `Generated on: ${new Date().toLocaleString()}\n\n`;
+  
+  content += `## Test Run Information\n\n`;
+  content += `- **Name**: ${testRun.name}\n`;
+  content += `- **Status**: ${testRun.status}\n`;
+  content += `- **Target URL**: ${testRun.base_url}\n`;
+  content += `- **Total Findings**: ${findings.length}\n\n`;
+  
+  content += `## Summary\n\n`;
+  content += `- **Critical Issues**: ${severityCounts.CRITICAL}\n`;
+  content += `- **High Priority Issues**: ${severityCounts.HIGH}\n`;
+  content += `- **Moderate Issues**: ${severityCounts.MODERATE}\n`;
+  content += `- **Low Priority Issues**: ${severityCounts.LOW}\n\n`;
+  
+  content += `## Build Status\n\n`;
+  content += shouldFail 
+    ? `⛔ **FAIL** - Critical issues must be resolved before deployment\n\n`
+    : `✅ **PASS** - No critical issues found\n\n`;
+  
+  if (severityCounts.CRITICAL > 0) {
+    content += `### Critical Issues That Must Be Fixed\n\n`;
+    const criticalFindings = findings.filter(f => f.severity === 'CRITICAL');
+    
+    criticalFindings.forEach(finding => {
+      const frameworkId = finding.framework_id || `PKL-278651-${finding.area.toUpperCase()}-${String(finding.id).padStart(4, '0')}-FIX`;
+      content += `- **${finding.title}** (\`${frameworkId}\`)\n`;
+      content += `  ${finding.description}\n`;
+      content += `  Affected URL: ${finding.affected_url}\n\n`;
+    });
   }
   
-  // Create reports directory if it doesn't exist
+  if (severityCounts.HIGH > 0) {
+    content += `### High Priority Issues\n\n`;
+    content += `${severityCounts.HIGH} high priority issues were found. See the detailed report for more information.\n\n`;
+  }
+  
+  content += `---\n\n`;
+  content += `Generated by Bounce Automated Testing System | Framework5.2\n`;
+  
+  // Ensure the reports directory exists
   const reportsDir = path.join(process.cwd(), 'reports');
-  if (!fs.existsSync(reportsDir)) {
-    fs.mkdirSync(reportsDir, { recursive: true });
-  }
+  await fs.mkdir(reportsDir, { recursive: true });
   
-  // Write summary to file
-  const fileName = `cicd-summary-${testRunId}-${new Date().toISOString().replace(/:/g, '-')}.md`;
-  const filePath = path.join(reportsDir, fileName);
-  
-  fs.writeFileSync(filePath, summary);
+  // Write the report to a file
+  const filePath = path.join(reportsDir, `cicd-summary-${testRunId}-${timestamp}.md`);
+  await fs.writeFile(filePath, content);
   
   return filePath;
 }
 
 /**
- * Get test run trend over a time period
- * @param days Number of days to look back
- * @returns Test run trend data
+ * Run CI/CD integration tests and return appropriate exit code
+ * @param baseUrl The base URL to test
+ * @returns Exit code (0 for success, 1 for failure)
  */
-export async function getCICDTrend(days: number = 30): Promise<any> {
-  const cutoffDate = new Date();
-  cutoffDate.setDate(cutoffDate.getDate() - days);
-  
-  const testRuns = await db
-    .select()
-    .from(bounceTestRuns)
-    .where(
-      and(
-        gte(bounceTestRuns.created_at, cutoffDate),
-        eq(bounceTestRuns.status, BounceTestRunStatus.COMPLETED)
-      )
-    )
-    .orderBy(desc(bounceTestRuns.created_at));
-  
-  const trend = {
-    totalRuns: testRuns.length,
-    findingCounts: [] as any[],
-    averageCritical: 0,
-    averageHigh: 0
-  };
-  
-  // Get findings counts for each test run
-  for (const run of testRuns) {
-    const findings = await db
-      .select()
-      .from(bounceFindings)
-      .where(eq(bounceFindings.test_run_id, run.id));
+export async function runCICDTests(baseUrl: string): Promise<number> {
+  try {
+    console.log('==========================================================');
+    console.log('Bounce CI/CD Integration Tests');
+    console.log('==========================================================');
+    console.log(`Starting tests against: ${baseUrl}`);
     
-    const criticalCount = findings.filter(f => f.severity === BounceFindingSeverity.CRITICAL).length;
-    const highCount = findings.filter(f => f.severity === BounceFindingSeverity.HIGH).length;
+    // Import dynamically to avoid circular dependencies
+    const { startTestRun } = await import('./production-run');
     
-    trend.findingCounts.push({
-      runId: run.id,
-      date: run.created_at,
-      criticalCount,
-      highCount,
-      totalCount: findings.length
+    // Run the tests
+    const testRunId = await startTestRun({
+      baseUrl,
+      browser: 'chrome',
+      mobile: false,
+      coverage: 50,
+      headless: true,
+      timeout: 30000,
     });
+    
+    console.log(`\nTest run completed with ID: ${testRunId}`);
+    
+    // Generate the CI/CD summary
+    const summaryPath = await generateCICDSummary(testRunId);
+    console.log(`CI/CD summary generated: ${summaryPath}`);
+    
+    // Get findings to determine exit code
+    const findings = await getFindings(testRunId);
+    const hasCritical = findings.some(f => f.severity === 'CRITICAL');
+    
+    console.log('\n==========================================================');
+    
+    if (hasCritical) {
+      console.log('❌ TEST FAILURE: Critical issues found');
+      console.log('The build should not be deployed until these issues are fixed.');
+      console.log('==========================================================');
+      return 1;
+    } else {
+      console.log('✅ TEST SUCCESS: No critical issues found');
+      console.log('The build can be safely deployed.');
+      console.log('==========================================================');
+      return 0;
+    }
+  } catch (error) {
+    console.error(`Error running CI/CD tests: ${error.message}`);
+    return 1;
   }
-  
-  // Calculate averages
-  if (trend.findingCounts.length > 0) {
-    trend.averageCritical = trend.findingCounts.reduce((sum, item) => sum + item.criticalCount, 0) / trend.findingCounts.length;
-    trend.averageHigh = trend.findingCounts.reduce((sum, item) => sum + item.highCount, 0) / trend.findingCounts.length;
-  }
-  
-  return trend;
 }
 
-// Direct run if called directly
-if (import.meta.url.endsWith(process.argv[1])) {
-  runCICDTests()
-    .then((result) => {
-      console.log(`[Bounce CI/CD] Tests completed with result: ${result.success ? 'PASS' : 'FAIL'}`);
-      process.exit(result.exitCode);
-    })
+// Run the function if this script is called directly
+if (import.meta.url === process.argv[1]) {
+  // Default to production URL if not specified
+  const baseUrl = process.argv[2] || 'https://pickle-plus.replit.app';
+  
+  runCICDTests(baseUrl)
+    .then((exitCode) => process.exit(exitCode))
     .catch((error) => {
-      console.error(`[Bounce CI/CD] Error: ${error.message}`);
-      process.exit(2);
+      console.error(`Error running CI/CD tests: ${error.message}`);
+      process.exit(1);
     });
 }
