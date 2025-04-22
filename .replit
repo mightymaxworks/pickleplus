@@ -7,7 +7,7 @@ channel = "stable-24_05"
 
 [deployment]
 deploymentTarget = "autoscale"
-build = ["sh", "-c", "cp deploy-package.json package.json && npm install"]
+build = ["sh", "-c", "cp app-deploy.js index.js && cp app-package.json package.json && npm install"]
 run = ["sh", "-c", "npm start"]
 
 [workflows]
