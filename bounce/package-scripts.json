@@ -1,0 +1,12 @@
+{
+  "scripts": {
+    "bounce": "npx tsx bounce/cli.ts",
+    "bounce:test": "npx tsx bounce/cli.ts run --suite all --browsers chrome --output markdown --verbose",
+    "bounce:test:community": "npx tsx bounce/cli.ts run --suite community --browsers chrome --output markdown --verbose",
+    "bounce:test:api": "npx tsx bounce/cli.ts run --suite api --browsers chrome --output markdown --verbose",
+    "bounce:init": "npx tsx bounce/cli.ts init",
+    "bounce:ci": "npx tsx bounce/ci/run-ci.ts",
+    "bounce:ci:fast": "npx tsx bounce/ci/run-ci.ts --skip-tests",
+    "bounce:report": "node -e \"const path=require('path');const fs=require('fs');const dir=path.join('reports');const files=fs.readdirSync(dir).filter(f=>f.endsWith('.md')).map(f=>path.join(dir,f));if(files.length>0){console.log('Latest report:',files[files.length-1]);console.log(fs.readFileSync(files[files.length-1],'utf8'))}else{console.log('No reports found')}\""
+  }
+}
