@@ -18,6 +18,14 @@ interface BounceAwarenessState {
   completedTests: number;
   totalIssuesFound: number;
   recentNotifications: { message: string; timestamp: Date }[];
+  userAssistanceRequests: {
+    id: string;
+    area: string;
+    task: string;
+    timestamp: Date;
+    status: 'pending' | 'completed' | 'skipped';
+    xpReward: number;
+  }[];
 }
 
 export function useBounceAwareness() {
@@ -27,7 +35,8 @@ export function useBounceAwareness() {
     currentAreas: [],
     completedTests: 0,
     totalIssuesFound: 0,
-    recentNotifications: []
+    recentNotifications: [],
+    userAssistanceRequests: []
   });
   
   // Load initial data and set up listeners
@@ -57,7 +66,7 @@ export function useBounceAwareness() {
       // Simulate a random testing event every so often
       const random = Math.random();
       
-      if (random < 0.3) {
+      if (random < 0.2) {
         // Simulate a test completion event
         setState(prev => ({
           ...prev,
@@ -70,7 +79,7 @@ export function useBounceAwareness() {
             ...prev.recentNotifications.slice(0, 4) // Keep only recent 5
           ]
         }));
-      } else if (random < 0.5) {
+      } else if (random < 0.4) {
         // Simulate an issue found event
         setState(prev => ({
           ...prev,
@@ -83,8 +92,49 @@ export function useBounceAwareness() {
             ...prev.recentNotifications.slice(0, 4) // Keep only recent 5
           ]
         }));
+      } else if (random < 0.5) {
+        // Simulate a user assistance request - this is what we want to demonstrate
+        const assistanceAreas = [
+          'Tournament Registration',
+          'Match Recording',
+          'User Profile',
+          'Notifications'
+        ];
+        
+        const assistanceTasks = [
+          'Please test the tournament registration flow and verify you receive a confirmation email',
+          'Can you record a match result and check if stats are updated correctly?',
+          'Please update your profile picture and verify it displays correctly',
+          'Please check if you receive push notifications when a match is scheduled'
+        ];
+        
+        const randomAreaIndex = Math.floor(Math.random() * assistanceAreas.length);
+        
+        setState(prev => {
+          // Create a new user assistance request
+          const newRequest = {
+            id: `req-${Date.now()}`,
+            area: assistanceAreas[randomAreaIndex],
+            task: assistanceTasks[randomAreaIndex],
+            timestamp: new Date(),
+            status: 'pending' as const,
+            xpReward: 15 + Math.floor(Math.random() * 25) // 15-40 XP
+          };
+          
+          return {
+            ...prev,
+            userAssistanceRequests: [...prev.userAssistanceRequests, newRequest],
+            recentNotifications: [
+              {
+                message: `Bounce needs your help with ${newRequest.area}!`,
+                timestamp: new Date()
+              },
+              ...prev.recentNotifications.slice(0, 4)
+            ]
+          };
+        });
       }
-    }, 30000); // Every 30 seconds
+    }, 5000); // Faster interval for demo purposes
     
     return () => {
       clearInterval(intervalId);
@@ -95,14 +145,133 @@ export function useBounceAwareness() {
     ...state,
     // Methods that would trigger actions
     joinTesting: () => {
+      // Start a testing session and create the first assistance request immediately
+      const assistanceAreas = [
+        'Tournament Registration',
+        'Match Recording',
+        'User Profile',
+        'Notifications'
+      ];
+      
+      const assistanceTasks = [
+        'Please test the tournament registration flow and verify you receive a confirmation email',
+        'Can you record a match result and check if stats are updated correctly?',
+        'Please update your profile picture and verify it displays correctly',
+        'Please check if you receive push notifications when a match is scheduled'
+      ];
+      
+      const randomAreaIndex = Math.floor(Math.random() * assistanceAreas.length);
+      
+      const newRequest = {
+        id: `req-${Date.now()}`,
+        area: assistanceAreas[randomAreaIndex],
+        task: assistanceTasks[randomAreaIndex],
+        timestamp: new Date(),
+        status: 'pending' as const,
+        xpReward: 15 + Math.floor(Math.random() * 25) // 15-40 XP
+      };
+      
+      setState(prev => ({
+        ...prev,
+        isActive: true,
+        testingSince: new Date(),
+        userAssistanceRequests: [...prev.userAssistanceRequests, newRequest],
+        recentNotifications: [
+          {
+            message: `Bounce needs your help with ${newRequest.area}!`,
+            timestamp: new Date()
+          },
+          ...prev.recentNotifications.slice(0, 4)
+        ]
+      }));
+      
       console.log('Joining testing - would navigate to /admin/bounce');
-      // Would navigate to testing page
     },
     dismissNotification: (index: number) => {
       setState(prev => ({
         ...prev,
         recentNotifications: prev.recentNotifications.filter((_, i) => i !== index)
       }));
+    },
+    // Methods for user assistance requests
+    completeAssistanceRequest: (requestId: string) => {
+      setState(prev => {
+        const updatedRequests = prev.userAssistanceRequests.map(req => 
+          req.id === requestId 
+            ? { ...req, status: 'completed' as const } 
+            : req
+        );
+        
+        // Find the completed request to get XP reward
+        const completedRequest = prev.userAssistanceRequests.find(req => req.id === requestId);
+        
+        return {
+          ...prev,
+          userAssistanceRequests: updatedRequests,
+          recentNotifications: [
+            {
+              message: `🎉 You earned ${completedRequest?.xpReward || 0} XP for helping with testing!`,
+              timestamp: new Date()
+            },
+            ...prev.recentNotifications.slice(0, 4)
+          ]
+        };
+      });
+    },
+    skipAssistanceRequest: (requestId: string) => {
+      setState(prev => {
+        const updatedRequests = prev.userAssistanceRequests.map(req => 
+          req.id === requestId 
+            ? { ...req, status: 'skipped' as const } 
+            : req
+        );
+        
+        return {
+          ...prev,
+          userAssistanceRequests: updatedRequests
+        };
+      });
+    },
+    // Helper method for demo purposes
+    triggerAssistanceRequest: () => {
+      const assistanceAreas = [
+        'Tournament Registration',
+        'Match Recording',
+        'User Profile',
+        'Notifications'
+      ];
+      
+      const assistanceTasks = [
+        'Please test the tournament registration flow and verify you receive a confirmation email',
+        'Can you record a match result and check if stats are updated correctly?',
+        'Please update your profile picture and verify it displays correctly',
+        'Please check if you receive push notifications when a match is scheduled'
+      ];
+      
+      const randomAreaIndex = Math.floor(Math.random() * assistanceAreas.length);
+      
+      setState(prev => {
+        const newRequest = {
+          id: `req-${Date.now()}`,
+          area: assistanceAreas[randomAreaIndex],
+          task: assistanceTasks[randomAreaIndex],
+          timestamp: new Date(),
+          status: 'pending' as const,
+          xpReward: 15 + Math.floor(Math.random() * 25) // 15-40 XP
+        };
+        
+        return {
+          ...prev,
+          userAssistanceRequests: [...prev.userAssistanceRequests, newRequest],
+          recentNotifications: [
+            {
+              message: `Bounce needs your help with ${newRequest.area}!`,
+              timestamp: new Date()
+            },
+            ...prev.recentNotifications.slice(0, 4)
+          ]
+        };
+      });
     }
   };
 }
