@@ -1,0 +1,54 @@
+{
+  "name": "community",
+  "tests": [
+    {
+      "name": "Community Visibility Test",
+      "description": "Tests that only the Pickle+ Giveaway community (ID 3) is visible to users",
+      "paths": ["/communities"],
+      "steps": [
+        {
+          "action": "navigate",
+          "target": "/communities"
+        },
+        {
+          "action": "assertElementExists",
+          "target": ".community-card"
+        },
+        {
+          "action": "assertElementCount",
+          "target": ".community-card",
+          "value": "1"
+        },
+        {
+          "action": "assertText",
+          "target": ".community-card .community-name",
+          "value": "Pickle+ Giveaway"
+        }
+      ]
+    },
+    {
+      "name": "Community Detail Page Test",
+      "description": "Tests that the community detail page displays correctly",
+      "paths": ["/communities/3"],
+      "steps": [
+        {
+          "action": "navigate",
+          "target": "/communities/3"
+        },
+        {
+          "action": "assertElementExists",
+          "target": ".community-detail-container"
+        },
+        {
+          "action": "assertElementExists",
+          "target": ".community-header"
+        },
+        {
+          "action": "assertText",
+          "target": ".community-header h1",
+          "value": "Pickle+ Giveaway"
+        }
+      ]
+    }
+  ]
+}

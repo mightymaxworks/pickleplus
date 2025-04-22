@@ -1,225 +1,170 @@
 /**
- * PKL-278651-BOUNCE-0001-CORE
- * Bounce Testing System Identity Module
+ * PKL-278651-BOUNCE-0003-CORE - Bounce Identity Module
  * 
- * This module manages the identity and authentication for the Bounce testing system.
- * It ensures that Bounce's automated testing has appropriate permissions and tracking.
+ * This module handles the identity management for the Bounce testing system,
+ * including test run tracking and user association.
  * 
  * @framework Framework5.2
  * @version 1.0.0
- * @lastModified 2025-04-21
+ * @lastModified 2025-04-22
  */
 
-import { Pool } from "@neondatabase/serverless";
-import { db } from "../../server/db";
+import { db } from '../../server/db';
 import { 
   bounceTestRuns, 
-  bounceInteractions, 
-  BounceTestRunStatus
-} from "../../shared/schema";
-import { nanoid } from "nanoid";
-import * as crypto from "crypto";
+  BounceTestRunStatus 
+} from '../../shared/schema/bounce';
+import { randomUUID } from 'crypto';
 
 /**
- * Configuration options for the Bounce identity system
+ * Bounce Identity Service
+ * Manages identities for automated testing, including test run creation and tracking
  */
-interface BounceIdentityConfig {
+class BounceIdentity {
   /**
-   * The name of the Bounce bot for user-facing interactions
+   * Current test run ID
    */
-  botName: string;
+  private currentTestRunId: number = 0;
   
   /**
-   * Avatar URL for the Bounce bot
+   * User ID associated with the test run
    */
-  botAvatar: string;
+  private userId: number | null = null;
   
   /**
-   * Whether to mark test data as hidden from regular users (recommended for production)
+   * Whether the identity service is in CI mode
    */
-  markTestData: boolean;
+  private ciMode: boolean = false;
   
   /**
-   * Hash salt for generating consistent Bounce identifiers
-   */
-  hashSalt: string;
-}
-
-/**
- * Default configuration for Bounce identity
- */
-const DEFAULT_CONFIG: BounceIdentityConfig = {
-  botName: "Bounce Bot",
-  botAvatar: "/assets/bounce-bot-avatar.png", // Path to be created in a future task
-  markTestData: true,
-  hashSalt: process.env.BOUNCE_HASH_SALT || "bounce-testing-system-salt-" + new Date().toISOString().split('T')[0],
-};
-
-/**
- * Manages the identity of the Bounce testing system 
- * to ensure clean identification and data separation
- */
-export class BounceIdentity {
-  private config: BounceIdentityConfig;
-  private currentTestRunId: number | null = null;
-  private sessionId: string;
-  private deviceIdentifier: string;
-  
-  /**
-   * Create a new Bounce identity
-   * @param config Configuration options
-   */
-  constructor(config: Partial<BounceIdentityConfig> = {}) {
-    this.config = { ...DEFAULT_CONFIG, ...config };
-    this.sessionId = nanoid(16);
-    this.deviceIdentifier = this.generateDeviceId();
-  }
-  
-  /**
-   * Generate a consistent device ID for the current test environment
-   */
-  private generateDeviceId(): string {
-    const baseData = `bounce-device-${process.platform}-${process.arch}`;
-    return crypto
-      .createHash('sha256')
-      .update(baseData + this.config.hashSalt)
-      .digest('hex')
-      .substring(0, 16);
-  }
-  
-  /**
-   * Start a new test run and record it in the database
+   * Start a new test run
    * @param browsers Comma-separated list of browsers being tested
-   * @param testTypes Comma-separated list of test types being run
+   * @param testTypes Types of tests being run
+   * @param userId Optional user ID to associate with the test run
    * @returns The ID of the created test run
    */
-  async startTestRun(browsers: string, testTypes: string): Promise<number> {
+  async startTestRun(
+    browsers: string,
+    testTypes: string,
+    userId?: number
+  ): Promise<number> {
     try {
-      const [testRun] = await db
-        .insert(bounceTestRuns)
-        .values({
-          browsers,
-          testTypes,
-          status: BounceTestRunStatus.RUNNING,
+      // Generate a unique test ID
+      const testId = randomUUID();
+      
+      // Create a new test run record
+      const [testRun] = await db.insert(bounceTestRuns).values({
+        name: `Bounce Test Run - ${new Date().toISOString()}`,
+        description: `Automated test run for browsers: ${browsers}, test types: ${testTypes}`,
+        status: BounceTestRunStatus.RUNNING,
+        startedAt: new Date(),
+        userId: userId || null,
+        targetUrl: process.env.APP_URL || 'http://localhost:3000',
+        testConfig: JSON.stringify({
+          browsers: browsers.split(','),
+          testTypes: testTypes.split(','),
+          ciMode: this.ciMode,
+          timestamp: new Date().toISOString()
         })
-        .returning();
+      }).returning();
       
+      // Store the current test run ID
       this.currentTestRunId = testRun.id;
-      console.log(`[Bounce] Started test run #${testRun.id} with session ${this.sessionId}`);
+      this.userId = userId || null;
       
+      console.log(`[Bounce] Started test run ${testRun.id} with test ID ${testId}`);
       return testRun.id;
     } catch (error) {
-      console.error("[Bounce] Failed to start test run:", error);
+      console.error(`[Bounce] Error starting test run: ${(error as Error).message}`);
       throw error;
     }
   }
   
   /**
-   * End the current test run and update its status in the database
-   * @param status The final status of the test run
-   * @param totalIssues The total number of issues found
-   * @param coverage The test coverage percentage (0-100)
+   * End a test run
+   * @param status Status of the test run
+   * @param findingsCount Number of findings discovered
+   * @param coveragePercent Coverage percentage achieved
+   * @returns The updated test run
    */
   async endTestRun(
-    status: BounceTestRunStatus = BounceTestRunStatus.COMPLETED,
-    totalIssues: number = 0,
-    coverage: number = 0
-  ): Promise<void> {
+    status: BounceTestRunStatus,
+    findingsCount: number,
+    coveragePercent: number
+  ): Promise<any> {
     if (!this.currentTestRunId) {
-      throw new Error("No active test run to end");
+      throw new Error('No active test run. Call startTestRun() first.');
     }
     
     try {
-      await db
+      // Update the test run record
+      const [testRun] = await db
         .update(bounceTestRuns)
         .set({
           status,
-          endTime: new Date(),
-          totalIssues,
-          coverage,
+          completedAt: new Date(),
+          totalFindings: findingsCount,
+          updatedAt: new Date()
         })
-        .where({ id: this.currentTestRunId });
+        .where(bounceTestRuns.id.equals(this.currentTestRunId))
+        .returning();
       
-      console.log(`[Bounce] Ended test run #${this.currentTestRunId} with status ${status}`);
-      this.currentTestRunId = null;
-    } catch (error) {
-      console.error("[Bounce] Failed to end test run:", error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Record a user interaction with the Bounce system (for gamification)
-   * @param userId The ID of the user who interacted with Bounce
-   * @param interactionType The type of interaction
-   * @param points The number of points awarded for this interaction
-   * @param details Additional details about the interaction
-   */
-  async recordInteraction(
-    userId: number,
-    interactionType: string,
-    points: number,
-    details: any = {}
-  ): Promise<void> {
-    try {
-      await db
-        .insert(bounceInteractions)
-        .values({
-          userId,
-          interactionType,
-          points,
-          details,
-        });
+      console.log(`[Bounce] Ended test run ${testRun.id} with status ${status}`);
+      console.log(`[Bounce] Findings: ${findingsCount}, Coverage: ${coveragePercent}%`);
       
-      console.log(`[Bounce] Recorded interaction for user ${userId}: ${interactionType} (+${points} points)`);
+      // Reset the current test run
+      this.currentTestRunId = 0;
+      
+      return testRun;
     } catch (error) {
-      console.error("[Bounce] Failed to record interaction:", error);
+      console.error(`[Bounce] Error ending test run: ${(error as Error).message}`);
       throw error;
     }
   }
   
   /**
    * Get the current test run ID
+   * @returns The current test run ID
    */
-  getCurrentTestRunId(): number | null {
+  getCurrentTestRunId(): number {
     return this.currentTestRunId;
   }
   
   /**
-   * Get the session ID for the current Bounce instance
+   * Get the user ID associated with the test run
+   * @returns The user ID
    */
-  getSessionId(): string {
-    return this.sessionId;
+  getUserId(): number | null {
+    return this.userId;
   }
   
   /**
-   * Get the device identifier for the current Bounce instance
+   * Set CI mode
+   * @param enabled Whether CI mode is enabled
    */
-  getDeviceIdentifier(): string {
-    return this.deviceIdentifier;
+  setCIMode(enabled: boolean): void {
+    this.ciMode = enabled;
+    console.log(`[Bounce] CI mode ${enabled ? 'enabled' : 'disabled'}`);
   }
   
   /**
-   * Get the bot name for user-facing interactions
+   * Check if CI mode is enabled
+   * @returns Whether CI mode is enabled
    */
-  getBotName(): string {
-    return this.config.botName;
+  isCIMode(): boolean {
+    return this.ciMode;
   }
   
   /**
-   * Get the bot avatar URL for user-facing interactions
+   * Reset the identity service
    */
-  getBotAvatar(): string {
-    return this.config.botAvatar;
-  }
-  
-  /**
-   * Check if test data should be marked (hidden from regular users)
-   */
-  shouldMarkTestData(): boolean {
-    return this.config.markTestData;
+  reset(): void {
+    this.currentTestRunId = 0;
+    this.userId = null;
+    this.ciMode = false;
+    console.log('[Bounce] Identity service reset');
   }
 }
 
-// Export a singleton instance for use throughout the application
+// Export a singleton instance
 export const bounceIdentity = new BounceIdentity();

@@ -1,46 +1,34 @@
 /**
- * PKL-278651-BOUNCE-0001-CORE
- * Non-Destructive Tester Module
+ * PKL-278651-BOUNCE-0002-CORE - Non-destructive Testing Module
  * 
- * This module implements the non-destructive testing protocol that allows
- * Bounce to safely test the application without disrupting production data.
+ * This module provides non-destructive testing capabilities for automated
+ * testing workflows. It ensures that tests can run without affecting production data.
  * 
  * @framework Framework5.2
  * @version 1.0.0
- * @lastModified 2025-04-21
+ * @lastModified 2025-04-22
  */
 
-import { db } from "../../server/db";
+import path from 'path';
+import fs from 'fs';
+import crypto from 'crypto';
+import { db } from '../../server/db';
 import { 
   bounceFindings, 
   bounceEvidence,
   BounceFindingSeverity,
   BounceFindingStatus,
   BounceEvidenceType
-} from "../../shared/schema";
-import { bounceIdentity } from "./bounce-identity";
-import * as fs from "fs";
-import * as path from "path";
-import * as crypto from "crypto";
+} from '../../shared/schema/bounce';
 
 /**
- * Options for a test operation
+ * Finding context information
  */
-interface TestOperationOptions {
+interface FindingContext {
   /**
-   * Whether the operation might modify data (default: false)
-   */
-  isModifying?: boolean;
-  
-  /**
-   * The area of the application being tested
+   * The area/component being tested
    */
   area: string;
-  
-  /**
-   * The path or URL being tested
-   */
-  path?: string;
   
   /**
    * The browser being used for testing
@@ -48,12 +36,22 @@ interface TestOperationOptions {
   browser: string;
   
   /**
-   * The device being simulated (desktop, mobile, etc.)
+   * The URL path where the issue was found
+   */
+  path: string;
+  
+  /**
+   * Whether the test action would modify data
+   */
+  isModifying: boolean;
+  
+  /**
+   * Optional device type for responsive testing
    */
   device?: string;
   
   /**
-   * The screen size being tested (e.g., "1920x1080")
+   * Optional screen size for responsive testing
    */
   screenSize?: string;
 }
@@ -63,226 +61,200 @@ interface TestOperationOptions {
  */
 interface EvidenceData {
   /**
-   * The type of evidence
+   * Type of evidence (screenshot, console log, etc.)
    */
-  type: BounceEvidenceType;
+  type: string;
   
   /**
-   * The raw data (e.g., image data, console log text)
+   * The evidence data (binary or text)
    */
   data: Buffer | string;
   
   /**
-   * Optional description of the evidence
+   * Description of the evidence
    */
-  description?: string;
+  description: string;
 }
 
 /**
- * Non-destructive testing implementation
- * Ensures tests don't modify production data in harmful ways
+ * Non-destructive tester service
+ * Provides safe testing without affecting production data
  */
-export class NonDestructiveTester {
-  private testRunId: number | null = null;
-  private evidencePath: string;
-  private operationCount: number = 0;
-  
+class NonDestructiveTester {
   /**
-   * Create a new non-destructive tester
-   * @param evidenceBasePath Base path for storing evidence files
+   * The current test run ID
    */
-  constructor(evidenceBasePath: string = "./uploads/bounce-evidence") {
-    this.evidencePath = evidenceBasePath;
-    this.ensureEvidencePath();
-  }
+  private testRunId: number = 0;
   
   /**
-   * Ensure the evidence directory exists
+   * Whether the tester is initialized
    */
-  private ensureEvidencePath(): void {
-    if (!fs.existsSync(this.evidencePath)) {
-      fs.mkdirSync(this.evidencePath, { recursive: true });
-    }
-  }
+  private initialized: boolean = false;
   
   /**
-   * Initialize the tester with a test run ID
-   * @param testRunId The ID of the current test run
+   * The directory where evidence is stored
+   */
+  private evidenceDir: string = path.join(process.cwd(), 'reports', 'evidence');
+  
+  /**
+   * Initialize the non-destructive tester
+   * @param testRunId The test run ID to associate findings with
    */
   initialize(testRunId: number): void {
     this.testRunId = testRunId;
-    this.operationCount = 0;
-    console.log(`[Bounce] Initialized non-destructive tester for test run #${testRunId}`);
+    this.initialized = true;
+    
+    // Ensure evidence directory exists
+    if (!fs.existsSync(this.evidenceDir)) {
+      fs.mkdirSync(this.evidenceDir, { recursive: true });
+    }
+    
+    console.log(`[Bounce] Non-destructive tester initialized for test run ${testRunId}`);
   }
   
   /**
-   * Create a unique identifier for a finding
-   * @param area The area of the application
-   * @param operationNumber The operation number within the test
-   * @returns A unique, human-readable finding ID
-   */
-  private createFindingId(area: string, operationNumber: number): string {
-    const areaPrefix = area.toUpperCase().replace(/[^A-Z]/g, "").substring(0, 4);
-    const timestamp = Date.now().toString(36).substring(4, 8);
-    return `BOUNCE-${areaPrefix}-${operationNumber.toString().padStart(3, "0")}-${timestamp}`;
-  }
-  
-  /**
-   * Execute a test operation safely
-   * @param operation The function to execute
-   * @param options Options for the test operation
-   * @returns The result of the operation
-   */
-  async executeOperation<T>(
-    operation: () => Promise<T>,
-    options: TestOperationOptions
-  ): Promise<T> {
-    if (!this.testRunId) {
-      throw new Error("Non-destructive tester not initialized with test run ID");
-    }
-    
-    this.operationCount++;
-    console.log(`[Bounce] Executing operation #${this.operationCount}: ${options.area} - ${options.path || "no path"}`);
-    
-    // If the operation might modify data, we need to be extra careful
-    if (options.isModifying) {
-      console.log(`[Bounce] Executing potentially modifying operation in area ${options.area}`);
-      // In a real implementation, we would add transaction rollback or data isolation here
-    }
-    
-    // Execute the operation and return the result
-    try {
-      const result = await operation();
-      return result;
-    } catch (error) {
-      console.error(`[Bounce] Operation failed: ${(error as Error).message}`);
-      throw error;
-    }
-  }
-  
-  /**
-   * Report a finding (bug or issue)
+   * Report a finding during testing
    * @param description Description of the finding
-   * @param severity The severity of the issue
-   * @param options Test operation options
-   * @param evidence Optional evidence data
+   * @param severity Severity of the finding
+   * @param context Context information about the finding
+   * @param evidence Array of evidence data
    * @returns The ID of the created finding
    */
   async reportFinding(
     description: string,
     severity: BounceFindingSeverity,
-    options: TestOperationOptions,
-    evidence?: EvidenceData[]
+    context: FindingContext,
+    evidence: EvidenceData[]
   ): Promise<number> {
-    if (!this.testRunId) {
-      throw new Error("Non-destructive tester not initialized with test run ID");
+    if (!this.initialized) {
+      throw new Error('Non-destructive tester not initialized. Call initialize() first.');
     }
     
-    const findingId = this.createFindingId(options.area, this.operationCount);
-    
     try {
+      // Generate a unique finding ID
+      const findingId = crypto.randomBytes(4).toString('hex');
+      
       // Insert the finding into the database
-      const [finding] = await db
-        .insert(bounceFindings)
-        .values({
-          findingId,
-          testRunId: this.testRunId,
-          description,
-          severity,
-          area: options.area,
-          path: options.path,
-          browser: options.browser,
-          device: options.device,
-          screenSize: options.screenSize,
-          status: BounceFindingStatus.OPEN,
-          reproducibility: 100, // Default to 100% reproducible
-        })
-        .returning();
+      const [finding] = await db.insert(bounceFindings).values({
+        testRunId: this.testRunId,
+        title: `${context.area}: ${description.substring(0, 50)}${description.length > 50 ? '...' : ''}`,
+        description,
+        severity,
+        status: BounceFindingStatus.NEW,
+        affectedUrl: context.path,
+        browserInfo: JSON.stringify({
+          browser: context.browser,
+          device: context.device,
+          screenSize: context.screenSize
+        }),
+        reproducibleSteps: 'Automated test detected this issue'
+      }).returning();
       
-      console.log(`[Bounce] Reported finding ${findingId}: ${description}`);
-      
-      // If evidence is provided, save it
-      if (evidence && evidence.length > 0) {
-        await this.saveEvidence(finding.id, evidence);
+      // Process and save evidence
+      for (const item of evidence) {
+        const evidenceFilename = await this.saveEvidence(item.data, finding.id, item.type);
+        
+        // Insert evidence record
+        await db.insert(bounceEvidence).values({
+          findingId: finding.id,
+          type: this.mapEvidenceType(item.type),
+          content: evidenceFilename,
+          metadata: JSON.stringify({
+            description: item.description,
+            timestamp: new Date().toISOString()
+          })
+        });
       }
       
+      console.log(`[Bounce] Reported finding: ${finding.id} - ${description}`);
       return finding.id;
     } catch (error) {
-      console.error(`[Bounce] Failed to report finding: ${(error as Error).message}`);
-      throw error;
+      console.error(`[Bounce] Error reporting finding: ${(error as Error).message}`);
+      return 0;
     }
   }
   
   /**
-   * Save evidence for a finding
-   * @param findingId The ID of the finding
-   * @param evidenceItems Array of evidence items
+   * Map evidence type string to enum value
+   * @param type Evidence type string
+   * @returns Evidence type enum value
+   */
+  private mapEvidenceType(type: string): BounceEvidenceType {
+    switch (type.toUpperCase()) {
+      case 'SCREENSHOT':
+        return BounceEvidenceType.SCREENSHOT;
+      case 'CONSOLE':
+        return BounceEvidenceType.CONSOLE_LOG;
+      case 'NETWORK':
+        return BounceEvidenceType.NETWORK_REQUEST;
+      case 'DOM':
+        return BounceEvidenceType.DOM_STATE;
+      case 'PERFORMANCE':
+        return BounceEvidenceType.PERFORMANCE_METRIC;
+      default:
+        return BounceEvidenceType.SCREENSHOT;
+    }
+  }
+  
+  /**
+   * Save evidence data to the file system
+   * @param data Evidence data (binary or text)
+   * @param findingId The finding ID to associate with
+   * @param type The type of evidence
+   * @returns The path to the saved evidence file
    */
   private async saveEvidence(
+    data: Buffer | string,
     findingId: number,
-    evidenceItems: EvidenceData[]
-  ): Promise<void> {
-    try {
-      for (const item of evidenceItems) {
-        // Create a unique filename for the evidence
-        const filename = `${findingId}_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
-        const extension = this.getFileExtension(item.type);
-        const fullPath = path.join(this.evidencePath, `${filename}${extension}`);
-        const relativePath = path.relative(".", fullPath);
-        
-        // Write the evidence file
-        if (Buffer.isBuffer(item.data)) {
-          fs.writeFileSync(fullPath, item.data);
-        } else {
-          fs.writeFileSync(fullPath, item.data, "utf8");
-        }
-        
-        // Insert the evidence record into the database
-        await db.insert(bounceEvidence).values({
-          findingId,
-          evidenceType: item.type,
-          filePath: relativePath,
-          description: item.description,
-        });
-        
-        console.log(`[Bounce] Saved evidence for finding ${findingId}: ${relativePath}`);
-      }
-    } catch (error) {
-      console.error(`[Bounce] Failed to save evidence: ${(error as Error).message}`);
-      throw error;
+    type: string
+  ): Promise<string> {
+    // Create a directory for this finding
+    const findingDir = path.join(this.evidenceDir, findingId.toString());
+    if (!fs.existsSync(findingDir)) {
+      fs.mkdirSync(findingDir, { recursive: true });
     }
+    
+    // Determine file extension based on type
+    let extension = '.txt';
+    if (type.toUpperCase() === 'SCREENSHOT') {
+      extension = '.png';
+    }
+    
+    // Generate unique filename
+    const timestamp = new Date().getTime();
+    const filename = `evidence_${type.toLowerCase()}_${timestamp}${extension}`;
+    const filePath = path.join(findingDir, filename);
+    
+    // Write data to file
+    if (typeof data === 'string') {
+      fs.writeFileSync(filePath, data, 'utf8');
+    } else {
+      fs.writeFileSync(filePath, data);
+    }
+    
+    // Return relative path from the project root
+    return path.relative(process.cwd(), filePath);
   }
   
   /**
-   * Get the file extension for an evidence type
-   * @param type The type of evidence
-   * @returns The appropriate file extension
+   * Check if an operation would be destructive
+   * @param action The action to check
+   * @returns Whether the action is destructive
    */
-  private getFileExtension(type: BounceEvidenceType): string {
-    switch (type) {
-      case BounceEvidenceType.SCREENSHOT:
-        return ".png";
-      case BounceEvidenceType.VIDEO:
-        return ".mp4";
-      case BounceEvidenceType.CONSOLE:
-      case BounceEvidenceType.LOG:
-        return ".log";
-      case BounceEvidenceType.NETWORK:
-        return ".json";
-      default:
-        return ".dat";
-    }
+  isDestructiveAction(action: string): boolean {
+    const destructiveActions = ['DELETE', 'UPDATE', 'INSERT', 'TRUNCATE', 'DROP', 'ALTER'];
+    return destructiveActions.some(da => action.toUpperCase().includes(da));
   }
   
   /**
-   * Clean up any resources used during testing
+   * Reset the non-destructive tester
    */
-  cleanup(): void {
-    console.log(`[Bounce] Cleaning up non-destructive tester for test run #${this.testRunId}`);
-    this.testRunId = null;
-    this.operationCount = 0;
+  reset(): void {
+    this.testRunId = 0;
+    this.initialized = false;
+    console.log('[Bounce] Non-destructive tester reset');
   }
 }
 
-// Export a singleton instance for use throughout the application
+// Export a singleton instance
 export const nonDestructiveTester = new NonDestructiveTester();

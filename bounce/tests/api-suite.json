@@ -1,0 +1,76 @@
+{
+  "name": "api",
+  "tests": [
+    {
+      "name": "API Authentication Test",
+      "description": "Tests the authentication endpoints",
+      "paths": ["/api/auth/current-user"],
+      "steps": [
+        {
+          "action": "apiRequest",
+          "target": "GET",
+          "value": "/api/auth/current-user"
+        },
+        {
+          "action": "assertStatus",
+          "target": "response.status",
+          "value": "200"
+        }
+      ]
+    },
+    {
+      "name": "API Communities Endpoint Test",
+      "description": "Tests that the communities API only returns the Pickle+ Giveaway community",
+      "paths": ["/api/communities"],
+      "steps": [
+        {
+          "action": "apiRequest",
+          "target": "GET",
+          "value": "/api/communities"
+        },
+        {
+          "action": "assertStatus",
+          "target": "response.status",
+          "value": "200"
+        },
+        {
+          "action": "assertResponseJsonLength",
+          "target": "response.body.communities",
+          "value": "1"
+        },
+        {
+          "action": "assertResponseJsonProperty",
+          "target": "response.body.communities[0].id",
+          "value": "3"
+        },
+        {
+          "action": "assertResponseJsonProperty",
+          "target": "response.body.communities[0].name",
+          "value": "Pickle+ Giveaway"
+        }
+      ]
+    },
+    {
+      "name": "API Health Check",
+      "description": "Tests that the API health check endpoint returns OK",
+      "paths": ["/api/health"],
+      "steps": [
+        {
+          "action": "apiRequest",
+          "target": "GET",
+          "value": "/api/health"
+        },
+        {
+          "action": "assertStatus",
+          "target": "response.status",
+          "value": "200"
+        },
+        {
+          "action": "assertResponseJsonProperty",
+          "target": "response.body.status",
+          "value": "ok"
+        }
+      ]
+    }
+  ]
+}
