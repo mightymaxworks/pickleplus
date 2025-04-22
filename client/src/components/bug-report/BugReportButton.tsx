@@ -34,9 +34,7 @@ export function SimpleBugReportButton({ position = 'bottom-right' }: BugReportBu
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  
-  // Position below the ticker (top-36 positions it below the ticker and header)
-  const buttonPosition = 'top-36 right-4';
+  const { user } = useAuth();
   
   // Use useCallback to prevent recreating the function on each render
   const toggleDialog = useCallback(() => {
@@ -61,6 +59,14 @@ export function SimpleBugReportButton({ position = 'bottom-right' }: BugReportBu
       setIsOpen(false);
     }, 1000);
   }, [toast]);
+  
+  // Don't show the button if user is not logged in
+  if (!user) {
+    return null;
+  }
+  
+  // Position below the ticker (top-36 positions it below the ticker and header)
+  const buttonPosition = 'top-36 right-4';
   
   return (
     <>
