@@ -10,7 +10,7 @@
  */
 
 import React from 'react';
-import AdminLayout from '@/modules/admin/components/AdminLayout';
+import { AdminLayout } from '@/modules/admin/components/AdminLayout';
 import { 
   Card, 
   CardContent, 
