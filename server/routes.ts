@@ -13,6 +13,7 @@ import { registerBounceAdminRoutes } from "./routes/admin-bounce-routes";
 import { registerBounceGamificationRoutes } from "./routes/bounce-gamification-routes";
 import { registerBounceXpRoutes } from "./routes/bounce-xp-routes";
 import { registerBounceAutomationRoutes } from "./routes/admin-bounce-automation-routes";
+import { registerUserSearchRoutes } from "./routes/user-search-routes"; // PKL-278651-SRCH-0001-UNIFD
 import securityRoutes from "./routes/security-routes";
 import { isAuthenticated } from "./middleware/auth";
 

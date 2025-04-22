@@ -22,8 +22,8 @@ export default function QuickMatchFAB() {
 
   // Set button colors based on founding member status
   const buttonClass = isFoundingMember 
-    ? "bg-gradient-to-br from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 focus:ring-green-500"
-    : "bg-[#4CAF50] hover:bg-[#388E3C] focus:ring-[#4CAF50]";
+    ? "bg-gradient-to-br from-orange-500 to-orange-700 hover:from-orange-600 hover:to-orange-800 focus:ring-orange-500"
+    : "bg-[#FF9800] hover:bg-[#F57C00] focus:ring-[#FF9800]";
 
   // Handle record match button click
   const handleRecordMatch = () => {
