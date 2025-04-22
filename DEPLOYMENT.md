@@ -11,25 +11,34 @@ This guide walks you through the step-by-step process of deploying the Pickle+ p
 2. ✅ Production environment setup
    - Using `production.js` as entry point
    - Setting NODE_ENV to 'production'
+   - Building client files for production
 
 3. ✅ Database connection
    - PostgreSQL database is properly configured
    - Connection string is available in environment variables
 
-## Deployment Steps
+## Deployment Steps (FINAL METHOD)
 
-1. Run the deployment preparation script:
-   ```
-   ./deploy.sh
-   ```
+1. Click the "Deploy" button in the Replit sidebar
 
-2. Click the "Deploy" button in the Replit sidebar
+2. Use these deployment settings:
+   - Build Command: `./build.sh`
+   - Run Command: `npm start`
+   - Deploy Directory: `dist`
 
-3. Use these deployment settings:
-   - Build Command: `npm install`
-   - Run Command: `npx tsx production.js`
+3. Click "Deploy" to start the deployment process
 
-4. Click "Deploy" to start the deployment process
+This method properly builds the client files and sets up the necessary structure for production deployment.
+
+### What This Does
+
+Our build script (`build.sh`) does the following:
+
+1. Builds the client using Vite, outputting to `dist/public`
+2. Creates the server structure in the `dist` directory
+3. Creates a production entry point with `NODE_ENV=production`
+4. Sets up a minimal package.json with only the required dependencies
+5. Configures the application to run on port 8080 in production
 
 ## Post-Deployment Verification
 
