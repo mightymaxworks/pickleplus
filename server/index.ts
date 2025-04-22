@@ -124,8 +124,9 @@ app.use((req, res, next) => {
     console.error("Error setting up frontend serving:", error);
   }
 
-  // Use port 5000 in development, port 8080 in production 
-  const port = process.env.NODE_ENV === 'production' ? 8080 : 5000;
+  // For Replit deployment, port 5000 must be used for both production and development
+  // Use process.env.PORT if defined or default to 5000
+  const port = process.env.PORT || 5000;
   serverHttp.listen({
     port: Number(port),
     host: "0.0.0.0",

@@ -1,31 +1,31 @@
-# Pickle+ Deployment Steps
+# Pickle+ Deployment Steps - Simplified Approach
 
-Follow these steps to deploy the full application with authentication fixes:
+Follow these steps to deploy the Pickle+ application using Replit's standard deployment method:
 
-## 1. Use the Deployment Script
+## 1. No Special Scripts Needed
 
-Use the `deploy-full-app-with-auth-fixes.sh` script which:
-- Builds the full application
-- Sets up the production server with authentication fixes
-- Creates all necessary supporting files
+We've made specific, targeted fixes to the core codebase:
+- Added robust error handling in `passport.deserializeUser`
+- Fixed port configuration to use port 5000 for Replit deployment
+- Ensured the session handling is resilient
 
 ## 2. Configure Deployment in Replit
 
 In the Replit deployment settings:
 1. Click the Deploy button
-2. Choose Cloud Run
+2. Choose Cloud Run deployment
 3. Set the following:
-   - **Build Command**: `bash deploy-full-app-with-auth-fixes.sh`
-   - **Run Command**: `cd dist && ./start.sh`
+   - **Build Command**: `npm run build`
+   - **Run Command**: `NODE_ENV=production node server/index.js`
    - Ensure `DATABASE_URL` is set in environment variables
 
-## 3. Make Sure Authentication Fixes Are Applied
+## 3. Key Fixes for Deployment Success
 
-The key authentication fixes in this deployment are:
-- Using direct SQL queries instead of ORM for user operations
-- Adding robust error handling in passport.deserializeUser
-- Implementing a fallback for session store issues
-- Adding more detailed logging for authentication issues
+Our targeted changes ensure:
+- Authentication works reliably in production
+- The server uses the correct port (5000) for Replit deployment
+- Error handling gracefully handles auth failures without crashing
+- Sessions persist correctly
 
 ## 4. Deploy and Monitor
 
@@ -33,5 +33,6 @@ After deployment:
 - Check the logs for any authentication errors
 - Test authentication by logging in/out
 - Verify all API endpoints are working
+- Ensure the actual Pickle+ application loads (not placeholder)
 
-If you still have issues, the logs will provide more specific information about what's failing.
+The simplified approach avoids complex deployment scripts while still addressing the core issues.
