@@ -351,7 +351,7 @@ fi
 
 # Start the application with error handling
 echo "Starting Pickle+ application on port $PORT"
-node index.js
+node -r ./port-config.js index.js
 `;
 
   try {
