@@ -14,7 +14,6 @@
  */
 
 import React, { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
 import MasteryPathsDisplay from '@/components/mastery/MasteryPathsDisplay';
 import TierProgressionHistory from '@/components/mastery/TierProgressionHistory';
 import TierBenefitsCard from '@/components/mastery/TierBenefitsCard';
@@ -23,11 +22,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
 import { Award, Shield, Crown, TrendingUp, Zap, Medal } from 'lucide-react';
 
+/**
+ * PKL-278651-ROUTE-0001-FIX - MasteryPathsPage
+ * 
+ * This component is now loaded through ProtectedRouteWithLayout in App.tsx,
+ * which handles the authentication and wraps this component in the standard layout.
+ * No need for manual authentication checks or layout wrapping here.
+ */
 export default function MasteryPathsPage() {
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
-  
-  if (!user) return null;
   
   return (
     <>
