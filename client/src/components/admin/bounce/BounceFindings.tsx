@@ -106,7 +106,11 @@ interface FindingFilters {
 }
 
 // BounceFindings Component
-const BounceFindings: React.FC = () => {
+interface BounceFindingsProps {
+  viewTab?: string;
+}
+
+const BounceFindings: React.FC<BounceFindingsProps> = ({ viewTab = 'all' }) => {
   const queryClient = useQueryClient();
   const isMobile = useMediaQuery("(max-width: 768px)");
   
@@ -119,14 +123,15 @@ const BounceFindings: React.FC = () => {
   const [pageSize, setPageSize] = useState(isMobile ? 5 : 10); // Fewer items per page on mobile
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFinding, setSelectedFinding] = useState<Finding | null>(null);
-  const [viewTab, setViewTab] = useState<'all' | 'critical' | 'assigned'>('all');
+  // Use prop value for viewTab with useState for local state
+  const [activeViewTab, setActiveViewTab] = useState<'all' | 'critical' | 'assigned'>(viewTab as 'all' | 'critical' | 'assigned');
   const [statusUpdateDialogOpen, setStatusUpdateDialogOpen] = useState(false);
   const [newStatus, setNewStatus] = useState<BounceFindingStatus | ''>('');
   
   // Reset pagination when filters change
   React.useEffect(() => {
     setPage(1);
-  }, [filters, searchQuery, viewTab]);
+  }, [filters, searchQuery, activeViewTab]);
 
   // Adjust page size when mobile status changes
   React.useEffect(() => {
@@ -192,14 +197,14 @@ const BounceFindings: React.FC = () => {
       queryParams.append('search', searchQuery);
     }
     
-    if (viewTab === 'critical') {
+    if (activeViewTab === 'critical') {
       queryParams.append('severity', 'critical');
-    } else if (viewTab === 'assigned') {
+    } else if (activeViewTab === 'assigned') {
       queryParams.append('assigned', 'true');
     }
     
     return apiRequest(`/api/admin/bounce/findings?${queryParams.toString()}`);
-  }, [filters, viewTab, page, pageSize, searchQuery]);
+  }, [filters, activeViewTab, page, pageSize, searchQuery]);
   
   // Get findings data with filters and pagination applied - with offline support
   const { 
@@ -433,7 +438,7 @@ const BounceFindings: React.FC = () => {
         onClick={() => {
           setFilters({ severity: [], status: [BounceFindingStatus.NEW, BounceFindingStatus.IN_PROGRESS] });
           setSearchQuery('');
-          setViewTab('all');
+          setActiveViewTab('all');
         }}
       >
         Reset filters
@@ -645,8 +650,8 @@ const BounceFindings: React.FC = () => {
           
           <Tabs 
             defaultValue="all" 
-            value={viewTab} 
-            onValueChange={(value) => setViewTab(value as 'all' | 'critical' | 'assigned')}
+            value={activeViewTab} 
+            onValueChange={(value) => setActiveViewTab(value as 'all' | 'critical' | 'assigned')}
             className="w-full"
           >
             <TabsList>

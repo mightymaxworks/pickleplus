@@ -48,6 +48,7 @@ import {
   LazyMobileTestPage,
   LazyBugReportDashboard,
   LazyBouncePage, // PKL-278651-BOUNCE-0001-CORE
+  LazyBounceFindingsPage, // PKL-278651-BOUNCE-0006-ADMIN
   LazyUserDetailsPage, // PKL-278651-ADMIN-0015-USER
   LazyUsersPage, // PKL-278651-ADMIN-0015-USER
   LazyNotFoundPage,
@@ -369,6 +370,14 @@ export default function App() {
                     {(params) => (
                       <AdminProtectedRoute>
                         <LazyBouncePage />
+                      </AdminProtectedRoute>
+                    )}
+                  </Route>
+                  {/* PKL-278651-BOUNCE-0006-ADMIN: Bounce Findings Page */}
+                  <Route path="/admin/bounce/findings">
+                    {(params) => (
+                      <AdminProtectedRoute>
+                        <LazyBounceFindingsPage />
                       </AdminProtectedRoute>
                     )}
                   </Route>
