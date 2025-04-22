@@ -180,6 +180,60 @@ export default function DashboardContent() {
           </motion.div>
           
           {/* Mastery Paths Section */}
+          {/* Bounce Testing Status Ticker */}
+          <motion.div 
+            className="md:col-span-12 mb-4"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15, duration: 0.5 }}
+          >
+            <div className="relative overflow-hidden bg-gradient-to-r from-gray-900/90 to-gray-800/90 dark:from-gray-900 dark:to-black rounded-md shadow-md border border-gray-700/30 dark:border-gray-700/50">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 to-blue-500"></div>
+              <div className="absolute top-1 right-2 flex items-center gap-1 z-10">
+                <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></div>
+                <div className="text-xs text-cyan-400 font-mono">LIVE</div>
+              </div>
+              <div className="flex items-center px-4 py-3">
+                <div className="mr-3 bg-gradient-to-r from-cyan-500 to-blue-500 p-1.5 rounded-full text-white">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z" fill="currentColor"/>
+                    <path d="M13 7H11V13H17V11H13V7Z" fill="currentColor"/>
+                  </svg>
+                </div>
+                <div className="relative overflow-hidden flex-1">
+                  <div className="animate-marquee whitespace-nowrap flex items-center gap-8">
+                    <div className="inline-flex items-center">
+                      <span className="text-cyan-400 font-medium mr-2">Bounce Testing:</span>
+                      <span className="text-white text-sm">98.5% of users experienced error-free matches this week</span>
+                    </div>
+                    <div className="inline-flex items-center">
+                      <span className="text-cyan-400 font-medium mr-2">Currently Testing:</span>
+                      <span className="text-white text-sm">XP System • Tournament Brackets • Mobile Performance</span>
+                    </div>
+                    <div className="inline-flex items-center">
+                      <span className="text-cyan-400 font-medium mr-2">Community Impact:</span>
+                      <span className="text-white text-sm">Bounce testers have found 142 issues this month</span>
+                    </div>
+                    <div className="inline-flex items-center">
+                      <span className="text-cyan-400 font-medium mr-2">Weather Report:</span>
+                      <span className="text-white text-sm">Next focus areas: Match Recording • Profile Settings</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="hidden md:flex items-center ml-3 pl-3 border-l border-gray-700/30">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M11 7H13V9H11V7ZM11 11H13V17H11V11ZM12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z" fill="white"/>
+                    </svg>
+                  </div>
+                  <button className="ml-2 text-xs text-white bg-blue-600 hover:bg-blue-700 transition-colors px-2 py-1 rounded">
+                    Join Testing
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
           <motion.div 
             className="md:col-span-12"
             initial={{ opacity: 0, y: 20 }}
