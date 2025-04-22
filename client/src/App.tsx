@@ -125,6 +125,17 @@ function ProtectedRoute({
   return <Component {...rest} />;
 }
 
+// Authentication wrapper component that only renders children when user is authenticated
+function AuthenticationWrapper({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  
+  if (!user) {
+    return null;
+  }
+  
+  return <>{children}</>;
+}
+
 export default function App() {
   // Add location hook to debug routing
   const [location] = useLocation();
@@ -165,8 +176,10 @@ export default function App() {
                       {/* PKL-278651-BOUNCE-0008-ASSIST - Add Bounce Floating Widget */}
                       <BounceFloatingWidget />
                       
-                      {/* Match Recording Button */}
-                      <QuickMatchFAB />
+                      {/* Match Recording Button - Only shown when user is authenticated */}
+                      <AuthenticationWrapper>
+                        <QuickMatchFAB />
+                      </AuthenticationWrapper>
                     
                     {/* Bounce Mascot disabled for now (PKL-278651-MASCOT-0001-CORE) */}
                     {/* Removed to focus on launch priorities */}
