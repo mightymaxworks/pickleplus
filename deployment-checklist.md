@@ -1,71 +1,80 @@
-# Pickle+ Deployment Readiness Checklist
+# Pickle+ Deployment Checklist
 
-## Core Configuration
-- [ ] Server port is set to 8080 for Cloud Run compatibility
-- [ ] Environment variables are properly configured in .env file
-- [ ] Database connection strings are using Neon Serverless PostgreSQL format
-- [ ] Node.js version is compatible with Replit (Node.js 18+)
+This checklist will help us ensure a successful deployment of the Pickle+ application.
 
-## Server Component Checks
-- [ ] Server starts without errors in development mode
-- [ ] API endpoints return expected responses
-- [ ] Special routes are properly registered and functioning
-- [ ] Health check endpoints return 200 OK
-- [ ] Database connections are established successfully
-- [ ] WebSocket connections initialize correctly
-- [ ] Session management is working properly
-- [ ] User authentication flow functions as expected
+## Pre-Deployment Checks
 
-## Client Component Checks
-- [ ] Client builds without errors or warnings
-- [ ] React components render as expected
-- [ ] CSS and styling is applied correctly
-- [ ] Images and assets are loading properly
-- [ ] Authentication UI works as expected
-- [ ] Forms submit data correctly
-- [ ] Navigation and routing works as expected
-- [ ] Mobile responsiveness is functioning properly
+### Critical Path Structure
 
-## Deployment Preparation
-- [ ] Package.json contains correct dependencies
-- [ ] No unnecessary Node.js native modules in client imports
-- [ ] Performance-hooks usage is properly isolated to server-side
-- [ ] Build script handles server/client separation correctly
-- [ ] Port configuration is properly set for deployment
-- [ ] No hardcoded development URLs in the codebase
+- [ ] Verify client/src paths in imports
+- [ ] Check for absolute vs. relative path issues
+- [ ] Verify asset paths (@assets/ vs /src/assets/)
+- [ ] Check public asset references
+- [ ] Verify uploads directory references
 
-## Security Considerations
-- [ ] CSRF protection is enabled
-- [ ] API endpoints validate input properly
-- [ ] Authentication checks are in place for protected routes
-- [ ] No sensitive information in client-side code
-- [ ] Database credentials are properly secured
-- [ ] Session cookies have proper security settings
+### Server Configuration
 
-## Deployment Settings
-- [ ] Build Command: `npm install`
-- [ ] Run Command: `npx tsx server/index.ts`
-- [ ] Environment variables are set in Replit Secrets
-- [ ] Database connection string is configured in environment
+- [ ] Ensure server listens on port 8080 for Cloud Run
+- [ ] Verify database connection using DATABASE_URL
+- [ ] Check WebSocket configuration compatibility
+- [ ] Verify session middleware setup
+- [ ] Check authentication flow in production
 
-## Post-Deployment Verification
-- [ ] Server starts successfully in production
-- [ ] API endpoints are accessible
-- [ ] Database connections work in production
-- [ ] Authentication flows work end-to-end
-- [ ] Static assets load correctly
-- [ ] Performance is acceptable
+### React Build Process
 
-## Troubleshooting Guide
-- If server fails to start: Check port configuration and logs
-- If database connection fails: Verify DATABASE_URL and Neon connection
-- If client doesn't load: Check for build errors in the console
-- If API returns 404: Verify routes are registered correctly
-- If authentication fails: Check session configuration
+- [ ] Test build locally with `npm run build` 
+- [ ] Verify build output is created in client/dist
+- [ ] Check for any build warnings or errors
+- [ ] Verify static assets are included in the build
+- [ ] Check for environment variables used in the build
 
-## Important Files to Check
-- `server/index.ts`: Ensure port is set to 8080
-- `server/routes.ts`: Verify all routes are registered
-- `server/db.ts`: Check database connection configuration
-- `.env`: Verify environment variables
-- `package.json`: Check dependencies and scripts
+### API Endpoint Checks
+
+- [ ] Verify API routes are properly registered
+- [ ] Check for hardcoded URLs or ports in API calls
+- [ ] Verify CORS configuration
+- [ ] Check API error handling
+- [ ] Verify authentication protected routes
+
+### Database Integration
+
+- [ ] Verify database connection string usage
+- [ ] Check for migrations that need to be run
+- [ ] Verify schema compatibility
+- [ ] Check database queries for production readiness
+- [ ] Verify database error handling
+
+## Deployment Steps
+
+1. Run pre-deployment check script:
+   ```
+   bash pre-deployment-check.sh
+   ```
+
+2. Fix any issues identified by the pre-deployment checks
+
+3. Update the final-deploy.sh script if needed based on issues found
+
+4. Deploy using the following steps:
+   - Click the Deploy button in Replit
+   - Set the Build Command to: `bash final-deploy.sh`
+   - Set the Run Command to: `npm start`
+   - Click Deploy
+
+5. Verify the deployment:
+   - Check that the application loads correctly
+   - Verify API endpoints are working
+   - Check database connectivity
+   - Test authentication flow
+   - Verify static assets are loaded properly
+
+## Post-Deployment Validation
+
+- [ ] Test login/authentication flow
+- [ ] Check community features
+- [ ] Verify tournaments functionality
+- [ ] Test match recording
+- [ ] Check profile management
+- [ ] Verify admin features
+- [ ] Test Bounce integration
+- [ ] Check responsive design on mobile
