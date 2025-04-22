@@ -1,177 +1,172 @@
 /**
- * Simplified Bounce Test Runner
+ * PKL-278651-BOUNCE-0011-CICD - Simple Bounce Test Runner
+ * 
  * This version doesn't require external dependencies like Playwright
  * It generates a sample bug report to demonstrate the reporting functionality
+ * 
+ * @framework Framework5.2
+ * @version 1.0.0
+ * @lastModified 2025-04-22
  */
 
-import { bugReportGenerator } from './reporting/bug-report-generator';
-import { bounceFindings, bounceTestRuns, bounceEvidence } from '../shared/schema/bounce';
 import { db } from '../server/db';
 import { eq } from 'drizzle-orm';
+import { 
+  bounceTestRuns, 
+  bounceFindings,
+  bounceEvidence,
+  BounceTestRunStatus,
+  BounceFindingSeverity,
+  BounceEvidenceType
+} from '../shared/schema/bounce';
+import { bugReportGenerator } from './reporting';
+import { actionItemsGenerator } from './action-items-generator';
+import fs from 'fs';
+import path from 'path';
 
-// Mock data for demonstration
-const mockFindings = [
-  {
-    id: 1,
-    title: "Community page loads with incorrect layout on mobile",
-    description: "When viewing the community page on mobile devices, the layout breaks and elements overlap.",
-    severity: "MODERATE",
-    area: "Community",
-    affectedUrl: "/communities",
-    browserInfo: JSON.stringify({
-      name: "Chrome Mobile",
-      device: "iPhone 12",
-      screenSize: "390x844"
-    }),
-    status: "OPEN"
-  },
-  {
-    id: 2,
-    title: "Profile image upload fails with 404 error",
-    description: "When attempting to upload a profile image, the request fails with a 404 error.",
-    severity: "HIGH",
-    area: "Profile",
-    affectedUrl: "/profile/edit",
-    browserInfo: JSON.stringify({
-      name: "Chrome",
-      device: "Desktop",
-      screenSize: "1920x1080"
-    }),
-    status: "OPEN"
-  },
-  {
-    id: 3,
-    title: "Login button not visible on Safari",
-    description: "The login button is not visible when using Safari browser.",
-    severity: "CRITICAL",
-    area: "Authentication",
-    affectedUrl: "/auth",
-    browserInfo: JSON.stringify({
-      name: "Safari",
-      device: "Desktop",
-      screenSize: "1440x900"
-    }),
-    status: "OPEN"
-  }
-];
-
-const mockEvidence = [
-  {
-    id: 1,
-    findingId: 1,
-    type: "screenshot",
-    content: "community-page-mobile-bug.png",
-    metadata: JSON.stringify({
-      timestamp: new Date().toISOString()
+/**
+ * Run a simplified demo of the Bounce testing system
+ * @returns The ID of the generated test run
+ */
+async function runSimpleDemo(): Promise<number> {
+  console.log('[Bounce] Starting simple demo run...');
+  
+  // Create a test run
+  const [testRun] = await db.insert(bounceTestRuns).values({
+    name: `Bounce Simple Demo - ${new Date().toISOString()}`,
+    description: 'A simple demo run that doesn\'t require external dependencies',
+    status: BounceTestRunStatus.RUNNING,
+    startedAt: new Date(),
+    targetUrl: 'http://localhost:3000'
+  }).returning();
+  
+  console.log(`[Bounce] Created test run ${testRun.id}`);
+  
+  // Simulate finding issues
+  const findings = [];
+  
+  // Add some sample findings
+  const [finding1] = await db.insert(bounceFindings).values({
+    testRunId: testRun.id,
+    title: 'Mobile responsive layout issue on community page',
+    description: 'The community page layout breaks on mobile viewport widths below 375px. Text overlaps and buttons become inaccessible.',
+    severity: BounceFindingSeverity.HIGH,
+    area: 'Community',
+    path: '/communities',
+    browser: 'Chrome Mobile',
+    isModifying: false,
+    deviceInfo: JSON.stringify({
+      viewport: '320x568',
+      userAgent: 'Mobile Safari',
+      devicePixelRatio: 2
     })
-  },
-  {
-    id: 2,
-    findingId: 2,
-    type: "network",
-    content: "POST /api/profile/image 404 Not Found",
-    metadata: JSON.stringify({
-      timestamp: new Date().toISOString(),
-      requestHeaders: {
-        "Content-Type": "multipart/form-data"
-      }
+  }).returning();
+  
+  findings.push(finding1);
+  
+  const [finding2] = await db.insert(bounceFindings).values({
+    testRunId: testRun.id,
+    title: 'Authentication persistence issue after browser refresh',
+    description: 'User is logged out when refreshing the profile page. This only happens in Firefox.',
+    severity: BounceFindingSeverity.CRITICAL,
+    area: 'Authentication',
+    path: '/profile',
+    browser: 'Firefox',
+    isModifying: false,
+    deviceInfo: JSON.stringify({
+      viewport: '1280x800',
+      userAgent: 'Firefox/112.0',
+      devicePixelRatio: 1
     })
-  },
-  {
-    id: 3,
-    findingId: 3,
-    type: "dom",
-    content: "<button class='login-button' style='display: none'>Login</button>",
-    metadata: JSON.stringify({
-      timestamp: new Date().toISOString()
+  }).returning();
+  
+  findings.push(finding2);
+  
+  const [finding3] = await db.insert(bounceFindings).values({
+    testRunId: testRun.id,
+    title: 'Tournament bracket rendering incorrectly',
+    description: 'The tournament bracket visualization renders incorrectly when there are more than 16 participants. Some participant names are cut off.',
+    severity: BounceFindingSeverity.MODERATE,
+    area: 'Tournaments',
+    path: '/tournaments/12/bracket',
+    browser: 'Chrome',
+    isModifying: false,
+    deviceInfo: JSON.stringify({
+      viewport: '1920x1080',
+      userAgent: 'Chrome/111.0',
+      devicePixelRatio: 1
     })
-  }
-];
-
-async function runSimpleDemo() {
-  console.log("🚀 Starting Bounce simplified demo...");
-
-  try {
-    // Create a test run
-    console.log("📝 Creating test run record...");
-    const [testRun] = await db.insert(bounceTestRuns)
-      .values({
-        name: "Demo Test Run",
-        description: "A demonstration of Bounce bug reporting",
-        status: "COMPLETED",
-        startedAt: new Date(Date.now() - 60000), // 1 minute ago
-        completedAt: new Date(),
-        targetUrl: "Chrome, Safari",
-        coverage: 80
-      })
-      .returning();
-
-    console.log(`✅ Created test run with ID: ${testRun.id}`);
-
-    // Insert mock findings
-    console.log("🔍 Inserting demo findings...");
-    for (const finding of mockFindings) {
-      const [insertedFinding] = await db.insert(bounceFindings)
-        .values({
-          testRunId: testRun.id,
-          title: finding.title,
-          description: finding.description,
-          severity: finding.severity,
-          area: finding.area,
-          affectedUrl: finding.affectedUrl,
-          browserInfo: finding.browserInfo,
-          status: finding.status,
-          createdAt: new Date()
-        })
-        .returning();
-
-      // Find the corresponding evidence
-      const evidence = mockEvidence.find(e => e.findingId === finding.id);
-      if (evidence) {
-        await db.insert(bounceEvidence)
-          .values({
-            findingId: insertedFinding.id,
-            type: evidence.type,
-            content: evidence.content,
-            metadata: evidence.metadata,
-            createdAt: new Date()
-          });
-      }
+  }).returning();
+  
+  findings.push(finding3);
+  
+  // Add some evidence
+  for (const finding of findings) {
+    // Create mock screenshot evidence
+    const screenshotDir = path.join(process.cwd(), 'evidence');
+    
+    // Ensure directory exists
+    if (!fs.existsSync(screenshotDir)) {
+      fs.mkdirSync(screenshotDir, { recursive: true });
     }
-
-    console.log("✅ Demo data inserted successfully!");
-
-    // Generate a bug report
-    console.log("📊 Generating bug report...");
-    const report = await bugReportGenerator.generateBugReport(
-      testRun.id,
-      { 
-        includeEvidence: true,
-        includeSolutionPrompts: true,
-        sortBySeverity: true,
-        groupByArea: true
-      }
-    );
-
-    // Save report to file
-    const reportPath = bugReportGenerator.saveReportToFile(
-      report,
-      './reports/bounce_demo_report.md'
-    );
-
-    console.log(`✅ Bug report generated and saved to: ${reportPath}`);
-    console.log("Done! 🎉");
-
-  } catch (error) {
-    console.error("❌ Error running demo:", (error as Error).message);
-    console.error((error as Error).stack);
+    
+    const screenshotPath = path.join(screenshotDir, `finding-${finding.id}-screenshot.png`);
+    
+    // Create an empty file if it doesn't exist
+    if (!fs.existsSync(screenshotPath)) {
+      fs.writeFileSync(screenshotPath, Buffer.from('Mock screenshot data'));
+    }
+    
+    // Store evidence reference in database
+    // This would normally point to actual evidence files
+    await db.insert(bounceEvidence).values({
+      findingId: finding.id,
+      type: 'SCREENSHOT',
+      filePath: screenshotPath,
+      description: 'Screenshot showing the issue'
+    });
   }
+  
+  // Update the test run as completed
+  await db.update(bounceTestRuns)
+    .set({
+      status: BounceTestRunStatus.COMPLETED,
+      completedAt: new Date(),
+      totalFindings: findings.length,
+      results: JSON.stringify({
+        findings: findings.length,
+        criticalIssues: findings.filter(f => f.severity === BounceFindingSeverity.CRITICAL).length,
+        highIssues: findings.filter(f => f.severity === BounceFindingSeverity.HIGH).length,
+        moderateIssues: findings.filter(f => f.severity === BounceFindingSeverity.MODERATE).length,
+        lowIssues: findings.filter(f => f.severity === BounceFindingSeverity.LOW).length
+      })
+    })
+    .where(eq(bounceTestRuns.id, testRun.id));
+  
+  console.log(`[Bounce] Test run completed with ${findings.length} findings`);
+  
+  // Generate the bug report
+  const reportPath = await bugReportGenerator.generateReport(testRun.id);
+  console.log(`[Bounce] Bug report generated: ${reportPath}`);
+  
+  // Generate action items
+  const sprintPath = await actionItemsGenerator.generateActionItems(testRun.id);
+  console.log(`[Bounce] Sprint plan generated: ${sprintPath}`);
+  
+  return testRun.id;
 }
 
-// Export the function for importing in CLI
 export { runSimpleDemo };
 
-// Run the demo directly if this script is executed
+// If this script is run directly
 if (require.main === module) {
-  runSimpleDemo();
+  runSimpleDemo()
+    .then((testRunId) => {
+      console.log(`\nSimple demo completed with test run ID: ${testRunId}`);
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error('Error running simple demo:', error);
+      process.exit(1);
+    });
 }

@@ -10,6 +10,7 @@
  */
 
 import { db } from '../../server/db';
+import { eq } from 'drizzle-orm';
 import { 
   bounceTestRuns, 
   BounceTestRunStatus 
@@ -106,7 +107,7 @@ class BounceIdentity {
           totalFindings: findingsCount,
           updatedAt: new Date()
         })
-        .where(bounceTestRuns.id.equals(this.currentTestRunId))
+        .where(eq(bounceTestRuns.id, this.currentTestRunId))
         .returning();
       
       console.log(`[Bounce] Ended test run ${testRun.id} with status ${status}`);
@@ -163,6 +164,72 @@ class BounceIdentity {
     this.userId = null;
     this.ciMode = false;
     console.log('[Bounce] Identity service reset');
+  }
+  
+  /**
+   * Create a new test run with specific configuration
+   * @param config Test run configuration
+   * @returns The ID of the created test run
+   */
+  async createTestRun(config: {
+    name: string;
+    status: BounceTestRunStatus;
+    configuration?: Record<string, any>;
+  }): Promise<number> {
+    try {
+      // Create a new test run record
+      const [testRun] = await db.insert(bounceTestRuns).values({
+        name: config.name,
+        status: config.status,
+        startedAt: new Date(),
+        configuration: config.configuration ? JSON.stringify(config.configuration) : null
+      }).returning();
+      
+      // Store the current test run ID
+      this.currentTestRunId = testRun.id;
+      
+      console.log(`[Bounce] Created test run ${testRun.id} with name "${config.name}"`);
+      return testRun.id;
+    } catch (error) {
+      console.error(`[Bounce] Error creating test run: ${(error as Error).message}`);
+      throw error;
+    }
+  }
+  
+  /**
+   * Update an existing test run
+   * @param testRunId ID of the test run to update
+   * @param updateData Data to update
+   * @returns The updated test run
+   */
+  async updateTestRun(
+    testRunId: number,
+    updateData: {
+      status?: BounceTestRunStatus;
+      completedAt?: Date;
+      results?: Record<string, any>;
+      totalFindings?: number;
+    }
+  ): Promise<any> {
+    try {
+      // Update the test run record
+      const [testRun] = await db
+        .update(bounceTestRuns)
+        .set({
+          ...updateData,
+          results: updateData.results ? JSON.stringify(updateData.results) : undefined,
+          updatedAt: new Date()
+        })
+        .where(eq(bounceTestRuns.id, testRunId))
+        .returning();
+      
+      console.log(`[Bounce] Updated test run ${testRun.id} with status ${updateData.status || 'unchanged'}`);
+      
+      return testRun;
+    } catch (error) {
+      console.error(`[Bounce] Error updating test run: ${(error as Error).message}`);
+      throw error;
+    }
   }
 }
 

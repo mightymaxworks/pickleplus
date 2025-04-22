@@ -1,61 +1,65 @@
 #!/bin/bash
-# Bounce CI/CD Setup Script
-# Installs necessary dependencies for Bounce CI/CD
+# PKL-278651-BOUNCE-0010-CICD - Bounce Test Environment Setup Script
+# 
+# This script sets up the required dependencies for running Bounce tests,
+# including Playwright.
 #
-# Run with: bash bounce/setup.sh
+# @framework Framework5.2
+# @version 1.0.0
+# @lastModified 2025-04-22
 
-# Set error handling
-set -e
+echo "Setting up Bounce automated testing environment..."
 
-echo "=== Setting up Bounce CI/CD Framework ==="
+# Create reports and evidence directories if they don't exist
+echo "Creating report directories..."
+mkdir -p ./reports
+mkdir -p ./evidence
 
-# Create required directories
-echo "Creating required directories..."
-mkdir -p bounce/tests
-mkdir -p reports/evidence
-mkdir -p reports/ci
-
-# Install dev dependencies directly without using packager_tool
-# This avoids issues with auto-including @shared/schema and other problematic packages
-echo "Installing development dependencies..."
-
-# Install dependencies one by one to avoid package resolution issues
-echo "Installing Playwright..."
-npm install -D playwright@latest --no-save
-
-echo "Installing colors..."
-npm install -D colors@latest --no-save
-
-echo "Installing commander..."
-npm install -D commander@latest --no-save
-
-echo "Installing dotenv..."
-npm install -D dotenv@latest --no-save
-
-# IMPORTANT: Using --no-save to prevent modifying package.json
-# This is a workaround for Replit's package management
-echo "Dependencies installed without modifying package.json"
-
-# Install global packages if needed
-echo "Installing global dependencies..."
-if ! command -v npx &> /dev/null; then
-  npm install -g npx
+# Install Playwright (only if needed)
+if ! npm list playwright | grep -q "playwright"; then
+  echo "Installing Playwright..."
+  npm install --no-save playwright@latest
+else
+  echo "Playwright already installed."
 fi
 
-# Set permissions
-echo "Setting permissions..."
-chmod +x bounce/setup.sh
+# Check if the browsers are already installed
+if [ ! -d "./node_modules/playwright/.local-browsers" ]; then
+  echo "Installing Playwright browsers..."
+  npx playwright install --with-deps chromium firefox webkit
+else
+  echo "Playwright browsers already installed."
+fi
 
-echo "=== Bounce CI/CD Framework Setup Complete ==="
-echo ""
-echo "IMPORTANT NOTE:"
-echo "The dependencies have been installed in the node_modules directory"
-echo "but package.json has NOT been modified to avoid conflicts with Replit's"
-echo "package management system. If you reinstall node_modules or restart the"
-echo "Repl, you'll need to run this setup script again."
-echo ""
-echo "Usage:"
-echo "  - Run tests: npx tsx bounce/cli.ts run --suite all"
-echo "  - Run CI/CD: npx tsx bounce/ci/run-ci.ts"
-echo "  - Initialize test suite: npx tsx bounce/cli.ts init"
-echo ""
+# Create default test structure if it doesn't exist
+if [ ! -d "./bounce/tests" ]; then
+  echo "Creating default test structure..."
+  mkdir -p ./bounce/tests
+  
+  # Create a basic test suite
+  cat > ./bounce/tests/basic-test-suite.json <<EOL
+{
+  "name": "basic",
+  "tests": [
+    {
+      "name": "Home Page Test",
+      "description": "Tests the home page loads correctly",
+      "paths": ["/"],
+      "steps": [
+        {
+          "action": "navigate",
+          "target": "/"
+        },
+        {
+          "action": "assertElementExists",
+          "target": "body"
+        }
+      ]
+    }
+  ]
+}
+EOL
+fi
+
+echo "Bounce testing environment setup complete!"
+echo "You can now run tests using: npx tsx bounce/cli.ts run"
