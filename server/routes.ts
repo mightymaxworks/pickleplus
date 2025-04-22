@@ -20,6 +20,7 @@ import securityRoutes from "./routes/security-routes";
 import multiRankingsRoutes from "./routes/multi-rankings-routes"; // PKL-278651-PRANK-0008-FWK52
 import courtiqRoutes from "./routes/courtiq-routes"; // PKL-278651-CRTIQ-0009-FWK52
 import { isAuthenticated } from "./middleware/auth";
+import { specialRouter } from "./special-routes"; // Import special critical routes
 
 /**
  * Register all application routes with the Express app
@@ -27,6 +28,11 @@ import { isAuthenticated } from "./middleware/auth";
  * @returns HTTP server
  */
 export async function registerRoutes(app: express.Express): Promise<Server> {
+  console.log("[API][CRITICAL] Registering special direct routes before standard routes");
+  // Mount special router first to ensure direct implementation takes precedence
+  app.use('/api', specialRouter);
+  console.log("[API][CRITICAL] Special routes registered successfully");
+  
   // Register route groups
   registerAdminRoutes(app);
   setupAdminDashboardRoutes(app); // Added for PKL-278651-ADMIN-0012-PERF
