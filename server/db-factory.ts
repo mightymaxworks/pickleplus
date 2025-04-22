@@ -20,6 +20,22 @@ import * as schema from "../shared/schema";
 import * as bounceAutomationSchema from "../shared/schema/bounce-automation";
 import configService from './config';
 
+// Fix for Neon + WebSocket: Patch error handling
+// This addresses the TypeError: Cannot set property message of #<ErrorEvent> which has only a getter
+const originalWebSocketErrorHandler = ws.prototype.onerror;
+ws.prototype.onerror = function(event) {
+  // Create a proper error object that can be modified
+  const patchedEvent = {
+    ...event,
+    message: event.message || 'WebSocket error'
+  };
+  
+  // Call the original handler with our patched event
+  if (originalWebSocketErrorHandler) {
+    originalWebSocketErrorHandler.call(this, patchedEvent);
+  }
+};
+
 // WebSocket support for Neon
 neonConfig.webSocketConstructor = ws;
 
