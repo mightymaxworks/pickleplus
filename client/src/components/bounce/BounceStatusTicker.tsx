@@ -124,7 +124,7 @@ export const BounceStatusTicker = ({
         </div>
         <div className="relative overflow-hidden flex-1">
           {/* For smooth animation, we use CSS animation on this div */}
-          <div className="whitespace-nowrap flex items-center gap-8 animate-ticker">
+          <div className="whitespace-nowrap flex items-center gap-8 animate-marquee">
             <div className="inline-flex items-center">
               <span className="text-cyan-400 font-medium mr-2">Bounce Testing:</span>
               <span className="text-white text-sm">
