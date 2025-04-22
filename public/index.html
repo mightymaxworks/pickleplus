@@ -4,230 +4,250 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pickle+ Platform</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
     :root {
-      --primary: #38a169;
-      --primary-light: #9ae6b4;
-      --primary-dark: #2f855a;
-      --background: #f7fafc;
-      --card-bg: #ffffff;
-      --text: #2d3748;
-      --text-light: #4a5568;
-      --border: #e2e8f0;
-      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --pickle-green: #38a169;
+      --pickle-light: #f0fff4;
     }
-    
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
-      line-height: 1.6;
-      color: var(--text);
-      background-color: var(--background);
-      margin: 0;
-      padding: 0;
-    }
-    
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem 1rem;
-    }
-    
-    .header {
-      text-align: center;
-      padding: 2rem 0;
-    }
-    
-    .logo {
-      font-size: 2.5rem;
-      font-weight: bold;
-      color: var(--primary);
-      margin-bottom: 1rem;
-    }
-    
-    .tagline {
-      font-size: 1.2rem;
-      color: var(--text-light);
-      max-width: 600px;
-      margin: 0 auto;
-    }
-    
-    .card {
-      background-color: var(--card-bg);
-      border-radius: 8px;
-      box-shadow: var(--shadow);
-      padding: 2rem;
-      margin: 2rem 0;
-    }
-    
-    .card-title {
-      font-size: 1.5rem;
-      color: var(--primary);
-      margin-top: 0;
-      margin-bottom: 1rem;
-      border-bottom: 2px solid var(--primary-light);
-      padding-bottom: 0.5rem;
-    }
-    
-    .api-section {
-      margin-top: 1.5rem;
-    }
-    
-    .api-endpoint {
-      background-color: #f8f9fa;
-      border-radius: 4px;
-      padding: 0.75rem 1rem;
-      font-family: 'Courier New', monospace;
-      margin: 0.5rem 0;
-      border-left: 4px solid var(--primary);
-    }
-    
-    .status-indicator {
-      display: flex;
-      align-items: center;
-      margin: 1rem 0;
-    }
-    
-    .status-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background-color: #38a169;
-      margin-right: 10px;
-    }
-    
-    .status-text {
-      font-weight: 500;
-    }
-    
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 1.5rem;
-      margin-top: 1.5rem;
-    }
-    
-    .feature-item {
-      background-color: var(--card-bg);
-      border-radius: 8px;
-      box-shadow: var(--shadow);
-      padding: 1.5rem;
-    }
-    
-    .feature-title {
-      font-weight: 600;
-      margin-top: 0;
-      color: var(--primary-dark);
-    }
-    
-    .footer {
-      text-align: center;
-      padding: 2rem 0;
-      margin-top: 2rem;
-      color: var(--text-light);
-      border-top: 1px solid var(--border);
-    }
-    
-    @media (max-width: 768px) {
-      .features-grid {
-        grid-template-columns: 1fr;
-      }
-    }
+    .bg-pickle-green { background-color: var(--pickle-green); }
+    .text-pickle-green { color: var(--pickle-green); }
+    .border-pickle-green { border-color: var(--pickle-green); }
+    .hover-pickle-green:hover { background-color: var(--pickle-green); }
   </style>
 </head>
-<body>
-  <div class="container">
-    <header class="header">
-      <div class="logo">Pickle+</div>
-      <p class="tagline">Transforming pickleball player development through innovative mobile-first technology</p>
-    </header>
+<body class="bg-gray-50 min-h-screen">
+  <!-- Navigation -->
+  <nav class="bg-white shadow-sm py-3">
+    <div class="container mx-auto px-4 flex justify-between items-center">
+      <div class="flex items-center">
+        <div class="text-2xl font-bold text-pickle-green">Pickle+</div>
+      </div>
+      <div class="flex space-x-6">
+        <a href="/" class="text-gray-700 hover:text-pickle-green font-medium">Home</a>
+        <a href="/matches" class="text-gray-700 hover:text-pickle-green font-medium">Matches</a>
+        <a href="/leaderboard" class="text-gray-700 hover:text-pickle-green font-medium">Leaderboard</a>
+        <a href="/tournaments" class="text-gray-700 hover:text-pickle-green font-medium">Tournaments</a>
+      </div>
+      <div>
+        <a href="/profile" class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-full bg-pickle-green text-white flex items-center justify-center font-semibold">
+            U
+          </div>
+          <span class="text-gray-700 font-medium" id="username">User</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <div class="container mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+      <h1 class="text-3xl font-bold text-pickle-green mb-2">Welcome to Pickle+</h1>
+      <p class="text-gray-600">The premier platform for pickleball players to track matches, join tournaments, and connect with the community.</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      
+      <!-- Leaderboard Card -->
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-semibold">Leaderboard</h2>
+          <a href="/leaderboard" class="text-sm text-pickle-green hover:underline">View all</a>
+        </div>
+        <div class="space-y-3" id="leaderboard-container">
+          <p class="text-gray-500 text-center py-4">Loading leaderboard data...</p>
+        </div>
+      </div>
+      
+      <!-- Recent Matches Card -->
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-semibold">Recent Matches</h2>
+          <a href="/matches" class="text-sm text-pickle-green hover:underline">View all</a>
+        </div>
+        <div class="space-y-3" id="matches-container">
+          <p class="text-gray-500 text-center py-4">Loading match data...</p>
+        </div>
+      </div>
+      
+      <!-- Upcoming Tournaments Card -->
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-semibold">Tournaments</h2>
+          <a href="/tournaments" class="text-sm text-pickle-green hover:underline">View all</a>
+        </div>
+        <div class="space-y-3" id="tournaments-container">
+          <p class="text-gray-500 text-center py-4">Loading tournament data...</p>
+        </div>
+      </div>
+    </div>
     
-    <section class="card">
-      <h2 class="card-title">Deployment Status</h2>
-      <div class="status-indicator">
-        <div class="status-dot"></div>
-        <span class="status-text">System online and operational</span>
-      </div>
-      <p>
-        The Pickle+ platform has been successfully deployed. This deployment includes
-        core platform functionality and database connectivity.
-      </p>
-      <div class="api-section">
-        <h3>Available API Endpoints:</h3>
-        <div class="api-endpoint">/api/health</div>
-        <div class="api-endpoint">/api/db-test</div>
-      </div>
-    </section>
-    
-    <section class="card">
-      <h2 class="card-title">Platform Features</h2>
-      <div class="features-grid">
-        <div class="feature-item">
-          <h3 class="feature-title">User Management</h3>
-          <p>Comprehensive user profiles, authentication, and permission systems</p>
+    <!-- Status Section -->
+    <div class="mt-8 bg-white rounded-lg shadow-sm p-6">
+      <h2 class="text-xl font-semibold mb-4">System Status</h2>
+      <div id="status-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="bg-gray-50 p-4 rounded border">
+          <div class="text-sm font-medium text-gray-500">API Status</div>
+          <div id="api-status" class="mt-1 font-semibold">Checking...</div>
         </div>
-        <div class="feature-item">
-          <h3 class="feature-title">Match Tracking</h3>
-          <p>Record and analyze your pickleball matches with detailed statistics</p>
+        <div class="bg-gray-50 p-4 rounded border">
+          <div class="text-sm font-medium text-gray-500">Database</div>
+          <div id="db-status" class="mt-1 font-semibold">Checking...</div>
         </div>
-        <div class="feature-item">
-          <h3 class="feature-title">Skill Development</h3>
-          <p>Track your progress and improve your pickleball skills</p>
-        </div>
-        <div class="feature-item">
-          <h3 class="feature-title">Community Features</h3>
-          <p>Connect with other pickleball enthusiasts and join communities</p>
-        </div>
-        <div class="feature-item">
-          <h3 class="feature-title">Tournament Management</h3>
-          <p>Create and manage tournaments with automatic bracket generation</p>
-        </div>
-        <div class="feature-item">
-          <h3 class="feature-title">Mobile Optimization</h3>
-          <p>Fully responsive design for a seamless mobile experience</p>
+        <div class="bg-gray-50 p-4 rounded border">
+          <div class="text-sm font-medium text-gray-500">Port</div>
+          <div id="port-status" class="mt-1 font-semibold">Checking...</div>
         </div>
       </div>
-    </section>
+    </div>
   </div>
-  
-  <footer class="footer">
-    <p>&copy; 2025 Pickle+ Platform. All rights reserved.</p>
+
+  <!-- Footer -->
+  <footer class="bg-white mt-12 py-8 border-t">
+    <div class="container mx-auto px-4">
+      <div class="flex flex-col md:flex-row justify-between">
+        <div>
+          <h3 class="text-xl font-bold text-pickle-green">Pickle+</h3>
+          <p class="text-gray-600 mt-2">The platform for pickleball enthusiasts</p>
+        </div>
+        <div class="mt-4 md:mt-0">
+          <div class="flex space-x-6">
+            <a href="/" class="text-gray-600 hover:text-pickle-green">Home</a>
+            <a href="/matches" class="text-gray-600 hover:text-pickle-green">Matches</a>
+            <a href="/leaderboard" class="text-gray-600 hover:text-pickle-green">Leaderboard</a>
+            <a href="/api/health" class="text-gray-600 hover:text-pickle-green">API Health</a>
+          </div>
+        </div>
+      </div>
+      <div class="mt-8 border-t border-gray-200 pt-4 text-gray-500 text-sm">
+        &copy; 2025 Pickle+. All rights reserved.
+      </div>
+    </div>
   </footer>
 
   <script>
-    // Simple script to check API health and update status indicator
-    async function checkHealth() {
-      try {
-        const response = await fetch('/api/health');
-        const data = await response.json();
-        
-        const statusDot = document.querySelector('.status-dot');
-        const statusText = document.querySelector('.status-text');
-        
-        if (data.status === 'ok') {
-          statusDot.style.backgroundColor = '#38a169'; // green
-          statusText.textContent = 'System online and operational';
-        } else {
-          statusDot.style.backgroundColor = '#e53e3e'; // red
-          statusText.textContent = 'System experiencing issues';
-        }
-        
-        // Add database status
-        if (data.database === 'connected') {
-          statusText.textContent += ' • Database connected';
-        } else {
-          statusText.textContent += ' • Database not connected';
-        }
-      } catch (error) {
-        console.error('Health check failed:', error);
-        const statusDot = document.querySelector('.status-dot');
-        const statusText = document.querySelector('.status-text');
-        statusDot.style.backgroundColor = '#e53e3e'; // red
-        statusText.textContent = 'Could not connect to API';
-      }
-    }
+    // Fetch user data
+    fetch('/api/auth/current-user')
+      .then(response => {
+        if (response.ok) return response.json();
+        throw new Error('Not authenticated');
+      })
+      .then(userData => {
+        document.getElementById('username').textContent = userData.username || 'User';
+      })
+      .catch(error => {
+        console.log('User not authenticated:', error);
+      });
     
-    // Run health check when page loads
-    window.addEventListener('DOMContentLoaded', checkHealth);
+    // Fetch leaderboard data
+    fetch('/api/leaderboard')
+      .then(response => response.json())
+      .then(data => {
+        const container = document.getElementById('leaderboard-container');
+        if (data && data.length > 0) {
+          container.innerHTML = '';
+          data.slice(0, 5).forEach(player => {
+            container.innerHTML += `
+              <div class="flex justify-between items-center border-b border-gray-100 py-2">
+                <span class="font-medium">${player.name}</span>
+                <span class="bg-gray-100 px-2 py-1 rounded text-sm">${player.wins}-${player.losses}</span>
+              </div>
+            `;
+          });
+        } else {
+          container.innerHTML = '<p class="text-gray-500 text-center py-4">No leaderboard data available</p>';
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching leaderboard:', error);
+        document.getElementById('leaderboard-container').innerHTML = 
+          '<p class="text-red-500 text-center py-4">Error loading leaderboard</p>';
+      });
+      
+    // Fetch match history
+    fetch('/api/match/history')
+      .then(response => response.json())
+      .then(data => {
+        const container = document.getElementById('matches-container');
+        if (data && data.length > 0) {
+          container.innerHTML = '';
+          data.slice(0, 5).forEach(match => {
+            const date = new Date(match.created_at).toLocaleDateString();
+            container.innerHTML += `
+              <div class="border-b border-gray-100 py-2">
+                <div class="flex justify-between">
+                  <span class="font-medium">${match.winner_username}</span>
+                  <span class="font-medium">${match.winner_score}</span>
+                </div>
+                <div class="flex justify-between text-gray-500">
+                  <span>${match.loser_username}</span>
+                  <span>${match.loser_score}</span>
+                </div>
+                <div class="text-xs text-gray-400 mt-1">${date}</div>
+              </div>
+            `;
+          });
+        } else {
+          container.innerHTML = '<p class="text-gray-500 text-center py-4">No match data available</p>';
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching matches:', error);
+        document.getElementById('matches-container').innerHTML = 
+          '<p class="text-red-500 text-center py-4">Error loading matches</p>';
+      });
+      
+    // Fetch tournaments
+    fetch('/api/tournaments')
+      .then(response => response.json())
+      .then(data => {
+        const container = document.getElementById('tournaments-container');
+        if (data && data.length > 0) {
+          container.innerHTML = '';
+          data.slice(0, 3).forEach(tournament => {
+            const startDate = new Date(tournament.start_date).toLocaleDateString();
+            container.innerHTML += `
+              <div class="border-b border-gray-100 py-2">
+                <div class="font-medium">${tournament.name}</div>
+                <div class="text-sm text-gray-600">${tournament.location}</div>
+                <div class="flex justify-between mt-1">
+                  <span class="text-xs text-gray-400">${startDate}</span>
+                  <span class="text-xs bg-gray-100 px-2 py-0.5 rounded-full">${tournament.participant_count} players</span>
+                </div>
+              </div>
+            `;
+          });
+        } else {
+          container.innerHTML = '<p class="text-gray-500 text-center py-4">No tournaments available</p>';
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching tournaments:', error);
+        document.getElementById('tournaments-container').innerHTML = 
+          '<p class="text-red-500 text-center py-4">Error loading tournaments</p>';
+      });
+
+    // Check API health
+    fetch('/api/health')
+      .then(response => response.json())
+      .then(data => {
+        console.log('API Health:', data);
+        document.getElementById('api-status').textContent = 'Connected';
+        document.getElementById('api-status').classList.add('text-green-600');
+        
+        document.getElementById('db-status').textContent = data.database === 'connected' ? 'Connected' : 'Not Connected';
+        document.getElementById('db-status').classList.add(data.database === 'connected' ? 'text-green-600' : 'text-yellow-600');
+        
+        document.getElementById('port-status').textContent = data.port;
+        document.getElementById('port-status').classList.add('text-green-600');
+      })
+      .catch(error => {
+        console.error('Error checking API health:', error);
+        document.getElementById('api-status').textContent = 'Error';
+        document.getElementById('api-status').classList.add('text-red-600');
+      });
   </script>
 </body>
 </html>

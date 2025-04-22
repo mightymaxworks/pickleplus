@@ -7,7 +7,7 @@ channel = "stable-24_05"
 
 [deployment]
 deploymentTarget = "autoscale"
-build = ["sh", "-c", "bash es-full-build.sh"]
+build = ["sh", "-c", "bash two-step-build.sh"]
 run = ["sh", "-c", "cd dist && node index.js"]
 
 [workflows]
@@ -36,6 +36,10 @@ task = "packager.installForAll"
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
+
+[[ports]]
+localPort = 80
+externalPort = 3002
 
 [[ports]]
 localPort = 3000

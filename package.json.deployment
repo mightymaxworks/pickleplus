@@ -1,0 +1,17 @@
+{
+  "name": "pickle-plus",
+  "version": "1.0.0",
+  "description": "Pickle+ Platform Production Deployment",
+  "type": "module",
+  "main": "prod-server.js",
+  "scripts": {
+    "start": "node prod-server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "express": "^4.18.2",
+    "express-session": "^1.18.0",
+    "ws": "^8.14.2"
+  }
+}
