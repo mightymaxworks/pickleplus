@@ -16,6 +16,8 @@ import { registerBounceAutomationRoutes } from "./routes/admin-bounce-automation
 import { registerUserSearchRoutes } from "./routes/user-search-routes"; // PKL-278651-SRCH-0001-UNIFD
 import { registerMasteryPathsRoutes } from "./modules/mastery/masteryPathsRoutes"; // PKL-278651-RATE-0004-MADV
 import securityRoutes from "./routes/security-routes";
+import multiRankingsRoutes from "./routes/multi-rankings-routes"; // PKL-278651-PRANK-0008-FWK52
+import courtiqRoutes from "./routes/courtiq-routes"; // PKL-278651-CRTIQ-0009-FWK52
 import { isAuthenticated } from "./middleware/auth";
 
 /**
@@ -41,6 +43,10 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Mount security routes
   app.use('/api/security', securityRoutes);
+  
+  // Mount PCP Rankings and CourtIQ API routes - PKL-278651-PRANK-0008-FWK52
+  app.use('/api/multi-rankings', multiRankingsRoutes);
+  app.use('/api/courtiq', courtiqRoutes);
   
   // Basic user info endpoint
   app.get("/api/me", isAuthenticated, async (req: Request, res: Response) => {
