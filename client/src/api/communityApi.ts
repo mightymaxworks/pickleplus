@@ -266,12 +266,20 @@ const communityApi = {
     
     console.log('Advanced search params:', params);
     
-    const response = await apiRequest<Community[]>({
+    // The API now returns an object with a communities array and metadata
+    const response = await apiRequest<{
+      communities: Community[];
+      count: number;
+      total: number;
+      message: string;
+    }>({
       url: '/api/communities',
       method: 'GET',
       params,
     });
-    return response;
+    
+    // Return just the communities array to maintain backward compatibility with existing code
+    return response.communities || [];
   },
 
   /**
