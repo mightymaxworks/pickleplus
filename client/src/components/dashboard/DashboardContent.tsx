@@ -52,10 +52,13 @@ export default function DashboardContent() {
   
   if (!user) return null;
   
-  // Dynamic stats for animations
+  // Dynamic stats for animations - PKL-278651-STATS-0001-VERIFY
   const xpPercentage = Math.min((user.xp || 520) / 10, 100);
-  const winRate = matchStats?.winRate || 
-    (user.totalMatches ? Math.round((user.matchesWon || 16) / (user.totalMatches || 24) * 100) : 67);
+  // Only calculate winRate when we have real match data
+  const hasMatchData = matchStats?.totalMatches > 0 || (user.totalMatches && user.totalMatches > 0);
+  const winRate = hasMatchData 
+    ? matchStats?.winRate || (user.totalMatches ? Math.round((user.matchesWon || 0) / (user.totalMatches || 1) * 100) : 0)
+    : null;
   
   return (
     <>
@@ -419,7 +422,8 @@ export default function DashboardContent() {
                             strokeLinecap="round"
                             initial={{ strokeDasharray: 251, strokeDashoffset: 251 }}
                             animate={{ 
-                              strokeDashoffset: isLoaded ? 251 - (251 * Math.min(winRate, 100) / 100) : 251
+                              // PKL-278651-STATS-0001-VERIFY - Handle null win rate for the progress circle
+                              strokeDashoffset: isLoaded ? (winRate === null ? 251 : 251 - (251 * Math.min(winRate, 100) / 100)) : 251
                             }}
                             transition={{ delay: 0.8, duration: 1.5, ease: "easeOut" }}
                             style={{ transformOrigin: 'center', transform: 'rotate(-90deg)' }}
@@ -442,6 +446,9 @@ export default function DashboardContent() {
                             >
                               {isMatchStatsLoading ? (
                                 <Loader2 size={16} className="animate-spin mx-auto" />
+                              ) : winRate === null ? (
+                                // PKL-278651-STATS-0001-VERIFY - Show friendly message when no match data
+                                <span className="text-sm text-gray-500">N/A</span>
                               ) : (
                                 `${Math.round(winRate)}%`
                               )}
