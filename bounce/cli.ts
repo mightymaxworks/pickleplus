@@ -12,7 +12,7 @@
 import { Command } from 'commander';
 import { bounceIdentity } from './core/bounce-identity';
 import { nonDestructiveTester } from './core/non-destructive-tester';
-import { reportGenerator, enhancedReportGenerator } from './reporting';
+import { reportGenerator, enhancedReportGenerator, bugReportGenerator } from './reporting';
 import { RunnerConfig, TestSuite, runTests } from './runner/test-runner';
 import { BounceTestRunStatus, BounceFindingSeverity } from '../shared/schema/bounce';
 import fs from 'fs';
