@@ -6,6 +6,7 @@
  */
 
 import React from 'react';
+import { Link } from 'wouter';
 import { 
   Card, 
   CardContent, 
@@ -225,10 +226,10 @@ const MasteryPathsDisplay: React.FC = () => {
           View Benefits
         </Button>
         <Button variant="outline" size="sm" className="text-xs" asChild>
-          <a href="/mastery-paths">
+          <Link href="/mastery-paths">
             View All Paths
             <ChevronRight className="ml-1 h-4 w-4" />
-          </a>
+          </Link>
         </Button>
       </CardFooter>
     </Card>
