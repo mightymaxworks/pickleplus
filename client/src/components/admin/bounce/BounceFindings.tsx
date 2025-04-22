@@ -61,6 +61,8 @@ import { apiRequest } from '@/lib/queryClient';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useMediaQuery } from '@/hooks/use-media-query';
+import BounceFindingCard from './BounceFindingCard';
 
 // Types for findings data
 interface Finding {
@@ -97,6 +99,7 @@ interface FindingFilters {
 // BounceFindings Component
 const BounceFindings: React.FC = () => {
   const queryClient = useQueryClient();
+  const isMobile = useMediaQuery("(max-width: 768px)");
   
   // State for filtering and detail view
   const [filters, setFilters] = useState<FindingFilters>({
@@ -575,6 +578,18 @@ const BounceFindings: React.FC = () => {
                 </div>
               ) : data?.findings?.length === 0 ? (
                 renderEmptyState()
+              ) : isMobile ? (
+                <div className="pt-2">
+                  {data.findings.map((finding) => (
+                    <BounceFindingCard
+                      key={finding.id}
+                      finding={finding}
+                      onViewDetails={() => setSelectedFinding(finding)}
+                      onStatusChange={(status) => handleStatusChange(finding, status)}
+                      onAssign={() => handleAssignToMe(finding)}
+                    />
+                  ))}
+                </div>
               ) : (
                 <div className="border rounded-md">
                   <ScrollArea className="h-[450px]">

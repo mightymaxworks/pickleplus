@@ -1,8 +1,7 @@
 /**
- * PKL-278651-COMM-0036-MEDIA-MOBILE
- * Media Query Hook
+ * PKL-278651-BOUNCE-0006-MOBILE - Mobile Optimization
  * 
- * Custom hook for responsive design that returns whether a media query matches
+ * A React hook for using media queries in components
  * 
  * @framework Framework5.2
  * @version 1.0.0
@@ -11,9 +10,15 @@
 
 import { useState, useEffect } from 'react';
 
+/**
+ * Hook for using media queries in React components
+ * @param query CSS media query string (e.g. "(max-width: 768px)")
+ * @returns Boolean indicating if the media query matches
+ */
 export function useMediaQuery(query: string): boolean {
+  // Initialize with the current match state if available
   const getMatches = (query: string): boolean => {
-    // Prevents SSR issues
+    // Check for window to handle SSR
     if (typeof window !== 'undefined') {
       return window.matchMedia(query).matches;
     }
@@ -25,22 +30,24 @@ export function useMediaQuery(query: string): boolean {
   useEffect(() => {
     const mediaQuery = window.matchMedia(query);
     
-    // Initial check
-    setMatches(mediaQuery.matches);
-    
-    // Create listener function
-    const handleChange = (event: MediaQueryListEvent) => {
-      setMatches(event.matches);
+    // Update the state initially and on changes
+    const updateMatches = (): void => {
+      setMatches(mediaQuery.matches);
     };
     
-    // Add the callback function as a listener for changes to the media query
-    mediaQuery.addEventListener('change', handleChange);
+    // Set up listeners for changes
+    mediaQuery.addEventListener('change', updateMatches);
     
-    // Clean up
+    // Call once initially to set the state correctly
+    updateMatches();
+    
+    // Clean up on unmount
     return () => {
-      mediaQuery.removeEventListener('change', handleChange);
+      mediaQuery.removeEventListener('change', updateMatches);
     };
   }, [query]);
 
   return matches;
 }
+
+export default useMediaQuery;
