@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { BounceFindingSeverity, BounceFindingStatus } from '@shared/schema/bounce';
+import { cn } from '@/lib/utils';
 
 interface BounceFindingCardProps {
   finding: {
@@ -99,104 +100,144 @@ export const BounceFindingCard: React.FC<BounceFindingCardProps> = ({
   };
 
   return (
-    <Card className={`mb-3 hover:shadow-md transition-shadow ${
-      finding.severity === 'critical' ? 'border-l-4 border-l-red-500' : 
-      finding.status === BounceFindingStatus.NEW ? 'border-l-4 border-l-red-400' : 
-      finding.status === BounceFindingStatus.IN_PROGRESS ? 'border-l-4 border-l-blue-400' : 
-      ''
-    }`}>
-      <CardContent className="p-4">
-        <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <div 
-              className="font-medium text-base mb-1 cursor-pointer"
-              onClick={onViewDetails}
-            >
-              {finding.title}
+    <Card 
+      className={cn(
+        "mb-4 transition-shadow active:bg-gray-50 dark:active:bg-gray-800",
+        "touch-manipulation", // Improves performance on touch devices
+        finding.severity === 'critical' ? 'border-l-4 border-l-red-500' : 
+        finding.status === BounceFindingStatus.NEW ? 'border-l-4 border-l-red-400' : 
+        finding.status === BounceFindingStatus.IN_PROGRESS ? 'border-l-4 border-l-blue-400' : 
+        ''
+      )}
+    >
+      {/* Make entire card clickable for details with appropriate styling */}
+      <div 
+        onClick={onViewDetails} 
+        className="tap-highlight-transparent cursor-pointer"
+        style={{ WebkitTapHighlightColor: 'transparent' }}
+      >
+        <CardContent className="p-5">
+          <div className="flex justify-between items-start">
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-base mb-2 break-words">
+                {finding.title}
+              </div>
+              <div className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                {finding.description}
+              </div>
             </div>
-            <div className="text-sm text-muted-foreground line-clamp-2 mb-2">
-              {finding.description}
+            {/* Prevent propagation so dropdown clicks don't trigger card click */}
+            <div onClick={(e) => e.stopPropagation()}>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-11 w-11 rounded-full" // Larger touch target (44x44px)
+                  >
+                    <MoreVertical className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                  <DropdownMenuItem 
+                    onClick={onViewDetails}
+                    className="h-11 cursor-pointer flex items-center" // Taller menu items for better touch
+                  >
+                    View Details
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => onStatusChange(BounceFindingStatus.NEW)}
+                    className="h-11 cursor-pointer flex items-center"
+                  >
+                    <AlertCircle className="h-5 w-5 mr-2 text-red-500" /> Mark New
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => onStatusChange(BounceFindingStatus.IN_PROGRESS)}
+                    className="h-11 cursor-pointer flex items-center"
+                  >
+                    <AlertTriangle className="h-5 w-5 mr-2 text-blue-500" /> Mark In Progress
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => onStatusChange(BounceFindingStatus.FIXED)}
+                    className="h-11 cursor-pointer flex items-center"
+                  >
+                    <Check className="h-5 w-5 mr-2 text-green-500" /> Mark Fixed
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => onStatusChange(BounceFindingStatus.WONT_FIX)}
+                    className="h-11 cursor-pointer flex items-center"
+                  >
+                    <X className="h-5 w-5 mr-2 text-gray-500" /> Won't Fix
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => onStatusChange(BounceFindingStatus.DUPLICATE)}
+                    className="h-11 cursor-pointer flex items-center"
+                  >
+                    <Copy className="h-5 w-5 mr-2 text-purple-500" /> Mark Duplicate
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={onAssign}
+                    className="h-11 cursor-pointer flex items-center"
+                  >
+                    <Flag className="h-5 w-5 mr-2" /> Assign to Me
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={onViewDetails}>
-                View Details
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onStatusChange(BounceFindingStatus.NEW)}>
-                <AlertCircle className="h-4 w-4 mr-2 text-red-500" /> Mark New
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onStatusChange(BounceFindingStatus.IN_PROGRESS)}>
-                <AlertTriangle className="h-4 w-4 mr-2 text-blue-500" /> Mark In Progress
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onStatusChange(BounceFindingStatus.FIXED)}>
-                <Check className="h-4 w-4 mr-2 text-green-500" /> Mark Fixed
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onStatusChange(BounceFindingStatus.WONT_FIX)}>
-                <X className="h-4 w-4 mr-2 text-gray-500" /> Won't Fix
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onStatusChange(BounceFindingStatus.DUPLICATE)}>
-                <Copy className="h-4 w-4 mr-2 text-purple-500" /> Mark Duplicate
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onAssign}>
-                <Flag className="h-4 w-4 mr-2" /> Assign to Me
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        
-        <div className="flex flex-wrap gap-2 mt-3">
-          <div className="flex items-center text-xs bg-gray-100 dark:bg-gray-800 rounded-full px-2 py-1">
-            {getSeverityIcon(finding.severity)}
-            <span className="ml-1 capitalize">{finding.severity}</span>
-          </div>
-          <div className="flex items-center text-xs bg-gray-100 dark:bg-gray-800 rounded-full px-2 py-1">
-            {getStatusBadge(finding.status)}
-          </div>
-          {finding.area && (
-            <div className="text-xs bg-gray-100 dark:bg-gray-800 rounded-full px-2 py-1">
-              {finding.area}
+          
+          <div className="flex flex-wrap gap-2 mt-3">
+            <div className="flex items-center text-xs bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5">
+              {getSeverityIcon(finding.severity)}
+              <span className="ml-1 capitalize">{finding.severity}</span>
             </div>
-          )}
-          <div className="text-xs bg-gray-100 dark:bg-gray-800 rounded-full px-2 py-1">
-            {formatDate(finding.createdAt)}
-          </div>
-          {finding.assignedTo && (
-            <div className="text-xs bg-gray-100 dark:bg-gray-800 rounded-full px-2 py-1">
-              Assigned: {finding.assignedTo}
+            <div className="flex items-center text-xs bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5">
+              {getStatusBadge(finding.status)}
             </div>
-          )}
-        </div>
-        
-        <div className="flex justify-end mt-3">
+            {finding.area && (
+              <div className="text-xs bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5">
+                {finding.area}
+              </div>
+            )}
+            <div className="text-xs bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5">
+              {formatDate(finding.createdAt)}
+            </div>
+            {finding.assignedTo && (
+              <div className="text-xs bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5">
+                Assigned: {finding.assignedTo}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </div>
+      
+      {/* Action buttons outside the clickable area for independent interaction */}
+      <div 
+        className="flex justify-end px-5 pb-4 pt-0"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Button 
+          variant="ghost" 
+          size="default" 
+          className="h-11 min-w-[96px]" // Larger touch target
+          onClick={onViewDetails}
+        >
+          View Details
+        </Button>
+        {!finding.assignedTo && (
           <Button 
-            variant="ghost" 
-            size="sm" 
-            className="text-xs h-8"
-            onClick={onViewDetails}
+            variant="outline" 
+            size="default" 
+            className="h-11 min-w-[110px] ml-2" // Larger touch target
+            onClick={onAssign}
           >
-            View Details
+            Assign to Me
           </Button>
-          {!finding.assignedTo && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="text-xs h-8 ml-2"
-              onClick={onAssign}
-            >
-              Assign to Me
-            </Button>
-          )}
-        </div>
-      </CardContent>
+        )}
+      </div>
     </Card>
   );
 };

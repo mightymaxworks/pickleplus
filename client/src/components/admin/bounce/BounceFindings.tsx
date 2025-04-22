@@ -63,6 +63,15 @@ import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import BounceFindingCard from './BounceFindingCard';
+import { 
+  Pagination, 
+  PaginationContent, 
+  PaginationEllipsis, 
+  PaginationItem, 
+  PaginationLink, 
+  PaginationNext, 
+  PaginationPrevious 
+} from "@/components/ui/pagination";
 
 // Types for findings data
 interface Finding {
@@ -101,22 +110,38 @@ const BounceFindings: React.FC = () => {
   const queryClient = useQueryClient();
   const isMobile = useMediaQuery("(max-width: 768px)");
   
-  // State for filtering and detail view
+  // State for filtering, pagination, and detail view
   const [filters, setFilters] = useState<FindingFilters>({
     severity: [],
     status: [BounceFindingStatus.NEW, BounceFindingStatus.IN_PROGRESS]
   });
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(isMobile ? 5 : 10); // Fewer items per page on mobile
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFinding, setSelectedFinding] = useState<Finding | null>(null);
   const [viewTab, setViewTab] = useState<'all' | 'critical' | 'assigned'>('all');
   const [statusUpdateDialogOpen, setStatusUpdateDialogOpen] = useState(false);
   const [newStatus, setNewStatus] = useState<BounceFindingStatus | ''>('');
   
-  // Get findings data with filters applied
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['/api/admin/bounce/findings', filters, viewTab],
+  // Reset pagination when filters change
+  React.useEffect(() => {
+    setPage(1);
+  }, [filters, searchQuery, viewTab]);
+
+  // Adjust page size when mobile status changes
+  React.useEffect(() => {
+    setPageSize(isMobile ? 5 : 10);
+  }, [isMobile]);
+  
+  // Get findings data with filters and pagination applied
+  const { data, isLoading, error, isPreviousData, isFetching } = useQuery({
+    queryKey: ['/api/admin/bounce/findings', filters, viewTab, page, pageSize],
     queryFn: async () => {
       const queryParams = new URLSearchParams();
+      
+      // Add pagination parameters
+      queryParams.append('page', String(page));
+      queryParams.append('pageSize', String(pageSize));
       
       if (filters.severity.length > 0) {
         queryParams.append('severity', filters.severity.join(','));
