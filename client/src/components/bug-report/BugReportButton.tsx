@@ -34,8 +34,8 @@ export function SimpleBugReportButton({ position = 'bottom-right' }: BugReportBu
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   
-  // Fixed position in the top right corner
-  const buttonPosition = 'top-24 right-4';
+  // Position below the ticker (top-36 positions it below the ticker and header)
+  const buttonPosition = 'top-36 right-4';
   
   // Use useCallback to prevent recreating the function on each render
   const toggleDialog = useCallback(() => {
