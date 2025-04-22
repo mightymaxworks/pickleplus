@@ -124,8 +124,8 @@ app.use((req, res, next) => {
     console.error("Error setting up frontend serving:", error);
   }
 
-  // Use port 5000 for Cloud Run
-  const port = 8080;
+  // Use port 5000 in development, port 8080 in production 
+  const port = process.env.NODE_ENV === 'production' ? 8080 : 5000;
   serverHttp.listen({
     port: Number(port),
     host: "0.0.0.0",
