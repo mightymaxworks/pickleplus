@@ -131,12 +131,28 @@ const BounceFindings: React.FC = () => {
     if (data?.total) {
       setTotalFindings(data.total);
       setTotalPages(Math.ceil(data.total / pageSize));
+    } else if (data?.findings) {
+      // Default total calculation if API doesn't return a total
+      setTotalFindings(data.findings.length);
+      setTotalPages(Math.max(1, Math.ceil(data.findings.length / pageSize)));
     }
   }, [data, pageSize]);
   
   // Get total count for pagination
   const [totalFindings, setTotalFindings] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  
+  // Navigation functions for pagination
+  const goToPage = (newPage: number) => {
+    // Keep page within valid range
+    const validPage = Math.max(1, Math.min(newPage, totalPages));
+    setPage(validPage);
+  };
+  
+  const goToFirstPage = () => goToPage(1);
+  const goToPreviousPage = () => goToPage(page - 1);
+  const goToNextPage = () => goToPage(page + 1);
+  const goToLastPage = () => goToPage(totalPages);
   
   // Get findings data with filters and pagination applied
   const { data, isLoading, error, isFetching } = useQuery({
@@ -388,6 +404,73 @@ const BounceFindings: React.FC = () => {
     </div>
   );
   
+  // Render pagination control component
+  const renderPagination = () => {
+    // Only show pagination if there's more than one page
+    if (totalPages <= 1) return null;
+    
+    return (
+      <div className="flex items-center justify-between py-4 px-2">
+        <div className="flex-1 text-sm text-muted-foreground">
+          Showing <span className="font-medium">{((page - 1) * pageSize) + 1}</span> to{" "}
+          <span className="font-medium">{Math.min(page * pageSize, totalFindings)}</span> of{" "}
+          <span className="font-medium">{totalFindings}</span> findings
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={goToFirstPage}
+            disabled={page === 1}
+            className="hidden sm:flex h-8 w-8 p-0 min-w-[2rem]"
+            aria-label="Go to first page"
+          >
+            <ChevronsLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={goToPreviousPage}
+            disabled={page === 1}
+            className="h-8 w-8 p-0 min-w-[2rem]"
+            aria-label="Go to previous page"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex items-center gap-1 mx-2">
+            <span className="text-sm font-medium">
+              {page}
+            </span>
+            <span className="text-sm text-muted-foreground">/</span>
+            <span className="text-sm text-muted-foreground">
+              {totalPages}
+            </span>
+          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={goToNextPage}
+            disabled={page >= totalPages}
+            className="h-8 w-8 p-0 min-w-[2rem]"
+            aria-label="Go to next page"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={goToLastPage}
+            disabled={page >= totalPages}
+            className="hidden sm:flex h-8 w-8 p-0 min-w-[2rem]"
+            aria-label="Go to last page"
+          >
+            <ChevronsRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+  
   // Render findings table
   const renderFindingsTable = () => (
     <Table>
@@ -603,7 +686,7 @@ const BounceFindings: React.FC = () => {
               ) : data?.findings?.length === 0 ? (
                 renderEmptyState()
               ) : isMobile ? (
-                <div className="pt-2">
+                <div className="pt-2 space-y-4">
                   {data?.findings?.map((finding) => (
                     <BounceFindingCard
                       key={finding.id}
@@ -613,6 +696,8 @@ const BounceFindings: React.FC = () => {
                       onAssign={() => handleAssignToMe(finding)}
                     />
                   ))}
+                  {/* Mobile pagination */}
+                  {renderPagination()}
                 </div>
               ) : (
                 <div className="border rounded-md">
@@ -640,7 +725,7 @@ const BounceFindings: React.FC = () => {
                   </p>
                 </div>
               ) : isMobile ? (
-                <div className="pt-2">
+                <div className="pt-2 space-y-4">
                   {data?.findings
                     ?.filter(f => f.severity === 'critical')
                     ?.map((finding) => (
@@ -652,6 +737,8 @@ const BounceFindings: React.FC = () => {
                         onAssign={() => handleAssignToMe(finding)}
                       />
                   ))}
+                  {/* Critical issues mobile pagination */}
+                  {renderPagination()}
                 </div>
               ) : (
                 <div className="border rounded-md">
@@ -669,7 +756,7 @@ const BounceFindings: React.FC = () => {
                   ))}
                 </div>
               ) : isMobile ? (
-                <div className="pt-2">
+                <div className="pt-2 space-y-4">
                   {data?.findings
                     ?.filter(f => f.assignedTo === 'current-user') // This would use the actual user ID in production
                     .map((finding) => (
@@ -681,6 +768,8 @@ const BounceFindings: React.FC = () => {
                         onAssign={() => handleAssignToMe(finding)}
                       />
                   ))}
+                  {/* Assigned issues mobile pagination */}
+                  {renderPagination()}
                 </div>
               ) : (
                 <div className="border rounded-md">
