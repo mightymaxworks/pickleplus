@@ -14,6 +14,7 @@ import { registerBounceGamificationRoutes } from "./routes/bounce-gamification-r
 import { registerBounceXpRoutes } from "./routes/bounce-xp-routes";
 import { registerBounceAutomationRoutes } from "./routes/admin-bounce-automation-routes";
 import { registerUserSearchRoutes } from "./routes/user-search-routes"; // PKL-278651-SRCH-0001-UNIFD
+import { registerMasteryPathsRoutes } from "./modules/mastery/masteryPathsRoutes"; // PKL-278651-RATE-0004-MADV
 import securityRoutes from "./routes/security-routes";
 import { isAuthenticated } from "./middleware/auth";
 
@@ -36,6 +37,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   registerBounceXpRoutes(app); // Add Bounce XP integration routes
   registerBounceAutomationRoutes(app); // Add Bounce automation routes
   registerUserSearchRoutes(app); // PKL-278651-SRCH-0001-UNIFD - Player search routes
+  registerMasteryPathsRoutes(app); // PKL-278651-RATE-0004-MADV - CourtIQ Mastery Paths
   
   // Mount security routes
   app.use('/api/security', securityRoutes);
