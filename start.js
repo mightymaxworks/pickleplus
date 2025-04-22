@@ -1,5 +1,3 @@
-
-// Production startup script with fallback
 import express from 'express';
 import { createServer } from 'http';
 import path from 'path';
@@ -18,7 +16,7 @@ app.get('/api/health', (req, res) => {
 
 // Try to import the main server module
 try {
-  const { default: serverApp } = await import('./dist/index.js');
+  const { default: serverApp } = await import('./server/index.js');
   // Use the imported server app's routes
   app.use(serverApp);
 } catch (error) {
