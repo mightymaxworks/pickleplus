@@ -71,6 +71,7 @@ import { useMediaQuery } from '@/hooks/use-media-query';
 import BounceFindingCard from './BounceFindingCard';
 import { MobilePagination } from './enhanced-pagination';
 import BounceFindingsTable from './BounceFindingsTable';
+import OfflineIndicator from './OfflineIndicator';
 
 // Types for findings data
 interface Finding {
@@ -160,53 +161,83 @@ const BounceFindings: React.FC = () => {
   const goToNextPage = () => goToPage(page + 1);
   const goToLastPage = () => goToPage(totalPages);
   
-  // Get findings data with filters and pagination applied
-  const { data, isLoading, error, isFetching } = useQuery({
-    queryKey: ['/api/admin/bounce/findings', filters, viewTab, page, pageSize],
-    queryFn: async () => {
-      const queryParams = new URLSearchParams();
-      
-      // Add pagination parameters
-      queryParams.append('page', String(page));
-      queryParams.append('pageSize', String(pageSize));
-      
-      if (filters.severity.length > 0) {
-        queryParams.append('severity', filters.severity.join(','));
-      }
-      
-      if (filters.status.length > 0) {
-        queryParams.append('status', filters.status.join(','));
-      }
-      
-      if (filters.area) {
-        queryParams.append('area', filters.area);
-      }
-      
-      if (filters.component) {
-        queryParams.append('component', filters.component);
-      }
-      
-      if (searchQuery) {
-        queryParams.append('search', searchQuery);
-      }
-      
-      if (viewTab === 'critical') {
-        queryParams.append('severity', 'critical');
-      } else if (viewTab === 'assigned') {
-        queryParams.append('assigned', 'true');
-      }
-      
-      return apiRequest<{ findings: Finding[] }>(`/api/admin/bounce/findings?${queryParams.toString()}`);
-    }
-  });
+  // Network status for offline mode
+  const { isOnline, wasOffline } = useNetworkStatus();
   
-  // Get areas and components for filtering
-  const { data: metaData } = useQuery({
-    queryKey: ['/api/admin/bounce/findings/metadata'],
-    queryFn: async () => {
-      return apiRequest<{ areas: string[]; components: string[] }>('/api/admin/bounce/findings/metadata');
+  // Fetch function for findings data
+  const fetchFindings = useCallback(async () => {
+    const queryParams = new URLSearchParams();
+    
+    // Add pagination parameters
+    queryParams.append('page', String(page));
+    queryParams.append('pageSize', String(pageSize));
+    
+    if (filters.severity.length > 0) {
+      queryParams.append('severity', filters.severity.join(','));
     }
-  });
+    
+    if (filters.status.length > 0) {
+      queryParams.append('status', filters.status.join(','));
+    }
+    
+    if (filters.area) {
+      queryParams.append('area', filters.area);
+    }
+    
+    if (filters.component) {
+      queryParams.append('component', filters.component);
+    }
+    
+    if (searchQuery) {
+      queryParams.append('search', searchQuery);
+    }
+    
+    if (viewTab === 'critical') {
+      queryParams.append('severity', 'critical');
+    } else if (viewTab === 'assigned') {
+      queryParams.append('assigned', 'true');
+    }
+    
+    return apiRequest(`/api/admin/bounce/findings?${queryParams.toString()}`);
+  }, [filters, viewTab, page, pageSize, searchQuery]);
+  
+  // Get findings data with filters and pagination applied - with offline support
+  const { 
+    data, 
+    isLoading, 
+    error, 
+    isStale,
+    isOnline: queryIsOnline  
+  } = useCachedQuery(
+    ['/api/admin/bounce/findings', filters, viewTab, page, pageSize],
+    fetchFindings,
+    { refetchOnReconnect: true }
+  );
+  
+  // For compatibility with existing code, simulate isFetching
+  const isFetching = isLoading && !data;
+  
+  // Fetch function for metadata
+  const fetchMetadata = useCallback(async () => {
+    return apiRequest('/api/admin/bounce/findings/metadata');
+  }, []);
+  
+  // Get areas and components for filtering - with offline support
+  const { 
+    data: metaData,
+    isStale: isMetaDataStale 
+  } = useCachedQuery(
+    ['/api/admin/bounce/findings/metadata'],
+    fetchMetadata,
+    { refetchOnReconnect: true }
+  );
+  
+  // Refresh data handler
+  const handleRefresh = useCallback(() => {
+    // Clear cache and re-fetch data
+    queryClient.invalidateQueries({ queryKey: ['/api/admin/bounce/findings'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/admin/bounce/findings/metadata'] });
+  }, [queryClient]);
   
   // Update finding status mutation
   const updateFindingMutation = useMutation({
@@ -538,6 +569,14 @@ const BounceFindings: React.FC = () => {
   
   return (
     <div className="space-y-6">
+      {/* Offline status indicator */}
+      <OfflineIndicator 
+        isOnline={isOnline} 
+        wasOffline={wasOffline} 
+        isStale={isStale || isMetaDataStale}
+        onRefresh={handleRefresh} 
+      />
+      
       <Card>
         <CardContent className="space-y-4 pt-6">
           <div className="flex flex-col md:flex-row gap-4">
