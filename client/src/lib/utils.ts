@@ -103,3 +103,20 @@ export function formatTime(date?: Date | string | null, options?: Intl.DateTimeF
     ...options
   });
 }
+
+/**
+ * Formats a date into a readable string (date only, no time)
+ * @param date The date to format
+ * @returns A formatted date string (YYYY-MM-DD)
+ */
+export function formatDateOnly(date?: Date | string | null): string {
+  if (!date) return "—";
+  
+  const dateObj = typeof date === "string" ? new Date(date) : date;
+  
+  return dateObj.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).replace(/\//g, "-");
+}
