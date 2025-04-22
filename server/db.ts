@@ -1,17 +1,12 @@
 /**
- * PKL-278651-DB-0002-SHAL
- * Database Export Shallowly Re-exports from db-factory
+ * Database Export
  * 
- * This module re-exports the database connection from db-factory
- * to ensure all database access uses the production-ready connection.
+ * This module re-exports the database connection from db-factory.
  * 
- * @framework Framework5.3
+ * @framework Framework5.2
  * @version 1.0.0
- * @lastModified 2025-04-22
  */
 
-// Import from the factory to ensure production safeguards
 import { pool, db } from './db-factory';
 
-// Re-export for use throughout the application
 export { pool, db };
