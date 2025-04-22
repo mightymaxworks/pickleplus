@@ -28,8 +28,9 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
+
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
   Select, 
@@ -63,15 +64,7 @@ import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import BounceFindingCard from './BounceFindingCard';
-import { 
-  Pagination, 
-  PaginationContent, 
-  PaginationEllipsis, 
-  PaginationItem, 
-  PaginationLink, 
-  PaginationNext, 
-  PaginationPrevious 
-} from "@/components/ui/pagination";
+import { ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from 'lucide-react';
 
 // Types for findings data
 interface Finding {
@@ -133,8 +126,20 @@ const BounceFindings: React.FC = () => {
     setPageSize(isMobile ? 5 : 10);
   }, [isMobile]);
   
+  // Update total pages when data changes
+  React.useEffect(() => {
+    if (data?.total) {
+      setTotalFindings(data.total);
+      setTotalPages(Math.ceil(data.total / pageSize));
+    }
+  }, [data, pageSize]);
+  
+  // Get total count for pagination
+  const [totalFindings, setTotalFindings] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  
   // Get findings data with filters and pagination applied
-  const { data, isLoading, error, isPreviousData, isFetching } = useQuery({
+  const { data, isLoading, error, isFetching } = useQuery({
     queryKey: ['/api/admin/bounce/findings', filters, viewTab, page, pageSize],
     queryFn: async () => {
       const queryParams = new URLSearchParams();
