@@ -1,0 +1,41 @@
+/**
+ * PKL-278651-BOUNCE-0006-AWARE - Bounce Awareness Enhancement
+ * 
+ * CSS animations and styles for the BounceStatusTicker component
+ * 
+ * @version 1.0.0
+ * @framework Framework5.2
+ */
+
+@keyframes ticker {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-ticker {
+  animation: ticker 30s linear infinite;
+  display: flex;
+  /* Double content for seamless looping */
+  padding-right: 100%;
+}
+
+.animate-ticker:hover {
+  animation-play-state: paused;
+}
+
+/* Ensure multiple iterations of the ticker content for smooth looping */
+.animate-ticker > * {
+  flex-shrink: 0;
+  margin-right: 2rem;
+}
+
+/* Ensure we display a duplicate set of items for seamless looping */
+.animate-ticker::after {
+  content: " ";
+  white-space: nowrap;
+  padding-right: 100%;
+}
