@@ -266,6 +266,175 @@ export default function LandingPage() {
       {/* CourtIQ Explanation Section */}
       <CourtIQExplanationSection />
       
+      {/* Coming Soon / V1.0 Features Section */}
+      <section className="py-16 sm:py-24 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
+        <div className="container mx-auto px-4 sm:px-6">
+          <motion.div 
+            className="text-center mb-12 sm:mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="inline-flex items-center bg-[#FF5722]/10 rounded-full px-4 py-1.5 mb-4">
+              <span className="flex h-2 w-2 rounded-full bg-[#FF5722] mr-2"></span>
+              <span className="text-sm font-medium text-[#FF5722]">Coming in v1.0</span>
+            </div>
+            
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">The Future of Pickle+</h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              We're constantly evolving the platform with new features to enhance your pickleball journey.
+              Here's a sneak peek at what's coming next.
+            </p>
+          </motion.div>
+          
+          <div className="grid md:grid-cols-2 gap-8 mb-12">
+            <motion.div 
+              className="bg-white rounded-xl overflow-hidden shadow-md border border-gray-100"
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+            >
+              <div className="p-6 sm:p-8">
+                <div className="mb-4 text-[#2196F3]">
+                  <LayoutDashboard size={32} />
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold mb-2">Enhanced Dashboard</h3>
+                <p className="text-gray-600 mb-4">
+                  A completely redesigned dashboard with personalized insights, progress tracking, 
+                  and quick access to your most important pickleball stats and activities.
+                </p>
+                <ul className="space-y-2">
+                  <li className="flex items-center text-gray-700">
+                    <div className="h-5 w-5 rounded-full bg-[#2196F3]/10 flex items-center justify-center mr-2">
+                      <Check size={12} className="text-[#2196F3]" />
+                    </div>
+                    Custom widget arrangement
+                  </li>
+                  <li className="flex items-center text-gray-700">
+                    <div className="h-5 w-5 rounded-full bg-[#2196F3]/10 flex items-center justify-center mr-2">
+                      <Check size={12} className="text-[#2196F3]" />
+                    </div>
+                    Performance trend visualization
+                  </li>
+                  <li className="flex items-center text-gray-700">
+                    <div className="h-5 w-5 rounded-full bg-[#2196F3]/10 flex items-center justify-center mr-2">
+                      <Check size={12} className="text-[#2196F3]" />
+                    </div>
+                    Goal-setting and tracking
+                  </li>
+                </ul>
+              </div>
+            </motion.div>
+            
+            <motion.div 
+              className="bg-white rounded-xl overflow-hidden shadow-md border border-gray-100"
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+            >
+              <div className="p-6 sm:p-8">
+                <div className="mb-4 text-[#673AB7]">
+                  <Activity size={32} />
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold mb-2">Advanced Match Analysis</h3>
+                <p className="text-gray-600 mb-4">
+                  Detailed match statistics and analysis to help you understand your performance 
+                  and identify areas for improvement with actionable insights.
+                </p>
+                <ul className="space-y-2">
+                  <li className="flex items-center text-gray-700">
+                    <div className="h-5 w-5 rounded-full bg-[#673AB7]/10 flex items-center justify-center mr-2">
+                      <Check size={12} className="text-[#673AB7]" />
+                    </div>
+                    Shot-by-shot breakdown
+                  </li>
+                  <li className="flex items-center text-gray-700">
+                    <div className="h-5 w-5 rounded-full bg-[#673AB7]/10 flex items-center justify-center mr-2">
+                      <Check size={12} className="text-[#673AB7]" />
+                    </div>
+                    Pattern recognition
+                  </li>
+                  <li className="flex items-center text-gray-700">
+                    <div className="h-5 w-5 rounded-full bg-[#673AB7]/10 flex items-center justify-center mr-2">
+                      <Check size={12} className="text-[#673AB7]" />
+                    </div>
+                    AI-powered improvement suggestions
+                  </li>
+                </ul>
+              </div>
+            </motion.div>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-6">
+            <motion.div 
+              className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: 0 }}
+            >
+              <div className="h-12 w-12 rounded-lg bg-[#4CAF50]/10 flex items-center justify-center text-[#4CAF50] mb-4">
+                <Users size={24} />
+              </div>
+              <h3 className="text-lg font-bold mb-2">Team Management</h3>
+              <p className="text-gray-600 text-sm">
+                Create and manage teams, track team performance, and coordinate practice sessions with your doubles partners.
+              </p>
+            </motion.div>
+            
+            <motion.div 
+              className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+            >
+              <div className="h-12 w-12 rounded-lg bg-[#FF9800]/10 flex items-center justify-center text-[#FF9800] mb-4">
+                <Calendar size={24} />
+              </div>
+              <h3 className="text-lg font-bold mb-2">Advanced Scheduling</h3>
+              <p className="text-gray-600 text-sm">
+                Integrated calendar with court booking, availability sharing, and automated reminders for upcoming matches and events.
+              </p>
+            </motion.div>
+            
+            <motion.div 
+              className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+            >
+              <div className="h-12 w-12 rounded-lg bg-[#9C27B0]/10 flex items-center justify-center text-[#9C27B0] mb-4">
+                <Trophy size={24} />
+              </div>
+              <h3 className="text-lg font-bold mb-2">Custom Tournaments</h3>
+              <p className="text-gray-600 text-sm">
+                Create your own tournaments with customizable formats, brackets, and scoring systems for clubs and community events.
+              </p>
+            </motion.div>
+          </div>
+          
+          <motion.div 
+            className="text-center mt-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <Button size="lg" className="bg-[#FF5722] hover:bg-[#E64A19] text-white">
+              Join the Waiting List <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+            <p className="text-sm text-gray-500 mt-3">
+              Be the first to know when new features are released.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+      
       {/* Rating Systems Integration Section */}
       <RatingSystemsIntegrationSection />
       
@@ -825,62 +994,139 @@ export default function LandingPage() {
 
       {/* Enhanced Changelog is already included above */}
 
-      {/* Final CTA Section */}
-      <section className="py-14 sm:py-20 bg-gradient-to-br from-[#2196F3] to-[#1a75c9] text-white overflow-hidden relative">
-        {/* Background pattern decoration */}
-        <div className="absolute inset-0 opacity-10">
-          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1"/>
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#grid)" />
-          </svg>
-        </div>
-        
-        <div className="container relative z-10 mx-auto px-4 sm:px-6 text-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
+      {/* Enhanced Final CTA Section */}
+      <section className="py-16 sm:py-24 bg-gradient-to-br from-[#FF5722]/5 via-[#673AB7]/5 to-[#2196F3]/5 overflow-hidden">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="grid md:grid-cols-2 gap-8 sm:gap-16 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+            >
+              <motion.div 
+                className="inline-flex items-center bg-[#673AB7]/10 rounded-full px-4 py-1.5 mb-4"
+                initial={{ opacity: 0, y: -10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: 0.3 }}
+              >
+                <span className="flex h-2 w-2 rounded-full bg-[#673AB7] mr-2"></span>
+                <span className="text-sm font-medium text-[#673AB7]">Limited Time Offer</span>
+              </motion.div>
+              
+              <h2 className="text-4xl sm:text-5xl font-bold mb-6 leading-tight">
+                Transform Your <br className="hidden sm:block" />
+                <span className="text-[#FF5722]">Pickleball Journey</span> <br className="hidden sm:block" />
+                Today
+              </h2>
+              
+              <p className="text-lg text-gray-700 mb-8 max-w-lg">
+                Join thousands of players who are tracking their progress, connecting with the community, and taking their game to the next level with Pickle+.
+              </p>
+              
+              <div className="space-y-4 mb-8">
+                <div className="flex items-center text-gray-700">
+                  <div className="h-6 w-6 rounded-full bg-[#4CAF50]/10 flex items-center justify-center mr-3">
+                    <Check className="h-4 w-4 text-[#4CAF50]" />
+                  </div>
+                  <span className="font-medium">Free access to community features</span>
+                </div>
+                <div className="flex items-center text-gray-700">
+                  <div className="h-6 w-6 rounded-full bg-[#4CAF50]/10 flex items-center justify-center mr-3">
+                    <Check className="h-4 w-4 text-[#4CAF50]" />
+                  </div>
+                  <span className="font-medium">Unlimited match tracking</span>
+                </div>
+                <div className="flex items-center text-gray-700">
+                  <div className="h-6 w-6 rounded-full bg-[#4CAF50]/10 flex items-center justify-center mr-3">
+                    <Check className="h-4 w-4 text-[#4CAF50]" />
+                  </div>
+                  <span className="font-medium">Exclusive early access to new features</span>
+                </div>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button size="lg" className="bg-[#FF5722] hover:bg-[#E64A19] text-white" onClick={() => navigate("/auth")}>
+                  Get Started Now <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+                <Button size="lg" variant="outline" className="border-[#673AB7] text-[#673AB7] hover:bg-[#673AB7]/10">
+                  Schedule a Demo
+                </Button>
+              </div>
+            </motion.div>
+            
+            <motion.div
+              className="relative"
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+            >
+              <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200 p-6 sm:p-8">
+                <div className="flex justify-between items-start mb-6">
+                  <div>
+                    <h3 className="text-2xl font-bold mb-1">Founding Member</h3>
+                    <div className="flex items-center">
+                      <span className="text-3xl font-bold text-[#FF5722]">$0</span>
+                      <span className="text-gray-500 ml-2">/ Limited Time</span>
+                    </div>
+                  </div>
+                  <Badge className="bg-[#4CAF50]">Most Popular</Badge>
+                </div>
+                
+                <ul className="space-y-3 mb-8">
+                  {[
+                    "Premium CourtIQ™ Analytics",
+                    "Tournament Passport with QR Code",
+                    "Community Membership Features",
+                    "Match History and Statistics",
+                    "Achievement System",
+                    "Court Booking Integration",
+                    "Partner Matching System"
+                  ].map((feature, index) => (
+                    <li key={index} className="flex items-start">
+                      <div className="h-6 w-6 rounded-full bg-[#673AB7]/10 flex-shrink-0 flex items-center justify-center mr-3 mt-0.5">
+                        <Check size={14} className="text-[#673AB7]" />
+                      </div>
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                
+                <div className="bg-gray-50 -mx-8 -mb-8 p-6 mt-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="font-medium">Available Spots</div>
+                    <div className="font-bold">27 / 100</div>
+                  </div>
+                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden mb-8">
+                    <div className="h-full bg-[#FF5722] rounded-full" style={{ width: "27%" }}></div>
+                  </div>
+                  
+                  <Button size="lg" className="w-full bg-[#673AB7] hover:bg-[#5E35B1] text-white" onClick={() => navigate("/auth")}>
+                    Claim Your Spot <ChevronsRight className="ml-1 h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="absolute -bottom-4 -right-4 bg-white p-3 rounded-lg shadow-lg rotate-6">
+                <div className="text-[#FF5722] font-bold text-lg flex items-center">
+                  <Star className="h-5 w-5 fill-[#FF5722] mr-1" />
+                  Limited Offer!
+                </div>
+              </div>
+            </motion.div>
+          </div>
+          
+          <motion.p 
+            className="text-center text-sm text-gray-500 mt-12"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="max-w-3xl mx-auto"
+            transition={{ duration: 0.4, delay: 0.6 }}
           >
-            <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6 border border-white/20">
-              <span className="flex h-2 w-2 rounded-full bg-white mr-2"></span>
-              <span className="text-sm font-medium">Final Beta Release - Limited Spots Available</span>
-            </div>
-            
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6 leading-tight">
-              Ready to Transform Your Pickleball Experience?
-            </h2>
-            <p className="text-base sm:text-lg mb-8 sm:mb-10 mx-auto text-white/90 max-w-2xl">
-              Join our community of players who are already tracking their progress and improving their game with data-driven insights from Pickle+
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-sm sm:max-w-md mx-auto">
-              <Button 
-                size="lg" 
-                className="bg-white text-[#2196F3] hover:bg-white/90 w-full font-semibold text-base sm:text-lg shadow-lg relative overflow-hidden group"
-                onClick={() => navigate("/auth")}
-              >
-                <span className="relative z-10">Secure Your Beta Spot</span>
-                <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="border-white border-2 text-white hover:bg-white/10 w-full font-medium text-base sm:text-lg bg-black/20"
-                onClick={() => navigate("/auth")}
-              >
-                Sign In
-              </Button>
-            </div>
-            
-            <p className="mt-6 text-sm text-white/70">
-              No credit card required · Free forever · Level up today
-            </p>
-          </motion.div>
+            No credit card required · Free forever · Level up today
+          </motion.p>
         </div>
       </section>
 
