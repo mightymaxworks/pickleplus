@@ -11,7 +11,7 @@ mkdir -p dist
 mkdir -p dist/client/dist
 
 # Add a Procfile for clarity on how to start the server
-echo "web: npm start" > dist/Procfile
+echo "web: node index.js" > dist/Procfile
 
 # Add a .env file with default port configuration
 echo "PORT=80" > dist/.env 
@@ -93,8 +93,14 @@ EOL
 
 # Step 3: Copy ES module compatible server and package.json
 echo "📄 Setting up ES module compatible server..."
+# Copy as both es-deployment.js and index.js to ensure any command will work
+cp es-deployment.js dist/es-deployment.js
 cp es-deployment.js dist/index.js
 cp es-deploy-package.json dist/package.json
+
+# Create a minimal server.js that just requires the main file
+echo "// Simple entry point that loads the main server file
+import './index.js';" > dist/server.js
 
 # Step 4: Install dependencies
 echo "📦 Installing ES module dependencies..."

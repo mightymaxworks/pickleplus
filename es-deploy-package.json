@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Pickle+ Platform ES Module Compatible Deployment",
   "type": "module",
-  "main": "es-deployment.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node es-deployment.js"
+    "start": "node index.js"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",

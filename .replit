@@ -7,7 +7,7 @@ channel = "stable-24_05"
 
 [deployment]
 deploymentTarget = "autoscale"
-build = ["sh", "-c", "bash deploy-ready.sh"]
+build = ["sh", "-c", "bash es-build.sh"]
 run = ["sh", "-c", "cd dist && npm start"]
 
 [workflows]
