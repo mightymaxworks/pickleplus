@@ -219,9 +219,22 @@ router.get('/', communityAuth, async (req: Request, res: Response) => {
     
     console.log('[PKL-278651-COMM-0017-SEARCH] Processed filters:', JSON.stringify(filters));
     
+    // Always search for default communities (isDefault = true) as well
+    // Add special flag to include default communities
+    filters.includeDefaults = true;
+    
+    // Get communities based on filters
     const communities = await storage.getCommunities(filters);
     
-    res.json(communities);
+    console.log(`[PKL-278651-COMM-0020-DEFGRP] Found ${communities.length} communities (including defaults)`);
+    
+    // Return communities in the format expected by the client
+    res.json({
+      communities,
+      count: communities.length,
+      total: communities.length,
+      message: "Community data fetched successfully"
+    });
   } catch (error) {
     console.error('[PKL-278651-COMM-0017-SEARCH] Error getting communities:', error);
     res.status(500).json({ message: 'Failed to fetch communities' });
