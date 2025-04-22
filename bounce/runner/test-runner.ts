@@ -14,7 +14,38 @@ import path from 'path';
 import { bounceIdentity } from '../core/bounce-identity';
 import { nonDestructiveTester } from '../core/non-destructive-tester';
 import { BounceTestRunStatus, BounceFindingSeverity } from '../../shared/schema/bounce';
-import { Browser, Page, chromium, firefox, webkit } from 'playwright';
+// Playwright interfaces without requiring the dependency
+// Will use dynamic import when actually needed to avoid dependency issues
+export interface Browser {
+  close(): Promise<void>;
+  browserType(): { name(): string };
+  newPage(): Promise<Page>;
+}
+
+export interface Page {
+  close(): Promise<void>;
+  goto(url: string): Promise<any>;
+  waitForLoadState(state: string): Promise<void>;
+  click(selector: string): Promise<void>;
+  fill(selector: string, value: string): Promise<void>;
+  $(selector: string): Promise<any>;
+  $$(selector: string): Promise<any[]>;
+  textContent(selector: string): Promise<string | null>;
+  waitForTimeout(timeout: number): Promise<void>;
+  screenshot(): Promise<Buffer>;
+  evaluate(fn: () => any): Promise<any>;
+  url(): string;
+}
+
+// We'll use dynamic import of playwright when actually needed
+async function getDynamicPlaywright() {
+  try {
+    return await import('playwright');
+  } catch (error) {
+    console.error('Playwright not installed. Run the setup script first.');
+    throw new Error('Playwright not installed. Run: bash bounce/setup.sh');
+  }
+}
 
 /**
  * Configuration for the test runner

@@ -15,12 +15,18 @@ Bounce is a comprehensive automated testing and CI/CD framework developed for th
 To use Bounce, you'll need to install the following dependencies:
 
 ```bash
-# Run the setup script
+# Run the setup script (recommended approach)
 bash bounce/setup.sh
-
-# Or install dependencies manually
-npm install -D playwright@latest colors@latest commander@latest dotenv@latest
 ```
+
+The setup script installs dependencies without modifying package.json, which avoids conflicts with Replit's package management system. It installs:
+
+- playwright (browser automation)
+- colors (terminal coloring)
+- commander (command-line interface)
+- dotenv (environment variables)
+
+**Important**: The dependencies are installed with `--no-save` to prevent modifying package.json. If you reinstall node_modules or restart the Repl, you'll need to run the setup script again.
 
 ## Architecture
 Bounce consists of several core components:

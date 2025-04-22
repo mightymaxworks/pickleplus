@@ -12,13 +12,22 @@
 import { Command } from 'commander';
 import { bounceIdentity } from './core/bounce-identity';
 import { nonDestructiveTester } from './core/non-destructive-tester';
-import { reportGenerator } from './reporting/report-generator';
+import { reportGenerator, enhancedReportGenerator } from './reporting';
 import { RunnerConfig, TestSuite, runTests } from './runner/test-runner';
 import { BounceTestRunStatus, BounceFindingSeverity } from '../shared/schema/bounce';
 import fs from 'fs';
 import path from 'path';
-import colors from 'colors/safe';
 import dotenv from 'dotenv';
+
+// Use built-in terminal colors to avoid unnecessary dependencies
+const colors = {
+  red: (text: string) => `\x1b[31m${text}\x1b[0m`,
+  green: (text: string) => `\x1b[32m${text}\x1b[0m`,
+  yellow: (text: string) => `\x1b[33m${text}\x1b[0m`,
+  blue: (text: string) => `\x1b[34m${text}\x1b[0m`,
+  magenta: (text: string) => `\x1b[35m${text}\x1b[0m`,
+  cyan: (text: string) => `\x1b[36m${text}\x1b[0m`
+};
 
 // Load environment variables
 dotenv.config();
