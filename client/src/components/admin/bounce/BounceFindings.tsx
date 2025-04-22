@@ -69,6 +69,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import BounceFindingCard from './BounceFindingCard';
 import { MobilePagination } from './enhanced-pagination';
+import BounceFindingsTable from './BounceFindingsTable';
 
 // Types for findings data
 interface Finding {
