@@ -30,7 +30,7 @@ export function EnhancedHeroSection() {
           >
             <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6 border border-white/20">
               <span className="flex h-2 w-2 rounded-full bg-white mr-2"></span>
-              <span className="text-sm font-medium">New: Golden Tickets & Tournament Discovery</span>
+              <span className="text-sm font-medium">Beta v0.9.0: Experience Pickle+ before official launch</span>
             </div>
             
             <h1 className="text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 leading-tight tracking-tight">
