@@ -98,13 +98,4 @@ async function main() {
   }
 }
 
-// Run the migration
-main()
-  .then(() => {
-    console.log("[PKL-278651-COMM-0020-DEFGRP] Migration script completed");
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error("[PKL-278651-COMM-0020-DEFGRP] Migration script failed:", error);
-    process.exit(1);
-  });
+main().catch(console.error);
