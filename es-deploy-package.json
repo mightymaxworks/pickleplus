@@ -1,0 +1,18 @@
+{
+  "name": "pickle-plus",
+  "version": "1.0.0",
+  "description": "Pickle+ Platform ES Module Compatible Deployment",
+  "type": "module",
+  "main": "es-deployment.js",
+  "scripts": {
+    "start": "node es-deployment.js"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "connect-pg-simple": "^9.0.1",
+    "express": "^4.18.2",
+    "express-session": "^1.18.0",
+    "memorystore": "^1.6.7",
+    "ws": "^8.14.2"
+  }
+}
