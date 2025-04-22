@@ -192,27 +192,88 @@ export const communityStorageImplementation: CommunityStorage = {
     
     let query = db.select().from(communities);
     
+    // Always include default communities in the results (isDefault=true)
+    // Create a condition to either match filters OR be a default community
+    let hasConditions = false;
+    
     if (location) {
-      query = query.where(ilike(communities.location, `%${location}%`));
+      query = query.where(
+        or(
+          ilike(communities.location, `%${location}%`),
+          eq(communities.isDefault, true)
+        )
+      );
+      hasConditions = true;
     }
     
     if (skillLevel) {
-      query = query.where(eq(communities.skillLevel, skillLevel));
+      if (hasConditions) {
+        query = query.where(
+          or(
+            eq(communities.skillLevel, skillLevel),
+            eq(communities.isDefault, true)
+          )
+        );
+      } else {
+        query = query.where(
+          or(
+            eq(communities.skillLevel, skillLevel),
+            eq(communities.isDefault, true)
+          )
+        );
+        hasConditions = true;
+      }
     }
     
     if (tags && tags.length > 0) {
       // For simplicity, we'll search for any of the tags in the comma-separated list
       const tagConditions = tags.map(tag => ilike(communities.tags, `%${tag}%`));
-      query = query.where(or(...tagConditions));
+      if (hasConditions) {
+        query = query.where(
+          or(
+            or(...tagConditions),
+            eq(communities.isDefault, true)
+          )
+        );
+      } else {
+        query = query.where(
+          or(
+            or(...tagConditions),
+            eq(communities.isDefault, true)
+          )
+        );
+        hasConditions = true;
+      }
     }
     
     if (search) {
-      query = query.where(
-        or(
-          ilike(communities.name, `%${search}%`),
-          ilike(communities.description, `%${search}%`)
-        )
-      );
+      if (hasConditions) {
+        query = query.where(
+          or(
+            or(
+              ilike(communities.name, `%${search}%`),
+              ilike(communities.description, `%${search}%`)
+            ),
+            eq(communities.isDefault, true)
+          )
+        );
+      } else {
+        query = query.where(
+          or(
+            or(
+              ilike(communities.name, `%${search}%`),
+              ilike(communities.description, `%${search}%`)
+            ),
+            eq(communities.isDefault, true)
+          )
+        );
+        hasConditions = true;
+      }
+    }
+    
+    // If no conditions were added yet, add a simple condition to include defaults
+    if (!hasConditions) {
+      console.log('[PKL-278651-COMM-0020-DEFGRP] No filter conditions, including default communities');
     }
     
     return await query
