@@ -84,6 +84,16 @@ export default function DashboardContent() {
         transition={{ duration: 0.5 }}
         className="relative z-10"
       >
+        {/* Bounce Testing Status Ticker - Moved above Welcome section */}
+        <motion.div 
+          className="mb-4"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05, duration: 0.5 }}
+        >
+          <BounceStatusTicker />
+        </motion.div>
+        
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           {/* Welcome Section */}
           <motion.div 
@@ -181,15 +191,6 @@ export default function DashboardContent() {
           </motion.div>
           
           {/* Mastery Paths Section */}
-          {/* Bounce Testing Status Ticker */}
-          <motion.div 
-            className="md:col-span-12 mb-4"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15, duration: 0.5 }}
-          >
-            <BounceStatusTicker />
-          </motion.div>
 
           <motion.div 
             className="md:col-span-12"
