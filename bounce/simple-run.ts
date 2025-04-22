@@ -168,5 +168,10 @@ async function runSimpleDemo() {
   }
 }
 
-// Run the demo
-runSimpleDemo();
+// Export the function for importing in CLI
+export { runSimpleDemo };
+
+// Run the demo directly if this script is executed
+if (require.main === module) {
+  runSimpleDemo();
+}

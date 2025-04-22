@@ -1,236 +1,319 @@
+#!/usr/bin/env node
 /**
- * PKL-278651-BOUNCE-0010-CICD - Bounce CI/CD Command Line Interface
+ * PKL-278651-BOUNCE-0001-CORE
+ * Bounce CLI - Command-line interface for the Bounce automated testing system
  * 
- * This module provides a command-line interface for running Bounce tests
- * as part of CI/CD workflows directly within Replit.
+ * This module provides a command-line interface for running Bounce tests and
+ * generating reports. The CLI can be used to run tests, generate bug reports,
+ * and convert bug reports into actionable sprint plans with Framework 5.2 compliant codes.
  * 
  * @framework Framework5.2
- * @version 1.0.0
+ * @version 1.0.1
  * @lastModified 2025-04-22
  */
 
 import { Command } from 'commander';
-import { bounceIdentity } from './core/bounce-identity';
-import { nonDestructiveTester } from './core/non-destructive-tester';
-import { reportGenerator, enhancedReportGenerator, bugReportGenerator } from './reporting';
-import { RunnerConfig, TestSuite, runTests } from './runner/test-runner';
-import { BounceTestRunStatus, BounceFindingSeverity } from '../shared/schema/bounce';
-import fs from 'fs';
 import path from 'path';
-import dotenv from 'dotenv';
+import fs from 'fs';
+import { bugReportGenerator } from './reporting';
+import { actionItemsGenerator } from './reporting';
+import { db } from '../server/db';
 
-// Use built-in terminal colors to avoid unnecessary dependencies
+// Simple color functions without external dependencies
 const colors = {
-  red: (text: string) => `\x1b[31m${text}\x1b[0m`,
+  blue: (text: string) => `\x1b[34m${text}\x1b[0m`,
   green: (text: string) => `\x1b[32m${text}\x1b[0m`,
   yellow: (text: string) => `\x1b[33m${text}\x1b[0m`,
-  blue: (text: string) => `\x1b[34m${text}\x1b[0m`,
-  magenta: (text: string) => `\x1b[35m${text}\x1b[0m`,
-  cyan: (text: string) => `\x1b[36m${text}\x1b[0m`
+  red: (text: string) => `\x1b[31m${text}\x1b[0m`,
+  cyan: (text: string) => `\x1b[36m${text}\x1b[0m`,
+  white: (text: string) => `\x1b[37m${text}\x1b[0m`,
 };
 
-// Load environment variables
-dotenv.config();
-
-// Create the command-line program
+// Initialize commander
 const program = new Command();
 
+// Set up program info
 program
-  .name('bounce-cli')
-  .description('Bounce Automated Testing System for CI/CD')
-  .version('1.0.0');
+  .name('bounce')
+  .description('Bounce automated testing system')
+  .version('1.0.1');
 
-// Command for running tests
+// run command - runs automated tests
 program
   .command('run')
   .description('Run automated tests')
-  .option('-s, --suite <name>', 'Test suite to run (e.g., "api", "ui", "all")', 'all')
-  .option('-b, --browsers <list>', 'Comma-separated list of browsers to test', 'chrome')
-  .option('-e, --environment <env>', 'Environment to test against', 'development')
-  .option('-o, --output <format>', 'Output format (json, markdown, html, buglist)', 'markdown')
-  .option('-v, --verbose', 'Enable verbose logging')
-  .option('--headless', 'Run browser tests in headless mode', true)
-  .option('--ci-mode', 'Run in CI mode (fail on critical findings)', false)
+  .option('-u, --url <url>', 'Base URL to test', 'http://localhost:3000')
+  .option('-b, --browser <browser>', 'Browser to use (chrome, firefox, webkit)', 'chrome')
+  .option('-m, --mobile', 'Run mobile tests', false)
+  .option('-c, --coverage <percent>', 'Coverage target percent', '80')
+  .option('-d, --headless', 'Run in headless mode', true)
+  .option('-t, --timeout <timeout>', 'Timeout in milliseconds', '30000')
   .action(async (options) => {
+    console.log(chalk.blue('┌─────────────────────────────────┐'));
+    console.log(chalk.blue('│      BOUNCE TEST RUNNER         │'));
+    console.log(chalk.blue('└─────────────────────────────────┘'));
+    
+    console.log(chalk.yellow('Starting tests with options:'));
+    console.log(chalk.cyan('URL:'), options.url);
+    console.log(chalk.cyan('Browser:'), options.browser);
+    console.log(chalk.cyan('Mobile:'), options.mobile ? 'Yes' : 'No');
+    console.log(chalk.cyan('Coverage:'), `${options.coverage}%`);
+    console.log(chalk.cyan('Headless:'), options.headless ? 'Yes' : 'No');
+    console.log(chalk.cyan('Timeout:'), `${options.timeout}ms`);
+    
     try {
-      console.log(colors.blue('┌─────────────────────────────────┐'));
-      console.log(colors.blue('│      BOUNCE TESTING SYSTEM      │'));
-      console.log(colors.blue('└─────────────────────────────────┘'));
-      console.log(colors.yellow(`Starting test run for suite: ${options.suite}`));
-      console.log(colors.yellow(`Testing environment: ${options.environment}`));
-      console.log(colors.yellow(`Browsers: ${options.browsers}`));
-      
-      // Initialize test run
-      const testRunId = await bounceIdentity.startTestRun(
-        options.browsers,
-        options.suite
-      );
-      
-      // Initialize non-destructive tester
-      nonDestructiveTester.initialize(testRunId);
-      
-      // Set up test configuration
-      const config: RunnerConfig = {
-        suite: options.suite,
-        browsers: options.browsers.split(','),
-        environment: options.environment,
-        headless: options.headless,
-        verbose: options.verbose,
-        testRunId
-      };
+      // Import the test runner dynamically to avoid import issues
+      const { testRunner } = await import('./runner/test-runner');
       
       // Run the tests
-      const results = await runTests(config);
+      const testRunId = await testRunner.runTests({
+        baseUrl: options.url,
+        browser: options.browser,
+        mobile: options.mobile,
+        coverage: parseInt(options.coverage),
+        headless: options.headless,
+        timeout: parseInt(options.timeout)
+      });
       
-      // Process results
-      const criticalFindings = results.findings.filter(
-        f => f.severity === BounceFindingSeverity.CRITICAL
-      ).length;
+      console.log(chalk.green(`\nTests completed with ID: ${testRunId}`));
+      console.log(chalk.yellow('\nGenerating bug report...'));
       
-      const highFindings = results.findings.filter(
-        f => f.severity === BounceFindingSeverity.HIGH
-      ).length;
-      
-      const status = results.success 
-        ? BounceTestRunStatus.COMPLETED 
-        : BounceTestRunStatus.FAILED;
-      
-      // End the test run
-      await bounceIdentity.endTestRun(
-        status,
-        results.findings.length,
-        results.coverage
+      // Generate a bug report
+      const report = await bugReportGenerator.generateBugReport(
+        testRunId,
+        {
+          includeEvidence: true,
+          includeSolutionPrompts: true,
+          sortBySeverity: true,
+          groupByArea: true
+        }
       );
       
-      // Generate report
-      let reportContent = '';
-      let reportPath = '';
+      // Save the report to a file
+      const timestamp = Date.now();
+      const reportPath = bugReportGenerator.saveReportToFile(
+        report,
+        `./reports/bounce_report_${timestamp}.md`
+      );
       
-      // Use the proper bug report generator for buglist format
-      if (options.output === 'buglist') {
-        console.log(colors.cyan('\nGenerating detailed bug report with solution prompts...'));
+      console.log(chalk.green(`\nBug report generated: ${reportPath}`));
+      
+      // Ask if user wants to generate a sprint plan
+      console.log(chalk.yellow('\nWould you like to generate a sprint plan from this report? (y/n)'));
+      process.stdin.once('data', async (data) => {
+        const response = data.toString().trim().toLowerCase();
         
-        // Use the dedicated bug report generator which properly handles all severity levels
-        reportContent = await bugReportGenerator.generateBugReport(
-          testRunId,
-          { 
-            includeEvidence: true,
-            includeSolutionPrompts: true,
-            sortBySeverity: true,
-            groupByArea: true
-          }
-        );
+        if (response === 'y' || response === 'yes') {
+          console.log(chalk.yellow('\nGenerating sprint plan...'));
+          
+          // Generate a sprint plan
+          const sprintPlanPath = actionItemsGenerator.generateActionItemsFromReport(reportPath);
+          
+          console.log(chalk.green(`\nSprint plan generated: ${sprintPlanPath}`));
+          console.log(chalk.cyan('\nYou can now begin fixing these issues using Framework 5.2 sprint codes.'));
+        }
         
-        reportPath = bugReportGenerator.saveReportToFile(
-          reportContent,
-          path.join('reports', `bounce_buglist_${testRunId}.md`)
-        );
+        process.exit(0);
+      });
+    } catch (error) {
+      console.error(chalk.red(`\nError running tests: ${(error as Error).message}`));
+      process.exit(1);
+    }
+  });
+
+// report command - generates a report from a past test run
+program
+  .command('report')
+  .description('Generate a report from a test run')
+  .argument('<test-run-id>', 'Test run ID')
+  .option('-e, --evidence', 'Include evidence', true)
+  .option('-s, --solution', 'Include solution prompts', true)
+  .option('-o, --output <filename>', 'Output filename')
+  .action(async (testRunId, options) => {
+    console.log(chalk.blue('┌─────────────────────────────────┐'));
+    console.log(chalk.blue('│      BOUNCE REPORT GENERATOR    │'));
+    console.log(chalk.blue('└─────────────────────────────────┘'));
+    
+    console.log(chalk.yellow(`Generating report for test run: ${testRunId}`));
+    
+    try {
+      // Generate a bug report
+      const report = await bugReportGenerator.generateBugReport(
+        parseInt(testRunId),
+        {
+          includeEvidence: options.evidence,
+          includeSolutionPrompts: options.solution,
+          sortBySeverity: true,
+          groupByArea: true
+        }
+      );
+      
+      // Determine output filename
+      const timestamp = Date.now();
+      const outputFilename = options.output || `./reports/bounce_report_${timestamp}.md`;
+      
+      // Save the report to a file
+      const reportPath = bugReportGenerator.saveReportToFile(report, outputFilename);
+      
+      console.log(chalk.green(`\nBug report generated: ${reportPath}`));
+      
+      // Ask if user wants to generate a sprint plan
+      console.log(chalk.yellow('\nWould you like to generate a sprint plan from this report? (y/n)'));
+      process.stdin.once('data', async (data) => {
+        const response = data.toString().trim().toLowerCase();
         
-        console.log(colors.green(`Bug report with solution prompts generated successfully!`));
+        if (response === 'y' || response === 'yes') {
+          console.log(chalk.yellow('\nGenerating sprint plan...'));
+          
+          // Generate a sprint plan
+          const sprintPlanPath = actionItemsGenerator.generateActionItemsFromReport(reportPath);
+          
+          console.log(chalk.green(`\nSprint plan generated: ${sprintPlanPath}`));
+          console.log(chalk.cyan('\nYou can now begin fixing these issues using Framework 5.2 sprint codes.'));
+        }
+        
+        process.exit(0);
+      });
+    } catch (error) {
+      console.error(chalk.red(`\nError generating report: ${(error as Error).message}`));
+      process.exit(1);
+    }
+  });
+
+// sprint command - generates a sprint plan from a bug report
+program
+  .command('sprint')
+  .description('Generate a sprint plan from a bug report')
+  .option('-r, --report <filename>', 'Report filename')
+  .option('-d, --date <date>', 'Report date (e.g. 2025-04-22)')
+  .action(async (options) => {
+    console.log(chalk.blue('┌─────────────────────────────────┐'));
+    console.log(chalk.blue('│      BOUNCE SPRINT GENERATOR    │'));
+    console.log(chalk.blue('└─────────────────────────────────┘'));
+    
+    try {
+      // Find the report file
+      let reportFile: string | null = null;
+      
+      if (options.report) {
+        // Use the specified report file
+        reportFile = path.resolve(options.report);
+        
+        if (!fs.existsSync(reportFile)) {
+          console.error(chalk.red(`Report file not found: ${reportFile}`));
+          process.exit(1);
+        }
+      } else if (options.date) {
+        // Find a report file by date
+        console.log(chalk.yellow(`Looking for bug reports from ${options.date}...`));
+        reportFile = actionItemsGenerator.findBugReportFile(options.date);
       } else {
-        // Use standard report generator for other formats
-        reportContent = await reportGenerator.generateTestRunReport(
-          testRunId,
-          { format: options.output as any, includeEvidence: true }
-        );
-        
-        reportPath = reportGenerator.saveReportToFile(
-          reportContent,
-          options.output as any,
-          path.join('reports', `bounce_report_${testRunId}.${options.output === 'markdown' ? 'md' : options.output}`)
-        );
+        // Find the latest report file
+        console.log(chalk.yellow('Looking for the latest bug report...'));
+        reportFile = actionItemsGenerator.findBugReportFile();
       }
       
-      // Print summary
-      console.log(colors.blue('\n┌─────────────────────────────────┐'));
-      console.log(colors.blue('│           TEST SUMMARY          │'));
-      console.log(colors.blue('└─────────────────────────────────┘'));
-      console.log(`Total tests: ${colors.cyan(String(results.total))}`);
-      console.log(`Passed: ${colors.green(String(results.passed))}`);
-      console.log(`Failed: ${colors.red(String(results.failed))}`);
-      console.log(`Skipped: ${colors.yellow(String(results.skipped))}`);
-      console.log(`Coverage: ${colors.cyan(String(results.coverage))}%`);
-      console.log(colors.yellow('\nFindings:'));
-      console.log(`Critical: ${colors.red(String(criticalFindings))}`);
-      console.log(`High: ${colors.magenta(String(highFindings))}`);
-      console.log(`Other: ${colors.yellow(String(results.findings.length - criticalFindings - highFindings))}`);
-      console.log(colors.cyan(`\nReport saved to: ${reportPath}`));
-      
-      // Exit with appropriate code for CI
-      if (options.ciMode && (criticalFindings > 0 || !results.success)) {
-        console.log(colors.red('\nCI check failed due to critical issues or test failures'));
+      if (!reportFile) {
+        console.error(chalk.red('No bug report files found.'));
+        console.log(chalk.yellow('Please run Bounce tests first to generate bug reports.'));
         process.exit(1);
       }
       
-      console.log(colors.green('\nBounce test run completed successfully'));
+      console.log(chalk.green(`Found bug report: ${reportFile}`));
+      console.log(chalk.yellow('Generating sprint planning document...'));
+      
+      // Generate the sprint planning document
+      const sprintPlanFile = actionItemsGenerator.generateActionItemsFromReport(reportFile);
+      
+      console.log(chalk.green(`\nSprint planning document generated: ${sprintPlanFile}`));
+      console.log(chalk.cyan('\nYou can now begin fixing these issues using Framework 5.2 sprint codes.'));
+      
     } catch (error) {
-      console.error(colors.red(`Error running tests: ${(error as Error).message}`));
+      console.error(chalk.red(`\nError generating sprint plan: ${(error as Error).message}`));
       process.exit(1);
     }
   });
 
-// Command for initializing test suites
+// demo command - runs the simplified demo
 program
-  .command('init')
-  .description('Initialize test suite configuration')
-  .option('-d, --directory <path>', 'Directory to initialize', './bounce/tests')
-  .action((options) => {
+  .command('demo')
+  .description('Run a simplified demo of the Bounce reporting system')
+  .action(async () => {
+    console.log(chalk.blue('┌─────────────────────────────────┐'));
+    console.log(chalk.blue('│      BOUNCE DEMO                │'));
+    console.log(chalk.blue('└─────────────────────────────────┘'));
+    
     try {
-      if (!fs.existsSync(options.directory)) {
-        fs.mkdirSync(options.directory, { recursive: true });
-      }
+      // Import the simple-run module dynamically
+      const { runSimpleDemo } = await import('./simple-run');
       
-      // Create sample test suite configuration
-      const sampleConfig: TestSuite = {
-        name: 'default',
-        tests: [
-          {
-            name: 'Basic Functionality',
-            description: 'Tests core application functionality',
-            paths: ['/', '/communities', '/profile'],
-            steps: [
-              { action: 'navigate', target: '/' },
-              { action: 'assertElementExists', target: 'h1', value: 'Welcome to Pickle+' },
-              { action: 'navigate', target: '/communities' },
-              { action: 'assertElementCount', target: '.community-card', value: '1' }
-            ]
-          }
-        ]
-      };
+      // Run the demo
+      await runSimpleDemo();
       
-      fs.writeFileSync(
-        path.join(options.directory, 'default-suite.json'),
-        JSON.stringify(sampleConfig, null, 2),
-        'utf8'
-      );
-      
-      console.log(colors.green(`Test suite configuration initialized at ${options.directory}/default-suite.json`));
+      // Ask if user wants to generate a sprint plan
+      console.log(chalk.yellow('\nWould you like to generate a sprint plan from this demo report? (y/n)'));
+      process.stdin.once('data', async (data) => {
+        const response = data.toString().trim().toLowerCase();
+        
+        if (response === 'y' || response === 'yes') {
+          console.log(chalk.yellow('\nGenerating sprint plan...'));
+          
+          // Find the demo report
+          const reportFile = path.resolve('./reports/bounce_demo_report.md');
+          
+          // Generate a sprint plan
+          const sprintPlanPath = actionItemsGenerator.generateActionItemsFromReport(reportFile);
+          
+          console.log(chalk.green(`\nSprint plan generated: ${sprintPlanPath}`));
+          console.log(chalk.cyan('\nYou can now begin fixing these issues using Framework 5.2 sprint codes.'));
+        }
+        
+        process.exit(0);
+      });
     } catch (error) {
-      console.error(colors.red(`Error initializing test suite: ${(error as Error).message}`));
+      console.error(chalk.red(`\nError running demo: ${(error as Error).message}`));
       process.exit(1);
     }
   });
 
-// Schedule management
+// list command - lists test runs
 program
-  .command('schedule')
-  .description('Manage automated test schedules')
-  .option('-l, --list', 'List all schedules')
-  .option('-c, --create <name>', 'Create a new schedule')
-  .option('-r, --remove <id>', 'Remove a schedule')
-  .option('-e, --enable <id>', 'Enable a schedule')
-  .option('-d, --disable <id>', 'Disable a schedule')
+  .command('list')
+  .description('List test runs')
+  .option('-l, --limit <limit>', 'Number of test runs to list', '10')
   .action(async (options) => {
-    // This would connect to the bounce-automation system
-    // Implementation would use the database to manage schedules
-    console.log(colors.yellow('Schedule management not fully implemented yet'));
+    console.log(chalk.blue('┌─────────────────────────────────┐'));
+    console.log(chalk.blue('│      BOUNCE TEST RUNS           │'));
+    console.log(chalk.blue('└─────────────────────────────────┘'));
+    
+    try {
+      // Get test runs from database
+      const testRuns = await db.query.bounceTestRuns.findMany({
+        orderBy: (testRuns, { desc }) => [desc(testRuns.createdAt)],
+        limit: parseInt(options.limit)
+      });
+      
+      if (testRuns.length === 0) {
+        console.log(chalk.yellow('No test runs found.'));
+      } else {
+        console.log(chalk.yellow(`Found ${testRuns.length} test runs:`));
+        console.log('');
+        
+        // Display test runs
+        testRuns.forEach((testRun) => {
+          console.log(chalk.cyan(`ID: ${testRun.id}`));
+          console.log(chalk.white(`Name: ${testRun.name}`));
+          console.log(chalk.white(`Status: ${testRun.status}`));
+          console.log(chalk.white(`Started: ${testRun.startedAt?.toLocaleString() || 'N/A'}`));
+          console.log(chalk.white(`Completed: ${testRun.completedAt?.toLocaleString() || 'N/A'}`));
+          console.log(chalk.white(`Total Findings: ${testRun.totalFindings || 0}`));
+          console.log('');
+        });
+      }
+    } catch (error) {
+      console.error(chalk.red(`\nError listing test runs: ${(error as Error).message}`));
+    }
   });
 
-// Parse command-line arguments
-// Use import.meta.url to check if this is the main module
-const isMainModule = import.meta.url.endsWith(process.argv[1]);
-if (isMainModule) {
-  program.parse(process.argv);
-}
-
-export { program as bounceCli };
+// Execute the program
+program.parse(process.argv);

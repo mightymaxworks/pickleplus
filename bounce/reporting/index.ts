@@ -1,15 +1,18 @@
 /**
  * PKL-278651-BOUNCE-0001-CORE
- * Bounce Testing System Reporting Module
+ * Bounce Reporting Module Index
  * 
- * This module exports the report generators for use throughout the application.
+ * This file exports all reporting-related functionality for the Bounce automated testing system.
  * 
  * @framework Framework5.2
  * @version 1.0.0
  * @lastModified 2025-04-22
  */
 
-// Export report generators
-export * from './report-generator';
-export * from './enhanced-report-generator';
-export * from './bug-report-generator';
+import { bugReportGenerator } from './bug-report-generator';
+import { actionItemsGenerator } from '../action-items-generator';
+
+export { 
+  bugReportGenerator,
+  actionItemsGenerator 
+};
