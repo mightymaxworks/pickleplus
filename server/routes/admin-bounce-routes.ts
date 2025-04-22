@@ -13,6 +13,51 @@ import * as bounceApi from '../api/bounce';
 export function registerBounceAdminRoutes(app: express.Express): void {
   console.log("[API] Registering Bounce Admin API routes");
   
+  // Get dashboard statistics
+  app.get('/api/admin/bounce/dashboard', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
+    try {
+      // Get counts of test runs, findings, etc.
+      const testRunsCount = await bounceApi.getTestRunsCount();
+      const findingsCount = await bounceApi.getFindingsCount();
+      
+      // Get counts by severity
+      const criticalCount = await bounceApi.getFindingsCountBySeverity('critical');
+      const highCount = await bounceApi.getFindingsCountBySeverity('high');
+      const mediumCount = await bounceApi.getFindingsCountBySeverity('medium');
+      const lowCount = await bounceApi.getFindingsCountBySeverity('low');
+      
+      // Get counts by status
+      const openCount = await bounceApi.getFindingsCountByStatus('open');
+      const inProgressCount = await bounceApi.getFindingsCountByStatus('in_progress');
+      const resolvedCount = await bounceApi.getFindingsCountByStatus('resolved');
+      
+      res.status(200).json({
+        success: true,
+        metrics: {
+          totalTestRuns: testRunsCount,
+          totalFindings: findingsCount,
+          findingsBySeverity: {
+            critical: criticalCount,
+            high: highCount,
+            medium: mediumCount,
+            low: lowCount
+          },
+          findingsByStatus: {
+            open: openCount,
+            inProgress: inProgressCount,
+            resolved: resolvedCount
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error getting dashboard data:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to fetch dashboard data' 
+      });
+    }
+  });
+  
   // Get test runs
   app.get('/api/admin/bounce/test-runs', isAuthenticated, isAdmin, async (req: Request, res: Response) => {
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;

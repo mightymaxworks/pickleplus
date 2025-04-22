@@ -24,6 +24,68 @@ import {
 } from '@shared/schema';
 
 /**
+ * Get the total number of test runs
+ * @returns Number of test runs
+ */
+export async function getTestRunsCount(): Promise<number> {
+  try {
+    const result = await db.select({ value: count() }).from(bounceTestRuns);
+    return result[0].value || 0;
+  } catch (error) {
+    console.error("Error getting test runs count:", error);
+    return 0;
+  }
+}
+
+/**
+ * Get the total number of findings
+ * @returns Number of findings
+ */
+export async function getFindingsCount(): Promise<number> {
+  try {
+    const result = await db.select({ value: count() }).from(bounceFindings);
+    return result[0].value || 0;
+  } catch (error) {
+    console.error("Error getting findings count:", error);
+    return 0;
+  }
+}
+
+/**
+ * Get the number of findings with a specific severity
+ * @param severity The severity to filter by
+ * @returns Number of findings with the specified severity
+ */
+export async function getFindingsCountBySeverity(severity: string): Promise<number> {
+  try {
+    const result = await db.select({ value: count() })
+      .from(bounceFindings)
+      .where(eq(bounceFindings.severity, severity as BounceFindingSeverity));
+    return result[0].value || 0;
+  } catch (error) {
+    console.error(`Error getting ${severity} findings count:`, error);
+    return 0;
+  }
+}
+
+/**
+ * Get the number of findings with a specific status
+ * @param status The status to filter by
+ * @returns Number of findings with the specified status
+ */
+export async function getFindingsCountByStatus(status: string): Promise<number> {
+  try {
+    const result = await db.select({ value: count() })
+      .from(bounceFindings)
+      .where(eq(bounceFindings.status, status as BounceFindingStatus));
+    return result[0].value || 0;
+  } catch (error) {
+    console.error(`Error getting ${status} findings count:`, error);
+    return 0;
+  }
+}
+
+/**
  * Creates a new test run in the database
  * @param testRunData The test run data to create
  * @returns The created test run record
