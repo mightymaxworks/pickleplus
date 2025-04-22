@@ -1,8 +1,7 @@
 /**
- * PKL-278651-BOUNCE-0003-CORE - Bounce Identity Module
+ * PKL-278651-BOUNCE-0003-CORE - Bounce Identity
  * 
- * This module handles the identity management for the Bounce testing system,
- * including test run tracking and user association.
+ * Manages core identity and state for the Bounce testing system.
  * 
  * @framework Framework5.2
  * @version 1.0.0
@@ -13,225 +12,158 @@ import { db } from '../../server/db';
 import { eq } from 'drizzle-orm';
 import { 
   bounceTestRuns, 
-  BounceTestRunStatus 
+  BounceTestRunStatus, 
+  BounceFindingSeverity, 
+  bounceFindings 
 } from '../../shared/schema/bounce';
-import { randomUUID } from 'crypto';
 
 /**
- * Bounce Identity Service
- * Manages identities for automated testing, including test run creation and tracking
+ * Class that manages core identity and state for the Bounce testing system
  */
 class BounceIdentity {
-  /**
-   * Current test run ID
-   */
-  private currentTestRunId: number = 0;
-  
-  /**
-   * User ID associated with the test run
-   */
-  private userId: number | null = null;
-  
-  /**
-   * Whether the identity service is in CI mode
-   */
-  private ciMode: boolean = false;
+  private testRunId: number | null = null;
   
   /**
    * Start a new test run
-   * @param browsers Comma-separated list of browsers being tested
-   * @param testTypes Types of tests being run
-   * @param userId Optional user ID to associate with the test run
-   * @returns The ID of the created test run
+   * @param browser Browser being used
+   * @param deviceType Device type (mobile or desktop)
+   * @returns ID of the created test run
    */
-  async startTestRun(
-    browsers: string,
-    testTypes: string,
-    userId?: number
-  ): Promise<number> {
-    try {
-      // Generate a unique test ID
-      const testId = randomUUID();
-      
-      // Create a new test run record
-      const [testRun] = await db.insert(bounceTestRuns).values({
-        name: `Bounce Test Run - ${new Date().toISOString()}`,
-        description: `Automated test run for browsers: ${browsers}, test types: ${testTypes}`,
-        status: BounceTestRunStatus.RUNNING,
-        startedAt: new Date(),
-        userId: userId || null,
-        targetUrl: process.env.APP_URL || 'http://localhost:3000',
-        testConfig: JSON.stringify({
-          browsers: browsers.split(','),
-          testTypes: testTypes.split(','),
-          ciMode: this.ciMode,
-          timestamp: new Date().toISOString()
-        })
-      }).returning();
-      
-      // Store the current test run ID
-      this.currentTestRunId = testRun.id;
-      this.userId = userId || null;
-      
-      console.log(`[Bounce] Started test run ${testRun.id} with test ID ${testId}`);
-      return testRun.id;
-    } catch (error) {
-      console.error(`[Bounce] Error starting test run: ${(error as Error).message}`);
-      throw error;
-    }
+  async startTestRun(browser: string, deviceType: string): Promise<number> {
+    console.log(`[Bounce] Starting new test run (${browser}, ${deviceType})`);
+    
+    const [testRun] = await db.insert(bounceTestRuns).values({
+      name: `Bounce Test Run - ${browser} - ${deviceType} - ${new Date().toISOString()}`,
+      description: `Automated test run using ${browser} on ${deviceType}`,
+      status: BounceTestRunStatus.RUNNING,
+      startedAt: new Date(),
+      targetUrl: 'http://localhost:3000',
+      testConfig: JSON.stringify({
+        browser,
+        deviceType,
+        timestamp: new Date().toISOString()
+      })
+    }).returning();
+    
+    this.testRunId = testRun.id;
+    console.log(`[Bounce] Created test run with ID ${testRun.id}`);
+    
+    return testRun.id;
   }
   
   /**
-   * End a test run
+   * End a test run with status and finding count
    * @param status Status of the test run
-   * @param findingsCount Number of findings discovered
-   * @param coveragePercent Coverage percentage achieved
-   * @returns The updated test run
+   * @param findingCount Number of findings
+   * @param coverage Percentage of code covered (if available)
    */
   async endTestRun(
     status: BounceTestRunStatus,
-    findingsCount: number,
-    coveragePercent: number
-  ): Promise<any> {
-    if (!this.currentTestRunId) {
-      throw new Error('No active test run. Call startTestRun() first.');
+    findingCount: number,
+    coverage?: number
+  ): Promise<void> {
+    if (!this.testRunId) {
+      throw new Error('[Bounce] No active test run');
     }
     
-    try {
-      // Update the test run record
-      const [testRun] = await db
-        .update(bounceTestRuns)
-        .set({
-          status,
-          completedAt: new Date(),
-          totalFindings: findingsCount,
-          updatedAt: new Date()
-        })
-        .where(eq(bounceTestRuns.id, this.currentTestRunId))
-        .returning();
-      
-      console.log(`[Bounce] Ended test run ${testRun.id} with status ${status}`);
-      console.log(`[Bounce] Findings: ${findingsCount}, Coverage: ${coveragePercent}%`);
-      
-      // Reset the current test run
-      this.currentTestRunId = 0;
-      
-      return testRun;
-    } catch (error) {
-      console.error(`[Bounce] Error ending test run: ${(error as Error).message}`);
-      throw error;
-    }
+    console.log(`[Bounce] Ending test run ${this.testRunId} with status ${status} and ${findingCount} findings`);
+    
+    const results: Record<string, any> = {
+      findingCount,
+      coverage: coverage || 0,
+      completedAt: new Date().toISOString()
+    };
+    
+    // Get counts by severity
+    const findings = await db
+      .select()
+      .from(bounceFindings)
+      .where(eq(bounceFindings.testRunId, this.testRunId));
+    
+    results.criticalCount = findings.filter(f => f.severity === BounceFindingSeverity.CRITICAL).length;
+    results.highCount = findings.filter(f => f.severity === BounceFindingSeverity.HIGH).length;
+    results.moderateCount = findings.filter(f => 
+      f.severity === BounceFindingSeverity.MODERATE || 
+      f.severity === BounceFindingSeverity.MEDIUM
+    ).length;
+    results.lowCount = findings.filter(f => 
+      f.severity === BounceFindingSeverity.LOW || 
+      f.severity === BounceFindingSeverity.INFO
+    ).length;
+    
+    // Update the test run
+    await db.update(bounceTestRuns)
+      .set({
+        status,
+        completedAt: new Date(),
+        totalFindings: findingCount,
+        results: JSON.stringify(results)
+      })
+      .where(eq(bounceTestRuns.id, this.testRunId));
+    
+    console.log(`[Bounce] Test run ${this.testRunId} completed with status ${status}`);
+    
+    // Reset the test run ID
+    this.testRunId = null;
   }
   
   /**
    * Get the current test run ID
-   * @returns The current test run ID
+   * @returns Current test run ID
    */
-  getCurrentTestRunId(): number {
-    return this.currentTestRunId;
+  getTestRunId(): number | null {
+    return this.testRunId;
   }
   
   /**
-   * Get the user ID associated with the test run
-   * @returns The user ID
+   * Set the current test run ID manually
+   * @param id Test run ID to set
    */
-  getUserId(): number | null {
-    return this.userId;
+  setTestRunId(id: number): void {
+    this.testRunId = id;
   }
   
   /**
-   * Set CI mode
-   * @param enabled Whether CI mode is enabled
+   * Get information about a test run
+   * @param id Test run ID
+   * @returns Test run information
    */
-  setCIMode(enabled: boolean): void {
-    this.ciMode = enabled;
-    console.log(`[Bounce] CI mode ${enabled ? 'enabled' : 'disabled'}`);
-  }
-  
-  /**
-   * Check if CI mode is enabled
-   * @returns Whether CI mode is enabled
-   */
-  isCIMode(): boolean {
-    return this.ciMode;
-  }
-  
-  /**
-   * Reset the identity service
-   */
-  reset(): void {
-    this.currentTestRunId = 0;
-    this.userId = null;
-    this.ciMode = false;
-    console.log('[Bounce] Identity service reset');
-  }
-  
-  /**
-   * Create a new test run with specific configuration
-   * @param config Test run configuration
-   * @returns The ID of the created test run
-   */
-  async createTestRun(config: {
-    name: string;
-    status: BounceTestRunStatus;
-    configuration?: Record<string, any>;
-  }): Promise<number> {
-    try {
-      // Create a new test run record
-      const [testRun] = await db.insert(bounceTestRuns).values({
-        name: config.name,
-        status: config.status,
-        startedAt: new Date(),
-        configuration: config.configuration ? JSON.stringify(config.configuration) : null
-      }).returning();
-      
-      // Store the current test run ID
-      this.currentTestRunId = testRun.id;
-      
-      console.log(`[Bounce] Created test run ${testRun.id} with name "${config.name}"`);
-      return testRun.id;
-    } catch (error) {
-      console.error(`[Bounce] Error creating test run: ${(error as Error).message}`);
-      throw error;
+  async getTestRun(id: number): Promise<any> {
+    const [testRun] = await db
+      .select()
+      .from(bounceTestRuns)
+      .where(eq(bounceTestRuns.id, id));
+    
+    if (!testRun) {
+      throw new Error(`[Bounce] Test run ${id} not found`);
     }
+    
+    return testRun;
   }
   
   /**
-   * Update an existing test run
-   * @param testRunId ID of the test run to update
-   * @param updateData Data to update
-   * @returns The updated test run
+   * Get all test runs
+   * @returns List of all test runs
    */
-  async updateTestRun(
-    testRunId: number,
-    updateData: {
-      status?: BounceTestRunStatus;
-      completedAt?: Date;
-      results?: Record<string, any>;
-      totalFindings?: number;
-    }
-  ): Promise<any> {
-    try {
-      // Update the test run record
-      const [testRun] = await db
-        .update(bounceTestRuns)
-        .set({
-          ...updateData,
-          results: updateData.results ? JSON.stringify(updateData.results) : undefined,
-          updatedAt: new Date()
-        })
-        .where(eq(bounceTestRuns.id, testRunId))
-        .returning();
-      
-      console.log(`[Bounce] Updated test run ${testRun.id} with status ${updateData.status || 'unchanged'}`);
-      
-      return testRun;
-    } catch (error) {
-      console.error(`[Bounce] Error updating test run: ${(error as Error).message}`);
-      throw error;
-    }
+  async getAllTestRuns(): Promise<any[]> {
+    return db
+      .select()
+      .from(bounceTestRuns)
+      .orderBy(bounceTestRuns.createdAt);
+  }
+  
+  /**
+   * Get all findings for a test run
+   * @param testRunId Test run ID
+   * @returns List of findings
+   */
+  async getFindings(testRunId: number): Promise<any[]> {
+    return db
+      .select()
+      .from(bounceFindings)
+      .where(eq(bounceFindings.testRunId, testRunId));
   }
 }
 
-// Export a singleton instance
+// Export singleton instance
 export const bounceIdentity = new BounceIdentity();

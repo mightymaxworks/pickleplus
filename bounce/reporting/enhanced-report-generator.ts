@@ -1,639 +1,302 @@
 /**
- * PKL-278651-BOUNCE-0001-CORE
- * Bounce Testing System Enhanced Report Generator
+ * PKL-278651-BOUNCE-0015-CICD - Enhanced Report Generator
  * 
- * This module generates formatted reports from test findings including bug reports 
- * and solution prompts for easier debugging and resolution.
+ * Generates detailed, categorized bug reports with solution guidance
  * 
  * @framework Framework5.2
  * @version 1.0.0
  * @lastModified 2025-04-22
  */
 
-import { db } from "../../server/db";
-import { 
-  bounceTestRuns, 
-  bounceFindings, 
-  bounceEvidence,
-  BounceFindingSeverity,
-  BounceFindingStatus,
-  BounceEvidenceType
-} from "../../shared/schema";
-import { eq, and, desc } from "drizzle-orm";
-import * as fs from "fs";
-import * as path from "path";
+import { db } from '../../server/db';
+import { eq } from 'drizzle-orm';
+import { bounceTestRuns, bounceFindings, bounceEvidence, BounceFindingSeverity } from '../../shared/schema/bounce';
+import fs from 'fs';
+import path from 'path';
 
 /**
- * Options for generating a report
- */
-interface ReportOptions {
-  /**
-   * Whether to include detailed evidence in the report
-   */
-  includeEvidence?: boolean;
-  
-  /**
-   * The format of the report (markdown, html, text)
-   */
-  format?: "markdown" | "html" | "text" | "buglist";
-  
-  /**
-   * Whether to group findings by area
-   */
-  groupByArea?: boolean;
-  
-  /**
-   * Whether to sort findings by severity (highest first)
-   */
-  sortBySeverity?: boolean;
-  
-  /**
-   * Whether to include solution prompts for each finding
-   */
-  includeSolutionPrompts?: boolean;
-}
-
-/**
- * Default report options
- */
-const DEFAULT_REPORT_OPTIONS: ReportOptions = {
-  includeEvidence: true,
-  format: "markdown",
-  groupByArea: true,
-  sortBySeverity: true,
-  includeSolutionPrompts: true,
-};
-
-/**
- * Test run summary for a report
- */
-interface TestRunSummary {
-  id: number;
-  testId: string;
-  startTime: Date;
-  endTime: Date | null;
-  browsers: string;
-  testTypes: string;
-  coverage: number | null;
-  status: string;
-  totalIssues: number;
-  totalCritical: number;
-  totalModerate: number;
-  totalLow: number;
-}
-
-/**
- * Finding with evidence for a report
- */
-interface FindingWithEvidence {
-  id: number;
-  findingId: string;
-  description: string;
-  severity: string;
-  area: string;
-  path: string | null;
-  browser: string;
-  device: string | null;
-  screenSize: string | null;
-  status: string;
-  createdAt: Date;
-  evidence: {
-    id: number;
-    evidenceType: string;
-    filePath: string;
-    description: string | null;
-  }[];
-}
-
-/**
- * Generates structured reports from Bounce test findings
- * with enhanced features like solution prompts
+ * Enhanced report generator with additional categorization and actionable solution prompts
  */
 export class EnhancedReportGenerator {
   /**
-   * Generate a report for a specific test run
-   * @param testRunId The ID of the test run
-   * @param options Report generation options
-   * @returns The generated report as a string
+   * Generate an enhanced report for a test run with more structured data
+   * @param testRunId The test run ID to generate a report for
+   * @returns Path to the generated report file
    */
-  async generateTestRunReport(
-    testRunId: number,
-    options: ReportOptions = {}
-  ): Promise<string> {
-    const mergedOptions = { ...DEFAULT_REPORT_OPTIONS, ...options };
+  async generateEnhancedReport(testRunId: number): Promise<string> {
+    console.log(`[Bounce] Generating enhanced report for test run ${testRunId}...`);
     
-    try {
-      // Get the test run data
-      const testRunData = await this.getTestRunData(testRunId);
-      if (!testRunData) {
-        throw new Error(`Test run with ID ${testRunId} not found`);
-      }
-      
-      // Get the findings with evidence
-      const findings = await this.getFindingsWithEvidence(testRunId);
-      
-      // Generate the report based on the format
-      switch (mergedOptions.format) {
-        case "buglist":
-          return this.generateBugListReport(testRunData, findings, mergedOptions);
-        case "markdown":
-          return this.generateMarkdownReport(testRunData, findings, mergedOptions);
-        case "html":
-          return this.generateHtmlReport(testRunData, findings, mergedOptions);
-        case "text":
-        default:
-          return this.generateTextReport(testRunData, findings, mergedOptions);
-      }
-    } catch (error) {
-      console.error(`[Bounce] Failed to generate report: ${(error as Error).message}`);
-      throw error;
-    }
-  }
-  
-  /**
-   * Get test run data with issue counts
-   * @param testRunId The ID of the test run
-   * @returns The test run summary
-   */
-  private async getTestRunData(testRunId: number): Promise<TestRunSummary | null> {
-    const testRun = await db.select().from(bounceTestRuns).where(eq(bounceTestRuns.id, testRunId)).limit(1);
+    // Get the test run
+    const [testRun] = await db
+      .select()
+      .from(bounceTestRuns)
+      .where(eq(bounceTestRuns.id, testRunId));
     
-    if (testRun.length === 0) {
-      return null;
+    if (!testRun) {
+      throw new Error(`Test run ${testRunId} not found`);
     }
+    
+    // Get all findings for this test run
+    const findings = await db
+      .select()
+      .from(bounceFindings)
+      .where(eq(bounceFindings.testRunId, testRunId));
     
     // Count findings by severity
-    const criticalFindings = await db.select({ count: db.fn.count() })
-      .from(bounceFindings)
-      .where(and(
-        eq(bounceFindings.testRunId, testRunId),
-        eq(bounceFindings.severity, BounceFindingSeverity.CRITICAL)
-      ));
+    const criticalCount = findings.filter(f => f.severity === BounceFindingSeverity.CRITICAL).length;
+    const highCount = findings.filter(f => f.severity === BounceFindingSeverity.HIGH).length;
+    const moderateCount = findings.filter(f => 
+      f.severity === BounceFindingSeverity.MODERATE || 
+      f.severity === BounceFindingSeverity.MEDIUM // For backward compatibility
+    ).length;
+    const lowCount = findings.filter(f => 
+      f.severity === BounceFindingSeverity.LOW || 
+      f.severity === BounceFindingSeverity.INFO
+    ).length;
     
-    const moderateFindings = await db.select({ count: db.fn.count() })
-      .from(bounceFindings)
-      .where(and(
-        eq(bounceFindings.testRunId, testRunId),
-        eq(bounceFindings.severity, BounceFindingSeverity.MODERATE)
-      ));
-    
-    const lowFindings = await db.select({ count: db.fn.count() })
-      .from(bounceFindings)
-      .where(and(
-        eq(bounceFindings.testRunId, testRunId),
-        eq(bounceFindings.severity, BounceFindingSeverity.LOW)
-      ));
-    
-    return {
-      ...testRun[0],
-      totalCritical: parseInt(criticalFindings[0].count.toString()),
-      totalModerate: parseInt(moderateFindings[0].count.toString()),
-      totalLow: parseInt(lowFindings[0].count.toString()),
-    };
-  }
-  
-  /**
-   * Get findings with their associated evidence
-   * @param testRunId The ID of the test run
-   * @returns Array of findings with evidence
-   */
-  private async getFindingsWithEvidence(testRunId: number): Promise<FindingWithEvidence[]> {
-    const findings = await db.select()
-      .from(bounceFindings)
-      .where(eq(bounceFindings.testRunId, testRunId))
-      .orderBy(desc(bounceFindings.createdAt));
-    
-    const result: FindingWithEvidence[] = [];
-    
-    for (const finding of findings) {
-      const evidence = await db.select()
-        .from(bounceEvidence)
-        .where(eq(bounceEvidence.findingId, finding.id));
+    // Generate report header with enhanced styling
+    const dateStr = testRun.completedAt 
+      ? new Date(testRun.completedAt).toLocaleString()
+      : new Date().toLocaleString();
       
-      result.push({
-        ...finding,
-        evidence,
-      });
+    let report = `# 🔍 Enhanced Bounce Test Report: ${testRun.name}\n\n`;
+    report += `> 📅 Generated on ${dateStr}\n\n`;
+    
+    // Add executive summary
+    report += `## 📊 Executive Summary\n\n`;
+    report += `This report contains the findings from automated testing run #${testRun.id}. `;
+    
+    if (criticalCount > 0) {
+      report += `**${criticalCount} critical issues** were identified that require immediate attention. `;
     }
     
-    return result;
-  }
-
-  /**
-   * Generate a Bug List report with solution prompts
-   * @param testRun The test run summary
-   * @param findings The findings with evidence
-   * @param options Report options
-   * @returns Bug list with solution prompts
-   */
-  private generateBugListReport(
-    testRun: TestRunSummary,
-    findings: FindingWithEvidence[],
-    options: ReportOptions
-  ): string {
-    // Sort findings if needed
-    if (options.sortBySeverity) {
-      findings.sort((a, b) => {
-        const severityOrder = {
-          [BounceFindingSeverity.CRITICAL]: 0,
-          [BounceFindingSeverity.MODERATE]: 1,
-          [BounceFindingSeverity.LOW]: 2,
-        };
-        return (severityOrder[a.severity as BounceFindingSeverity] || 3) - 
-               (severityOrder[b.severity as BounceFindingSeverity] || 3);
-      });
+    if (highCount > 0) {
+      report += `**${highCount} high priority issues** were found that should be addressed soon. `;
     }
     
-    // Build the report
-    let report = `# Pickle+ Bug Report\n\n`;
-    report += `Generated by Bounce Testing System on ${new Date().toLocaleString()}\n\n`;
+    report += `The test run covered the application at ${testRun.targetUrl || 'the target URL'} `;
+    report += `and was completed on ${testRun.completedAt ? new Date(testRun.completedAt).toLocaleString() : 'N/A'}.\n\n`;
     
-    // Issues summary
-    report += `## Summary\n\n`;
-    report += `This report contains ${findings.length} issues detected during automated testing:\n\n`;
-    report += `- Critical Issues: ${testRun.totalCritical}\n`;
-    report += `- Moderate Issues: ${testRun.totalModerate}\n`;
-    report += `- Low Issues: ${testRun.totalLow}\n\n`;
+    // Add impact assessment
+    report += `### 🎯 Impact Assessment\n\n`;
     
-    // Bug list with solution prompts
-    report += `## Bug List\n\n`;
+    const totalIssues = criticalCount + highCount + moderateCount + lowCount;
     
-    findings.forEach((finding, index) => {
-      const bugNumber = index + 1;
-      report += `### Bug #${bugNumber}: ${finding.description}\n\n`;
+    if (totalIssues === 0) {
+      report += `✅ No issues were found during this test run. Excellent work!\n\n`;
+    } else if (criticalCount > 0) {
+      report += `⚠️ **Critical Impact**: The application has ${criticalCount} critical issues that are likely blocking key user journeys or presenting security vulnerabilities. These should be addressed immediately.\n\n`;
+    } else if (highCount > 5) {
+      report += `🚨 **High Impact**: While no critical issues were found, there are ${highCount} high priority issues that cumulatively create a significant impact on user experience. These should be addressed in the current sprint.\n\n`;
+    } else if (highCount > 0) {
+      report += `⚠️ **Moderate Impact**: There are ${highCount} high priority issues that should be addressed soon, but they don't appear to block critical user journeys.\n\n`;
+    } else {
+      report += `📝 **Low Impact**: Only minor issues were identified that don't significantly impact the user experience.\n\n`;
+    }
+    
+    // Add statistics
+    report += `### 📈 Test Run Statistics\n\n`;
+    report += `| Metric | Value |\n`;
+    report += `| ------ | ----- |\n`;
+    report += `| Test Run ID | ${testRun.id} |\n`;
+    report += `| Status | ${testRun.status} |\n`;
+    report += `| Started | ${testRun.startedAt ? new Date(testRun.startedAt).toLocaleString() : 'N/A'} |\n`;
+    report += `| Completed | ${testRun.completedAt ? new Date(testRun.completedAt).toLocaleString() : 'N/A'} |\n`;
+    report += `| Target URL | ${testRun.targetUrl || 'N/A'} |\n`;
+    report += `| Total Findings | ${findings.length} |\n`;
+    report += `| Critical Issues | ${criticalCount} |\n`;
+    report += `| High Issues | ${highCount} |\n`;
+    report += `| Moderate Issues | ${moderateCount} |\n`;
+    report += `| Low Issues | ${lowCount} |\n\n`;
+    
+    // Add finding categories summary
+    const areas = new Set<string>();
+    findings.forEach(f => areas.add(f.area || 'General'));
+    
+    report += `### 🏷️ Finding Categories\n\n`;
+    report += `Findings were identified in the following areas:\n\n`;
+    
+    for (const area of areas) {
+      const areaFindings = findings.filter(f => (f.area || 'General') === area);
+      const criticalAreaCount = areaFindings.filter(f => f.severity === BounceFindingSeverity.CRITICAL).length;
+      const highAreaCount = areaFindings.filter(f => f.severity === BounceFindingSeverity.HIGH).length;
       
-      // Severity and location
-      report += `**Severity:** ${this.getSeverityLabel(finding.severity as BounceFindingSeverity)}\n`;
-      report += `**Location:** ${finding.area}${finding.path ? ` (${finding.path})` : ''}\n`;
-      report += `**Browser:** ${finding.browser}${finding.device ? ` on ${finding.device}` : ''}\n\n`;
+      report += `- **${area}**: ${areaFindings.length} issues`;
       
-      // Evidence summary
-      if (options.includeEvidence && finding.evidence.length > 0) {
-        report += `**Evidence:**\n`;
-        finding.evidence.forEach(item => {
-          report += `- ${item.evidenceType}${item.description ? `: ${item.description}` : ''}\n`;
-        });
-        report += `\n`;
+      if (criticalAreaCount > 0) {
+        report += ` (${criticalAreaCount} critical)`;
+      } else if (highAreaCount > 0) {
+        report += ` (${highAreaCount} high priority)`;
       }
       
-      // Solution prompt
-      if (options.includeSolutionPrompts) {
-        report += `**Solution Prompt:**\n\n`;
-        report += this.generateSolutionPrompt(finding) + `\n\n`;
-      }
+      report += '\n';
+    }
+    
+    report += '\n';
+    
+    // Add critical findings section
+    if (criticalCount > 0) {
+      report += `## 🔴 Critical Findings\n\n`;
       
-      report += `---\n\n`;
+      const criticalFindings = findings.filter(f => f.severity === BounceFindingSeverity.CRITICAL);
+      
+      for (const finding of criticalFindings) {
+        report += this.generateFindingMarkdown(finding, true);
+      }
+    }
+    
+    // Add high priority findings section
+    if (highCount > 0) {
+      report += `## 🟠 High Priority Findings\n\n`;
+      
+      const highPriorityFindings = findings.filter(f => f.severity === BounceFindingSeverity.HIGH);
+      
+      for (const finding of highPriorityFindings) {
+        report += this.generateFindingMarkdown(finding, false);
+      }
+    }
+    
+    // Add complete findings list
+    report += `## 📋 Complete Findings List\n\n`;
+    report += `| ID | Title | Severity | Area | Browser |\n`;
+    report += `| -- | ----- | -------- | ---- | ------- |\n`;
+    
+    // Sort by severity
+    const sortedFindings = [...findings].sort((a, b) => {
+      const severityMap: Record<string, number> = {
+        [BounceFindingSeverity.CRITICAL]: 1,
+        [BounceFindingSeverity.HIGH]: 2,
+        [BounceFindingSeverity.MODERATE]: 3,
+        [BounceFindingSeverity.MEDIUM]: 3, // For backward compatibility
+        [BounceFindingSeverity.LOW]: 4,
+        [BounceFindingSeverity.INFO]: 5
+      };
+      
+      return severityMap[a.severity] - severityMap[b.severity];
     });
     
-    // Footer
-    report += `## Next Steps\n\n`;
-    report += `1. Review each bug and its solution prompt\n`;
-    report += `2. Implement fixes starting with critical issues first\n`;
-    report += `3. Re-run Bounce tests to verify fixes\n`;
-    report += `4. Update documentation as needed\n\n`;
+    for (const finding of sortedFindings) {
+      const severityIcon = this.getSeverityIcon(finding.severity);
+      report += `| ${finding.id} | ${finding.title} | ${severityIcon} ${finding.severity} | ${finding.area || 'General'} | ${finding.browser || 'Not specified'} |\n`;
+    }
     
-    return report;
+    report += '\n';
+    
+    // Add next steps
+    report += `## 🚀 Next Steps\n\n`;
+    report += `1. **Prioritize**: Address critical and high priority issues first\n`;
+    report += `2. **Plan**: Generate a sprint plan using \`npx tsx bounce/cli.ts plan ${testRunId}\`\n`;
+    report += `3. **Implement**: Fix the issues following the suggested solutions\n`;
+    report += `4. **Verify**: Re-run tests after fixes are implemented\n`;
+    report += `5. **Monitor**: Keep track of fixed findings and monitor for regressions\n\n`;
+    
+    // Add framework compliance footer
+    report += `---\n\n`;
+    report += `Generated by Bounce Enhanced Reporting System | Framework5.2 | v1.0.0\n`;
+    
+    // Ensure report directory exists
+    const reportsDir = path.join(process.cwd(), 'reports');
+    if (!fs.existsSync(reportsDir)) {
+      fs.mkdirSync(reportsDir, { recursive: true });
+    }
+    
+    // Write report to file
+    const fileName = `enhanced-report-${testRunId}-${new Date().toISOString().replace(/:/g, '-')}.md`;
+    const filePath = path.join(reportsDir, fileName);
+    
+    fs.writeFileSync(filePath, report);
+    
+    console.log(`[Bounce] Enhanced report generated and saved to ${filePath}`);
+    
+    return filePath;
   }
   
   /**
-   * Generate a solution prompt for a finding
-   * @param finding The finding with evidence
-   * @returns A solution prompt for the finding
+   * Generate markdown for a single finding
+   * @param finding The finding to generate markdown for
+   * @param isDetailed Whether to include detailed information
+   * @returns Markdown string for the finding
    */
-  private generateSolutionPrompt(finding: FindingWithEvidence): string {
-    const severity = finding.severity as BounceFindingSeverity;
-    const area = finding.area;
-    const path = finding.path || '';
+  private generateFindingMarkdown(finding: any, isDetailed: boolean): string {
+    const severityIcon = this.getSeverityIcon(finding.severity);
+    let markdown = `### ${severityIcon} ${finding.title}\n\n`;
     
-    let prompt = `Fix the following issue in the ${area} area`;
-    if (path) {
-      prompt += ` at path ${path}`;
-    }
-    prompt += `:\n\n`;
-    prompt += `${finding.description}\n\n`;
+    // Generate Framework5.2 ticket ID suggestion
+    const areaCode = finding.area ? finding.area.toUpperCase().replace(/\\s+/g, '-') : 'GENERAL';
+    const fixId = `PKL-278651-${areaCode}-${String(finding.id).padStart(4, '0')}-FIX`;
     
-    // Add context-specific guidance based on the type of issue
-    if (finding.description.toLowerCase().includes('not found') || 
-        finding.description.toLowerCase().includes('404')) {
-      prompt += `This appears to be a resource not found issue. Check for:\n`;
-      prompt += `- Incorrect path or URL\n`;
-      prompt += `- Missing file or resource\n`;
-      prompt += `- Route configuration issues\n`;
-      prompt += `- API endpoint availability\n`;
-    } 
-    else if (finding.description.toLowerCase().includes('layout') || 
-             finding.description.toLowerCase().includes('responsive') ||
-             finding.description.toLowerCase().includes('display')) {
-      prompt += `This appears to be a layout or display issue. Check for:\n`;
-      prompt += `- CSS styling problems\n`;
-      prompt += `- Responsive design breakpoints\n`;
-      prompt += `- Element positioning or overflow\n`;
-      prompt += `- Browser-specific rendering differences\n`;
-    }
-    else if (finding.description.toLowerCase().includes('data') || 
-             finding.description.toLowerCase().includes('loading') ||
-             finding.description.toLowerCase().includes('api')) {
-      prompt += `This appears to be a data loading or API issue. Check for:\n`;
-      prompt += `- API endpoint correctness\n`;
-      prompt += `- Data fetching logic\n`;
-      prompt += `- Error handling for data loading\n`;
-      prompt += `- State management during loading\n`;
-    }
-    else if (finding.description.toLowerCase().includes('button') || 
-             finding.description.toLowerCase().includes('click') ||
-             finding.description.toLowerCase().includes('action')) {
-      prompt += `This appears to be an interaction issue. Check for:\n`;
-      prompt += `- Event handler implementation\n`;
-      prompt += `- Button or interactive element state\n`;
-      prompt += `- Action dispatch or callback execution\n`;
-      prompt += `- Conditional rendering of interactive elements\n`;
-    }
-    else {
-      // Generic prompts based on severity
-      if (severity === BounceFindingSeverity.CRITICAL) {
-        prompt += `This is a critical issue that should be addressed immediately. Consider:\n`;
-        prompt += `- Looking for recent code changes in this area\n`;
-        prompt += `- Checking error logs and stack traces\n`;
-        prompt += `- Adding additional logging to pinpoint the issue\n`;
-        prompt += `- Verifying dependencies and external services\n`;
-      } 
-      else if (severity === BounceFindingSeverity.MODERATE) {
-        prompt += `This is a moderate issue that affects functionality. Consider:\n`;
-        prompt += `- Reviewing the business logic and user flow\n`;
-        prompt += `- Adding validation or error handling\n`;
-        prompt += `- Checking related components and dependencies\n`;
-        prompt += `- Improving UX feedback for error states\n`;
-      }
-      else {
-        prompt += `This is a low-severity issue that should be addressed when possible. Consider:\n`;
-        prompt += `- Improving code quality or performance\n`;
-        prompt += `- Enhancing visual design or accessibility\n`;
-        prompt += `- Adding additional test coverage\n`;
-        prompt += `- Updating documentation\n`;
-      }
-    }
+    markdown += `**Framework5.2 ID**: \`${fixId}\`\n\n`;
+    markdown += `**Severity**: ${finding.severity}\n\n`;
+    markdown += `**Area**: ${finding.area || 'General'}\n\n`;
+    markdown += `**Path**: ${finding.path || 'Not specified'}\n\n`;
+    markdown += `**Browser**: ${finding.browser || 'Not specified'}\n\n`;
     
-    // Add testing guidance
-    prompt += `\nAfter fixing, verify the solution by:\n`;
-    prompt += `1. Running focused Bounce tests on this specific area\n`;
-    prompt += `2. Testing across multiple browsers (${finding.browser} specifically)\n`;
-    prompt += `3. Verifying no regression in related functionality\n`;
-    
-    return prompt;
-  }
-  
-  /**
-   * Generate a Markdown format report
-   * @param testRun The test run summary
-   * @param findings The findings with evidence
-   * @param options Report options
-   * @returns Markdown formatted report
-   */
-  private generateMarkdownReport(
-    testRun: TestRunSummary,
-    findings: FindingWithEvidence[],
-    options: ReportOptions
-  ): string {
-    // Sort findings if needed
-    if (options.sortBySeverity) {
-      findings.sort((a, b) => {
-        const severityOrder = {
-          [BounceFindingSeverity.CRITICAL]: 0,
-          [BounceFindingSeverity.MODERATE]: 1,
-          [BounceFindingSeverity.LOW]: 2,
-        };
-        return (severityOrder[a.severity as BounceFindingSeverity] || 3) - 
-               (severityOrder[b.severity as BounceFindingSeverity] || 3);
-      });
-    }
-    
-    // Group findings by area if needed
-    const groupedFindings: Record<string, FindingWithEvidence[]> = {};
-    
-    if (options.groupByArea) {
-      findings.forEach(finding => {
-        if (!groupedFindings[finding.area]) {
-          groupedFindings[finding.area] = [];
-        }
-        groupedFindings[finding.area].push(finding);
-      });
-    }
-    
-    // Build the report
-    let report = `# Bounce Test Report: Run #${testRun.id}\n\n`;
-    
-    // Test run summary
-    report += `## Test Run Summary\n\n`;
-    report += `- **Test ID:** ${testRun.testId}\n`;
-    report += `- **Start Time:** ${testRun.startTime.toLocaleString()}\n`;
-    report += `- **End Time:** ${testRun.endTime ? testRun.endTime.toLocaleString() : "Not completed"}\n`;
-    report += `- **Status:** ${testRun.status}\n`;
-    report += `- **Browsers Tested:** ${testRun.browsers}\n`;
-    report += `- **Test Types:** ${testRun.testTypes}\n`;
-    report += `- **Coverage:** ${testRun.coverage ? `${testRun.coverage}%` : "Not calculated"}\n\n`;
-    
-    // Issues summary
-    report += `## Issues Summary\n\n`;
-    report += `- **Total Issues:** ${testRun.totalIssues}\n`;
-    report += `- **Critical Issues:** ${testRun.totalCritical}\n`;
-    report += `- **Moderate Issues:** ${testRun.totalModerate}\n`;
-    report += `- **Low Issues:** ${testRun.totalLow}\n\n`;
-    
-    // Findings
-    report += `## Findings\n\n`;
-    
-    if (options.groupByArea) {
-      // Report findings grouped by area
-      for (const area in groupedFindings) {
-        report += `### Area: ${area}\n\n`;
+    if (finding.deviceInfo && isDetailed) {
+      try {
+        const deviceInfo = JSON.parse(finding.deviceInfo);
+        markdown += `**Device Info**:\n\n`;
         
-        groupedFindings[area].forEach(finding => {
-          report += this.generateFindingMarkdown(finding, options);
-        });
+        for (const [key, value] of Object.entries(deviceInfo)) {
+          markdown += `- ${key}: ${value}\n`;
+        }
+        
+        markdown += '\n';
+      } catch (error) {
+        markdown += `**Device Info**: ${finding.deviceInfo}\n\n`;
       }
+    }
+    
+    markdown += `**Description**:\n\n${finding.description}\n\n`;
+    
+    if (finding.reproducibleSteps) {
+      markdown += `**Steps to Reproduce**:\n\n${finding.reproducibleSteps}\n\n`;
+    }
+    
+    // Add solution guidance
+    markdown += `**Solution Guidance**:\n\n`;
+    
+    if (finding.area === 'Authentication') {
+      markdown += `- Check session management implementation for persistence issues\n`;
+      markdown += `- Verify secure cookie settings and CSRF protection\n`;
+      markdown += `- Ensure token validation is working across page refreshes\n`;
+    } else if (finding.area === 'Community') {
+      markdown += `- Review responsive breakpoints in CSS for mobile layouts\n`;
+      markdown += `- Check flex layouts and container overflow handling\n`;
+      markdown += `- Verify text truncation for long content\n`;
+    } else if (finding.area === 'Tournaments') {
+      markdown += `- Inspect bracket rendering logic for large tournament sizes\n`;
+      markdown += `- Verify data truncation and overflow handling\n`;
+      markdown += `- Check responsive design for tournament brackets\n`;
     } else {
-      // Report all findings sequentially
-      findings.forEach(finding => {
-        report += this.generateFindingMarkdown(finding, options);
-      });
+      markdown += `- Fix the issue following standard best practices\n`;
+      markdown += `- Ensure proper error handling is implemented\n`;
+      markdown += `- Add tests to verify the fix and prevent regression\n`;
     }
     
-    return report;
-  }
-  
-  /**
-   * Generate Markdown for a single finding
-   * @param finding The finding with evidence
-   * @param options Report options
-   * @returns Markdown for the finding
-   */
-  private generateFindingMarkdown(
-    finding: FindingWithEvidence,
-    options: ReportOptions
-  ): string {
-    let markdown = `#### ${finding.findingId}: ${finding.description}\n\n`;
-    
-    // Severity badge
-    markdown += `**Severity:** ${this.getSeverityLabel(finding.severity as BounceFindingSeverity)}\n\n`;
-    
-    // Finding details
-    markdown += `**Status:** ${finding.status}\n`;
-    markdown += `**Browser:** ${finding.browser}\n`;
-    if (finding.device) markdown += `**Device:** ${finding.device}\n`;
-    if (finding.screenSize) markdown += `**Screen Size:** ${finding.screenSize}\n`;
-    if (finding.path) markdown += `**Path:** ${finding.path}\n`;
-    markdown += `**Created:** ${finding.createdAt.toLocaleString()}\n\n`;
-    
-    // Evidence
-    if (options.includeEvidence && finding.evidence.length > 0) {
-      markdown += `**Evidence:**\n\n`;
-      
-      finding.evidence.forEach(item => {
-        markdown += `- **${item.evidenceType}**: [View Evidence](${item.filePath})`;
-        if (item.description) markdown += ` - ${item.description}`;
-        markdown += `\n`;
-      });
-      
-      markdown += `\n`;
-    }
-    
-    // Solution prompt
-    if (options.includeSolutionPrompts) {
-      markdown += `**Solution Prompt:**\n\n`;
-      markdown += `\`\`\`\n${this.generateSolutionPrompt(finding)}\n\`\`\`\n\n`;
-    }
-    
-    markdown += `---\n\n`;
-    
+    markdown += '\n---\n\n';
     return markdown;
   }
   
   /**
-   * Get a human-readable severity label with emoji
-   * @param severity The finding severity
-   * @returns Human-readable severity label
+   * Get an icon representing severity
+   * @param severity Severity level
+   * @returns Icon string
    */
-  private getSeverityLabel(severity: BounceFindingSeverity): string {
+  private getSeverityIcon(severity: string): string {
     switch (severity) {
       case BounceFindingSeverity.CRITICAL:
-        return `🔴 Critical`;
+        return '🔴';
+      case BounceFindingSeverity.HIGH:
+        return '🟠';
       case BounceFindingSeverity.MODERATE:
-        return `🟠 Moderate`;
+      case BounceFindingSeverity.MEDIUM: // For backward compatibility
+        return '🟡';
       case BounceFindingSeverity.LOW:
-        return `🟡 Low`;
+        return '🟢';
+      case BounceFindingSeverity.INFO:
+        return '🔵';
       default:
-        return severity;
+        return '⚪';
     }
-  }
-  
-  /**
-   * Generate an HTML format report
-   * @param testRun The test run summary
-   * @param findings The findings with evidence
-   * @param options Report options
-   * @returns HTML formatted report
-   */
-  private generateHtmlReport(
-    testRun: TestRunSummary,
-    findings: FindingWithEvidence[],
-    options: ReportOptions
-  ): string {
-    // For brevity, this is simplified - a real implementation would include
-    // a complete HTML report with CSS styling
-    
-    const markdown = this.generateMarkdownReport(testRun, findings, options);
-    
-    // Simple HTML wrapper for the markdown content
-    // In a real implementation, we would use a proper markdown to HTML converter
-    return `<!DOCTYPE html>
-<html>
-<head>
-  <title>Bounce Test Report: Run #${testRun.id}</title>
-  <style>
-    body { font-family: sans-serif; line-height: 1.6; max-width: 1000px; margin: 0 auto; padding: 20px; }
-    h1, h2, h3, h4 { color: #333; }
-    .critical { color: #e53e3e; }
-    .moderate { color: #ed8936; }
-    .low { color: #ecc94b; }
-    pre { background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { text-align: left; padding: 12px; border-bottom: 1px solid #ddd; }
-    th { background-color: #f2f2f2; }
-    .solution-prompt { background-color: #e6f7ff; border-left: 4px solid #1890ff; padding: 16px; margin: 16px 0; }
-  </style>
-</head>
-<body>
-  <div class="report-content">
-    ${markdown.replace(/\n/g, '<br>')}
-  </div>
-</body>
-</html>`;
-  }
-  
-  /**
-   * Generate a plain text format report
-   * @param testRun The test run summary
-   * @param findings The findings with evidence
-   * @param options Report options
-   * @returns Plain text formatted report
-   */
-  private generateTextReport(
-    testRun: TestRunSummary,
-    findings: FindingWithEvidence[],
-    options: ReportOptions
-  ): string {
-    // Convert markdown to plain text (simplified)
-    const markdown = this.generateMarkdownReport(testRun, findings, options);
-    return markdown
-      .replace(/#+\s+/g, '')  // Remove markdown headers
-      .replace(/\*\*/g, '')   // Remove bold markers
-      .replace(/\n\n/g, '\n') // Reduce double line breaks
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1 ($2)'); // Convert links
-  }
-  
-  /**
-   * Save a report to a file
-   * @param reportContent The report content
-   * @param format The format of the report
-   * @param outputPath Optional custom output path
-   * @returns The full path to the saved report
-   */
-  saveReportToFile(
-    reportContent: string,
-    format: "markdown" | "html" | "text" | "buglist" = "markdown",
-    outputPath?: string
-  ): string {
-    let extension: string;
-    switch (format) {
-      case "markdown":
-      case "buglist":
-        extension = ".md";
-        break;
-      case "html":
-        extension = ".html";
-        break;
-      case "text":
-      default:
-        extension = ".txt";
-        break;
-    }
-    
-    const filename = `bounce_report_${Date.now()}${extension}`;
-    const reportPath = outputPath || path.join("./reports", filename);
-    
-    // Ensure the directory exists
-    const dir = path.dirname(reportPath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    
-    // Write the report to file
-    fs.writeFileSync(reportPath, reportContent, "utf8");
-    
-    console.log(`[Bounce] Report saved to: ${reportPath}`);
-    return reportPath;
   }
 }
-
-// Export a singleton instance for use throughout the application
-export const enhancedReportGenerator = new EnhancedReportGenerator();

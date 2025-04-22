@@ -1,18 +1,16 @@
 /**
- * PKL-278651-BOUNCE-0001-CORE
- * Bounce Reporting Module Index
+ * PKL-278651-BOUNCE-0014-CICD - Bounce Reporting Index
  * 
- * This file exports all reporting-related functionality for the Bounce automated testing system.
+ * Central export point for bug report generators
  * 
  * @framework Framework5.2
  * @version 1.0.0
  * @lastModified 2025-04-22
  */
 
-import { bugReportGenerator } from './bug-report-generator';
-import { actionItemsGenerator } from '../action-items-generator';
+import { BugReportGenerator } from './bug-report-generator';
+import { EnhancedReportGenerator } from './enhanced-report-generator';
 
-export { 
-  bugReportGenerator,
-  actionItemsGenerator 
-};
+// Export singleton instances of report generators
+export const bugReportGenerator = new BugReportGenerator();
+export const enhancedReportGenerator = new EnhancedReportGenerator();
