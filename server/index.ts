@@ -124,8 +124,8 @@ app.use((req, res, next) => {
     console.error("Error setting up frontend serving:", error);
   }
 
-  // Use port 3000 for Cloud Run
-  const port = process.env.PORT || 3000;
+  // Use port 5000 for Cloud Run
+  const port = process.env.PORT || 5000;
   serverHttp.listen({
     port: Number(port),
     host: "0.0.0.0",
