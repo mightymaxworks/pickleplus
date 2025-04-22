@@ -47,7 +47,7 @@ program
   .option('-s, --suite <name>', 'Test suite to run (e.g., "api", "ui", "all")', 'all')
   .option('-b, --browsers <list>', 'Comma-separated list of browsers to test', 'chrome')
   .option('-e, --environment <env>', 'Environment to test against', 'development')
-  .option('-o, --output <format>', 'Output format (json, markdown, html)', 'markdown')
+  .option('-o, --output <format>', 'Output format (json, markdown, html, buglist)', 'markdown')
   .option('-v, --verbose', 'Enable verbose logging')
   .option('--headless', 'Run browser tests in headless mode', true)
   .option('--ci-mode', 'Run in CI mode (fail on critical findings)', false)
@@ -103,17 +103,42 @@ program
       );
       
       // Generate report
-      const reportContent = await reportGenerator.generateTestRunReport(
-        testRunId,
-        { format: options.output as any, includeEvidence: true }
-      );
+      let reportContent = '';
+      let reportPath = '';
       
-      // Save report
-      const reportPath = reportGenerator.saveReportToFile(
-        reportContent,
-        options.output as any,
-        path.join('reports', `bounce_report_${testRunId}.${options.output === 'markdown' ? 'md' : options.output}`)
-      );
+      // Use enhanced report generator for buglist format
+      if (options.output === 'buglist') {
+        console.log(colors.cyan('\nGenerating detailed bug report with solution prompts...'));
+        reportContent = await enhancedReportGenerator.generateTestRunReport(
+          testRunId,
+          { 
+            format: 'buglist', 
+            includeEvidence: true,
+            includeSolutionPrompts: true,
+            sortBySeverity: true 
+          }
+        );
+        
+        reportPath = enhancedReportGenerator.saveReportToFile(
+          reportContent,
+          'buglist',
+          path.join('reports', `bounce_buglist_${testRunId}.md`)
+        );
+        
+        console.log(colors.green(`Bug report with solution prompts generated successfully!`));
+      } else {
+        // Use standard report generator for other formats
+        reportContent = await reportGenerator.generateTestRunReport(
+          testRunId,
+          { format: options.output as any, includeEvidence: true }
+        );
+        
+        reportPath = reportGenerator.saveReportToFile(
+          reportContent,
+          options.output as any,
+          path.join('reports', `bounce_report_${testRunId}.${options.output === 'markdown' ? 'md' : options.output}`)
+        );
+      }
       
       // Print summary
       console.log(colors.blue('\n┌─────────────────────────────────┐'));

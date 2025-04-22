@@ -33,7 +33,8 @@ export enum BounceTestRunStatus {
 export enum BounceFindingSeverity {
   CRITICAL = "critical",
   HIGH = "high",
-  MEDIUM = "medium",
+  MODERATE = "moderate",
+  MEDIUM = "medium", // Keeping for backward compatibility
   LOW = "low",
   INFO = "info"
 }
