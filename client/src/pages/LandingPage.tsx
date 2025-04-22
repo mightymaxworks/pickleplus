@@ -3,9 +3,10 @@ import { motion } from "framer-motion";
 import { PicklePlusTextLogo } from "@/components/icons/PicklePlusTextLogo";
 import { PicklePlusLogo } from "@/components/icons/PicklePlusLogo";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { 
   ChevronDown, Award, Calendar, BarChart, ArrowRight, Users, Trophy, Zap,
-  Activity, LayoutDashboard
+  Activity, LayoutDashboard, Check, Play, Download, ChevronsRight, Star
 } from "lucide-react";
 import { useKonamiCode } from "@/hooks/useKonamiCode";
 import { EasterEggModal } from "@/components/EasterEggModal";
