@@ -7,34 +7,32 @@
  * @framework Framework5.2
  */
 
-@keyframes ticker {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-100%);
-  }
-}
+/* 
+ * Most animations are now handled by Tailwind's animate-marquee class
+ * The keyframes are defined in tailwind.config.ts
+ * This file provides supplementary styles
+ */
 
-.animate-ticker {
-  animation: ticker 30s linear infinite;
-  display: flex;
-  /* Double content for seamless looping */
-  padding-right: 100%;
-}
-
-.animate-ticker:hover {
+/* Pause animation on hover */
+.animate-marquee:hover {
   animation-play-state: paused;
 }
 
 /* Ensure multiple iterations of the ticker content for smooth looping */
-.animate-ticker > * {
+.animate-marquee > * {
   flex-shrink: 0;
   margin-right: 2rem;
 }
 
+/* Additional styles for ticker items */
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
 /* Ensure we display a duplicate set of items for seamless looping */
-.animate-ticker::after {
+.animate-marquee::after {
   content: " ";
   white-space: nowrap;
   padding-right: 100%;

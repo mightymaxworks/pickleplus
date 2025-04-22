@@ -11,6 +11,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Info, Activity, Clock, AlertCircle } from 'lucide-react';
+import { useLocation } from 'wouter';
 import { 
   bounceStatusService, 
   type TestingArea,
@@ -18,6 +19,10 @@ import {
   type WeatherForecast,
   type CommunityImpact
 } from '@/lib/services/bounceStatusService';
+import { useBounceAwareness } from '@/hooks/use-bounce-awareness';
+
+// Import CSS for ticker animations and styles
+import './bounce-status-ticker.css';
 
 interface BounceStatusTickerProps {
   className?: string;
@@ -33,6 +38,8 @@ export const BounceStatusTicker = ({
   const [metrics, setMetrics] = useState<TestingMetrics | null>(null);
   const [forecast, setForecast] = useState<WeatherForecast | null>(null);
   const [impact, setImpact] = useState<CommunityImpact | null>(null);
+  const [, setLocation] = useLocation();
+  const { joinTesting } = useBounceAwareness();
   
   useEffect(() => {
     const loadData = async () => {
@@ -125,25 +132,25 @@ export const BounceStatusTicker = ({
         <div className="relative overflow-hidden flex-1">
           {/* For smooth animation, we use CSS animation on this div */}
           <div className="whitespace-nowrap flex items-center gap-8 animate-marquee">
-            <div className="inline-flex items-center">
+            <div className="ticker-item">
               <span className="text-cyan-400 font-medium mr-2">Bounce Testing:</span>
               <span className="text-white text-sm">
                 {metrics ? `${metrics.successRate}% of users experienced error-free matches this week` : 'Testing in progress'}
               </span>
             </div>
-            <div className="inline-flex items-center">
+            <div className="ticker-item">
               <span className="text-cyan-400 font-medium mr-2">Currently Testing:</span>
               <span className="text-white text-sm">
                 {testingAreas.length > 0 ? formatTestingAreas(testingAreas) : 'No active tests'}
               </span>
             </div>
-            <div className="inline-flex items-center">
+            <div className="ticker-item">
               <span className="text-cyan-400 font-medium mr-2">Community Impact:</span>
               <span className="text-white text-sm">
                 {metrics ? `Bounce testers have found ${metrics.issuesFound} issues this month` : 'Calculating impact...'}
               </span>
             </div>
-            <div className="inline-flex items-center">
+            <div className="ticker-item">
               <span className="text-cyan-400 font-medium mr-2">Weather Report:</span>
               <span className="text-white text-sm">
                 {forecast ? `Next focus areas: ${formatNextAreas(forecast)}` : 'Generating forecast...'}
@@ -155,7 +162,13 @@ export const BounceStatusTicker = ({
           <div className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
             <Info size={14} className="text-white" />
           </div>
-          <button className="ml-2 text-xs text-white bg-blue-600 hover:bg-blue-700 transition-colors px-2 py-1 rounded">
+          <button 
+            onClick={() => {
+              joinTesting();
+              setLocation('/admin/bounce');
+            }}
+            className="ml-2 text-xs text-white bg-blue-600 hover:bg-blue-700 transition-colors px-2 py-1 rounded"
+          >
             Join Testing
           </button>
         </div>
