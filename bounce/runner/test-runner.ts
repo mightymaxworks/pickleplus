@@ -45,7 +45,8 @@ const mockPlaywright = {
     launch: async () => ({
       newContext: async () => ({
         newPage: async () => new MockBrowser()
-      })
+      }),
+      close: async () => console.log('[MockBrowser] Browser closed')
     })
   }
 };
@@ -138,8 +139,8 @@ class TestRunner {
         .update(bounceTestRuns)
         .set({
           status: BounceTestRunStatus.COMPLETED,
-          completedAt: new Date(),
-          totalFindings: 5
+          completed_at: new Date(),
+          total_findings: 5
         })
         .where(eq(bounceTestRuns.id, testRunId));
       
@@ -157,8 +158,8 @@ class TestRunner {
         .update(bounceTestRuns)
         .set({
           status: BounceTestRunStatus.FAILED,
-          completedAt: new Date(),
-          errorMessage: (error as Error).message
+          completed_at: new Date(),
+          error_message: (error as Error).message
         })
         .where(eq(bounceTestRuns.id, testRunId));
       
@@ -175,67 +176,67 @@ class TestRunner {
     
     // Critical finding - Authentication
     await db.insert(bounceFindings).values({
-      testRunId,
+      test_run_id: testRunId,
       title: 'Session timeout not properly handled',
       description: 'When a user session times out, the application shows a generic error instead of a proper session expiration message with login prompt',
       severity: 'CRITICAL',
       status: 'OPEN',
       area: 'Authentication',
-      reproducibleSteps: '1. Login to the application\n2. Wait for 30+ minutes without any activity\n3. Try to perform any action\n4. Observe generic error message',
-      affectedUrl: '/communities',
-      createdAt: new Date()
+      reproducible_steps: '1. Login to the application\n2. Wait for 30+ minutes without any activity\n3. Try to perform any action\n4. Observe generic error message',
+      affected_url: '/communities',
+      created_at: new Date()
     });
     
     // High finding - Community
     await db.insert(bounceFindings).values({
-      testRunId,
+      test_run_id: testRunId,
       title: 'Community page not responsive on mobile',
       description: 'The community details page layout breaks on mobile devices with screen width below 375px',
       severity: 'HIGH',
       status: 'OPEN',
       area: 'Community',
-      reproducibleSteps: '1. Navigate to any community details page\n2. View on mobile device or resize browser to 375px width\n3. Observe content overflow and layout issues',
-      affectedUrl: '/communities/1',
-      createdAt: new Date()
+      reproducible_steps: '1. Navigate to any community details page\n2. View on mobile device or resize browser to 375px width\n3. Observe content overflow and layout issues',
+      affected_url: '/communities/1',
+      created_at: new Date()
     });
     
     // High finding - Tournaments
     await db.insert(bounceFindings).values({
-      testRunId,
+      test_run_id: testRunId,
       title: 'Tournament bracket rendering error with large number of participants',
       description: 'Tournament brackets with more than 32 participants cause horizontal overflow without proper scrolling controls',
       severity: 'HIGH',
       status: 'OPEN',
       area: 'Tournaments',
-      reproducibleSteps: '1. Navigate to tournament with 64 participants\n2. View bracket visualization\n3. Observe horizontal overflow without easy navigation',
-      affectedUrl: '/tournaments/bracket/5',
-      createdAt: new Date()
+      reproducible_steps: '1. Navigate to tournament with 64 participants\n2. View bracket visualization\n3. Observe horizontal overflow without easy navigation',
+      affected_url: '/tournaments/bracket/5',
+      created_at: new Date()
     });
     
     // Moderate finding
     await db.insert(bounceFindings).values({
-      testRunId,
+      test_run_id: testRunId,
       title: 'Profile image upload preview not showing on Safari',
       description: 'When uploading a profile image on Safari browsers, the image preview does not display correctly',
       severity: 'MODERATE',
       status: 'OPEN',
       area: 'Profile',
-      reproducibleSteps: '1. Login and navigate to profile settings\n2. Attempt to upload a new profile image\n3. Observe missing image preview on Safari',
-      affectedUrl: '/profile/settings',
-      createdAt: new Date()
+      reproducible_steps: '1. Login and navigate to profile settings\n2. Attempt to upload a new profile image\n3. Observe missing image preview on Safari',
+      affected_url: '/profile/settings',
+      created_at: new Date()
     });
     
     // Low finding
     await db.insert(bounceFindings).values({
-      testRunId,
+      test_run_id: testRunId,
       title: 'Inconsistent button styling on settings page',
       description: 'The buttons on the settings page use inconsistent styling compared to the rest of the application',
       severity: 'LOW',
       status: 'OPEN',
       area: 'UI',
-      reproducibleSteps: '1. Navigate to settings page\n2. Compare button styling with other pages\n3. Observe inconsistencies in padding, border-radius and hover states',
-      affectedUrl: '/settings',
-      createdAt: new Date()
+      reproducible_steps: '1. Navigate to settings page\n2. Compare button styling with other pages\n3. Observe inconsistencies in padding, border-radius and hover states',
+      affected_url: '/settings',
+      created_at: new Date()
     });
     
     console.log(`[Bounce] Created 5 mock findings for test run ${testRunId}`);
