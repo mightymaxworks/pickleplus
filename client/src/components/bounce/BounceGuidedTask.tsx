@@ -8,14 +8,17 @@
  * @framework Framework5.2
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, ChevronRight, ChevronLeft, ArrowRight, Zap } from 'lucide-react';
-import { useGuidedTask, VerificationData } from '@/contexts/BounceGuidedTaskContext';
-import { BounceGuidedTaskStep } from './BounceGuidedTaskStep';
+import { Trophy, ChevronRight } from 'lucide-react';
+import { useGuidedTask } from '@/contexts/BounceGuidedTaskContext';
+import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { BounceGuidedTaskStep } from './BounceGuidedTaskStep';
 import { useToast } from '@/hooks/use-toast';
+import { useBounceAwareness } from '@/hooks/use-bounce-awareness';
+import { VerificationData, TaskUpdateMessage } from '@/types/bounce';
 
 interface BounceGuidedTaskProps {
   taskId: string;
@@ -24,172 +27,152 @@ interface BounceGuidedTaskProps {
 export const BounceGuidedTask: React.FC<BounceGuidedTaskProps> = ({
   taskId
 }) => {
-  const { 
-    tasks,
-    activeTaskId,
-    currentStepIndex,
-    setCurrentStep,
-    setActiveTask,
-    completedStepIds,
-    completeStep,
-    taskProgress
-  } = useGuidedTask();
-  
+  const { tasks, completeTask, getStepProgress } = useGuidedTask();
+  const { sendTaskUpdate } = useBounceAwareness();
   const { toast } = useToast();
   
-  // Find the task
-  const task = tasks.find(t => t.id === taskId);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [isCompleted, setIsCompleted] = useState(false);
   
-  // If no task found, render nothing
+  // Find the current task
+  const task = tasks.find((t: any) => t.id === taskId);
+  
+  // If task not found, don't render anything
   if (!task) {
     return null;
   }
   
-  // Get current step
-  const currentStep = task.steps[currentStepIndex];
-  
-  // Calculate progress
-  const progress = taskProgress(taskId);
+  const steps = task.steps || [];
+  const totalSteps = steps.length;
+  const currentStep = steps[currentStepIndex];
+  const progress = getStepProgress(taskId);
   
   // Handle step completion
   const handleStepComplete = (verificationData: VerificationData) => {
-    completeStep(verificationData.stepId, verificationData);
-    
-    // Show toast
-    toast({
-      title: "Step completed!",
-      description: `You earned ${currentStep.xpReward} XP for this step.`,
-      duration: 3000,
-    });
-    
-    // Check if all steps are completed
-    if (progress.completed + 1 === progress.total) {
+    // If there are more steps, advance to the next one
+    if (currentStepIndex < totalSteps - 1) {
+      setCurrentStepIndex(currentStepIndex + 1);
+      
+      // Notify the Bounce system of progress
+      sendTaskUpdate({
+        taskId: taskId,
+        stepIndex: currentStepIndex,
+        status: 'completed',
+        verificationData
+      });
+      
+      // Show success toast
+      toast({
+        title: "Step Completed",
+        description: "Moving to the next step in the task.",
+        duration: 3000,
+      });
+    } else {
+      // This was the last step, complete the whole task
+      setIsCompleted(true);
+      
+      // Notify the Bounce system of task completion
+      sendTaskUpdate({
+        taskId: taskId,
+        stepIndex: currentStepIndex,
+        status: 'completed',
+        verificationData
+      });
+      
+      // Call the completeTask function
+      completeTask(taskId, {
+        completedAt: new Date(),
+        verificationData
+      });
+      
       // Show completion toast
-      setTimeout(() => {
-        toast({
-          title: "Task completed!",
-          description: `You've completed all steps and earned ${task.totalXpReward} XP in total.`,
-          duration: 5000,
-        });
-      }, 1000);
+      toast({
+        title: "Task Completed!",
+        description: `You've earned ${task.totalXpReward} XP for completing this task.`,
+        duration: 4000,
+      });
     }
   };
   
-  // Handle navigation
-  const goToNextStep = () => {
-    if (currentStepIndex < task.steps.length - 1) {
-      setCurrentStep(currentStepIndex + 1);
+  // Move to the next step without verification (for optional steps)
+  const handleNextStep = () => {
+    if (currentStepIndex < totalSteps - 1) {
+      setCurrentStepIndex(currentStepIndex + 1);
+      
+      // Notify the Bounce system of skipping
+      sendTaskUpdate({
+        taskId: taskId,
+        stepIndex: currentStepIndex,
+        status: 'skipped',
+        verificationData: null
+      });
     }
   };
   
-  const goToPreviousStep = () => {
-    if (currentStepIndex > 0) {
-      setCurrentStep(currentStepIndex - 1);
-    }
-  };
-  
-  // If task is complete, show a summary
-  const isTaskComplete = progress.completed === progress.total;
-  
-  if (isTaskComplete) {
+  // Render task completion screen
+  if (isCompleted) {
     return (
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-        className="mt-3"
+        className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg mt-3 text-center"
       >
-        <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-900">
-          <div className="flex items-center justify-center text-green-600 dark:text-green-400 mb-3">
-            <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-800 flex items-center justify-center">
-              <CheckCircle className="h-6 w-6" />
-            </div>
-          </div>
-          <h3 className="text-center font-medium text-green-700 dark:text-green-300 mb-1">
-            Task Completed
-          </h3>
-          <p className="text-center text-sm text-green-600 dark:text-green-400 mb-3">
-            You've completed all {task.steps.length} steps!
-          </p>
-          <div className="flex items-center justify-center mb-3">
-            <div className="bg-green-200 dark:bg-green-800 text-green-700 dark:text-green-300 px-3 py-1 rounded-full flex items-center">
-              <Zap className="h-4 w-4 mr-1" />
-              {task.totalXpReward} XP Earned
-            </div>
-          </div>
-          <div className="flex justify-center mt-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setActiveTask(null)}
-            >
-              Close
-            </Button>
-          </div>
+        <div className="mx-auto w-12 h-12 rounded-full bg-green-100 dark:bg-green-800/50 flex items-center justify-center mb-2">
+          <Trophy className="h-6 w-6 text-green-600 dark:text-green-400" />
+        </div>
+        <h3 className="font-medium text-green-700 dark:text-green-300 mb-1">Task Completed!</h3>
+        <p className="text-sm text-green-600 dark:text-green-400 mb-3">
+          You've earned {task.totalXpReward} XP for your contribution.
+        </p>
+        <div className="text-xs text-gray-500 dark:text-gray-400">
+          Thank you for helping improve Pickle+!
         </div>
       </motion.div>
     );
   }
   
+  // Render current step
   return (
     <motion.div
-      initial={{ opacity: 0, height: 0 }}
-      animate={{ opacity: 1, height: 'auto' }}
-      exit={{ opacity: 0, height: 0 }}
-      transition={{ duration: 0.3 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       className="mt-3"
     >
-      {/* Progress bar */}
-      <div className="mb-3">
-        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-          <span>Progress</span>
-          <span>{progress.completed} of {progress.total} steps</span>
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-xs text-gray-500 dark:text-gray-400">
+          Step {currentStepIndex + 1} of {totalSteps}
         </div>
-        <Progress value={progress.percentage} className="h-2" />
+        <div className="text-xs font-medium text-blue-600 dark:text-blue-400">
+          {progress}% Complete
+        </div>
       </div>
       
-      {/* Task steps */}
-      <div className="space-y-2">
-        {/* Render the current step with full details */}
-        <BounceGuidedTaskStep
-          step={currentStep}
-          isActive={true}
-          isCompleted={completedStepIds.includes(currentStep.id)}
-          onComplete={handleStepComplete}
-          onNext={goToNextStep}
-          stepNumber={currentStepIndex + 1}
-          totalSteps={task.steps.length}
-        />
-        
-        {/* Navigation buttons */}
-        <div className="flex justify-between items-center mt-2">
+      <Progress value={progress} className="h-1 mb-3" />
+      
+      <Separator className="my-2" />
+      
+      <BounceGuidedTaskStep
+        step={currentStep}
+        isActive={true}
+        isCompleted={false}
+        onComplete={handleStepComplete}
+        onNext={currentStep.optional ? handleNextStep : undefined}
+        stepNumber={currentStepIndex + 1}
+        totalSteps={totalSteps}
+      />
+      
+      {currentStep.optional && (
+        <div className="flex justify-end mt-2">
           <Button
-            variant="ghost"
+            variant="ghost" 
             size="sm"
-            onClick={goToPreviousStep}
-            disabled={currentStepIndex === 0}
-            className="h-8 px-2"
+            className="text-xs"
+            onClick={handleNextStep}
           >
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Previous
-          </Button>
-          
-          <div className="text-xs text-gray-500 dark:text-gray-400">
-            Step {currentStepIndex + 1} of {task.steps.length}
-          </div>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={goToNextStep}
-            disabled={currentStepIndex === task.steps.length - 1 || !completedStepIds.includes(currentStep.id)}
-            className="h-8 px-2"
-          >
-            Next
-            <ChevronRight className="h-4 w-4 ml-1" />
+            Skip <ChevronRight className="ml-1 h-3 w-3" />
           </Button>
         </div>
-      </div>
+      )}
     </motion.div>
   );
 };

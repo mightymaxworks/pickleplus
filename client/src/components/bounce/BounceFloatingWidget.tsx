@@ -215,7 +215,7 @@ export const BounceFloatingWidget: React.FC<BounceFloatingWidgetProps> = ({
               >
                 {tasks.length > 0 ? (
                   <div className="space-y-3">
-                    {tasks.map((task) => (
+                    {tasks.map((task: any) => (
                       <div 
                         key={task.id}
                         className={`cursor-pointer rounded-lg p-3 transition-colors ${

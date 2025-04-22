@@ -8,6 +8,8 @@ import { TournamentChangeProvider } from './core/modules/tournament/context/Tour
 import { UserDataProvider } from '@/contexts/UserDataContext' // PKL-278651-PERF-0001.1-CACHE
 import { TutorialProvider } from '@/components/onboarding' // PKL-278651-GAME-0002-TUT
 import { CommunityProvider } from '@/lib/providers/CommunityProvider' // PKL-278651-COMM-0014-CONT
+import { GuidedTaskProvider } from '@/contexts/BounceGuidedTaskContext' // PKL-278651-BOUNCE-0008-ASSIST
+import { BounceFloatingWidget } from '@/components/bounce/BounceFloatingWidget' // PKL-278651-BOUNCE-0008-ASSIST
 import { LazyLoadingFallback, lazyLoad } from '@/utils/lazyLoad' // PKL-278651-PERF-0001.2-SPLIT
 import { moduleRegistry } from '@/core/modules/moduleRegistry' // For feedback module
 import { SimpleBugReportButton } from '@/components/bug-report/BugReportButton' // Simplified bug report button
@@ -154,9 +156,13 @@ export default function App() {
             <TournamentChangeProvider>
               <TutorialProvider>
                 <CommunityProvider>
-                  <Suspense fallback={<LazyLoadingFallback />}>
-                    {/* Add Simplified Bug Report Button (PKL-278651-FEED-0001-BUG) */}
-                    <SimpleBugReportButton position="bottom-right" />
+                  <GuidedTaskProvider>
+                    <Suspense fallback={<LazyLoadingFallback />}>
+                      {/* Add Simplified Bug Report Button (PKL-278651-FEED-0001-BUG) */}
+                      <SimpleBugReportButton position="bottom-right" />
+                      
+                      {/* PKL-278651-BOUNCE-0008-ASSIST - Add Bounce Floating Widget */}
+                      <BounceFloatingWidget />
                     
                     {/* Bounce Mascot disabled for now (PKL-278651-MASCOT-0001-CORE) */}
                     {/* Removed to focus on launch priorities */}
@@ -473,6 +479,7 @@ export default function App() {
                   <Route component={LazyNotFoundPage} />
                 </Switch>
                   </Suspense>
+                  </GuidedTaskProvider>
                 </CommunityProvider>
               </TutorialProvider>
             </TournamentChangeProvider>

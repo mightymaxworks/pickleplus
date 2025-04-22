@@ -1,277 +1,207 @@
 /**
- * PKL-278651-BOUNCE-0006-AWARE - Bounce Awareness Enhancement
+ * PKL-278651-BOUNCE-0008-ASSIST - Bounce Assistance Request Enhancement
  * 
- * useBounceAwareness - Hook that provides real-time bounce testing status
- * and event listeners for automated testing activity.
+ * useBounceAwareness - Custom hook for interacting with Bounce testing system.
+ * Facilitates communication between user and the testing system.
  * 
  * @version 1.0.0
  * @framework Framework5.2
  */
 
 import { useState, useEffect } from 'react';
-import { bounceStatusService } from '@/lib/services/bounceStatusService';
+import { TaskUpdateMessage } from '@/types/bounce';
+import { useToast } from '@/hooks/use-toast';
 
-interface BounceAwarenessState {
-  isActive: boolean;
-  testingSince: Date | null;
-  currentAreas: string[];
-  completedTests: number;
-  totalIssuesFound: number;
-  recentNotifications: { message: string; timestamp: Date }[];
-  userAssistanceRequests: {
-    id: string;
-    area: string;
-    task: string;
-    timestamp: Date;
-    status: 'pending' | 'completed' | 'skipped';
-    xpReward: number;
-  }[];
+// Define types for notifications and assistance requests
+interface BounceNotification {
+  id: string;
+  message: string;
+  timestamp: Date;
+  type: 'info' | 'success' | 'warning' | 'error';
+  read: boolean;
 }
 
+interface AssistanceRequest {
+  id: string;
+  title: string;
+  description: string;
+  priority: 'low' | 'medium' | 'high';
+  createdAt: Date;
+  status: 'pending' | 'completed' | 'skipped';
+}
+
+// Sample notifications (for demo purposes)
+const SAMPLE_NOTIFICATIONS: BounceNotification[] = [
+  {
+    id: '1',
+    message: 'Welcome to Bounce Testing Mode! Help us improve Pickle+ by completing test tasks.',
+    timestamp: new Date(),
+    type: 'info',
+    read: false,
+  },
+  {
+    id: '2',
+    message: 'New test task available: Verify match recording form on different devices.',
+    timestamp: new Date(Date.now() - 30 * 60000), // 30 minutes ago
+    type: 'info',
+    read: false,
+  },
+];
+
+// Sample assistance requests (for demo purposes)
+const SAMPLE_ASSISTANCE_REQUESTS: AssistanceRequest[] = [
+  {
+    id: 'ar1',
+    title: 'Verify Profile Picture Upload',
+    description: 'Please navigate to your profile and test the profile picture upload functionality.',
+    priority: 'medium',
+    createdAt: new Date(Date.now() - 2 * 60 * 60000), // 2 hours ago
+    status: 'pending',
+  },
+  {
+    id: 'ar2',
+    title: 'Test Match Recording Flow',
+    description: 'Record a test match and verify all form fields work correctly.',
+    priority: 'high',
+    createdAt: new Date(Date.now() - 1 * 60 * 60000), // 1 hour ago
+    status: 'pending',
+  },
+];
+
+/**
+ * Custom hook for Bounce testing system awareness
+ */
 export function useBounceAwareness() {
-  const [state, setState] = useState<BounceAwarenessState>({
-    isActive: false,
-    testingSince: null,
-    currentAreas: [],
-    completedTests: 0,
-    totalIssuesFound: 0,
-    recentNotifications: [],
-    userAssistanceRequests: []
-  });
+  // State
+  const [isActive, setIsActive] = useState(false);
+  const [recentNotifications, setRecentNotifications] = useState<BounceNotification[]>([]);
+  const [userAssistanceRequests, setUserAssistanceRequests] = useState<AssistanceRequest[]>([]);
+  const { toast } = useToast();
   
-  // Load initial data and set up listeners
+  // Initialize with sample data (in a real implementation, this would fetch from an API)
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const areas = await bounceStatusService.getCurrentTestingAreas();
-        const metrics = await bounceStatusService.getTestingMetrics();
-        
-        setState(prev => ({
-          ...prev,
-          isActive: areas.length > 0,
-          testingSince: areas.length > 0 ? new Date() : null,
-          currentAreas: areas.map(area => area.name),
-          totalIssuesFound: metrics?.issuesFound || 0
-        }));
-      } catch (error) {
-        console.error('Error loading bounce awareness data:', error);
-      }
-    };
-    
-    fetchData();
-    
-    // Simulate real-time events 
-    // In production, this would be replaced with websocket connections or similar
-    const intervalId = setInterval(() => {
-      // Simulate a random testing event every so often
-      const random = Math.random();
-      
-      if (random < 0.2) {
-        // Simulate a test completion event
-        setState(prev => ({
-          ...prev,
-          completedTests: prev.completedTests + 1,
-          recentNotifications: [
-            {
-              message: `Test completed: ${['Login flow', 'Match recording', 'Tournament bracket'][Math.floor(Math.random() * 3)]}`,
-              timestamp: new Date()
-            },
-            ...prev.recentNotifications.slice(0, 4) // Keep only recent 5
-          ]
-        }));
-      } else if (random < 0.4) {
-        // Simulate an issue found event
-        setState(prev => ({
-          ...prev,
-          totalIssuesFound: prev.totalIssuesFound + 1,
-          recentNotifications: [
-            {
-              message: `New issue found: ID-${Math.floor(Math.random() * 1000)}`,
-              timestamp: new Date()
-            },
-            ...prev.recentNotifications.slice(0, 4) // Keep only recent 5
-          ]
-        }));
-      } else if (random < 0.5) {
-        // Simulate a user assistance request - this is what we want to demonstrate
-        const assistanceAreas = [
-          'Tournament Registration',
-          'Match Recording',
-          'User Profile',
-          'Notifications'
-        ];
-        
-        const assistanceTasks = [
-          'Please test the tournament registration flow and verify you receive a confirmation email',
-          'Can you record a match result and check if stats are updated correctly?',
-          'Please update your profile picture and verify it displays correctly',
-          'Please check if you receive push notifications when a match is scheduled'
-        ];
-        
-        const randomAreaIndex = Math.floor(Math.random() * assistanceAreas.length);
-        
-        setState(prev => {
-          // Create a new user assistance request
-          const newRequest = {
-            id: `req-${Date.now()}`,
-            area: assistanceAreas[randomAreaIndex],
-            task: assistanceTasks[randomAreaIndex],
-            timestamp: new Date(),
-            status: 'pending' as const,
-            xpReward: 15 + Math.floor(Math.random() * 25) // 15-40 XP
-          };
-          
-          return {
-            ...prev,
-            userAssistanceRequests: [...prev.userAssistanceRequests, newRequest],
-            recentNotifications: [
-              {
-                message: `Bounce needs your help with ${newRequest.area}!`,
-                timestamp: new Date()
-              },
-              ...prev.recentNotifications.slice(0, 4)
-            ]
-          };
-        });
-      }
-    }, 5000); // Faster interval for demo purposes
-    
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, []);
+    if (isActive) {
+      // In a real implementation, fetch notifications from API
+      setRecentNotifications(SAMPLE_NOTIFICATIONS);
+      setUserAssistanceRequests(SAMPLE_ASSISTANCE_REQUESTS);
+    }
+  }, [isActive]);
   
-  return {
-    ...state,
-    // Methods that would trigger actions
-    joinTesting: () => {
-      // Start a testing session and create the first assistance request immediately
-      const assistanceAreas = [
-        'Tournament Registration',
-        'Match Recording',
-        'User Profile',
-        'Notifications'
-      ];
-      
-      const assistanceTasks = [
-        'Please test the tournament registration flow and verify you receive a confirmation email',
-        'Can you record a match result and check if stats are updated correctly?',
-        'Please update your profile picture and verify it displays correctly',
-        'Please check if you receive push notifications when a match is scheduled'
-      ];
-      
-      const randomAreaIndex = Math.floor(Math.random() * assistanceAreas.length);
-      
-      const newRequest = {
-        id: `req-${Date.now()}`,
-        area: assistanceAreas[randomAreaIndex],
-        task: assistanceTasks[randomAreaIndex],
-        timestamp: new Date(),
-        status: 'pending' as const,
-        xpReward: 15 + Math.floor(Math.random() * 25) // 15-40 XP
-      };
-      
-      setState(prev => ({
-        ...prev,
-        isActive: true,
-        testingSince: new Date(),
-        userAssistanceRequests: [...prev.userAssistanceRequests, newRequest],
-        recentNotifications: [
-          {
-            message: `Bounce needs your help with ${newRequest.area}!`,
-            timestamp: new Date()
-          },
-          ...prev.recentNotifications.slice(0, 4)
-        ]
-      }));
-      
-      console.log('Joining testing - would navigate to /admin/bounce');
-    },
-    dismissNotification: (index: number) => {
-      setState(prev => ({
-        ...prev,
-        recentNotifications: prev.recentNotifications.filter((_, i) => i !== index)
-      }));
-    },
-    // Methods for user assistance requests
-    completeAssistanceRequest: (requestId: string) => {
-      setState(prev => {
-        const updatedRequests = prev.userAssistanceRequests.map(req => 
-          req.id === requestId 
-            ? { ...req, status: 'completed' as const } 
-            : req
-        );
-        
-        // Find the completed request to get XP reward
-        const completedRequest = prev.userAssistanceRequests.find(req => req.id === requestId);
-        
-        return {
-          ...prev,
-          userAssistanceRequests: updatedRequests,
-          recentNotifications: [
-            {
-              message: `🎉 You earned ${completedRequest?.xpReward || 0} XP for helping with testing!`,
-              timestamp: new Date()
-            },
-            ...prev.recentNotifications.slice(0, 4)
-          ]
-        };
-      });
-    },
-    skipAssistanceRequest: (requestId: string) => {
-      setState(prev => {
-        const updatedRequests = prev.userAssistanceRequests.map(req => 
-          req.id === requestId 
-            ? { ...req, status: 'skipped' as const } 
-            : req
-        );
-        
-        return {
-          ...prev,
-          userAssistanceRequests: updatedRequests
-        };
-      });
-    },
-    // Helper method for demo purposes
-    triggerAssistanceRequest: () => {
-      const assistanceAreas = [
-        'Tournament Registration',
-        'Match Recording',
-        'User Profile',
-        'Notifications'
-      ];
-      
-      const assistanceTasks = [
-        'Please test the tournament registration flow and verify you receive a confirmation email',
-        'Can you record a match result and check if stats are updated correctly?',
-        'Please update your profile picture and verify it displays correctly',
-        'Please check if you receive push notifications when a match is scheduled'
-      ];
-      
-      const randomAreaIndex = Math.floor(Math.random() * assistanceAreas.length);
-      
-      setState(prev => {
-        const newRequest = {
-          id: `req-${Date.now()}`,
-          area: assistanceAreas[randomAreaIndex],
-          task: assistanceTasks[randomAreaIndex],
-          timestamp: new Date(),
-          status: 'pending' as const,
-          xpReward: 15 + Math.floor(Math.random() * 25) // 15-40 XP
-        };
-        
-        return {
-          ...prev,
-          userAssistanceRequests: [...prev.userAssistanceRequests, newRequest],
-          recentNotifications: [
-            {
-              message: `Bounce needs your help with ${newRequest.area}!`,
-              timestamp: new Date()
-            },
-            ...prev.recentNotifications.slice(0, 4)
-          ]
-        };
+  // Join the testing program
+  const joinTesting = () => {
+    setIsActive(true);
+    
+    // In a real implementation, this would call an API
+    console.log('[Bounce] User joined testing program');
+    
+    // Show welcome notification
+    toast({
+      title: 'Testing Mode Activated',
+      description: "Thank you for helping test Pickle+! You'll receive notifications for test tasks.",
+      duration: 5000,
+    });
+  };
+  
+  // Dismiss a notification
+  const dismissNotification = (index: number) => {
+    setRecentNotifications(prev => {
+      const updated = [...prev];
+      updated.splice(index, 1);
+      return updated;
+    });
+  };
+  
+  // Complete an assistance request
+  const completeAssistanceRequest = (requestId: string) => {
+    setUserAssistanceRequests(prev => 
+      prev.map(req => 
+        req.id === requestId 
+          ? { ...req, status: 'completed' as const } 
+          : req
+      )
+    );
+    
+    // In a real implementation, this would call an API
+    console.log(`[Bounce] Completed assistance request: ${requestId}`);
+    
+    // Show completion toast
+    toast({
+      title: 'Task Completed',
+      description: 'Thank you for your help! Your feedback has been recorded.',
+      duration: 3000,
+    });
+  };
+  
+  // Skip an assistance request
+  const skipAssistanceRequest = (requestId: string) => {
+    setUserAssistanceRequests(prev => 
+      prev.map(req => 
+        req.id === requestId 
+          ? { ...req, status: 'skipped' as const } 
+          : req
+      )
+    );
+    
+    // In a real implementation, this would call an API
+    console.log(`[Bounce] Skipped assistance request: ${requestId}`);
+  };
+  
+  // Trigger a new assistance request (for demo purposes)
+  const triggerAssistanceRequest = () => {
+    const newRequest: AssistanceRequest = {
+      id: `ar${Date.now()}`,
+      title: 'Test Community Comments',
+      description: 'Please navigate to any community post and test the comment functionality.',
+      priority: 'medium',
+      createdAt: new Date(),
+      status: 'pending',
+    };
+    
+    setUserAssistanceRequests(prev => [...prev, newRequest]);
+    
+    // Show notification
+    const newNotification: BounceNotification = {
+      id: `notif${Date.now()}`,
+      message: `New assistance request: ${newRequest.title}`,
+      timestamp: new Date(),
+      type: 'info',
+      read: false,
+    };
+    
+    setRecentNotifications(prev => [newNotification, ...prev]);
+    
+    // Show toast
+    toast({
+      title: 'New Test Task',
+      description: newRequest.title,
+      duration: 5000,
+    });
+  };
+  
+  // Send task update to the Bounce system
+  const sendTaskUpdate = (message: TaskUpdateMessage) => {
+    // In a real implementation, this would send to an API
+    console.log('[Bounce] Task update:', message);
+    
+    // If the task is completed, award XP and show toast
+    if (message.status === 'completed') {
+      toast({
+        title: 'Task Step Completed',
+        description: 'Great job! Keep up the good work.',
+        duration: 3000,
       });
     }
+  };
+  
+  return {
+    isActive,
+    recentNotifications,
+    userAssistanceRequests,
+    joinTesting,
+    dismissNotification,
+    completeAssistanceRequest,
+    skipAssistanceRequest,
+    triggerAssistanceRequest,
+    sendTaskUpdate,
   };
 }
