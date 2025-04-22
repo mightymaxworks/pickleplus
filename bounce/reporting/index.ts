@@ -1,20 +1,28 @@
 /**
- * PKL-278651-BOUNCE-0013-CICD - Reporting Module
+ * PKL-278651-BOUNCE-0023-REPORTING - Bounce Reporting Module
  * 
- * Exports various report generators for the Bounce testing system
+ * Exports all reporting functionality
  * 
  * @framework Framework5.2
  * @version 1.0.0
  * @lastModified 2025-04-22
  */
 
-import { EnhancedReportGenerator } from './enhanced-report-generator';
-import { BugReportGenerator } from './bug-report-generator';
+import { generateReport } from './bug-report-generator';
+import { generateReportWithPrompts } from './bug-report-generator-with-prompts';
+import { generateFixPrompt } from './fix-prompts';
 
-// Create and export report generator instances
-export const enhancedReportGenerator = new EnhancedReportGenerator();
-export const bugReportGenerator = new BugReportGenerator();
+export const bugReportGenerator = {
+  generateReport,
+  generateReportWithPrompts
+};
 
-// Export all types from the individual files
-export * from './enhanced-report-generator';
-export * from './bug-report-generator';
+export const fixPromptGenerator = {
+  generateFixPrompt
+};
+
+export {
+  generateReport,
+  generateReportWithPrompts,
+  generateFixPrompt
+};
