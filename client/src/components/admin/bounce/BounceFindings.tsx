@@ -9,8 +9,9 @@
  * @lastModified 2025-04-21
  */
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCachedQuery, useNetworkStatus } from '@/lib/services/offlineCache';
 import { 
   AlertCircle, 
   AlertTriangle, 
