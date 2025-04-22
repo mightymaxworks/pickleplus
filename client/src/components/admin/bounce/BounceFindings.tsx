@@ -64,7 +64,7 @@ import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import BounceFindingCard from './BounceFindingCard';
-import { ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from 'lucide-react';
+import { MobilePagination } from './enhanced-pagination';
 
 // Types for findings data
 interface Finding {
