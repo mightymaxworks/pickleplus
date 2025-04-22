@@ -1,45 +1,29 @@
 #!/bin/bash
+# Pickle+ Production Deployment Script
+# This script builds and prepares the application for deployment
 
-# Simplified deployment script for Pickle+ platform
-# Author: Expert Software Developer
-# Date: April 22, 2025
+set -e # Exit immediately if a command exits with a non-zero status
 
-echo "📦 Preparing Pickle+ Platform for deployment..."
+echo "🚀 Starting Pickle+ full deployment process..."
 
-# Check if the production.js file exists
-if [ ! -f production.js ]; then
-  echo "❌ production.js file not found. Creating it now..."
-  cat > production.js << 'EOF'
-/**
- * Production startup file
- * 
- * This file sets the NODE_ENV to 'production' before starting the server.
- * Use this as the entry point for deployment.
- */
+# Step 1: Install production dependencies if needed
+echo "📦 Installing necessary dependencies..."
+npm install --no-save express
 
-// Set NODE_ENV to production
-process.env.NODE_ENV = 'production';
+# Step 2: Run the build script
+echo "🔨 Building the application..."
+node build-prod.js
 
-// Import the server using ES modules (since package.json has "type": "module")
-import './server/index.js';
-EOF
-  echo "✅ production.js file created successfully."
-fi
+# Step 3: Prepare for deployment
+echo "🔧 Preparing final deployment files..."
+cd dist
+npm install --production
 
-# Verify the server/index.ts file has the correct port logic
-if ! grep -q "process.env.NODE_ENV === 'production' ? 8080 : 5000" server/index.ts; then
-  echo "⚠️ Port configuration in server/index.ts may need review."
-  echo "   For proper deployment, make sure it uses port 8080 in production and 5000 in development."
-fi
-
-# Success message
 echo "✅ Deployment preparation complete!"
 echo ""
-echo "To deploy:"
-echo "  1. Click Deploy button in Replit"
-echo "  2. Use these settings:"
-echo "     - Build Command: npm install"
-echo "     - Run Command: npx tsx production.js"
-echo "  3. Click Deploy"
-echo ""
-echo "This will start the server on port 8080 in production mode."
+echo "🚀 Deployment instructions:"
+echo "1. Set Build Command to: bash deploy.sh"
+echo "2. Set Run Command to: npm --prefix dist start"
+
+# Return to the root directory
+cd ..
