@@ -1,76 +1,69 @@
-# Pickle+ Deployment Guide
+# Pickle+ Deployment Instructions
 
-This guide walks you through the step-by-step process of deploying the Pickle+ platform to Replit's Cloud Run environment.
+This document provides the latest instructions for deploying the Pickle+ platform to production.
 
-## Pre-Deployment Checklist
+## Important Deployment Requirements
 
-1. ✅ Server port configuration 
-   - Development: Port 5000
-   - Production: Port 8080
+When deploying to Cloud Run (via Replit), you need to:
 
-2. ✅ Production environment setup
-   - Using `production.js` as entry point
-   - Setting NODE_ENV to 'production'
-   - Creating minimal static files for production mode
+1. Use port 8080 for the server (not 5000 or 3000)
+2. Set the server to listen on `0.0.0.0` (not localhost or 127.0.0.1)
+3. Ensure any runtime dependencies are added to the package.json file
+4. For a full guide with multiple deployment options, see `FINAL-DEPLOYMENT-GUIDE.md`
 
-3. ✅ Database connection
-   - PostgreSQL database is properly configured
-   - Connection string is available in environment variables
+## Recommended Deployment Option
 
-## Deployment Steps (SIMPLIFIED METHOD)
+After testing multiple approaches, we recommend the **Simple Frontend Proxy** approach, which:
 
-1. Run the simplified deployment script:
+- Requires minimal configuration
+- Avoids complex TypeScript compilation issues 
+- Avoids WebSocket connection problems
+- Serves a professional landing page
+- Can direct users to your actual application
+
+### Simple Frontend Proxy Deployment
+
+Follow these steps for the recommended deployment:
+
+1. **Build Command**:
    ```
-   npx tsx deploy-simple.js
+   cp simple-frontend-deploy.js index.js && echo '{"name":"pickle-plus","version":"1.0.0","main":"index.js","scripts":{"start":"node index.js"},"dependencies":{"express":"^4.18.3"}}' > package.json && npm install
    ```
 
-2. Click the "Deploy" button in the Replit sidebar
+2. **Run Command**:
+   ```
+   npm start
+   ```
 
-3. Use these deployment settings:
-   - Build Command: `npm install`
-   - Run Command: `npx tsx production.js`
+3. Click **Deploy**
 
-4. Click "Deploy" to start the deployment process
+This will:
+- Create the necessary files for deployment
+- Install the Express dependency
+- Start the server on port 8080
+- Serve a beautiful landing page
+- Provide a link to your application
 
-### How This Simplified Deployment Works
+## Upgrading the Deployment
 
-Our deploy-simple.js script:
+If you want more advanced functionality (database connections, WebSockets, etc.), you can:
 
-1. Creates a production.js entry point that sets NODE_ENV=production
-2. Creates a minimal static index.html file in server/public
-3. Properly configures the app to run on port 8080 in production
+1. Follow the options in the `FINAL-DEPLOYMENT-GUIDE.md` file
+2. Modify `simple-frontend-deploy.js` to include additional functionality
+3. Add necessary dependencies to the package.json
 
-This approach avoids the lengthy client build process that was causing timeouts.
+## Troubleshooting
 
-## Post-Deployment Verification
+Common deployment issues:
 
-1. Once deployed, verify that the application is working by:
-   - Checking the application logs
-   - Accessing the deployed URL
-   - Testing key functionality
+- **Port Issues**: Make sure your server is configured to use port 8080
+- **Module Format**: If you get ES module errors, use CommonJS format with `require()` instead of `import`
+- **Missing Dependencies**: Ensure all dependencies are listed in package.json
+- **WebSocket Errors**: If you encounter WebSocket errors, try a deployment option without WebSockets
 
-2. Common deployment issues and solutions:
-   - If the database connection fails, check the DATABASE_URL environment variable
-   - If the application crashes, check the Replit logs for details
+## Additional Resources
 
-## Rollback Procedure
-
-If you need to roll back to a previous version:
-
-1. In Replit, go to the Deployments tab
-2. Find the previous successful deployment
-3. Click "Redeploy" on that version
-
-## Future Deployments
-
-For future updates, simply:
-
-1. Make your changes
-2. Commit them
-3. Run `./deploy.sh`
-4. Click Deploy in the Replit sidebar
-
----
-
-**Contact Information:**  
-If you encounter any issues during deployment, please contact the development team.
+For more information, check:
+- `FINAL-DEPLOYMENT-GUIDE.md` - Comprehensive deployment options
+- `frontend-deploy.js` - Full frontend deployment example
+- `landing-deploy.js` - Simple landing page example
