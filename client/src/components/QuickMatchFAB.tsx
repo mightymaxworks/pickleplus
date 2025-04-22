@@ -7,14 +7,22 @@ import { useLocation, useRoute } from "wouter";
  * Bottom action bar with quick match recording button
  * Appears on all main app pages when user is authenticated
  * Opens the match recording dialog in the match page or navigates to the match page
+ * 
+ * PKL-278651-UI-0023-FAB: Framework 5.2 - Record Match FAB visibility
+ * Record match FAB should not appear on the landing page (/) or for non-authenticated users
+ * @lastModified 2025-04-22
  */
 export default function QuickMatchFAB() {
   const { user } = useAuth();
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const [isOnMatchPage] = useRoute('/matches');
   
-  if (!user || isOnMatchPage) {
-    return null; // Don't show FAB on match page or if not logged in
+  // PKL-278651-UI-0023-FAB - Add explicit check for landing page
+  const isOnLandingPage = location === '/';
+  
+  // Don't show FAB on landing page, match page, or if not logged in
+  if (!user || isOnMatchPage || isOnLandingPage) {
+    return null;
   }
 
   // Determine if user is a founding member for special styling
