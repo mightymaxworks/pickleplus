@@ -8,7 +8,7 @@ channel = "stable-24_05"
 [deployment]
 deploymentTarget = "autoscale"
 run = ["sh", "-c", "cd dist && ./start.sh"]
-build = ["sh", "-c", "bash deploy-full-app-with-auth-fixes.sh"]
+build = ["sh", "-c", "bash deploy-pickle-plus.sh"]
 
 [workflows]
 runButton = "Project"
