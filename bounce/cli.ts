@@ -227,7 +227,9 @@ program
   });
 
 // Parse command-line arguments
-if (require.main === module) {
+// Use import.meta.url to check if this is the main module
+const isMainModule = import.meta.url.endsWith(process.argv[1]);
+if (isMainModule) {
   program.parse(process.argv);
 }
 
