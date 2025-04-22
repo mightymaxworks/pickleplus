@@ -7,8 +7,8 @@ channel = "stable-24_05"
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["sh", "-c", "node prod-server.js"]
-build = ["sh", "-c", "bash enhanced-build.sh"]
+run = ["sh", "-c", "node server.js"]
+build = ["sh", "-c", "bash react-deploy.sh"]
 
 [workflows]
 runButton = "Project"
