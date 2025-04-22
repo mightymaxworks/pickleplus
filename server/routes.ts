@@ -35,6 +35,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   registerBounceGamificationRoutes(app); // Add Bounce gamification routes
   registerBounceXpRoutes(app); // Add Bounce XP integration routes
   registerBounceAutomationRoutes(app); // Add Bounce automation routes
+  registerUserSearchRoutes(app); // PKL-278651-SRCH-0001-UNIFD - Player search routes
   
   // Mount security routes
   app.use('/api/security', securityRoutes);
