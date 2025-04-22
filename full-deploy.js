@@ -6,30 +6,55 @@
  * 2. Provides full API functionality
  * 3. Connects to the database
  * 4. Properly handles all routes
+ * 5. Supports user authentication and sessions
  */
 
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const session = require('express-session');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Setup CORS
+// Setup CORS with appropriate settings for production
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  // In production, we should restrict CORS to known domains
+  const allowedOrigins = ['https://pickle-plus.replit.app', 'https://pickle-plus.app'];
+  const origin = req.headers.origin;
+  
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else {
+    // For local development and testing
+    res.header('Access-Control-Allow-Origin', '*');
+  }
+  
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  
   next();
 });
 
 // Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Database setup - Only if DATABASE_URL is available
+// Database and session store setup
 let db = null;
+let sessionStore = null;
+
 try {
   if (process.env.DATABASE_URL) {
     console.log('Setting up database connection...');
     const { Pool, neonConfig } = require('@neondatabase/serverless');
+    const connectPg = require('connect-pg-simple');
+    const memorystore = require('memorystore');
     
     // Configure WebSocket for Neon - This is important for production deployment
     try {
@@ -57,17 +82,89 @@ try {
     pool.query('SELECT NOW()')
       .then(result => {
         console.log('Database connection successful at:', result.rows[0].now);
+        
+        // Set up session storage with PostgreSQL
+        try {
+          const PostgresSessionStore = connectPg(session);
+          sessionStore = new PostgresSessionStore({
+            conObject: {
+              connectionString: process.env.DATABASE_URL,
+            },
+            createTableIfMissing: true
+          });
+          console.log('PostgreSQL session store configured');
+        } catch (sessionError) {
+          console.error('Failed to configure PostgreSQL session store:', sessionError.message);
+          // Fall back to memory store
+          const MemoryStore = memorystore(session);
+          sessionStore = new MemoryStore({
+            checkPeriod: 86400000 // prune expired entries every 24h
+          });
+          console.log('Fallback to memory session store');
+        }
       })
       .catch(err => {
         console.error('Database connection test failed:', err.message);
         console.log('Will continue to serve app without database functionality');
+        
+        // Fall back to memory store for sessions
+        const MemoryStore = memorystore(session);
+        sessionStore = new MemoryStore({
+          checkPeriod: 86400000 // prune expired entries every 24h
+        });
+        console.log('Using memory session store due to database connection failure');
       });
   } else {
     console.log('No DATABASE_URL found, running without database');
+    
+    // Use memory store for sessions when no database is available
+    const MemoryStore = memorystore(session);
+    sessionStore = new MemoryStore({
+      checkPeriod: 86400000 // prune expired entries every 24h
+    });
+    console.log('Using memory session store (no database)');
   }
+  
+  // Configure session middleware with appropriate settings
+  app.use(session({
+    store: sessionStore,
+    secret: process.env.SESSION_SECRET || 'pickle-plus-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production', // secure in production only
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+  }));
+  
 } catch (error) {
   console.error('Database setup error:', error.message);
   console.log('Continuing without database connection');
+  
+  // Set up memory store for sessions as fallback
+  try {
+    const MemoryStore = require('memorystore')(session);
+    sessionStore = new MemoryStore({
+      checkPeriod: 86400000 // prune expired entries every 24h
+    });
+    
+    app.use(session({
+      store: sessionStore,
+      secret: process.env.SESSION_SECRET || 'pickle-plus-secret-key',
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      }
+    }));
+    
+    console.log('Fallback memory session store configured');
+  } catch (sessionError) {
+    console.error('Failed to configure session store:', sessionError.message);
+  }
 }
 
 // Serve static files from client/dist
