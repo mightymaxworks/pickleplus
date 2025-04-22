@@ -24,7 +24,11 @@ import {
   ExternalLink, 
   FileText, 
   Check,
-  Copy
+  Copy,
+  ChevronsLeft,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsRight
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -406,68 +410,14 @@ const BounceFindings: React.FC = () => {
   
   // Render pagination control component
   const renderPagination = () => {
-    // Only show pagination if there's more than one page
-    if (totalPages <= 1) return null;
-    
     return (
-      <div className="flex items-center justify-between py-4 px-2">
-        <div className="flex-1 text-sm text-muted-foreground">
-          Showing <span className="font-medium">{((page - 1) * pageSize) + 1}</span> to{" "}
-          <span className="font-medium">{Math.min(page * pageSize, totalFindings)}</span> of{" "}
-          <span className="font-medium">{totalFindings}</span> findings
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={goToFirstPage}
-            disabled={page === 1}
-            className="hidden sm:flex h-8 w-8 p-0 min-w-[2rem]"
-            aria-label="Go to first page"
-          >
-            <ChevronsLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={goToPreviousPage}
-            disabled={page === 1}
-            className="h-8 w-8 p-0 min-w-[2rem]"
-            aria-label="Go to previous page"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <div className="flex items-center gap-1 mx-2">
-            <span className="text-sm font-medium">
-              {page}
-            </span>
-            <span className="text-sm text-muted-foreground">/</span>
-            <span className="text-sm text-muted-foreground">
-              {totalPages}
-            </span>
-          </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={goToNextPage}
-            disabled={page >= totalPages}
-            className="h-8 w-8 p-0 min-w-[2rem]"
-            aria-label="Go to next page"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={goToLastPage}
-            disabled={page >= totalPages}
-            className="hidden sm:flex h-8 w-8 p-0 min-w-[2rem]"
-            aria-label="Go to last page"
-          >
-            <ChevronsRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+      <MobilePagination 
+        currentPage={page}
+        totalPages={totalPages}
+        totalItems={totalFindings}
+        pageSize={pageSize}
+        onPageChange={goToPage}
+      />
     );
   };
   
