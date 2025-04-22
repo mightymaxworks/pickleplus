@@ -61,6 +61,27 @@ export const TIER_TO_PATH_MAP: Record<MasteryTierName, MasteryPath> = {
 export type TierHealth = 'good' | 'warning' | 'danger';
 
 /**
+ * Default tier colors for UI rendering when not provided by the API
+ * Added as part of PKL-278651-RATE-0004-MADV-FIX
+ */
+export const DEFAULT_TIER_COLORS = {
+  // Foundation Path
+  'Explorer': '#4285F4',      // Blue
+  'Pathfinder': '#3367D6',    // Darker Blue
+  'Trailblazer': '#2A56C6',   // Deep Blue
+  
+  // Evolution Path
+  'Challenger': '#9C27B0',    // Purple
+  'Innovator': '#8E24AA',     // Mid Purple
+  'Tactician': '#7B1FA2',     // Deep Purple
+  
+  // Pinnacle Path
+  'Virtuoso': '#FFA000',      // Amber
+  'Luminary': '#FF8F00',      // Dark Amber
+  'Legend': '#FF6F00'         // Deep Amber
+} as const;
+
+/**
  * Player's current tier status
  */
 export interface PlayerTierStatus {
@@ -77,6 +98,7 @@ export interface PlayerTierStatus {
   tierHealth: TierHealth;
   matchesInTier: number;
   lastMatch: string; // ISO date string
+  status?: string;   // For status messages like "insufficient_data"
 }
 
 /**

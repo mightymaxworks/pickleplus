@@ -126,14 +126,15 @@ export function useCourtIQPerformance(options: CourtIQPerformanceOptions = {}) {
       
       const nextTier = nextTierIndex >= 0 ? tiers[nextTierIndex] : undefined;
       
-      // Calculate skill ratings from recent performances or use defaults
-      const skills: CourtIQSkillRating = ratingData.skillBreakdown || {
-        power: 65,
-        speed: 70,
-        precision: 75,
-        strategy: 60,
-        control: 80,
-        consistency: 68
+      // PKL-278651-STATS-0002-DATA: Use real skill data when available
+      const skills: CourtIQSkillRating = ratingData.skillBreakdown || ratingData.skills || {
+        // Default to real user data from the API when available
+        power: ratingData.power || 65,
+        speed: ratingData.speed || 70,
+        precision: ratingData.precision || 75,
+        strategy: ratingData.strategy || 60,
+        control: ratingData.control || 80,
+        consistency: ratingData.consistency || 68
       };
       
       // Find strongest and weakest areas
