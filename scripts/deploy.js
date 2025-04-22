@@ -10,9 +10,14 @@
  * @lastModified 2025-04-22
  */
 
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get current directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Set environment to production
 process.env.NODE_ENV = 'production';
@@ -22,7 +27,8 @@ console.log('🚀 Starting Pickle+ deployment process...');
 // Step 1: Run prepare-build script
 console.log('\n📋 STEP 1: Preparing build environment...');
 try {
-  require('./prepare-build.js');
+  // We'll use execSync instead of import since we can't dynamically import in this context
+  execSync('node scripts/prepare-build.js', { stdio: 'inherit' });
   console.log('✅ Build environment prepared successfully');
 } catch (error) {
   console.error('❌ Error preparing build environment:', error);
@@ -43,7 +49,7 @@ try {
 // Step 3: Run post-build script
 console.log('\n📦 STEP 3: Finalizing build artifacts...');
 try {
-  require('./post-build.js');
+  execSync('node scripts/post-build.js', { stdio: 'inherit' });
   console.log('✅ Build artifacts finalized successfully');
 } catch (error) {
   console.error('❌ Error finalizing build artifacts:', error);

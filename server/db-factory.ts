@@ -35,18 +35,50 @@ export function createDatabaseConnection() {
     );
   }
 
-  // Get configuration from config service
-  const dbConfig = configService.get('database', {});
+  // Default database configuration
+  const defaultPoolSize = isProd ? 20 : 5;
+  const defaultIdleTimeoutMillis = isProd ? 30000 : 10000;
+  const defaultConnectionTimeoutMillis = isProd ? 5000 : 2000;
+  
+  // Get configuration from config service with safe fallbacks
+  let dbPoolSize = defaultPoolSize;
+  let dbIdleTimeoutMillis = defaultIdleTimeoutMillis;
+  let dbConnectionTimeoutMillis = defaultConnectionTimeoutMillis;
+  let dbSsl: any = undefined;
+  
+  try {
+    // Attempt to get database configuration safely
+    const dbConfig = configService.get('database', {});
+    if (typeof dbConfig === 'object' && dbConfig !== null) {
+      if ('poolSize' in dbConfig && typeof dbConfig.poolSize === 'number') {
+        dbPoolSize = dbConfig.poolSize;
+      }
+      if ('idleTimeoutMillis' in dbConfig && typeof dbConfig.idleTimeoutMillis === 'number') {
+        dbIdleTimeoutMillis = dbConfig.idleTimeoutMillis;
+      }
+      if ('connectionTimeoutMillis' in dbConfig && typeof dbConfig.connectionTimeoutMillis === 'number') {
+        dbConnectionTimeoutMillis = dbConfig.connectionTimeoutMillis;
+      }
+      if ('ssl' in dbConfig && typeof dbConfig.ssl === 'object' && dbConfig.ssl !== null) {
+        dbSsl = dbConfig.ssl;
+      }
+    }
+  } catch (error) {
+    console.warn('Error reading database configuration, using defaults:', error);
+  }
   
   // Pool configuration with environment-specific settings
-  const poolConfig = {
+  const poolConfig: any = {
     connectionString: process.env.DATABASE_URL,
-    max: isProd ? (dbConfig.poolSize || 20) : 5, // More connections for production
-    idleTimeoutMillis: isProd ? (dbConfig.idleTimeoutMillis || 30000) : 10000,
-    connectionTimeoutMillis: isProd ? (dbConfig.connectionTimeoutMillis || 5000) : 2000,
-    // Only add SSL in production if configured
-    ...(isProd && dbConfig.ssl ? { ssl: dbConfig.ssl } : {})
+    max: dbPoolSize,
+    idleTimeoutMillis: dbIdleTimeoutMillis,
+    connectionTimeoutMillis: dbConnectionTimeoutMillis,
   };
+  
+  // Only add SSL in production if configured
+  if (isProd && dbSsl) {
+    poolConfig.ssl = dbSsl;
+  }
 
   // Create connection pool
   const pool = new Pool(poolConfig);
