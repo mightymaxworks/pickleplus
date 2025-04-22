@@ -214,7 +214,7 @@ const BounceFindings: React.FC<BounceFindingsProps> = ({ viewTab = 'all' }) => {
     isStale,
     isOnline: queryIsOnline  
   } = useCachedQuery(
-    ['/api/admin/bounce/findings', filters, viewTab, page, pageSize],
+    ['/api/admin/bounce/findings', filters, activeViewTab, page, pageSize],
     fetchFindings,
     { refetchOnReconnect: true }
   );
