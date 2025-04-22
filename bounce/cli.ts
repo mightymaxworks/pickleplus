@@ -49,17 +49,17 @@ program
   .option('-d, --headless', 'Run in headless mode', true)
   .option('-t, --timeout <timeout>', 'Timeout in milliseconds', '30000')
   .action(async (options) => {
-    console.log(chalk.blue('┌─────────────────────────────────┐'));
-    console.log(chalk.blue('│      BOUNCE TEST RUNNER         │'));
-    console.log(chalk.blue('└─────────────────────────────────┘'));
+    console.log(colors.blue('┌─────────────────────────────────┐'));
+    console.log(colors.blue('│      BOUNCE TEST RUNNER         │'));
+    console.log(colors.blue('└─────────────────────────────────┘'));
     
-    console.log(chalk.yellow('Starting tests with options:'));
-    console.log(chalk.cyan('URL:'), options.url);
-    console.log(chalk.cyan('Browser:'), options.browser);
-    console.log(chalk.cyan('Mobile:'), options.mobile ? 'Yes' : 'No');
-    console.log(chalk.cyan('Coverage:'), `${options.coverage}%`);
-    console.log(chalk.cyan('Headless:'), options.headless ? 'Yes' : 'No');
-    console.log(chalk.cyan('Timeout:'), `${options.timeout}ms`);
+    console.log(colors.yellow('Starting tests with options:'));
+    console.log(colors.cyan('URL:'), options.url);
+    console.log(colors.cyan('Browser:'), options.browser);
+    console.log(colors.cyan('Mobile:'), options.mobile ? 'Yes' : 'No');
+    console.log(colors.cyan('Coverage:'), `${options.coverage}%`);
+    console.log(colors.cyan('Headless:'), options.headless ? 'Yes' : 'No');
+    console.log(colors.cyan('Timeout:'), `${options.timeout}ms`);
     
     try {
       // Import the test runner dynamically to avoid import issues
@@ -75,8 +75,8 @@ program
         timeout: parseInt(options.timeout)
       });
       
-      console.log(chalk.green(`\nTests completed with ID: ${testRunId}`));
-      console.log(chalk.yellow('\nGenerating bug report...'));
+      console.log(colors.green(`\nTests completed with ID: ${testRunId}`));
+      console.log(colors.yellow('\nGenerating bug report...'));
       
       // Generate a bug report
       const report = await bugReportGenerator.generateBugReport(
@@ -96,27 +96,27 @@ program
         `./reports/bounce_report_${timestamp}.md`
       );
       
-      console.log(chalk.green(`\nBug report generated: ${reportPath}`));
+      console.log(colors.green(`\nBug report generated: ${reportPath}`));
       
       // Ask if user wants to generate a sprint plan
-      console.log(chalk.yellow('\nWould you like to generate a sprint plan from this report? (y/n)'));
+      console.log(colors.yellow('\nWould you like to generate a sprint plan from this report? (y/n)'));
       process.stdin.once('data', async (data) => {
         const response = data.toString().trim().toLowerCase();
         
         if (response === 'y' || response === 'yes') {
-          console.log(chalk.yellow('\nGenerating sprint plan...'));
+          console.log(colors.yellow('\nGenerating sprint plan...'));
           
           // Generate a sprint plan
           const sprintPlanPath = actionItemsGenerator.generateActionItemsFromReport(reportPath);
           
-          console.log(chalk.green(`\nSprint plan generated: ${sprintPlanPath}`));
-          console.log(chalk.cyan('\nYou can now begin fixing these issues using Framework 5.2 sprint codes.'));
+          console.log(colors.green(`\nSprint plan generated: ${sprintPlanPath}`));
+          console.log(colors.cyan('\nYou can now begin fixing these issues using Framework 5.2 sprint codes.'));
         }
         
         process.exit(0);
       });
     } catch (error) {
-      console.error(chalk.red(`\nError running tests: ${(error as Error).message}`));
+      console.error(colors.red(`\nError running tests: ${(error as Error).message}`));
       process.exit(1);
     }
   });
@@ -130,11 +130,11 @@ program
   .option('-s, --solution', 'Include solution prompts', true)
   .option('-o, --output <filename>', 'Output filename')
   .action(async (testRunId, options) => {
-    console.log(chalk.blue('┌─────────────────────────────────┐'));
-    console.log(chalk.blue('│      BOUNCE REPORT GENERATOR    │'));
-    console.log(chalk.blue('└─────────────────────────────────┘'));
+    console.log(colors.blue('┌─────────────────────────────────┐'));
+    console.log(colors.blue('│      BOUNCE REPORT GENERATOR    │'));
+    console.log(colors.blue('└─────────────────────────────────┘'));
     
-    console.log(chalk.yellow(`Generating report for test run: ${testRunId}`));
+    console.log(colors.yellow(`Generating report for test run: ${testRunId}`));
     
     try {
       // Generate a bug report
@@ -155,27 +155,27 @@ program
       // Save the report to a file
       const reportPath = bugReportGenerator.saveReportToFile(report, outputFilename);
       
-      console.log(chalk.green(`\nBug report generated: ${reportPath}`));
+      console.log(colors.green(`\nBug report generated: ${reportPath}`));
       
       // Ask if user wants to generate a sprint plan
-      console.log(chalk.yellow('\nWould you like to generate a sprint plan from this report? (y/n)'));
+      console.log(colors.yellow('\nWould you like to generate a sprint plan from this report? (y/n)'));
       process.stdin.once('data', async (data) => {
         const response = data.toString().trim().toLowerCase();
         
         if (response === 'y' || response === 'yes') {
-          console.log(chalk.yellow('\nGenerating sprint plan...'));
+          console.log(colors.yellow('\nGenerating sprint plan...'));
           
           // Generate a sprint plan
           const sprintPlanPath = actionItemsGenerator.generateActionItemsFromReport(reportPath);
           
-          console.log(chalk.green(`\nSprint plan generated: ${sprintPlanPath}`));
-          console.log(chalk.cyan('\nYou can now begin fixing these issues using Framework 5.2 sprint codes.'));
+          console.log(colors.green(`\nSprint plan generated: ${sprintPlanPath}`));
+          console.log(colors.cyan('\nYou can now begin fixing these issues using Framework 5.2 sprint codes.'));
         }
         
         process.exit(0);
       });
     } catch (error) {
-      console.error(chalk.red(`\nError generating report: ${(error as Error).message}`));
+      console.error(colors.red(`\nError generating report: ${(error as Error).message}`));
       process.exit(1);
     }
   });
@@ -187,9 +187,9 @@ program
   .option('-r, --report <filename>', 'Report filename')
   .option('-d, --date <date>', 'Report date (e.g. 2025-04-22)')
   .action(async (options) => {
-    console.log(chalk.blue('┌─────────────────────────────────┐'));
-    console.log(chalk.blue('│      BOUNCE SPRINT GENERATOR    │'));
-    console.log(chalk.blue('└─────────────────────────────────┘'));
+    console.log(colors.blue('┌─────────────────────────────────┐'));
+    console.log(colors.blue('│      BOUNCE SPRINT GENERATOR    │'));
+    console.log(colors.blue('└─────────────────────────────────┘'));
     
     try {
       // Find the report file
@@ -200,36 +200,36 @@ program
         reportFile = path.resolve(options.report);
         
         if (!fs.existsSync(reportFile)) {
-          console.error(chalk.red(`Report file not found: ${reportFile}`));
+          console.error(colors.red(`Report file not found: ${reportFile}`));
           process.exit(1);
         }
       } else if (options.date) {
         // Find a report file by date
-        console.log(chalk.yellow(`Looking for bug reports from ${options.date}...`));
+        console.log(colors.yellow(`Looking for bug reports from ${options.date}...`));
         reportFile = actionItemsGenerator.findBugReportFile(options.date);
       } else {
         // Find the latest report file
-        console.log(chalk.yellow('Looking for the latest bug report...'));
+        console.log(colors.yellow('Looking for the latest bug report...'));
         reportFile = actionItemsGenerator.findBugReportFile();
       }
       
       if (!reportFile) {
-        console.error(chalk.red('No bug report files found.'));
-        console.log(chalk.yellow('Please run Bounce tests first to generate bug reports.'));
+        console.error(colors.red('No bug report files found.'));
+        console.log(colors.yellow('Please run Bounce tests first to generate bug reports.'));
         process.exit(1);
       }
       
-      console.log(chalk.green(`Found bug report: ${reportFile}`));
-      console.log(chalk.yellow('Generating sprint planning document...'));
+      console.log(colors.green(`Found bug report: ${reportFile}`));
+      console.log(colors.yellow('Generating sprint planning document...'));
       
       // Generate the sprint planning document
       const sprintPlanFile = actionItemsGenerator.generateActionItemsFromReport(reportFile);
       
-      console.log(chalk.green(`\nSprint planning document generated: ${sprintPlanFile}`));
-      console.log(chalk.cyan('\nYou can now begin fixing these issues using Framework 5.2 sprint codes.'));
+      console.log(colors.green(`\nSprint planning document generated: ${sprintPlanFile}`));
+      console.log(colors.cyan('\nYou can now begin fixing these issues using Framework 5.2 sprint codes.'));
       
     } catch (error) {
-      console.error(chalk.red(`\nError generating sprint plan: ${(error as Error).message}`));
+      console.error(colors.red(`\nError generating sprint plan: ${(error as Error).message}`));
       process.exit(1);
     }
   });
@@ -239,9 +239,9 @@ program
   .command('demo')
   .description('Run a simplified demo of the Bounce reporting system')
   .action(async () => {
-    console.log(chalk.blue('┌─────────────────────────────────┐'));
-    console.log(chalk.blue('│      BOUNCE DEMO                │'));
-    console.log(chalk.blue('└─────────────────────────────────┘'));
+    console.log(colors.blue('┌─────────────────────────────────┐'));
+    console.log(colors.blue('│      BOUNCE DEMO                │'));
+    console.log(colors.blue('└─────────────────────────────────┘'));
     
     try {
       // Import the simple-run module dynamically
@@ -251,12 +251,12 @@ program
       await runSimpleDemo();
       
       // Ask if user wants to generate a sprint plan
-      console.log(chalk.yellow('\nWould you like to generate a sprint plan from this demo report? (y/n)'));
+      console.log(colors.yellow('\nWould you like to generate a sprint plan from this demo report? (y/n)'));
       process.stdin.once('data', async (data) => {
         const response = data.toString().trim().toLowerCase();
         
         if (response === 'y' || response === 'yes') {
-          console.log(chalk.yellow('\nGenerating sprint plan...'));
+          console.log(colors.yellow('\nGenerating sprint plan...'));
           
           // Find the demo report
           const reportFile = path.resolve('./reports/bounce_demo_report.md');
@@ -264,14 +264,14 @@ program
           // Generate a sprint plan
           const sprintPlanPath = actionItemsGenerator.generateActionItemsFromReport(reportFile);
           
-          console.log(chalk.green(`\nSprint plan generated: ${sprintPlanPath}`));
-          console.log(chalk.cyan('\nYou can now begin fixing these issues using Framework 5.2 sprint codes.'));
+          console.log(colors.green(`\nSprint plan generated: ${sprintPlanPath}`));
+          console.log(colors.cyan('\nYou can now begin fixing these issues using Framework 5.2 sprint codes.'));
         }
         
         process.exit(0);
       });
     } catch (error) {
-      console.error(chalk.red(`\nError running demo: ${(error as Error).message}`));
+      console.error(colors.red(`\nError running demo: ${(error as Error).message}`));
       process.exit(1);
     }
   });
@@ -282,9 +282,9 @@ program
   .description('List test runs')
   .option('-l, --limit <limit>', 'Number of test runs to list', '10')
   .action(async (options) => {
-    console.log(chalk.blue('┌─────────────────────────────────┐'));
-    console.log(chalk.blue('│      BOUNCE TEST RUNS           │'));
-    console.log(chalk.blue('└─────────────────────────────────┘'));
+    console.log(colors.blue('┌─────────────────────────────────┐'));
+    console.log(colors.blue('│      BOUNCE TEST RUNS           │'));
+    console.log(colors.blue('└─────────────────────────────────┘'));
     
     try {
       // Get test runs from database
@@ -294,24 +294,24 @@ program
       });
       
       if (testRuns.length === 0) {
-        console.log(chalk.yellow('No test runs found.'));
+        console.log(colors.yellow('No test runs found.'));
       } else {
-        console.log(chalk.yellow(`Found ${testRuns.length} test runs:`));
+        console.log(colors.yellow(`Found ${testRuns.length} test runs:`));
         console.log('');
         
         // Display test runs
         testRuns.forEach((testRun) => {
-          console.log(chalk.cyan(`ID: ${testRun.id}`));
-          console.log(chalk.white(`Name: ${testRun.name}`));
-          console.log(chalk.white(`Status: ${testRun.status}`));
-          console.log(chalk.white(`Started: ${testRun.startedAt?.toLocaleString() || 'N/A'}`));
-          console.log(chalk.white(`Completed: ${testRun.completedAt?.toLocaleString() || 'N/A'}`));
-          console.log(chalk.white(`Total Findings: ${testRun.totalFindings || 0}`));
+          console.log(colors.cyan(`ID: ${testRun.id}`));
+          console.log(colors.white(`Name: ${testRun.name}`));
+          console.log(colors.white(`Status: ${testRun.status}`));
+          console.log(colors.white(`Started: ${testRun.startedAt?.toLocaleString() || 'N/A'}`));
+          console.log(colors.white(`Completed: ${testRun.completedAt?.toLocaleString() || 'N/A'}`));
+          console.log(colors.white(`Total Findings: ${testRun.totalFindings || 0}`));
           console.log('');
         });
       }
     } catch (error) {
-      console.error(chalk.red(`\nError listing test runs: ${(error as Error).message}`));
+      console.error(colors.red(`\nError listing test runs: ${(error as Error).message}`));
     }
   });
 
