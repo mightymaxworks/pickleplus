@@ -124,12 +124,10 @@ app.use((req, res, next) => {
     console.error("Error setting up frontend serving:", error);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
+  // Use PORT env var for Cloud Run compatibility, fallback to 5000 for development
+  const port = process.env.PORT || 5000;
   serverHttp.listen({
-    port,
+    port: Number(port),
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
