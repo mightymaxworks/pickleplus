@@ -191,6 +191,39 @@ import {
   type InsertUserBounceAchievement
 } from './schema/bounce-achievements';
 
+// Import CourtIQ™ Rating System schema (PKL-278651-RATINGS-0001-COURTIQ - Multi-dimensional Rating System)
+import {
+  courtiqUserRatings,
+  courtiqRatingImpacts,
+  matchAssessments,
+  courtiqCalculationRules,
+  courtiqPlayerAttributes,
+  incompleteAssessments,
+  courtiqUserRatingsRelations,
+  courtiqRatingImpactsRelations,
+  matchAssessmentsRelations,
+  courtiqPlayerAttributesRelations,
+  incompleteAssessmentsRelations,
+  insertCourtiqUserRatingSchema,
+  insertCourtiqRatingImpactSchema,
+  insertMatchAssessmentSchema,
+  insertCourtiqCalculationRuleSchema,
+  insertCourtiqPlayerAttributeSchema,
+  insertIncompleteAssessmentSchema,
+  type CourtiqUserRating,
+  type InsertCourtiqUserRating,
+  type CourtiqRatingImpact,
+  type InsertCourtiqRatingImpact,
+  type MatchAssessment,
+  type InsertMatchAssessment,
+  type CourtiqCalculationRule,
+  type InsertCourtiqCalculationRule,
+  type CourtiqPlayerAttribute,
+  type InsertCourtiqPlayerAttribute,
+  type IncompleteAssessment,
+  type InsertIncompleteAssessment
+} from './schema/courtiq';
+
 // Import Community schema (PKL-278651-COMM-0006-HUB - Community Hub Implementation)
 import {
   communities,
