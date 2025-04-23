@@ -22,7 +22,8 @@ import {
   TicketIcon, 
   AlertCircleIcon,
   TrendingUpIcon,
-  ClockIcon
+  ClockIcon,
+  LockIcon
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -48,6 +49,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/lib/auth';
+import { useLocation } from 'wouter';
 
 // Helper function to safely format dates
 const safeFormatDate = (dateString: any) => {
@@ -101,14 +104,25 @@ export function EventList({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
+  /**
+   * PKL-278651-PASS-0011-LOOP - Fix infinite loading by adding timeout and retry limits
+   * Enhanced query with timeout, retry configuration and proper error handling
+   */
   const { data: events, isLoading, error } = useQuery({
     queryKey: ['/api/events/upcoming', limit], 
-    queryFn: () => getUpcomingEvents(limit)
+    queryFn: () => getUpcomingEvents(limit),
+    retry: 2, // Limit retries to prevent infinite loop
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+    staleTime: 60000, // 1 minute
+    gcTime: 300000, // 5 minutes
+    refetchOnWindowFocus: false // Prevent unnecessary refetches
   });
   
   /**
+   * PKL-278651-PASS-0011-LOOP - Fix infinite loading by adding timeout and retry limits
    * PKL-278651-CONN-0011-FIX - Event Registration Flow Error Handling
    * Framework5.2 compliant null-safety implementation for event registration status
+   * with proper error handling, timeouts and retry logic
    */
   const { data: registrationStatusData, isLoading: isLoadingRegistrationStatus } = useQuery({
     queryKey: ['/api/events/registration-status', Array.isArray(events) ? events.map(e => e.id).join(',') : ''],
@@ -118,24 +132,44 @@ export function EventList({
       // Create an object to store registration status for each event
       const statuses: Record<number, boolean> = {};
       
-      // Fetch registration status for each event
-      await Promise.all(
-        events.map(async (event) => {
-          try {
-            const status = await getEventRegistrationStatus(event.id);
-            statuses[event.id] = status;
-          } catch (error) {
-            console.error(`Failed to fetch registration status for event ${event.id}:`, error);
-            statuses[event.id] = false;
-          }
-        })
-      );
+      // Set timeout for the entire operation
+      const timeout = setTimeout(() => {
+        console.warn('[EventList] Registration status fetch timed out after 10 seconds');
+        throw new Error('Registration status fetch timed out');
+      }, 10000); // 10 second timeout
       
-      return statuses;
+      try {
+        // Fetch registration status for each event
+        await Promise.all(
+          events.map(async (event) => {
+            try {
+              const status = await getEventRegistrationStatus(event.id);
+              statuses[event.id] = status;
+            } catch (error) {
+              console.error(`Failed to fetch registration status for event ${event.id}:`, error);
+              statuses[event.id] = false;
+            }
+          })
+        );
+        
+        // Clear timeout after successful completion
+        clearTimeout(timeout);
+        return statuses;
+      } catch (error) {
+        // Clear timeout if there's an error
+        clearTimeout(timeout);
+        console.error('[EventList] Error fetching registration statuses:', error);
+        
+        // Return partial results if available or empty object as fallback
+        return Object.keys(statuses).length > 0 ? statuses : {};
+      }
     },
     enabled: !!events && events.length > 0,
     refetchOnWindowFocus: false,
-    staleTime: 5 * 60 * 1000 // 5 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1, // Only retry once
+    retryDelay: 1000, // 1 second delay before retry
+    gcTime: 300000 // 5 minutes
   });
   
   /**
@@ -244,7 +278,39 @@ export function EventList({
     }
   };
   
+  /**
+   * PKL-278651-PASS-0012-BUTN - Fix Register Button Functionality
+   * Enhanced event registration click handler with authentication check
+   * and proper error handling
+   */
+  const { user } = useAuth();
+  const [, navigate] = useLocation();
+  
   const handleRegisterClick = (event: Event) => {
+    // Check if user is authenticated
+    if (!user) {
+      console.log('[EventList] User not authenticated for registration');
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to register for events",
+        variant: "default"
+      });
+      navigate('/login');
+      return;
+    }
+    
+    // Validate event capacity
+    if (event.maxAttendees && event.currentAttendees && event.currentAttendees >= event.maxAttendees) {
+      console.log('[EventList] Event is at full capacity');
+      toast({
+        title: "Event Full",
+        description: "This event has reached its maximum capacity",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Proceed with registration flow
     setSelectedEvent(event);
     setRegistrationNotes('');
     setRegisterDialogOpen(true);
@@ -623,17 +689,41 @@ export function EventList({
                                 {isCancelling ? "Cancelling..." : "Cancel Registration"}
                               </Button>
                             ) : (
+                              {/* PKL-278651-PASS-0012-BUTN - Enhanced Registration Button */}
                               <Button 
                                 variant="default" 
                                 size="sm" 
-                                className="text-xs bg-green-600 hover:bg-green-700 transition-all duration-200"
+                                className={cn(
+                                  "text-xs transition-all duration-200",
+                                  user ? "bg-green-600 hover:bg-green-700" : "bg-muted-foreground/70 hover:bg-muted-foreground/80"
+                                )}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleRegisterClick(event);
                                 }}
+                                disabled={
+                                  (event.maxAttendees && event.currentAttendees && event.currentAttendees >= event.maxAttendees) || 
+                                  isRegistering || 
+                                  isLoadingRegistrationStatus
+                                }
+                                title={!user ? "Log in to register" : (
+                                  (event.maxAttendees && event.currentAttendees && event.currentAttendees >= event.maxAttendees) 
+                                    ? "Event is at full capacity" 
+                                    : "Register for this event"
+                                )}
                               >
-                                <TicketIcon className="h-3 w-3 mr-1" />
-                                Register
+                                {!user && <LockIcon className="h-3 w-3 mr-1" />}
+                                {(event.maxAttendees && event.currentAttendees && event.currentAttendees >= event.maxAttendees) ? (
+                                  <>
+                                    <AlertCircleIcon className="h-3 w-3 mr-1" />
+                                    Full
+                                  </>
+                                ) : (
+                                  <>
+                                    <TicketIcon className="h-3 w-3 mr-1" />
+                                    Register
+                                  </>
+                                )}
                               </Button>
                             )}
                           </CardFooter>
