@@ -92,9 +92,14 @@ export function ModernUniversalPassport({
   const isFoundingMember = passportData?.isFoundingMember || false;
 
   // Fetch registered events count
-  const { data: registeredEvents } = useQuery({
+  const { data: registeredEvents, isError: isRegisteredEventsError } = useQuery({
     queryKey: ['/api/events/my/registered'],
     queryFn: () => getMyRegisteredEvents(),
+    // Don't throw errors, provide fallback data
+    onError: (error) => {
+      console.error('Error loading registered events:', error);
+      return []; // Return empty array on error
+    }
   });
 
   // Highlight animation

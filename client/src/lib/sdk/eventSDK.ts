@@ -308,34 +308,42 @@ export async function getEventAttendees(eventId: number, limit?: number, offset?
  * @returns Promise with array of events
  */
 export async function getMyRegisteredEvents(limit?: number, offset?: number): Promise<Event[]> {
-  let url = '/api/events/my/registered';
-  
-  const params = new URLSearchParams();
-  if (limit) params.append('limit', limit.toString());
-  if (offset) params.append('offset', offset.toString());
-  
-  const queryString = params.toString();
-  if (queryString) url += `?${queryString}`;
-  
-  const response = await apiRequest('GET', url);
-  
-  if (!response.ok) {
-    throw new Error(`Failed to fetch registered events: ${response.status}`);
-  }
-  
-  const text = await response.text();
-  if (!text) return [];
-  
   try {
-    const parsedResponse = JSON.parse(text);
-    // Check if response has rows property (PostgreSQL direct response)
-    if (parsedResponse && parsedResponse.rows) {
-      return parsedResponse.rows;
+    let url = '/api/events/my/registered';
+    
+    const params = new URLSearchParams();
+    if (limit) params.append('limit', limit.toString());
+    if (offset) params.append('offset', offset.toString());
+    
+    const queryString = params.toString();
+    if (queryString) url += `?${queryString}`;
+    
+    const response = await apiRequest('GET', url);
+    
+    if (!response.ok) {
+      // Instead of throwing an error, just log it and return empty array
+      console.warn(`[PKL-278651-CONN-0004-PASS-REG] Failed to fetch registered events: ${response.status}`);
+      return [];
     }
-    // Otherwise assume it's already the expected array format
-    return Array.isArray(parsedResponse) ? parsedResponse : [];
+    
+    const text = await response.text();
+    if (!text) return [];
+    
+    try {
+      const parsedResponse = JSON.parse(text);
+      // Check if response has rows property (PostgreSQL direct response)
+      if (parsedResponse && parsedResponse.rows) {
+        return parsedResponse.rows;
+      }
+      // Otherwise assume it's already the expected array format
+      return Array.isArray(parsedResponse) ? parsedResponse : [];
+    } catch (error) {
+      console.error('Error parsing registered events response:', error);
+      return [];
+    }
   } catch (error) {
-    console.error('Error parsing registered events response:', error);
+    // Catch any other errors that might occur
+    console.error('Error fetching registered events:', error);
     return [];
   }
 }

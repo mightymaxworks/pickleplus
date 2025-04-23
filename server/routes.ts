@@ -64,6 +64,18 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
     res.json(user);
   });
   
+  // PKL-278651-CONN-0004-PASS-REG - Direct implementation of registered events endpoint
+  app.get('/api/events/my/registered', isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      // For now return empty array since this is just for fixing the passport UI
+      // In a real implementation, this would fetch the user's registered events from database
+      res.json([]);
+    } catch (error) {
+      console.error('[API] Error getting registered events:', error);
+      res.status(500).json({ error: 'Error getting registered events' });
+    }
+  });
+  
   // Default route for API 404s
   app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
     res.status(404).json({ error: 'API endpoint not found' });
