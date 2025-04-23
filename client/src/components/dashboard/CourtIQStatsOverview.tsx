@@ -236,11 +236,11 @@ export default function CourtIQStatsOverview({ userId }: CourtIQStatsOverviewPro
                           // Default view - just show the aggregate ratings
                           <polygon 
                             points={`
-                              50,${50 - normalizeValue(courtIQStats?.dimensions?.power || enhancedPerformanceData?.dimensions?.power?.score * 100 || 0) * 0.4} 
-                              ${50 + normalizeValue(courtIQStats?.dimensions?.control || enhancedPerformanceData?.dimensions?.focus?.score * 100 || 0) * 0.4},50 
-                              ${50 + normalizeValue(courtIQStats?.dimensions?.consistency || enhancedPerformanceData?.dimensions?.consistency?.score * 100 || 0) * 0.2},${50 + normalizeValue(courtIQStats?.dimensions?.consistency || enhancedPerformanceData?.dimensions?.consistency?.score * 100 || 0) * 0.2} 
-                              ${50 - normalizeValue(courtIQStats?.dimensions?.mobility || enhancedPerformanceData?.dimensions?.speed?.score * 100 || 0) * 0.2},${50 + normalizeValue(courtIQStats?.dimensions?.mobility || enhancedPerformanceData?.dimensions?.speed?.score * 100 || 0) * 0.2} 
-                              ${50 - normalizeValue(courtIQStats?.dimensions?.strategy || enhancedPerformanceData?.dimensions?.strategy?.score * 100 || 0) * 0.4},50
+                              50,${50 - normalizeValue(courtIQStats?.dimensions?.power || (enhancedPerformanceData?.dimensions?.power?.score ? enhancedPerformanceData.dimensions.power.score * 100 : 0) || 0) * 0.4} 
+                              ${50 + normalizeValue(courtIQStats?.dimensions?.control || (enhancedPerformanceData?.dimensions?.focus?.score ? enhancedPerformanceData.dimensions.focus.score * 100 : 0) || 0) * 0.4},50 
+                              ${50 + normalizeValue(courtIQStats?.dimensions?.consistency || (enhancedPerformanceData?.dimensions?.consistency?.score ? enhancedPerformanceData.dimensions.consistency.score * 100 : 0) || 0) * 0.2},${50 + normalizeValue(courtIQStats?.dimensions?.consistency || (enhancedPerformanceData?.dimensions?.consistency?.score ? enhancedPerformanceData.dimensions.consistency.score * 100 : 0) || 0) * 0.2} 
+                              ${50 - normalizeValue(courtIQStats?.dimensions?.mobility || (enhancedPerformanceData?.dimensions?.speed?.score ? enhancedPerformanceData.dimensions.speed.score * 100 : 0) || 0) * 0.2},${50 + normalizeValue(courtIQStats?.dimensions?.mobility || (enhancedPerformanceData?.dimensions?.speed?.score ? enhancedPerformanceData.dimensions.speed.score * 100 : 0) || 0) * 0.2} 
+                              ${50 - normalizeValue(courtIQStats?.dimensions?.strategy || (enhancedPerformanceData?.dimensions?.strategy?.score ? enhancedPerformanceData.dimensions.strategy.score * 100 : 0) || 0) * 0.4},50
                             `}
                             fill="rgba(33, 150, 243, 0.2)"
                             stroke="#2196F3"
