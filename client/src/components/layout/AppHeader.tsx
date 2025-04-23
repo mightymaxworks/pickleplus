@@ -77,7 +77,7 @@ export function AppHeader({
   });
 
   useEffect(() => {
-    if (notificationData) {
+    if (notificationData && typeof notificationData === 'object' && 'count' in notificationData) {
       setNotificationCount(notificationData.count);
     }
   }, [notificationData]);
@@ -187,9 +187,20 @@ export function AppHeader({
             whileHover={{ scale: 1.02 }}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
-            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#2196F3] to-[#03A9F4] flex items-center justify-center text-sm font-medium text-white shadow-sm">
-              {user?.username.substring(0, 2).toUpperCase()}
-            </div>
+            {user?.avatarUrl ? (
+              <div className="w-8 h-8 rounded-full overflow-hidden shadow-sm">
+                <img 
+                  src={user.avatarUrl} 
+                  alt={user.username} 
+                  className="w-full h-full object-cover"
+                  key={user.avatarUrl} // Force re-render when URL changes
+                />
+              </div>
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#2196F3] to-[#03A9F4] flex items-center justify-center text-sm font-medium text-white shadow-sm">
+                {user?.username.substring(0, 2).toUpperCase()}
+              </div>
+            )}
             {mobileMenuOpen ? (
               <X size={16} className="text-gray-600 dark:text-gray-300 ml-1" />
             ) : (

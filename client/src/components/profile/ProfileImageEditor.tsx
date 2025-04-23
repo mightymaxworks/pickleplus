@@ -101,12 +101,25 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
       return;
     }
 
-    // Create a preview immediately
+    // Create a preview immediately and show it
+    console.log("[ProfileImageEditor] Creating preview for file:", file.name);
     setSelectedFile(file);
+    
+    // Create object URL and set it
     const url = URL.createObjectURL(file);
+    
+    // Let's force clean up any existing preview first
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    
     setPreviewUrl(url);
     setShowPreview(true);
-    setIsModalOpen(true);
+    
+    // Open the modal after setting the preview
+    setTimeout(() => {
+      setIsModalOpen(true);
+    }, 50);
     
     // Reset the file input so the same file can be reselected
     if (fileInputRef.current) {
