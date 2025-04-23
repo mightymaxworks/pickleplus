@@ -426,7 +426,82 @@ router.post('/onboarding/complete-step', devAuthMiddleware, async (req: Request,
 });
 
 /**
- * Select a rating system and provide initial rating
+ * Set preferred rating system
+ * POST /api/courtiq/rating/set-preferred
+ */
+router.post('/rating/set-preferred', devAuthMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    
+    // Validate request body
+    const schema = z.object({
+      system: z.string(),
+      rating: z.number()
+    });
+    
+    const validationResult = schema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({ error: 'Invalid request body', details: validationResult.error });
+    }
+    
+    const { system, rating } = validationResult.data;
+    
+    // Special handling for development environment
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[CourtIQ API] Using mock data for setting preferred rating in development');
+      
+      // Get mock system data
+      const mockSystem = MOCK_RATING_SYSTEMS.find(s => s.code === system) || {
+        id: 999,
+        code: system,
+        name: system.toUpperCase(),
+        description: `${system.toUpperCase()} Rating System`,
+        minRating: 1.0,
+        maxRating: 5.0,
+        decimals: 1,
+        isActive: true
+      } as MockRatingSystem;
+      
+      return res.json({
+        success: true,
+        message: `Successfully set ${mockSystem.name} as preferred rating system`,
+        userId: userId,
+        system: system,
+        rating: rating,
+        onboardingStatus: {
+          ...mockOnboardingStatus,
+          progress: {
+            ...mockOnboardingStatus.progress,
+            ratingSystemSelected: true,
+            ratingProvided: true
+          },
+          preferences: {
+            ...mockOnboardingStatus.preferences,
+            preferredRatingSystem: system,
+            initialRating: rating
+          },
+          progress_pct: 40,
+          nextStep: 'experience_summary'
+        }
+      });
+    }
+    
+    // Normal flow for production
+    const result = await onboardingService.selectRatingSystem(userId, system, rating);
+    
+    if (!result.success) {
+      return res.status(400).json({ error: result.message });
+    }
+    
+    return res.json(result);
+  } catch (error) {
+    console.error('[API] Error setting preferred rating system:', error);
+    return res.status(500).json({ error: 'Failed to set preferred rating system' });
+  }
+});
+
+/**
+ * Legacy route for backwards compatibility
  * POST /api/courtiq/onboarding/select-rating
  */
 router.post('/onboarding/select-rating', devAuthMiddleware, async (req: Request, res: Response) => {
