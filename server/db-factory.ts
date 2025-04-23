@@ -12,6 +12,7 @@ import { drizzle } from 'drizzle-orm/neon-serverless';
 import ws from "ws";
 import * as schema from "../shared/schema";
 import * as bounceAutomationSchema from "../shared/schema/bounce-automation";
+import * as courtiqSchema from "../shared/schema/courtiq";
 
 // Fix for Neon + WebSocket: Patch error handling
 // This addresses the TypeError: Cannot set property message of #<ErrorEvent> which has only a getter
@@ -64,7 +65,7 @@ process.on('SIGINT', () => {
 });
 
 // Merge all schema objects for a complete database schema
-const mergedSchema = { ...schema, ...bounceAutomationSchema };
+const mergedSchema = { ...schema, ...bounceAutomationSchema, ...courtiqSchema };
 
 // Create Drizzle instance
 const db = drizzle({ client: pool, schema: mergedSchema });
