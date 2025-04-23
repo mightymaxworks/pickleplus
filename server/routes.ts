@@ -8,6 +8,7 @@ import { setupAdminDashboardRoutes } from "./routes/admin-dashboard-routes"; // 
 import { registerCommunityRoutes } from "./routes/community-routes";
 import { registerEventRoutes } from "./routes/event-routes";
 import { registerUserRoutes } from "./routes/user-routes";
+import { registerUserProfileRoutes } from "./routes/user-profile-routes"; // PKL-278651-PROF-0005-UPLOAD
 import { registerMatchRoutes } from "./routes/match-routes";
 import { registerTournamentRoutes } from "./routes/tournament-routes";
 import { registerBounceAdminRoutes } from "./routes/admin-bounce-routes";
@@ -42,6 +43,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   registerCommunityRoutes(app);
   registerEventRoutes(app);
   registerUserRoutes(app);
+  registerUserProfileRoutes(app); // Added for PKL-278651-PROF-0005-UPLOAD - Profile Photo Upload
   registerMatchRoutes(app);
   registerTournamentRoutes(app);
   registerBounceAdminRoutes(app); // Add Bounce admin routes
