@@ -33,6 +33,9 @@ import {
   RefreshCw 
 } from "lucide-react";
 
+// Import default avatar for new users
+import defaultAvatarPath from "@assets/Untitled design (51).png";
+
 interface User {
   id: number;
   username?: string;
@@ -236,9 +239,12 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
               key={currentAvatarUrl} // Force re-render when URL changes
             />
           ) : (
-            <div className="h-full w-full rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-2xl sm:text-3xl font-bold">
-              {getInitials()}
-            </div>
+            <img 
+              src={defaultAvatarPath} 
+              alt={user.username || "Default avatar"} 
+              className="h-full w-full object-contain bg-yellow-100"
+              key="default-avatar"
+            />
           )}
         </div>
 
@@ -284,22 +290,34 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
           </DialogHeader>
 
           <div className="space-y-4">
-            {previewUrl && (
-              <div className="flex justify-center p-2">
-                <div className="h-48 w-48 rounded-full overflow-hidden bg-muted relative">
-                  <img 
-                    src={previewUrl} 
-                    alt="Preview" 
-                    className="h-full w-full object-cover"
-                  />
-                  {showPreview && (
+            <div className="flex justify-center p-2">
+              <div className="h-48 w-48 rounded-full overflow-hidden bg-muted relative">
+                {previewUrl ? (
+                  <>
+                    <img 
+                      src={previewUrl} 
+                      alt="Preview" 
+                      className="h-full w-full object-cover"
+                    />
                     <div className="absolute bottom-0 left-0 right-0 bg-green-600 text-white py-1 text-xs text-center">
                       Preview
                     </div>
-                  )}
-                </div>
+                  </>
+                ) : currentAvatarUrl ? (
+                  <img 
+                    src={currentAvatarUrl} 
+                    alt={user.username || 'Current avatar'} 
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <img 
+                    src={defaultAvatarPath} 
+                    alt="Default avatar" 
+                    className="h-full w-full object-contain bg-yellow-100"
+                  />
+                )}
               </div>
-            )}
+            </div>
 
             <div className="flex flex-col sm:flex-row gap-2">
               <Button 
@@ -340,21 +358,19 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
               Cancel
             </Button>
 
-            {previewUrl && (
-              <Button 
-                variant="default" 
-                onClick={uploadImage}
-                disabled={isUploading}
-                className="bg-[#4CAF50] hover:bg-[#3d8b40]"
-              >
-                {isUploading ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Check className="h-4 w-4 mr-2" />
-                )}
-                Save Photo
-              </Button>
-            )}
+            <Button 
+              variant="default" 
+              onClick={uploadImage}
+              disabled={isUploading || !selectedFile}
+              className="bg-[#4CAF50] hover:bg-[#3d8b40]"
+            >
+              {isUploading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Check className="h-4 w-4 mr-2" />
+              )}
+              Save Photo
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
