@@ -51,7 +51,8 @@ export class RatingConverter {
     // Direct query using SQL since query builder is not yet set up for this table
     const systemsResult = await db.execute(
       sql`SELECT * FROM rating_systems WHERE is_active = true ORDER BY code`
-    ) as SqlResult;
+    );
+    const typedResult = systemsResult as unknown as SqlResult;
     
     // Cast to array of RatingSystem objects with proper typing
     return (Array.isArray(systemsResult) ? systemsResult : []) as unknown as RatingSystem[];
@@ -80,13 +81,15 @@ export class RatingConverter {
       // Get the system IDs
       const fromSystemResult = await db.execute(
         sql`SELECT * FROM rating_systems WHERE code = ${fromSystemCode}`
-      ) as SqlResult;
-      const fromSystem = fromSystemResult[0] as SqlResultRow;
+      );
+      const typedFromResult = fromSystemResult as unknown as SqlResult;
+      const fromSystem = typedFromResult[0] as SqlResultRow;
       
       const toSystemResult = await db.execute(
         sql`SELECT * FROM rating_systems WHERE code = ${toSystemCode}`
-      ) as SqlResult;
-      const toSystem = toSystemResult[0] as SqlResultRow;
+      );
+      const typedToResult = toSystemResult as unknown as SqlResult;
+      const toSystem = typedToResult[0] as SqlResultRow;
 
       if (!fromSystem || !toSystem) {
         throw new Error(`Rating system not found: ${!fromSystem ? fromSystemCode : toSystemCode}`);
@@ -98,8 +101,9 @@ export class RatingConverter {
             from_system_id = ${fromSystem.id} AND 
             to_system_id = ${toSystem.id} AND 
             source_rating = ${rating.toString()}`
-      ) as SqlResult;
-      const exactMatch = exactMatchResult[0] as SqlResultRow;
+      );
+      const typedExactMatchResult = exactMatchResult as unknown as SqlResult;
+      const exactMatch = typedExactMatchResult[0] as SqlResultRow;
 
       if (exactMatch) {
         const confidenceModifier = exactMatch.confidenceModifier ? Number(exactMatch.confidenceModifier) : 0;
@@ -120,8 +124,9 @@ export class RatingConverter {
             AND source_rating <= ${rating.toString()}
             ORDER BY source_rating DESC
             LIMIT 1`
-      ) as unknown as SqlResult;
-      const lowerBound = lowerBoundResult[0] as SqlResultRow;
+      );
+      const typedLowerBoundResult = lowerBoundResult as unknown as SqlResult;
+      const lowerBound = typedLowerBoundResult[0] as SqlResultRow;
 
       const upperBoundResult = await db.execute(
         sql`SELECT * FROM rating_conversions 
@@ -130,8 +135,9 @@ export class RatingConverter {
             AND source_rating >= ${rating.toString()}
             ORDER BY source_rating ASC
             LIMIT 1`
-      ) as unknown as SqlResult;
-      const upperBound = upperBoundResult[0] as SqlResultRow;
+      );
+      const typedUpperBoundResult = upperBoundResult as unknown as SqlResult;
+      const upperBound = typedUpperBoundResult[0] as SqlResultRow;
 
       // Interpolate if we have bounds
       if (lowerBound && upperBound) {
@@ -208,8 +214,9 @@ export class RatingConverter {
     try {
       const systemResult = await db.execute(
         sql`SELECT * FROM rating_systems WHERE code = ${systemCode} LIMIT 1`
-      ) as unknown as SqlResult;
-      const system = systemResult[0] as SqlResultRow;
+      );
+      const typedSystemResult = systemResult as unknown as SqlResult;
+      const system = typedSystemResult[0] as SqlResultRow;
       
       if (system) {
         // Insert the external rating
@@ -250,8 +257,9 @@ export class RatingConverter {
             AND format = ${format} 
             AND division = ${division} 
             LIMIT 1`
-      ) as unknown as SqlResult;
-      const userRating = userRatingResult[0] as SqlResultRow;
+      );
+      const typedUserRatingResult = userRatingResult as unknown as SqlResult;
+      const userRating = typedUserRatingResult[0] as SqlResultRow;
       
       if (!userRating) {
         throw new Error(`No rating found for user ID ${userId} in ${format}/${division}`);

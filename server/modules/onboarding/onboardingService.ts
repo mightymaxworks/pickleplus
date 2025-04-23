@@ -16,7 +16,7 @@ import {
 } from "../../../shared/courtiq-schema";
 import { ratingConverter, RATING_SYSTEMS } from "../rating/ratingConverter";
 import { serverEventBus } from "../../core/events/eventBus";
-import { xpSystem } from "../xp/xpSystem";
+import { xpSystem, XPSource } from "../xp/xpSystem";
 
 // Helper types for SQL query results
 type SqlRecord = Record<string, unknown>;
@@ -159,7 +159,7 @@ export class OnboardingService {
       });
       
       // Give XP for completing this step
-      await xpSystem.awardXP(userId.toString(), 50, "onboarding_step_completion", "Completed rating selection step in onboarding");
+      await xpSystem.awardXP(userId, XPSource.PROFILE_COMPLETION, 50, undefined, 100, "Completed rating selection step in onboarding");
 
       return {
         success: true,
@@ -277,9 +277,11 @@ export class OnboardingService {
       
       // Award XP
       await xpSystem.awardXP(
-        userId.toString(), 
+        userId, 
+        XPSource.PROFILE_COMPLETION, 
         xpToAward, 
-        "onboarding_step_completion", 
+        undefined, 
+        100, 
         `Completed ${step} step in onboarding`
       );
       

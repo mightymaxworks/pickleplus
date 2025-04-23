@@ -37,7 +37,7 @@ interface XPLevel {
 }
 
 // XP Sources and weights
-enum XPSource {
+export enum XPSource {
   // Account activity
   PROFILE_COMPLETION = "profile_completion",
   DAILY_LOGIN = "daily_login",
