@@ -137,6 +137,8 @@ export interface FirstTimeUserTutorialProps {
  * FirstTimeUserTutorial Component
  * 
  * A step-by-step tutorial that guides first-time users through the major features of Pickle+.
+ * 
+ * NOTE: This component has been temporarily deactivated per user request.
  */
 const FirstTimeUserTutorial: React.FC<FirstTimeUserTutorialProps> = ({
   isFirstTimeUser,
@@ -144,7 +146,8 @@ const FirstTimeUserTutorial: React.FC<FirstTimeUserTutorialProps> = ({
   onComplete
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [showTutorial, setShowTutorial] = useState(isFirstTimeUser);
+  // Always disable the tutorial by setting showTutorial to false
+  const [showTutorial, setShowTutorial] = useState(false); // Deactivated as requested
   const [showReward, setShowReward] = useState(false);
   const [location, setLocation] = useLocation();
 
@@ -164,24 +167,29 @@ const FirstTimeUserTutorial: React.FC<FirstTimeUserTutorialProps> = ({
 
   // Initialize discovery campaign for the tutorial
   useEffect(() => {
-    if (isFirstTimeUser) {
-      // Use setTimeout to ensure this doesn't happen during render phase
-      setTimeout(() => {
-        // Add the tutorial campaign to the discovery tracking system
-        addCampaign({
-          id: 101,
-          name: 'First-Time User Tutorial',
-          description: 'Complete the introduction to Pickle+ features',
-          discoveries: tutorialSteps.map(step => ({
-            id: step.id,
-            code: step.code,
-            name: step.title,
-            discovered: false
-          }))
-        });
-      }, 0);
-    }
-  }, [isFirstTimeUser, addCampaign]);
+    // Tutorial initialization has been disabled per user request
+    // If you need to reactivate this tutorial, restore the original code here
+    
+    // Original implementation was:
+    // if (isFirstTimeUser) {
+    //   setTimeout(() => {
+    //     addCampaign({
+    //       id: 101,
+    //       name: 'First-Time User Tutorial',
+    //       description: 'Complete the introduction to Pickle+ features',
+    //       discoveries: tutorialSteps.map(step => ({
+    //         id: step.id,
+    //         code: step.code,
+    //         name: step.title,
+    //         discovered: false
+    //       }))
+    //     });
+    //   }, 0);
+    // }
+    
+    // Call onComplete to make sure any dependent code knows tutorial is "done"
+    if (onComplete) onComplete();
+  }, [isFirstTimeUser, addCampaign, onComplete]);
 
   // Track discovery for the current step
   useEffect(() => {
