@@ -30,6 +30,34 @@ export interface CourtIQPerformanceData {
     speed?: { score: number; };
   };
   
+  // Source-specific dimension ratings for multi-source visualization
+  sourceRatings?: {
+    self?: {
+      technique?: number;
+      strategy?: number;
+      consistency?: number;
+      focus?: number;
+      power?: number;
+      speed?: number;
+    };
+    opponent?: {
+      technique?: number;
+      strategy?: number;
+      consistency?: number;
+      focus?: number;
+      power?: number;
+      speed?: number;
+    };
+    coach?: {
+      technique?: number;
+      strategy?: number;
+      consistency?: number;
+      focus?: number;
+      power?: number;
+      speed?: number;
+    };
+  };
+  
   // For backwards compatibility
   skills: CourtIQSkillRating;
   
@@ -79,6 +107,9 @@ export function useCourtIQPerformance(options: CourtIQPerformanceOptions = {}) {
   if (userId) queryParams.append('userId', userId.toString());
   if (format) queryParams.append('format', format);
   if (division) queryParams.append('division', division);
+  
+  // Include source-specific ratings
+  queryParams.append('includeSourceTypes', 'true');
 
   return useQuery<CourtIQPerformanceData>({
     queryKey: ['/api/courtiq/performance', { userId, format, division }],

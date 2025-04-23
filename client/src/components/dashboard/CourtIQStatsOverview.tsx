@@ -1,10 +1,17 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, ChevronUp, BarChart2, TrendingUp, TrendingDown, Activity } from "lucide-react";
+import { ChevronRight, ChevronUp, BarChart2, TrendingUp, TrendingDown, Activity, Info } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useCourtIQPerformance, CourtIQPerformanceData } from "@/hooks/use-courtiq-performance";
 
 interface CourtIQStatsOverviewProps {
   userId: number;
@@ -12,10 +19,11 @@ interface CourtIQStatsOverviewProps {
 
 export default function CourtIQStatsOverview({ userId }: CourtIQStatsOverviewProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showSourceBreakdown, setShowSourceBreakdown] = useState(false);
   const [, navigate] = useLocation();
   
-  // Query user ratings
-  const { data: courtIQStats, isLoading } = useQuery({
+  // Query user ratings using the legacy endpoint
+  const { data: courtIQStats, isLoading: isStatsLoading } = useQuery({
     queryKey: ["/api/user/ratings", { userId }],
     queryFn: async () => {
       try {
@@ -29,11 +37,24 @@ export default function CourtIQStatsOverview({ userId }: CourtIQStatsOverviewPro
     },
   });
   
+  // Use the enhanced CourtIQ performance hook with source-specific ratings
+  const { data: enhancedPerformanceData, isLoading: isPerformanceLoading } = useCourtIQPerformance({
+    userId,
+    enabled: true
+  });
+  
+  const isLoading = isStatsLoading || isPerformanceLoading;
+  
   // Calculate the normalized values for radar chart (0-100)
   const normalizeValue = (value: number, max = 1500) => Math.min(100, Math.max(0, (value / max) * 100));
   
   const navigateToTraining = () => {
     navigate("/training");
+  };
+  
+  // Function to toggle the source breakdown view
+  const toggleSourceBreakdown = () => {
+    setShowSourceBreakdown(!showSourceBreakdown);
   };
   
   return (
@@ -91,7 +112,30 @@ export default function CourtIQStatsOverview({ userId }: CourtIQStatsOverviewPro
             
             {/* Radar Chart */}
             <div className="relative h-52 mx-auto">
-              {courtIQStats.dimensions ? (
+              {/* Source type visualization toggle */}
+              {enhancedPerformanceData?.sourceRatings && (
+                <div className="absolute top-0 right-0 z-10">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0"
+                          onClick={toggleSourceBreakdown}
+                        >
+                          <Info size={14} className={showSourceBreakdown ? "text-primary" : "text-muted-foreground"} />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">Toggle multi-source visualization</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              )}
+              
+              {courtIQStats?.dimensions || enhancedPerformanceData?.dimensions ? (
                 <>
                   {/* Base pentagon */}
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -119,19 +163,90 @@ export default function CourtIQStatsOverview({ userId }: CourtIQStatsOverviewPro
                           strokeWidth="0.5" 
                         />
                         
-                        {/* Data polygon */}
-                        <polygon 
-                          points={`
-                            50,${50 - normalizeValue(courtIQStats.dimensions.power || 0) * 0.4} 
-                            ${50 + normalizeValue(courtIQStats.dimensions.control || 0) * 0.4},50 
-                            ${50 + normalizeValue(courtIQStats.dimensions.consistency || 0) * 0.2},${50 + normalizeValue(courtIQStats.dimensions.consistency || 0) * 0.2} 
-                            ${50 - normalizeValue(courtIQStats.dimensions.mobility || 0) * 0.2},${50 + normalizeValue(courtIQStats.dimensions.mobility || 0) * 0.2} 
-                            ${50 - normalizeValue(courtIQStats.dimensions.strategy || 0) * 0.4},50
-                          `}
-                          fill="rgba(33, 150, 243, 0.2)"
-                          stroke="#2196F3"
-                          strokeWidth="1.5"
-                        />
+                        {/* Default radar or multi-source visualizations */}
+                        {showSourceBreakdown && enhancedPerformanceData?.sourceRatings ? (
+                          <>
+                            {/* Self-assessment polygon (blue) */}
+                            {enhancedPerformanceData.sourceRatings.self && (
+                              <polygon 
+                                points={`
+                                  50,${50 - normalizeValue(enhancedPerformanceData.sourceRatings.self.power || 0, 100) * 0.4} 
+                                  ${50 + normalizeValue(enhancedPerformanceData.sourceRatings.self.focus || 0, 100) * 0.4},50 
+                                  ${50 + normalizeValue(enhancedPerformanceData.sourceRatings.self.consistency || 0, 100) * 0.2},${50 + normalizeValue(enhancedPerformanceData.sourceRatings.self.consistency || 0, 100) * 0.2} 
+                                  ${50 - normalizeValue(enhancedPerformanceData.sourceRatings.self.speed || 0, 100) * 0.2},${50 + normalizeValue(enhancedPerformanceData.sourceRatings.self.speed || 0, 100) * 0.2} 
+                                  ${50 - normalizeValue(enhancedPerformanceData.sourceRatings.self.strategy || 0, 100) * 0.4},50
+                                `}
+                                fill="rgba(33, 150, 243, 0.1)"
+                                stroke="#2196F3"
+                                strokeWidth="1"
+                                strokeDasharray="0"
+                              />
+                            )}
+                            
+                            {/* Opponent-assessment polygon (red) */}
+                            {enhancedPerformanceData.sourceRatings.opponent && (
+                              <polygon 
+                                points={`
+                                  50,${50 - normalizeValue(enhancedPerformanceData.sourceRatings.opponent.power || 0, 100) * 0.4} 
+                                  ${50 + normalizeValue(enhancedPerformanceData.sourceRatings.opponent.focus || 0, 100) * 0.4},50 
+                                  ${50 + normalizeValue(enhancedPerformanceData.sourceRatings.opponent.consistency || 0, 100) * 0.2},${50 + normalizeValue(enhancedPerformanceData.sourceRatings.opponent.consistency || 0, 100) * 0.2} 
+                                  ${50 - normalizeValue(enhancedPerformanceData.sourceRatings.opponent.speed || 0, 100) * 0.2},${50 + normalizeValue(enhancedPerformanceData.sourceRatings.opponent.speed || 0, 100) * 0.2} 
+                                  ${50 - normalizeValue(enhancedPerformanceData.sourceRatings.opponent.strategy || 0, 100) * 0.4},50
+                                `}
+                                fill="rgba(244, 67, 54, 0.1)"
+                                stroke="#F44336"
+                                strokeWidth="1"
+                                strokeDasharray="0"
+                              />
+                            )}
+                            
+                            {/* Coach-assessment polygon (green) */}
+                            {enhancedPerformanceData.sourceRatings.coach && (
+                              <polygon 
+                                points={`
+                                  50,${50 - normalizeValue(enhancedPerformanceData.sourceRatings.coach.power || 0, 100) * 0.4} 
+                                  ${50 + normalizeValue(enhancedPerformanceData.sourceRatings.coach.focus || 0, 100) * 0.4},50 
+                                  ${50 + normalizeValue(enhancedPerformanceData.sourceRatings.coach.consistency || 0, 100) * 0.2},${50 + normalizeValue(enhancedPerformanceData.sourceRatings.coach.consistency || 0, 100) * 0.2} 
+                                  ${50 - normalizeValue(enhancedPerformanceData.sourceRatings.coach.speed || 0, 100) * 0.2},${50 + normalizeValue(enhancedPerformanceData.sourceRatings.coach.speed || 0, 100) * 0.2} 
+                                  ${50 - normalizeValue(enhancedPerformanceData.sourceRatings.coach.strategy || 0, 100) * 0.4},50
+                                `}
+                                fill="rgba(76, 175, 80, 0.1)"
+                                stroke="#4CAF50"
+                                strokeWidth="1"
+                                strokeDasharray="0"
+                              />
+                            )}
+                            
+                            {/* Composite (black outline - no fill) */}
+                            <polygon 
+                              points={`
+                                50,${50 - normalizeValue(enhancedPerformanceData.dimensions?.power?.score || 0, 10) * 4} 
+                                ${50 + normalizeValue(enhancedPerformanceData.dimensions?.focus?.score || 0, 10) * 4},50 
+                                ${50 + normalizeValue(enhancedPerformanceData.dimensions?.consistency?.score || 0, 10) * 2},${50 + normalizeValue(enhancedPerformanceData.dimensions?.consistency?.score || 0, 10) * 2} 
+                                ${50 - normalizeValue(enhancedPerformanceData.dimensions?.speed?.score || 0, 10) * 2},${50 + normalizeValue(enhancedPerformanceData.dimensions?.speed?.score || 0, 10) * 2} 
+                                ${50 - normalizeValue(enhancedPerformanceData.dimensions?.strategy?.score || 0, 10) * 4},50
+                              `}
+                              fill="none"
+                              stroke="#000000"
+                              strokeWidth="1.5"
+                              strokeDasharray="0"
+                            />
+                          </>
+                        ) : (
+                          // Default view - just show the aggregate ratings
+                          <polygon 
+                            points={`
+                              50,${50 - normalizeValue(courtIQStats?.dimensions?.power || enhancedPerformanceData?.dimensions?.power?.score * 100 || 0) * 0.4} 
+                              ${50 + normalizeValue(courtIQStats?.dimensions?.control || enhancedPerformanceData?.dimensions?.focus?.score * 100 || 0) * 0.4},50 
+                              ${50 + normalizeValue(courtIQStats?.dimensions?.consistency || enhancedPerformanceData?.dimensions?.consistency?.score * 100 || 0) * 0.2},${50 + normalizeValue(courtIQStats?.dimensions?.consistency || enhancedPerformanceData?.dimensions?.consistency?.score * 100 || 0) * 0.2} 
+                              ${50 - normalizeValue(courtIQStats?.dimensions?.mobility || enhancedPerformanceData?.dimensions?.speed?.score * 100 || 0) * 0.2},${50 + normalizeValue(courtIQStats?.dimensions?.mobility || enhancedPerformanceData?.dimensions?.speed?.score * 100 || 0) * 0.2} 
+                              ${50 - normalizeValue(courtIQStats?.dimensions?.strategy || enhancedPerformanceData?.dimensions?.strategy?.score * 100 || 0) * 0.4},50
+                            `}
+                            fill="rgba(33, 150, 243, 0.2)"
+                            stroke="#2196F3"
+                            strokeWidth="1.5"
+                          />
+                        )}
                       </svg>
                       
                       {/* Labels */}
@@ -144,29 +259,67 @@ export default function CourtIQStatsOverview({ userId }: CourtIQStatsOverviewPro
                   </div>
                   
                   {/* Dimension values */}
-                  {isExpanded && (
+                  {isExpanded && !showSourceBreakdown && (
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-center">
                         <div className="bg-blue-50 rounded-md px-2 py-1">
                           <div className="text-xs text-gray-500">Power</div>
-                          <div className="text-sm font-bold text-[#2196F3]">{courtIQStats.dimensions.power || 0}</div>
+                          <div className="text-sm font-bold text-[#2196F3]">
+                            {courtIQStats?.dimensions?.power || 
+                             (enhancedPerformanceData?.dimensions?.power?.score ? 
+                              Math.round(enhancedPerformanceData.dimensions.power.score * 10) : 0)}
+                          </div>
                         </div>
                         <div className="bg-blue-50 rounded-md px-2 py-1">
                           <div className="text-xs text-gray-500">Control</div>
-                          <div className="text-sm font-bold text-[#2196F3]">{courtIQStats.dimensions.control || 0}</div>
+                          <div className="text-sm font-bold text-[#2196F3]">
+                            {courtIQStats?.dimensions?.control || 
+                             (enhancedPerformanceData?.dimensions?.focus?.score ? 
+                              Math.round(enhancedPerformanceData.dimensions.focus.score * 10) : 0)}
+                          </div>
                         </div>
                         <div className="bg-blue-50 rounded-md px-2 py-1">
                           <div className="text-xs text-gray-500">Consistency</div>
-                          <div className="text-sm font-bold text-[#2196F3]">{courtIQStats.dimensions.consistency || 0}</div>
+                          <div className="text-sm font-bold text-[#2196F3]">
+                            {courtIQStats?.dimensions?.consistency || 
+                             (enhancedPerformanceData?.dimensions?.consistency?.score ? 
+                              Math.round(enhancedPerformanceData.dimensions.consistency.score * 10) : 0)}
+                          </div>
                         </div>
                         <div className="bg-blue-50 rounded-md px-2 py-1">
                           <div className="text-xs text-gray-500">Mobility</div>
-                          <div className="text-sm font-bold text-[#2196F3]">{courtIQStats.dimensions.mobility || 0}</div>
+                          <div className="text-sm font-bold text-[#2196F3]">
+                            {courtIQStats?.dimensions?.mobility || 
+                             (enhancedPerformanceData?.dimensions?.speed?.score ? 
+                              Math.round(enhancedPerformanceData.dimensions.speed.score * 10) : 0)}
+                          </div>
                         </div>
                         <div className="col-span-2 bg-blue-50 rounded-md px-2 py-1">
                           <div className="text-xs text-gray-500">Strategy</div>
-                          <div className="text-sm font-bold text-[#2196F3]">{courtIQStats.dimensions.strategy || 0}</div>
+                          <div className="text-sm font-bold text-[#2196F3]">
+                            {courtIQStats?.dimensions?.strategy || 
+                             (enhancedPerformanceData?.dimensions?.strategy?.score ? 
+                              Math.round(enhancedPerformanceData.dimensions.strategy.score * 10) : 0)}
+                          </div>
                         </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Multi-source breakdown legend */}
+                  {showSourceBreakdown && (
+                    <div className="absolute bottom-0 left-0 right-0 flex justify-center space-x-3 text-xs">
+                      <div className="flex items-center">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full mr-1"></div>
+                        <span>Self</span>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-3 h-3 bg-red-500 rounded-full mr-1"></div>
+                        <span>Opponent</span>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-3 h-3 bg-green-500 rounded-full mr-1"></div>
+                        <span>Coach</span>
                       </div>
                     </div>
                   )}
