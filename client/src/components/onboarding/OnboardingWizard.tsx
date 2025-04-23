@@ -366,11 +366,14 @@ export function OnboardingWizard({
       description: "You've completed the CourtIQ™ onboarding process. Welcome to Pickle+!",
     });
     
-    // PKL-278651-COURTIQ-0002-GUIDANCE - Don't navigate away automatically
-    // Stay on this page and let the OnboardingComplete component handle next steps
-    console.log("[OnboardingWizard] Onboarding complete - preventing automatic redirect");
+    // PKL-278651-COURTIQ-0002-GUIDANCE - Navigate to the dedicated completion page
+    console.log("[Onboarding] Completed, redirecting to the dedicated completion page");
     
-    // Still call onComplete for consistency, but we'll override its behavior
+    // Navigate to the completion page directly
+    const [, navigate] = useLocation();
+    navigate('/onboarding-complete');
+    
+    // Still call onComplete for consistency
     if (onComplete) {
       onComplete();
     }
@@ -462,11 +465,24 @@ export function OnboardingWizard({
 
   // Check if onboarding is already completed
   if (status?.completed) {
-    console.log("[OnboardingWizard] Onboarding status is completed, rendering OnboardingComplete component", {
-      xpEarned: status.xpEarned,
-      completedAt: status.completedAt
-    });
-    return <OnboardingComplete xpEarned={status.xpEarned} className={className} />;
+    console.log("[OnboardingWizard] Onboarding status is completed, redirecting to completion page");
+    // Redirect to the dedicated completion page
+    const [, navigate] = useLocation();
+    useEffect(() => {
+      navigate('/onboarding-complete');
+    }, [navigate]);
+    
+    // Return loading state while redirect happens
+    return (
+      <Card className={`w-full max-w-2xl shadow-lg ${className}`}>
+        <CardContent className="p-8">
+          <div className="flex flex-col items-center justify-center">
+            <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mb-4"></div>
+            <p className="text-muted-foreground">Redirecting to completion page...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   // Get the current step

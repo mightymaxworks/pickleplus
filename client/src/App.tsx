@@ -16,6 +16,7 @@ import { moduleRegistry } from '@/core/modules/moduleRegistry' // For feedback m
 import { SimpleBugReportButton } from '@/components/bug-report/BugReportButton' // Simplified bug report button
 import { ProtectedRouteWithLayout } from './lib/protected-route-with-layout' // PKL-278651-UI-0001-STDROUTE
 import { BounceMascot } from '@/components/mascot' // PKL-278651-MASCOT-0001-CORE
+import OnboardingCompletePage from './pages/onboarding-complete-page' // PKL-278651-COURTIQ-0002-GUIDANCE
 
 
 // Import module initializations
@@ -197,6 +198,7 @@ export default function App() {
                   <Route path="/register" component={Register} />
                   <Route path="/auth" component={LazyAuthPage} />
                   <Route path="/onboarding" component={LazyOnboardingPage} />
+                  <Route path="/onboarding-complete" component={OnboardingCompletePage} />
                   <Route path="/about" component={LazyAboutUsPage} />
                   <Route path="/test-routing" component={TestRoutingPage} />
                   <Route path="/landing-test" component={LandingPageTest} />
