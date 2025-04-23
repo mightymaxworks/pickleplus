@@ -29,7 +29,7 @@ const profileStorage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     // Generate unique filename with timestamp and user ID if available
-    const userId = req.user?.id || 'anonymous';
+    const userId = req.user && req.user.id ? String(req.user.id) : 'anonymous';
     const timestamp = Date.now();
     const fileExt = path.extname(file.originalname).toLowerCase();
     cb(null, `avatar-${userId}-${timestamp}${fileExt}`);
