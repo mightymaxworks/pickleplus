@@ -20,7 +20,8 @@ import {
   CalendarDaysIcon,
   ClockIcon,
   AlertCircleIcon,
-  FilterIcon
+  FilterIcon,
+  Star as StarIcon
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -183,40 +184,43 @@ export function MyEventsTab({ className, onEventClick, onPassportClick }: MyEven
     );
   }
 
-  // Render empty state with link to passport
-  if (!events || events.length === 0) {
-    return (
-      <Card className={cn("bg-gradient-to-b from-muted/20 to-muted/5 border-primary/10 shadow-md", className)}>
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center">
-            <CalendarDaysIcon className="h-5 w-5 mr-2 text-primary" />
-            No Registered Events
-          </CardTitle>
-          <CardDescription>
-            You haven't registered for any upcoming PicklePass™ events yet.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <div className="rounded-full bg-primary/5 w-20 h-20 mx-auto mb-5 flex items-center justify-center border border-primary/10 shadow-inner">
-              <TicketIcon className="w-9 h-9 text-primary/70" />
-            </div>
-            <p className="text-muted-foreground mb-7 max-w-xs mx-auto">
-              Register for events from the Events tab and they'll appear here.
-            </p>
-            <Button 
-              onClick={onPassportClick} 
-              className="bg-primary/90 hover:bg-primary transition-colors duration-300 py-6 px-8 rounded-lg shadow-md"
-              disabled={!onPassportClick}
-            >
-              <TicketIcon className="mr-2 h-5 w-5" />
-              View My Passport
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  /* PKL-278651-PASS-0014-DEFT - Ensure empty state includes default community event */
+  // This commented-out section is kept as a reference since we'll never reach this code path now
+  // Default community event is added in processedEvents via ensureDefaultCommunityEvent
+  // 
+  // if (!events || events.length === 0) {
+  //   return (
+  //     <Card className={cn("bg-gradient-to-b from-muted/20 to-muted/5 border-primary/10 shadow-md", className)}>
+  //       <CardHeader className="pb-2">
+  //         <CardTitle className="flex items-center">
+  //           <CalendarDaysIcon className="h-5 w-5 mr-2 text-primary" />
+  //           No Registered Events
+  //         </CardTitle>
+  //         <CardDescription>
+  //           You haven't registered for any upcoming PicklePass™ events yet.
+  //         </CardDescription>
+  //       </CardHeader>
+  //       <CardContent>
+  //         <div className="text-center py-8">
+  //           <div className="rounded-full bg-primary/5 w-20 h-20 mx-auto mb-5 flex items-center justify-center border border-primary/10 shadow-inner">
+  //             <TicketIcon className="w-9 h-9 text-primary/70" />
+  //           </div>
+  //           <p className="text-muted-foreground mb-7 max-w-xs mx-auto">
+  //             Register for events from the Events tab and they'll appear here.
+  //           </p>
+  //           <Button 
+  //             onClick={onPassportClick} 
+  //             className="bg-primary/90 hover:bg-primary transition-colors duration-300 py-6 px-8 rounded-lg shadow-md"
+  //             disabled={!onPassportClick}
+  //           >
+  //             <TicketIcon className="mr-2 h-5 w-5" />
+  //             View My Passport
+  //           </Button>
+  //         </div>
+  //       </CardContent>
+  //     </Card>
+  //   );
+  // }
 
   // Render error state
   if (error) {
@@ -229,14 +233,15 @@ export function MyEventsTab({ className, onEventClick, onPassportClick }: MyEven
     );
   }
 
-  // Process events for UI display
+  /* PKL-278651-PASS-0014-DEFT - Process events and ensure default community event is included */
   const processedEvents = useMemo(() => {
-    if (!events) return [];
+    // Add default community event to the events list
+    const eventsWithDefault = ensureDefaultCommunityEvent(events || []);
     
     // Group events by date
-    const grouped: Record<string, typeof events> = {};
+    const grouped: Record<string, typeof eventsWithDefault> = {};
     
-    events.forEach(event => {
+    eventsWithDefault.forEach(event => {
       if (!event.startDateTime) {
         if (!grouped['Date TBD']) grouped['Date TBD'] = [];
         grouped['Date TBD'].push(event);
@@ -356,14 +361,17 @@ export function MyEventsTab({ className, onEventClick, onPassportClick }: MyEven
                           className={cn(
                             "overflow-hidden border-l-4 transition-all",
                             onEventClick && "hover:shadow-md cursor-pointer",
-                            soon ? "border-l-amber-500 bg-gradient-to-r from-amber-50/40 to-transparent" : 
-                              "border-l-primary/70 bg-gradient-to-r from-primary/5 to-transparent"
+                            isDefaultCommunityEvent(event) ? 
+                              "border-l-emerald-500 bg-gradient-to-r from-emerald-50/30 to-transparent" :
+                              soon ? "border-l-amber-500 bg-gradient-to-r from-amber-50/40 to-transparent" : 
+                                "border-l-primary/70 bg-gradient-to-r from-primary/5 to-transparent"
                           )}
                           onClick={() => handleEventClick(event)}
                         >
                           <CardHeader className="pb-2">
                             <div className="flex justify-between items-start">
                               <CardTitle className="text-lg flex items-center gap-2">
+                                {/* PKL-278651-PASS-0014-DEFT - Show indicators for special event states */}
                                 {soon && (
                                   <TooltipProvider>
                                     <Tooltip>
@@ -372,6 +380,18 @@ export function MyEventsTab({ className, onEventClick, onPassportClick }: MyEven
                                       </TooltipTrigger>
                                       <TooltipContent>
                                         <p>Happening in less than 24 hours!</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
+                                {isDefaultCommunityEvent(event) && (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <StarIcon className="h-4 w-4 text-emerald-500" />
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Community Event - Always Available</p>
                                       </TooltipContent>
                                     </Tooltip>
                                   </TooltipProvider>
@@ -440,10 +460,18 @@ export function MyEventsTab({ className, onEventClick, onPassportClick }: MyEven
                               animate={{ opacity: 1, scale: 1 }}
                               transition={{ delay: 0.2 }}
                             >
-                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                <CheckIcon className="h-3 w-3 mr-1" />
-                                Registered
-                              </Badge>
+                              {/* PKL-278651-PASS-0014-DEFT - Add special badge for default community event */}
+                              {isDefaultCommunityEvent(event) ? (
+                                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                                  <StarIcon className="h-3 w-3 mr-1" />
+                                  Community Event
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                  <CheckIcon className="h-3 w-3 mr-1" />
+                                  Registered
+                                </Badge>
+                              )}
                               <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                                 <TicketIcon className="h-3 w-3 mr-1" />
                                 Pass Ready
@@ -458,20 +486,28 @@ export function MyEventsTab({ className, onEventClick, onPassportClick }: MyEven
                           </CardContent>
                           
                           <CardFooter className="pt-0">
-                            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="text-xs text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openCancelDialog(event);
-                                }}
-                              >
-                                <XCircleIcon className="h-3 w-3 mr-1" />
-                                Cancel Registration
-                              </Button>
-                            </motion.div>
+                            {/* PKL-278651-PASS-0014-DEFT - Only show cancel button for non-default events */}
+                            {!isDefaultCommunityEvent(event) ? (
+                              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="text-xs text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openCancelDialog(event);
+                                  }}
+                                >
+                                  <XCircleIcon className="h-3 w-3 mr-1" />
+                                  Cancel Registration
+                                </Button>
+                              </motion.div>
+                            ) : (
+                              <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                                <CheckIcon className="h-3 w-3 mr-1" />
+                                Always Registered
+                              </Badge>
+                            )}
                           </CardFooter>
                         </Card>
                       </motion.div>
