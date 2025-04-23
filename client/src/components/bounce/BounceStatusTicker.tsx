@@ -284,8 +284,8 @@ export const BounceStatusTicker = ({
           <div className="mr-3 bg-gradient-to-r from-lime-500 to-green-600 p-1.5 rounded-full text-white">
             <Lightbulb size={16} />
           </div>
-          <div className="relative overflow-hidden flex-1">
-            <div className="ticker-item">
+          <div className="relative overflow-hidden flex-1 ticker-container h-6">
+            <div className="ticker-scroll">
               <span className="text-white text-sm">
                 {defaultMessage}
               </span>
@@ -319,11 +319,15 @@ export const BounceStatusTicker = ({
             <div className="w-2 h-2 rounded-full bg-lime-500 animate-pulse"></div>
             <div className="text-xs text-lime-400 font-mono">LIVE</div>
           </div>
-          <div className="ml-2 text-white text-xs truncate">
+          <div className="ml-2 text-white text-xs relative overflow-hidden ticker-container">
             {currentItem.type === 'tip' ? (
-              <span>{truncateText(currentItem.content, 30)}</span>
+              <div className="ticker-scroll">
+                <span>{currentItem.content}</span>
+              </div>
             ) : (
-              <span>{truncateText(formatActivityMessage(currentItem.activity), 30)}</span>
+              <div className="ticker-scroll">
+                <span>{formatActivityMessage(currentItem.activity)}</span>
+              </div>
             )}
           </div>
         </div>
@@ -348,19 +352,16 @@ export const BounceStatusTicker = ({
             <Award size={16} />
           )}
         </div>
-        <div className="relative overflow-hidden flex-1">
+        <div className="relative overflow-hidden flex-1 ticker-container h-6">
           {currentItem.type === 'tip' ? (
-            <div className="ticker-item">
+            <div className={`ticker-scroll ${currentItem.content.length > 50 ? 'long-content' : ''}`}>
               <span className="text-white text-sm">
                 {currentItem.content}
                 {currentItem.source && <span className="text-lime-200 ml-1 italic text-xs"> - {currentItem.source}</span>}
               </span>
             </div>
           ) : (
-            <div className="ticker-item">
-              <span className="text-lime-400 font-medium mr-2">
-                {currentItem.activity.type === 'join' ? 'NEW PLAYER:' : 'ACHIEVEMENT:'}
-              </span>
+            <div className={`ticker-scroll ${formatActivityMessage(currentItem.activity).length > 50 ? 'long-content' : ''}`}>
               <span className="text-white text-sm">
                 {formatActivityMessage(currentItem.activity)}
                 <span className="text-lime-200 ml-1 italic text-xs">
