@@ -1,13 +1,25 @@
-import { useState, useRef } from "react";
+/**
+ * PKL-278651-PROF-0005-UPLOAD
+ * Enhanced Profile Image Editor Component
+ * 
+ * Features:
+ * - Real-time image preview on file selection
+ * - Immediate UI updates after successful uploads
+ * - Error handling and validation
+ * - Integration with UserDataContext for global user data updates
+ */
+import { useState, useRef, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useUserData } from "@/contexts/UserDataContext";
 import { 
   Dialog, 
   DialogContent, 
   DialogFooter, 
   DialogHeader, 
-  DialogTitle 
+  DialogTitle,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { 
@@ -17,7 +29,8 @@ import {
   Trash2, 
   X, 
   Check, 
-  Loader2 
+  Loader2, 
+  RefreshCw 
 } from "lucide-react";
 
 interface User {
@@ -37,15 +50,32 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [localAvatarUrl, setLocalAvatarUrl] = useState<string | null>(user.avatarUrl || null);
+  const [showPreview, setShowPreview] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { refreshUserData } = useUserData();
 
   const triggerFileSelect = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
+
+  // Update local avatar URL when user prop changes
+  useEffect(() => {
+    setLocalAvatarUrl(user.avatarUrl || null);
+  }, [user.avatarUrl]);
+
+  // Clean up any object URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -71,10 +101,17 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
       return;
     }
 
+    // Create a preview immediately
     setSelectedFile(file);
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
+    setShowPreview(true);
     setIsModalOpen(true);
+    
+    // Reset the file input so the same file can be reselected
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const closeModal = () => {
@@ -103,14 +140,22 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
         throw new Error(errorData.message || 'Failed to upload avatar');
       }
 
+      // Get the response data with the new avatar URL
+      const responseData = await response.json();
+      
+      // Update local state immediately for instant UI feedback
+      if (responseData.avatarUrl) {
+        setLocalAvatarUrl(responseData.avatarUrl);
+      }
+
       // Invalidate both current user and any profile queries
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["/api/auth/current-user"] }),
         queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] })
       ]);
 
-      // Force a refetch of current user data
-      await queryClient.refetchQueries({ queryKey: ["/api/auth/current-user"] });
+      // Force a refresh of user data context
+      await refreshUserData();
 
       toast({
         title: "Success", 
@@ -163,15 +208,19 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
     return user.username?.substring(0, 2).toUpperCase() || "?";
   };
 
+  // Use the most up-to-date avatar (localAvatarUrl or user.avatarUrl)
+  const currentAvatarUrl = localAvatarUrl || user.avatarUrl;
+  
   return (
     <>
       <div className="relative group">
         <div className="h-24 w-24 sm:h-32 sm:w-32 rounded-full overflow-hidden mx-auto">
-          {user.avatarUrl ? (
+          {currentAvatarUrl ? (
             <img 
-              src={user.avatarUrl} 
+              src={currentAvatarUrl} 
               alt={user.username} 
               className="h-full w-full object-cover"
+              key={currentAvatarUrl} // Force re-render when URL changes
             />
           ) : (
             <div className="h-full w-full rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-2xl sm:text-3xl font-bold">
@@ -190,6 +239,17 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
             >
               <Camera className="h-4 w-4" />
             </Button>
+            {user.avatarUrl && (
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                className="h-8 w-8 p-0 rounded-full"
+                onClick={() => refreshUserData()}
+                title="Refresh profile image"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            )}
           </div>
           <input 
             type="file" 
@@ -205,17 +265,25 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Update Profile Photo</DialogTitle>
+            <DialogDescription>
+              Choose an image to represent you across Pickle+
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             {previewUrl && (
               <div className="flex justify-center p-2">
-                <div className="h-48 w-48 rounded-full overflow-hidden bg-muted">
+                <div className="h-48 w-48 rounded-full overflow-hidden bg-muted relative">
                   <img 
                     src={previewUrl} 
                     alt="Preview" 
                     className="h-full w-full object-cover"
                   />
+                  {showPreview && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-green-600 text-white py-1 text-xs text-center">
+                      Preview
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -231,7 +299,7 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
                 Choose Another
               </Button>
 
-              {user.avatarUrl && (
+              {currentAvatarUrl && (
                 <Button 
                   variant="destructive" 
                   className="flex-1"
