@@ -7,9 +7,12 @@
 
 import { Router } from "express";
 import { z } from "zod";
+import { db } from "../db";
+import { eq, and, desc } from "drizzle-orm";
 import { 
   insertMatchAssessmentSchema,
-  insertIncompleteAssessmentSchema
+  insertIncompleteAssessmentSchema,
+  matchAssessments
 } from "@shared/schema/courtiq";
 import { courtiqStorage } from "../services/courtiq-storage";
 import { courtiqCalculator } from "../services/courtiq-calculator-fixed";
@@ -312,7 +315,19 @@ router.get("/performance", async (req, res) => {
     }
     
     // Check match requirements first
-    const matchCount = 0; // TODO: Get actual match count for the user
+    // Get match count from match assessments for the user
+    const assessmentData = await db
+      .select({
+        matchId: matchAssessments.matchId
+      })
+      .from(matchAssessments)
+      .where(eq(matchAssessments.targetId, userId));
+    
+    // Get unique match IDs by using a Set
+    const uniqueMatchIds = new Set(assessmentData.map((a: { matchId: number }) => a.matchId));
+    const matchCount = uniqueMatchIds.size;
+    
+    console.log(`[CourtIQ] User ${userId} has played ${matchCount} unique matches with assessments`);
     
     if (matchCount < 5) {
       return res.json({
