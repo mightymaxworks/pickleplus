@@ -7,6 +7,9 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useUserGlobalRankingPosition } from '@/hooks/use-pcp-global-rankings';
 import { useMatchStatistics } from '@/hooks/use-match-statistics';
 
+// Import default avatar
+import defaultAvatarPath from "@assets/Untitled design (51).png";
+
 interface PlayerPassportProps {
   user: User;
 }
@@ -110,13 +113,25 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
             {/* Player info */}
             <div className="flex items-center mt-2">
               <div className="h-12 w-12 rounded-full bg-white p-0.5 mr-2 shadow">
-                <div className={`h-full w-full rounded-full flex items-center justify-center text-white font-bold text-base ${
-                  isFoundingMember 
-                    ? 'bg-gradient-to-r from-[#BF953F] to-[#FBF5B7] via-[#AA771C]' 
-                    : 'bg-gradient-to-r from-[#2196F3] to-[#03A9F4]'
-                }`}>
-                  {getInitials()}
-                </div>
+                {user.avatarUrl ? (
+                  <div className="h-full w-full rounded-full overflow-hidden">
+                    <img 
+                      src={user.avatarUrl} 
+                      alt={user.username} 
+                      className="h-full w-full object-cover"
+                      key={user.avatarUrl} // Force re-render when URL changes
+                    />
+                  </div>
+                ) : (
+                  <div className="h-full w-full rounded-full overflow-hidden bg-yellow-100">
+                    <img 
+                      src={defaultAvatarPath} 
+                      alt={user.username || "User"} 
+                      className="h-full w-full object-contain"
+                      key="default-avatar"
+                    />
+                  </div>
+                )}
               </div>
               
               <div>
@@ -260,12 +275,13 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
                     />
                   </div>
                 ) : (
-                  <div className={`h-full w-full rounded-full flex items-center justify-center text-white font-bold text-xl ${
-                    isFoundingMember 
-                      ? 'bg-gradient-to-r from-[#BF953F] to-[#FBF5B7] via-[#AA771C]' 
-                      : 'bg-gradient-to-r from-[#2196F3] to-[#03A9F4]'
-                  }`}>
-                    {getInitials()}
+                  <div className="h-full w-full rounded-full overflow-hidden bg-yellow-100">
+                    <img 
+                      src={defaultAvatarPath} 
+                      alt={user.username || "User"} 
+                      className="h-full w-full object-contain"
+                      key="default-avatar"
+                    />
                   </div>
                 )}
               </div>

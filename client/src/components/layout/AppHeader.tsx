@@ -44,6 +44,9 @@ import { useMediaQuery } from '@/hooks/use-media-query';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 
+// Import default avatar image
+import defaultAvatarPath from "@assets/Untitled design (51).png";
+
 interface AppHeaderProps {
   onLogout?: () => void;
   hideSearch?: boolean;
@@ -78,7 +81,10 @@ export function AppHeader({
 
   useEffect(() => {
     if (notificationData && typeof notificationData === 'object' && 'count' in notificationData) {
-      setNotificationCount(notificationData.count);
+      const count = notificationData.count;
+      if (typeof count === 'number') {
+        setNotificationCount(count);
+      }
     }
   }, [notificationData]);
 
@@ -197,8 +203,13 @@ export function AppHeader({
                 />
               </div>
             ) : (
-              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#2196F3] to-[#03A9F4] flex items-center justify-center text-sm font-medium text-white shadow-sm">
-                {user?.username.substring(0, 2).toUpperCase()}
+              <div className="w-8 h-8 rounded-full overflow-hidden shadow-sm bg-yellow-100">
+                <img 
+                  src={defaultAvatarPath} 
+                  alt={user?.username || "User"} 
+                  className="w-full h-full object-contain"
+                  key="default-avatar"
+                />
               </div>
             )}
             {mobileMenuOpen ? (
