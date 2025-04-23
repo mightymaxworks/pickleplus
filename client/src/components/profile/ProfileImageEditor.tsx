@@ -40,17 +40,17 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   const triggerFileSelect = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
-  
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     // Validate file
     if (!file.type.startsWith('image/')) {
       toast({
@@ -60,7 +60,7 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
       });
       return;
     }
-    
+
     // Validate file size (5MB max)
     if (file.size > 5 * 1024 * 1024) {
       toast({
@@ -70,43 +70,45 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
       });
       return;
     }
-    
+
     setSelectedFile(file);
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
     setIsModalOpen(true);
   };
-  
+
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedFile(null);
     setPreviewUrl(null);
   };
-  
+
   const uploadImage = async () => {
     if (!selectedFile) return;
-    
+
     setIsUploading(true);
-    
+
     try {
       const formData = new FormData();
-      formData.append("profileImage", selectedFile);
-      
-      // Send to API - formData needs special handling in fetch
-      const response = await fetch("/api/profile/upload-image", {
+      formData.append("file", selectedFile); // Changed field name to 'file'
+
+      const response = await fetch("/api/user/avatar", { // Changed API endpoint
         method: "POST",
         credentials: "include",
-        body: formData, // Don't set Content-Type header for multipart/form-data
+        body: formData,
       });
-      
-      // Update UI
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/current-user"] });
-      
+
+      if (!response.ok) {
+        throw new Error('Failed to upload avatar');
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/current-user"] });
+
       toast({
         title: "Success",
-        description: "Profile image updated successfully",
+        description: "Profile picture updated successfully",
       });
-      
+
       closeModal();
     } catch (error) {
       toast({
@@ -121,18 +123,18 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
 
   const removeProfileImage = async () => {
     setIsUploading(true);
-    
+
     try {
       await apiRequest("DELETE", "/api/profile/remove-image");
-      
+
       // Update UI
       queryClient.invalidateQueries({ queryKey: ["/api/auth/current-user"] });
-      
+
       toast({
         title: "Success",
         description: "Profile image removed successfully",
       });
-      
+
       closeModal();
     } catch (error) {
       toast({
@@ -169,7 +171,7 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
             </div>
           )}
         </div>
-        
+
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 rounded-full">
           <div className="flex gap-1">
             <Button 
@@ -196,7 +198,7 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
           <DialogHeader>
             <DialogTitle>Update Profile Photo</DialogTitle>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             {previewUrl && (
               <div className="flex justify-center p-2">
@@ -209,7 +211,7 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
                 </div>
               </div>
             )}
-            
+
             <div className="flex flex-col sm:flex-row gap-2">
               <Button 
                 variant="outline" 
@@ -220,7 +222,7 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
                 <Upload className="h-4 w-4 mr-2" />
                 Choose Another
               </Button>
-              
+
               {user.avatarUrl && (
                 <Button 
                   variant="destructive" 
@@ -238,7 +240,7 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
               )}
             </div>
           </div>
-          
+
           <DialogFooter className="flex justify-between sm:justify-end">
             <Button 
               variant="ghost" 
@@ -248,7 +250,7 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
               <X className="h-4 w-4 mr-2" />
               Cancel
             </Button>
-            
+
             {previewUrl && (
               <Button 
                 variant="default" 
