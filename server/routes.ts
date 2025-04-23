@@ -49,6 +49,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   registerUserSearchRoutes(app); // PKL-278651-SRCH-0001-UNIFD - Player search routes
   registerMasteryPathsRoutes(app); // PKL-278651-RATE-0004-MADV - CourtIQ Mastery Paths
   registerHealthCheckRoutes(app); // Simple health check route
+  registerPassportVerificationRoutes(app); // PKL-278651-CONN-0004-PASS-ADMIN - Passport verification routes
   
   // Mount security routes
   app.use('/api/security', securityRoutes);

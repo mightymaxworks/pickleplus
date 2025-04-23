@@ -4,7 +4,7 @@
  */
 
 import express, { Request, Response } from "express";
-import { isAuthenticated, isAdmin } from "../auth";
+import { isAuthenticated, isAdmin } from "../auth"; // Use the proper authentication from auth.ts
 import { storage } from "../storage";
 import { insertPassportVerificationSchema } from "@shared/schema/events";
 import { ZodError } from "zod";
