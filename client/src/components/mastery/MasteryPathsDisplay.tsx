@@ -111,21 +111,30 @@ const MasteryPathsDisplay: React.FC = () => {
     return (
       <Card className="w-full">
         <CardHeader>
-          <CardTitle className="text-lg">CourtIQ™ Mastery</CardTitle>
+          <CardTitle className="text-lg">CourtIQ™ Mastery Journey</CardTitle>
           <CardDescription>
-            {isAuthError ? 'Your session may need to be refreshed' : 'There was an error loading your tier status'}
+            {isAuthError ? 'Let\'s get your data back on track!' : 'Hmm, we hit a little bump in the road'}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className={`p-4 ${isAuthError ? 'bg-blue-50 text-blue-700' : 'bg-red-50 text-red-500'} rounded-md`}>
+          <div className={`p-4 ${isAuthError ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'} rounded-md`}>
             {isAuthError 
-              ? 'Please refresh your browser to see your latest mastery data.' 
-              : 'Unable to load your mastery path information. Please try again later.'}
+              ? 'Your session needs a quick refresh to show your latest mastery achievements. Just one click and we\'ll have you back on the court!' 
+              : 'We couldn\'t load your mastery path information right now. Don\'t worry - your progress is still being tracked behind the scenes!'}
+          </div>
+          <div className="mt-3 text-sm text-gray-500">
+            {isAuthError
+              ? 'This usually happens when you\'ve been inactive for a while.'
+              : 'Our CourtIQ™ system might be calculating new ratings. Check back soon!'}
           </div>
         </CardContent>
         <CardFooter>
-          <Button variant="outline" onClick={() => window.location.reload()}>
-            Refresh
+          <Button 
+            variant={isAuthError ? "default" : "outline"} 
+            onClick={() => window.location.reload()}
+            className="w-full"
+          >
+            {isAuthError ? "Refresh My Data" : "Try Again"}
           </Button>
         </CardFooter>
       </Card>
@@ -137,26 +146,29 @@ const MasteryPathsDisplay: React.FC = () => {
     return (
       <Card className="w-full">
         <CardHeader>
-          <CardTitle className="text-lg">CourtIQ™ Mastery</CardTitle>
-          <CardDescription>Get started on your mastery journey</CardDescription>
+          <CardTitle className="text-lg">CourtIQ™ Mastery Journey</CardTitle>
+          <CardDescription>Your pickleball adventure is just beginning!</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="p-4 bg-blue-50 text-blue-700 rounded-md mb-4">
-            <p className="mb-2 font-semibold">Need more match data</p>
-            <p className="text-sm">Play more matches to unlock your CourtIQ™ Mastery status. This helps us understand your skills and provide personalized insights.</p>
+          <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 rounded-md mb-4">
+            <p className="mb-2 font-semibold">Your CourtIQ™ Profile is Growing</p>
+            <p className="text-sm">We're getting to know your playing style! Record a few more matches and we'll unlock your personalized CourtIQ™ Mastery Path.</p>
           </div>
           <div className="flex justify-between text-sm mb-2">
-            <span>Progress to unlock</span>
+            <span>Profile Development</span>
             <span className="font-medium">40%</span>
           </div>
-          <Progress value={40} className="h-2 mb-4" />
-          <div className="text-sm text-muted-foreground">
-            Complete 3 more matches to see your full mastery status.
+          <Progress value={40} className="h-2 mb-4 bg-blue-100" />
+          <div className="text-sm text-muted-foreground flex items-center gap-2">
+            <span className="inline-block p-1 bg-green-100 text-green-700 rounded-full">
+              <ChevronRight className="h-3 w-3" />
+            </span>
+            <span>Just 3 more matches to unlock your full mastery profile!</span>
           </div>
         </CardContent>
-        <CardFooter className="pt-0 justify-between">
+        <CardFooter className="pt-3 justify-between border-t mt-4">
           <Button variant="outline" size="sm" className="text-xs">
-            Learn About CourtIQ™
+            About CourtIQ™ Mastery
           </Button>
           <Button variant="default" size="sm" className="text-xs">
             Record a Match
