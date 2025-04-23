@@ -335,27 +335,33 @@ const submitProfileForm = async (formData) => {
 
 ## Best Practices Quick Reference
 
-### 1. Image Handling
+### 1. Frontend-Driven Architecture
+✅ Let frontend components control their own navigation flow  
+✅ Use generic data storage/retrieval APIs instead of flow-specific endpoints  
+✅ Have components explicitly manage wizard/flow state  
+✅ Handle errors gracefully at the component level  
+
+### 2. Image Handling
 ✅ Use FileReader for image previews instead of URL.createObjectURL  
 ✅ Use basic type checking (`file.type.startsWith('image/')`)  
 ✅ Keep validation simple and focused  
 
-### 2. Data Persistence
+### 3. Data Persistence
 ✅ Use localStorage for simple persistence needs  
 ✅ Store data in a straightforward format  
 ✅ Use clear naming conventions for storage keys  
 
-### 3. Form Submissions
+### 4. Form Submissions
 ✅ Use a single loading state  
 ✅ Handle errors with direct user feedback  
 ✅ Keep request and response handling simple  
 
-### 4. State Management
+### 5. State Management
 ✅ Minimize the number of state variables  
 ✅ Avoid unnecessary derived state  
 ✅ Use React's built-in state management for component state  
 
-### 5. Component Design
+### 6. Component Design
 ✅ Minimize nesting of DOM elements  
 ✅ Avoid unnecessary wrapper divs  
 ✅ Keep component interfaces focused and minimal  
@@ -364,6 +370,8 @@ const submitProfileForm = async (formData) => {
 
 | Issue | Overcomplicated Approach | Simple Solution |
 |-------|--------------------------|-----------------|
+| Multi-Step Wizard | Backend-driven flow with specialized endpoints | Frontend-driven flow with generic data storage API |
+| User Onboarding | Complex state machine with server validation | Component-managed state with simple data persistence |
 | Image Preview | Complex state tracking with object URLs and timeouts | Use FileReader with a direct onload handler |
 | Data Persistence | Custom caching layer with IndexedDB fallbacks | Simple localStorage get/set operations |
 | Form Validation | Custom validation engine with multiple steps | Use library validation (Zod) with direct error display |
@@ -381,3 +389,127 @@ const submitProfileForm = async (formData) => {
 6. **Document simply** - Brief explanation of what was fixed and how
 
 Remember: The best solution is often the simplest one that completely solves the problem.
+
+## Frontend-Driven Architecture Guidelines
+
+When implementing multi-step flows or wizard-like features:
+
+### 1. Component State Control Pattern
+
+✅ **DO**: Let frontend components manage their own state and navigation
+```jsx
+// Each component decides when to navigate forward
+function RatingStep({ onComplete }) {
+  const [rating, setRating] = useState(4.0);
+  
+  const handleSave = async () => {
+    await saveData({ type: "rating", data: { value: rating } });
+    onComplete(); // Component decides when to proceed
+  };
+  
+  return (/* Component UI */);
+}
+```
+
+❌ **DON'T**: Rely on backend to manage flow state
+```jsx
+// Don't have backend determine next step
+async function submitRating() {
+  const response = await fetch('/api/wizard/submit-rating', { 
+    method: 'POST',
+    body: JSON.stringify({ rating })
+  });
+  const { nextStep } = await response.json();
+  // Don't let server dictate flow
+  navigate(`/onboarding/${nextStep}`);
+}
+```
+
+### 2. Generic Data Storage API Pattern
+
+✅ **DO**: Use a generic API for data persistence
+```jsx
+// Generic data storage endpoint
+const saveUserData = async (key, data) => {
+  const response = await fetch('/api/user-data/store', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ 
+      dataType: key, 
+      data 
+    })
+  });
+  return response.json();
+};
+
+// Usage
+saveUserData('playStylePreferences', { 
+  aggressiveness: 'high',
+  courtPosition: 'front' 
+});
+```
+
+❌ **DON'T**: Create specialized endpoints for each data type
+```jsx
+// Don't create unique endpoints for each step
+const savePlayStyle = async (data) => {
+  return await fetch('/api/onboarding/save-play-style', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+};
+```
+
+### 3. Visible Progress and Feedback Pattern
+
+✅ **DO**: Show users immediate feedback and progress
+```jsx
+function ExperienceStep() {
+  const [showXpToast, setShowXpToast] = useState(false);
+  
+  const handleComplete = async () => {
+    const result = await saveData();
+    // Show XP earned immediately in the UI
+    if (result.xpEarned) {
+      setShowXpToast(true);
+      setTimeout(() => setShowXpToast(false), 3000);
+    }
+    onComplete();
+  };
+  
+  return (
+    <>
+      {/* Component UI */}
+      {showXpToast && (
+        <Toast>+50 XP Earned!</Toast>
+      )}
+    </>
+  );
+}
+```
+
+❌ **DON'T**: Hide progress or make users wait
+```jsx
+// Don't hide progress or make users wait
+async function completeStep() {
+  setIsLoading(true);
+  await fetch('/api/wizard/complete-step');
+  // Don't make users wait without feedback
+  setTimeout(() => {
+    setIsLoading(false);
+    navigate('/next-step');
+  }, 1000);
+}
+```
+
+### 4. Incremental Refactoring Approach
+
+When converting from a backend-driven to frontend-driven approach:
+
+1. Start with one component at a time
+2. Create the generic API endpoint first
+3. Update individual components to use the new pattern
+4. Maintain backward compatibility during the transition
+5. Add clear logging to track the new approach
+
+Our onboarding flow successfully migrated from a complex backend-driven approach to a simpler frontend-driven implementation. This resulted in greater resilience, easier debugging, and faster development iterations.
