@@ -1,9 +1,24 @@
 /**
- * PKL-278651-GAME-0002-TUT
+ * PKL-278651-COURTIQ-0001-GLOBAL
  * Onboarding Module Exports
  * 
  * This file exports all onboarding components for the application.
  */
 
-export { default as FirstTimeUserTutorial } from './FirstTimeUserTutorial';
-export { default as TutorialProvider, useTutorial } from './TutorialProvider';
+import { OnboardingWizard } from './OnboardingWizard';
+import RatingSystemSelection from './RatingSystemSelection';
+import ExperienceSummary from './ExperienceSummary';
+import PlayStyleAssessment from './PlayStyleAssessment';
+import TutorialProvider, { useTutorial, TutorialStep, TutorialFlow } from './TutorialProvider';
+
+export { 
+  OnboardingWizard,
+  RatingSystemSelection,
+  ExperienceSummary,
+  PlayStyleAssessment,
+  TutorialProvider,
+  useTutorial,
+  // Types
+  TutorialStep,
+  TutorialFlow
+};

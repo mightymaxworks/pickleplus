@@ -37,6 +37,7 @@ import {
   LazyBracketDetailsPage,
   LazyLeaderboardPage,
   LazyMasteryPathsPage,
+  LazyOnboardingPage,
   LazyEventDiscoveryPage,
   LazyMyEventsPage,
   LazyAdminDashboardPage,
@@ -195,6 +196,7 @@ export default function App() {
                   <Route path="/login" component={LazyAuthPage} />
                   <Route path="/register" component={Register} />
                   <Route path="/auth" component={LazyAuthPage} />
+                  <Route path="/onboarding" component={LazyOnboardingPage} />
                   <Route path="/about" component={LazyAboutUsPage} />
                   <Route path="/test-routing" component={TestRoutingPage} />
                   <Route path="/landing-test" component={LandingPageTest} />

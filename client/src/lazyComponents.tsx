@@ -48,6 +48,7 @@ export const LazyLeaderboardPage = lazyLoad(() =>
   )
 );
 export const LazyMasteryPathsPage = lazyLoad(() => import('./pages/MasteryPathsPage'));
+export const LazyOnboardingPage = lazyLoad(() => import('./pages/onboarding-page'));
 
 // Event related pages
 // Using modernized components for PicklePass™ UI Enhancement (PKL-278651-CONN-0008-UX-MOD)
