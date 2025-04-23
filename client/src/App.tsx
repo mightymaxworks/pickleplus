@@ -76,6 +76,9 @@ import CommunityEngagementPage from './pages/community/CommunityEngagementPage' 
 import NotificationsPage from './pages/notifications-page'
 import NotificationPreferencesPage from './pages/NotificationPreferencesPage'
 
+// Import referral page (PKL-278651-COMM-0007 - Enhanced Referral System)
+import ReferralPage from './pages/ReferralPage'
+
 // Import custom test login page to help with loading issues
 import TestLoginPage from './pages/test-login-page'
 
@@ -220,6 +223,12 @@ export default function App() {
                     path="/tournaments" 
                     component={LazyTournamentDiscoveryPage} 
                     pageTitle="Tournaments"
+                  />
+                  {/* PKL-278651-COMM-0007 - Enhanced Referral System */}
+                  <ProtectedRouteWithLayout 
+                    path="/referrals" 
+                    component={ReferralPage} 
+                    pageTitle="Referral Program"
                   />
                   <Route path="/admin/tournaments">
                     {(params) => (
