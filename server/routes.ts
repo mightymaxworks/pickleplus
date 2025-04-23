@@ -22,6 +22,7 @@ import { registerPassportVerificationRoutes } from "./routes/passport-verificati
 import securityRoutes from "./routes/security-routes";
 import multiRankingsRoutes from "./routes/multi-rankings-routes"; // PKL-278651-PRANK-0008-FWK52
 import courtiqRoutes from "./routes/courtiq-routes"; // PKL-278651-CRTIQ-0009-FWK52
+import simpleRatingApi from "./routes/simple-rating-api"; // Simple rating API (Framework 5.3)
 import { isAuthenticated as isAuthenticatedMiddleware } from "./middleware/auth";
 import { isAuthenticated } from "./auth"; // Import the proper passport-based authentication
 import { specialRouter } from "./special-routes"; // Import special critical routes
@@ -61,6 +62,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Mount PCP Rankings and CourtIQ API routes - PKL-278651-PRANK-0008-FWK52
   app.use('/api/multi-rankings', multiRankingsRoutes);
   app.use('/api/courtiq', courtiqRoutes);
+  
+  // Mount simple rating API (Framework 5.3 simplified approach)
+  app.use('/api/simple-rating', simpleRatingApi);
   
   // Basic user info endpoint
   app.get("/api/me", isAuthenticated, async (req: Request, res: Response) => {

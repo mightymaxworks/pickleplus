@@ -102,6 +102,7 @@ const MOCK_RATING_SYSTEMS: MockRatingSystem[] = [
  * Create a single shared state object for development
  * This is the simplest approach to ensure data is preserved between API calls
  */
+// Initialize DEV_STATE with a type that can accept various values
 const DEV_STATE = {
   // Onboarding status with all possible fields - centralized to one location
   onboarding: {
@@ -118,10 +119,10 @@ const DEV_STATE = {
     },
     progress_pct: 20,
     preferences: {
-      preferredRatingSystem: null,
-      initialRating: null,
-      experienceYears: null,
-      playStyle: null,
+      preferredRatingSystem: "",
+      initialRating: 0,
+      experienceYears: 0,
+      playStyle: "",
       skillFocus: [] as string[]
     },
     nextStep: 'rating_selection',

@@ -116,13 +116,27 @@ export default function RatingSystemSelection({ onComplete }: RatingSystemSelect
     },
   });
 
-  // Mutation to submit the rating
+  // Mutation to submit the rating using the simplified API
   const submitRatingMutation = useMutation({
     mutationFn: async (data: RatingFormValues) => {
-      const response = await apiRequest('POST', '/api/courtiq/rating/set-preferred', data);
+      // Convert to the simpler format used by our new API
+      const simplePayload = {
+        system: data.ratingSystem,
+        rating: data.ratingValue || (
+          data.selfAssessment === 'beginner' ? 1.0 :
+          data.selfAssessment === 'intermediate' ? 2.5 :
+          data.selfAssessment === 'advanced' ? 4.0 :
+          data.selfAssessment === 'pro' ? 5.5 : 2.0
+        )
+      };
+      
+      console.log('[RatingSystemSelection] Submitting simplified rating data:', simplePayload);
+      
+      // Use our new simple API endpoint
+      const response = await apiRequest('POST', '/api/simple-rating/save', simplePayload);
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to set rating');
+        throw new Error(errorData.error || 'Failed to set rating');
       }
       return response.json();
     },
@@ -133,6 +147,19 @@ export default function RatingSystemSelection({ onComplete }: RatingSystemSelect
       });
       // Log to help with debugging
       console.log('[RatingSystemSelection] Rating saved successfully:', data);
+      
+      // Also submit to the original endpoint just to maintain compatibility
+      try {
+        // We won't await this or handle errors - it's a secondary call
+        apiRequest('POST', '/api/courtiq/onboarding/next-step', {
+          step: 'rating_selection',
+          ratingSystem: form.getValues('ratingSystem'),
+          ratingValue: form.getValues('ratingValue') || form.getValues('selfAssessment')
+        });
+      } catch (err) {
+        console.log('[RatingSystemSelection] Secondary API call failed:', err);
+        // We don't care if this fails
+      }
       
       // Pass the selected rating data to parent component
       if (onComplete) {
