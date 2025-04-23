@@ -128,9 +128,10 @@ app.use((req, res, next) => {
     console.error("Error setting up frontend serving:", error);
   }
 
-  // For Replit deployment, port 5000 must be used for both production and development
-  // Use process.env.PORT if defined or default to 5000
-  const port = process.env.PORT || 5000;
+  // For Cloud Run deployment, port 8080 must be used for production
+  // For local development, default to port 5000
+  // Always use process.env.PORT if provided by the platform
+  const port = process.env.PORT || (process.env.NODE_ENV === 'production' ? 8080 : 5000);
   serverHttp.listen({
     port: Number(port),
     host: "0.0.0.0",
