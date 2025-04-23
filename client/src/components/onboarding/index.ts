@@ -9,7 +9,7 @@ import { OnboardingWizard } from './OnboardingWizard';
 import RatingSystemSelection from './RatingSystemSelection';
 import ExperienceSummary from './ExperienceSummary';
 import PlayStyleAssessment from './PlayStyleAssessment';
-import TutorialProvider, { useTutorial, TutorialStep, TutorialFlow } from './TutorialProvider';
+import TutorialProvider, { useTutorial } from './TutorialProvider';
 
 export { 
   OnboardingWizard,
@@ -17,8 +17,5 @@ export {
   ExperienceSummary,
   PlayStyleAssessment,
   TutorialProvider,
-  useTutorial,
-  // Types
-  TutorialStep,
-  TutorialFlow
+  useTutorial
 };

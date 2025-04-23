@@ -10,7 +10,8 @@ import { useLocation } from 'wouter';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useToast } from '@/hooks/use-toast';
 
-export type TutorialStep = {
+// Types that need to be exported for the TutorialProvider
+type TutorialStep = {
   id: string;
   title: string;
   description: string;
@@ -19,7 +20,7 @@ export type TutorialStep = {
   onComplete?: () => void;
 };
 
-export type TutorialFlow = {
+type TutorialFlow = {
   id: string;
   name: string;
   steps: TutorialStep[];
