@@ -37,7 +37,9 @@ import {
   Settings,
   LogOut,
   Shield,
-  Palette
+  Palette,
+  Share,
+  LifeBuoy
 } from 'lucide-react';
 import { PicklePlusNewLogo } from '@/components/icons/PicklePlusNewLogo';
 import { useMediaQuery } from '@/hooks/use-media-query';
@@ -138,6 +140,8 @@ export function AppHeader({
     // Temporarily disabled until MasteryPathsPage is implemented
     // { label: 'Mastery Paths', icon: <Award size={18} />, path: '/mastery-paths' },
     { label: 'PicklePass™', icon: <Ticket size={18} />, path: '/events' },
+    { label: 'Referrals', icon: <Share size={18} />, path: '/referrals' },
+    { label: 'Onboarding', icon: <LifeBuoy size={18} />, path: '/onboarding' },
     { label: 'Profile', icon: <UserIcon size={18} />, path: '/profile' },
     { label: 'Settings', icon: <Settings size={18} />, path: '/settings' },
     // Removed Icons Test per user request (2025-04-21)
