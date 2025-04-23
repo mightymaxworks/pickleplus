@@ -98,6 +98,7 @@ export default function NotFound() {
             </div>
           </CardContent>
           <CardFooter className="flex gap-3">
+            {/* PKL-278651-ROUT-0013-LOGOT - Fix button actions to prevent accidental logout */}
             <Button 
               className="w-1/2 bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300"
               onClick={() => window.history.back()}
@@ -105,8 +106,12 @@ export default function NotFound() {
               <RefreshCw className="mr-2 h-4 w-4" />
               Previous
             </Button>
-            <Button asChild className="w-1/2 bg-orange-500 hover:bg-orange-600">
-              <Link href="/">Back to Court</Link>
+            <Button 
+              className="w-1/2 bg-orange-500 hover:bg-orange-600 text-white"
+              onClick={() => navigate(getHomeDestination())}
+            >
+              <Home className="mr-2 h-4 w-4" />
+              {user ? 'Dashboard' : 'Home'}
             </Button>
           </CardFooter>
         </Card>
