@@ -11,6 +11,7 @@ import { useState, useEffect } from "react";
  * 
  * PKL-278651-UI-0023-FAB: Framework 5.2 - Record Match FAB visibility
  * Record match FAB should not appear on the landing page (/) or for non-authenticated users
+ * PKL-278651-LAYC-0008-FLOAT - Improved floating action button placement
  * @lastModified 2025-04-23
  */
 export default function QuickMatchFAB() {
@@ -106,22 +107,20 @@ export default function QuickMatchFAB() {
     };
   }, []);
   
+  // PKL-278651-LAYC-0008-FLOAT - New circular floating action button design
   return (
-    <>
-      {/* PKL-278651-LAYC-0008-FLOAT - Floating action button in bottom right corner */}
-      <div 
-        className={`fixed z-50 shadow-xl`}
-        style={{ 
-          bottom: `${position.bottom + 20}px`,
-          right: '20px',
-          transition: 'all 0.3s ease'
-        }}
-      >
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="rounded-full shadow-lg"
-        >
+    <div 
+      className="fixed z-50"
+      style={{ 
+        bottom: `${position.bottom + 20}px`,
+        right: '20px',
+        transition: 'all 0.3s ease'
+      }}
+    >
+      <div className="group relative">
+        {/* Button container with hover effects */}
+        <div className="rounded-full shadow-lg transition-all duration-200 hover:shadow-xl 
+                       transform hover:scale-105 active:scale-95">
           {/* Circular Record Match Button */}
           <Button 
             onClick={handleRecordMatch}
@@ -131,13 +130,16 @@ export default function QuickMatchFAB() {
             <PlusCircle className="h-8 w-8" />
             <span className="sr-only">Record Match</span>
           </Button>
-        </motion.div>
+        </div>
         
-        {/* Tooltip label that appears on hover */}
-        <div className="absolute bottom-full right-0 mb-2 shadow-md rounded-md bg-white dark:bg-gray-800 text-sm font-medium px-3 py-1.5 border border-gray-200 dark:border-gray-700 hidden md:block">
+        {/* Tooltip that appears on hover */}
+        <div className="absolute bottom-full right-0 mb-2 opacity-0 group-hover:opacity-100
+                     shadow-md rounded-md bg-white dark:bg-gray-800 text-sm font-medium 
+                     px-3 py-1.5 border border-gray-200 dark:border-gray-700 
+                     transition-opacity duration-200 hidden md:block">
           Record Match
         </div>
       </div>
-    </>
+    </div>
   );
 }
