@@ -3,6 +3,8 @@
  * 
  * Provides data operations for match assessment and skill ratings
  * following Framework 5.3 principles for frontend-first data handling.
+ * 
+ * Updated for PKL-278651-RATINGS-0001-COURTIQ - Multi-dimensional Rating System
  */
 
 import { BaseEntity, getStorageService, IStorageService } from './storage-service';
@@ -10,6 +12,11 @@ import { queryClient } from '../queryClient';
 import { apiRequest } from '../queryClient';
 import { toast } from '@/hooks/use-toast';
 import featureFlags from '../featureFlags';
+import { courtiqService } from './courtiq-service';
+import { 
+  type MatchAssessment as CourtIQMatchAssessment, 
+  type InsertMatchAssessment as InsertCourtIQMatchAssessment
+} from '@shared/schema/courtiq';
 
 // Assessment types
 export interface SkillDimension {
@@ -231,28 +238,46 @@ export class AssessmentService {
   /**
    * Sync an assessment with the server
    * Made public so it can be used by SyncManager
+   * Updated for CourtIQ™ integration
    */
   public async syncAssessmentWithServer(assessment: MatchAssessment): Promise<void> {
     try {
       console.log('AssessmentService: Syncing assessment with server:', assessment);
       
-      // Try to send to server
-      const response = await apiRequest('POST', '/api/match-assessment/record', assessment);
-      
-      if (!response.ok) {
-        console.error('AssessmentService: Server sync failed with status:', response.status);
-        // Store this assessment for future sync attempts
-        this.storeFailedSync('match-assessments', assessment.id);
-        return;
-      }
-      
-      // Get the server's version of the assessment
-      const serverAssessment = await response.json();
-      console.log('AssessmentService: Server sync successful, received:', serverAssessment);
-      
-      // Update local version with server data
-      if (serverAssessment && serverAssessment.id) {
-        await this.assessmentStorage.update(assessment.id, serverAssessment);
+      // Try to send to legacy server endpoint first
+      try {
+        const response = await apiRequest('POST', '/api/match-assessment/record', assessment);
+        
+        if (!response.ok) {
+          throw new Error(`Server sync failed with status: ${response.status}`);
+        }
+        
+        // Get the server's version of the assessment
+        const serverAssessment = await response.json();
+        console.log('AssessmentService: Legacy server sync successful, received:', serverAssessment);
+        
+        // Update local version with server data
+        if (serverAssessment && serverAssessment.id) {
+          await this.assessmentStorage.update(assessment.id, serverAssessment);
+        }
+      } catch (legacyError) {
+        console.warn('AssessmentService: Legacy sync failed, trying CourtIQ™ format:', legacyError);
+        
+        // Convert to CourtIQ format and try new endpoint
+        try {
+          // Convert the assessment to the CourtIQ format
+          const courtiqAssessment = this.convertToCourtIQFormat(assessment);
+          
+          // Send to CourtIQ™ API
+          await courtiqService.saveMatchAssessment(courtiqAssessment);
+          
+          console.log('AssessmentService: CourtIQ™ sync successful');
+        } catch (courtiqError) {
+          console.error('AssessmentService: CourtIQ™ sync failed:', courtiqError);
+          // Store this assessment for future sync attempts
+          this.storeFailedSync('match-assessments', assessment.id);
+          throw courtiqError;
+        }
       }
       
       // Invalidate related queries
@@ -264,6 +289,91 @@ export class AssessmentService {
       this.storeFailedSync('match-assessments', assessment.id);
       throw error;
     }
+  }
+  
+  /**
+   * Convert legacy assessment format to CourtIQ™ format
+   * @param assessment Legacy assessment data
+   * @returns CourtIQ™ format assessment data
+   */
+  private convertToCourtIQFormat(assessment: MatchAssessment): InsertCourtIQMatchAssessment {
+    // Extract ratings by dimension code
+    const getTechRating = () => {
+      const techRating = assessment.ratings.find(r => r.dimensionCode === 'TECH');
+      return techRating ? techRating.rating : 3; // Default to middle rating if not found
+    };
+    
+    const getTactRating = () => {
+      const tactRating = assessment.ratings.find(r => r.dimensionCode === 'TACT');
+      return tactRating ? tactRating.rating : 3;
+    };
+    
+    const getPhysRating = () => {
+      const physRating = assessment.ratings.find(r => r.dimensionCode === 'PHYS');
+      return physRating ? physRating.rating : 3;
+    };
+    
+    const getMentRating = () => {
+      const mentRating = assessment.ratings.find(r => r.dimensionCode === 'MENT');
+      return mentRating ? mentRating.rating : 3;
+    };
+    
+    const getConsRating = () => {
+      const consRating = assessment.ratings.find(r => r.dimensionCode === 'CONS');
+      return consRating ? consRating.rating : 3;
+    };
+    
+    // Get notes from any dimension
+    const getNotes = () => {
+      for (const rating of assessment.ratings) {
+        if (rating.notes) {
+          return rating.notes;
+        }
+      }
+      
+      // Check contextual factors notes
+      if (assessment.contextualFactors?.notes) {
+        return assessment.contextualFactors.notes;
+      }
+      
+      return undefined;
+    };
+    
+    // Convert the ID to a number if it's a string
+    const matchId = typeof assessment.matchId === 'string' 
+      ? parseInt(assessment.matchId) 
+      : assessment.matchId;
+    
+    // Map to CourtIQ™ format
+    return {
+      matchId,
+      assessorId: assessment.assessorId,
+      targetId: assessment.targetId,
+      technicalRating: this.convertRatingScale(getTechRating()),
+      tacticalRating: this.convertRatingScale(getTactRating()),
+      physicalRating: this.convertRatingScale(getPhysRating()),
+      mentalRating: this.convertRatingScale(getMentRating()),
+      consistencyRating: this.convertRatingScale(getConsRating()),
+      assessmentType: 'self', // Default type
+      notes: getNotes(),
+      matchContext: assessment.contextualFactors ? {
+        surface: assessment.contextualFactors.surface,
+        weather: assessment.contextualFactors.weather,
+        fatigue: assessment.contextualFactors.fatigue,
+        pressure: assessment.contextualFactors.pressure
+      } : undefined,
+      isComplete: true
+    };
+  }
+  
+  /**
+   * Convert rating from 1-10 scale to 1-5 scale for CourtIQ™
+   * @param rating Rating on 1-10 scale
+   * @returns Rating on 1-5 scale
+   */
+  private convertRatingScale(rating: number): number {
+    // Convert from 1-10 scale to 1-5 scale
+    return Math.max(1, Math.min(5, Math.ceil(rating / 2)));
   }
   
   /**
