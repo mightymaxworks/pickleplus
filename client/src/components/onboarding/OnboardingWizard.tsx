@@ -457,6 +457,10 @@ export function OnboardingWizard({
 
   // Check if onboarding is already completed
   if (status?.completed) {
+    console.log("[OnboardingWizard] Onboarding status is completed, rendering OnboardingComplete component", {
+      xpEarned: status.xpEarned,
+      completedAt: status.completedAt
+    });
     return <OnboardingComplete xpEarned={status.xpEarned} className={className} />;
   }
 
