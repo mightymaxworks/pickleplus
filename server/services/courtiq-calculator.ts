@@ -91,7 +91,7 @@ class CourtIQCalculationEngine {
    */
   private calculateWeightedAverage(
     assessments: MatchAssessment[],
-    weights: Record<AssessmentType, number>,
+    weights: Record<AssessmentType, number | null>,
     dimension: RatingDimension
   ): number {
     if (assessments.length === 0) {

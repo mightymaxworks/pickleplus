@@ -302,6 +302,7 @@ router.get("/recommendations/:userId", async (req, res) => {
 // Get performance data for the performance chart
 router.get("/performance", async (req, res) => {
   try {
+    console.log("[API][CRITICAL][CourtIQ] Direct handler called, query:", req.query);
     const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
     const format = req.query.format as string;
     const division = req.query.division as string;
@@ -310,25 +311,50 @@ router.get("/performance", async (req, res) => {
       return res.status(400).json({ error: "Invalid or missing user ID" });
     }
     
+    // Check match requirements first
+    const matchCount = 0; // TODO: Get actual match count for the user
+    
+    if (matchCount < 5) {
+      return res.json({
+        status: "insufficient_data",
+        message: "Not enough match data to generate performance metrics",
+        requiredMatches: 5,
+        currentMatches: matchCount,
+        guidance: {
+          title: "Start tracking your performance",
+          description: "Play at least 5 matches to unlock your CourtIQ™ Performance metrics",
+          primaryAction: "Record a match",
+          primaryActionPath: "/record-match"
+        }
+      });
+    }
+    
     // Get user ratings
     const ratings = await courtiqStorage.getUserRatings(userId);
     
-    if (!ratings || ratings.assessmentCount < 3) {
+    if (!ratings || (ratings.assessmentCount !== null && ratings.assessmentCount < 3)) {
       return res.json({
         status: "insufficient_data",
         message: "Not enough assessments to generate performance chart.",
-        data: null
+        requiredAssessments: 3,
+        currentAssessments: ratings?.assessmentCount || 0,
+        guidance: {
+          title: "Get assessed to view your ratings",
+          description: "Request assessments from coaches or peers to unlock your CourtIQ™ Performance metrics",
+          primaryAction: "Request Assessment",
+          primaryActionPath: "/request-assessment"
+        }
       });
     }
     
     // Extract the radar chart data
     const radarData = {
-      technical: ratings.technicalRating,
-      tactical: ratings.tacticalRating,
-      physical: ratings.physicalRating,
-      mental: ratings.mentalRating,
-      consistency: ratings.consistencyRating,
-      overall: ratings.overallRating
+      technical: ratings.technicalRating || 0,
+      tactical: ratings.tacticalRating || 0,
+      physical: ratings.physicalRating || 0,
+      mental: ratings.mentalRating || 0,
+      consistency: ratings.consistencyRating || 0,
+      overall: ratings.overallRating || 0
     };
     
     // Get top players data for comparison (if format and division specified)
@@ -361,8 +387,8 @@ router.get("/performance", async (req, res) => {
       data: {
         radarData,
         comparisonData,
-        confidenceScore: ratings.confidenceScore,
-        assessmentCount: ratings.assessmentCount,
+        confidenceScore: ratings.confidenceScore || 0,
+        assessmentCount: ratings.assessmentCount || 0,
         priorityImprovement: recommendations.priorityArea,
         recommendationSummary: recommendations.overallAdvice
       }
