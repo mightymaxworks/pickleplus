@@ -94,6 +94,21 @@ const ratingFormSchema = z.object({
     z.string().min(1, 'Please enter your rating').optional(),
   ]),
   selfAssessment: z.string().optional(),
+}).refine(data => {
+  // If rating system is 'self', require selfAssessment to be set
+  if (data.ratingSystem === 'self') {
+    return !!data.selfAssessment;
+  }
+  
+  // For all other rating systems, require ratingValue to be set
+  if (data.ratingSystem && data.ratingSystem !== 'self') {
+    return data.ratingValue !== undefined;
+  }
+  
+  return true;
+}, {
+  message: "Please complete your rating information",
+  path: ["ratingValue"]
 });
 
 type RatingFormValues = z.infer<typeof ratingFormSchema>;
@@ -107,18 +122,35 @@ export default function RatingSystemSelection({ onComplete }: RatingSystemSelect
   const { toast } = useToast();
   
   // Query to get user data
-  const { data: userData, isLoading } = useQuery({
+  const { data: userData, isLoading, isError } = useQuery({
     queryKey: ['/api/user-data/get'],
     queryFn: async () => {
-      const response = await fetch('/api/user-data/get', { 
-        credentials: 'include' 
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch user data');
+      try {
+        console.log('[RatingSystemSelection] Fetching user data');
+        const response = await fetch('/api/user-data/get', { 
+          credentials: 'include' 
+        });
+        
+        if (!response.ok) {
+          console.error('[RatingSystemSelection] Error fetching user data:', response.status);
+          if (response.status === 404) {
+            // If the data doesn't exist yet, return an empty data structure
+            return { success: true, data: { ratingData: { system: '', rating: 0 } } };
+          }
+          throw new Error('Failed to fetch user data');
+        }
+        
+        const data = await response.json();
+        console.log('[RatingSystemSelection] User data received:', data);
+        return data;
+      } catch (error) {
+        console.error('[RatingSystemSelection] Error in data fetch:', error);
+        // Return empty data structure on error to avoid breaking the component
+        return { success: true, data: { ratingData: { system: '', rating: 0 } } };
       }
-      return response.json();
     },
     staleTime: 30000, // Data stays fresh for 30 seconds
+    retry: 1, // Only retry once
   });
 
   // Set up form with default values
