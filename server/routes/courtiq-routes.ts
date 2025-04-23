@@ -98,31 +98,35 @@ const MOCK_RATING_SYSTEMS: MockRatingSystem[] = [
 ];
 
 /**
- * Mock onboarding status data for development mode
- * This will be used when the devAuthMiddleware is active
+ * SIMPLIFIED APPROACH: Framework 5.3
+ * Create a single shared state object for development
+ * This is the simplest approach to ensure data is preserved between API calls
  */
-const mockOnboardingStatus = {
-  userId: 1,
-  started: true,
-  completed: false,
-  completedAt: null,
-  progress: {
-    profileCompleted: true,
-    ratingSystemSelected: false,
-    ratingProvided: false,
-    experienceSummaryCompleted: false,
-    playStyleAssessed: false
-  },
-  progress_pct: 20,
-  preferences: {
-    preferredRatingSystem: null,
-    initialRating: null,
-    experienceYears: null,
-    playStyle: null,
-    skillFocus: [] as string[]
-  },
-  nextStep: 'rating_selection',
-  xpEarned: 0
+const DEV_STATE = {
+  // Onboarding status with all possible fields - centralized to one location
+  onboarding: {
+    userId: 1,
+    started: true,
+    completed: false,
+    completedAt: null,
+    progress: {
+      profileCompleted: true,
+      ratingSystemSelected: false,
+      ratingProvided: false,
+      experienceSummaryCompleted: false,
+      playStyleAssessed: false
+    },
+    progress_pct: 20,
+    preferences: {
+      preferredRatingSystem: null,
+      initialRating: null,
+      experienceYears: null,
+      playStyle: null,
+      skillFocus: [] as string[]
+    },
+    nextStep: 'rating_selection',
+    xpEarned: 0
+  }
 };
 
 /**
