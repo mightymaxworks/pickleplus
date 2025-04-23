@@ -16,6 +16,7 @@ import { registerBounceAutomationRoutes } from "./routes/admin-bounce-automation
 import { registerUserSearchRoutes } from "./routes/user-search-routes"; // PKL-278651-SRCH-0001-UNIFD
 import { registerMasteryPathsRoutes } from "./modules/mastery/masteryPathsRoutes"; // PKL-278651-RATE-0004-MADV
 import { registerHealthCheckRoutes } from "./routes/health-check-routes"; // Simple health check routes
+import { registerPassportVerificationRoutes } from "./routes/passport-verification-routes"; // PKL-278651-CONN-0004-PASS-ADMIN
 import securityRoutes from "./routes/security-routes";
 import multiRankingsRoutes from "./routes/multi-rankings-routes"; // PKL-278651-PRANK-0008-FWK52
 import courtiqRoutes from "./routes/courtiq-routes"; // PKL-278651-CRTIQ-0009-FWK52
