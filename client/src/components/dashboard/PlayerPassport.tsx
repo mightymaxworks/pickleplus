@@ -32,46 +32,88 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
   const userLevel = user.level || 1;
   
   /**
-   * PKL-278651-XP-0005-PASSPORT - XP Percentage Calculation Fix
-   * Calculate the correct XP percentage based on current XP and level thresholds
-   * This replaces the incorrect calculation that divided userXp by 10
+   * PKL-278651-XP-0006-EXTEND - Extended XP Percentage Calculation
+   * Calculate the correct XP percentage based on our new 100-level system
+   * This matches the extended calculation in DashboardContent.tsx
    */
   const calculateXpPercentage = (xp: number, level: number) => {
     // If no XP, return 0
     if (!xp) return 0;
     
-    // Get level thresholds based on the XP levels defined in the server
-    const getThresholdForLevel = (lvl: number) => {
-      // Define XP thresholds based on the system in xpSystem.ts
-      const levels: { [key: number]: { min: number, max: number } } = {
-        1: { min: 0, max: 99 },
-        2: { min: 100, max: 249 },
-        3: { min: 250, max: 499 },
-        4: { min: 500, max: 749 },
-        5: { min: 750, max: 999 },
-        10: { min: 1000, max: 1999 },
-        15: { min: 2000, max: 3999 }
+    /**
+     * Get XP required for a specific level
+     * This function exactly mirrors the one in DashboardContent.tsx
+     * to ensure consistent calculations across the application
+     */
+    const getXpRequiredForLevel = (level: number): number => {
+      // Define explicit thresholds for early levels (for backward compatibility)
+      const earlyLevels: { [key: number]: number } = {
+        1: 0,
+        2: 100,
+        3: 250,
+        4: 500,
+        5: 750,
+        10: 1000,
+        15: 2000,
+        20: 4000
       };
       
-      // If we don't have the exact level, use defaults
-      if (!levels[lvl]) {
-        // For level > 15, use a consistent 1000 XP per level progression
-        return { 
-          min: (lvl - 1) * 1000, 
-          max: lvl * 1000 - 1 
-        };
+      if (level in earlyLevels) {
+        return earlyLevels[level];
       }
       
-      return levels[lvl];
+      // For levels 1-20, use the existing progression if defined
+      if (level <= 20) {
+        // Linear interpolation between defined points
+        const lowerBound = 
+          Object.keys(earlyLevels)
+            .map(Number)
+            .filter(l => l <= level)
+            .sort((a, b) => b - a)[0] || 1;
+            
+        const upperBound = 
+          Object.keys(earlyLevels)
+            .map(Number)
+            .filter(l => l > level)
+            .sort((a, b) => a - b)[0] || 20;
+        
+        const lowerXP = earlyLevels[lowerBound];
+        const upperXP = earlyLevels[upperBound];
+        
+        // Linear interpolation
+        return Math.round(
+          lowerXP + (upperXP - lowerXP) * (level - lowerBound) / (upperBound - lowerBound)
+        );
+      }
+      
+      // For levels 21-40, moderate growth: 1000 + 100 * (level - 20)^2
+      if (level <= 40) {
+        return 4000 + 100 * Math.pow(level - 20, 2);
+      }
+      
+      // For levels 41-60, faster growth: quadratic formula with steeper coefficient
+      if (level <= 60) {
+        return 4000 + 100 * Math.pow(20, 2) + 200 * Math.pow(level - 40, 2);
+      }
+      
+      // For levels 61-80, even faster growth
+      if (level <= 80) {
+        const base = 4000 + 100 * Math.pow(20, 2) + 200 * Math.pow(20, 2);
+        return base + 300 * Math.pow(level - 60, 2);
+      }
+      
+      // For levels 81-100, most challenging growth
+      const base = 4000 + 100 * Math.pow(20, 2) + 200 * Math.pow(20, 2) + 300 * Math.pow(20, 2);
+      return base + 500 * Math.pow(level - 80, 2);
     };
     
     // Get current level thresholds
-    const currentLevelData = getThresholdForLevel(level);
-    const nextLevelData = getThresholdForLevel(level + 1);
+    const currentLevelXp = getXpRequiredForLevel(level);
+    const nextLevelXp = getXpRequiredForLevel(level + 1);
     
     // Calculate xp progress percentage
-    const totalForLevel = nextLevelData.min - currentLevelData.min;
-    const currentProgress = xp - currentLevelData.min;
+    const totalForLevel = nextLevelXp - currentLevelXp;
+    const currentProgress = xp - currentLevelXp;
     
     return Math.min(Math.max(0, Math.floor((currentProgress / totalForLevel) * 100)), 100);
   };
