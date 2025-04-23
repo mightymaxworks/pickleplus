@@ -92,7 +92,9 @@ export class OnboardingService {
         serverEventBus.publish(OnboardingEvents.STARTED, { userId });
       }
 
-      return this.formatOnboardingStatus(progress);
+      // Convert to OnboardingProgress if from SQL result
+      const formattedProgress = this.convertToOnboardingProgress(progress);
+      return this.formatOnboardingStatus(formattedProgress);
     } catch (error) {
       console.error("Error starting onboarding:", error);
       throw error;
@@ -189,7 +191,7 @@ export class OnboardingService {
       const progressResult = await db.execute(
         sql`SELECT * FROM onboarding_progress WHERE user_id = ${userId} LIMIT 1`
       );
-      const progress = progressResult[0];
+      const progress = (progressResult as unknown as SqlResult)[0] as SqlResultRow;
 
       if (!progress) {
         throw new Error(`No onboarding progress found for user ${userId}`);
@@ -290,7 +292,7 @@ export class OnboardingService {
       const updatedProgressResult = await db.execute(
         sql`SELECT * FROM onboarding_progress WHERE user_id = ${userId} LIMIT 1`
       );
-      const updatedProgress = updatedProgressResult[0];
+      const updatedProgress = (updatedProgressResult as unknown as SqlResult)[0] as SqlResultRow;
       
       return this.formatOnboardingStatus(updatedProgress!);
     } catch (error) {
@@ -307,7 +309,7 @@ export class OnboardingService {
       const progressResult = await db.execute(
         sql`SELECT completed_at FROM onboarding_progress WHERE user_id = ${userId} LIMIT 1`
       );
-      const progress = progressResult[0];
+      const progress = (progressResult as unknown as SqlResult)[0] as SqlResultRow;
       
       return progress?.completed_at != null;
     } catch (error) {
@@ -324,7 +326,7 @@ export class OnboardingService {
       const progressResult = await db.execute(
         sql`SELECT * FROM onboarding_progress WHERE user_id = ${userId} LIMIT 1`
       );
-      const progress = progressResult[0];
+      const progress = (progressResult as unknown as SqlResult)[0] as SqlResultRow;
       
       if (!progress) {
         return null;
@@ -338,53 +340,91 @@ export class OnboardingService {
   }
 
   /**
+   * Convert a SQL record to OnboardingProgress type
+   */
+  private convertToOnboardingProgress(record: SqlResultRow | OnboardingProgress): OnboardingProgress {
+    // If it's already an OnboardingProgress type, return it directly
+    if ('id' in record && typeof record.id === 'number') {
+      return record as OnboardingProgress;
+    }
+    
+    // Convert from SQL row to OnboardingProgress
+    return {
+      id: record.id as number,
+      userId: record.user_id as number,
+      startedAt: record.started_at as Date | null,
+      completedAt: record.completed_at as Date | null,
+      currentStep: record.current_step as string | null,
+      lastStepCompleted: record.last_step_completed as string | null,
+      lastStepCompletedAt: record.last_step_completed_at as Date | null,
+      profileCompleted: Boolean(record.profile_completed),
+      ratingSystemSelected: Boolean(record.rating_system_selected),
+      ratingProvided: Boolean(record.rating_provided),
+      experienceSummaryCompleted: Boolean(record.experience_summary_completed),
+      equipmentPreferencesSet: Boolean(record.equipment_preferences_set),
+      playStyleAssessed: Boolean(record.play_style_assessed),
+      initialAssessmentCompleted: Boolean(record.initial_assessment_completed),
+      tourCompleted: Boolean(record.tour_completed),
+      preferredDivision: record.preferred_division as string | null,
+      preferredFormat: record.preferred_format as string | null,
+      preferredRatingSystem: record.preferred_rating_system as string | null,
+      experienceYears: record.experience_years as number | null,
+      additionalData: record.additional_data as Record<string, any> | null,
+      deviceInfo: record.device_info as string | null,
+      xpEarned: record.xp_earned as number | null || 0
+    };
+  }
+  
+  /**
    * Format onboarding status for API response
    */
-  private formatOnboardingStatus(progress: OnboardingProgress): OnboardingStatus {
+  private formatOnboardingStatus(progress: SqlResultRow | OnboardingProgress): OnboardingStatus {
+    // Convert to OnboardingProgress if it's a SQL record
+    const formattedProgress = this.convertToOnboardingProgress(progress);
     // Calculate progress percentage
     const totalSteps = 8; // Total number of steps in onboarding
     const completedSteps = [
-      progress.profileCompleted,
-      progress.ratingSystemSelected,
-      progress.ratingProvided,
-      progress.experienceSummaryCompleted,
-      progress.equipmentPreferencesSet,
-      progress.playStyleAssessed,
-      progress.initialAssessmentCompleted,
-      progress.tourCompleted
+      formattedProgress.profileCompleted,
+      formattedProgress.ratingSystemSelected,
+      formattedProgress.ratingProvided,
+      formattedProgress.experienceSummaryCompleted,
+      formattedProgress.equipmentPreferencesSet,
+      formattedProgress.playStyleAssessed,
+      formattedProgress.initialAssessmentCompleted,
+      formattedProgress.tourCompleted
     ].filter(Boolean).length;
     
     const progressPct = Math.round((completedSteps / totalSteps) * 100);
     
     // Determine next step
-    let nextStep = progress.currentStep || 'welcome';
-    if (progress.completedAt) {
+    let nextStep = formattedProgress.currentStep || 'welcome';
+    if (formattedProgress.completedAt) {
       nextStep = 'completed';
     }
     
     return {
-      userId: progress.userId,
+      userId: formattedProgress.userId,
       progress: {
-        profileCompleted: progress.profileCompleted || false,
-        ratingSystemSelected: progress.ratingSystemSelected || false,
-        ratingProvided: progress.ratingProvided || false,
-        experienceSummaryCompleted: progress.experienceSummaryCompleted || false,
-        equipmentPreferencesSet: progress.equipmentPreferencesSet || false,
-        playStyleAssessed: progress.playStyleAssessed || false,
-        initialAssessmentCompleted: progress.initialAssessmentCompleted || false,
-        tourCompleted: progress.tourCompleted || false
+        profileCompleted: formattedProgress.profileCompleted || false,
+        ratingSystemSelected: formattedProgress.ratingSystemSelected || false,
+        ratingProvided: formattedProgress.ratingProvided || false,
+        experienceSummaryCompleted: formattedProgress.experienceSummaryCompleted || false,
+        equipmentPreferencesSet: formattedProgress.equipmentPreferencesSet || false,
+        playStyleAssessed: formattedProgress.playStyleAssessed || false,
+        initialAssessmentCompleted: formattedProgress.initialAssessmentCompleted || false,
+        tourCompleted: formattedProgress.tourCompleted || false
       },
       preferences: {
-        preferredDivision: progress.preferredDivision,
-        preferredFormat: progress.preferredFormat,
-        preferredRatingSystem: progress.preferredRatingSystem,
-        experienceYears: progress.experienceYears
+        preferredDivision: formattedProgress.preferredDivision ?? undefined,
+        preferredFormat: formattedProgress.preferredFormat ?? undefined,
+        preferredRatingSystem: formattedProgress.preferredRatingSystem ?? undefined,
+        experienceYears: formattedProgress.experienceYears ?? undefined
       },
       progress_pct: progressPct,
       nextStep,
-      completed: progress.completedAt != null,
-      xpEarned: progress.xpEarned || 0,
-      completedAt: progress.completedAt
+      completed: formattedProgress.completedAt != null,
+      xpEarned: formattedProgress.xpEarned || 0,
+      completedAt: formattedProgress.completedAt ?? undefined
     };
   }
 }
