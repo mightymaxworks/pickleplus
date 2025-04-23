@@ -53,8 +53,9 @@ export default function CourtIQStatsOverview({ userId, enhancedPerformanceData: 
   // Calculate the normalized values for radar chart (0-100)
   const normalizeValue = (value: number, max = 1500) => Math.min(100, Math.max(0, (value / max) * 100));
   
-  const navigateToTraining = () => {
-    navigate("/training");
+  const navigateToDetailedAnalysis = () => {
+    // Navigate to the detailed CourtIQ analysis page with the current user's ID
+    navigate(`/courtiq/analysis/${userId || 1}`);
   };
   
   // Function to toggle the source breakdown view
@@ -392,7 +393,7 @@ export default function CourtIQStatsOverview({ userId, enhancedPerformanceData: 
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={navigateToTraining}
+                onClick={navigateToDetailedAnalysis}
                 className="w-full text-xs"
               >
                 View Detailed Analysis
