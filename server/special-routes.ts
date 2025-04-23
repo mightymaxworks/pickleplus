@@ -88,7 +88,72 @@ specialRouter.get('/courtiq/performance', async (req: Request, res: Response) =>
     console.log("[API][CRITICAL][CourtIQ] Returning real user rating data");
     
     // Get tiers data to determine user's tier
-    const tiers = await db.select().from(await import('../shared/schema/courtiq').then(m => m.courtiqTiers));
+    // Use a more direct approach to avoid import issues
+    const tiers = [
+      {
+        id: 1,
+        name: "Elite",
+        minRating: 4.5,
+        maxRating: 5.0,
+        colorCode: "#7C3AED" // Deep purple
+      },
+      {
+        id: 2,
+        name: "Expert",
+        minRating: 4.0,
+        maxRating: 4.49,
+        colorCode: "#8B5CF6" // Medium purple
+      },
+      {
+        id: 3,
+        name: "Advanced",
+        minRating: 3.5,
+        maxRating: 3.99,
+        colorCode: "#A78BFA" // Light purple
+      },
+      {
+        id: 4,
+        name: "Competitive",
+        minRating: 3.0,
+        maxRating: 3.49,
+        colorCode: "#C4B5FD" // Very light purple
+      },
+      {
+        id: 5,
+        name: "Intermediate",
+        minRating: 2.5,
+        maxRating: 2.99,
+        colorCode: "#4F46E5" // Indigo
+      },
+      {
+        id: 6, 
+        name: "Developing",
+        minRating: 2.0,
+        maxRating: 2.49,
+        colorCode: "#818CF8" // Light indigo
+      },
+      {
+        id: 7,
+        name: "Recreational",
+        minRating: 1.5,
+        maxRating: 1.99,
+        colorCode: "#10B981" // Green
+      },
+      {
+        id: 8,
+        name: "Beginner",
+        minRating: 1.0,
+        maxRating: 1.49,
+        colorCode: "#34D399" // Light green
+      },
+      {
+        id: 9,
+        name: "Novice",
+        minRating: 0,
+        maxRating: 0.99,
+        colorCode: "#6EE7B7" // Very light green
+      }
+    ];
     
     // Find current tier
     const currentTier = tiers.find(
@@ -100,7 +165,7 @@ specialRouter.get('/courtiq/performance', async (req: Request, res: Response) =>
     
     // Generate the response
     const response = {
-      overallRating: userRating.overallRating,
+      overallRating: Math.round(userRating.overallRating * 250 + 750), // Convert 1-5 scale to 1000-2000 scale
       tierName: currentTier.name,
       tierColorCode: currentTier.colorCode,
       
