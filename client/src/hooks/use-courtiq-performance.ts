@@ -110,105 +110,17 @@ export function useCourtIQPerformance(options: CourtIQPerformanceOptions = {}) {
   
   // Always include source-specific ratings for visualization
   queryParams.append('includeSourceTypes', 'true');
-  
-  // Request demo data when in development mode
-  if (import.meta.env.DEV) {
-    queryParams.append('includeDemoData', 'true');
-  }
 
   return useQuery<CourtIQPerformanceData>({
     queryKey: ['/api/courtiq/performance', { userId, format, division }],
     queryFn: async () => {
-      // If the direct endpoint isn't available yet, we'll use the rating data
-      // and multi-dimensional ranking data to construct a compatible response
-      
-      // First try the direct endpoint
-      try {
-        const res = await fetch(`/api/courtiq/performance?${queryParams}`);
-        if (res.ok) {
-          return res.json();
-        }
-      } catch (error) {
-        console.log('Direct CourtIQ performance endpoint not available, using fallback');
-      }
-      
-      // Fallback to using the rating and multi-dimensional data
-      // Fetch rating data
-      const ratingRes = await fetch(`/api/user/rating-detail?userId=${userId}&format=${format}&division=${division}`);
-      if (!ratingRes.ok) {
+      // Directly fetch from the CourtIQ performance API
+      const res = await fetch(`/api/courtiq/performance?${queryParams}`);
+      if (!res.ok) {
         throw new Error('Failed to fetch CourtIQ performance data');
       }
       
-      const ratingData = await ratingRes.json();
-      
-      // Fetch tier data
-      const tiersRes = await fetch('/api/courtiq/tiers');
-      const tiers = await tiersRes.json();
-      
-      // Find current tier
-      const currentTier = tiers.find(
-        (tier: any) => 
-          ratingData.rating >= tier.minRating && 
-          ratingData.rating <= tier.maxRating
-      ) || {
-        name: "Unranked",
-        colorCode: "#9E9E9E",
-      };
-      
-      // Find next tier
-      const nextTierIndex = tiers.findIndex(
-        (tier: any) => tier.id === currentTier.id
-      ) - 1;
-      
-      const nextTier = nextTierIndex >= 0 ? tiers[nextTierIndex] : undefined;
-      
-      // PKL-278651-STATS-0002-DATA: Use real skill data when available
-      const skills: CourtIQSkillRating = ratingData.skillBreakdown || ratingData.skills || {
-        // Default to real user data from the API when available
-        power: ratingData.power || 65,
-        speed: ratingData.speed || 70,
-        precision: ratingData.precision || 75,
-        strategy: ratingData.strategy || 60,
-        control: ratingData.control || 80,
-        consistency: ratingData.consistency || 68
-      };
-      
-      // Find strongest and weakest areas
-      const skillEntries = Object.entries(skills) as [keyof CourtIQSkillRating, number][];
-      const sortedSkills = [...skillEntries].sort((a, b) => b[1] - a[1]);
-      
-      const strongestArea = sortedSkills[0][0];
-      const weakestArea = sortedSkills[sortedSkills.length - 1][0];
-      
-      // Create the response object
-      return {
-        overallRating: ratingData.rating,
-        tierName: currentTier.name,
-        tierColorCode: currentTier.colorCode,
-        skills,
-        // Add dimensions in the new format for compatibility with UI changes
-        dimensions: {
-          technique: { score: Math.round(skills.precision / 10) },
-          strategy: { score: Math.round(skills.strategy / 10) },
-          consistency: { score: Math.round(skills.consistency / 10) },
-          focus: { score: Math.round(skills.control / 10) },
-          power: { score: Math.round(skills.power / 10) },
-          speed: { score: Math.round(skills.speed / 10) }
-        },
-        recentTrends: ratingData.recentTrends || {
-          change: ratingData.recentChange || 0,
-          direction: ratingData.recentChange > 0 ? 'up' : ratingData.recentChange < 0 ? 'down' : 'stable',
-          matches: ratingData.recentMatches || 0
-        },
-        strongestArea,
-        weakestArea,
-        percentile: ratingData.percentile || 50,
-        nextTier: nextTier ? {
-          name: nextTier.name,
-          pointsNeeded: nextTier.minRating - ratingData.rating,
-          colorCode: nextTier.colorCode
-        } : undefined
-      };
+      return res.json();
     },
     enabled: enabled && !!userId
   });
