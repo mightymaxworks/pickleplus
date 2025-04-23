@@ -21,6 +21,11 @@ export default function QuickMatchFAB() {
   // PKL-278651-UI-0023-FAB - Add explicit check for landing page
   const isOnLandingPage = location === '/';
   
+  // PKL-278651-LAYC-0008-FLOAT - Fix Record Match button position to avoid element overlap
+  // Note: Hooks must be called in the same order on every render
+  // IMPORTANT: Always declare hooks at the top level, before any conditional returns
+  const [position, setPosition] = useState({ bottom: 0 });
+  
   // Don't show FAB on landing page, match page, or if not logged in
   if (!user || isOnMatchPage || isOnLandingPage) {
     return null;
@@ -38,9 +43,6 @@ export default function QuickMatchFAB() {
   const handleRecordMatch = () => {
     navigate('/matches?dialog=open');
   };
-
-  // PKL-278651-LAYC-0008-FLOAT - Fix Record Match button position to avoid element overlap
-  const [position, setPosition] = useState({ bottom: 0 });
   
   // Adjust position based on footer visibility and screen size
   useEffect(() => {
