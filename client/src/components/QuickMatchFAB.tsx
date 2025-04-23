@@ -108,26 +108,34 @@ export default function QuickMatchFAB() {
   
   return (
     <>
-      {/* PKL-278651-PASS-0014-DEFT-FIX - Bottom padding spacer element to prevent content from being hidden */}
-      <div className="pb-24 w-full" />
-      
+      {/* PKL-278651-LAYC-0008-FLOAT - Floating action button in bottom right corner */}
       <div 
-        className={`fixed left-0 right-0 z-50 shadow-lg border-t border-gray-200 bg-white px-2 py-2`}
+        className={`fixed z-50 shadow-xl`}
         style={{ 
-          bottom: `${position.bottom}px`,
-          transition: 'bottom 0.3s ease'
+          bottom: `${position.bottom + 20}px`,
+          right: '20px',
+          transition: 'all 0.3s ease'
         }}
       >
-        <div className="px-2 py-2 md:py-0">
-          {/* Full-width Record Match Button */}
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="rounded-full shadow-lg"
+        >
+          {/* Circular Record Match Button */}
           <Button 
             onClick={handleRecordMatch}
-            size="lg"
-            className={`flex items-center justify-center h-14 md:h-16 rounded-xl w-full gap-2 ${buttonClass}`}
+            size="icon"
+            className={`flex items-center justify-center h-16 w-16 rounded-full ${buttonClass}`}
           >
-            <PlusCircle className="h-6 w-6" />
-            <span className="text-base font-medium">Record Match</span>
+            <PlusCircle className="h-8 w-8" />
+            <span className="sr-only">Record Match</span>
           </Button>
+        </motion.div>
+        
+        {/* Tooltip label that appears on hover */}
+        <div className="absolute bottom-full right-0 mb-2 shadow-md rounded-md bg-white dark:bg-gray-800 text-sm font-medium px-3 py-1.5 border border-gray-200 dark:border-gray-700 hidden md:block">
+          Record Match
         </div>
       </div>
     </>
