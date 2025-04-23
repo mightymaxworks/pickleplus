@@ -79,15 +79,7 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
     };
   }, [previewUrl]);
 
-  /**
-   * PKL-278651-PROF-0005-UPLOAD-FIX
-   * Improved file change handler with immediate preview display
-   * 
-   * Fixes:
-   * - Removed setTimeout that could cause race conditions
-   * - Improved state management flow
-   * - Added additional logging
-   */
+  // PKL-278651-PROF-0005-UPLOAD-FIX
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -117,18 +109,14 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
     
     // Clean up any existing preview URL first
     if (previewUrl) {
-      console.log("[ProfileImageEditor] Cleaning up previous preview URL");
       URL.revokeObjectURL(previewUrl);
     }
     
-    // Create new object URL
+    // Create new object URL and update state
     const url = URL.createObjectURL(file);
-    console.log("[ProfileImageEditor] Created new preview URL");
-    
-    // Update state in a single batch
     setSelectedFile(file);
     setPreviewUrl(url);
-    setIsModalOpen(true); // Open modal immediately
+    setIsModalOpen(true);
     
     // Reset the file input so the same file can be reselected
     if (fileInputRef.current) {
@@ -299,44 +287,23 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
             <div className="flex justify-center p-2">
               <div className="h-48 w-48 rounded-full overflow-hidden bg-muted relative">
                 {previewUrl ? (
-                  <div className="relative w-full h-full">
-                    <img 
-                      src={previewUrl} 
-                      alt="Preview" 
-                      className="h-full w-full object-cover"
-                      key={`preview-${Date.now()}`} // Force re-render by using a unique key
-                    />
-                    <div className="absolute bottom-0 left-0 right-0 bg-green-600 text-white py-1 text-xs text-center">
-                      Preview
-                    </div>
-                    <div className="absolute top-0 left-0 right-0 bg-blue-600/80 text-white py-0.5 text-xs text-center">
-                      New Image
-                    </div>
-                  </div>
+                  <img 
+                    src={previewUrl} 
+                    alt="Preview" 
+                    className="h-full w-full object-cover"
+                  />
                 ) : currentAvatarUrl ? (
-                  <div className="relative w-full h-full">
-                    <img 
-                      src={currentAvatarUrl} 
-                      alt={user.username || 'Current avatar'} 
-                      className="h-full w-full object-cover"
-                      key={currentAvatarUrl} // Force re-render when URL changes
-                    />
-                    <div className="absolute bottom-0 left-0 right-0 bg-gray-600/80 text-white py-1 text-xs text-center">
-                      Current
-                    </div>
-                  </div>
+                  <img 
+                    src={currentAvatarUrl} 
+                    alt={user.username || 'Current avatar'} 
+                    className="h-full w-full object-cover"
+                  />
                 ) : (
-                  <div className="relative w-full h-full">
-                    <img 
-                      src={defaultAvatarPath} 
-                      alt="Default avatar" 
-                      className="h-full w-full object-contain bg-yellow-100"
-                      key="default-avatar"
-                    />
-                    <div className="absolute bottom-0 left-0 right-0 bg-amber-600/80 text-white py-1 text-xs text-center">
-                      Default
-                    </div>
-                  </div>
+                  <img 
+                    src={defaultAvatarPath} 
+                    alt="Default avatar" 
+                    className="h-full w-full object-contain bg-yellow-100"
+                  />
                 )}
               </div>
             </div>
