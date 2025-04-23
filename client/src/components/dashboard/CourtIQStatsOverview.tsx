@@ -171,7 +171,7 @@ export default function CourtIQStatsOverview({ userId, enhancedPerformanceData: 
                         {/* Default radar or multi-source visualizations */}
                         {showSourceBreakdown && (enhancedPerformanceData?.sourceRatings || import.meta.env.DEV) ? (
                           <>
-                            {/* Self-assessment polygon (blue) */}
+                            {/* Self-assessment polygon (purple) */}
                             <polygon 
                               points={`
                                 50,${50 - normalizeValue((enhancedPerformanceData?.sourceRatings?.self?.power || 45), 100) * 0.4} 
@@ -180,8 +180,8 @@ export default function CourtIQStatsOverview({ userId, enhancedPerformanceData: 
                                 ${50 - normalizeValue((enhancedPerformanceData?.sourceRatings?.self?.speed || 45), 100) * 0.2},${50 + normalizeValue((enhancedPerformanceData?.sourceRatings?.self?.speed || 45), 100) * 0.2} 
                                 ${50 - normalizeValue((enhancedPerformanceData?.sourceRatings?.self?.strategy || 40), 100) * 0.4},50
                               `}
-                              fill="rgba(33, 150, 243, 0.1)"
-                              stroke="#2196F3"
+                              fill="rgba(139, 92, 246, 0.1)"
+                              stroke="#8b5cf6"
                               strokeWidth="1"
                               strokeDasharray="0"
                             />
@@ -269,33 +269,33 @@ export default function CourtIQStatsOverview({ userId, enhancedPerformanceData: 
                               Math.round(enhancedPerformanceData.dimensions.power.score * 10) : 0)}
                           </div>
                         </div>
-                        <div className="bg-blue-50 rounded-md px-2 py-1">
+                        <div className="bg-purple-50 rounded-md px-2 py-1">
                           <div className="text-xs text-gray-500">Control</div>
-                          <div className="text-sm font-bold text-[#2196F3]">
+                          <div className="text-sm font-bold text-purple-500">
                             {courtIQStats?.dimensions?.control || 
                              (enhancedPerformanceData?.dimensions?.focus?.score ? 
                               Math.round(enhancedPerformanceData.dimensions.focus.score * 10) : 0)}
                           </div>
                         </div>
-                        <div className="bg-blue-50 rounded-md px-2 py-1">
+                        <div className="bg-purple-50 rounded-md px-2 py-1">
                           <div className="text-xs text-gray-500">Consistency</div>
-                          <div className="text-sm font-bold text-[#2196F3]">
+                          <div className="text-sm font-bold text-purple-500">
                             {courtIQStats?.dimensions?.consistency || 
                              (enhancedPerformanceData?.dimensions?.consistency?.score ? 
                               Math.round(enhancedPerformanceData.dimensions.consistency.score * 10) : 0)}
                           </div>
                         </div>
-                        <div className="bg-blue-50 rounded-md px-2 py-1">
+                        <div className="bg-purple-50 rounded-md px-2 py-1">
                           <div className="text-xs text-gray-500">Mobility</div>
-                          <div className="text-sm font-bold text-[#2196F3]">
+                          <div className="text-sm font-bold text-purple-500">
                             {courtIQStats?.dimensions?.mobility || 
                              (enhancedPerformanceData?.dimensions?.speed?.score ? 
                               Math.round(enhancedPerformanceData.dimensions.speed.score * 10) : 0)}
                           </div>
                         </div>
-                        <div className="col-span-2 bg-blue-50 rounded-md px-2 py-1">
+                        <div className="col-span-2 bg-purple-50 rounded-md px-2 py-1">
                           <div className="text-xs text-gray-500">Strategy</div>
-                          <div className="text-sm font-bold text-[#2196F3]">
+                          <div className="text-sm font-bold text-purple-500">
                             {courtIQStats?.dimensions?.strategy || 
                              (enhancedPerformanceData?.dimensions?.strategy?.score ? 
                               Math.round(enhancedPerformanceData.dimensions.strategy.score * 10) : 0)}
@@ -309,7 +309,7 @@ export default function CourtIQStatsOverview({ userId, enhancedPerformanceData: 
                   {showSourceBreakdown && (
                     <div className="absolute bottom-0 left-0 right-0 flex justify-center space-x-3 text-xs">
                       <div className="flex items-center">
-                        <div className="w-3 h-3 bg-blue-500 rounded-full mr-1"></div>
+                        <div className="w-3 h-3 bg-purple-500 rounded-full mr-1"></div>
                         <span>Self</span>
                       </div>
                       <div className="flex items-center">
@@ -407,7 +407,7 @@ export default function CourtIQStatsOverview({ userId, enhancedPerformanceData: 
             <Button 
               onClick={() => navigate("/record-match")}
               size="sm"
-              className="bg-[#2196F3] hover:bg-[#2196F3]/90"
+              className="bg-purple-500 hover:bg-purple-600"
             >
               Record a Match
             </Button>
