@@ -116,6 +116,37 @@ class CourtIQStorageService {
       throw error;
     }
   }
+  
+  /**
+   * Get user assessments grouped by assessment type
+   * @param userId The user ID to get assessments for
+   * @returns Object containing assessments grouped by type (self, opponent, coach, system)
+   */
+  async getUserAssessmentsByType(userId: number): Promise<{
+    self: MatchAssessment[];
+    opponent: MatchAssessment[];
+    coach: MatchAssessment[];
+    system: MatchAssessment[];
+  }> {
+    try {
+      const allAssessments = await db
+        .select()
+        .from(matchAssessments)
+        .where(eq(matchAssessments.targetId, userId))
+        .orderBy(desc(matchAssessments.createdAt));
+      
+      // Group assessments by type
+      return {
+        self: allAssessments.filter(a => a.assessmentType === 'self'),
+        opponent: allAssessments.filter(a => a.assessmentType === 'opponent'),
+        coach: allAssessments.filter(a => a.assessmentType === 'coach'),
+        system: allAssessments.filter(a => a.assessmentType === 'system'),
+      };
+    } catch (error) {
+      console.error("Error getting user assessments by type:", error);
+      throw error;
+    }
+  }
 
   /**
    * Get match assessments for a specific match
