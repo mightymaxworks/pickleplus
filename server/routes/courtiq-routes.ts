@@ -12,7 +12,7 @@ import {
   insertIncompleteAssessmentSchema
 } from "@shared/schema/courtiq";
 import { courtiqStorage } from "../services/courtiq-storage";
-import { courtiqCalculator } from "../services/courtiq-calculator";
+import { courtiqCalculator } from "../services/courtiq-calculator-fixed";
 import { isAuthenticated } from "../middleware/auth";
 
 const router = Router();

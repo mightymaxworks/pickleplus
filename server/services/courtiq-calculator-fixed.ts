@@ -134,15 +134,15 @@ class CourtIQCalculationEngine {
         let rating = 0;
         
         if (dimension === 'TECH') {
-          rating = assessment.technicalRating;
+          rating = assessment.technicalRating || 0;
         } else if (dimension === 'TACT') {
-          rating = assessment.tacticalRating;
+          rating = assessment.tacticalRating || 0;
         } else if (dimension === 'PHYS') {
-          rating = assessment.physicalRating;
+          rating = assessment.physicalRating || 0;
         } else if (dimension === 'MENT') {
-          rating = assessment.mentalRating;
+          rating = assessment.mentalRating || 0;
         } else if (dimension === 'CONS') {
-          rating = assessment.consistencyRating;
+          rating = assessment.consistencyRating || 0;
         }
         
         typeSum += rating;
@@ -151,8 +151,8 @@ class CourtIQCalculationEngine {
       const typeAverage = typeSum / typeAssessments.length;
       
       // Add to the weighted sum
-      weightedSum += typeAverage * typeWeight;
-      totalWeight += typeWeight;
+      weightedSum += typeAverage * (typeWeight || 0);
+      totalWeight += (typeWeight || 0);
     });
     
     // Calculate final weighted average
@@ -341,7 +341,7 @@ class CourtIQCalculationEngine {
   private async recordRatingImpacts(assessment: MatchAssessment): Promise<void> {
     try {
       // Record impact for each dimension
-      const dimensions: RatingDimension[] = ['TECH', 'TACT', 'PHYS', 'MENT', 'CONS'];
+      const dimensions: ("TECH" | "TACT" | "PHYS" | "MENT" | "CONS")[] = ['TECH', 'TACT', 'PHYS', 'MENT', 'CONS'];
       const assessmentType = assessment.assessmentType;
       
       // Calculate the weight for this assessment type
@@ -364,15 +364,15 @@ class CourtIQCalculationEngine {
         
         // Extract the appropriate rating value based on dimension
         if (dimension === 'TECH') {
-          ratingValue = assessment.technicalRating;
+          ratingValue = assessment.technicalRating || 0;
         } else if (dimension === 'TACT') {
-          ratingValue = assessment.tacticalRating;
+          ratingValue = assessment.tacticalRating || 0;
         } else if (dimension === 'PHYS') {
-          ratingValue = assessment.physicalRating;
+          ratingValue = assessment.physicalRating || 0;
         } else if (dimension === 'MENT') {
-          ratingValue = assessment.mentalRating;
+          ratingValue = assessment.mentalRating || 0;
         } else if (dimension === 'CONS') {
-          ratingValue = assessment.consistencyRating;
+          ratingValue = assessment.consistencyRating || 0;
         }
         
         // Record the impact
@@ -415,11 +415,11 @@ class CourtIQCalculationEngine {
       
       // Create array of dimensions and ratings
       const dimensions: Array<{dimension: RatingDimension, rating: number}> = [
-        {dimension: 'TECH', rating: userRating.technicalRating},
-        {dimension: 'TACT', rating: userRating.tacticalRating},
-        {dimension: 'PHYS', rating: userRating.physicalRating},
-        {dimension: 'MENT', rating: userRating.mentalRating},
-        {dimension: 'CONS', rating: userRating.consistencyRating}
+        {dimension: 'TECH', rating: userRating.technicalRating || 0},
+        {dimension: 'TACT', rating: userRating.tacticalRating || 0},
+        {dimension: 'PHYS', rating: userRating.physicalRating || 0},
+        {dimension: 'MENT', rating: userRating.mentalRating || 0},
+        {dimension: 'CONS', rating: userRating.consistencyRating || 0}
       ];
       
       // Sort by rating (descending for strengths, ascending for weaknesses)
@@ -432,7 +432,7 @@ class CourtIQCalculationEngine {
       // Generate analysis text
       let analysis = "";
       
-      if (userRating.confidenceScore < 30) {
+      if (!userRating.confidenceScore || userRating.confidenceScore < 30) {
         analysis = "This analysis is based on limited data and may not fully represent the player's abilities.";
       } else {
         analysis = `Player demonstrates notable strength in ${this.getDimensionName(strengths[0].dimension)} `;
@@ -448,26 +448,29 @@ class CourtIQCalculationEngine {
       };
     } catch (error) {
       console.error("Error analyzing player strengths and weaknesses:", error);
-      throw error;
+      return {
+        strengths: [],
+        weaknesses: [],
+        analysis: "Error analyzing player data."
+      };
     }
   }
 
   /**
-   * Get the full name of a rating dimension
-   * @param dimension The dimension code
-   * @returns The full dimension name
+   * Get a friendly name for a dimension code
+   * @param dimension Dimension code
+   * @returns User-friendly dimension name
    */
   private getDimensionName(dimension: RatingDimension): string {
-    const names: Record<RatingDimension, string> = {
-      TECH: "Technical Skills",
-      TACT: "Tactical Awareness",
-      PHYS: "Physical Fitness",
-      MENT: "Mental Toughness",
-      CONS: "Consistency",
-      OVERALL: "Overall Rating"
-    };
-    
-    return names[dimension] || dimension;
+    switch (dimension) {
+      case 'TECH': return 'Technical Skills';
+      case 'TACT': return 'Tactical Awareness';
+      case 'PHYS': return 'Physical Fitness';
+      case 'MENT': return 'Mental Toughness';
+      case 'CONS': return 'Consistency';
+      case 'OVERALL': return 'Overall Rating';
+      default: return dimension;
+    }
   }
 
   /**
@@ -476,8 +479,8 @@ class CourtIQCalculationEngine {
    * @returns Coaching recommendations
    */
   async generateCoachingRecommendations(userId: number): Promise<{
-    recommendations: Array<{dimension: RatingDimension, recommendation: string}>;
-    priorityArea: RatingDimension;
+    priorityArea: string;
+    recommendations: Record<RatingDimension, string>;
     overallAdvice: string;
   }> {
     try {
@@ -486,128 +489,188 @@ class CourtIQCalculationEngine {
       
       if (!userRating) {
         return {
-          recommendations: [],
-          priorityArea: 'OVERALL',
-          overallAdvice: "Complete at least 3 match assessments to receive coaching recommendations."
+          priorityArea: "Get Rated",
+          recommendations: {
+            TECH: "Get assessed to receive technical recommendations.",
+            TACT: "Get assessed to receive tactical recommendations.",
+            PHYS: "Get assessed to receive physical conditioning recommendations.",
+            MENT: "Get assessed to receive mental game recommendations.", 
+            CONS: "Get assessed to receive consistency recommendations.",
+            OVERALL: "Complete your initial assessments to unlock CourtIQ™ coaching recommendations."
+          },
+          overallAdvice: "Complete your player profile and participate in assessments to unlock personalized coaching recommendations."
         };
       }
       
-      // Create array of dimensions and ratings
+      // Identify the lowest-rated dimension
       const dimensions: Array<{dimension: RatingDimension, rating: number}> = [
-        {dimension: 'TECH', rating: userRating.technicalRating},
-        {dimension: 'TACT', rating: userRating.tacticalRating},
-        {dimension: 'PHYS', rating: userRating.physicalRating},
-        {dimension: 'MENT', rating: userRating.mentalRating},
-        {dimension: 'CONS', rating: userRating.consistencyRating}
+        {dimension: 'TECH', rating: userRating.technicalRating || 0},
+        {dimension: 'TACT', rating: userRating.tacticalRating || 0},
+        {dimension: 'PHYS', rating: userRating.physicalRating || 0},
+        {dimension: 'MENT', rating: userRating.mentalRating || 0},
+        {dimension: 'CONS', rating: userRating.consistencyRating || 0}
       ];
       
-      // Sort by rating (ascending to find the weakest areas)
+      // Sort by rating (ascending to get weakest areas first)
       const sorted = [...dimensions].sort((a, b) => a.rating - b.rating);
-      
-      // Find the priority area (weakest dimension)
-      const priorityArea = sorted[0].dimension;
+      const lowestDimension = sorted[0].dimension;
       
       // Generate recommendations for each dimension
-      const recommendations = dimensions.map(({dimension, rating}) => {
-        return {
-          dimension,
-          recommendation: this.getRecommendationForDimension(dimension, rating)
-        };
-      });
+      const recommendations: Record<RatingDimension, string> = {
+        TECH: this.getTechnicalRecommendation(userRating.technicalRating || 0),
+        TACT: this.getTacticalRecommendation(userRating.tacticalRating || 0),
+        PHYS: this.getPhysicalRecommendation(userRating.physicalRating || 0),
+        MENT: this.getMentalRecommendation(userRating.mentalRating || 0),
+        CONS: this.getConsistencyRecommendation(userRating.consistencyRating || 0),
+        OVERALL: `Focus on improving your ${this.getDimensionName(lowestDimension).toLowerCase()} to see the biggest overall improvement in your game.`
+      };
       
       // Generate overall advice
-      let overallAdvice = "";
-      
-      if (userRating.confidenceScore < 30) {
-        overallAdvice = "These recommendations are based on limited data. Continue completing match assessments to receive more accurate coaching advice.";
-      } else {
-        overallAdvice = `Focus on improving ${this.getDimensionName(priorityArea)} as your primary development area. `;
-        overallAdvice += `Your current overall CourtIQ™ rating is ${userRating.overallRating}/5, `;
-        overallAdvice += `which indicates ${this.getSkillLevelDescription(userRating.overallRating)}.`;
-      }
+      const overallAdvice = !userRating.confidenceScore || userRating.confidenceScore < 50
+        ? `Continue participating in matches and assessments to improve the accuracy of your CourtIQ™ ratings and receive more tailored recommendations.`
+        : `Your ${this.getDimensionName(lowestDimension).toLowerCase()} is your biggest area for improvement. ${recommendations[lowestDimension]}`;
       
       return {
+        priorityArea: this.getDimensionName(lowestDimension),
         recommendations,
-        priorityArea,
         overallAdvice
       };
     } catch (error) {
       console.error("Error generating coaching recommendations:", error);
-      throw error;
+      return {
+        priorityArea: "Error",
+        recommendations: {
+          TECH: "Error generating recommendations.",
+          TACT: "Error generating recommendations.",
+          PHYS: "Error generating recommendations.",
+          MENT: "Error generating recommendations.",
+          CONS: "Error generating recommendations.",
+          OVERALL: "Error generating recommendations."
+        },
+        overallAdvice: "An error occurred while generating coaching recommendations."
+      };
     }
   }
 
   /**
-   * Get a recommendation for a specific dimension and rating level
-   * @param dimension The dimension to get a recommendation for
-   * @param rating The current rating level
-   * @returns A coaching recommendation
+   * Get technical skill recommendation based on rating
+   * @param rating Technical rating
+   * @returns Recommendation for technical improvement
    */
-  private getRecommendationForDimension(dimension: RatingDimension, rating: number): string {
-    // Basic recommendations based on rating level
+  private getTechnicalRecommendation(rating: number): string {
+    // Beginner recommendations
     if (rating < 2) {
-      // Beginner recommendations
-      if (dimension === 'TECH') {
-        return "Focus on fundamental stroke mechanics and proper grip techniques. Practice basic dinks and drives.";
-      } else if (dimension === 'TACT') {
-        return "Learn the basic strategies of the game, including court positioning and the 'third shot drop'.";
-      } else if (dimension === 'PHYS') {
-        return "Work on basic movement patterns and quick directional changes to improve court coverage.";
-      } else if (dimension === 'MENT') {
-        return "Practice maintaining focus during basic rallies and develop a pre-serve routine.";
-      } else if (dimension === 'CONS') {
-        return "Focus on making clean contact with the ball and keeping simple shots in play consistently.";
-      }
-    } else if (rating < 3.5) {
-      // Intermediate recommendations
-      if (dimension === 'TECH') {
-        return "Refine your shot arsenal with targeted practice on spin control and placement accuracy.";
-      } else if (dimension === 'TACT') {
-        return "Develop awareness of opponent patterns and practice adjusting your strategy mid-match.";
-      } else if (dimension === 'PHYS') {
-        return "Incorporate agility drills and reaction time exercises into your training regimen.";
-      } else if (dimension === 'MENT') {
-        return "Work on resilience after errors and maintain positive self-talk throughout matches.";
-      } else if (dimension === 'CONS') {
-        return "Practice pressure situations to improve consistency when it matters most.";
-      }
-    } else {
-      // Advanced recommendations
-      if (dimension === 'TECH') {
-        return "Fine-tune advanced shots like around-the-post winners and specialized serves.";
-      } else if (dimension === 'TACT') {
-        return "Develop multi-step strategic thinking and work on disguising your shot intentions.";
-      } else if (dimension === 'PHYS') {
-        return "Optimize explosive movements and recovery techniques for maximum court coverage.";
-      } else if (dimension === 'MENT') {
-        return "Master strategic timeout usage and develop routines for maintaining focus in high-pressure situations.";
-      } else if (dimension === 'CONS') {
-        return "Work on maintaining performance quality across different playing conditions and match durations.";
-      }
+      return "Focus on basic paddle grip and swing mechanics. Practice dinking drills to develop touch and control.";
     }
-    
-    return "Continue practicing regularly to further develop your skills.";
+    // Intermediate recommendations
+    else if (rating < 3.5) {
+      return "Work on third-shot drops and developing consistent serving patterns. Incorporate volley practice into your routine.";
+    }
+    // Advanced recommendations
+    else if (rating < 4.5) {
+      return "Refine your attacking shots, including drive volleys and overhead smashes. Add spin variations to your serves and returns.";
+    }
+    // Expert recommendations
+    else {
+      return "Focus on subtle technical refinements and shot disguise. Work with a coach on video analysis to identify minor form adjustments.";
+    }
   }
 
   /**
-   * Get a description of a player's skill level based on overall rating
-   * @param rating The overall rating
-   * @returns A description of the skill level
+   * Get tactical recommendation based on rating
+   * @param rating Tactical rating
+   * @returns Recommendation for tactical improvement
    */
-  private getSkillLevelDescription(rating: number): string {
-    if (rating < 1.5) {
-      return "beginner level play with significant room for improvement";
-    } else if (rating < 2.5) {
-      return "developing fundamentals with some core skills established";
-    } else if (rating < 3.5) {
-      return "intermediate play with solid fundamentals and developing advanced skills";
-    } else if (rating < 4.5) {
-      return "advanced play with well-rounded abilities and few weaknesses";
-    } else {
-      return "elite level play with exceptional skill across all dimensions";
+  private getTacticalRecommendation(rating: number): string {
+    // Beginner recommendations
+    if (rating < 2) {
+      return "Learn basic court positioning and kitchen rules. Focus on keeping the ball in play rather than going for winners.";
+    }
+    // Intermediate recommendations
+    else if (rating < 3.5) {
+      return "Study patterns of play and work on transitioning from baseline to kitchen. Begin learning about stacking strategies.";
+    }
+    // Advanced recommendations
+    else if (rating < 4.5) {
+      return "Develop situational awareness and anticipation. Practice offensive and defensive positioning adjustments based on opponents.";
+    }
+    // Expert recommendations
+    else {
+      return "Refine advanced strategies like Erne shots, around-the-post techniques, and situation-specific stacking arrangements.";
+    }
+  }
+
+  /**
+   * Get physical recommendation based on rating
+   * @param rating Physical fitness rating
+   * @returns Recommendation for physical improvement
+   */
+  private getPhysicalRecommendation(rating: number): string {
+    // Beginner recommendations
+    if (rating < 2) {
+      return "Build basic endurance with regular aerobic exercise and incorporate light agility drills into your routine.";
+    }
+    // Intermediate recommendations
+    else if (rating < 3.5) {
+      return "Add specific footwork drills and lateral movement exercises. Begin incorporating pickleball-specific conditioning.";
+    }
+    // Advanced recommendations
+    else if (rating < 4.5) {
+      return "Implement a structured strength and conditioning program with focus on explosive movements and recovery techniques.";
+    }
+    // Expert recommendations
+    else {
+      return "Work with a sports performance coach on periodized training plans and recovery protocols to maintain peak physical condition.";
+    }
+  }
+
+  /**
+   * Get mental recommendation based on rating
+   * @param rating Mental toughness rating
+   * @returns Recommendation for mental game improvement
+   */
+  private getMentalRecommendation(rating: number): string {
+    // Beginner recommendations
+    if (rating < 2) {
+      return "Focus on enjoying the game and staying positive after mistakes. Practice basic visualization techniques before matches.";
+    }
+    // Intermediate recommendations
+    else if (rating < 3.5) {
+      return "Develop pre-point routines and work on maintaining focus during longer points. Practice mindfulness techniques for pressure situations.";
+    }
+    // Advanced recommendations
+    else if (rating < 4.5) {
+      return "Incorporate structured mental game practice including visualization, self-talk monitoring, and emotional regulation during competitive play.";
+    }
+    // Expert recommendations
+    else {
+      return "Work with a sports psychologist on advanced mental performance training and competitive mindset development specific to tournament play.";
+    }
+  }
+
+  /**
+   * Get consistency recommendation based on rating
+   * @param rating Consistency rating
+   * @returns Recommendation for consistency improvement
+   */
+  private getConsistencyRecommendation(rating: number): string {
+    // Beginner recommendations
+    if (rating < 2) {
+      return "Practice simple dinking drills focusing on getting 10+ shots in a row. Track your unforced errors during practice sessions.";
+    }
+    // Intermediate recommendations
+    else if (rating < 3.5) {
+      return "Implement deliberate practice routines that target consistent shot execution under various conditions and pressure scenarios.";
+    }
+    // Advanced recommendations
+    else if (rating < 4.5) {
+      return "Add fatigue and distraction elements to your practice routines to build resilience. Track performance metrics across different match situations.";
+    }
+    // Expert recommendations
+    else {
+      return "Fine-tune your adaptation to different playing surfaces, weather conditions, and opponent styles to maintain consistency in all environments.";
     }
   }
 }
 
-// Export a singleton instance
 export const courtiqCalculator = new CourtIQCalculationEngine();

@@ -54,17 +54,18 @@ class CourtIQStorageService {
       
       if (existingRating) {
         // Update existing ratings with optimistic locking
+        const currentVersion = existingRating.version || 0;
         const [updated] = await db
           .update(courtiqUserRatings)
           .set({
             ...data,
-            version: existingRating.version + 1,
+            version: currentVersion + 1,
             lastUpdated: new Date()
           })
           .where(
             and(
               eq(courtiqUserRatings.userId, data.userId),
-              eq(courtiqUserRatings.version, existingRating.version)
+              eq(courtiqUserRatings.version, currentVersion)
             )
           )
           .returning();
