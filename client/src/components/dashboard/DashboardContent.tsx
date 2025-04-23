@@ -54,7 +54,53 @@ export default function DashboardContent() {
   
   // Dynamic stats for animations - PKL-278651-STATS-0001-VERIFY
   // If user has no XP, show 0% progress, otherwise calculate actual progress to next level
-  const xpPercentage = !user.xp ? 0 : Math.min((user.xp % 100) / 100 * 100, 100);
+  /**
+   * PKL-278651-XP-0003-CALC - Fix XP percentage calculation
+   * Calculate the correct XP percentage based on current XP and level thresholds
+   * This replaces the incorrect calculation that assumed 100 XP per level
+   */
+  const calculateXpPercentage = (xp: number, level: number) => {
+    // If no XP, return 0
+    if (!xp) return 0;
+    
+    // Get level thresholds based on the XP levels defined in the server
+    // Using the levels from the database schema
+    const getThresholdForLevel = (level: number) => {
+      // Define XP thresholds based on the system in xpSystem.ts
+      const levels: { [key: number]: { min: number, max: number } } = {
+        1: { min: 0, max: 99 },
+        2: { min: 100, max: 249 },
+        3: { min: 250, max: 499 },
+        4: { min: 500, max: 749 },
+        5: { min: 750, max: 999 },
+        10: { min: 1000, max: 1999 },
+        15: { min: 2000, max: 3999 }
+      };
+      
+      // If we don't have the exact level, use defaults
+      if (!levels[level]) {
+        // For level > 15, use a consistent 1000 XP per level progression
+        return { 
+          min: (level - 1) * 1000, 
+          max: level * 1000 - 1 
+        };
+      }
+      
+      return levels[level];
+    };
+    
+    // Get current level thresholds
+    const currentLevelData = getThresholdForLevel(level || 1);
+    const nextLevelData = getThresholdForLevel((level || 1) + 1);
+    
+    // Calculate xp progress percentage
+    const totalForLevel = nextLevelData.min - currentLevelData.min;
+    const currentProgress = xp - currentLevelData.min;
+    
+    return Math.min(Math.max(0, Math.floor((currentProgress / totalForLevel) * 100)), 100);
+  };
+  
+  const xpPercentage = calculateXpPercentage(user.xp || 0, user.level || 1);
   // Only calculate winRate when we have real match data
   const hasMatchData = (matchStats && matchStats.totalMatches && matchStats.totalMatches > 0) || (user.totalMatches && user.totalMatches > 0);
   const winRate = hasMatchData 
@@ -347,6 +393,11 @@ export default function DashboardContent() {
                         ) : (
                           <>
                             <div className="space-y-2 mb-2">
+                              {/* 
+                                PKL-278651-XP-0004-DISPLAY 
+                                Updated XP info display to show actual level thresholds
+                                instead of raw XP values, making progress easier to understand
+                              */}
                               <div className="flex justify-between text-sm">
                                 <span className="text-gray-600">Current XP</span>
                                 <motion.span 
@@ -355,7 +406,7 @@ export default function DashboardContent() {
                                   animate={{ opacity: isLoaded ? 1 : 0 }}
                                   transition={{ delay: 0.6, duration: 0.3 }}
                                 >
-                                  {user.xp}
+                                  {user.xp || 0}
                                 </motion.span>
                               </div>
                               <div className="flex justify-between text-sm">
@@ -366,7 +417,32 @@ export default function DashboardContent() {
                                   animate={{ opacity: isLoaded ? 1 : 0 }}
                                   transition={{ delay: 0.7, duration: 0.3 }}
                                 >
-                                  {(user.level || 1) + 1}
+                                  {(() => {
+                                    const level = user.level || 1;
+                                    const nextLevel = level + 1;
+                                    const nextLevelXp = (() => {
+                                      // Define XP thresholds based on the system in xpSystem.ts
+                                      const levels: { [key: number]: { min: number } } = {
+                                        2: { min: 100 },
+                                        3: { min: 250 },
+                                        4: { min: 500 },
+                                        5: { min: 750 },
+                                        10: { min: 1000 },
+                                        15: { min: 2000 },
+                                        20: { min: 4000 }
+                                      };
+                                      
+                                      // If we don't have the exact level, use defaults
+                                      if (!levels[nextLevel]) {
+                                        // For level > 15, use a consistent 1000 XP per level progression
+                                        return (nextLevel - 1) * 1000;
+                                      }
+                                      
+                                      return levels[nextLevel].min;
+                                    })();
+                                    
+                                    return `${nextLevel} (${nextLevelXp} XP)`;
+                                  })()}
                                 </motion.span>
                               </div>
                             </div>
