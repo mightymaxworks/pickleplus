@@ -75,7 +75,7 @@ class CourtIQService {
       
       // Try to fetch from API
       try {
-        const res = await apiRequest<CourtiqUserRating>("GET", `/api/courtiq/ratings/${userId}`);
+        const res = await apiRequest("GET", `/api/courtiq/ratings/${userId}`);
         const ratings = await res.json();
         
         // Cache the ratings
@@ -126,11 +126,11 @@ class CourtIQService {
       
       // First check local storage for cached data
       const cacheKey = `performance_${userId}_${format || 'all'}_${division || 'all'}`;
-      const cachedData = this.getLocalData<PerformanceData>(cacheKey);
+      const cachedData = this.getLocalData(cacheKey);
       
       // Try to fetch from API
       try {
-        const res = await apiRequest<PerformanceData>(
+        const res = await apiRequest(
           "GET", 
           `/api/courtiq/performance?${params.toString()}`
         );
@@ -260,7 +260,7 @@ class CourtIQService {
           targetId: targetId.toString()
         });
         
-        const res = await apiRequest<IncompleteAssessment>(
+        const res = await apiRequest(
           "GET",
           `/api/courtiq/incomplete-assessment?${params.toString()}`
         );
@@ -271,7 +271,7 @@ class CourtIQService {
         
         // Check local storage
         const key = `draft_${matchId}_${assessorId}_${targetId}`;
-        const localDraft = this.getLocalData<IncompleteAssessment>(key);
+        const localDraft = this.getLocalData(key);
         
         return localDraft;
       }
@@ -321,7 +321,7 @@ class CourtIQService {
         limit: limit.toString()
       });
       
-      const res = await apiRequest<any[]>("GET", `/api/courtiq/top-players?${params.toString()}`);
+      const res = await apiRequest("GET", `/api/courtiq/top-players?${params.toString()}`);
       return await res.json();
     } catch (error) {
       console.error(`Error getting top rated players for ${dimension}:`, error);
@@ -336,7 +336,7 @@ class CourtIQService {
    */
   async getPlayerAnalysis(userId: number): Promise<any> {
     try {
-      const res = await apiRequest<any>("GET", `/api/courtiq/analysis/${userId}`);
+      const res = await apiRequest("GET", `/api/courtiq/analysis/${userId}`);
       return await res.json();
     } catch (error) {
       console.error("Error getting player analysis:", error);
@@ -357,7 +357,7 @@ class CourtIQService {
    */
   async getCoachingRecommendations(userId: number): Promise<any> {
     try {
-      const res = await apiRequest<any>("GET", `/api/courtiq/recommendations/${userId}`);
+      const res = await apiRequest("GET", `/api/courtiq/recommendations/${userId}`);
       return await res.json();
     } catch (error) {
       console.error("Error getting coaching recommendations:", error);
@@ -383,7 +383,7 @@ class CourtIQService {
         limit: limit.toString()
       });
       
-      const res = await apiRequest<any[]>(
+      const res = await apiRequest(
         "GET", 
         `/api/courtiq/similar-players/${userId}?${params.toString()}`
       );
@@ -422,7 +422,7 @@ class CourtIQService {
         params.append("endDate", endDate.toISOString());
       }
       
-      const res = await apiRequest<any[]>(
+      const res = await apiRequest(
         "GET", 
         `/api/courtiq/progression/${userId}?${params.toString()}`
       );
@@ -487,7 +487,7 @@ class CourtIQService {
     
     while (retries < RETRY_CONFIG.maxRetries) {
       try {
-        const res = await apiRequest<{assessment: MatchAssessment}>(
+        const res = await apiRequest(
           "POST",
           "/api/courtiq/assessment",
           assessment
@@ -540,7 +540,7 @@ class CourtIQService {
       }
       
       // Save to local storage
-      storageService.setItem(
+      localStorage.setItem(
         `${this.STORAGE_KEY_PREFIX}offline_assessments`,
         JSON.stringify(offlineAssessments)
       );
@@ -555,7 +555,7 @@ class CourtIQService {
    */
   private getOfflineAssessments(): InsertMatchAssessment[] {
     try {
-      const data = storageService.getItem(`${this.STORAGE_KEY_PREFIX}offline_assessments`);
+      const data = localStorage.getItem(`${this.STORAGE_KEY_PREFIX}offline_assessments`);
       
       if (!data) {
         return [];
@@ -584,7 +584,7 @@ class CourtIQService {
       );
       
       // Save to local storage
-      storageService.setItem(
+      localStorage.setItem(
         `${this.STORAGE_KEY_PREFIX}offline_assessments`,
         JSON.stringify(filtered)
       );
@@ -599,7 +599,7 @@ class CourtIQService {
    * @returns Cached ratings or null if not found
    */
   private getCachedRatings(userId: number): CourtiqUserRating | null {
-    return this.getLocalData<CourtiqUserRating>(`ratings_${userId}`);
+    return this.getLocalData(`ratings_${userId}`);
   }
 
   /**
@@ -616,9 +616,9 @@ class CourtIQService {
    * @param key Storage key
    * @param data Data to save
    */
-  private saveLocalData<T>(key: string, data: T): void {
+  private saveLocalData(key: string, data: any): void {
     try {
-      storageService.setItem(
+      localStorage.setItem(
         `${this.STORAGE_KEY_PREFIX}${key}`,
         JSON.stringify(data)
       );
@@ -632,15 +632,15 @@ class CourtIQService {
    * @param key Storage key
    * @returns Data or null if not found
    */
-  private getLocalData<T>(key: string): T | null {
+  private getLocalData(key: string): any {
     try {
-      const data = storageService.getItem(`${this.STORAGE_KEY_PREFIX}${key}`);
+      const data = localStorage.getItem(`${this.STORAGE_KEY_PREFIX}${key}`);
       
       if (!data) {
         return null;
       }
       
-      return JSON.parse(data) as T;
+      return JSON.parse(data);
     } catch (error) {
       console.error(`Error getting data for key ${key}:`, error);
       return null;
