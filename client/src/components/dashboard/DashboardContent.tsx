@@ -301,19 +301,19 @@ export default function DashboardContent() {
             transition={{ delay: 0.25, duration: 0.5 }}
           >
             <div className="flex items-center mb-4">
-              <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-400 to-cyan-500 text-transparent bg-clip-text">
+              <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-400 to-indigo-500 text-transparent bg-clip-text">
                 CourtIQ™ Performance
               </h3>
-              <div className="ml-2 text-xs bg-gradient-to-r from-blue-400 to-cyan-500 text-white px-2 py-0.5 rounded-full">
+              <div className="ml-2 text-xs bg-gradient-to-r from-purple-400 to-indigo-500 text-white px-2 py-0.5 rounded-full">
                 Multi-Source Analysis
               </div>
             </div>
             <Card className="shadow-lg border border-gray-100/20 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-indigo-500"></div>
               <CardContent className="p-4 relative z-10">
                 {isCourtIQLoading ? (
                   <div className="text-center py-6">
-                    <div className="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
+                    <div className="animate-spin h-5 w-5 border-2 border-purple-500 border-t-transparent rounded-full mx-auto"></div>
                     <div className="text-sm text-gray-500 mt-2">Loading CourtIQ data...</div>
                   </div>
                 ) : courtIQData ? (
