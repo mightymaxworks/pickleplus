@@ -35,6 +35,12 @@ import {
   cancelEventRegistration 
 } from '@/lib/sdk/eventSDK';
 import type { Event } from '@shared/schema/events';
+import { 
+  defaultCommunityEvent, 
+  ensureDefaultCommunityEvent, 
+  isDefaultCommunityEvent, 
+  DEFAULT_COMMUNITY_EVENT_ID 
+} from '@/lib/defaultCommunityEvent';
 import { cn } from '@/lib/utils';
 import { 
   Dialog,
