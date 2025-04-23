@@ -95,21 +95,61 @@ export default function ExperienceSummary({ onComplete }: ExperienceSummaryProps
     },
   });
 
-  // Mutation to submit the experience data
+  // Mutation to submit the experience data using frontend-driven approach
   const submitExperienceMutation = useMutation({
     mutationFn: async (data: ExperienceFormValues) => {
-      const response = await apiRequest('POST', '/api/courtiq/onboarding/experience', data);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to save experience data');
+      // Create the experience data
+      const experienceData = {
+        yearsPlaying: data.yearsPlaying,
+        playFrequency: data.playFrequency,
+        tournamentExperience: data.tournamentExperience,
+        preferredFormat: data.preferredFormat,
+        goals: data.goals,
+        additionalInfo: data.additionalInfo || ''
+      };
+      
+      console.log('[ExperienceSummary] Saving experience data with frontend-driven approach');
+      
+      // Update wizard state to mark this step as completed
+      const wizardState = {
+        currentStep: 'play_style_assessment', // Next step in the flow
+        completedSteps: ['profile_completion', 'rating_selection', 'experience_summary'],
+        progress: 70, // 70% progress in onboarding
+        lastUpdated: new Date().toISOString()
+      };
+      
+      // Store the experience data first
+      const experienceResponse = await apiRequest('POST', '/api/user-data/store', {
+        dataType: 'experienceData',
+        data: experienceData
+      });
+      
+      if (!experienceResponse.ok) {
+        const errorData = await experienceResponse.json();
+        throw new Error(errorData.error || 'Failed to save experience data');
       }
-      return response.json();
+      
+      // Then update the wizard state
+      const wizardResponse = await apiRequest('POST', '/api/user-data/store', {
+        dataType: 'wizardState',
+        data: wizardState
+      });
+      
+      if (!wizardResponse.ok) {
+        const errorData = await wizardResponse.json();
+        throw new Error(errorData.error || 'Failed to update wizard state');
+      }
+      
+      // Return the final state
+      return wizardResponse.json();
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (data, variables) => {
       toast({
         title: "Experience information saved",
         description: "Your pickleball experience has been recorded.",
       });
+      console.log('[ExperienceSummary] Data saved successfully:', data);
+      
       if (onComplete) {
         onComplete(variables);
       }
