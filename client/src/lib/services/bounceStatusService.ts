@@ -1,160 +1,220 @@
 /**
- * PKL-278651-BOUNCE-0006-AWARE - Bounce Awareness Enhancement
+ * PKL-278651-MATCH-0007-TICKER - Latest Match Status Service
  * 
- * BounceStatusService - Provides data about current Bounce testing status, metrics,
- * and forecasts for display in UI components.
+ * StatusTickerService - Provides data about current matches, community activity,
+ * and system updates for display in the live ticker component.
  * 
  * @version 1.0.0
- * @framework Framework5.2
+ * @framework Framework5.3
  */
 
-// Types for Bounce Status data
-export interface TestingArea {
-  id: string;
-  name: string;
-  status: 'active' | 'scheduled' | 'completed';
-  priority: 'high' | 'medium' | 'low';
+// Types for Status Ticker data
+export interface RecentMatch {
+  id: number;
+  date: string;
+  formatType: string;
+  players: {
+    displayName: string;
+    score: number;
+    isWinner: boolean;
+  }[];
+  location?: string;
 }
 
-export interface TestingMetrics {
-  successRate: number;
-  issuesFound: number;
-  userSessionsAnalyzed: number;
+export interface SystemUpdate {
+  id: string;
+  message: string;
+  timestamp: Date;
+  category: 'feature' | 'improvement' | 'fix' | 'event';
+}
+
+export interface CommunityStats {
+  matchesPlayed: number;
+  activeTournaments: number;
+  userMilestone?: string;
   lastUpdated: Date;
 }
 
-export interface WeatherForecast {
-  nextAreas: TestingArea[];
-  recentlyCompleted: TestingArea[];
+export interface UpcomingEvents {
+  nextEvents: {
+    id: string;
+    name: string;
+    date: string;
+    location: string;
+  }[];
 }
 
-export interface CommunityImpact {
-  issuesResolved: number;
-  usersBenefited: number;
-  improvementPercentage: number;
-}
-
-// In a complete implementation, this data would be fetched from the API
-// For now, we'll use static data for the UI implementation
-class BounceStatusService {
-  private testingMetricsCache: TestingMetrics | null = null;
-  private testingAreasCache: TestingArea[] | null = null;
-  private weatherForecastCache: WeatherForecast | null = null;
-  private communityImpactCache: CommunityImpact | null = null;
+// Service to provide data for the status ticker
+class StatusTickerService {
+  private recentMatchesCache: RecentMatch[] | null = null;
+  private systemUpdatesCache: SystemUpdate[] | null = null;
+  private communityStatsCache: CommunityStats | null = null;
+  private upcomingEventsCache: UpcomingEvents | null = null;
   
   /**
-   * Get list of currently active testing areas
-   * @returns Array of active testing areas
+   * Get list of recent matches
+   * @returns Array of recent matches
    */
-  async getCurrentTestingAreas(): Promise<TestingArea[]> {
-    // In production, fetch from API: /api/bounce/status/areas
-    if (!this.testingAreasCache) {
-      this.testingAreasCache = [
+  async getRecentMatches(): Promise<RecentMatch[]> {
+    try {
+      // In a production environment, fetch from API
+      const response = await fetch('/api/match/recent?limit=5');
+      if (response.ok) {
+        const matches = await response.json();
+        // Transform the data into the format we need
+        // Define explicit interface for API response to avoid 'any' type
+        interface MatchResponse {
+          id: number;
+          date: string;
+          formatType: string;
+          players: {
+            userId: number;
+            score: number;
+            isWinner: boolean;
+          }[];
+          playerNames: {
+            [key: number]: {
+              displayName: string;
+              username: string;
+            }
+          };
+          location?: string;
+        }
+        
+        this.recentMatchesCache = matches.map((match: MatchResponse) => ({
+          id: match.id,
+          date: match.date,
+          formatType: match.formatType,
+          players: match.players.map((player) => ({
+            displayName: match.playerNames[player.userId]?.displayName || 'Player',
+            score: player.score,
+            isWinner: player.isWinner
+          })),
+          location: match.location
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching recent matches:', error);
+      // Fallback to cached data if API fails
+      if (!this.recentMatchesCache) {
+        // Provide minimal data structure if cache is empty
+        this.recentMatchesCache = [];
+      }
+    }
+    
+    return this.recentMatchesCache || [];
+  }
+  
+  /**
+   * Get current system updates
+   * @returns Array of system updates
+   */
+  async getSystemUpdates(): Promise<SystemUpdate[]> {
+    try {
+      // In a production environment, fetch from API
+      // For now return recent updates
+      this.systemUpdatesCache = [
         {
-          id: 'xp-system',
-          name: 'XP System',
-          status: 'active',
-          priority: 'high'
+          id: 'sys-update-1',
+          message: 'New tournament bracket visualization released',
+          timestamp: new Date(Date.now() - 3600000), // 1 hour ago
+          category: 'feature'
         },
         {
-          id: 'tournament-brackets',
-          name: 'Tournament Brackets',
-          status: 'active',
-          priority: 'medium'
+          id: 'sys-update-2',
+          message: 'CourtIQ rating system accuracy improved',
+          timestamp: new Date(Date.now() - 86400000), // 1 day ago
+          category: 'improvement'
         },
         {
-          id: 'mobile-performance',
-          name: 'Mobile Performance',
-          status: 'active',
-          priority: 'high'
+          id: 'sys-update-3',
+          message: 'Registration open for Summer Championship Series',
+          timestamp: new Date(Date.now() - 172800000), // 2 days ago
+          category: 'event'
         }
       ];
+    } catch (error) {
+      console.error('Error fetching system updates:', error);
+      if (!this.systemUpdatesCache) {
+        this.systemUpdatesCache = [];
+      }
     }
     
-    return this.testingAreasCache;
+    return this.systemUpdatesCache || [];
   }
   
   /**
-   * Get current testing performance metrics
-   * @returns Testing metrics object
+   * Get community statistics
+   * @returns Community stats object
    */
-  async getTestingMetrics(): Promise<TestingMetrics> {
-    // In production, fetch from API: /api/bounce/status/metrics
-    if (!this.testingMetricsCache) {
-      this.testingMetricsCache = {
-        successRate: 98.5,
-        issuesFound: 142,
-        userSessionsAnalyzed: 3456,
+  async getCommunityStats(): Promise<CommunityStats> {
+    try {
+      // In a production environment, fetch from API
+      this.communityStatsCache = {
+        matchesPlayed: 4752,
+        activeTournaments: 12,
+        userMilestone: 'Laura S. reached Elite status!',
         lastUpdated: new Date()
       };
+    } catch (error) {
+      console.error('Error fetching community stats:', error);
+      if (!this.communityStatsCache) {
+        this.communityStatsCache = {
+          matchesPlayed: 0,
+          activeTournaments: 0,
+          lastUpdated: new Date()
+        };
+      }
     }
     
-    return this.testingMetricsCache;
+    return this.communityStatsCache;
   }
   
   /**
-   * Get forecast of upcoming testing areas
-   * @returns Weather forecast object
+   * Get upcoming events
+   * @returns Upcoming events object
    */
-  async getWeatherForecast(): Promise<WeatherForecast> {
-    // In production, fetch from API: /api/bounce/status/forecast
-    if (!this.weatherForecastCache) {
-      this.weatherForecastCache = {
-        nextAreas: [
+  async getUpcomingEvents(): Promise<UpcomingEvents> {
+    try {
+      // In a production environment, fetch from API
+      this.upcomingEventsCache = {
+        nextEvents: [
           {
-            id: 'match-recording',
-            name: 'Match Recording',
-            status: 'scheduled',
-            priority: 'high'
+            id: 'event-1',
+            name: 'Regional Tournament',
+            date: '2025-05-15',
+            location: 'Central Courts'
           },
           {
-            id: 'profile-settings',
-            name: 'Profile Settings',
-            status: 'scheduled',
-            priority: 'medium'
-          }
-        ],
-        recentlyCompleted: [
-          {
-            id: 'court-reservation',
-            name: 'Court Reservation',
-            status: 'completed',
-            priority: 'medium'
+            id: 'event-2',
+            name: 'Beginner Workshop',
+            date: '2025-05-02',
+            location: 'Community Center'
           }
         ]
       };
+    } catch (error) {
+      console.error('Error fetching upcoming events:', error);
+      if (!this.upcomingEventsCache) {
+        this.upcomingEventsCache = {
+          nextEvents: []
+        };
+      }
     }
     
-    return this.weatherForecastCache;
-  }
-  
-  /**
-   * Get community impact metrics from testing
-   * @returns Community impact object
-   */
-  async getCommunityImpact(): Promise<CommunityImpact> {
-    // In production, fetch from API: /api/bounce/status/impact
-    if (!this.communityImpactCache) {
-      this.communityImpactCache = {
-        issuesResolved: 104,
-        usersBenefited: 4870,
-        improvementPercentage: 22.5
-      };
-    }
-    
-    return this.communityImpactCache;
+    return this.upcomingEventsCache;
   }
   
   /**
    * Reset all caches to fetch fresh data
    */
   clearCache(): void {
-    this.testingMetricsCache = null;
-    this.testingAreasCache = null;
-    this.weatherForecastCache = null;
-    this.communityImpactCache = null;
+    this.recentMatchesCache = null;
+    this.systemUpdatesCache = null;
+    this.communityStatsCache = null;
+    this.upcomingEventsCache = null;
   }
 }
 
 // Export a singleton instance
-export const bounceStatusService = new BounceStatusService();
+export const bounceStatusService = new StatusTickerService();
