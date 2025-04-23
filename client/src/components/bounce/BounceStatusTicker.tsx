@@ -164,8 +164,21 @@ export const BounceStatusTicker = ({
           </div>
           <button 
             onClick={() => {
-              joinTesting();
-              setLocation('/admin/bounce');
+              // PKL-278651-GAMF-0007-JOIN - Add friendly message for non-admin users
+              const isAdmin = window.localStorage.getItem('user_role') === 'admin';
+              if (isAdmin) {
+                joinTesting();
+                setLocation('/admin/bounce');
+              } else {
+                // Show friendly message for non-admin users
+                const { toast } = require('@/hooks/use-toast');
+                toast({
+                  title: "Coming Soon!",
+                  description: "We will be welcoming testers to earn XP very soon!",
+                  variant: "default",
+                  duration: 5000,
+                });
+              }
             }}
             className="ml-2 text-xs text-white bg-blue-600 hover:bg-blue-700 transition-colors px-2 py-1 rounded"
           >

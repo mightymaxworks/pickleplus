@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation, useRoute } from "wouter";
+import { useState, useEffect } from "react";
 
 /**
  * Bottom action bar with quick match recording button
@@ -38,14 +39,50 @@ export default function QuickMatchFAB() {
     navigate('/matches?dialog=open');
   };
 
+  // PKL-278651-LAYC-0008-FLOAT - Fix Record Match button position to avoid element overlap
+  const [position, setPosition] = useState({ bottom: 0 });
+  
+  // Adjust position based on footer visibility and screen size
+  useEffect(() => {
+    const checkPosition = () => {
+      const footer = document.querySelector('footer');
+      const isFooterVisible = footer && footer.getBoundingClientRect().top < window.innerHeight;
+      
+      // Adjust position based on viewport size and footer visibility
+      if (window.innerWidth < 768) {
+        // On mobile, position higher to avoid nav
+        setPosition({ bottom: isFooterVisible ? 80 : 0 });
+      } else {
+        // On desktop, adjust based on footer
+        setPosition({ bottom: isFooterVisible ? 20 : 0 });
+      }
+    };
+    
+    // Check position on initial render and on scroll/resize
+    checkPosition();
+    window.addEventListener('scroll', checkPosition);
+    window.addEventListener('resize', checkPosition);
+    
+    return () => {
+      window.removeEventListener('scroll', checkPosition);
+      window.removeEventListener('resize', checkPosition);
+    };
+  }, []);
+  
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 shadow-lg border-t border-gray-200 bg-white px-2 py-2">
-      <div className="px-2">
+    <div 
+      className={`fixed left-0 right-0 z-50 shadow-lg border-t border-gray-200 bg-white px-2 py-2`}
+      style={{ 
+        bottom: `${position.bottom}px`,
+        transition: 'bottom 0.3s ease'
+      }}
+    >
+      <div className="px-2 py-2 md:py-0">
         {/* Full-width Record Match Button */}
         <Button 
           onClick={handleRecordMatch}
           size="lg"
-          className={`flex items-center justify-center h-16 rounded-xl w-full gap-2 ${buttonClass}`}
+          className={`flex items-center justify-center h-14 md:h-16 rounded-xl w-full gap-2 ${buttonClass}`}
         >
           <PlusCircle className="h-6 w-6" />
           <span className="text-base font-medium">Record Match</span>

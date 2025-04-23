@@ -1,10 +1,21 @@
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, RefreshCw } from "lucide-react";
-import { Link } from "wouter";
+import { AlertCircle, RefreshCw, Home } from "lucide-react";
+import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function NotFound() {
+  // PKL-278651-ROUT-0013-LOGOT - Fix logout issue on 404 page
+  const { user } = useAuth();
+  const [, navigate] = useLocation();
+  
+  // Determine destination based on auth status
+  const getHomeDestination = () => {
+    // If user is logged in, go to dashboard, otherwise go to landing page
+    return user ? '/dashboard' : '/';
+  };
+  
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-orange-50 to-blue-50 overflow-hidden">
       {/* Decorative pickleballs in background */}

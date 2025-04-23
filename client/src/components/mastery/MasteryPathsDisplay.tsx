@@ -15,6 +15,13 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -222,14 +229,48 @@ const MasteryPathsDisplay: React.FC = () => {
         </div>
       </CardContent>
       <CardFooter className="pt-0 justify-between">
-        <Button variant="outline" size="sm" className="text-xs">
-          View Benefits
-        </Button>
-        <Button variant="outline" size="sm" className="text-xs" asChild>
-          <Link href="/mastery-paths">
-            View All Paths
-            <ChevronRight className="ml-1 h-4 w-4" />
-          </Link>
+        {/* PKL-278651-MAST-0009-CLICK - Fix unresponsive benefits button by adding dialog */}
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm" className="text-xs">
+              View Benefits
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Mastery Path Benefits</DialogTitle>
+            </DialogHeader>
+            <div className="benefits-content space-y-4">
+              <p>Earn XP and unlock exclusive rewards as you progress through mastery paths!</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-3 bg-slate-50 rounded-md">
+                  <h3 className="text-sm font-semibold mb-1 flex items-center">
+                    <Award className="h-4 w-4 mr-1 text-purple-500" />
+                    Special Badges
+                  </h3>
+                  <p className="text-xs text-gray-600">Earn unique badges displayed on your profile as you achieve new tiers.</p>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-md">
+                  <h3 className="text-sm font-semibold mb-1 flex items-center">
+                    <Crown className="h-4 w-4 mr-1 text-amber-500" />
+                    Tournament Priority
+                  </h3>
+                  <p className="text-xs text-gray-600">Higher-tier players receive early access to tournaments and special events.</p>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+        
+        {/* PKL-278651-MAST-0009-CLICK - Fix "View All Paths" button with proper navigation */}
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="text-xs"
+          onClick={() => window.location.href = '/mastery-paths'}
+        >
+          View All Paths
+          <ChevronRight className="ml-1 h-4 w-4" />
         </Button>
       </CardFooter>
     </Card>
