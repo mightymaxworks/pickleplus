@@ -23,7 +23,8 @@ import {
   AlertCircleIcon,
   TrendingUpIcon,
   ClockIcon,
-  LockIcon
+  LockIcon,
+  Star as StarIcon
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -236,12 +237,24 @@ export function EventList({
     }
   }, [isEnabled, eventIds, queryClient]);
 
-  const eventsWithRegistrationStatus = Array.isArray(events) 
-    ? events.map(event => {
+  /**
+   * PKL-278651-PASS-0014-DEFT - Add default community event
+   * Ensure the default community event is included in the events list
+   */
+  const eventsWithDefaultCommunity = useMemo(() => {
+    // If events is an array, add the default community event; otherwise return default event only
+    return ensureDefaultCommunityEvent(events);
+  }, [events]);
+  
+  const eventsWithRegistrationStatus = Array.isArray(eventsWithDefaultCommunity) 
+    ? eventsWithDefaultCommunity.map(event => {
+        // Handle registration status - default community event is always registered
+        const isDefaultEvent = isDefaultCommunityEvent(event);
         return {
           ...event,
-          isRegistered: registrationStatusData?.[event.id] || false,
-          isLoadingStatus: isLoadingRegistrationStatus,
+          isRegistered: isDefaultEvent || registrationStatusData?.[event.id] || false,
+          isLoadingStatus: isDefaultEvent ? false : isLoadingRegistrationStatus,
+          isDefaultCommunityEvent: isDefaultEvent,
           // Add formatting for grouping
           dateForGrouping: event.startDateTime ? 
             safeFormatDate(event.startDateTime) : 
@@ -546,10 +559,17 @@ export function EventList({
                           className={cn(
                             "overflow-hidden transition-all border-l-4",
                             onEventClick && "hover:shadow-md cursor-pointer",
-                            featured ? "border-l-primary" : "border-l-transparent",
-                            attendanceLevel === 'high' ? "bg-gradient-to-r from-amber-50/70 to-transparent" :
-                            attendanceLevel === 'medium' ? "bg-gradient-to-r from-blue-50/40 to-transparent" :
-                            "bg-gradient-to-r from-muted/25 to-transparent"
+                            // PKL-278651-PASS-0014-DEFT - Special styling for default community event
+                            event.isDefaultCommunityEvent 
+                              ? "border-l-emerald-500 bg-gradient-to-r from-emerald-50/70 to-transparent" 
+                              : featured 
+                                ? "border-l-primary" 
+                                : "border-l-transparent",
+                            !event.isDefaultCommunityEvent && (
+                              attendanceLevel === 'high' ? "bg-gradient-to-r from-amber-50/70 to-transparent" :
+                              attendanceLevel === 'medium' ? "bg-gradient-to-r from-blue-50/40 to-transparent" :
+                              "bg-gradient-to-r from-muted/25 to-transparent"
+                            )
                           )}
                           onClick={() => handleEventClick(event)}
                         >
@@ -558,12 +578,23 @@ export function EventList({
                             <div className="flex justify-between items-start">
                               <CardTitle className={cn(
                                 "text-lg flex items-center gap-2",
-                                featured && "text-primary/90"
+                                featured && !event.isDefaultCommunityEvent && "text-primary/90",
+                                event.isDefaultCommunityEvent && "text-emerald-700"
                               )}>
-                                {featured && <TrendingUpIcon className="h-4 w-4 text-primary/70" />}
+                                {featured && !event.isDefaultCommunityEvent && <TrendingUpIcon className="h-4 w-4 text-primary/70" />}
+                                {event.isDefaultCommunityEvent && <UsersIcon className="h-4 w-4 text-emerald-500" />}
                                 {event.name}
                               </CardTitle>
-                              {getEventStatusBadge(event)}
+                              <div className="flex items-center gap-1.5">
+                                {/* PKL-278651-PASS-0014-DEFT - Special badge for default community event */}
+                                {event.isDefaultCommunityEvent && (
+                                  <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                                    <StarIcon className="h-3 w-3 mr-1" />
+                                    Community
+                                  </Badge>
+                                )}
+                                {getEventStatusBadge(event)}
+                              </div>
                             </div>
                             <CardDescription>
                               <div className="flex items-center mt-1">
@@ -682,18 +713,26 @@ export function EventList({
                                 <Skeleton className="h-4 w-16" />
                               </Button>
                             ) : event.isRegistered ? (
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="text-xs text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600 transition-all duration-200"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleCancelRegistration(event);
-                                }}
-                                disabled={isCancelling}
-                              >
-                                {isCancelling ? "Cancelling..." : "Cancel Registration"}
-                              </Button>
+                              /* PKL-278651-PASS-0014-DEFT - Prevent cancellation of default community event */
+                              event.isDefaultCommunityEvent ? (
+                                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                                  <CheckIcon className="h-3 w-3 mr-1" />
+                                  Always Registered
+                                </Badge>
+                              ) : (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="text-xs text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600 transition-all duration-200"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleCancelRegistration(event);
+                                  }}
+                                  disabled={isCancelling}
+                                >
+                                  {isCancelling ? "Cancelling..." : "Cancel Registration"}
+                                </Button>
+                              )
                             ) : (
                               {/* PKL-278651-PASS-0012-BUTN - Enhanced Registration Button */}
                               <Button 
