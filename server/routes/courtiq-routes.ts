@@ -433,14 +433,18 @@ router.post('/rating/set-preferred', devAuthMiddleware, async (req: Request, res
   try {
     const userId = req.user!.id;
     
-    // Validate request body
+    // Debug log the request body
+    console.log('[CourtIQ API] Rating set-preferred request body:', req.body);
+    
+    // Validate request body - make the schema more flexible
     const schema = z.object({
       system: z.string(),
-      rating: z.number()
+      rating: z.union([z.number(), z.string().transform(val => parseFloat(val))])
     });
     
     const validationResult = schema.safeParse(req.body);
     if (!validationResult.success) {
+      console.log('[CourtIQ API] Validation error:', validationResult.error);
       return res.status(400).json({ error: 'Invalid request body', details: validationResult.error });
     }
     
@@ -508,14 +512,18 @@ router.post('/onboarding/select-rating', devAuthMiddleware, async (req: Request,
   try {
     const userId = req.user!.id;
     
-    // Validate request body
+    // Debug log the request body
+    console.log('[CourtIQ API] Legacy rating selection request body:', req.body);
+    
+    // Validate request body - make the schema more flexible
     const schema = z.object({
       system: z.string(),
-      rating: z.number()
+      rating: z.union([z.number(), z.string().transform(val => parseFloat(val))])
     });
     
     const validationResult = schema.safeParse(req.body);
     if (!validationResult.success) {
+      console.log('[CourtIQ API] Legacy validation error:', validationResult.error);
       return res.status(400).json({ error: 'Invalid request body', details: validationResult.error });
     }
     
@@ -602,15 +610,19 @@ router.get('/rating-systems', async (req: Request, res: Response) => {
  */
 router.post('/convert-rating', async (req: Request, res: Response) => {
   try {
-    // Validate request body
+    // Debug log the request body
+    console.log('[CourtIQ API] Convert rating request body:', req.body);
+    
+    // Validate request body with more flexibility
     const schema = z.object({
       fromSystem: z.string(),
       toSystem: z.string(),
-      rating: z.number()
+      rating: z.union([z.number(), z.string().transform(val => parseFloat(val))])
     });
     
     const validationResult = schema.safeParse(req.body);
     if (!validationResult.success) {
+      console.log('[CourtIQ API] Convert rating validation error:', validationResult.error);
       return res.status(400).json({ error: 'Invalid request body', details: validationResult.error });
     }
     
