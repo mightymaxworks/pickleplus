@@ -33,6 +33,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import XpToast from '@/components/gamification/XpToast';
+import OnboardingComplete from './OnboardingComplete';
 
 // Import onboarding step components
 import RatingSystemSelection from './RatingSystemSelection';
@@ -218,22 +219,28 @@ export function OnboardingWizard({
         // Save previous XP value to calculate difference
         const previousXp = mockOnboardingStatus.xpEarned;
         
+        // PKL-278651-XP-0001-ALLOC: XP allocation according to official table
         // Update mock status with the completed step
-        if (payload.step === 'rating_selection') {
+        if (payload.step === 'profile_completion') {
+          mockOnboardingStatus.progress.profileCompleted = true;
+          mockOnboardingStatus.progress_pct = 25;
+          mockOnboardingStatus.nextStep = 'rating_selection';
+          mockOnboardingStatus.xpEarned += 75; // Award 75 XP for profile completion
+        } else if (payload.step === 'rating_selection') {
           mockOnboardingStatus.progress.ratingSystemSelected = true;
           mockOnboardingStatus.progress.ratingProvided = true;
-          mockOnboardingStatus.progress_pct = 40;
+          mockOnboardingStatus.progress_pct = 50;
           mockOnboardingStatus.nextStep = 'experience_summary';
-          mockOnboardingStatus.xpEarned += 50; // Award 50 XP for this step
+          mockOnboardingStatus.xpEarned += 50; // Award 50 XP for rating selection
           
           if (payload.data?.ratingSystem) {
             mockOnboardingStatus.preferences.preferredRatingSystem = payload.data.ratingSystem as string;
           }
         } else if (payload.step === 'experience_summary') {
           mockOnboardingStatus.progress.experienceSummaryCompleted = true;
-          mockOnboardingStatus.progress_pct = 70;
+          mockOnboardingStatus.progress_pct = 75;
           mockOnboardingStatus.nextStep = 'play_style_assessment';
-          mockOnboardingStatus.xpEarned += 75; // Award 75 XP for this step
+          mockOnboardingStatus.xpEarned += 75; // Award 75 XP for experience summary
           
           if (payload.data?.experienceYears) {
             mockOnboardingStatus.preferences.experienceYears = Number(payload.data.experienceYears);
@@ -242,7 +249,7 @@ export function OnboardingWizard({
           mockOnboardingStatus.progress.playStyleAssessed = true;
           mockOnboardingStatus.progress_pct = 100;
           mockOnboardingStatus.completed = true;
-          mockOnboardingStatus.xpEarned += 125; // Add 125 more XP for completion
+          mockOnboardingStatus.xpEarned += 150; // Add 100 XP for play style + 50 XP completion bonus
           mockOnboardingStatus.completedAt = new Date().toISOString();
         }
         
@@ -450,35 +457,7 @@ export function OnboardingWizard({
 
   // Check if onboarding is already completed
   if (status?.completed) {
-    return (
-      <Card className={`w-full max-w-2xl shadow-lg ${className}`}>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <CheckCircle className="h-5 w-5 text-green-500" />
-            <CardTitle>Onboarding Complete</CardTitle>
-          </div>
-          <CardDescription>
-            You've already completed the CourtIQ™ onboarding process.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-6">
-            <div className="inline-flex items-center justify-center rounded-full h-20 w-20 bg-green-100 mb-4">
-              <CheckCircle className="h-10 w-10 text-green-500" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">All Set!</h3>
-            <p className="text-muted-foreground">
-              Your CourtIQ™ profile is ready. You earned {status.xpEarned} XP for completing the onboarding process.
-            </p>
-          </div>
-        </CardContent>
-        <CardFooter className="justify-center">
-          <Button onClick={() => setLocation('/dashboard')}>
-            Go to Dashboard
-          </Button>
-        </CardFooter>
-      </Card>
-    );
+    return <OnboardingComplete xpEarned={status.xpEarned} className={className} />;
   }
 
   // Get the current step

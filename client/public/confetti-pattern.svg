@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="500px" height="500px" viewBox="0 0 500 500" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <rect id="rect" width="10" height="10" rx="1" />
+    <circle id="circle" cx="5" cy="5" r="5" />
+    <path id="triangle" d="M0,10 L5,0 L10,10 Z" />
+  </defs>
+  <g fill="none">
+    <!-- First row -->
+    <use xlink:href="#rect" fill="#FFFFFF" transform="translate(10, 10) rotate(15)" />
+    <use xlink:href="#circle" fill="#FFEB3B" transform="translate(40, 20)" />
+    <use xlink:href="#triangle" fill="#FFFFFF" transform="translate(80, 15) rotate(45)" />
+    <use xlink:href="#rect" fill="#64B5F6" transform="translate(120, 25) rotate(-10)" />
+    <use xlink:href="#circle" fill="#FFFFFF" transform="translate(160, 10)" />
+    <use xlink:href="#triangle" fill="#FF9800" transform="translate(200, 20) rotate(20)" />
+    <use xlink:href="#rect" fill="#FFFFFF" transform="translate(240, 15) rotate(60)" />
+    <use xlink:href="#circle" fill="#9575CD" transform="translate(280, 25)" />
+    <use xlink:href="#triangle" fill="#FFFFFF" transform="translate(320, 10) rotate(-25)" />
+    
+    <!-- Second row -->
+    <use xlink:href="#circle" fill="#FFFFFF" transform="translate(15, 60)" />
+    <use xlink:href="#triangle" fill="#4CAF50" transform="translate(55, 50) rotate(15)" />
+    <use xlink:href="#rect" fill="#FFFFFF" transform="translate(95, 65) rotate(30)" />
+    <use xlink:href="#circle" fill="#F44336" transform="translate(135, 55)" />
+    <use xlink:href="#triangle" fill="#FFFFFF" transform="translate(175, 65) rotate(-15)" />
+    <use xlink:href="#rect" fill="#FFEB3B" transform="translate(215, 50) rotate(5)" />
+    <use xlink:href="#circle" fill="#FFFFFF" transform="translate(255, 60)" />
+    <use xlink:href="#triangle" fill="#2196F3" transform="translate(295, 50) rotate(25)" />
+    <use xlink:href="#rect" fill="#FFFFFF" transform="translate(335, 65) rotate(-5)" />
+    
+    <!-- Third row -->
+    <use xlink:href="#triangle" fill="#FFFFFF" transform="translate(20, 100) rotate(-10)" />
+    <use xlink:href="#rect" fill="#9C27B0" transform="translate(60, 110) rotate(20)" />
+    <use xlink:href="#circle" fill="#FFFFFF" transform="translate(100, 105)" />
+    <use xlink:href="#triangle" fill="#FF9800" transform="translate(140, 95) rotate(5)" />
+    <use xlink:href="#rect" fill="#FFFFFF" transform="translate(180, 110) rotate(-25)" />
+    <use xlink:href="#circle" fill="#4CAF50" transform="translate(220, 100)" />
+    <use xlink:href="#triangle" fill="#FFFFFF" transform="translate(260, 105) rotate(15)" />
+    <use xlink:href="#rect" fill="#F44336" transform="translate(300, 95) rotate(10)" />
+    <use xlink:href="#circle" fill="#FFFFFF" transform="translate(340, 110)" />
+    
+    <!-- Additional scattered elements -->
+    <use xlink:href="#rect" fill="#FFC107" transform="translate(30, 150) rotate(25)" />
+    <use xlink:href="#circle" fill="#FFFFFF" transform="translate(90, 170)" />
+    <use xlink:href="#triangle" fill="#3F51B5" transform="translate(150, 160) rotate(-15)" />
+    <use xlink:href="#rect" fill="#FFFFFF" transform="translate(210, 155) rotate(5)" />
+    <use xlink:href="#circle" fill="#E91E63" transform="translate(270, 165)" />
+    <use xlink:href="#triangle" fill="#FFFFFF" transform="translate(330, 150) rotate(30)" />
+    
+    <use xlink:href="#circle" fill="#CDDC39" transform="translate(25, 210)" />
+    <use xlink:href="#triangle" fill="#FFFFFF" transform="translate(85, 220) rotate(10)" />
+    <use xlink:href="#rect" fill="#00BCD4" transform="translate(145, 215) rotate(-5)" />
+    <use xlink:href="#circle" fill="#FFFFFF" transform="translate(205, 205)" />
+    <use xlink:href="#triangle" fill="#FF5722" transform="translate(265, 220) rotate(20)" />
+    <use xlink:href="#rect" fill="#FFFFFF" transform="translate(325, 210) rotate(-10)" />
+    
+    <!-- More elements for density -->
+    <use xlink:href="#rect" fill="#FFFFFF" transform="translate(40, 250) rotate(15)" />
+    <use xlink:href="#circle" fill="#9C27B0" transform="translate(100, 265)" />
+    <use xlink:href="#triangle" fill="#FFFFFF" transform="translate(160, 255) rotate(35)" />
+    <use xlink:href="#rect" fill="#2196F3" transform="translate(220, 260) rotate(5)" />
+    <use xlink:href="#circle" fill="#FFFFFF" transform="translate(280, 250)" />
+    <use xlink:href="#triangle" fill="#4CAF50" transform="translate(340, 265) rotate(-15)" />
+  </g>
+</svg>
