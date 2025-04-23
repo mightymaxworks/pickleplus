@@ -720,7 +720,7 @@ export class XPSystem {
       unlocks: levelDetails.unlocks as string[],
       color: levelDetails.colorCode || '#FF5722', // Default to system orange if no color
       description: levelDetails.description || '',
-      recentXP: recentXP.map((xp) => ({
+      recentXP: recentXP.map((xp: { amount: number; source: string; createdAt: Date | string }) => ({
         amount: xp.amount,
         source: xp.source,
         date: xp.createdAt as Date

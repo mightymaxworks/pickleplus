@@ -357,10 +357,11 @@ export class RatingConverter {
       // Check if the systems are already initialized
       const existingSystemsResult = await db.execute(
         sql`SELECT * FROM rating_systems`
-      ) as unknown as SqlResult;
-      if (existingSystemsResult && existingSystemsResult.length > 0) {
+      );
+      const typedExistingSystemsResult = existingSystemsResult as unknown as SqlResult;
+      if (typedExistingSystemsResult && typedExistingSystemsResult.length > 0) {
         console.log("Rating systems already initialized");
-        return existingSystemsResult;
+        return typedExistingSystemsResult;
       }
 
       // Define the rating systems
@@ -445,9 +446,10 @@ export class RatingConverter {
             ${system.isActive},
             ${system.websiteUrl || null}
           ) RETURNING *`
-        ) as unknown as SqlResult;
+        );
+        const typedResult = result as unknown as SqlResult;
         
-        const insertedSystem = result[0] as SqlResultRow;
+        const insertedSystem = typedResult[0] as SqlResultRow;
         systemsInsertResults.push(insertedSystem);
         systemMap[insertedSystem.code as string] = insertedSystem.id as number;
       }
