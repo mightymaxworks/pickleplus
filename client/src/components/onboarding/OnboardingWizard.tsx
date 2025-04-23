@@ -6,7 +6,7 @@
  * for new users, focusing on rating system selection and CourtIQ setup.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,7 +19,8 @@ import {
   ChevronRight,
   CheckCircle,
   RefreshCw,
-  Timer
+  Timer,
+  Bug
 } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,11 +30,16 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 // Import onboarding step components
 import RatingSystemSelection from './RatingSystemSelection';
 import ExperienceSummary from './ExperienceSummary';
 import PlayStyleAssessment from './PlayStyleAssessment';
+
+// Development mode - this helps us test without backend connectivity
+const isDevelopment = process.env.NODE_ENV === 'development';
 
 // Type for onboarding status
 interface OnboardingStatus {
@@ -60,6 +66,26 @@ interface OnboardingStatus {
   xpEarned: number;
   completedAt?: string;
 }
+
+// Mock onboarding status for development mode
+const mockOnboardingStatus: OnboardingStatus = {
+  userId: 1,
+  progress: {
+    profileCompleted: false,
+    ratingSystemSelected: false,
+    ratingProvided: false,
+    experienceSummaryCompleted: false,
+    equipmentPreferencesSet: false,
+    playStyleAssessed: false,
+    initialAssessmentCompleted: false,
+    tourCompleted: false
+  },
+  preferences: {},
+  progress_pct: 0,
+  nextStep: 'profile_completion',
+  completed: false,
+  xpEarned: 0
+};
 
 // Type for step completion payload
 interface StepCompletionPayload {
@@ -95,6 +121,7 @@ export function OnboardingWizard({
 }: OnboardingWizardProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [transitionDirection, setTransitionDirection] = useState<'next' | 'prev'>('next');
+  const [devMode, setDevMode] = useState<boolean>(false);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
@@ -104,16 +131,28 @@ export function OnboardingWizard({
     isLoading: isLoadingStatus,
     error: statusError
   } = useQuery({
-    queryKey: ['/api/courtiq/onboarding/status'],
+    queryKey: ['/api/courtiq/onboarding/status', devMode],
     queryFn: async () => {
-      const response = await fetch('/api/courtiq/onboarding/start', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      if (!response.ok) throw new Error('Failed to start onboarding');
-      return response.json() as Promise<OnboardingStatus>;
+      // Use mock data in development mode
+      if (devMode) {
+        console.log('Using mock onboarding data for development mode');
+        return mockOnboardingStatus;
+      }
+
+      // Try to fetch from the real API
+      try {
+        const response = await fetch('/api/courtiq/onboarding/start', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        if (!response.ok) throw new Error('Failed to start onboarding');
+        return response.json() as Promise<OnboardingStatus>;
+      } catch (error) {
+        console.error('Onboarding API error:', error);
+        throw error;
+      }
     }
   });
 
@@ -169,6 +208,40 @@ export function OnboardingWizard({
   // Mutation for completing an onboarding step
   const completeStepMutation = useMutation({
     mutationFn: async (payload: StepCompletionPayload) => {
+      // In development mode, just simulate API success
+      if (devMode) {
+        console.log('Dev mode active: simulating successful step completion', payload);
+        
+        // Update mock status with the completed step
+        if (payload.step === 'rating_selection') {
+          mockOnboardingStatus.progress.ratingSystemSelected = true;
+          mockOnboardingStatus.progress.ratingProvided = true;
+          mockOnboardingStatus.progress_pct = 40;
+          mockOnboardingStatus.nextStep = 'experience_summary';
+          
+          if (payload.data?.ratingSystem) {
+            mockOnboardingStatus.preferences.preferredRatingSystem = payload.data.ratingSystem as string;
+          }
+        } else if (payload.step === 'experience_summary') {
+          mockOnboardingStatus.progress.experienceSummaryCompleted = true;
+          mockOnboardingStatus.progress_pct = 70;
+          mockOnboardingStatus.nextStep = 'play_style_assessment';
+          
+          if (payload.data?.experienceYears) {
+            mockOnboardingStatus.preferences.experienceYears = Number(payload.data.experienceYears);
+          }
+        } else if (payload.step === 'play_style_assessment') {
+          mockOnboardingStatus.progress.playStyleAssessed = true;
+          mockOnboardingStatus.progress_pct = 100;
+          mockOnboardingStatus.completed = true;
+          mockOnboardingStatus.xpEarned = 250;
+          mockOnboardingStatus.completedAt = new Date().toISOString();
+        }
+        
+        return mockOnboardingStatus;
+      }
+      
+      // Real API call for production
       const res = await apiRequest('POST', '/api/courtiq/onboarding/complete-step', payload);
       return await res.json();
     },
@@ -239,6 +312,22 @@ export function OnboardingWizard({
     }
   };
 
+  // Handle dev mode toggle
+  const toggleDevMode = useCallback(() => {
+    setDevMode(prev => !prev);
+    
+    // Show toast notification
+    toast({
+      title: `Development Mode ${!devMode ? 'Enabled' : 'Disabled'}`,
+      description: !devMode 
+        ? "Using mock data to bypass authentication requirements." 
+        : "Using real API endpoints with authentication.",
+    });
+    
+    // Invalidate the query to force a refetch
+    queryClient.invalidateQueries({ queryKey: ['/api/courtiq/onboarding/status'] });
+  }, [devMode, toast]);
+
   // If there's an error fetching the status, display an error message
   if (statusError) {
     return (
@@ -256,9 +345,31 @@ export function OnboardingWizard({
               Please try refreshing the page or contact support if the problem persists.
             </AlertDescription>
           </Alert>
+          
+          {/* Development mode toggle */}
+          <div className="mt-6 p-4 bg-muted rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <div className="flex items-center">
+                  <Bug className="mr-2 h-4 w-4 text-amber-500" />
+                  <h4 className="font-medium">Development Mode</h4>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Enable to use mock data and bypass authentication requirements.
+                </p>
+              </div>
+              <div>
+                <Switch
+                  checked={devMode}
+                  onCheckedChange={toggleDevMode}
+                  id="dev-mode"
+                />
+              </div>
+            </div>
+          </div>
         </CardContent>
         <CardFooter>
-          <Button onClick={() => window.location.reload()}>
+          <Button variant="outline" onClick={() => window.location.reload()}>
             Refresh Page
           </Button>
         </CardFooter>
