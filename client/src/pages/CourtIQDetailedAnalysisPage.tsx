@@ -9,7 +9,15 @@ import {
   CardTitle 
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, HelpCircle, Info } from "lucide-react";
+import { 
+  ChevronLeft, 
+  HelpCircle, 
+  Info, 
+  ActivitySquare, 
+  History, 
+  Users, 
+  BookOpen 
+} from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCourtIQDetailedAnalysis } from "@/hooks/use-courtiq-detailed-analysis";
@@ -144,11 +152,27 @@ export default function CourtIQDetailedAnalysisPage() {
       </div>
       
       <Tabs value={tab} onValueChange={setTab} className="w-full">
-        <TabsList className="w-full justify-start mb-4 overflow-x-auto">
-          <TabsTrigger value="dimensions">Skill Dimensions</TabsTrigger>
-          <TabsTrigger value="history">Performance History</TabsTrigger>
-          <TabsTrigger value="sources">Source Comparison</TabsTrigger>
-          <TabsTrigger value="recommendations">Skill Recommendations</TabsTrigger>
+        <TabsList className="w-full justify-start mb-4 overflow-x-auto flex-nowrap">
+          <TabsTrigger value="dimensions" className="flex items-center gap-1 whitespace-nowrap">
+            <ActivitySquare className="h-4 w-4 md:mr-1" />
+            <span className="hidden sm:inline">Skill Dimensions</span>
+            <span className="sm:hidden">Skills</span>
+          </TabsTrigger>
+          <TabsTrigger value="history" className="flex items-center gap-1 whitespace-nowrap">
+            <History className="h-4 w-4 md:mr-1" />
+            <span className="hidden sm:inline">Performance History</span>
+            <span className="sm:hidden">History</span>
+          </TabsTrigger>
+          <TabsTrigger value="sources" className="flex items-center gap-1 whitespace-nowrap">
+            <Users className="h-4 w-4 md:mr-1" />
+            <span className="hidden sm:inline">Source Comparison</span>
+            <span className="sm:hidden">Sources</span>
+          </TabsTrigger>
+          <TabsTrigger value="recommendations" className="flex items-center gap-1 whitespace-nowrap">
+            <BookOpen className="h-4 w-4 md:mr-1" />
+            <span className="hidden sm:inline">Skill Recommendations</span>
+            <span className="sm:hidden">Tips</span>
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="dimensions" className="mt-0">

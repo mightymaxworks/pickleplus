@@ -32,20 +32,36 @@ export function CourtIQSourceComparison({ data }: { data: CourtIQDetailedAnalysi
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Source Comparison</CardTitle>
+          <CardTitle>Source Comparison: What Others Think</CardTitle>
           <CardDescription>
-            Compare how you're rated across different assessment sources
+            See how your self-assessment compares to feedback from opponents and coaches
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Alert className="bg-muted">
-            <Info className="h-4 w-4" />
-            <AlertTitle>No source comparison data available</AlertTitle>
-            <AlertDescription>
-              Source comparison will be available once you have assessments from multiple sources 
-              (self-assessment, opponent feedback, and coach evaluations).
-            </AlertDescription>
-          </Alert>
+          <div className="flex flex-col items-center justify-center p-4 text-center space-y-4">
+            <div className="rounded-full bg-muted w-12 h-12 flex items-center justify-center mb-2">
+              <Info className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <h3 className="font-medium text-lg">No comparison data yet</h3>
+            <p className="text-muted-foreground max-w-md">
+              Source comparison will be available once you have ratings from multiple sources.
+              Complete self-assessments and get feedback from opponents and coaches.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 mt-4">
+              <div className="flex items-center p-2 border rounded-md border-border">
+                <div className="w-3 h-3 rounded-full bg-[#8b5cf6] mr-2"></div>
+                <span className="text-sm">Self Assessment</span>
+              </div>
+              <div className="flex items-center p-2 border rounded-md border-border">
+                <div className="w-3 h-3 rounded-full bg-[#ef4444] mr-2"></div>
+                <span className="text-sm">Opponent Feedback</span>
+              </div>
+              <div className="flex items-center p-2 border rounded-md border-border">
+                <div className="w-3 h-3 rounded-full bg-[#22c55e] mr-2"></div>
+                <span className="text-sm">Coach Evaluation</span>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
     );
@@ -203,9 +219,9 @@ export function CourtIQSourceComparison({ data }: { data: CourtIQDetailedAnalysi
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Source Comparison</CardTitle>
+          <CardTitle>Source Comparison: What Others Think</CardTitle>
           <CardDescription>
-            Compare how you're rated by different sources
+            Compare how you're rated by yourself, opponents, and coaches
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -225,10 +241,37 @@ export function CourtIQSourceComparison({ data }: { data: CourtIQDetailedAnalysi
             <div className="bg-muted/30 p-4 rounded-lg">
               <h3 className="text-sm font-medium mb-3 text-center">Radar Comparison</h3>
               <ResponsiveContainer width="100%" height={300}>
-                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-                  <PolarGrid />
-                  <PolarAngleAxis dataKey="dimension" />
-                  <PolarRadiusAxis angle={30} domain={[0, 100]} />
+                <RadarChart 
+                  cx="50%" 
+                  cy="50%" 
+                  outerRadius="70%" 
+                  data={radarData}
+                  margin={{ top: 5, right: 5, bottom: 5, left: 5 }}
+                >
+                  <PolarGrid gridType="circle" />
+                  <PolarAngleAxis 
+                    dataKey="dimension" 
+                    tick={{ 
+                      fontSize: 11,
+                      fill: 'currentColor',
+                      // Use shorter dimension names on small screens
+                      formatter: (value) => {
+                        if (window.innerWidth < 768) {
+                          const shortNames: Record<string, string> = {
+                            "Technical": "Tech",
+                            "Tactical": "Tact",
+                            "Consistency": "Cons",
+                            "Mental": "Ment",
+                            "Power": "Pwr",
+                            "Speed": "Spd"
+                          };
+                          return shortNames[value] || value;
+                        }
+                        return value;
+                      } 
+                    }}
+                  />
+                  <PolarRadiusAxis angle={30} domain={[0, 100]} tickCount={5} />
                   
                   {data.sourceRatings?.self && (
                     <Radar
@@ -260,8 +303,17 @@ export function CourtIQSourceComparison({ data }: { data: CourtIQDetailedAnalysi
                     />
                   )}
                   
-                  <Legend />
-                  <Tooltip />
+                  <Legend 
+                    iconSize={10}
+                    wrapperStyle={{
+                      fontSize: '11px',
+                      paddingTop: '10px'
+                    }}
+                  />
+                  <Tooltip 
+                    formatter={(value) => [`${value}%`, 'Rating']}
+                    labelFormatter={(label) => `${label} Skills`}
+                  />
                 </RadarChart>
               </ResponsiveContainer>
             </div>
@@ -271,13 +323,49 @@ export function CourtIQSourceComparison({ data }: { data: CourtIQDetailedAnalysi
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart
                   data={getBarData()}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                  margin={{ top: 20, right: 10, left: 0, bottom: 5 }}
+                  layout={window.innerWidth < 640 ? "vertical" : "horizontal"}
                 >
                   <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                  <XAxis dataKey="name" />
-                  <YAxis domain={[0, 100]} />
-                  <Tooltip />
-                  <Legend />
+                  {window.innerWidth < 640 ? (
+                    <>
+                      <XAxis type="number" domain={[0, 100]} />
+                      <YAxis 
+                        dataKey="name" 
+                        type="category"
+                        width={50}
+                        tick={{
+                          fontSize: 11,
+                          formatter: (value) => {
+                            const shortNames: Record<string, string> = {
+                              "Technical": "Tech",
+                              "Tactical": "Tact",
+                              "Consistency": "Cons",
+                              "Mental": "Mental",
+                              "Power": "Power",
+                              "Speed": "Speed"
+                            };
+                            return shortNames[value] || value;
+                          }
+                        }}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <XAxis dataKey="name" />
+                      <YAxis domain={[0, 100]} />
+                    </>
+                  )}
+                  <Tooltip 
+                    formatter={(value) => [`${value}%`, 'Rating']}
+                  />
+                  <Legend 
+                    iconSize={10}
+                    wrapperStyle={{
+                      fontSize: '11px',
+                      paddingTop: '10px'
+                    }}
+                  />
                   
                   {data.sourceRatings?.self && (
                     <Bar dataKey="self" name="Self Assessment" fill="#8b5cf6" />

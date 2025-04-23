@@ -117,12 +117,39 @@ export function CourtIQDimensionBreakdown({ data }: { data: CourtIQDetailedAnaly
         <CardContent>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Radar Chart */}
-            <div className="flex justify-center items-center bg-muted/40 p-4 rounded-lg min-h-[350px]">
+            <div className="flex justify-center items-center bg-muted/40 p-2 sm:p-4 rounded-lg min-h-[350px]">
               <ResponsiveContainer width="100%" height={350}>
-                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-                  <PolarGrid />
-                  <PolarAngleAxis dataKey="dimension" />
-                  <PolarRadiusAxis angle={30} domain={[0, 100]} />
+                <RadarChart 
+                  cx="50%" 
+                  cy="50%" 
+                  outerRadius="70%" 
+                  data={radarData}
+                  margin={{ top: 20, right: 30, bottom: 20, left: 30 }}
+                >
+                  <PolarGrid gridType="circle" />
+                  <PolarAngleAxis 
+                    dataKey="dimension" 
+                    tick={{ 
+                      fontSize: 12,
+                      fill: 'currentColor',
+                      // Use shorter dimension names on small screens
+                      formatter: (value) => {
+                        if (window.innerWidth < 768) {
+                          const shortNames: Record<string, string> = {
+                            "Technical": "Tech",
+                            "Tactical": "Tact",
+                            "Consistency": "Cons",
+                            "Mental": "Ment",
+                            "Power": "Pwr",
+                            "Speed": "Spd"
+                          };
+                          return shortNames[value] || value;
+                        }
+                        return value;
+                      } 
+                    }}
+                  />
+                  <PolarRadiusAxis angle={30} domain={[0, 100]} tickCount={5} />
                   <Radar
                     name="Skills"
                     dataKey="value"
@@ -130,7 +157,10 @@ export function CourtIQDimensionBreakdown({ data }: { data: CourtIQDetailedAnaly
                     fill={radarColor}
                     fillOpacity={0.3}
                   />
-                  <RechartsTooltip />
+                  <RechartsTooltip 
+                    formatter={(value) => [`${value}%`, 'Rating']}
+                    labelFormatter={(label) => `${label} Skills`}
+                  />
                 </RadarChart>
               </ResponsiveContainer>
             </div>
