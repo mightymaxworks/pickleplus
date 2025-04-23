@@ -1,70 +1,31 @@
 /**
  * PKL-278651-COMM-0007 - Enhanced Referral System & Community Ticker
  * 
- * CSS animations and styles for the BounceStatusTicker component
+ * Simple CSS animations for BounceStatusTicker component
  * 
- * @version 3.0.0
+ * @version 1.0.0
  * @framework Framework5.3
  */
 
-@keyframes tickerScroll {
+@keyframes scroll {
   0% {
     transform: translateX(100%);
   }
   100% {
-    transform: translateX(-140%);
+    transform: translateX(-100%);
   }
 }
 
-/* The container that holds the ticker content */
 .ticker-container {
-  width: 100%;
   overflow: hidden;
-  position: relative;
-  height: 100%;
-}
-
-/* The scrolling ticker content */
-.ticker-scroll {
-  display: flex;
-  position: absolute;
-  white-space: nowrap;
-  animation: tickerScroll 20s linear infinite;
-}
-
-/* Pause animation on hover */
-.ticker-scroll:hover {
-  animation-play-state: paused;
-}
-
-/* Individual ticker items */
-.ticker-item {
-  display: inline-flex;
-  align-items: center;
-  white-space: nowrap;
-  margin-right: 40px;
-  padding-right: 5px;
+  width: 100%;
   position: relative;
 }
 
-/* Separator between items */
-.ticker-item:not(:last-child):after {
-  content: "•";
-  color: #4ade80;
-  margin-left: 10px;
-  position: absolute;
-  right: -10px;
-}
-
-/* Speed control for different screen sizes */
-@media (max-width: 640px) {
-  .ticker-scroll {
-    animation-duration: 15s;
-  }
-}
-
-@media (min-width: 1280px) {
-  .ticker-scroll {
-    animation-duration: 30s;
-  }
+.ticker-content {
+  display: inline-block;
+  white-space: nowrap;
+  animation: scroll 15s linear infinite;
+  padding-left: 100%;
+  position: relative;
 }
