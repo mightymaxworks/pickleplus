@@ -5,6 +5,131 @@ import { z } from "zod";
 import { users } from "./schema";
 
 /**
+ * PKL-278651-COURTIQ-0001-GLOBAL
+ * Global Rating System Integration Schema
+ * 
+ * This extension adds support for multiple rating systems and
+ * provides a flexible way to convert between them.
+ */
+
+// Rating systems table
+// Stores metadata about external rating systems we support
+export const ratingSystems = pgTable("rating_systems", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(), // System code (e.g., "DUPR", "IFP", "UTPR", "WPR", "IPTPA")
+  name: text("name").notNull(), // Full name (e.g., "Dynamic Universal Pickleball Rating")
+  minRating: decimal("min_rating", { precision: 5, scale: 2 }).notNull(), // Minimum value in this system
+  maxRating: decimal("max_rating", { precision: 5, scale: 2 }).notNull(), // Maximum value in this system
+  decimals: integer("decimals").notNull().default(1), // Number of decimal places used (e.g., 1 for 4.5, 2 for 4.25)
+  description: text("description"), // Additional details about this rating system
+  websiteUrl: text("website_url"), // Link to the rating system's website
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// User external ratings table
+// Stores user-provided external ratings to be converted to CourtIQ
+export const userExternalRatings = pgTable("user_external_ratings", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  systemId: integer("system_id").notNull().references(() => ratingSystems.id),
+  rating: decimal("rating", { precision: 5, scale: 2 }).notNull(), // User's rating in the external system
+  confidence: integer("confidence").notNull().default(50), // 0-100, how confident we are in this rating
+  isVerified: boolean("is_verified").notNull().default(false), // Whether this rating has been verified
+  verificationMethod: text("verification_method"), // How the rating was verified, if applicable
+  sourceType: text("source_type").notNull().default("user_provided"), // "user_provided", "api_import", "manual_verification"
+  divisionContext: text("division_context"), // The division this rating applies to, if applicable
+  formatContext: text("format_context"), // The format this rating applies to, if applicable
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// System conversion tables
+// Stores mapping data for converting between rating systems
+export const ratingConversions = pgTable("rating_conversions", {
+  id: serial("id").primaryKey(),
+  fromSystemId: integer("from_system_id").notNull().references(() => ratingSystems.id),
+  toSystemId: integer("to_system_id").notNull().references(() => ratingSystems.id),
+  sourceRating: decimal("source_rating", { precision: 5, scale: 2 }).notNull(), // Rating value in source system
+  targetRating: decimal("target_rating", { precision: 5, scale: 2 }).notNull(), // Equivalent rating value in target system
+  confidenceModifier: integer("confidence_modifier").notNull().default(0), // Adjustment to confidence during conversion (-20 to +20)
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// CourtIQ skill dimensions
+// Defines the dimensions used for skill assessment
+export const skillDimensions = pgTable("skill_dimensions", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(), // Short code (e.g., "TECH", "TACT", "PHYS", "MENT", "CONS")
+  name: text("name").notNull(), // Full name (e.g., "Technical Skills")
+  description: text("description").notNull(), // Detailed explanation
+  order: integer("order").notNull(), // Display order
+  colorCode: text("color_code"), // Color for UI display
+  iconName: text("icon_name"), // Icon name for this dimension
+  isActive: boolean("is_active").notNull().default(true)
+});
+
+// User skill dimension ratings
+// Stores individual ratings for each skill dimension
+export const userSkillRatings = pgTable("user_skill_ratings", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  dimensionId: integer("dimension_id").notNull().references(() => skillDimensions.id),
+  rating: integer("rating").notNull().default(1000), // 1000-2500 internal scale
+  confidence: integer("confidence").notNull().default(30), // 0-100
+  isProvisional: boolean("is_provisional").notNull().default(true),
+  divisionContext: text("division_context"), // Optional division context
+  formatContext: text("format_context"), // Optional format context
+  matchesAssessed: integer("matches_assessed").notNull().default(0),
+  lastUpdated: timestamp("last_updated").defaultNow()
+});
+
+// Onboarding progress table
+// Tracks user progress through the onboarding wizard
+export const onboardingProgress = pgTable("onboarding_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id).unique(),
+  
+  // Flags for each onboarding step
+  profileCompleted: boolean("profile_completed").notNull().default(false),
+  ratingSystemSelected: boolean("rating_system_selected").notNull().default(false),
+  ratingProvided: boolean("rating_provided").notNull().default(false),
+  experienceSummaryCompleted: boolean("experience_summary_completed").notNull().default(false),
+  equipmentPreferencesSet: boolean("equipment_preferences_set").notNull().default(false),
+  playStyleAssessed: boolean("play_style_assessed").notNull().default(false),
+  initialAssessmentCompleted: boolean("initial_assessment_completed").notNull().default(false),
+  tourCompleted: boolean("tour_completed").notNull().default(false),
+  
+  // Selected preferences during onboarding
+  preferredDivision: text("preferred_division"),
+  preferredFormat: text("preferred_format"),
+  preferredRatingSystem: text("preferred_rating_system"),
+  experienceYears: integer("experience_years"),
+  
+  // Timestamps
+  startedAt: timestamp("started_at").defaultNow(),
+  lastStepCompletedAt: timestamp("last_step_completed_at"),
+  completedAt: timestamp("completed_at"),
+  
+  // Metadata
+  lastStepCompleted: text("last_step_completed"),
+  currentStep: text("current_step"),
+  xpEarned: integer("xp_earned").notNull().default(0),
+  referredBy: text("referred_by"), // Referral code or user ID
+  
+  // Storage for additional data
+  additionalData: json("additional_data"),
+  
+  // Tracking
+  totalTimeSpentSeconds: integer("total_time_spent_seconds").notNull().default(0),
+  deviceInfo: text("device_info")
+});
+
+/**
  * CourtIQ Rating and Ranking System Schema
  */
 
@@ -490,6 +615,59 @@ export const xpMultipliersRelations = relations(xpMultipliers, ({ one }) => ({
   })
 }));
 
+// Relations for global rating system - PKL-278651-COURTIQ-0001-GLOBAL
+export const ratingSystemsRelations = relations(ratingSystems, ({ many }) => ({
+  userRatings: many(userExternalRatings),
+  conversionsPrimary: many(ratingConversions, { relationName: "fromSystem" }),
+  conversionsSecondary: many(ratingConversions, { relationName: "toSystem" }),
+}));
+
+export const userExternalRatingsRelations = relations(userExternalRatings, ({ one }) => ({
+  user: one(users, {
+    fields: [userExternalRatings.userId],
+    references: [users.id]
+  }),
+  system: one(ratingSystems, {
+    fields: [userExternalRatings.systemId],
+    references: [ratingSystems.id]
+  })
+}));
+
+export const ratingConversionsRelations = relations(ratingConversions, ({ one }) => ({
+  fromSystem: one(ratingSystems, {
+    fields: [ratingConversions.fromSystemId],
+    references: [ratingSystems.id],
+    relationName: "fromSystem"
+  }),
+  toSystem: one(ratingSystems, {
+    fields: [ratingConversions.toSystemId],
+    references: [ratingSystems.id],
+    relationName: "toSystem"
+  })
+}));
+
+export const skillDimensionsRelations = relations(skillDimensions, ({ many }) => ({
+  ratings: many(userSkillRatings)
+}));
+
+export const userSkillRatingsRelations = relations(userSkillRatings, ({ one }) => ({
+  user: one(users, {
+    fields: [userSkillRatings.userId],
+    references: [users.id]
+  }),
+  dimension: one(skillDimensions, {
+    fields: [userSkillRatings.dimensionId],
+    references: [skillDimensions.id]
+  })
+}));
+
+export const onboardingProgressRelations = relations(onboardingProgress, ({ one }) => ({
+  user: one(users, {
+    fields: [onboardingProgress.userId],
+    references: [users.id]
+  })
+}));
+
 // Types
 
 export type PlayerRating = typeof playerRatings.$inferSelect;
@@ -543,3 +721,34 @@ export type InsertPlayerTierStatus = z.infer<typeof insertPlayerTierStatusSchema
 
 export type TierProgression = typeof tierProgressions.$inferSelect;
 export type InsertTierProgression = z.infer<typeof insertTierProgressionSchema>;
+
+// Global Rating System Types - PKL-278651-COURTIQ-0001-GLOBAL
+export const insertRatingSystemSchema = createInsertSchema(ratingSystems)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+export type RatingSystem = typeof ratingSystems.$inferSelect;
+export type InsertRatingSystem = z.infer<typeof insertRatingSystemSchema>;
+
+export const insertUserExternalRatingSchema = createInsertSchema(userExternalRatings)
+  .omit({ id: true, createdAt: true });
+export type UserExternalRating = typeof userExternalRatings.$inferSelect;
+export type InsertUserExternalRating = z.infer<typeof insertUserExternalRatingSchema>;
+
+export const insertRatingConversionSchema = createInsertSchema(ratingConversions)
+  .omit({ id: true, createdAt: true, updatedAt: true });
+export type RatingConversion = typeof ratingConversions.$inferSelect;
+export type InsertRatingConversion = z.infer<typeof insertRatingConversionSchema>;
+
+export const insertSkillDimensionSchema = createInsertSchema(skillDimensions)
+  .omit({ id: true });
+export type SkillDimension = typeof skillDimensions.$inferSelect;
+export type InsertSkillDimension = z.infer<typeof insertSkillDimensionSchema>;
+
+export const insertUserSkillRatingSchema = createInsertSchema(userSkillRatings)
+  .omit({ id: true });
+export type UserSkillRating = typeof userSkillRatings.$inferSelect;
+export type InsertUserSkillRating = z.infer<typeof insertUserSkillRatingSchema>;
+
+export const insertOnboardingProgressSchema = createInsertSchema(onboardingProgress)
+  .omit({ id: true, startedAt: true });
+export type OnboardingProgress = typeof onboardingProgress.$inferSelect;
+export type InsertOnboardingProgress = z.infer<typeof insertOnboardingProgressSchema>;
