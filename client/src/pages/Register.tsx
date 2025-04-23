@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth.tsx";
 import { PicklePlusTextLogo } from "@/components/icons/PicklePlusTextLogo";
@@ -13,6 +13,7 @@ import { z } from "zod";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // Create a schema for the registration form
 const registerSchema = insertUserSchema.extend({
@@ -35,6 +36,21 @@ export default function Register() {
   const { registerMutation } = useAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const [referrerId, setReferrerId] = useState<string | null>(null);
+  const [referralNotice, setReferralNotice] = useState<boolean>(false);
+  
+  // Extract referral ID from URL when component mounts
+  useEffect(() => {
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const ref = urlParams.get('ref');
+    
+    if (ref) {
+      setReferrerId(ref);
+      setReferralNotice(true);
+      console.log(`[REFERRAL] Registration with referral ID: ${ref}`);
+    }
+  }, []);
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -107,8 +123,15 @@ export default function Register() {
       });
       
       try {
+        // Build the URL with referral param if available
+        let registerUrl = '/api/auth/register';
+        if (referrerId) {
+          registerUrl += `?ref=${referrerId}`;
+          console.log(`[REFERRAL] Adding referral ID ${referrerId} to registration request`);
+        }
+        
         // Make direct fetch call to inspect response in detail
-        const response = await fetch('/api/auth/register', {
+        const response = await fetch(registerUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -188,6 +211,13 @@ export default function Register() {
           <CardDescription>
             Join PICKLE+ to track your pickleball journey
           </CardDescription>
+          {referralNotice && (
+            <Alert className="mt-2 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-900">
+              <AlertDescription className="text-green-700 dark:text-green-300 text-sm">
+                You were invited by a friend! They'll earn XP when you register.
+              </AlertDescription>
+            </Alert>
+          )}
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)}>

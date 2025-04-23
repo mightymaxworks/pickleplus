@@ -454,16 +454,36 @@ export function PCPRankings({ user }: PCPRankingsProps) {
                   <p className="text-gray-600 dark:text-gray-400 text-sm">
                     {leaderboardMessage || `This leaderboard will be available once ${requiredCount || 20} players have competed in this category. Currently ${playerCount || 0} players.`}
                   </p>
-                  {leaderboardGuidance?.primaryAction && (
-                    <motion.a
-                      href={leaderboardGuidance.primaryActionPath}
-                      className="mt-2 inline-block px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium"
-                      whileHover={{ y: -2 }}
-                      whileTap={{ y: 0 }}
-                    >
-                      {leaderboardGuidance.primaryAction}
-                    </motion.a>
-                  )}
+                  {/* Invite Friends Button - Replace existing action */}
+                  <motion.button
+                    onClick={() => {
+                      // Generate a referral link with the current user's ID
+                      const referralLink = `${window.location.origin}/register?ref=${user.id}`;
+                      
+                      // Copy to clipboard
+                      navigator.clipboard.writeText(referralLink).then(() => {
+                        // Show success message using toast notification
+                        const { toast } = require('@/hooks/use-toast');
+                        toast({
+                          title: "Referral Link Copied!",
+                          description: "Share this link with friends and earn XP when they register!",
+                          variant: "default",
+                          duration: 5000,
+                        });
+                      }, (err) => {
+                        console.error('Failed to copy: ', err);
+                        // Handle fallback if clipboard fails
+                        prompt("Copy this referral link to invite friends (you'll earn XP when they register):", referralLink);
+                      });
+                    }}
+                    className="mt-2 inline-block px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium"
+                    whileHover={{ y: -2 }}
+                    whileTap={{ y: 0 }}
+                  >
+                    Invite Friends (Earn XP)
+                  </motion.button>
+                  
+                  {/* Secondary Action - If still needed */}
                   {leaderboardGuidance?.secondaryAction && (
                     <motion.a
                       href={leaderboardGuidance.secondaryActionPath}

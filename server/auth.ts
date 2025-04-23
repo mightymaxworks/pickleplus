@@ -201,6 +201,10 @@ export function setupAuth(app: Express) {
           displayName: validatedData.displayName
         });
         
+        // Check for referral code in the request
+        const referrerId = parseInt(req.query.ref as string, 10) || null;
+        console.log(`[DEBUG AUTH] Referral ID from query: ${referrerId}`);
+        
         // Check if the username is already taken
         const existingUser = await storage.getUserByUsername(validatedData.username);
         if (existingUser) {
@@ -252,6 +256,11 @@ export function setupAuth(app: Express) {
         // Manually add the passportId field (which is normally omitted in the InsertUser type)
         userData.passportId = passportCode;
         
+        // If referrerId is provided, save it to track the referral
+        if (referrerId) {
+          userData.referredBy = referrerId;
+        }
+        
         // Create the user with the augmented data object
         const user = await storage.createUser(userData as InsertUser);
         
@@ -296,6 +305,39 @@ export function setupAuth(app: Express) {
         } catch (error) {
           // Don't block registration if adding to default communities fails
           console.error("[PKL-278651-COMM-0020-DEFGRP] Error adding user to default communities:", error);
+        }
+
+        // Award XP to referrer if valid
+        try {
+          if (referrerId) {
+            // Check if referrer exists
+            const referrer = await storage.getUser(referrerId);
+            if (referrer) {
+              // Import XP service
+              const { xpService } = require('./modules/xp/xp-service');
+              
+              // Define XP constants at the top of the function or file
+              const REFERRAL_XP_REWARD = 500;
+              const XP_SOURCE_REFERRAL = 'REFERRAL';
+              
+              // Award XP to the referrer
+              await xpService.awardXp({
+                userId: referrerId,
+                amount: REFERRAL_XP_REWARD,
+                source: XP_SOURCE_REFERRAL,
+                sourceType: 'USER_REGISTRATION',
+                sourceId: user.id.toString(),
+                description: `Invited user ${user.username} who registered`
+              });
+              
+              console.log(`[REFERRAL] Awarded ${REFERRAL_XP_REWARD} XP to user ${referrerId} for referring ${user.username}`);
+            } else {
+              console.log(`[REFERRAL] Referrer with ID ${referrerId} not found, no XP awarded`);
+            }
+          }
+        } catch (error) {
+          // Don't block registration if XP award fails
+          console.error("[REFERRAL] Error awarding XP to referrer:", error);
         }
 
         // Log the user in automatically after registration
