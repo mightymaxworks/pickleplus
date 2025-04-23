@@ -32,6 +32,7 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import XpToast from '@/components/gamification/XpToast';
 
 // Import onboarding step components
 import RatingSystemSelection from './RatingSystemSelection';
@@ -123,6 +124,7 @@ export function OnboardingWizard({
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [transitionDirection, setTransitionDirection] = useState<'next' | 'prev'>('next');
   const [devMode, setDevMode] = useState<boolean>(false);
+  const [xpEarned, setXpEarned] = useState<number | null>(null);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
@@ -297,6 +299,21 @@ export function OnboardingWizard({
         
         // Force refresh the onboarding status
         queryClient.invalidateQueries({ queryKey: ['/api/courtiq/onboarding/status'] });
+        
+        // Calculate XP gained for this step
+        const previousTotalXP = status?.xpEarned || 0;
+        const currentTotalXP = result.xpEarned || 0;
+        const earnedThisStep = currentTotalXP - previousTotalXP;
+        
+        // If XP was earned, show the notification
+        if (earnedThisStep > 0) {
+          setXpEarned(earnedThisStep);
+          
+          // Auto-dismiss XP notification after 3 seconds
+          setTimeout(() => {
+            setXpEarned(null);
+          }, 3000);
+        }
         
         // Check if this is the last step
         if (currentStepIndex >= steps.length - 1) {
