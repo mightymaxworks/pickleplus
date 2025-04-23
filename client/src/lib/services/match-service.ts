@@ -210,9 +210,10 @@ export class MatchService {
   }
   
   /**
-   * Private method to sync a match with the server
+   * Sync a match with the server
+   * Made public so it can be used by SyncManager
    */
-  private async syncMatchWithServer(match: Match): Promise<void> {
+  public async syncMatchWithServer(match: Match): Promise<void> {
     try {
       console.log('MatchService: Syncing match with server:', match);
       

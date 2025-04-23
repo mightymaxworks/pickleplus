@@ -216,9 +216,10 @@ export class AssessmentService {
   }
   
   /**
-   * Private method to sync an assessment with the server
+   * Sync an assessment with the server
+   * Made public so it can be used by SyncManager
    */
-  private async syncAssessmentWithServer(assessment: MatchAssessment): Promise<void> {
+  public async syncAssessmentWithServer(assessment: MatchAssessment): Promise<void> {
     try {
       console.log('AssessmentService: Syncing assessment with server:', assessment);
       
