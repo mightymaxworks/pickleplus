@@ -195,21 +195,24 @@ export class RatingConverter {
     
     // Record this external rating for the user
     try {
-      const system = await db.query.ratingSystems.findFirst({
-        where: eq(ratingSystems.code, systemCode)
-      });
+      const systemResult = await db.execute(
+        sql`SELECT * FROM rating_systems WHERE code = ${systemCode} LIMIT 1`
+      );
+      const system = systemResult[0];
       
       if (system) {
-        const newExternalRating: InsertUserExternalRating = {
-          userId,
-          systemId: system.id,
-          rating,
-          divisionContext: division === "all" ? undefined : division,
-          formatContext: format === "all" ? undefined : format,
-          sourceType: "user_provided"
-        };
-        
-        await db.insert(userExternalRatings).values(newExternalRating);
+        // Insert the external rating
+        await db.execute(
+          sql`INSERT INTO user_external_ratings (
+            user_id, system_id, rating, 
+            division_context, format_context, source_type
+          ) VALUES (
+            ${userId}, ${system.id}, ${rating.toString()}, 
+            ${division === "all" ? null : division}, 
+            ${format === "all" ? null : format}, 
+            'user_provided'
+          )`
+        );
       }
     } catch (error) {
       console.error("Error recording external rating:", error);
@@ -230,13 +233,14 @@ export class RatingConverter {
   ): Promise<ConversionResult> {
     try {
       // Get the user's internal rating
-      const userRating = await db.query.playerRatings.findFirst({
-        where: and(
-          eq(playerRatings.userId, userId),
-          eq(playerRatings.format, format),
-          eq(playerRatings.division, division)
-        )
-      });
+      const userRatingResult = await db.execute(
+        sql`SELECT * FROM player_ratings 
+            WHERE user_id = ${userId} 
+            AND format = ${format} 
+            AND division = ${division} 
+            LIMIT 1`
+      );
+      const userRating = userRatingResult[0];
       
       if (!userRating) {
         throw new Error(`No rating found for user ID ${userId} in ${format}/${division}`);
@@ -332,10 +336,12 @@ export class RatingConverter {
   async initializeRatingSystems() {
     try {
       // Check if the systems are already initialized
-      const existingSystems = await db.query.ratingSystems.findMany();
-      if (existingSystems.length > 0) {
+      const existingSystemsResult = await db.execute(
+        sql`SELECT * FROM rating_systems`
+      );
+      if (existingSystemsResult.length > 0) {
         console.log("Rating systems already initialized");
-        return existingSystems;
+        return existingSystemsResult;
       }
 
       // Define the rating systems
@@ -401,13 +407,31 @@ export class RatingConverter {
       ];
 
       // Insert the systems
-      const systems = await db.insert(ratingSystems).values(systemsToInsert).returning();
+      const systemsInsertResults = [];
+      const systemMap = {} as Record<string, number>;
       
-      // Create a map of system codes to IDs
-      const systemMap = systems.reduce((map, system) => {
-        map[system.code] = system.id;
-        return map;
-      }, {} as Record<string, number>);
+      // Insert each system and track IDs
+      for (const system of systemsToInsert) {
+        const result = await db.execute(
+          sql`INSERT INTO rating_systems (
+            code, name, min_rating, max_rating, decimals, description, is_active, 
+            website_url
+          ) VALUES (
+            ${system.code}, 
+            ${system.name}, 
+            ${system.minRating.toString()}, 
+            ${system.maxRating.toString()}, 
+            ${system.decimals}, 
+            ${system.description}, 
+            ${system.isActive},
+            ${system.websiteUrl || null}
+          ) RETURNING *`
+        );
+        
+        const insertedSystem = result[0];
+        systemsInsertResults.push(insertedSystem);
+        systemMap[insertedSystem.code] = insertedSystem.id;
+      }
 
       // Define conversion mappings (reference points for interpolation)
       // DUPR to CourtIQ conversions
@@ -427,19 +451,24 @@ export class RatingConverter {
 
       // Insert DUPR to CourtIQ conversions
       for (const conv of duprToCourtIQConversions) {
-        await db.insert(ratingConversions).values({
-          fromSystemId: systemMap[RATING_SYSTEMS.DUPR],
-          toSystemId: systemMap[RATING_SYSTEMS.COURTIQ],
-          sourceRating: conv.sourceRating,
-          targetRating: conv.targetRating,
-          confidenceModifier: 0
-        });
+        await db.execute(
+          sql`INSERT INTO rating_conversions (
+            from_system_id, to_system_id, source_rating, 
+            target_rating, confidence_modifier
+          ) VALUES (
+            ${systemMap[RATING_SYSTEMS.DUPR]}, 
+            ${systemMap[RATING_SYSTEMS.COURTIQ]}, 
+            ${conv.sourceRating.toString()}, 
+            ${conv.targetRating.toString()}, 
+            0
+          )`
+        );
       }
 
       // Add more conversion mappings for other systems
       
       console.log("Rating systems initialized successfully");
-      return systems;
+      return systemsInsertResults;
     } catch (error) {
       console.error("Error initializing rating systems:", error);
       throw error;

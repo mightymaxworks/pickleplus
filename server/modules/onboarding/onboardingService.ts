@@ -152,7 +152,7 @@ export class OnboardingService {
       });
       
       // Give XP for completing this step
-      await xpSystem.awardXp(userId, 50, "onboarding_step_completion", "Completed rating selection step in onboarding");
+      await xpSystem.awardXP(userId, 50, "onboarding_step_completion", "Completed rating selection step in onboarding");
 
       return {
         success: true,
@@ -267,7 +267,7 @@ export class OnboardingService {
         .where(eq(onboardingProgress.userId, userId));
       
       // Award XP
-      await xpSystem.awardXp(
+      await xpSystem.awardXP(
         userId, 
         xpToAward, 
         "onboarding_step_completion", 
@@ -282,9 +282,10 @@ export class OnboardingService {
       });
       
       // Get updated onboarding progress
-      const updatedProgress = await db.query.onboardingProgress.findFirst({
-        where: eq(onboardingProgress.userId, userId)
-      });
+      const updatedProgressResult = await db.execute(
+        sql`SELECT * FROM onboarding_progress WHERE user_id = ${userId} LIMIT 1`
+      );
+      const updatedProgress = updatedProgressResult[0];
       
       return this.formatOnboardingStatus(updatedProgress!);
     } catch (error) {
@@ -298,11 +299,12 @@ export class OnboardingService {
    */
   async isOnboardingCompleted(userId: number): Promise<boolean> {
     try {
-      const progress = await db.query.onboardingProgress.findFirst({
-        where: eq(onboardingProgress.userId, userId)
-      });
+      const progressResult = await db.execute(
+        sql`SELECT completed_at FROM onboarding_progress WHERE user_id = ${userId} LIMIT 1`
+      );
+      const progress = progressResult[0];
       
-      return progress?.completedAt != null;
+      return progress?.completed_at != null;
     } catch (error) {
       console.error("Error checking onboarding completion:", error);
       return false;
@@ -314,9 +316,10 @@ export class OnboardingService {
    */
   async getOnboardingStatus(userId: number): Promise<OnboardingStatus | null> {
     try {
-      const progress = await db.query.onboardingProgress.findFirst({
-        where: eq(onboardingProgress.userId, userId)
-      });
+      const progressResult = await db.execute(
+        sql`SELECT * FROM onboarding_progress WHERE user_id = ${userId} LIMIT 1`
+      );
+      const progress = progressResult[0];
       
       if (!progress) {
         return null;
