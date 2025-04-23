@@ -17,12 +17,16 @@ import {
   RatingTier 
 } from "@shared/multi-dimensional-rankings";
 import { usePCPGlobalRankingData } from "@/hooks/use-pcp-global-rankings";
+import { useToast } from "@/hooks/use-toast";
 
 interface PCPRankingsProps {
   user: User;
 }
 
 export function PCPRankings({ user }: PCPRankingsProps) {
+  // Access toast notification system
+  const { toast } = useToast();
+  
   // State for selected format and division
   const [format, setFormat] = React.useState<PlayFormat>('singles');
   const [ageDivision, setAgeDivision] = React.useState<AgeDivision>('19plus');
@@ -463,7 +467,6 @@ export function PCPRankings({ user }: PCPRankingsProps) {
                       // Copy to clipboard
                       navigator.clipboard.writeText(referralLink).then(() => {
                         // Show success message using toast notification
-                        const { toast } = require('@/hooks/use-toast');
                         toast({
                           title: "Referral Link Copied!",
                           description: "Share this link with friends and earn 20-40 XP when they register!",
