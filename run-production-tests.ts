@@ -1,7 +1,9 @@
 /**
- * PKL-278651-BOUNCE-0018-MANUAL - Manual Production Test Runner
+ * PKL-278651-BOUNCE-0027-RUNPROD - Production Test Runner Script
  * 
- * This script runs Bounce tests against the production platform and generates reports.
+ * This script runs Bounce tests against the production environment and
+ * generates a detailed report.
+ * 
  * Run with: npx tsx run-production-tests.ts
  * 
  * @framework Framework5.2
@@ -9,69 +11,86 @@
  * @lastModified 2025-04-22
  */
 
-import { runCICDTests } from './bounce/ci-cd-integration';
-import { getCICDTrend } from './bounce/ci-cd-integration';
-import dotenv from 'dotenv';
+import { startTestRun } from './bounce/production-run';
+import { generateReport } from './bounce/reporting/bug-report-generator';
+import { generateCICDSummary } from './bounce/ci-cd-integration';
+import { BounceTestRunOptions } from './bounce/types';
+import { getFindings } from './bounce/storage';
 
-// Load environment variables
-dotenv.config();
+// Default options for production tests
+const productionOptions: BounceTestRunOptions = {
+  baseUrl: 'https://pickle-plus.replit.app',
+  browser: 'chrome',
+  mobile: false,
+  coverage: 50,
+  headless: true,
+  timeout: 30000,
+};
 
-// Make sure required environment variables are set
-if (!process.env.DATABASE_URL) {
-  console.error('Error: DATABASE_URL environment variable must be set');
-  process.exit(1);
-}
-
-async function main() {
+/**
+ * Runs production tests
+ */
+async function runProductionTests() {
+  console.log('==========================================================');
+  console.log('Bounce Production Tests');
+  console.log('==========================================================');
+  
+  console.log(`Starting tests against: ${productionOptions.baseUrl}`);
+  
+  // Run the test and get the test run ID
   try {
-    console.log('==========================================================');
-    console.log('Bounce Production Tests - Manual Runner');
-    console.log('==========================================================');
-    console.log('Starting production tests...');
+    const testRunId = await startTestRun(productionOptions);
+    console.log(`\nTest run completed with ID: ${testRunId}`);
     
-    // Run the tests
-    const result = await runCICDTests(true, 3);
+    // Generate a report
+    const reportPath = await generateReport(testRunId);
+    console.log(`Bug report generated: ${reportPath}`);
     
-    console.log('\n==========================================================');
-    console.log(`Test Results: ${result.success ? 'PASS ✅' : 'FAIL ❌'}`);
-    console.log(`Test Run ID: ${result.testRunId}`);
-    console.log(`Report Path: ${result.reportPath}`);
-    console.log(`Critical Issues: ${result.criticalCount}`);
-    console.log(`High Issues: ${result.highCount}`);
-    console.log(`Moderate Issues: ${result.moderateCount}`);
-    console.log(`Low Issues: ${result.lowCount}`);
-    console.log(`Total Issues: ${result.totalCount}`);
-    console.log('==========================================================');
+    // Generate a CI/CD summary
+    const summaryPath = await generateCICDSummary(testRunId);
+    console.log(`CI/CD summary generated: ${summaryPath}`);
     
-    // Show recent trends if available
-    if (result.testRunId > 0) {
-      console.log('\nFetching recent testing trends (last 30 days)...');
-      const trends = await getCICDTrend(30);
-      
-      console.log(`Total Test Runs: ${trends.totalRuns}`);
-      console.log(`Average Critical Issues: ${trends.averageCritical.toFixed(2)}`);
-      console.log(`Average High Issues: ${trends.averageHigh.toFixed(2)}`);
-      
-      if (trends.findingCounts.length > 0) {
-        console.log('\nRecent Test Runs:');
-        trends.findingCounts.slice(0, 5).forEach((run: any) => {
-          const date = new Date(run.date).toLocaleDateString();
-          console.log(`- Run #${run.runId} (${date}): ${run.criticalCount} critical, ${run.highCount} high, ${run.totalCount} total`);
-        });
-      }
-    }
+    // Get findings to display statistics
+    const findings = await getFindings(testRunId);
+    
+    const criticalCount = findings.filter(f => f.severity === 'CRITICAL').length;
+    const highCount = findings.filter(f => f.severity === 'HIGH').length;
+    const moderateCount = findings.filter(f => f.severity === 'MODERATE').length;
+    const lowCount = findings.filter(f => f.severity === 'LOW').length;
+    const totalCount = findings.length;
+    
+    console.log('\nTest Results:');
+    console.log(`Total Issues Found: ${totalCount}`);
+    console.log(`Critical Issues: ${criticalCount}`);
+    console.log(`High Priority Issues: ${highCount}`);
+    console.log(`Moderate Issues: ${moderateCount}`);
+    console.log(`Low Priority Issues: ${lowCount}`);
     
     console.log('\n==========================================================');
-    console.log('Testing complete! Check the reports directory for details.');
+    console.log('Testing complete! Check the reports directory for your bug report.');
     console.log('==========================================================');
     
-    // Exit with appropriate code
-    process.exit(result.exitCode);
+    return {
+      success: criticalCount === 0,
+      exitCode: criticalCount > 0 ? 1 : 0
+    };
   } catch (error) {
-    console.error(`Error running tests: ${(error as Error).message}`);
-    process.exit(2);
+    console.error(`Error running production tests: ${error.message}`);
+    return {
+      success: false,
+      exitCode: 1
+    };
   }
 }
 
-// Run the main function
-main();
+// Run the function if this script is called directly
+if (import.meta.url === process.argv[1]) {
+  runProductionTests()
+    .then(result => process.exit(result.exitCode))
+    .catch(error => {
+      console.error(`Fatal error: ${error.message}`);
+      process.exit(1);
+    });
+}
+
+export { runProductionTests };

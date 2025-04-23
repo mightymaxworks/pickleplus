@@ -1,114 +1,77 @@
-name: Bounce CI/CD Testing
+name: Bounce Automated Testing
 
 on:
   push:
-    branches: [main]
+    branches: [ main, master ]
   pull_request:
-    branches: [main]
+    branches: [ main, master ]
   workflow_dispatch:
     inputs:
-      environment:
-        description: 'Environment to test'
-        required: true
-        default: 'staging'
-        type: choice
-        options:
-          - staging
-          - production
+      target_url:
+        description: 'Target URL to test'
+        required: false
+        default: 'https://pickle-plus.replit.app'
 
 jobs:
   bounce-test:
-    name: Run Bounce Automated Tests
+    name: Run Bounce Tests
     runs-on: ubuntu-latest
     
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: bounce_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
       
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
       
-      - name: Install Dependencies
+      - name: Install dependencies
         run: npm ci
       
-      - name: Setup PostgreSQL
-        uses: harmon758/postgresql-action@v1
-        with:
-          postgresql version: '14'
-          postgresql db: pickle
-          postgresql user: postgres
-          postgresql password: postgres
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chrome
       
-      - name: Set Environment Variables
+      - name: Set environment variables
         run: |
-          echo "DATABASE_URL=postgres://postgres:postgres@localhost:5432/pickle" >> $GITHUB_ENV
-          echo "SESSION_SECRET=ci-cd-test-secret" >> $GITHUB_ENV
+          echo "DATABASE_URL=postgres://postgres:postgres@localhost:5432/bounce_test" >> $GITHUB_ENV
+          echo "NODE_ENV=test" >> $GITHUB_ENV
       
-      - name: Create Bounce Tables
-        run: npx tsx create-bounce-tables.ts
-      
-      - name: Run Bounce Tests
-        id: bounce-tests
+      - name: Create Bounce directories
         run: |
-          # Run tests and store exit code
-          NODE_ENV=test npx tsx bounce/ci-cd-integration.ts
-          # Store the exit code
-          echo "BOUNCE_EXIT_CODE=$?" >> $GITHUB_ENV
+          mkdir -p bounce/data
+          mkdir -p evidence
+          mkdir -p reports
       
-      - name: Upload Test Reports
+      - name: Run Bounce CI/CD tests
+        run: npx tsx bounce/ci-cd-integration.ts ${{ github.event.inputs.target_url || 'https://pickle-plus.replit.app' }}
+      
+      - name: Upload test reports
         uses: actions/upload-artifact@v3
         with:
           name: bounce-reports
           path: reports/
+          retention-days: 14
       
-      - name: Add Test Summary
-        run: |
-          echo "### Bounce Test Results 🧪" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          if [ -f "reports/cicd-summary-*.md" ]; then
-            cat reports/cicd-summary-*.md >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ No CI/CD summary report found. Tests may have failed to run." >> $GITHUB_STEP_SUMMARY
-          fi
-      
-      - name: Check Test Results
-        if: ${{ env.BOUNCE_EXIT_CODE != '0' }}
-        run: |
-          echo "Bounce tests failed with exit code $BOUNCE_EXIT_CODE"
-          # Exit with non-zero code to fail the workflow
-          # You can comment this out if you don't want failing tests to block deployment
-          exit $BOUNCE_EXIT_CODE
-
-  # Optional integration with deployment workflow
-  deploy:
-    name: Deploy Application
-    needs: bounce-test
-    runs-on: ubuntu-latest
-    # Only run if tests pass and we're on main branch
-    if: success() && github.ref == 'refs/heads/main'
-    
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Upload test evidence
+        uses: actions/upload-artifact@v3
         with:
-          node-version: '18'
-          cache: 'npm'
-      
-      - name: Install Dependencies
-        run: npm ci
-      
-      - name: Build Application
-        run: npm run build
-      
-      - name: Deploy to Replit
-        run: |
-          echo "Deploying to Replit..."
-          # Add your Replit deployment commands here
-          # This would typically use the Replit CLI or API
+          name: bounce-evidence
+          path: evidence/
+          retention-days: 7

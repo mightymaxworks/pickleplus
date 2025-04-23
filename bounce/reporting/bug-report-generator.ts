@@ -1,22 +1,17 @@
 /**
- * PKL-278651-BOUNCE-0010-REPORTS - Bug Report Generator
+ * PKL-278651-BOUNCE-0028-REPORT - Bug Report Generator
  * 
- * Generates bug reports from test findings
+ * This module generates bug reports from Bounce test runs.
  * 
  * @framework Framework5.2
  * @version 1.0.0
  * @lastModified 2025-04-22
  */
 
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
-import { db } from '../../server/db';
-import { eq } from 'drizzle-orm';
-import { 
-  bounceTestRuns, 
-  bounceFindings,
-  BounceFindingSeverity 
-} from '../../shared/schema/bounce';
+import { getTestRun, getFindings } from '../storage';
+import { BounceFindingSeverity } from '../types';
 
 /**
  * Generate a bug report for a test run
@@ -24,119 +19,80 @@ import {
  * @returns The path to the generated report
  */
 export async function generateReport(testRunId: number): Promise<string> {
-  // Get the test run
-  const [testRun] = await db
-    .select()
-    .from(bounceTestRuns)
-    .where(eq(bounceTestRuns.id, testRunId));
-  
+  const testRun = await getTestRun(testRunId);
   if (!testRun) {
     throw new Error(`Test run ${testRunId} not found`);
   }
+
+  const findings = await getFindings(testRunId);
   
-  // Get all findings for this test run
-  const findings = await db
-    .select()
-    .from(bounceFindings)
-    .where(eq(bounceFindings.test_run_id, testRunId));
+  // Group findings by severity
+  const criticalFindings = findings.filter(f => f.severity === BounceFindingSeverity.CRITICAL);
+  const highFindings = findings.filter(f => f.severity === BounceFindingSeverity.HIGH);
+  const moderateFindings = findings.filter(f => f.severity === BounceFindingSeverity.MODERATE);
+  const lowFindings = findings.filter(f => f.severity === BounceFindingSeverity.LOW);
   
-  // Count findings by severity
-  const criticalCount = findings.filter(f => f.severity === BounceFindingSeverity.CRITICAL).length;
-  const highCount = findings.filter(f => f.severity === BounceFindingSeverity.HIGH).length;
-  const moderateCount = findings.filter(f => 
-    f.severity === BounceFindingSeverity.MODERATE || 
-    f.severity === BounceFindingSeverity.MEDIUM
-  ).length;
-  const lowCount = findings.filter(f => 
-    f.severity === BounceFindingSeverity.LOW || 
-    f.severity === BounceFindingSeverity.INFO
-  ).length;
+  // Format timestamp for filename
+  const timestamp = new Date().toISOString().replace(/:/g, '-');
   
-  // Generate the report content
-  let report = `# Bounce Bug Report - Test Run #${testRun.id}\n\n`;
-  report += `Generated on: ${new Date().toLocaleString()}\n\n`;
+  // Create the report content
+  let content = `# Bounce Bug Report - Test Run #${testRunId}\n\n`;
+  content += `Generated on: ${new Date().toLocaleString()}\n\n`;
   
-  // Add test run information
-  report += `## Test Run Information\n\n`;
-  report += `- **Name**: ${testRun.name}\n`;
-  report += `- **Started**: ${testRun.created_at ? new Date(testRun.created_at).toLocaleString() : new Date().toLocaleString()}\n`;
-  report += `- **Completed**: ${testRun.completed_at ? new Date(testRun.completed_at).toLocaleString() : 
-    (testRun.created_at ? new Date(testRun.created_at).toLocaleString() : new Date().toLocaleString())}\n`;
-  report += `- **Status**: ${testRun.status}\n`;
-  report += `- **Target URL**: ${testRun.target_url || 'Unknown'}\n`;
-  report += `- **Total Findings**: ${findings.length}\n\n`;
+  content += `## Test Run Information\n\n`;
+  content += `- **Name**: ${testRun.name}\n`;
+  content += `- **Started**: ${new Date(testRun.created_at).toLocaleString()}\n`;
+  content += `- **Completed**: ${testRun.completed_at ? new Date(testRun.completed_at).toLocaleString() : 'N/A'}\n`;
+  content += `- **Status**: ${testRun.status}\n`;
+  content += `- **Target URL**: ${testRun.base_url}\n`;
+  content += `- **Total Findings**: ${findings.length}\n\n`;
   
-  // Add summary section
-  report += `## Summary\n\n`;
-  report += `- **Critical Issues**: ${criticalCount}\n`;
-  report += `- **High Priority Issues**: ${highCount}\n`;
-  report += `- **Moderate Issues**: ${moderateCount}\n`;
-  report += `- **Low Priority Issues**: ${lowCount}\n\n`;
+  content += `## Summary\n\n`;
+  content += `- **Critical Issues**: ${criticalFindings.length}\n`;
+  content += `- **High Priority Issues**: ${highFindings.length}\n`;
+  content += `- **Moderate Issues**: ${moderateFindings.length}\n`;
+  content += `- **Low Priority Issues**: ${lowFindings.length}\n\n`;
   
-  // Add findings by severity
-  report += `## Findings\n\n`;
+  content += `## Findings\n\n`;
   
-  // Critical findings
-  if (criticalCount > 0) {
-    report += `### Critical Issues\n\n`;
-    let index = 0;
-    for (const finding of findings.filter(f => f.severity === BounceFindingSeverity.CRITICAL)) {
-      index++;
-      report += formatFinding(finding, index);
-    }
+  if (criticalFindings.length > 0) {
+    content += `### Critical Issues\n\n`;
+    criticalFindings.forEach((finding, index) => {
+      content += formatFinding(finding, index);
+    });
   }
   
-  // High findings
-  if (highCount > 0) {
-    report += `### High Priority Issues\n\n`;
-    let index = 0;
-    for (const finding of findings.filter(f => f.severity === BounceFindingSeverity.HIGH)) {
-      index++;
-      report += formatFinding(finding, index);
-    }
+  if (highFindings.length > 0) {
+    content += `### High Priority Issues\n\n`;
+    highFindings.forEach((finding, index) => {
+      content += formatFinding(finding, index);
+    });
   }
   
-  // Moderate findings
-  if (moderateCount > 0) {
-    report += `### Moderate Issues\n\n`;
-    let index = 0;
-    for (const finding of findings.filter(f => 
-      f.severity === BounceFindingSeverity.MODERATE || 
-      f.severity === BounceFindingSeverity.MEDIUM
-    )) {
-      index++;
-      report += formatFinding(finding, index);
-    }
+  if (moderateFindings.length > 0) {
+    content += `### Moderate Issues\n\n`;
+    moderateFindings.forEach((finding, index) => {
+      content += formatFinding(finding, index);
+    });
   }
   
-  // Low findings
-  if (lowCount > 0) {
-    report += `### Low Priority Issues\n\n`;
-    let index = 0;
-    for (const finding of findings.filter(f => 
-      f.severity === BounceFindingSeverity.LOW || 
-      f.severity === BounceFindingSeverity.INFO
-    )) {
-      index++;
-      report += formatFinding(finding, index);
-    }
+  if (lowFindings.length > 0) {
+    content += `### Low Priority Issues\n\n`;
+    lowFindings.forEach((finding, index) => {
+      content += formatFinding(finding, index);
+    });
   }
   
-  // Add footer
-  report += `\n---\n\n`;
-  report += `Generated by Bounce Automated Testing System | Framework5.2`;
+  content += `---\n\n`;
+  content += `Generated by Bounce Automated Testing System | Framework5.2\n`;
   
-  // Create reports directory if it doesn't exist
+  // Ensure the reports directory exists
   const reportsDir = path.join(process.cwd(), 'reports');
-  if (!fs.existsSync(reportsDir)) {
-    fs.mkdirSync(reportsDir, { recursive: true });
-  }
+  await fs.mkdir(reportsDir, { recursive: true });
   
-  // Write report to file
-  const fileName = `bug-report-${testRunId}-${new Date().toISOString().replace(/:/g, '-')}.md`;
-  const filePath = path.join(reportsDir, fileName);
-  
-  fs.writeFileSync(filePath, report);
+  // Write the report to a file
+  const filePath = path.join(reportsDir, `bug-report-${testRunId}-${timestamp}.md`);
+  await fs.writeFile(filePath, content);
   
   return filePath;
 }
@@ -148,8 +104,11 @@ export async function generateReport(testRunId: number): Promise<string> {
  * @returns Formatted finding text
  */
 function formatFinding(finding: any, index: number): string {
+  // Format Framework5.2 ID properly if missing
+  const frameworkId = finding.framework_id || `PKL-278651-${finding.area.toUpperCase()}-${String(finding.id).padStart(4, '0')}-FIX`;
+  
   let text = `#### Finding #${finding.id}: ${finding.title}\n\n`;
-  text += `**Framework5.2 ID**: \`${finding.framework_id}\`\n\n`;
+  text += `**Framework5.2 ID**: \`${frameworkId}\`\n\n`;
   text += `**Severity**: ${finding.severity}\n\n`;
   text += `**Area**: ${finding.area}\n\n`;
   text += `**Description**:\n${finding.description}\n\n`;
@@ -170,4 +129,25 @@ function formatFinding(finding: any, index: number): string {
   text += `---\n\n`;
   
   return text;
+}
+
+// Directly run if this module is executed on its own
+if (import.meta.url === process.argv[1]) {
+  // Check if a test run ID was provided
+  if (process.argv.length < 3) {
+    console.error('Please provide a test run ID');
+    process.exit(1);
+  }
+  
+  const testRunId = parseInt(process.argv[2], 10);
+  
+  generateReport(testRunId)
+    .then((filePath) => {
+      console.log(`Report generated: ${filePath}`);
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error(`Error generating report: ${error.message}`);
+      process.exit(1);
+    });
 }
