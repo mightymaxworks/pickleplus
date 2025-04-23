@@ -1,6 +1,6 @@
-# Framework 5.4: Simplicity Checklist
+# Framework 5.3: Simplicity Checklist
 
-Use this checklist when implementing a feature or fixing a bug to ensure you're following the simplicity principles of Framework 5.4.
+Use this checklist when implementing a feature or fixing a bug to ensure you're following the simplicity principles of Framework 5.3.
 
 ## Initial Assessment
 

@@ -1,6 +1,6 @@
-# Framework 5.4: Code Examples
+# Framework 5.3: Code Examples
 
-These examples demonstrate the practical application of Framework 5.4 principles in common development scenarios.
+These examples demonstrate the practical application of Framework 5.3 principles in common development scenarios.
 
 ## Table of Contents
 1. [Image Upload & Preview](#image-upload--preview)

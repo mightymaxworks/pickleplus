@@ -72,6 +72,7 @@ export function AppHeader({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [localAvatarUrl, setLocalAvatarUrl] = useState<string | null>(null);
 
   // Get notification count
   const { data: notificationData } = useQuery({
@@ -97,6 +98,22 @@ export function AppHeader({
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Load avatar URL from localStorage
+  useEffect(() => {
+    if (user?.id) {
+      const cachedAvatarUrl = localStorage.getItem(`user_avatar_${user.id}`);
+      if (cachedAvatarUrl) {
+        setLocalAvatarUrl(cachedAvatarUrl);
+      } else if (user.avatarUrl) {
+        // If no cached avatar but user has an avatarUrl, cache it for future use
+        localStorage.setItem(`user_avatar_${user.id}`, user.avatarUrl);
+        setLocalAvatarUrl(user.avatarUrl);
+      } else {
+        setLocalAvatarUrl(null);
+      }
+    }
+  }, [user?.id, user?.avatarUrl]);
 
   // Handle logout
   const handleLogout = async () => {
@@ -193,13 +210,13 @@ export function AppHeader({
             whileHover={{ scale: 1.02 }}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
-            {user?.avatarUrl ? (
+            {localAvatarUrl || user?.avatarUrl ? (
               <div className="w-8 h-8 rounded-full overflow-hidden shadow-sm">
                 <img 
-                  src={user.avatarUrl} 
-                  alt={user.username} 
+                  src={localAvatarUrl || user?.avatarUrl} 
+                  alt={user?.username} 
                   className="w-full h-full object-cover"
-                  key={user.avatarUrl} // Force re-render when URL changes
+                  key={localAvatarUrl || user?.avatarUrl} // Force re-render when URL changes
                 />
               </div>
             ) : (

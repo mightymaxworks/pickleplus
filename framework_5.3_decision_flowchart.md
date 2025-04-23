@@ -1,6 +1,6 @@
-# Framework 5.4: Decision Flowchart
+# Framework 5.3: Decision Flowchart
 
-This flowchart provides a visual decision-making guide for implementing features or fixing bugs using the simplicity principles in Framework 5.4.
+This flowchart provides a visual decision-making guide for implementing features or fixing bugs using the simplicity principles in Framework 5.3.
 
 ```
 START
