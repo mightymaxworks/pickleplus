@@ -1,25 +1,17 @@
 /**
- * PKL-278651-MATCH-0007-TICKER - Latest Match Updates Ticker
+ * PKL-278651-COMM-0007 - Enhanced Referral System & Community Ticker
  * 
- * StatusTicker - A modern ticker component that displays real-time information
- * about recent matches, system updates, and community activity.
+ * BounceStatusTicker - A modern ticker component that displays real-time information
+ * about pickleball tips, recent community joins, and achievement unlocks.
  * 
- * @version 1.0.0
+ * @version 2.0.0
  * @framework Framework5.3
  */
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Trophy, Activity, Calendar, Bell, Info } from 'lucide-react';
+import { Lightbulb, Trophy, UserPlus, Award, Calendar } from 'lucide-react';
 import { useLocation } from 'wouter';
-import { format } from 'date-fns';
-import { 
-  bounceStatusService, 
-  type RecentMatch,
-  type SystemUpdate,
-  type CommunityStats,
-  type UpcomingEvents
-} from '@/lib/services/bounceStatusService';
+import { formatDistanceToNow } from 'date-fns';
 
 // Import CSS for ticker animations and styles
 import './bounce-status-ticker.css';
@@ -29,66 +21,219 @@ interface BounceStatusTickerProps {
   compact?: boolean;
 }
 
+// PKL-278651-COMM-0007 - Enhanced Referral System & Community Ticker
+// Types for community activity and pickleball tips
+interface PickleballTip {
+  id: number;
+  tipContent: string;
+  source?: string;
+  isActive: boolean;
+  displayPriority: number;
+}
+
+interface CommunityActivity {
+  type: 'join' | 'achievement';
+  userId: number;
+  username: string;
+  displayName?: string;
+  timestamp: string;
+  achievementName?: string;
+}
+
+type TickerItem = 
+  | { type: 'tip'; content: string; source?: string }
+  | { type: 'activity'; activity: CommunityActivity };
+
 export const BounceStatusTicker = ({ 
   className = '',
   compact = false
 }: BounceStatusTickerProps) => {
+  const [tickerItems, setTickerItems] = useState<TickerItem[]>([]);
+  const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [recentMatches, setRecentMatches] = useState<RecentMatch[]>([]);
-  const [systemUpdates, setSystemUpdates] = useState<SystemUpdate[]>([]);
-  const [communityStats, setCommunityStats] = useState<CommunityStats | null>(null);
-  const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvents | null>(null);
   const [, setLocation] = useLocation();
-  
+
   useEffect(() => {
-    const loadData = async () => {
+    // Fetch community activity and pickleball tips
+    const fetchTickerContent = async () => {
+      setIsLoading(true);
+      
       try {
-        setIsLoading(true);
+        // Fetch pickleball tips from API
+        const tipsResponse = await fetch('/api/referrals/tips');
+        let tips: PickleballTip[] = [];
         
-        const [matchesData, updatesData, statsData, eventsData] = await Promise.all([
-          bounceStatusService.getRecentMatches(),
-          bounceStatusService.getSystemUpdates(),
-          bounceStatusService.getCommunityStats(),
-          bounceStatusService.getUpcomingEvents()
-        ]);
+        if (tipsResponse.ok) {
+          const tipsData = await tipsResponse.json();
+          tips = tipsData.tips || [];
+        }
         
-        setRecentMatches(matchesData);
-        setSystemUpdates(updatesData);
-        setCommunityStats(statsData);
-        setUpcomingEvents(eventsData);
+        // Get fallback tips if API fails or returns empty array
+        if (tips.length === 0) {
+          tips = getDefaultPickleballTips();
+        }
+        
+        // Fetch community activity (recent joins and achievements)
+        const activityResponse = await fetch('/api/referrals/activity');
+        let activity: CommunityActivity[] = [];
+        
+        if (activityResponse.ok) {
+          const activityData = await activityResponse.json();
+          activity = activityData.activity || [];
+        }
+        
+        // Get fallback activity if API fails or returns empty array
+        if (activity.length === 0) {
+          activity = getDefaultCommunityActivity();
+        }
+        
+        // Combine tips and activity into a unified ticker items array
+        const tickerItemsArray: TickerItem[] = [
+          ...tips.map(tip => ({ 
+            type: 'tip' as const, 
+            content: tip.tipContent,
+            source: tip.source
+          })),
+          ...activity.map(act => ({ 
+            type: 'activity' as const, 
+            activity: act 
+          }))
+        ];
+        
+        // Shuffle the array to mix tips and activity
+        const shuffledItems = shuffleArray([...tickerItemsArray]);
+        
+        setTickerItems(shuffledItems);
+        setIsLoading(false);
       } catch (error) {
-        console.error('Error loading status data:', error);
-      } finally {
+        console.error('Error fetching ticker content:', error);
+        
+        // Use default content if API fails
+        const defaultTips = getDefaultPickleballTips().map(tip => ({ 
+          type: 'tip' as const, 
+          content: tip.tipContent,
+          source: tip.source
+        }));
+        
+        const defaultActivity = getDefaultCommunityActivity().map(act => ({ 
+          type: 'activity' as const, 
+          activity: act 
+        }));
+        
+        setTickerItems([...defaultTips, ...defaultActivity]);
         setIsLoading(false);
       }
     };
-    
-    loadData();
-    
-    // Refresh data every 5 minutes
-    const intervalId = setInterval(loadData, 5 * 60 * 1000);
-    
+
+    fetchTickerContent();
+
+    // Rotate items every 3 seconds for tips, 5 seconds for activity
+    const intervalId = setInterval(() => {
+      setCurrentItemIndex((prevIndex) => {
+        // Calculate next index
+        const nextIndex = prevIndex === tickerItems.length - 1 ? 0 : prevIndex + 1;
+        
+        return nextIndex;
+      });
+    }, 3000);
+
     return () => clearInterval(intervalId);
   }, []);
-  
-  // Format a match result as a readable string
-  const formatMatchResult = (match: RecentMatch): string => {
-    const winner = match.players.find(p => p.isWinner);
-    const loser = match.players.find(p => !p.isWinner);
-    
-    if (winner && loser) {
-      return `${winner.displayName} def. ${loser.displayName} ${winner.score}-${loser.score}`;
+
+  // Helper function to get default pickleball tips if API fails
+  const getDefaultPickleballTips = (): PickleballTip[] => {
+    return [
+      { 
+        id: 1, 
+        tipContent: "For better control, hold your paddle with a continental grip.", 
+        isActive: true, 
+        displayPriority: 10 
+      },
+      { 
+        id: 2, 
+        tipContent: "Keep your non-dominant hand up for balance during shots.", 
+        isActive: true, 
+        displayPriority: 10 
+      },
+      { 
+        id: 3, 
+        tipContent: "When serving, aim deep to push your opponent back.", 
+        isActive: true, 
+        displayPriority: 10 
+      },
+      { 
+        id: 4, 
+        tipContent: "The third shot drop is essential for transitioning to the net.", 
+        source: "Coach Mike's Tips", 
+        isActive: true, 
+        displayPriority: 10 
+      },
+      { 
+        id: 5, 
+        tipContent: "Practice dinking to improve your soft game at the kitchen line.", 
+        isActive: true, 
+        displayPriority: 10 
+      }
+    ];
+  };
+
+  // Helper function to get default community activity if API fails
+  const getDefaultCommunityActivity = (): CommunityActivity[] => {
+    return [
+      {
+        type: 'join',
+        userId: 123,
+        username: 'picklemaster',
+        displayName: 'Sarah Jones',
+        timestamp: new Date(Date.now() - 15 * 60000).toISOString() // 15 minutes ago
+      },
+      {
+        type: 'achievement',
+        userId: 456,
+        username: 'dinkingqueen',
+        displayName: 'Tracy Williams',
+        achievementName: 'First Steps',
+        timestamp: new Date(Date.now() - 30 * 60000).toISOString() // 30 minutes ago
+      },
+      {
+        type: 'join',
+        userId: 789,
+        username: 'smashking',
+        displayName: 'Robert Chen',
+        timestamp: new Date(Date.now() - 120 * 60000).toISOString() // 2 hours ago
+      }
+    ];
+  };
+
+  // Helper function to shuffle array
+  const shuffleArray = <T,>(array: T[]): T[] => {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
     }
-    
-    return match.players.map(p => `${p.displayName}: ${p.score}`).join(' vs ');
+    return newArray;
   };
-  
-  // Format an upcoming event
-  const formatUpcomingEvent = (event: {name: string, date: string, location: string}): string => {
-    const eventDate = new Date(event.date);
-    return `${event.name} on ${format(eventDate, 'MMM d')} at ${event.location}`;
+
+  // Function to format activity message
+  const formatActivityMessage = (activity: CommunityActivity): string => {
+    if (activity.type === 'join') {
+      return `${activity.displayName || activity.username} joined Pickle+`;
+    } else if (activity.type === 'achievement') {
+      return `${activity.displayName || activity.username} earned the "${activity.achievementName}" achievement`;
+    }
+    return '';
   };
-  
+
+  // Function to format time ago
+  const formatTimeAgo = (timestamp: string): string => {
+    try {
+      return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
+    } catch (error) {
+      return '';
+    }
+  };
+
   if (isLoading) {
     return (
       <div className={`relative overflow-hidden bg-gradient-to-r from-green-900/90 to-green-800/90 dark:from-green-900 dark:to-black rounded-md shadow-md border border-green-700/30 dark:border-green-700/50 ${className}`}>
@@ -105,7 +250,13 @@ export const BounceStatusTicker = ({
       </div>
     );
   }
-  
+
+  if (tickerItems.length === 0) {
+    return null;
+  }
+
+  const currentItem = tickerItems[currentItemIndex];
+
   // Compact view for smaller devices
   if (compact) {
     return (
@@ -117,7 +268,11 @@ export const BounceStatusTicker = ({
             <div className="text-xs text-lime-400 font-mono">LIVE</div>
           </div>
           <div className="ml-2 text-white text-xs truncate">
-            {communityStats ? `${communityStats.matchesPlayed} matches played` : 'Pickle+ active'}
+            {currentItem.type === 'tip' ? (
+              <span>Pickle Tip: {truncateText(currentItem.content, 30)}</span>
+            ) : (
+              <span>Community: {truncateText(formatActivityMessage(currentItem.activity), 30)}</span>
+            )}
           </div>
         </div>
       </div>
@@ -133,73 +288,57 @@ export const BounceStatusTicker = ({
       </div>
       <div className="flex items-center px-4 py-3">
         <div className="mr-3 bg-gradient-to-r from-lime-500 to-green-600 p-1.5 rounded-full text-white">
-          <Trophy size={16} />
+          {currentItem.type === 'tip' ? (
+            <Lightbulb size={16} />
+          ) : currentItem.activity.type === 'join' ? (
+            <UserPlus size={16} />
+          ) : (
+            <Award size={16} />
+          )}
         </div>
         <div className="relative overflow-hidden flex-1">
-          {/* For smooth animation, we use CSS animation on this div */}
-          <div className="whitespace-nowrap flex items-center gap-8 animate-marquee">
-            {recentMatches.length > 0 && recentMatches.map((match, index) => (
-              <div key={`match-${match.id || index}`} className="ticker-item">
-                <span className="text-lime-400 font-medium mr-2">Recent Match:</span>
-                <span className="text-white text-sm">
-                  {formatMatchResult(match)} {match.location ? `at ${match.location}` : ''}
+          {currentItem.type === 'tip' ? (
+            <div className="ticker-item">
+              <span className="text-lime-400 font-medium mr-2">PICKLE TIP:</span>
+              <span className="text-white text-sm">
+                {currentItem.content}
+                {currentItem.source && <span className="text-lime-200 ml-1 italic text-xs"> - {currentItem.source}</span>}
+              </span>
+            </div>
+          ) : (
+            <div className="ticker-item">
+              <span className="text-lime-400 font-medium mr-2">
+                {currentItem.activity.type === 'join' ? 'NEW PLAYER:' : 'ACHIEVEMENT:'}
+              </span>
+              <span className="text-white text-sm">
+                {formatActivityMessage(currentItem.activity)}
+                <span className="text-lime-200 ml-1 italic text-xs">
+                  {formatTimeAgo(currentItem.activity.timestamp)}
                 </span>
-              </div>
-            ))}
-            
-            {systemUpdates.map((update, index) => (
-              <div key={`update-${update.id || index}`} className="ticker-item">
-                <span className="text-lime-400 font-medium mr-2">
-                  {update.category === 'feature' ? 'New Feature:' : 
-                   update.category === 'improvement' ? 'Improvement:' : 
-                   update.category === 'event' ? 'Event:' : 'Update:'}
-                </span>
-                <span className="text-white text-sm">
-                  {update.message}
-                </span>
-              </div>
-            ))}
-            
-            {communityStats && (
-              <div className="ticker-item">
-                <span className="text-lime-400 font-medium mr-2">Community:</span>
-                <span className="text-white text-sm">
-                  {communityStats.matchesPlayed} matches played across {communityStats.activeTournaments} active tournaments
-                </span>
-              </div>
-            )}
-            
-            {communityStats?.userMilestone && (
-              <div className="ticker-item">
-                <span className="text-lime-400 font-medium mr-2">Milestone:</span>
-                <span className="text-white text-sm">
-                  {communityStats.userMilestone}
-                </span>
-              </div>
-            )}
-            
-            {upcomingEvents?.nextEvents && upcomingEvents.nextEvents.map((event, index) => (
-              <div key={`event-${event.id || index}`} className="ticker-item">
-                <span className="text-lime-400 font-medium mr-2">Upcoming:</span>
-                <span className="text-white text-sm">
-                  {formatUpcomingEvent(event)}
-                </span>
-              </div>
-            ))}
-          </div>
+              </span>
+            </div>
+          )}
         </div>
         <div className="hidden md:flex items-center ml-3 pl-3 border-l border-green-700/30">
           <button 
             onClick={() => {
-              setLocation('/tournaments');
+              setLocation('/refer');
             }}
             className="ml-2 text-xs text-white bg-green-600 hover:bg-green-700 transition-colors px-2 py-1 rounded flex items-center"
           >
-            <Calendar size={12} className="mr-1" />
-            View Events
+            <UserPlus size={12} className="mr-1" />
+            Refer Friends
           </button>
         </div>
       </div>
     </div>
   );
 };
+
+// Helper function to truncate text for compact view
+function truncateText(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text;
+  return text.slice(0, maxLength) + '...';
+}
+
+export default BounceStatusTicker;

@@ -8,6 +8,19 @@ import {
 // Import XP tables from their new modular location
 import { xpTransactions } from "@shared/schema/xp";
 
+// PKL-278651-COMM-0007 - Enhanced Referral System & Community Ticker
+import {
+  referrals,
+  referralAchievements,
+  pickleballTips,
+  type Referral,
+  type InsertReferral,
+  type ReferralAchievement,
+  type InsertReferralAchievement,
+  type PickleballTip,
+  type InsertPickleballTip
+} from "@shared/schema/referrals";
+
 // PKL-278651-COMM-0028-NOTIF-REALTIME - Real-time Notifications
 import {
   userNotifications,
@@ -95,6 +108,31 @@ import memorystore from "memorystore";
 
 export interface IStorage {
   sessionStore: Store;
+  
+  // PKL-278651-COMM-0007 - Enhanced Referral System & Community Ticker
+  // Referral operations
+  getReferralsByReferrerId(referrerId: number): Promise<Referral[]>;
+  getReferralsByReferredUserId(referredUserId: number): Promise<Referral[]>;
+  getReferralByUsers(referrerId: number, referredUserId: number): Promise<Referral | undefined>;
+  createReferral(data: InsertReferral): Promise<Referral>;
+  updateReferralActivityStatus(referralId: number, activityLevel: 'new' | 'casual' | 'active', matchesPlayed: number): Promise<Referral>;
+  
+  // Referral achievement operations
+  getReferralAchievementsByUserId(userId: number): Promise<ReferralAchievement[]>;
+  createReferralAchievement(data: InsertReferralAchievement): Promise<ReferralAchievement>;
+  
+  // Pickleball tips operations
+  getPickleballTips(options?: { limit?: number, isActive?: boolean }): Promise<PickleballTip[]>;
+  createPickleballTip(data: InsertPickleballTip): Promise<PickleballTip>;
+  
+  // Update user activity in referrals
+  updateUserActivityInReferrals(userId: number, matchCount: number): Promise<void>;
+  
+  // Get community activity for ticker
+  getCommunityActivity(limit?: number): Promise<any[]>;
+  
+  // Helper method to award XP
+  awardXpToUser(userId: number, xpAmount: number, source: string): Promise<User | undefined>;
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getAllActiveUserIds(): Promise<number[]>;
@@ -375,6 +413,233 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   sessionStore: Store;
+  
+  // PKL-278651-COMM-0007 - Enhanced Referral System & Community Ticker
+  // Referral operations
+  async getReferralsByReferrerId(referrerId: number): Promise<Referral[]> {
+    try {
+      return await db.query.referrals.findMany({
+        where: eq(referrals.referrerId, referrerId),
+        with: {
+          referredUser: {
+            columns: {
+              id: true,
+              username: true,
+              displayName: true,
+              email: true
+            }
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching referrals by referrer ID:', error);
+      return [];
+    }
+  }
+
+  async getReferralsByReferredUserId(referredUserId: number): Promise<Referral[]> {
+    try {
+      return await db.query.referrals.findMany({
+        where: eq(referrals.referredUserId, referredUserId),
+        with: {
+          referrer: {
+            columns: {
+              id: true,
+              username: true,
+              displayName: true,
+              email: true
+            }
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching referrals by referred user ID:', error);
+      return [];
+    }
+  }
+
+  async getReferralByUsers(referrerId: number, referredUserId: number): Promise<Referral | undefined> {
+    try {
+      const results = await db.select().from(referrals).where(
+        and(
+          eq(referrals.referrerId, referrerId),
+          eq(referrals.referredUserId, referredUserId)
+        )
+      );
+      return results[0];
+    } catch (error) {
+      console.error('Error fetching referral by users:', error);
+      return undefined;
+    }
+  }
+
+  async createReferral(data: InsertReferral): Promise<Referral> {
+    try {
+      const [newReferral] = await db.insert(referrals).values(data).returning();
+      return newReferral;
+    } catch (error) {
+      console.error('Error creating referral:', error);
+      throw error;
+    }
+  }
+
+  async updateReferralActivityStatus(
+    referralId: number, 
+    activityLevel: 'new' | 'casual' | 'active', 
+    matchesPlayed: number
+  ): Promise<Referral> {
+    try {
+      const [updatedReferral] = await db.update(referrals)
+        .set({ 
+          activityLevel, 
+          matchesPlayed,
+          lastActive: new Date()
+        })
+        .where(eq(referrals.id, referralId))
+        .returning();
+      return updatedReferral;
+    } catch (error) {
+      console.error('Error updating referral activity status:', error);
+      throw error;
+    }
+  }
+
+  // Referral achievement operations
+  async getReferralAchievementsByUserId(userId: number): Promise<ReferralAchievement[]> {
+    try {
+      return await db.select().from(referralAchievements).where(eq(referralAchievements.userId, userId));
+    } catch (error) {
+      console.error('Error fetching referral achievements by user ID:', error);
+      return [];
+    }
+  }
+
+  async createReferralAchievement(data: InsertReferralAchievement): Promise<ReferralAchievement> {
+    try {
+      const [newAchievement] = await db.insert(referralAchievements).values(data).returning();
+      return newAchievement;
+    } catch (error) {
+      console.error('Error creating referral achievement:', error);
+      throw error;
+    }
+  }
+
+  // Pickleball tips operations
+  async getPickleballTips(options: { limit?: number, isActive?: boolean } = {}): Promise<PickleballTip[]> {
+    try {
+      const { limit = 5, isActive = true } = options;
+      
+      let query = db.select().from(pickleballTips);
+      
+      if (isActive !== undefined) {
+        query = query.where(eq(pickleballTips.isActive, isActive));
+      }
+      
+      return await query.limit(limit).orderBy(pickleballTips.displayPriority);
+    } catch (error) {
+      console.error('Error fetching pickleball tips:', error);
+      return [];
+    }
+  }
+
+  async createPickleballTip(data: InsertPickleballTip): Promise<PickleballTip> {
+    try {
+      const [newTip] = await db.insert(pickleballTips).values(data).returning();
+      return newTip;
+    } catch (error) {
+      console.error('Error creating pickleball tip:', error);
+      throw error;
+    }
+  }
+
+  // Update user activity in referrals
+  async updateUserActivityInReferrals(userId: number, matchCount: number): Promise<void> {
+    try {
+      // Define activity thresholds
+      const casualThreshold = 2; // 2+ matches = casual
+      const activeThreshold = 5; // 5+ matches = active
+      
+      let activityLevel: 'new' | 'casual' | 'active' = 'new';
+      
+      if (matchCount >= activeThreshold) {
+        activityLevel = 'active';
+      } else if (matchCount >= casualThreshold) {
+        activityLevel = 'casual';
+      }
+      
+      // Update all referrals where this user was referred
+      await db.update(referrals)
+        .set({ 
+          activityLevel, 
+          matchesPlayed: matchCount,
+          lastActive: new Date()
+        })
+        .where(eq(referrals.referredUserId, userId));
+        
+    } catch (error) {
+      console.error('Error updating user activity in referrals:', error);
+      throw error;
+    }
+  }
+
+  // Get community activity for ticker
+  async getCommunityActivity(limit: number = 5): Promise<any[]> {
+    try {
+      // Get recent user joins
+      const recentJoins = await db.select({
+        type: sql`'join'`.as('type'),
+        userId: users.id,
+        username: users.username,
+        displayName: users.displayName,
+        timestamp: users.createdAt
+      })
+      .from(users)
+      .orderBy(sql`users.created_at DESC`)
+      .limit(limit);
+      
+      // Get recent achievements
+      const recentAchievements = await db.select({
+        type: sql`'achievement'`.as('type'),
+        userId: referralAchievements.userId,
+        achievementName: referralAchievements.achievementName,
+        timestamp: referralAchievements.dateAchieved
+      })
+      .from(referralAchievements)
+      .orderBy(sql`referral_achievements.date_achieved DESC`)
+      .limit(limit);
+      
+      // Combine and sort by timestamp (most recent first)
+      const allActivities = [...recentJoins, ...recentAchievements]
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, limit);
+      
+      return allActivities;
+    } catch (error) {
+      console.error('Error fetching community activity:', error);
+      return [];
+    }
+  }
+
+  // Helper method to award XP
+  async awardXpToUser(userId: number, xpAmount: number, source: string): Promise<User | undefined> {
+    try {
+      // First, update the user's XP
+      const updatedUser = await this.updateUserXP(userId, xpAmount);
+      
+      // Also record an XP transaction
+      await this.createXpTransaction({
+        userId,
+        amount: xpAmount,
+        source,
+        transactionType: 'credit'
+      });
+      
+      return updatedUser;
+    } catch (error) {
+      console.error('Error awarding XP to user:', error);
+      return undefined;
+    }
+  }
   
   constructor() {
     const PostgresSessionStore = connectPg(session);
