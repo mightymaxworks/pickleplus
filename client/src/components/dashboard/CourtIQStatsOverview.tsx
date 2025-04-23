@@ -39,10 +39,14 @@ export default function CourtIQStatsOverview({ userId, enhancedPerformanceData: 
   });
   
   // Use the enhanced CourtIQ performance hook with source-specific ratings
-  const { data: enhancedPerformanceData, isLoading: isPerformanceLoading } = useCourtIQPerformance({
+  // Use the prop data if provided, or fetch it using the hook
+  const { data: fetchedPerformanceData, isLoading: isPerformanceLoading } = useCourtIQPerformance({
     userId,
-    enabled: true
+    enabled: !propData && !!userId
   });
+  
+  // Use the prop data if provided, otherwise use the fetched data
+  const enhancedPerformanceData = propData || fetchedPerformanceData;
   
   const isLoading = isStatsLoading || isPerformanceLoading;
   

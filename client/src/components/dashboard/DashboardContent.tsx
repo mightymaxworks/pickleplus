@@ -311,7 +311,18 @@ export default function DashboardContent() {
             <Card className="shadow-lg border border-gray-100/20 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
               <CardContent className="p-4 relative z-10">
-                <CourtIQStatsOverview enhancedPerformanceData={courtIQData} />
+                {isCourtIQLoading ? (
+                  <div className="text-center py-6">
+                    <div className="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
+                    <div className="text-sm text-gray-500 mt-2">Loading CourtIQ data...</div>
+                  </div>
+                ) : courtIQData ? (
+                  <CourtIQStatsOverview enhancedPerformanceData={courtIQData} />
+                ) : (
+                  <div className="text-center py-6">
+                    <p className="text-sm text-gray-500">Complete more matches to view your multi-source performance analysis.</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>
