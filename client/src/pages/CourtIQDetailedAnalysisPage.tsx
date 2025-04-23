@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "wouter";
+import { useLocation, useParams } from "wouter";
 import { 
   Card, 
   CardContent, 
@@ -21,7 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function CourtIQDetailedAnalysisPage() {
   const { userId = "" } = useParams();
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
   const [tab, setTab] = useState("dimensions");
   
   // Parse userId to number, if it's not a valid number, use the current user (undefined)

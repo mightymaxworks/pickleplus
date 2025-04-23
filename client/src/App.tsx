@@ -282,6 +282,17 @@ export default function App() {
                     component={LazyProfilePage}
                     pageTitle="Streamlined Profile"
                   />
+                  {/* PKL-278651-COURTIQ-0005-DETAIL - CourtIQ Detailed Analysis */}
+                  <ProtectedRouteWithLayout 
+                    path="/courtiq/analysis"
+                    component={LazyCourtIQDetailedAnalysisPage}
+                    pageTitle="CourtIQ Analysis"
+                  />
+                  <ProtectedRouteWithLayout 
+                    path="/courtiq/analysis/:userId"
+                    component={LazyCourtIQDetailedAnalysisPage}
+                    pageTitle="CourtIQ Analysis"
+                  />
                   <Route path="/record-match">
                     {(params) => <ProtectedRoute component={LazyRecordMatchPage} path="/record-match" />}
                   </Route>

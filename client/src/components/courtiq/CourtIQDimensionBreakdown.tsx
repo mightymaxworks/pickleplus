@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { CourtIQDetailedAnalysis, getDimensionDescription, getDimensionDisplayName } from "@/hooks/use-courtiq-detailed-analysis";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
-import { QuestionMarkCircledIcon } from "@radix-ui/react-icons";
+import { HelpCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Helper to render a tooltip with the dimension info
@@ -13,7 +13,7 @@ function DimensionInfo({ dimension }: { dimension: string }) {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <QuestionMarkCircledIcon className="h-4 w-4 ml-1 inline cursor-help opacity-50 hover:opacity-100 transition-opacity" />
+          <HelpCircle className="h-4 w-4 ml-1 inline cursor-help opacity-50 hover:opacity-100 transition-opacity" />
         </TooltipTrigger>
         <TooltipContent className="max-w-xs">
           <p>{getDimensionDescription(dimension)}</p>
