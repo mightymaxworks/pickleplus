@@ -546,17 +546,21 @@ export function PostMatchAssessment({
           className="w-full"
         >
           <TabsList className="grid grid-cols-4 mb-4">
-            <TabsTrigger value="self" disabled={step !== "self"}>
-              Self-Assessment
+            <TabsTrigger value="self" disabled={step !== "self"} className="flex items-center justify-center">
+              <User className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Self</span>
             </TabsTrigger>
-            <TabsTrigger value="opponent" disabled={step !== "opponent"}>
-              Opponent
+            <TabsTrigger value="opponent" disabled={step !== "opponent"} className="flex items-center justify-center">
+              <Users className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Opponent</span>
             </TabsTrigger>
-            <TabsTrigger value="context" disabled={step !== "context"}>
-              Match Context
+            <TabsTrigger value="context" disabled={step !== "context"} className="flex items-center justify-center">
+              <CalendarDays className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Context</span>
             </TabsTrigger>
-            <TabsTrigger value="review" disabled={step !== "review"}>
-              Review & Submit
+            <TabsTrigger value="review" disabled={step !== "review"} className="flex items-center justify-center">
+              <CheckCircle className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Review</span>
             </TabsTrigger>
           </TabsList>
           
@@ -758,30 +762,37 @@ export function PostMatchAssessment({
                     </AlertDescription>
                   </Alert>
                 )}
-                <div className="flex justify-between w-full">
-                  <div className="flex space-x-2">
+                <div className="flex flex-col sm:flex-row justify-between w-full gap-4 sm:gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button 
                       type="button" 
                       variant="outline" 
                       onClick={onCancel}
+                      className="flex-1 sm:flex-auto"
                     >
-                      Skip Assessment
+                      <span className="sm:hidden">Skip</span>
+                      <span className="hidden sm:inline">Skip Assessment</span>
                     </Button>
                     <Button
                       type="button"
                       variant="outline"
                       onClick={saveAssessmentProgress}
                       title="Save progress"
+                      className="flex-1 sm:flex-auto"
                     >
-                      <Save className="h-4 w-4 mr-2" /> Save Draft
+                      <Save className="h-4 w-4 mr-0 sm:mr-2" /> 
+                      <span className="hidden sm:inline">Save Draft</span>
                     </Button>
                   </div>
                   <Button 
                     type="button" 
                     onClick={nextStep} 
                     disabled={!isStepComplete()}
+                    className="w-full sm:w-auto"
                   >
-                    Continue <ArrowRight className="ml-2 h-4 w-4" />
+                    <span className="sm:hidden">Next</span>
+                    <span className="hidden sm:inline">Continue</span> 
+                    <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </div>
               </CardFooter>
@@ -986,12 +997,13 @@ export function PostMatchAssessment({
                     </AlertDescription>
                   </Alert>
                 )}
-                <div className="flex justify-between w-full">
-                  <div className="flex space-x-2">
+                <div className="flex flex-col sm:flex-row justify-between w-full gap-4 sm:gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button 
                       type="button" 
                       variant="outline" 
                       onClick={prevStep}
+                      className="flex-1 sm:flex-auto"
                     >
                       Back
                     </Button>
@@ -1000,15 +1012,20 @@ export function PostMatchAssessment({
                       variant="outline"
                       onClick={saveAssessmentProgress}
                       title="Save progress"
+                      className="flex-1 sm:flex-auto"
                     >
-                      <Save className="h-4 w-4 mr-2" /> Save Draft
+                      <Save className="h-4 w-4 mr-0 sm:mr-2" /> 
+                      <span className="hidden sm:inline">Save Draft</span>
                     </Button>
                   </div>
                   <Button 
                     type="button" 
                     onClick={nextStep}
+                    className="w-full sm:w-auto"
                   >
-                    Continue <ArrowRight className="ml-2 h-4 w-4" />
+                    <span className="sm:hidden">Next</span>
+                    <span className="hidden sm:inline">Continue</span> 
+                    <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </div>
               </CardFooter>
@@ -1188,12 +1205,13 @@ export function PostMatchAssessment({
                     </AlertDescription>
                   </Alert>
                 )}
-                <div className="flex justify-between w-full">
-                  <div className="flex space-x-2">
+                <div className="flex flex-col sm:flex-row justify-between w-full gap-4 sm:gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button 
                       type="button" 
                       variant="outline" 
                       onClick={prevStep}
+                      className="flex-1 sm:flex-auto"
                     >
                       Back
                     </Button>
@@ -1202,15 +1220,20 @@ export function PostMatchAssessment({
                       variant="outline"
                       onClick={saveAssessmentProgress}
                       title="Save progress"
+                      className="flex-1 sm:flex-auto"
                     >
-                      <Save className="h-4 w-4 mr-2" /> Save Draft
+                      <Save className="h-4 w-4 mr-0 sm:mr-2" /> 
+                      <span className="hidden sm:inline">Save Draft</span>
                     </Button>
                   </div>
                   <Button 
                     type="button" 
                     onClick={nextStep}
+                    className="w-full sm:w-auto"
                   >
-                    Review & Submit <ArrowRight className="ml-2 h-4 w-4" />
+                    <span className="sm:hidden">Review</span>
+                    <span className="hidden sm:inline">Review & Submit</span> 
+                    <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </div>
               </CardFooter>
