@@ -558,14 +558,17 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
             {/* QR code with special border for founding members */}
             <div className={`bg-white p-2 rounded-xl shadow-lg mb-2 ${
               isFoundingMember 
-                ? 'border-2 border-[#FFD700]' 
+                ? 'border-4 border-[#FFD700] relative overflow-hidden' 
                 : ''
             }`}>
+              {isFoundingMember && (
+                <div className="absolute inset-0 bg-gradient-to-br from-[#FFD700]/10 to-[#BF953F]/10"></div>
+              )}
               <QRCodeSVG
                 value={qrData}
                 size={isExtraSmallScreen ? 100 : isSmallScreen ? 120 : 150}
                 bgColor={"#ffffff"}
-                fgColor={isFoundingMember ? "#BF953F" : "#000000"}
+                fgColor={isFoundingMember ? "#D4AF37" : "#000000"}
                 level={"L"}
                 includeMargin={false}
               />
