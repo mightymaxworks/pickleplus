@@ -19,6 +19,7 @@ import { matchService } from './match-service';
 import { assessmentService } from './assessment-service';
 import { profileService } from './profile-service';
 import { tournamentService } from './tournament-service';
+import { communityService } from './community-service';
 
 // Storage key for failed sync attempts
 const FAILED_SYNCS_STORAGE_KEY = 'pickle_plus_failed_syncs';
@@ -304,8 +305,20 @@ export class SyncManager {
         await this.syncTournamentRegistration(item.id);
         break;
       case 'communities':
-        // TODO: Implement community sync
-        throw new Error('Community sync not yet implemented');
+        await this.syncCommunity(item.id);
+        break;
+      case 'community-posts':
+        await this.syncCommunityPost(item.id);
+        break;
+      case 'community-comments':
+        await this.syncCommunityComment(item.id);
+        break;
+      case 'community-members':
+        await this.syncCommunityMember(item.id);
+        break;
+      case 'community-join-requests':
+        await this.syncCommunityJoinRequest(item.id);
+        break;
       default:
         throw new Error(`Unknown entity type: ${item.entityType}`);
     }
@@ -386,6 +399,81 @@ export class SyncManager {
     
     // Use tournament service to sync with server
     return tournamentService.syncRegistrationWithServer(registration);
+  }
+  
+  /**
+   * Sync a community with the server
+   */
+  private async syncCommunity(id: string | number): Promise<void> {
+    // Get the community from storage service
+    const community = await communityService.communityStorage.getById(id);
+    
+    if (!community) {
+      throw new Error(`Community ${id} not found in local storage`);
+    }
+    
+    // Use community service to sync with server
+    return communityService.syncCommunityWithServer(community);
+  }
+  
+  /**
+   * Sync a community post with the server
+   */
+  private async syncCommunityPost(id: string | number): Promise<void> {
+    // Get the post from storage service
+    const post = await communityService.postStorage.getById(id);
+    
+    if (!post) {
+      throw new Error(`Community post ${id} not found in local storage`);
+    }
+    
+    // Use community service to sync with server
+    return communityService.syncPostWithServer(post);
+  }
+  
+  /**
+   * Sync a community comment with the server
+   */
+  private async syncCommunityComment(id: string | number): Promise<void> {
+    // Get the comment from storage service
+    const comment = await communityService.commentStorage.getById(id);
+    
+    if (!comment) {
+      throw new Error(`Community comment ${id} not found in local storage`);
+    }
+    
+    // Use community service to sync with server
+    return communityService.syncCommentWithServer(comment);
+  }
+  
+  /**
+   * Sync a community member with the server
+   */
+  private async syncCommunityMember(id: string | number): Promise<void> {
+    // Get the member from storage service
+    const member = await communityService.memberStorage.getById(id);
+    
+    if (!member) {
+      throw new Error(`Community member ${id} not found in local storage`);
+    }
+    
+    // Use community service to sync with server
+    return communityService.syncMemberWithServer(member);
+  }
+  
+  /**
+   * Sync a community join request with the server
+   */
+  private async syncCommunityJoinRequest(id: string | number): Promise<void> {
+    // Get the join request from storage service
+    const joinRequest = await communityService.joinRequestStorage.getById(id);
+    
+    if (!joinRequest) {
+      throw new Error(`Community join request ${id} not found in local storage`);
+    }
+    
+    // Use community service to sync with server
+    return communityService.syncJoinRequestWithServer(joinRequest);
   }
   
   /**

@@ -26,7 +26,7 @@ const defaultFlags: FeatureFlags = {
   enableMatchAssessmentFrontendFirst: true,
   enableProfileUpdatesFrontendFirst: true,
   enableTournamentsFrontendFirst: true,
-  enableCommunityPostsFrontendFirst: false,
+  enableCommunityPostsFrontendFirst: true,
   
   // Optimization features
   enableDataPrefetching: false,
