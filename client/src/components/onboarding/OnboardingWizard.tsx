@@ -359,27 +359,15 @@ export function OnboardingWizard({
     }
   };
 
-  // Handle onboarding completion
-  const handleComplete = () => {
-    toast({
-      title: "Onboarding completed",
-      description: "You've completed the CourtIQ™ onboarding process. Welcome to Pickle+!",
-    });
-    
-    // PKL-278651-COURTIQ-0002-GUIDANCE - Navigate to the dedicated completion page
-    console.log("[Onboarding] Completed, redirecting to the dedicated completion page");
-    
-    // Navigate to the completion page directly
-    const [, navigate] = useLocation();
-    navigate('/onboarding-complete');
-    
-    // Still call onComplete for consistency
-    if (onComplete) {
-      onComplete();
-    }
-  };
-
-  // Handle dev mode toggle
+  // All hooks need to be at the top level and in the same order every render
+  const [, navigate] = useLocation();
+  
+  // Navigation handlers
+  const goToCompletionPage = useCallback(() => {
+    window.location.href = '/onboarding-complete';
+  }, []);
+  
+  // Dev mode toggle callback
   const toggleDevMode = useCallback(() => {
     setDevMode(prev => !prev);
     
@@ -394,8 +382,52 @@ export function OnboardingWizard({
     // Invalidate the query to force a refetch
     queryClient.invalidateQueries({ queryKey: ['/api/courtiq/onboarding/status'] });
   }, [devMode, toast]);
-
-  // If there's an error fetching the status, display an error message
+  
+  // Check for completed onboarding - moved to the top level
+  useEffect(() => {
+    if (status?.completed) {
+      console.log("[OnboardingWizard] Onboarding already completed, redirecting to completion page");
+      goToCompletionPage();
+    }
+  }, [status?.completed, goToCompletionPage]);
+  
+  // Handler for completing onboarding
+  const handleComplete = useCallback(() => {
+    // Simple toast notification
+    toast({
+      title: "Onboarding completed",
+      description: "You've completed the CourtIQ™ onboarding process. Welcome to Pickle+!",
+    });
+    
+    // Navigate to completion page
+    goToCompletionPage();
+    
+    // Call parent handler if provided
+    if (onComplete) {
+      onComplete();
+    }
+  }, [toast, goToCompletionPage, onComplete]);
+  
+  // Render loading state
+  if (isLoadingStatus) {
+    return (
+      <Card className={`w-full max-w-2xl shadow-lg ${className}`}>
+        <CardHeader>
+          <Skeleton className="h-8 w-3/4 mb-2" />
+          <Skeleton className="h-4 w-5/6" />
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Skeleton className="h-64 w-full" />
+        </CardContent>
+        <CardFooter className="justify-between">
+          <Skeleton className="h-10 w-24" />
+          <Skeleton className="h-10 w-24" />
+        </CardFooter>
+      </Card>
+    );
+  }
+  
+  // Error state
   if (statusError) {
     return (
       <Card className={`w-full max-w-2xl shadow-lg ${className}`}>
@@ -444,35 +476,8 @@ export function OnboardingWizard({
     );
   }
   
-  // Loading state
-  if (isLoadingStatus) {
-    return (
-      <Card className={`w-full max-w-2xl shadow-lg ${className}`}>
-        <CardHeader>
-          <Skeleton className="h-8 w-3/4 mb-2" />
-          <Skeleton className="h-4 w-5/6" />
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Skeleton className="h-64 w-full" />
-        </CardContent>
-        <CardFooter className="justify-between">
-          <Skeleton className="h-10 w-24" />
-          <Skeleton className="h-10 w-24" />
-        </CardFooter>
-      </Card>
-    );
-  }
-
-  // Check if onboarding is already completed
+  // Show loading state while checking completion status
   if (status?.completed) {
-    console.log("[OnboardingWizard] Onboarding status is completed, redirecting to completion page");
-    // Redirect to the dedicated completion page
-    const [, navigate] = useLocation();
-    useEffect(() => {
-      navigate('/onboarding-complete');
-    }, [navigate]);
-    
-    // Return loading state while redirect happens
     return (
       <Card className={`w-full max-w-2xl shadow-lg ${className}`}>
         <CardContent className="p-8">
