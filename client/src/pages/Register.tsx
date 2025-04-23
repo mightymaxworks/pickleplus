@@ -214,7 +214,7 @@ export default function Register() {
           {referralNotice && (
             <Alert className="mt-2 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-900">
               <AlertDescription className="text-green-700 dark:text-green-300 text-sm">
-                You were invited by a friend! They'll earn XP when you register.
+                You were invited by a friend! They'll earn 20-40 XP when you register.
               </AlertDescription>
             </Alert>
           )}

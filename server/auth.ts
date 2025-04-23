@@ -317,20 +317,24 @@ export function setupAuth(app: Express) {
               const { xpService } = require('./modules/xp/xp-service');
               
               // Define XP constants at the top of the function or file
-              const REFERRAL_XP_REWARD = 500;
               const XP_SOURCE_REFERRAL = 'REFERRAL';
+              
+              // Generate a random XP reward between 20-40
+              const minXP = 20;
+              const maxXP = 40;
+              const randomXpReward = Math.floor(Math.random() * (maxXP - minXP + 1)) + minXP;
               
               // Award XP to the referrer
               await xpService.awardXp({
                 userId: referrerId,
-                amount: REFERRAL_XP_REWARD,
+                amount: randomXpReward,
                 source: XP_SOURCE_REFERRAL,
                 sourceType: 'USER_REGISTRATION',
                 sourceId: user.id.toString(),
                 description: `Invited user ${user.username} who registered`
               });
               
-              console.log(`[REFERRAL] Awarded ${REFERRAL_XP_REWARD} XP to user ${referrerId} for referring ${user.username}`);
+              console.log(`[REFERRAL] Awarded ${randomXpReward} XP to user ${referrerId} for referring ${user.username}`);
             } else {
               console.log(`[REFERRAL] Referrer with ID ${referrerId} not found, no XP awarded`);
             }
