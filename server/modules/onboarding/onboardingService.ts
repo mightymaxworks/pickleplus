@@ -11,8 +11,6 @@ import { db } from "../../db";
 import { eq, and, or, isNull, sql } from "drizzle-orm";
 import { 
   onboardingProgress, 
-  playerRatings,
-  users,
   InsertOnboardingProgress,
   OnboardingProgress
 } from "../../../shared/courtiq-schema";
@@ -71,9 +69,10 @@ export class OnboardingService {
   async startOrResumeOnboarding(userId: number): Promise<OnboardingStatus> {
     try {
       // Check if user already has onboarding progress
-      let progress = await db.query.onboardingProgress.findFirst({
-        where: eq(onboardingProgress.userId, userId)
-      });
+      const progressResult = await db.execute(
+        sql`SELECT * FROM onboarding_progress WHERE user_id = ${userId} LIMIT 1`
+      );
+      let progress = progressResult[0];
 
       // If not, create a new onboarding progress record
       if (!progress) {
@@ -182,9 +181,10 @@ export class OnboardingService {
   ): Promise<OnboardingStatus> {
     try {
       // Get current onboarding progress
-      const progress = await db.query.onboardingProgress.findFirst({
-        where: eq(onboardingProgress.userId, userId)
-      });
+      const progressResult = await db.execute(
+        sql`SELECT * FROM onboarding_progress WHERE user_id = ${userId} LIMIT 1`
+      );
+      const progress = progressResult[0];
 
       if (!progress) {
         throw new Error(`No onboarding progress found for user ${userId}`);

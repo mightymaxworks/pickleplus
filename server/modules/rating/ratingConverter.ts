@@ -43,10 +43,11 @@ export class RatingConverter {
    * Get all supported rating systems
    */
   async getSupportedSystems(): Promise<RatingSystem[]> {
-    return db.query.ratingSystems.findMany({
-      where: eq(ratingSystems.isActive, true),
-      orderBy: ratingSystems.code
-    });
+    // Direct query using SQL since query builder is not yet set up for this table
+    const systems = await db.execute(
+      sql`SELECT * FROM rating_systems WHERE is_active = true ORDER BY code`
+    );
+    return systems as RatingSystem[];
   }
 
   /**
@@ -70,26 +71,28 @@ export class RatingConverter {
 
     try {
       // Get the system IDs
-      const fromSystem = await db.query.ratingSystems.findFirst({
-        where: eq(ratingSystems.code, fromSystemCode)
-      });
+      const fromSystemResult = await db.execute(
+        sql`SELECT * FROM rating_systems WHERE code = ${fromSystemCode}`
+      );
+      const fromSystem = fromSystemResult[0];
       
-      const toSystem = await db.query.ratingSystems.findFirst({
-        where: eq(ratingSystems.code, toSystemCode)
-      });
+      const toSystemResult = await db.execute(
+        sql`SELECT * FROM rating_systems WHERE code = ${toSystemCode}`
+      );
+      const toSystem = toSystemResult[0];
 
       if (!fromSystem || !toSystem) {
         throw new Error(`Rating system not found: ${!fromSystem ? fromSystemCode : toSystemCode}`);
       }
 
       // Look for an exact match in the conversion table
-      const exactMatch = await db.query.ratingConversions.findFirst({
-        where: and(
-          eq(ratingConversions.fromSystemId, fromSystem.id),
-          eq(ratingConversions.toSystemId, toSystem.id),
-          eq(ratingConversions.sourceRating, rating)
-        )
-      });
+      const exactMatchResult = await db.execute(
+        sql`SELECT * FROM rating_conversions WHERE 
+            from_system_id = ${fromSystem.id} AND 
+            to_system_id = ${toSystem.id} AND 
+            source_rating = ${rating.toString()}`
+      );
+      const exactMatch = exactMatchResult[0];
 
       if (exactMatch) {
         return {
@@ -102,23 +105,25 @@ export class RatingConverter {
       }
 
       // Look for nearest values for interpolation
-      const lowerBound = await db.query.ratingConversions.findFirst({
-        where: and(
-          eq(ratingConversions.fromSystemId, fromSystem.id),
-          eq(ratingConversions.toSystemId, toSystem.id),
-          lte(ratingConversions.sourceRating, rating)
-        ),
-        orderBy: desc(ratingConversions.sourceRating)
-      });
+      const lowerBoundResult = await db.execute(
+        sql`SELECT * FROM rating_conversions 
+            WHERE from_system_id = ${fromSystem.id} 
+            AND to_system_id = ${toSystem.id} 
+            AND source_rating <= ${rating.toString()}
+            ORDER BY source_rating DESC
+            LIMIT 1`
+      );
+      const lowerBound = lowerBoundResult[0];
 
-      const upperBound = await db.query.ratingConversions.findFirst({
-        where: and(
-          eq(ratingConversions.fromSystemId, fromSystem.id),
-          eq(ratingConversions.toSystemId, toSystem.id),
-          gte(ratingConversions.sourceRating, rating)
-        ),
-        orderBy: ratingConversions.sourceRating
-      });
+      const upperBoundResult = await db.execute(
+        sql`SELECT * FROM rating_conversions 
+            WHERE from_system_id = ${fromSystem.id} 
+            AND to_system_id = ${toSystem.id} 
+            AND source_rating >= ${rating.toString()}
+            ORDER BY source_rating ASC
+            LIMIT 1`
+      );
+      const upperBound = upperBoundResult[0];
 
       // Interpolate if we have bounds
       if (lowerBound && upperBound) {
