@@ -19,6 +19,11 @@ import {
   InsertUserExternalRating
 } from "../../../shared/courtiq-schema";
 
+// Type helpers for SQL results
+type SqlRecord = Record<string, unknown>;
+type SqlResult = any[] & { [key: number]: SqlRecord };
+type SqlResultRow = SqlRecord;
+
 // Define rating system codes
 export const RATING_SYSTEMS = {
   COURTIQ: 'COURTIQ', // Our internal system
@@ -44,10 +49,12 @@ export class RatingConverter {
    */
   async getSupportedSystems(): Promise<RatingSystem[]> {
     // Direct query using SQL since query builder is not yet set up for this table
-    const systems = await db.execute(
+    const systemsResult = await db.execute(
       sql`SELECT * FROM rating_systems WHERE is_active = true ORDER BY code`
-    );
-    return systems as RatingSystem[];
+    ) as SqlResult;
+    
+    // Cast to array of RatingSystem objects with proper typing
+    return (Array.isArray(systemsResult) ? systemsResult : []) as unknown as RatingSystem[];
   }
 
   /**
@@ -73,13 +80,13 @@ export class RatingConverter {
       // Get the system IDs
       const fromSystemResult = await db.execute(
         sql`SELECT * FROM rating_systems WHERE code = ${fromSystemCode}`
-      );
-      const fromSystem = fromSystemResult[0];
+      ) as SqlResult;
+      const fromSystem = fromSystemResult[0] as SqlResultRow;
       
       const toSystemResult = await db.execute(
         sql`SELECT * FROM rating_systems WHERE code = ${toSystemCode}`
-      );
-      const toSystem = toSystemResult[0];
+      ) as SqlResult;
+      const toSystem = toSystemResult[0] as SqlResultRow;
 
       if (!fromSystem || !toSystem) {
         throw new Error(`Rating system not found: ${!fromSystem ? fromSystemCode : toSystemCode}`);
@@ -91,13 +98,14 @@ export class RatingConverter {
             from_system_id = ${fromSystem.id} AND 
             to_system_id = ${toSystem.id} AND 
             source_rating = ${rating.toString()}`
-      );
-      const exactMatch = exactMatchResult[0];
+      ) as SqlResult;
+      const exactMatch = exactMatchResult[0] as SqlResultRow;
 
       if (exactMatch) {
+        const confidenceModifier = exactMatch.confidenceModifier ? Number(exactMatch.confidenceModifier) : 0;
         return {
           rating: Number(exactMatch.targetRating),
-          confidence: 95 + (exactMatch.confidenceModifier || 0),
+          confidence: 95 + confidenceModifier,
           source: 'exact_match',
           originalRating: rating,
           originalSystem: fromSystemCode
@@ -112,8 +120,8 @@ export class RatingConverter {
             AND source_rating <= ${rating.toString()}
             ORDER BY source_rating DESC
             LIMIT 1`
-      );
-      const lowerBound = lowerBoundResult[0];
+      ) as unknown as SqlResult;
+      const lowerBound = lowerBoundResult[0] as SqlResultRow;
 
       const upperBoundResult = await db.execute(
         sql`SELECT * FROM rating_conversions 
@@ -122,8 +130,8 @@ export class RatingConverter {
             AND source_rating >= ${rating.toString()}
             ORDER BY source_rating ASC
             LIMIT 1`
-      );
-      const upperBound = upperBoundResult[0];
+      ) as unknown as SqlResult;
+      const upperBound = upperBoundResult[0] as SqlResultRow;
 
       // Interpolate if we have bounds
       if (lowerBound && upperBound) {
@@ -140,7 +148,10 @@ export class RatingConverter {
         const interpolatedRating = lowerTargetRating + position * (upperTargetRating - lowerTargetRating);
         
         // Calculate confidence (closer to bounds = higher confidence)
-        const confidenceModifier = Math.min(lowerBound.confidenceModifier || 0, upperBound.confidenceModifier || 0);
+        const lowerConfidenceMod = lowerBound.confidenceModifier ? Number(lowerBound.confidenceModifier) : 0;
+        const upperConfidenceMod = upperBound.confidenceModifier ? Number(upperBound.confidenceModifier) : 0;
+        const confidenceModifier = Math.min(lowerConfidenceMod, upperConfidenceMod);
+        
         const proximityToExact = 1 - Math.min(
           Math.abs(rating - lowerSourceRating),
           Math.abs(rating - upperSourceRating)
@@ -197,8 +208,8 @@ export class RatingConverter {
     try {
       const systemResult = await db.execute(
         sql`SELECT * FROM rating_systems WHERE code = ${systemCode} LIMIT 1`
-      );
-      const system = systemResult[0];
+      ) as unknown as SqlResult;
+      const system = systemResult[0] as SqlResultRow;
       
       if (system) {
         // Insert the external rating
@@ -239,15 +250,15 @@ export class RatingConverter {
             AND format = ${format} 
             AND division = ${division} 
             LIMIT 1`
-      );
-      const userRating = userRatingResult[0];
+      ) as unknown as SqlResult;
+      const userRating = userRatingResult[0] as SqlResultRow;
       
       if (!userRating) {
         throw new Error(`No rating found for user ID ${userId} in ${format}/${division}`);
       }
       
       // Convert to the requested system
-      return this.convertRating(RATING_SYSTEMS.COURTIQ, toSystemCode, userRating.rating);
+      return this.convertRating(RATING_SYSTEMS.COURTIQ, toSystemCode, Number(userRating.rating));
     } catch (error) {
       console.error("Error converting user rating:", error);
       throw error;
@@ -338,8 +349,8 @@ export class RatingConverter {
       // Check if the systems are already initialized
       const existingSystemsResult = await db.execute(
         sql`SELECT * FROM rating_systems`
-      );
-      if (existingSystemsResult.length > 0) {
+      ) as unknown as SqlResult;
+      if (existingSystemsResult && existingSystemsResult.length > 0) {
         console.log("Rating systems already initialized");
         return existingSystemsResult;
       }
@@ -426,11 +437,11 @@ export class RatingConverter {
             ${system.isActive},
             ${system.websiteUrl || null}
           ) RETURNING *`
-        );
+        ) as unknown as SqlResult;
         
-        const insertedSystem = result[0];
+        const insertedSystem = result[0] as SqlResultRow;
         systemsInsertResults.push(insertedSystem);
-        systemMap[insertedSystem.code] = insertedSystem.id;
+        systemMap[insertedSystem.code as string] = insertedSystem.id as number;
       }
 
       // Define conversion mappings (reference points for interpolation)

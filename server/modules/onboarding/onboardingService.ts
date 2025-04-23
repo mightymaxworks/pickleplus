@@ -11,12 +11,17 @@ import { db } from "../../db";
 import { eq, and, or, isNull, sql } from "drizzle-orm";
 import { 
   onboardingProgress, 
-  InsertOnboardingProgress,
-  OnboardingProgress
+  type InsertOnboardingProgress,
+  type OnboardingProgress
 } from "../../../shared/courtiq-schema";
 import { ratingConverter, RATING_SYSTEMS } from "../rating/ratingConverter";
 import { serverEventBus } from "../../core/events/eventBus";
 import { xpSystem } from "../xp/xpSystem";
+
+// Helper types for SQL query results
+type SqlRecord = Record<string, unknown>;
+type SqlResult = any[] & { [key: number]: SqlRecord };
+type SqlResultRow = SqlRecord;
 
 // Event names for onboarding 
 export const OnboardingEvents = {
@@ -72,7 +77,7 @@ export class OnboardingService {
       const progressResult = await db.execute(
         sql`SELECT * FROM onboarding_progress WHERE user_id = ${userId} LIMIT 1`
       );
-      let progress = progressResult[0];
+      let progress = (progressResult as unknown as SqlResult)[0] as SqlResultRow;
 
       // If not, create a new onboarding progress record
       if (!progress) {
