@@ -240,7 +240,9 @@ export function MyEventsTab({ className, onEventClick, onPassportClick }: MyEven
 
   /* PKL-278651-PASS-0014-DEFT - Process events and ensure default community event is included */
   const processedEvents = useMemo(() => {
-    // Add default community event to the events list
+    // Always start with the default community event and add other events
+    // This approach ensures the default community event is always included,
+    // even if the API returns null, undefined, or an empty array
     const eventsWithDefault = ensureDefaultCommunityEvent(events || []);
     
     // Group events by date

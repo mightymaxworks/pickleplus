@@ -13,7 +13,8 @@
 import type { Event } from '@shared/schema/events';
 
 // Special ID for the default community event
-export const DEFAULT_COMMUNITY_EVENT_ID = -1;
+// Define a consistent negative ID for this virtual community event
+export const DEFAULT_COMMUNITY_EVENT_ID = -999;  // Using a negative ID to ensure no conflict with real database IDs
 
 // Get current date
 const now = new Date();
