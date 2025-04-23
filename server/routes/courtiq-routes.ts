@@ -13,6 +13,119 @@ import { onboardingService } from "../modules/onboarding/onboardingService";
 import { ratingConverter, RATING_SYSTEMS } from "../modules/rating/ratingConverter";
 
 /**
+ * Rating system interface for better type safety
+ */
+interface MockRatingSystem {
+  id: number;
+  code: string;
+  name: string;
+  minRating: number;
+  maxRating: number;
+  decimals: number;
+  description: string;
+  websiteUrl?: string;
+  isActive: boolean;
+}
+
+/**
+ * Mock rating systems data for development mode
+ */
+const MOCK_RATING_SYSTEMS: MockRatingSystem[] = [
+  {
+    id: 1,
+    code: 'COURTIQ',
+    name: 'CourtIQ Rating',
+    minRating: 1000,
+    maxRating: 2500,
+    decimals: 0,
+    description: 'Pickle+ internal rating system (1000-2500)',
+    isActive: true
+  },
+  {
+    id: 2,
+    code: 'DUPR',
+    name: 'Dynamic Universal Pickleball Rating',
+    minRating: 2.0,
+    maxRating: 7.0,
+    decimals: 2,
+    description: 'DUPR rating system (2.0-7.0)',
+    websiteUrl: 'https://mydupr.com',
+    isActive: true
+  },
+  {
+    id: 3,
+    code: 'IFP',
+    name: 'International Federation of Pickleball',
+    minRating: 1.0,
+    maxRating: 5.0,
+    decimals: 1,
+    description: 'IFP rating system (1.0-5.0)',
+    websiteUrl: 'https://ifpickleball.org',
+    isActive: true
+  },
+  {
+    id: 4,
+    code: 'UTPR',
+    name: 'USA Pickleball Tournament Player Rating',
+    minRating: 2.5,
+    maxRating: 6.0,
+    decimals: 1,
+    description: 'UTPR rating system (2.5-6.0)',
+    websiteUrl: 'https://usapickleball.org',
+    isActive: true
+  },
+  {
+    id: 5,
+    code: 'WPR',
+    name: 'World Pickleball Rating',
+    minRating: 0.0,
+    maxRating: 10.0,
+    decimals: 1,
+    description: 'WPR rating system (0-10.0)',
+    isActive: true
+  },
+  {
+    id: 6,
+    code: 'IPTPA',
+    name: 'International Pickleball Teaching Professional Association',
+    minRating: 1.0,
+    maxRating: 5.0,
+    decimals: 1,
+    description: 'IPTPA rating system (1.0-5.0)',
+    websiteUrl: 'https://iptpa.com',
+    isActive: true
+  }
+];
+
+/**
+ * Mock onboarding status data for development mode
+ * This will be used when the devAuthMiddleware is active
+ */
+const mockOnboardingStatus = {
+  userId: 1,
+  started: true,
+  completed: false,
+  completedAt: null,
+  progress: {
+    profileCompleted: true,
+    ratingSystemSelected: false,
+    ratingProvided: false,
+    experienceSummaryCompleted: false,
+    playStyleAssessed: false
+  },
+  progress_pct: 20,
+  preferences: {
+    preferredRatingSystem: null,
+    initialRating: null,
+    experienceYears: null,
+    playStyle: null,
+    skillFocus: [] as string[]
+  },
+  nextStep: 'rating_selection',
+  xpEarned: 0
+};
+
+/**
  * Development-friendly authentication middleware
  * This uses the same development test user as /api/auth/current-user
  */
@@ -182,6 +295,14 @@ router.get("/performance", (req: Request, res: Response) => {
 router.get('/onboarding/status', devAuthMiddleware, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
+    
+    // Special handling for development environment
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[CourtIQ API] Using mock onboarding status for development');
+      return res.json(mockOnboardingStatus);
+    }
+    
+    // Normal flow for production
     const status = await onboardingService.getOnboardingStatus(userId);
     
     if (!status) {
@@ -204,6 +325,17 @@ router.get('/onboarding/status', devAuthMiddleware, async (req: Request, res: Re
 router.post('/onboarding/start', devAuthMiddleware, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
+    
+    // Special handling for development environment
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[CourtIQ API] Using mock onboarding status for development');
+      return res.json({
+        ...mockOnboardingStatus,
+        started: true
+      });
+    }
+    
+    // Normal flow for production
     const status = await onboardingService.startOrResumeOnboarding(userId);
     return res.json(status);
   } catch (error) {
@@ -233,6 +365,58 @@ router.post('/onboarding/complete-step', devAuthMiddleware, async (req: Request,
     
     const { step, data = {} } = validationResult.data;
     
+    // Special handling for development environment
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[CourtIQ API] Using mock data for step completion in development');
+      
+      // Create updated mock data based on the step that was completed
+      const updatedMockStatus = { ...mockOnboardingStatus };
+      
+      if (step === 'profile_completion') {
+        updatedMockStatus.progress.profileCompleted = true;
+        updatedMockStatus.progress_pct = 20;
+        updatedMockStatus.nextStep = 'rating_selection';
+        updatedMockStatus.xpEarned = 50;
+      } else if (step === 'rating_selection') {
+        updatedMockStatus.progress.ratingSystemSelected = true;
+        updatedMockStatus.progress.ratingProvided = true;
+        updatedMockStatus.progress_pct = 40;
+        updatedMockStatus.nextStep = 'experience_summary';
+        updatedMockStatus.xpEarned = 100;
+        if (data.system) {
+          updatedMockStatus.preferences.preferredRatingSystem = data.system;
+        }
+        if (data.rating) {
+          updatedMockStatus.preferences.initialRating = data.rating;
+        }
+      } else if (step === 'experience_summary') {
+        updatedMockStatus.progress.experienceSummaryCompleted = true;
+        updatedMockStatus.progress_pct = 70;
+        updatedMockStatus.nextStep = 'play_style_assessment';
+        updatedMockStatus.xpEarned = 150;
+        if (data.experienceYears) {
+          updatedMockStatus.preferences.experienceYears = data.experienceYears;
+        }
+      } else if (step === 'play_style_assessment') {
+        updatedMockStatus.progress.playStyleAssessed = true;
+        updatedMockStatus.progress_pct = 100;
+        updatedMockStatus.nextStep = 'completed';
+        updatedMockStatus.completed = true;
+        updatedMockStatus.xpEarned = 200;
+        // Cast to any to avoid type error
+        updatedMockStatus.completedAt = new Date().toISOString() as any;
+        if (data.playStyle) {
+          updatedMockStatus.preferences.playStyle = data.playStyle;
+        }
+        if (data.skillFocus) {
+          updatedMockStatus.preferences.skillFocus = data.skillFocus;
+        }
+      }
+      
+      return res.json(updatedMockStatus);
+    }
+    
+    // Normal flow for production
     const status = await onboardingService.completeStep(userId, step, data);
     return res.json(status);
   } catch (error) {
@@ -245,7 +429,7 @@ router.post('/onboarding/complete-step', devAuthMiddleware, async (req: Request,
  * Select a rating system and provide initial rating
  * POST /api/courtiq/onboarding/select-rating
  */
-router.post('/onboarding/select-rating', isAuthenticated, async (req: Request, res: Response) => {
+router.post('/onboarding/select-rating', devAuthMiddleware, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     
@@ -262,6 +446,47 @@ router.post('/onboarding/select-rating', isAuthenticated, async (req: Request, r
     
     const { system, rating } = validationResult.data;
     
+    // Special handling for development environment
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[CourtIQ API] Using mock data for rating selection in development');
+      
+      // Get mock system data
+      const mockSystem = MOCK_RATING_SYSTEMS.find(s => s.code === system) || {
+        id: 999,
+        code: system,
+        name: system.toUpperCase(),
+        description: `${system.toUpperCase()} Rating System`,
+        minRating: 1.0,
+        maxRating: 5.0,
+        decimals: 1,
+        isActive: true
+      } as MockRatingSystem;
+      
+      return res.json({
+        success: true,
+        message: `Successfully set ${mockSystem.name} as preferred rating system`,
+        userId: userId,
+        system: system,
+        rating: rating,
+        onboardingStatus: {
+          ...mockOnboardingStatus,
+          progress: {
+            ...mockOnboardingStatus.progress,
+            ratingSystemSelected: true,
+            ratingProvided: true
+          },
+          preferences: {
+            ...mockOnboardingStatus.preferences,
+            preferredRatingSystem: system,
+            initialRating: rating
+          },
+          progress_pct: 40,
+          nextStep: 'experience_summary'
+        }
+      });
+    }
+    
+    // Normal flow for production
     const result = await onboardingService.selectRatingSystem(userId, system, rating);
     
     if (!result.success) {
@@ -281,6 +506,13 @@ router.post('/onboarding/select-rating', isAuthenticated, async (req: Request, r
  */
 router.get('/rating-systems', async (req: Request, res: Response) => {
   try {
+    // Special handling for development environment
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[CourtIQ API] Using mock rating systems for development');
+      return res.json(MOCK_RATING_SYSTEMS);
+    }
+    
+    // Normal flow for production
     const systems = await ratingConverter.getSupportedSystems();
     return res.json(systems);
   } catch (error) {
@@ -309,6 +541,57 @@ router.post('/convert-rating', async (req: Request, res: Response) => {
     
     const { fromSystem, toSystem, rating } = validationResult.data;
     
+    // Special handling for development environment
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[CourtIQ API] Using mock data for rating conversion in development');
+      
+      // Get source system data
+      const fromSystemData = MOCK_RATING_SYSTEMS.find(s => s.code === fromSystem) || {
+        id: 998,
+        code: fromSystem,
+        name: fromSystem.toUpperCase(),
+        minRating: 1.0,
+        maxRating: 5.0,
+        decimals: 1,
+        description: `${fromSystem.toUpperCase()} Rating System`,
+        isActive: true
+      } as MockRatingSystem;
+      
+      // Get target system data
+      const toSystemData = MOCK_RATING_SYSTEMS.find(s => s.code === toSystem) || {
+        id: 999,
+        code: toSystem,
+        name: toSystem.toUpperCase(),
+        minRating: 1.0,
+        maxRating: 5.0,
+        decimals: 1,
+        description: `${toSystem.toUpperCase()} Rating System`,
+        isActive: true
+      } as MockRatingSystem;
+      
+      // Simple conversion logic based on relative position within min-max range
+      const fromRange = fromSystemData.maxRating - fromSystemData.minRating;
+      const toRange = toSystemData.maxRating - toSystemData.minRating;
+      
+      // Calculate the relative position in the source system's range (0-1)
+      const normalizedPosition = (rating - fromSystemData.minRating) / fromRange;
+      
+      // Calculate the equivalent value in the target system's range
+      const convertedRating = toSystemData.minRating + (normalizedPosition * toRange);
+      
+      // Round to one decimal place for a cleaner result
+      const roundedRating = Math.round(convertedRating * 10) / 10;
+      
+      return res.json({
+        rating: roundedRating,
+        confidence: 85,
+        source: 'mathematical',
+        originalRating: rating,
+        originalSystem: fromSystem
+      });
+    }
+    
+    // Normal flow for production
     const result = await ratingConverter.convertRating(fromSystem, toSystem, rating);
     return res.json(result);
   } catch (error) {
@@ -321,7 +604,7 @@ router.post('/convert-rating', async (req: Request, res: Response) => {
  * Get user's rating in a specific system
  * GET /api/courtiq/user-rating
  */
-router.get('/user-rating', isAuthenticated, async (req: Request, res: Response) => {
+router.get('/user-rating', devAuthMiddleware, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const system = req.query.system as string;
@@ -332,6 +615,62 @@ router.get('/user-rating', isAuthenticated, async (req: Request, res: Response) 
       return res.status(400).json({ error: 'System parameter is required' });
     }
     
+    // Special handling for development environment
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[CourtIQ API] Using mock data for user rating in development');
+      
+      // For test user ID 1, use fixed ratings for consistency
+      const baseRating = 1750 + (userId * 17) % 500;
+      
+      // Default to COURTIQ rating (internal)
+      let userRating = baseRating;
+      
+      // Get target system data
+      const targetSystem = MOCK_RATING_SYSTEMS.find(s => s.code === system) || {
+        id: 999,
+        code: system,
+        name: system.toUpperCase(),
+        minRating: 1.0,
+        maxRating: 5.0,
+        decimals: 1,
+        description: `${system.toUpperCase()} Rating System`,
+        isActive: true
+      } as MockRatingSystem;
+      
+      // For non-COURTIQ systems, convert from internal to target
+      if (system !== 'COURTIQ') {
+        // Calculate the relative position in CourtIQ range (0-1)
+        const courtiqSystem = MOCK_RATING_SYSTEMS.find(s => s.code === 'COURTIQ')!;
+        const normalizedPosition = (baseRating - courtiqSystem.minRating) / 
+                                  (courtiqSystem.maxRating - courtiqSystem.minRating);
+        
+        // Translate to target system
+        const targetRange = targetSystem.maxRating - targetSystem.minRating;
+        userRating = targetSystem.minRating + (normalizedPosition * targetRange);
+        
+        // Round appropriately based on the system's decimals
+        const power = targetSystem.decimals > 0 ? Math.pow(10, targetSystem.decimals) : 1;
+        userRating = Math.round(userRating * power) / power;
+      }
+      
+      return res.json({
+        rating: userRating,
+        confidence: 95,
+        source: 'user_record',
+        originalRating: baseRating,
+        originalSystem: 'COURTIQ',
+        playerDetails: {
+          userId: userId,
+          format: format,
+          division: division,
+          gamesAnalyzed: 35,
+          matchesAnalyzed: 12,
+          lastUpdated: new Date().toISOString()
+        }
+      });
+    }
+    
+    // Normal flow for production
     const result = await ratingConverter.convertUserRatingToSystem(
       userId,
       system,
@@ -350,13 +689,24 @@ router.get('/user-rating', isAuthenticated, async (req: Request, res: Response) 
  * Initialize rating systems and conversion data
  * POST /api/courtiq/initialize-systems (admin only)
  */
-router.post('/initialize-systems', isAuthenticated, async (req: Request, res: Response) => {
+router.post('/initialize-systems', devAuthMiddleware, async (req: Request, res: Response) => {
   try {
     // Check if user is admin
     if (!req.user?.isAdmin) {
       return res.status(403).json({ error: 'Administrator access required' });
     }
     
+    // Special handling for development environment
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[CourtIQ API] Using mock data for systems initialization in development');
+      return res.json({ 
+        success: true, 
+        systems: MOCK_RATING_SYSTEMS,
+        message: 'Rating systems initialized successfully'
+      });
+    }
+    
+    // Normal flow for production
     const systems = await ratingConverter.initializeRatingSystems();
     return res.json({ success: true, systems });
   } catch (error) {
