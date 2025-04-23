@@ -55,6 +55,7 @@ import {
   LazyUsersPage, // PKL-278651-ADMIN-0015-USER
   LazyNotFoundPage,
   LazyDashboardPage,
+  LazyCourtIQDetailedAnalysisPage, // PKL-278651-COURTIQ-0005-DETAIL
   LazyPassportPage, // PKL-278651-CONN-0008-UX-MOD2
   preloadProfilePages,
   preloadMatchPages,
