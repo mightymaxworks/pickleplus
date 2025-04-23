@@ -398,7 +398,6 @@ export default function DashboardContent() {
                       </div>
                     </div>
                   </CardContent>
-                  </CardContent>
                 </Card>
               </motion.div>
               
