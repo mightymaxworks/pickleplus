@@ -53,7 +53,8 @@ export default function DashboardContent() {
   if (!user) return null;
   
   // Dynamic stats for animations - PKL-278651-STATS-0001-VERIFY
-  const xpPercentage = Math.min((user.xp || 520) / 10, 100);
+  // If user has no XP, show 0% progress, otherwise calculate actual progress to next level
+  const xpPercentage = !user.xp ? 0 : Math.min((user.xp % 100) / 100 * 100, 100);
   // Only calculate winRate when we have real match data
   const hasMatchData = (matchStats && matchStats.totalMatches && matchStats.totalMatches > 0) || (user.totalMatches && user.totalMatches > 0);
   const winRate = hasMatchData 
@@ -320,62 +321,83 @@ export default function DashboardContent() {
                         </svg>
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="text-center">
-                            <div className="text-sm font-bold">{user.level || 5}</div>
+                            {!user?.xp ? (
+                              <div className="text-xs font-medium">Start</div>
+                            ) : (
+                              <div className="text-sm font-bold">{user.level || 1}</div>
+                            )}
                             <div className="text-xs text-gray-500">Level</div>
                           </div>
                         </div>
                       </div>
                       
                       <div className="flex-1">
-                        <div className="space-y-2 mb-2">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-600">Current XP</span>
-                            <motion.span 
-                              className="font-medium"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: isLoaded ? 1 : 0 }}
-                              transition={{ delay: 0.6, duration: 0.3 }}
-                            >
-                              {user.xp || 520}
-                            </motion.span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-600">Next Level</span>
-                            <motion.span 
-                              className="font-medium"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: isLoaded ? 1 : 0 }}
-                              transition={{ delay: 0.7, duration: 0.3 }}
-                            >
-                              {(user.level || 5) + 1}
-                            </motion.span>
-                          </div>
-                        </div>
-                        
-                        <div className="relative pt-1">
-                          <div className="flex mb-2 items-center justify-between">
-                            <div>
-                              <span className="text-xs font-semibold inline-block text-orange-500">
-                                Level Progress
-                              </span>
+                        {!user?.xp ? (
+                          <div className="space-y-3">
+                            <div className="p-2 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-md">
+                              <p className="text-sm text-orange-700">
+                                <span className="font-medium">Start your XP journey!</span> Complete your profile to earn your first experience points.
+                              </p>
                             </div>
-                            <div className="text-right">
-                              <span className="text-xs font-semibold inline-block text-orange-500">
-                                {Math.round(xpPercentage)}%
-                              </span>
+                            <div className="flex items-center text-xs text-gray-600 gap-1">
+                              <Award className="h-3 w-3 text-orange-400" />
+                              <span>Earn XP by playing matches and completing tasks</span>
                             </div>
                           </div>
-                          <div className="flex h-2 mb-0 overflow-hidden rounded bg-gray-200">
-                            <motion.div
-                              className="bg-gradient-to-r from-orange-500 to-yellow-500"
-                              initial={{ width: 0 }}
-                              animate={{ width: `${xpPercentage}%` }}
-                              transition={{ delay: 0.5, duration: 1.5, ease: "easeOut" }}
-                            />
-                          </div>
-                        </div>
+                        ) : (
+                          <>
+                            <div className="space-y-2 mb-2">
+                              <div className="flex justify-between text-sm">
+                                <span className="text-gray-600">Current XP</span>
+                                <motion.span 
+                                  className="font-medium"
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: isLoaded ? 1 : 0 }}
+                                  transition={{ delay: 0.6, duration: 0.3 }}
+                                >
+                                  {user.xp}
+                                </motion.span>
+                              </div>
+                              <div className="flex justify-between text-sm">
+                                <span className="text-gray-600">Next Level</span>
+                                <motion.span 
+                                  className="font-medium"
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: isLoaded ? 1 : 0 }}
+                                  transition={{ delay: 0.7, duration: 0.3 }}
+                                >
+                                  {(user.level || 1) + 1}
+                                </motion.span>
+                              </div>
+                            </div>
+                            
+                            <div className="relative pt-1">
+                              <div className="flex mb-2 items-center justify-between">
+                                <div>
+                                  <span className="text-xs font-semibold inline-block text-orange-500">
+                                    Level Progress
+                                  </span>
+                                </div>
+                                <div className="text-right">
+                                  <span className="text-xs font-semibold inline-block text-orange-500">
+                                    {Math.round(xpPercentage)}%
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex h-2 mb-0 overflow-hidden rounded bg-gray-200">
+                                <motion.div
+                                  className="bg-gradient-to-r from-orange-500 to-yellow-500"
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${xpPercentage}%` }}
+                                  transition={{ delay: 0.5, duration: 1.5, ease: "easeOut" }}
+                                />
+                              </div>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
+                  </CardContent>
                   </CardContent>
                 </Card>
               </motion.div>
