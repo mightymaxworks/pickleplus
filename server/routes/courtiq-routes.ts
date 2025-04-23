@@ -498,7 +498,9 @@ router.post('/rating/set-preferred', devAuthMiddleware, async (req: Request, res
     }
     
     // Normal flow for production
-    const result = await onboardingService.selectRatingSystem(userId, system, rating);
+    // Convert string to number if needed
+    const numericRating = typeof rating === 'string' ? parseFloat(rating) : rating;
+    const result = await onboardingService.selectRatingSystem(userId, system, numericRating);
     
     if (!result.success) {
       return res.status(400).json({ error: result.message });
@@ -512,81 +514,64 @@ router.post('/rating/set-preferred', devAuthMiddleware, async (req: Request, res
 });
 
 /**
- * Legacy route for backwards compatibility
- * POST /api/courtiq/onboarding/select-rating
+ * Simple dedicated route for onboarding - SIMPLIFIED FOR FRAMEWORK 5.3
+ * POST /api/courtiq/onboarding/next-step
  */
-router.post('/onboarding/select-rating', devAuthMiddleware, async (req: Request, res: Response) => {
+router.post('/onboarding/next-step', devAuthMiddleware, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     
-    // Debug log the request body
-    console.log('[CourtIQ API] Legacy rating selection request body:', req.body);
+    // Log the request for debugging
+    console.log('[CourtIQ API] Onboarding next-step request:', req.body);
     
-    // Validate request body - make the schema more flexible
-    const schema = z.object({
-      system: z.string(),
-      rating: z.union([z.number(), z.string().transform(val => parseFloat(val))])
-    });
-    
-    const validationResult = schema.safeParse(req.body);
-    if (!validationResult.success) {
-      console.log('[CourtIQ API] Legacy validation error:', validationResult.error);
-      return res.status(400).json({ error: 'Invalid request body', details: validationResult.error });
-    }
-    
-    const { system, rating } = validationResult.data;
-    
-    // Special handling for development environment
+    // In development, just use mock data 
     if (process.env.NODE_ENV !== 'production') {
-      console.log('[CourtIQ API] Using mock data for rating selection in development');
+      console.log('[CourtIQ API] Using simplified mock data for onboarding progress');
       
-      // Get mock system data
-      const mockSystem = MOCK_RATING_SYSTEMS.find(s => s.code === system) || {
-        id: 999,
-        code: system,
-        name: system.toUpperCase(),
-        description: `${system.toUpperCase()} Rating System`,
-        minRating: 1.0,
-        maxRating: 5.0,
-        decimals: 1,
-        isActive: true
-      } as MockRatingSystem;
+      // Get the current step from the request
+      const { step, ratingSystem, ratingValue } = req.body;
       
+      let nextStep = 'experience_summary';
+      let progressPct = 40;
+      
+      // Update preferences based on what step was completed
+      if (step === 'rating_selection') {
+        // Adjust mockOnboardingStatus to move to next step
+        mockOnboardingStatus.progress.ratingSystemSelected = true;
+        mockOnboardingStatus.progress.ratingProvided = true;
+        mockOnboardingStatus.preferences.preferredRatingSystem = ratingSystem;
+        mockOnboardingStatus.preferences.initialRating = ratingValue;
+        mockOnboardingStatus.nextStep = 'experience_summary';
+        mockOnboardingStatus.progress_pct = 40;
+      } else if (step === 'experience_summary') {
+        // Adjust to move to play style assessment
+        mockOnboardingStatus.progress.experienceSummaryCompleted = true;
+        mockOnboardingStatus.nextStep = 'play_style_assessment';
+        mockOnboardingStatus.progress_pct = 70;
+      } else if (step === 'play_style_assessment') {
+        // Mark onboarding as complete
+        mockOnboardingStatus.progress.playStyleAssessed = true;
+        mockOnboardingStatus.completed = true;
+        mockOnboardingStatus.progress_pct = 100;
+        mockOnboardingStatus.completedAt = new Date().toISOString();
+      }
+      
+      // Return the updated onboarding status
       return res.json({
         success: true,
-        message: `Successfully set ${mockSystem.name} as preferred rating system`,
         userId: userId,
-        system: system,
-        rating: rating,
-        onboardingStatus: {
-          ...mockOnboardingStatus,
-          progress: {
-            ...mockOnboardingStatus.progress,
-            ratingSystemSelected: true,
-            ratingProvided: true
-          },
-          preferences: {
-            ...mockOnboardingStatus.preferences,
-            preferredRatingSystem: system,
-            initialRating: rating
-          },
-          progress_pct: 40,
-          nextStep: 'experience_summary'
-        }
+        onboardingStatus: mockOnboardingStatus
       });
     }
     
-    // Normal flow for production
-    const result = await onboardingService.selectRatingSystem(userId, system, rating);
+    // Production implementation (to be added in future)
+    return res.status(500).json({ 
+      error: 'Production implementation not available yet'
+    });
     
-    if (!result.success) {
-      return res.status(400).json({ error: result.message });
-    }
-    
-    return res.json(result);
   } catch (error) {
-    console.error('[API] Error selecting rating system:', error);
-    return res.status(500).json({ error: 'Failed to select rating system' });
+    console.error('[API] Error processing onboarding step:', error);
+    return res.status(500).json({ error: 'Failed to process onboarding step' });
   }
 });
 

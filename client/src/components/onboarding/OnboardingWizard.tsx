@@ -58,6 +58,7 @@ interface OnboardingStatus {
     preferredDivision?: string;
     preferredFormat?: string;
     preferredRatingSystem?: string;
+    initialRating?: number;
     experienceYears?: number;
   };
   progress_pct: number;
@@ -284,7 +285,7 @@ export function OnboardingWizard({
       if (status?.preferences?.preferredRatingSystem) {
         payload.data = {
           ratingSystem: status.preferences.preferredRatingSystem,
-          ratingValue: status.preferences.initialRating
+          ratingValue: status.preferences.initialRating || 3.5
         };
       }
     }
