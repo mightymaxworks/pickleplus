@@ -12,6 +12,12 @@
 
 import type { Event } from '@shared/schema/events';
 
+// Define our custom event interface that extends the database Event type
+// This allows us to use string IDs for client-side only events
+interface ClientSideEvent extends Omit<Event, 'id'> {
+  id: number; // Match the database schema which uses number IDs
+}
+
 // Special ID for the default community event
 // Define a consistent negative ID for this virtual community event
 export const DEFAULT_COMMUNITY_EVENT_ID = -999;  // Using a negative ID to ensure no conflict with real database IDs
@@ -34,6 +40,7 @@ endDate.setHours(endDate.getHours() + 2);
 
 /**
  * Default community event that all users are automatically registered for
+ * PKL-278651-PASS-0014-DEFT - We use a custom event format that's compatible with the standard Event type
  */
 export const defaultCommunityEvent: Event = {
   id: DEFAULT_COMMUNITY_EVENT_ID,

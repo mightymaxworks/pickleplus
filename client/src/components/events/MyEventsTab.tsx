@@ -363,13 +363,15 @@ export function MyEventsTab({ className, onEventClick, onPassportClick }: MyEven
                           duration: 0.3 
                         }}
                         className="origin-top"
+                        // PKL-278651-PASS-0014-DEFT - Add special animation for default community event
+                        whileHover={isDefaultCommunityEvent(event) ? { scale: 1.02, boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)" } : { scale: 1.01 }}
                       >
                         <Card 
                           className={cn(
                             "overflow-hidden border-l-4 transition-all",
                             onEventClick && "hover:shadow-md cursor-pointer",
                             isDefaultCommunityEvent(event) ? 
-                              "border-l-emerald-500 bg-gradient-to-r from-emerald-50/30 to-transparent" :
+                              "border-l-emerald-500 border-emerald-200 bg-gradient-to-r from-emerald-50/30 to-transparent shadow-sm" :
                               soon ? "border-l-amber-500 bg-gradient-to-r from-amber-50/40 to-transparent" : 
                                 "border-l-primary/70 bg-gradient-to-r from-primary/5 to-transparent"
                           )}
@@ -469,9 +471,9 @@ export function MyEventsTab({ className, onEventClick, onPassportClick }: MyEven
                             >
                               {/* PKL-278651-PASS-0014-DEFT - Add special badge for default community event */}
                               {isDefaultCommunityEvent(event) ? (
-                                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
-                                  <StarIcon className="h-3 w-3 mr-1" />
-                                  Community Event
+                                <Badge variant="outline" className="bg-emerald-100 text-emerald-800 border-emerald-300 font-medium px-2.5 py-0.5 animate-pulse">
+                                  <StarIcon className="h-3.5 w-3.5 mr-1.5 text-emerald-600" />
+                                  Special Community Event
                                 </Badge>
                               ) : (
                                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
@@ -510,9 +512,9 @@ export function MyEventsTab({ className, onEventClick, onPassportClick }: MyEven
                                 </Button>
                               </motion.div>
                             ) : (
-                              <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
-                                <CheckIcon className="h-3 w-3 mr-1" />
-                                Always Registered
+                              <Badge variant="outline" className="bg-emerald-100 text-emerald-700 border-emerald-300 font-medium shadow-sm">
+                                <StarIcon className="h-3.5 w-3.5 mr-1.5 text-emerald-600" />
+                                Always Available
                               </Badge>
                             )}
                           </CardFooter>
