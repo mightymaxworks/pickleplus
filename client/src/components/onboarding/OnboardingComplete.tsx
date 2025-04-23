@@ -39,9 +39,29 @@ const OnboardingComplete: React.FC<OnboardingCompleteProps> = ({
 }) => {
   const [, setLocation] = useLocation();
   
-  // Log the component rendering
+  // Log the component rendering and ensure we don't allow immediate navigation away
   useEffect(() => {
     console.log("[OnboardingComplete] Component rendered with", xpEarned, "XP");
+    
+    // Safety measure: This prevents automatic navigation away from this page
+    // by overriding potential redirects for a brief period
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Only prevent navigation for the first 3 seconds to ensure users see this page
+      const timeOnPage = Date.now() - pageLoadTime;
+      if (timeOnPage < 3000) {
+        console.log("[OnboardingComplete] Blocking automatic navigation, time on page:", timeOnPage);
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+    
+    const pageLoadTime = Date.now();
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
   }, [xpEarned]);
 
   // Simple list of next steps with URLs

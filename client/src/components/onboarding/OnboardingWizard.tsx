@@ -365,7 +365,12 @@ export function OnboardingWizard({
       title: "Onboarding completed",
       description: "You've completed the CourtIQ™ onboarding process. Welcome to Pickle+!",
     });
-
+    
+    // PKL-278651-COURTIQ-0002-GUIDANCE - Don't navigate away automatically
+    // Stay on this page and let the OnboardingComplete component handle next steps
+    console.log("[OnboardingWizard] Onboarding complete - preventing automatic redirect");
+    
+    // Still call onComplete for consistency, but we'll override its behavior
     if (onComplete) {
       onComplete();
     }
