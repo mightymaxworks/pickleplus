@@ -1,4 +1,5 @@
 import { apiRequest } from "@/lib/queryClient";
+import { matchService } from "@/lib/services/match-service";
 
 /**
  * Match SDK
@@ -126,80 +127,37 @@ export async function recordMatch(matchData: MatchData): Promise<RecordedMatch> 
   console.log("matchSDK: Recording match with data:", JSON.stringify(matchData, null, 2));
   
   try {
-    const response = await apiRequest("POST", "/api/match/record", matchData);
-    console.log("matchSDK: Received API response status:", response.status);
+    // Use the new frontend-first match service (Framework 5.3)
+    // This will store the match locally first and then try to sync with server
+    const recordedMatch = await matchService.recordMatch({
+      formatType: matchData.formatType,
+      scoringSystem: matchData.scoringSystem,
+      pointsToWin: matchData.pointsToWin,
+      players: matchData.players,
+      gameScores: matchData.gameScores,
+      matchType: matchData.matchType,
+      eventTier: matchData.eventTier,
+      division: matchData.division,
+      location: matchData.location
+    });
     
-    // Special handling for testing the post-match assessment flow:
-    // If we get a 404 error (POST /api/match/record endpoint doesn't exist yet),
-    // create a successful mock response to allow testing the assessment flow
-    if (response.status === 404) {
-      console.log("matchSDK: Endpoint not found, generating mock match for testing assessment flow");
-      return {
-        id: Date.now(),
-        date: new Date().toISOString(),
-        formatType: matchData.formatType,
-        scoringSystem: matchData.scoringSystem,
-        pointsToWin: matchData.pointsToWin,
-        players: matchData.players,
-        gameScores: matchData.gameScores,
-        matchType: matchData.matchType || 'casual',
-        validationStatus: 'pending'
-      };
-    }
+    console.log("matchSDK: Match recorded successfully using frontend-first approach:", recordedMatch);
     
-    if (!response.ok) {
-      // Try to extract more specific error info from response
-      try {
-        const errorData = await response.json();
-        console.error("matchSDK: Error response data:", errorData);
-        throw new Error(errorData.error || `Server returned ${response.status}`);
-      } catch (jsonError) {
-        // If we can't parse the error JSON, throw a generic error with status
-        throw new Error(`Failed to record match: Server returned ${response.status}`);
-      }
-    }
-    
-    // Try to parse the response as JSON, but handle errors gracefully
-    try {
-      const text = await response.text();
-      
-      // Check if the response is HTML (starts with <!DOCTYPE or <html)
-      if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
-        console.log("matchSDK: Received HTML response instead of JSON");
-        // Create a mock successful response
-        return {
-          id: Date.now(),
-          date: new Date().toISOString(),
-          formatType: matchData.formatType,
-          scoringSystem: matchData.scoringSystem,
-          pointsToWin: matchData.pointsToWin,
-          players: matchData.players,
-          gameScores: matchData.gameScores,
-          matchType: matchData.matchType || 'casual',
-          validationStatus: 'pending'
-        };
-      }
-      
-      // Try to parse as JSON
-      const recordedMatch = JSON.parse(text);
-      console.log("matchSDK: Match recorded successfully:", recordedMatch);
-      return recordedMatch;
-    } catch (parseError) {
-      console.error("matchSDK: Error parsing response:", parseError);
-      // If we can't parse the response but the status was OK, assume success
-      // and return a minimal valid response
-      return {
-        id: Date.now(),
-        date: new Date().toISOString(),
-        formatType: matchData.formatType,
-        scoringSystem: matchData.scoringSystem,
-        pointsToWin: matchData.pointsToWin,
-        players: matchData.players,
-        gameScores: matchData.gameScores,
-        matchType: matchData.matchType || 'casual',
-        validationStatus: 'pending'
-      };
-    }
+    // Convert from the service model to the SDK model
+    return {
+      id: recordedMatch.id,
+      date: recordedMatch.date,
+      formatType: recordedMatch.formatType,
+      scoringSystem: recordedMatch.scoringSystem,
+      pointsToWin: recordedMatch.pointsToWin,
+      players: recordedMatch.players,
+      gameScores: recordedMatch.gameScores,
+      matchType: recordedMatch.matchType,
+      eventTier: recordedMatch.eventTier,
+      division: recordedMatch.division,
+      location: recordedMatch.location,
+      validationStatus: recordedMatch.validationStatus
+    };
   } catch (error) {
     console.error("matchSDK: Error recording match:", error);
     
@@ -209,21 +167,6 @@ export async function recordMatch(matchData: MatchData): Promise<RecordedMatch> 
       console.error("Error stack:", error.stack);
     } else if (error === null || error === undefined) {
       console.error("matchSDK: Received null/undefined error");
-    } else if (typeof error === 'object' && Object.keys(error).length === 0) {
-      console.error("matchSDK: Received empty error object, treating as success");
-      // If we have an empty error object but the request was actually successful,
-      // return a minimal valid response to prevent the UI from breaking
-      return { 
-        id: Date.now(), 
-        date: new Date().toISOString(),
-        formatType: matchData.formatType,
-        scoringSystem: matchData.scoringSystem,
-        pointsToWin: matchData.pointsToWin,
-        players: matchData.players,
-        gameScores: matchData.gameScores,
-        matchType: matchData.matchType || 'casual',
-        validationStatus: 'pending'
-      };
     }
     
     throw error;
@@ -237,79 +180,40 @@ export async function recordMatch(matchData: MatchData): Promise<RecordedMatch> 
  * @returns List of recent matches
  */
 export async function getRecentMatches(userId?: number, limit: number = 10): Promise<RecordedMatch[]> {
-  const queryParams = new URLSearchParams();
-  if (userId) queryParams.append("userId", userId.toString());
-  if (limit) queryParams.append("limit", limit.toString());
-  
-  console.log("Fetching recent matches with params:", queryParams.toString());
+  console.log("matchSDK: Fetching recent matches for user:", userId, "limit:", limit);
   
   try {
-    const response = await apiRequest("GET", `/api/match/recent?${queryParams}`);
-    console.log("Recent matches response status:", response.status);
+    // Use the frontend-first match service to get recent matches
+    // This will try to load from the server, but fall back to local storage if needed
+    const matches = await matchService.getRecentMatches(userId, limit);
+    console.log("matchSDK: Retrieved matches using frontend-first approach:", matches);
     
-    // First, get the raw text response
-    const textResponse = await response.text();
-    console.log("Recent matches raw response length:", textResponse.length);
-    console.log("Response starts with:", textResponse.substring(0, 50));
-    
-    // Check if response is HTML or JSON
-    if (textResponse.trim().startsWith('<!DOCTYPE') || textResponse.trim().startsWith('<html')) {
-      console.log("Received HTML instead of JSON for recent matches");
-      
-      // Return a default match for display purposes
-      return [{
-        id: 1001,
-        date: new Date().toISOString(),
-        formatType: 'singles',
-        scoringSystem: 'traditional',
-        pointsToWin: 11,
-        matchType: 'casual',
-        eventTier: 'local',
-        players: [
-          {
-            userId: 1, // Current user
-            score: "11",
-            isWinner: true
-          },
-          {
-            userId: 6, // Random opponent
-            score: "4",
-            isWinner: false
-          }
-        ],
-        gameScores: [
-          {
-            playerOneScore: 11,
-            playerTwoScore: 4
-          }
-        ],
-        playerNames: {
-          1: {
-            displayName: "You",
-            username: "PickleballPro",
-            avatarInitials: "YP"
-          },
-          6: {
-            displayName: "Johnny Pickleball",
-            username: "johnny_pickle",
-            avatarInitials: "JP"
-          }
-        },
-        validationStatus: 'validated'
-      }];
-    }
-    
-    try {
-      // Try to parse the response as JSON
-      const jsonData = JSON.parse(textResponse);
-      console.log("Successfully parsed recent matches JSON:", jsonData);
-      return jsonData;
-    } catch (e) {
-      console.error("Failed to parse JSON response:", e);
-      return [];
-    }
+    // Convert from the service model to the SDK model
+    return matches.map(match => ({
+      id: match.id,
+      date: match.date,
+      formatType: match.formatType,
+      scoringSystem: match.scoringSystem,
+      pointsToWin: match.pointsToWin,
+      players: match.players,
+      gameScores: match.gameScores,
+      matchType: match.matchType,
+      eventTier: match.eventTier,
+      division: match.division,
+      location: match.location,
+      validationStatus: match.validationStatus,
+      // Add default playerNames if not present
+      playerNames: match.playerNames || match.players.reduce((acc, player) => {
+        acc[player.userId] = {
+          displayName: `Player ${player.userId}`,
+          username: `player${player.userId}`,
+          avatarInitials: `P${player.userId}`
+        };
+        return acc;
+      }, {} as Record<number, {displayName: string, username: string, avatarInitials: string}>)
+    }));
   } catch (error) {
-    console.error("Error fetching recent matches:", error);
+    console.error("matchSDK: Error fetching recent matches:", error);
     return [];
   }
 }
