@@ -90,16 +90,17 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
 
     try {
       const formData = new FormData();
-      formData.append("file", selectedFile); // Changed field name to 'file'
+      formData.append("file", selectedFile);
 
-      const response = await fetch("/api/user/avatar", { // Changed API endpoint
+      const response = await fetch("/api/user/profile/avatar", {
         method: "POST",
         credentials: "include",
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error('Failed to upload avatar');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to upload avatar');
       }
 
       await queryClient.invalidateQueries({ queryKey: ["/api/auth/current-user"] });
@@ -113,7 +114,7 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
     } catch (error) {
       toast({
         title: "Upload Failed",
-        description: "There was an error uploading your image. Please try again.",
+        description: error instanceof Error ? error.message : "There was an error uploading your image. Please try again.",
         variant: "destructive",
       });
     } finally {
