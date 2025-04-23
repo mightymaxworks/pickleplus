@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { PicklePlusNewLogo } from '@/components/icons/PicklePlusNewLogo';
+import { PickleGoldLogo } from '@/components/icons/PickleGoldLogo';
 import { Trophy, Scan, RotateCw, Loader2 } from 'lucide-react';
 import { User } from '@shared/schema';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -217,7 +218,11 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
               <div className="font-bold text-base">
                 {isFoundingMember ? "Founding Member" : "Player Passport"}
               </div>
-              <PicklePlusNewLogo height="24px" width="auto" preserveAspectRatio={true} />
+              {isFoundingMember ? (
+                <PickleGoldLogo height={24} />
+              ) : (
+                <PicklePlusNewLogo height="24px" width="auto" preserveAspectRatio={true} />
+              )}
             </div>
             
             {/* Player info */}
@@ -369,7 +374,11 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
               <div className="font-bold text-lg">
                 {isFoundingMember ? "Founding Member" : "Player Passport"}
               </div>
-              <PicklePlusNewLogo height="32px" width="auto" preserveAspectRatio={true} />
+              {isFoundingMember ? (
+                <PickleGoldLogo height={32} />
+              ) : (
+                <PicklePlusNewLogo height="32px" width="auto" preserveAspectRatio={true} />
+              )}
             </div>
             
             {/* Player info */}
