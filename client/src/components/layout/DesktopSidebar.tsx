@@ -10,7 +10,9 @@ import {
   Settings, 
   LogOut,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Share,
+  LifeBuoy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PicklePlusWhiteLogo } from "@/components/icons/PicklePlusWhiteLogo";
@@ -114,6 +116,22 @@ export default function DesktopSidebar({ user }: DesktopSidebarProps) {
             icon={<Calendar size={20} />} 
             label="Passport" 
             active={location.startsWith("/passport")} 
+            collapsed={collapsed}
+          />
+
+          <NavItem 
+            href="/referrals" 
+            icon={<Share size={20} />} 
+            label="Referrals" 
+            active={location.startsWith("/referrals")} 
+            collapsed={collapsed}
+          />
+
+          <NavItem 
+            href="/onboarding" 
+            icon={<LifeBuoy size={20} />} 
+            label="Onboarding" 
+            active={location.startsWith("/onboarding")} 
             collapsed={collapsed}
           />
           
