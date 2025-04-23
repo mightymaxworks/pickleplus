@@ -302,8 +302,9 @@ router.get('/onboarding/status', devAuthMiddleware, async (req: Request, res: Re
     
     // Special handling for development environment
     if (process.env.NODE_ENV !== 'production') {
-      console.log('[CourtIQ API] Using mock onboarding status for development');
-      return res.json(mockOnboardingStatus);
+      console.log('[CourtIQ API] Using DEV_STATE for onboarding status');
+      // Return the centralized state
+      return res.json(DEV_STATE.onboarding);
     }
     
     // Normal flow for production
@@ -332,11 +333,12 @@ router.post('/onboarding/start', devAuthMiddleware, async (req: Request, res: Re
     
     // Special handling for development environment
     if (process.env.NODE_ENV !== 'production') {
-      console.log('[CourtIQ API] Using mock onboarding status for development');
-      return res.json({
-        ...mockOnboardingStatus,
-        started: true
-      });
+      console.log('[CourtIQ API] Using DEV_STATE for onboarding status');
+      
+      // Ensure the started flag is set to true
+      DEV_STATE.onboarding.started = true;
+      
+      return res.json(DEV_STATE.onboarding);
     }
     
     // Normal flow for production
