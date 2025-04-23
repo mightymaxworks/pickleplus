@@ -63,11 +63,38 @@ export function isAuthenticated(req: Request, res: Response, next: any) {
     return next();
   }
   
+  // PKL-278651-AUTH-0016-DEV - Development-only test user mode
+  if (process.env.NODE_ENV !== 'production') {
+    // Log that we're using development mode authentication
+    console.log(`[DEV MODE] Authentication bypass for ${req.path} - Using test user`);
+    
+    // Create a mock user request for development testing
+    req.user = {
+      id: 1,
+      username: 'testdev',
+      email: 'dev@pickle.plus',
+      isAdmin: true,
+      passportId: '1000MM7',
+      firstName: 'Mighty',
+      lastName: 'Max',
+      displayName: 'Mighty Max',
+      dateOfBirth: null,
+      avatarUrl: null,
+      avatarInitials: 'MM',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      verifiedEmail: true,
+      xp: 1000,
+      level: 10
+    };
+    return next();
+  }
+  
   // Log authentication failure for debugging
   console.log(`Authentication failed for ${req.path} - Session ID: ${req.sessionID}`);
   
   // Return standard 401 Unauthorized response
-  res.status(401).json({ message: "Unauthorized" });
+  res.status(401).json({ message: "Not authenticated" });
 }
 
 // Middleware to check if a user is an admin (basic version)
