@@ -213,10 +213,10 @@ export function AppHeader({
             {localAvatarUrl || user?.avatarUrl ? (
               <div className="w-8 h-8 rounded-full overflow-hidden shadow-sm">
                 <img 
-                  src={localAvatarUrl || user?.avatarUrl} 
-                  alt={user?.username} 
+                  src={(localAvatarUrl || user?.avatarUrl) as string} 
+                  alt={user?.username || ''} 
                   className="w-full h-full object-cover"
-                  key={localAvatarUrl || user?.avatarUrl} // Force re-render when URL changes
+                  key={(localAvatarUrl || user?.avatarUrl) || 'avatar-key'} // Force re-render when URL changes
                 />
               </div>
             ) : (

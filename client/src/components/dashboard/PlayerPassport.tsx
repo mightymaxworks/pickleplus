@@ -21,6 +21,7 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
   const [cardHeight, setCardHeight] = useState(isSmallScreen ? 350 : 400);
   const frontRef = useRef<HTMLDivElement>(null);
   const backRef = useRef<HTMLDivElement>(null);
+  const [localAvatarUrl, setLocalAvatarUrl] = useState<string | null>(null);
   
   // Fetch real data from API
   const { data: rankingPosition, isLoading: isRankingLoading } = useUserGlobalRankingPosition(user.id);
@@ -55,6 +56,22 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
     return () => clearTimeout(timer);
   }, [isSmallScreen, isExtraSmallScreen]);
   
+  // Load avatar URL from localStorage
+  useEffect(() => {
+    if (user?.id) {
+      const cachedAvatarUrl = localStorage.getItem(`user_avatar_${user.id}`);
+      if (cachedAvatarUrl) {
+        setLocalAvatarUrl(cachedAvatarUrl);
+      } else if (user.avatarUrl) {
+        // If no cached avatar but user has an avatarUrl, cache it for future use
+        localStorage.setItem(`user_avatar_${user.id}`, user.avatarUrl);
+        setLocalAvatarUrl(user.avatarUrl);
+      } else {
+        setLocalAvatarUrl(null);
+      }
+    }
+  }, [user?.id, user?.avatarUrl]);
+
   // Check if user is a founding member
   const isFoundingMember = user.isFoundingMember || false;
   
@@ -113,13 +130,13 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
             {/* Player info */}
             <div className="flex items-center mt-2">
               <div className="h-12 w-12 rounded-full bg-white p-0.5 mr-2 shadow">
-                {user.avatarUrl ? (
+                {localAvatarUrl || user.avatarUrl ? (
                   <div className="h-full w-full rounded-full overflow-hidden">
                     <img 
-                      src={user.avatarUrl} 
-                      alt={user.username} 
+                      src={(localAvatarUrl || user.avatarUrl) as string} 
+                      alt={user.username || ''} 
                       className="h-full w-full object-cover"
-                      key={user.avatarUrl} // Force re-render when URL changes
+                      key={(localAvatarUrl || user.avatarUrl) || 'small-avatar-key'} // Force re-render when URL changes
                     />
                   </div>
                 ) : (
@@ -265,13 +282,13 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
             {/* Player info */}
             <div className="flex items-center mt-3">
               <div className="h-16 w-16 rounded-full bg-white p-0.5 mr-3 shadow">
-                {user.avatarUrl ? (
+                {localAvatarUrl || user.avatarUrl ? (
                   <div className="h-full w-full rounded-full overflow-hidden">
                     <img 
-                      src={user.avatarUrl} 
-                      alt={user.username} 
+                      src={(localAvatarUrl || user.avatarUrl) as string} 
+                      alt={user.username || ''} 
                       className="h-full w-full object-cover"
-                      key={user.avatarUrl} // Force re-render when URL changes
+                      key={(localAvatarUrl || user.avatarUrl) || 'large-avatar-key'} // Force re-render when URL changes
                     />
                   </div>
                 ) : (
