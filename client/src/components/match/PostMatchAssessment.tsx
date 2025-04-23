@@ -540,6 +540,16 @@ export function PostMatchAssessment({
   
   return (
     <Form {...form}>
+      {lastSaved && (
+        <div className="mb-2 flex items-center justify-end">
+          <span className="text-xs text-muted-foreground flex items-center">
+            <Save className="h-3 w-3 mr-1" />
+            <span className="hidden sm:inline">Auto-saved at</span>
+            <span className="sm:hidden">Saved</span>
+            <span className="ml-1">{lastSaved}</span>
+          </span>
+        </div>
+      )}
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <Tabs 
           value={step} 
