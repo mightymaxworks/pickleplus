@@ -60,21 +60,60 @@ export default function PlayStyleAssessment({ onComplete }: PlayStyleAssessmentP
     },
   });
 
-  // Mutation to submit the play style data
+  // Mutation to submit the play style data using frontend-driven approach
   const submitPlayStyleMutation = useMutation({
     mutationFn: async (data: PlayStyleFormValues) => {
-      const response = await apiRequest('POST', '/api/courtiq/onboarding/play-style', data);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to save play style data');
+      // Create the play style data
+      const playStyleData = {
+        aggressiveness: data.aggressiveness,
+        courtPosition: data.courtPosition,
+        shotPreference: data.shotPreference,
+        gameSpeed: data.gameSpeed,
+        learningStyle: data.learningStyle
+      };
+      
+      console.log('[PlayStyleAssessment] Saving play style data with frontend-driven approach');
+      
+      // Update wizard state to mark this step as completed
+      const wizardState = {
+        currentStep: 'completed', // Final step - we're done!
+        completedSteps: ['profile_completion', 'rating_selection', 'experience_summary', 'play_style_assessment'],
+        progress: 100, // 100% progress in onboarding
+        lastUpdated: new Date().toISOString()
+      };
+      
+      // Store the play style data first
+      const playStyleResponse = await apiRequest('POST', '/api/user-data/store', {
+        dataType: 'playStyleData',
+        data: playStyleData
+      });
+      
+      if (!playStyleResponse.ok) {
+        const errorData = await playStyleResponse.json();
+        throw new Error(errorData.error || 'Failed to save play style data');
       }
-      return response.json();
+      
+      // Then update the wizard state
+      const wizardResponse = await apiRequest('POST', '/api/user-data/store', {
+        dataType: 'wizardState',
+        data: wizardState
+      });
+      
+      if (!wizardResponse.ok) {
+        const errorData = await wizardResponse.json();
+        throw new Error(errorData.error || 'Failed to update wizard state');
+      }
+      
+      // Return the final state
+      return wizardResponse.json();
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (data, variables) => {
       toast({
         title: "Play style saved",
         description: "Your play style preferences have been recorded.",
       });
+      console.log('[PlayStyleAssessment] Data saved successfully:', data);
+      
       if (onComplete) {
         onComplete(variables);
       }
