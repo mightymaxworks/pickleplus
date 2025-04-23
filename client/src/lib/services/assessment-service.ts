@@ -9,6 +9,7 @@ import { BaseEntity, getStorageService, IStorageService } from './storage-servic
 import { queryClient } from '../queryClient';
 import { apiRequest } from '../queryClient';
 import { toast } from '@/hooks/use-toast';
+import featureFlags from '../featureFlags';
 
 // Assessment types
 export interface SkillDimension {
@@ -59,12 +60,24 @@ export interface AssessmentInput {
   isConfidential?: boolean;
 }
 
+// Interface for saving incomplete assessments
+export interface IncompleteAssessment {
+  matchId: number | string;
+  assessorId: number;
+  targetId: number;
+  formData: Record<string, any>; // Stores form values in current state
+  lastUpdated: string;
+  currentStep: string;
+  isComplete: boolean;
+}
+
 /**
  * Assessment Service class for handling skill assessments and ratings
  */
 export class AssessmentService {
   private assessmentStorage: IStorageService<MatchAssessment>;
   private dimensionsStorage: IStorageService<SkillDimension>;
+  private readonly INCOMPLETE_ASSESSMENTS_KEY = 'pickle_plus_incomplete_assessments';
   
   // Default skill dimensions
   private defaultDimensions: SkillDimension[] = [
@@ -326,6 +339,105 @@ export class AssessmentService {
     } catch (error) {
       console.error('AssessmentService: Error syncing all pending assessments:', error);
     }
+  }
+  
+  /**
+   * Save an incomplete assessment for later completion
+   * This allows users to pause and resume their assessments
+   */
+  async saveIncompleteAssessment(data: IncompleteAssessment): Promise<void> {
+    try {
+      console.log('AssessmentService: Saving incomplete assessment:', data);
+      
+      // Get current incomplete assessments
+      const incompleteAssessments = this.getIncompleteAssessments();
+      
+      // Find if there's an existing incomplete assessment for this match and user
+      const existingIndex = incompleteAssessments.findIndex(
+        a => a.matchId === data.matchId && a.assessorId === data.assessorId
+      );
+      
+      // Update or add the incomplete assessment
+      if (existingIndex >= 0) {
+        incompleteAssessments[existingIndex] = {
+          ...data,
+          lastUpdated: new Date().toISOString()
+        };
+      } else {
+        incompleteAssessments.push({
+          ...data,
+          lastUpdated: new Date().toISOString()
+        });
+      }
+      
+      // Save back to local storage
+      localStorage.setItem(this.INCOMPLETE_ASSESSMENTS_KEY, JSON.stringify(incompleteAssessments));
+      
+      console.log('AssessmentService: Incomplete assessment saved successfully');
+    } catch (error) {
+      console.error('AssessmentService: Error saving incomplete assessment:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Get all incomplete assessments
+   */
+  getIncompleteAssessments(): IncompleteAssessment[] {
+    try {
+      const data = localStorage.getItem(this.INCOMPLETE_ASSESSMENTS_KEY);
+      return data ? JSON.parse(data) : [];
+    } catch (error) {
+      console.error('AssessmentService: Error getting incomplete assessments:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * Get incomplete assessment for a specific match and user
+   */
+  getIncompleteAssessment(matchId: number | string, assessorId: number): IncompleteAssessment | null {
+    try {
+      const incompleteAssessments = this.getIncompleteAssessments();
+      return incompleteAssessments.find(
+        a => a.matchId === matchId && a.assessorId === assessorId
+      ) || null;
+    } catch (error) {
+      console.error(`AssessmentService: Error getting incomplete assessment for match ${matchId}:`, error);
+      return null;
+    }
+  }
+  
+  /**
+   * Delete an incomplete assessment
+   * Used when an assessment is complete or abandoned
+   */
+  deleteIncompleteAssessment(matchId: number | string, assessorId: number): void {
+    try {
+      const incompleteAssessments = this.getIncompleteAssessments();
+      const filteredAssessments = incompleteAssessments.filter(
+        a => !(a.matchId === matchId && a.assessorId === assessorId)
+      );
+      
+      localStorage.setItem(this.INCOMPLETE_ASSESSMENTS_KEY, JSON.stringify(filteredAssessments));
+      console.log(`AssessmentService: Deleted incomplete assessment for match ${matchId}`);
+    } catch (error) {
+      console.error(`AssessmentService: Error deleting incomplete assessment for match ${matchId}:`, error);
+    }
+  }
+  
+  /**
+   * Get the count of incomplete assessments
+   */
+  getIncompleteAssessmentCount(): number {
+    return this.getIncompleteAssessments().length;
+  }
+  
+  /**
+   * Check if an assessment is in progress
+   */
+  hasIncompleteAssessment(matchId: number | string, assessorId: number): boolean {
+    return this.getIncompleteAssessment(matchId, assessorId) !== null;
   }
 }
 

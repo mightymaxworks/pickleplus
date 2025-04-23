@@ -8,7 +8,7 @@
  * 
  * Framework 5.3 Implementation
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -42,7 +42,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, User, Users, ArrowRight } from "lucide-react";
+import { Loader2, CheckCircle, User, Users, ArrowRight, Save } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -54,6 +54,12 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import { 
+  assessmentService, 
+  IncompleteAssessment 
+} from "@/lib/services/assessment-service";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // Define the assessment schema
 const postMatchAssessmentSchema = z.object({
@@ -152,6 +158,9 @@ export function PostMatchAssessment({
   const [step, setStep] = useState<"self" | "opponent" | "context" | "review">("self");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [hasIncompleteAssessment, setHasIncompleteAssessment] = useState(false);
+  const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [autoSaveInterval, setAutoSaveInterval] = useState<number | null>(null);
   
   // Setup form
   const form = useForm<PostMatchAssessmentFormValues>({
@@ -179,6 +188,79 @@ export function PostMatchAssessment({
       contextNotes: "",
     }
   });
+  
+  // Check for existing incomplete assessment on component mount
+  useEffect(() => {
+    const loadIncompleteAssessment = async () => {
+      try {
+        const incompleteAssessment = assessmentService.getIncompleteAssessment(matchId, matchData.playerOneId);
+        
+        if (incompleteAssessment) {
+          setHasIncompleteAssessment(true);
+          setLastSaved(new Date(incompleteAssessment.lastUpdated).toLocaleString());
+          
+          // Set the form data from the saved assessment
+          if (incompleteAssessment.formData) {
+            form.reset(incompleteAssessment.formData);
+          }
+          
+          // Set the current step from the saved assessment
+          if (incompleteAssessment.currentStep) {
+            setStep(incompleteAssessment.currentStep as any);
+          }
+          
+          toast({
+            title: "Assessment Draft Loaded",
+            description: "Your previous assessment has been restored.",
+          });
+        }
+      } catch (error) {
+        console.error("Error loading incomplete assessment:", error);
+      }
+    };
+    
+    loadIncompleteAssessment();
+    
+    // Set up auto-save interval (every 15 seconds)
+    const interval = window.setInterval(() => {
+      saveAssessmentProgress();
+    }, 15000);
+    
+    setAutoSaveInterval(interval);
+    
+    // Clean up interval on unmount
+    return () => {
+      if (autoSaveInterval) {
+        window.clearInterval(autoSaveInterval);
+      }
+    };
+  }, [matchId, matchData.playerOneId]);
+  
+  // Save assessment progress
+  const saveAssessmentProgress = async () => {
+    try {
+      const formData = form.getValues();
+      const isDirty = Object.values(formData).some(value => value !== "");
+      
+      // Only save if there's actual data to save
+      if (isDirty) {
+        await assessmentService.saveIncompleteAssessment({
+          matchId,
+          assessorId: matchData.playerOneId,
+          targetId: matchData.playerTwoId,
+          formData,
+          lastUpdated: new Date().toISOString(),
+          currentStep: step,
+          isComplete: false
+        });
+        
+        setLastSaved(new Date().toLocaleString());
+        setHasIncompleteAssessment(true);
+      }
+    } catch (error) {
+      console.error("Error saving assessment progress:", error);
+    }
+  };
   
   // Helper to determine if the current step is complete
   const isStepComplete = () => {
@@ -402,6 +484,13 @@ export function PostMatchAssessment({
       // Mark as complete
       setIsComplete(true);
       
+      // Clean up incomplete assessment if it exists
+      if (hasIncompleteAssessment) {
+        assessmentService.deleteIncompleteAssessment(matchId, matchData.playerOneId);
+        setHasIncompleteAssessment(false);
+        setLastSaved(null);
+      }
+      
       // Delay before calling onComplete to show success state
       setTimeout(() => {
         onComplete();
@@ -414,6 +503,9 @@ export function PostMatchAssessment({
         description: "There was a problem submitting your assessment. Please try again.",
         variant: "destructive",
       });
+      
+      // Auto-save one last time in case of submission error
+      saveAssessmentProgress();
     } finally {
       setIsSubmitting(false);
     }
@@ -646,21 +738,41 @@ export function PostMatchAssessment({
                   )}
                 />
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={onCancel}
-                >
-                  Skip Assessment
-                </Button>
-                <Button 
-                  type="button" 
-                  onClick={nextStep} 
-                  disabled={!isStepComplete()}
-                >
-                  Continue <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+              <CardFooter className="flex flex-col space-y-4">
+                {hasIncompleteAssessment && lastSaved && (
+                  <Alert className="bg-muted/50">
+                    <AlertDescription className="flex items-center text-xs text-muted-foreground">
+                      <Save className="h-3 w-3 mr-2" />
+                      Auto-saved at {lastSaved}
+                    </AlertDescription>
+                  </Alert>
+                )}
+                <div className="flex justify-between w-full">
+                  <div className="flex space-x-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={onCancel}
+                    >
+                      Skip Assessment
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={saveAssessmentProgress}
+                      title="Save progress"
+                    >
+                      <Save className="h-4 w-4 mr-2" /> Save Draft
+                    </Button>
+                  </div>
+                  <Button 
+                    type="button" 
+                    onClick={nextStep} 
+                    disabled={!isStepComplete()}
+                  >
+                    Continue <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
               </CardFooter>
             </Card>
           </TabsContent>
@@ -854,20 +966,40 @@ export function PostMatchAssessment({
                   )}
                 />
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={prevStep}
-                >
-                  Back
-                </Button>
-                <Button 
-                  type="button" 
-                  onClick={nextStep}
-                >
-                  Continue <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+              <CardFooter className="flex flex-col space-y-4">
+                {hasIncompleteAssessment && lastSaved && (
+                  <Alert className="bg-muted/50">
+                    <AlertDescription className="flex items-center text-xs text-muted-foreground">
+                      <Save className="h-3 w-3 mr-2" />
+                      Auto-saved at {lastSaved}
+                    </AlertDescription>
+                  </Alert>
+                )}
+                <div className="flex justify-between w-full">
+                  <div className="flex space-x-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={prevStep}
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={saveAssessmentProgress}
+                      title="Save progress"
+                    >
+                      <Save className="h-4 w-4 mr-2" /> Save Draft
+                    </Button>
+                  </div>
+                  <Button 
+                    type="button" 
+                    onClick={nextStep}
+                  >
+                    Continue <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
               </CardFooter>
             </Card>
           </TabsContent>
@@ -1036,20 +1168,40 @@ export function PostMatchAssessment({
                   )}
                 />
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={prevStep}
-                >
-                  Back
-                </Button>
-                <Button 
-                  type="button" 
-                  onClick={nextStep}
-                >
-                  Review & Submit <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+              <CardFooter className="flex flex-col space-y-4">
+                {hasIncompleteAssessment && lastSaved && (
+                  <Alert className="bg-muted/50">
+                    <AlertDescription className="flex items-center text-xs text-muted-foreground">
+                      <Save className="h-3 w-3 mr-2" />
+                      Auto-saved at {lastSaved}
+                    </AlertDescription>
+                  </Alert>
+                )}
+                <div className="flex justify-between w-full">
+                  <div className="flex space-x-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={prevStep}
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={saveAssessmentProgress}
+                      title="Save progress"
+                    >
+                      <Save className="h-4 w-4 mr-2" /> Save Draft
+                    </Button>
+                  </div>
+                  <Button 
+                    type="button" 
+                    onClick={nextStep}
+                  >
+                    Review & Submit <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
               </CardFooter>
             </Card>
           </TabsContent>
