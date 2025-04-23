@@ -270,18 +270,45 @@ export function OnboardingWizard({
 
   // Handle step completion
   const handleStepCompleted = (stepId: string, data?: Record<string, unknown>) => {
-    completeStepMutation.mutate({ step: stepId, data });
-
-    // Check if this is the last step
-    if (currentStepIndex >= steps.length - 1) {
-      if (onComplete) {
-        onComplete();
+    console.log('[OnboardingWizard] Step completed:', stepId, data);
+    
+    // Create payload with the correct format
+    const payload: StepCompletionPayload = { 
+      step: stepId,
+      data: data || {} 
+    };
+    
+    // For rating selection, ensure the data is properly formatted
+    if (stepId === 'rating_selection' && !data) {
+      // Create data with the current status preferences if available
+      if (status?.preferences?.preferredRatingSystem) {
+        payload.data = {
+          ratingSystem: status.preferences.preferredRatingSystem,
+          ratingValue: status.preferences.initialRating
+        };
       }
-    } else {
-      // Move to the next step
-      setTransitionDirection('next');
-      setCurrentStepIndex(prev => prev + 1);
     }
+    
+    // Perform the mutation to update server
+    completeStepMutation.mutate(payload, {
+      onSuccess: (result) => {
+        console.log('[OnboardingWizard] Step completion success:', result);
+        
+        // Force refresh the onboarding status
+        queryClient.invalidateQueries({ queryKey: ['/api/courtiq/onboarding/status'] });
+        
+        // Check if this is the last step
+        if (currentStepIndex >= steps.length - 1) {
+          if (onComplete) {
+            onComplete();
+          }
+        } else {
+          // Move to the next step 
+          setTransitionDirection('next');
+          setCurrentStepIndex(prev => prev + 1);
+        }
+      }
+    });
   };
 
   // Navigate to previous step

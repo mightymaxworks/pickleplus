@@ -126,12 +126,17 @@ export default function RatingSystemSelection({ onComplete }: RatingSystemSelect
       }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Rating saved",
         description: "Your preferred rating system has been saved.",
       });
+      // Log to help with debugging
+      console.log('[RatingSystemSelection] Rating saved successfully:', data);
+      
+      // Pass the selected rating data to parent component
       if (onComplete) {
+        // Call onComplete with the submitted form data
         onComplete();
       }
     },
