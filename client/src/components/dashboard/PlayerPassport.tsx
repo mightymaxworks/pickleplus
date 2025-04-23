@@ -30,7 +30,53 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
   // Get actual XP data - use fresh values over stale user object
   const userXp = user.xp || 0;
   const userLevel = user.level || 1;
-  const xpProgressPercent = Math.min((userXp / 10), 100);
+  
+  /**
+   * PKL-278651-XP-0005-PASSPORT - XP Percentage Calculation Fix
+   * Calculate the correct XP percentage based on current XP and level thresholds
+   * This replaces the incorrect calculation that divided userXp by 10
+   */
+  const calculateXpPercentage = (xp: number, level: number) => {
+    // If no XP, return 0
+    if (!xp) return 0;
+    
+    // Get level thresholds based on the XP levels defined in the server
+    const getThresholdForLevel = (lvl: number) => {
+      // Define XP thresholds based on the system in xpSystem.ts
+      const levels: { [key: number]: { min: number, max: number } } = {
+        1: { min: 0, max: 99 },
+        2: { min: 100, max: 249 },
+        3: { min: 250, max: 499 },
+        4: { min: 500, max: 749 },
+        5: { min: 750, max: 999 },
+        10: { min: 1000, max: 1999 },
+        15: { min: 2000, max: 3999 }
+      };
+      
+      // If we don't have the exact level, use defaults
+      if (!levels[lvl]) {
+        // For level > 15, use a consistent 1000 XP per level progression
+        return { 
+          min: (lvl - 1) * 1000, 
+          max: lvl * 1000 - 1 
+        };
+      }
+      
+      return levels[lvl];
+    };
+    
+    // Get current level thresholds
+    const currentLevelData = getThresholdForLevel(level);
+    const nextLevelData = getThresholdForLevel(level + 1);
+    
+    // Calculate xp progress percentage
+    const totalForLevel = nextLevelData.min - currentLevelData.min;
+    const currentProgress = xp - currentLevelData.min;
+    
+    return Math.min(Math.max(0, Math.floor((currentProgress / totalForLevel) * 100)), 100);
+  };
+  
+  const xpProgressPercent = calculateXpPercentage(userXp, userLevel);
   
   // Debug log function to help us identify sizing issues
   const logDimensions = () => {
