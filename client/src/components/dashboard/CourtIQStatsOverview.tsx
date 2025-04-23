@@ -63,10 +63,10 @@ export default function CourtIQStatsOverview({ userId, enhancedPerformanceData: 
   };
   
   return (
-    <Card className={`transition-all duration-300 ${isExpanded ? 'border-[#2196F3]/20' : ''}`}>
+    <Card className={`transition-all duration-300 ${isExpanded ? 'border-purple-500/20' : ''}`}>
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <CardTitle className="text-lg font-bold flex items-center">
-          <BarChart2 className="mr-2 h-5 w-5 text-[#2196F3]" />
+          <BarChart2 className="mr-2 h-5 w-5 text-purple-500" />
           CourtIQ™ Stats
         </CardTitle>
         <Button 
@@ -82,7 +82,7 @@ export default function CourtIQStatsOverview({ userId, enhancedPerformanceData: 
       <CardContent>
         {isLoading ? (
           <div className="text-center py-6">
-            <div className="animate-spin h-5 w-5 border-2 border-[#2196F3] border-t-transparent rounded-full mx-auto"></div>
+            <div className="animate-spin h-5 w-5 border-2 border-purple-500 border-t-transparent rounded-full mx-auto"></div>
             <div className="text-sm text-gray-500 mt-2">Loading stats...</div>
           </div>
         ) : courtIQStats ? (
@@ -91,7 +91,7 @@ export default function CourtIQStatsOverview({ userId, enhancedPerformanceData: 
             <div className="flex items-center justify-between mb-3">
               <div>
                 <div className="text-sm font-medium text-gray-500">Overall Rating</div>
-                <div className="text-2xl font-bold text-[#2196F3]">
+                <div className="text-2xl font-bold text-purple-500">
                   {courtIQStats.overall || 0}
                 </div>
               </div>
@@ -241,8 +241,8 @@ export default function CourtIQStatsOverview({ userId, enhancedPerformanceData: 
                               ${50 - normalizeValue(courtIQStats?.dimensions?.mobility || (enhancedPerformanceData?.dimensions?.speed?.score ? enhancedPerformanceData?.dimensions?.speed?.score * 100 : 35) || 35) * 0.2},${50 + normalizeValue(courtIQStats?.dimensions?.mobility || (enhancedPerformanceData?.dimensions?.speed?.score ? enhancedPerformanceData?.dimensions?.speed?.score * 100 : 35) || 35) * 0.2} 
                               ${50 - normalizeValue(courtIQStats?.dimensions?.strategy || (enhancedPerformanceData?.dimensions?.strategy?.score ? enhancedPerformanceData?.dimensions?.strategy?.score * 100 : 30) || 30) * 0.4},50
                             `}
-                            fill="rgba(33, 150, 243, 0.2)"
-                            stroke="#2196F3"
+                            fill="rgba(139, 92, 246, 0.2)"
+                            stroke="#8b5cf6"
                             strokeWidth="1.5"
                           />
                         )}
@@ -261,9 +261,9 @@ export default function CourtIQStatsOverview({ userId, enhancedPerformanceData: 
                   {isExpanded && !showSourceBreakdown && (
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-center">
-                        <div className="bg-blue-50 rounded-md px-2 py-1">
+                        <div className="bg-purple-50 rounded-md px-2 py-1">
                           <div className="text-xs text-gray-500">Power</div>
-                          <div className="text-sm font-bold text-[#2196F3]">
+                          <div className="text-sm font-bold text-purple-500">
                             {courtIQStats?.dimensions?.power || 
                              (enhancedPerformanceData?.dimensions?.power?.score ? 
                               Math.round(enhancedPerformanceData.dimensions.power.score * 10) : 0)}
