@@ -7,6 +7,7 @@
 
 import React from 'react';
 import { Link } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
 import { 
   Card, 
   CardContent, 
@@ -26,7 +27,6 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useMasteryTierStatus } from '@/hooks/use-mastery-tier-status';
 import { useTierByName } from '@/hooks/use-mastery-tiers';
 import { MasteryPath } from '@shared/mastery-paths';
 import { 
@@ -38,7 +38,8 @@ import {
   Heart, 
   Clock, 
   BarChart2,
-  ChevronRight
+  ChevronRight,
+  Medal
 } from 'lucide-react';
 
 // Path to icon mapping
@@ -72,8 +73,29 @@ const getTierHealthStatus = (healthPercentage: number): { text: string; color: s
 };
 
 const MasteryPathsDisplay: React.FC = () => {
-  const { data: tierStatus, isLoading, error } = useMasteryTierStatus();
+  // Using the standard React Query hook from TanStack
+  const { data: tierStatus, isLoading, error, refetch } = useQuery({
+    queryKey: ['mastery', 'status'],
+    queryFn: async () => {
+      const response = await fetch('/api/mastery/status');
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Not authenticated');
+        }
+        throw new Error('Failed to fetch mastery tier status');
+      }
+      return await response.json();
+    },
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+  
   const { data: tierDetails } = useTierByName(tierStatus?.currentTierName);
+  
+  // Get current user from global data (this pattern is used throughout the app)
+  // This is a fallback for when the component needs to know about user data
+  // but isn't directly connected to the auth context
+  const currentUser = (window as any)?.__USER_DATA__ || { duprRating: null };
   
   // Loading state
   if (isLoading) {
@@ -131,7 +153,11 @@ const MasteryPathsDisplay: React.FC = () => {
         <CardFooter>
           <Button 
             variant={isAuthError ? "default" : "outline"} 
-            onClick={() => window.location.reload()}
+            onClick={(e) => {
+              e.preventDefault();
+              // Refresh only this component data instead of full page
+              refetch();
+            }}
             className="w-full"
           >
             {isAuthError ? "Refresh My Data" : "Try Again"}
@@ -141,6 +167,43 @@ const MasteryPathsDisplay: React.FC = () => {
     );
   }
   
+  // Check for missing mastery tier status (e.g., no DUPR rating)
+  if (tierStatus.status === "no_rating" || (tierStatus.rating === 0 && !user?.duprRating)) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="text-lg">Ready to Start Your Journey?</CardTitle>
+          <CardDescription>Let's set up your CourtIQ™ Mastery profile</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="p-4 bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 rounded-md mb-4">
+            <p className="mb-2 font-semibold">Update Your DUPR Rating</p>
+            <p className="text-sm">Adding your DUPR rating helps us calculate your personalized CourtIQ™ Mastery tier and match you with players at a similar skill level.</p>
+          </div>
+          
+          <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-md">
+            <Medal className="h-5 w-5 text-blue-500" />
+            <div className="text-sm text-blue-700">Having a DUPR rating helps you get placed in the right mastery tier from the start!</div>
+          </div>
+        </CardContent>
+        <CardFooter className="pt-3 justify-between border-t mt-4">
+          <Button variant="outline" size="sm" className="text-xs">
+            Learn About DUPR
+          </Button>
+          <Button 
+            variant="default" 
+            size="sm" 
+            className="text-xs"
+            onClick={() => window.location.href = '/profile/edit'}
+          >
+            Update Profile
+            <ChevronRight className="ml-1 h-4 w-4" />
+          </Button>
+        </CardFooter>
+      </Card>
+    );
+  }
+
   // If we have status with insufficient_data, show a friendly message
   if (tierStatus.status === "insufficient_data") {
     return (
