@@ -1337,9 +1337,14 @@ export function PostMatchAssessment({
                         </div>
                         
                         {form.getValues().selfNotes && (
-                          <div className="mt-2">
-                            <div className="text-sm text-gray-500">Notes:</div>
-                            <div className="text-sm mt-1 border rounded p-2">
+                          <div className="mt-3">
+                            <div className="flex items-center mb-1">
+                              <Pencil className="h-4 w-4 mr-1 text-muted-foreground" />
+                              <span className="text-sm text-muted-foreground">
+                                <span>Notes</span>
+                              </span>
+                            </div>
+                            <div className="text-sm mt-1 border rounded-md p-3 bg-muted/30">
                               {form.getValues().selfNotes}
                             </div>
                           </div>
@@ -1452,9 +1457,14 @@ export function PostMatchAssessment({
                           </div>
                           
                           {form.getValues().opponentNotes && (
-                            <div className="mt-2">
-                              <div className="text-sm text-gray-500">Notes:</div>
-                              <div className="text-sm mt-1 border rounded p-2">
+                            <div className="mt-3">
+                              <div className="flex items-center mb-1">
+                                <Pencil className="h-4 w-4 mr-1 text-muted-foreground" />
+                                <span className="text-sm text-muted-foreground">
+                                  <span>Notes</span>
+                                </span>
+                              </div>
+                              <div className="text-sm mt-1 border rounded-md p-3 bg-muted/30">
                                 {form.getValues().opponentNotes}
                               </div>
                             </div>
@@ -1480,13 +1490,13 @@ export function PostMatchAssessment({
                         </div>
                       ) : (
                         <div className="space-y-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {form.getValues().courtSurface && (
                               <div className="flex items-center p-3 rounded-md bg-muted/40">
-                                <CircleIcon className="h-2 w-2 mr-2 text-green-500" />
-                                <div className="flex flex-col">
-                                  <span className="text-xs text-muted-foreground">Court Surface</span>
-                                  <span className="text-sm font-medium">
+                                <CircleIcon className="h-2 w-2 mr-2 text-green-500 flex-shrink-0" />
+                                <div className="flex flex-col min-w-0">
+                                  <span className="text-xs text-muted-foreground">Court</span>
+                                  <span className="text-sm font-medium truncate">
                                     {courtSurfaceOptions.find(o => o.value === form.getValues().courtSurface)?.label || "Not specified"}
                                   </span>
                                 </div>
@@ -1495,10 +1505,10 @@ export function PostMatchAssessment({
                             
                             {form.getValues().weatherConditions && (
                               <div className="flex items-center p-3 rounded-md bg-muted/40">
-                                <CircleIcon className="h-2 w-2 mr-2 text-blue-500" />
-                                <div className="flex flex-col">
-                                  <span className="text-xs text-muted-foreground">Weather Conditions</span>
-                                  <span className="text-sm font-medium">
+                                <CircleIcon className="h-2 w-2 mr-2 text-blue-500 flex-shrink-0" />
+                                <div className="flex flex-col min-w-0">
+                                  <span className="text-xs text-muted-foreground">Weather</span>
+                                  <span className="text-sm font-medium truncate">
                                     {weatherConditionOptions.find(o => o.value === form.getValues().weatherConditions)?.label || "Not specified"}
                                   </span>
                                 </div>
@@ -1507,10 +1517,10 @@ export function PostMatchAssessment({
                             
                             {form.getValues().physicalCondition && (
                               <div className="flex items-center p-3 rounded-md bg-muted/40">
-                                <CircleIcon className="h-2 w-2 mr-2 text-orange-500" />
-                                <div className="flex flex-col">
-                                  <span className="text-xs text-muted-foreground">Physical Condition</span>
-                                  <span className="text-sm font-medium">
+                                <CircleIcon className="h-2 w-2 mr-2 text-orange-500 flex-shrink-0" />
+                                <div className="flex flex-col min-w-0">
+                                  <span className="text-xs text-muted-foreground">Condition</span>
+                                  <span className="text-sm font-medium truncate">
                                     {physicalConditionOptions.find(o => o.value === form.getValues().physicalCondition)?.label || "Not specified"}
                                   </span>
                                 </div>
@@ -1519,10 +1529,10 @@ export function PostMatchAssessment({
                             
                             {form.getValues().pressureLevel && (
                               <div className="flex items-center p-3 rounded-md bg-muted/40">
-                                <CircleIcon className="h-2 w-2 mr-2 text-purple-500" />
-                                <div className="flex flex-col">
-                                  <span className="text-xs text-muted-foreground">Pressure Level</span>
-                                  <span className="text-sm font-medium">
+                                <CircleIcon className="h-2 w-2 mr-2 text-purple-500 flex-shrink-0" />
+                                <div className="flex flex-col min-w-0">
+                                  <span className="text-xs text-muted-foreground">Pressure</span>
+                                  <span className="text-sm font-medium truncate">
                                     {pressureLevelOptions.find(o => o.value === form.getValues().pressureLevel)?.label || "Not specified"}
                                   </span>
                                 </div>
@@ -1531,10 +1541,13 @@ export function PostMatchAssessment({
                           </div>
                           
                           {form.getValues().equipmentIssues && (
-                            <div className="mt-2">
+                            <div className="mt-3">
                               <div className="flex items-center mb-1">
                                 <Tool className="h-4 w-4 mr-1 text-muted-foreground" />
-                                <span className="text-sm text-muted-foreground">Equipment Issues</span>
+                                <span className="text-sm text-muted-foreground">
+                                  <span className="sm:hidden">Equipment</span>
+                                  <span className="hidden sm:inline">Equipment Issues</span>
+                                </span>
                               </div>
                               <div className="text-sm mt-1 border rounded-md p-3 bg-muted/30">
                                 {form.getValues().equipmentIssues}
@@ -1543,10 +1556,13 @@ export function PostMatchAssessment({
                           )}
                           
                           {form.getValues().contextNotes && (
-                            <div className="mt-2">
+                            <div className="mt-3">
                               <div className="flex items-center mb-1">
                                 <FileText className="h-4 w-4 mr-1 text-muted-foreground" />
-                                <span className="text-sm text-muted-foreground">Additional Context</span>
+                                <span className="text-sm text-muted-foreground">
+                                  <span className="sm:hidden">Context</span>
+                                  <span className="hidden sm:inline">Additional Context</span>
+                                </span>
                               </div>
                               <div className="text-sm mt-1 border rounded-md p-3 bg-muted/30">
                                 {form.getValues().contextNotes}
@@ -1568,12 +1584,13 @@ export function PostMatchAssessment({
                     </AlertDescription>
                   </Alert>
                 )}
-                <div className="flex justify-between w-full">
-                  <div className="flex space-x-2">
+                <div className="flex flex-col sm:flex-row justify-between w-full gap-4 sm:gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button 
                       type="button" 
                       variant="outline" 
                       onClick={prevStep}
+                      className="flex-1 sm:flex-auto"
                     >
                       Back
                     </Button>
@@ -1583,24 +1600,28 @@ export function PostMatchAssessment({
                       onClick={saveAssessmentProgress}
                       title="Save progress"
                       disabled={isSubmitting}
+                      className="flex-1 sm:flex-auto"
                     >
-                      <Save className="h-4 w-4 mr-2" /> Save Draft
+                      <Save className="h-4 w-4 mr-0 sm:mr-2" /> 
+                      <span className="hidden sm:inline">Save Draft</span>
                     </Button>
                   </div>
                   <Button 
                     type="submit" 
                     disabled={isSubmitting}
-                    className="bg-primary hover:bg-primary/90"
+                    className="w-full sm:w-auto bg-primary hover:bg-primary/90"
                   >
                     {isSubmitting ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Submitting...
+                        <span className="sm:hidden">Sending...</span>
+                        <span className="hidden sm:inline">Submitting...</span>
                       </>
                     ) : (
                       <>
                         <CheckCircle className="mr-2 h-4 w-4" />
-                        Submit Assessment
+                        <span className="sm:hidden">Submit</span>
+                        <span className="hidden sm:inline">Submit Assessment</span>
                       </>
                     )}
                   </Button>
