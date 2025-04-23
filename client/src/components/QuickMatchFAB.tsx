@@ -11,7 +11,7 @@ import { useState, useEffect } from "react";
  * 
  * PKL-278651-UI-0023-FAB: Framework 5.2 - Record Match FAB visibility
  * Record match FAB should not appear on the landing page (/) or for non-authenticated users
- * @lastModified 2025-04-22
+ * @lastModified 2025-04-23
  */
 export default function QuickMatchFAB() {
   const { user } = useAuth();
@@ -48,13 +48,19 @@ export default function QuickMatchFAB() {
       const footer = document.querySelector('footer');
       const isFooterVisible = footer && footer.getBoundingClientRect().top < window.innerHeight;
       
-      // Adjust position based on viewport size and footer visibility
+      // PKL-278651-PASS-0014-DEFT-FIX - Add additional space at the bottom to avoid blocking content
+      // Especially important on the events page to prevent blocking the last event card
+      const currentPage = window.location.pathname;
+      const isEventsPage = currentPage.includes('/events');
+      const extraSpace = isEventsPage ? 20 : 0;
+      
+      // Adjust position based on viewport size, page type, and footer visibility
       if (window.innerWidth < 768) {
-        // On mobile, position higher to avoid nav
-        setPosition({ bottom: isFooterVisible ? 80 : 0 });
+        // On mobile, position higher to avoid nav and add extra space on events page
+        setPosition({ bottom: isFooterVisible ? 80 + extraSpace : extraSpace });
       } else {
-        // On desktop, adjust based on footer
-        setPosition({ bottom: isFooterVisible ? 20 : 0 });
+        // On desktop, adjust based on footer and add extra space on events page
+        setPosition({ bottom: isFooterVisible ? 20 + extraSpace : extraSpace });
       }
     };
     
@@ -62,32 +68,39 @@ export default function QuickMatchFAB() {
     checkPosition();
     window.addEventListener('scroll', checkPosition);
     window.addEventListener('resize', checkPosition);
+    window.addEventListener('popstate', checkPosition);
     
     return () => {
       window.removeEventListener('scroll', checkPosition);
       window.removeEventListener('resize', checkPosition);
+      window.removeEventListener('popstate', checkPosition);
     };
   }, []);
   
   return (
-    <div 
-      className={`fixed left-0 right-0 z-50 shadow-lg border-t border-gray-200 bg-white px-2 py-2`}
-      style={{ 
-        bottom: `${position.bottom}px`,
-        transition: 'bottom 0.3s ease'
-      }}
-    >
-      <div className="px-2 py-2 md:py-0">
-        {/* Full-width Record Match Button */}
-        <Button 
-          onClick={handleRecordMatch}
-          size="lg"
-          className={`flex items-center justify-center h-14 md:h-16 rounded-xl w-full gap-2 ${buttonClass}`}
-        >
-          <PlusCircle className="h-6 w-6" />
-          <span className="text-base font-medium">Record Match</span>
-        </Button>
+    <>
+      {/* PKL-278651-PASS-0014-DEFT-FIX - Bottom padding spacer element to prevent content from being hidden */}
+      <div className="pb-24 w-full" />
+      
+      <div 
+        className={`fixed left-0 right-0 z-50 shadow-lg border-t border-gray-200 bg-white px-2 py-2`}
+        style={{ 
+          bottom: `${position.bottom}px`,
+          transition: 'bottom 0.3s ease'
+        }}
+      >
+        <div className="px-2 py-2 md:py-0">
+          {/* Full-width Record Match Button */}
+          <Button 
+            onClick={handleRecordMatch}
+            size="lg"
+            className={`flex items-center justify-center h-14 md:h-16 rounded-xl w-full gap-2 ${buttonClass}`}
+          >
+            <PlusCircle className="h-6 w-6" />
+            <span className="text-base font-medium">Record Match</span>
+          </Button>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

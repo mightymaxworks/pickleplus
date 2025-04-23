@@ -734,7 +734,7 @@ export function EventList({
                                 </Button>
                               )
                             ) : (
-                              {/* PKL-278651-PASS-0012-BUTN - Enhanced Registration Button */}
+                              // PKL-278651-PASS-0012-BUTN - Enhanced Registration Button
                               <Button 
                                 variant="default" 
                                 size="sm" 
