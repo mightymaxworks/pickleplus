@@ -51,6 +51,10 @@ import {
 import { getMyRegisteredEvents, cancelEventRegistration } from '@/lib/sdk/eventSDK';
 import type { Event } from '@shared/schema/events';
 import { cn, formatDate, formatTime } from '@/lib/utils';
+import { 
+  isDefaultCommunityEvent, 
+  ensureDefaultCommunityEvent 
+} from '@/lib/defaultCommunityEvent';
 
 interface MyEventsTabProps {
   className?: string;
@@ -77,7 +81,18 @@ export function MyEventsTab({ className, onEventClick, onPassportClick }: MyEven
     }
   };
 
+  /* PKL-278651-PASS-0014-DEFT - Add Default Community Event handling */
   const openCancelDialog = (event: Event) => {
+    // Prevent cancellation of the default community event
+    if (isDefaultCommunityEvent(event)) {
+      toast({
+        title: "Community Event",
+        description: "You cannot cancel registration for community events as they're available to all members.",
+        variant: "default"
+      });
+      return;
+    }
+    
     setEventToCancel(event);
     setShowCancelDialog(true);
   };

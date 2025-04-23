@@ -132,6 +132,16 @@ export default function EventDiscoveryWrapper() {
         <p className="text-muted-foreground">
           Discover and register for events
         </p>
+        {/* PKL-278651-PASS-0014-DEFT - Display default community event info */}
+        <div className="mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+            <p className="text-sm font-medium text-emerald-700">Community Events</p>
+          </div>
+          <p className="text-xs text-emerald-700">
+            All members are automatically registered for community events. Join in to connect with other players and earn XP.
+          </p>
+        </div>
       </div>
     
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
