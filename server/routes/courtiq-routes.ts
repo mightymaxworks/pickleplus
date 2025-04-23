@@ -373,65 +373,59 @@ router.post('/onboarding/complete-step', devAuthMiddleware, async (req: Request,
     
     // Special handling for development environment
     if (process.env.NODE_ENV !== 'production') {
-      console.log('[CourtIQ API] Using mock data for step completion in development');
-      
-      // IMPORTANT: We need to directly modify the mockOnboardingStatus reference
-      // instead of using a copy, to ensure changes persist between API calls
-      
+      console.log('[CourtIQ API] Using DEV_STATE for step completion in development');
       console.log('[CourtIQ API] Processing step completion:', step, 'with data:', data);
       
       if (step === 'profile_completion') {
-        mockOnboardingStatus.progress.profileCompleted = true;
-        mockOnboardingStatus.progress_pct = 20;
-        mockOnboardingStatus.nextStep = 'rating_selection';
-        mockOnboardingStatus.xpEarned = 50;
+        DEV_STATE.onboarding.progress.profileCompleted = true;
+        DEV_STATE.onboarding.progress_pct = 20;
+        DEV_STATE.onboarding.nextStep = 'rating_selection';
+        DEV_STATE.onboarding.xpEarned = 50;
       } else if (step === 'rating_selection') {
-        mockOnboardingStatus.progress.ratingSystemSelected = true;
-        mockOnboardingStatus.progress.ratingProvided = true;
-        mockOnboardingStatus.progress_pct = 40;
-        mockOnboardingStatus.nextStep = 'experience_summary';
-        mockOnboardingStatus.xpEarned = 100;
+        DEV_STATE.onboarding.progress.ratingSystemSelected = true;
+        DEV_STATE.onboarding.progress.ratingProvided = true;
+        DEV_STATE.onboarding.progress_pct = 40;
+        DEV_STATE.onboarding.nextStep = 'experience_summary';
+        DEV_STATE.onboarding.xpEarned = 100;
         
         // This is the critical part - we need to preserve rating data
-        console.log('[CourtIQ API] Rating step - data before update:', mockOnboardingStatus.preferences);
+        console.log('[CourtIQ API] Rating step - data before update:', DEV_STATE.onboarding.preferences);
         
         // Check if rating data was passed via /api/courtiq/rating/set-preferred
         // If not, use data from the request
-        if (mockOnboardingStatus.preferences.preferredRatingSystem === null && data.system) {
-          mockOnboardingStatus.preferences.preferredRatingSystem = data.system;
+        if (DEV_STATE.onboarding.preferences.preferredRatingSystem === null && data.system) {
+          DEV_STATE.onboarding.preferences.preferredRatingSystem = data.system;
         }
         
-        if (mockOnboardingStatus.preferences.initialRating === null && data.rating) {
-          mockOnboardingStatus.preferences.initialRating = data.rating;
+        if (DEV_STATE.onboarding.preferences.initialRating === null && data.rating) {
+          DEV_STATE.onboarding.preferences.initialRating = data.rating;
         }
         
-        console.log('[CourtIQ API] Rating step - data after update:', mockOnboardingStatus.preferences);
+        console.log('[CourtIQ API] Rating step - data after update:', DEV_STATE.onboarding.preferences);
       } else if (step === 'experience_summary') {
-        mockOnboardingStatus.progress.experienceSummaryCompleted = true;
-        mockOnboardingStatus.progress_pct = 70;
-        mockOnboardingStatus.nextStep = 'play_style_assessment';
-        mockOnboardingStatus.xpEarned = 150;
+        DEV_STATE.onboarding.progress.experienceSummaryCompleted = true;
+        DEV_STATE.onboarding.progress_pct = 70;
+        DEV_STATE.onboarding.nextStep = 'play_style_assessment';
+        DEV_STATE.onboarding.xpEarned = 150;
         if (data.experienceYears) {
-          mockOnboardingStatus.preferences.experienceYears = data.experienceYears;
+          DEV_STATE.onboarding.preferences.experienceYears = data.experienceYears;
         }
       } else if (step === 'play_style_assessment') {
-        mockOnboardingStatus.progress.playStyleAssessed = true;
-        mockOnboardingStatus.progress_pct = 100;
-        mockOnboardingStatus.nextStep = 'completed';
-        mockOnboardingStatus.completed = true;
-        mockOnboardingStatus.xpEarned = 200;
-        // Cast to any to avoid type error
-        // mockOnboardingStatus.completedAt = new Date().toISOString() as any;
+        DEV_STATE.onboarding.progress.playStyleAssessed = true;
+        DEV_STATE.onboarding.progress_pct = 100;
+        DEV_STATE.onboarding.nextStep = 'completed';
+        DEV_STATE.onboarding.completed = true;
+        DEV_STATE.onboarding.xpEarned = 200;
         if (data.playStyle) {
-          mockOnboardingStatus.preferences.playStyle = data.playStyle;
+          DEV_STATE.onboarding.preferences.playStyle = data.playStyle;
         }
         if (data.skillFocus) {
-          mockOnboardingStatus.preferences.skillFocus = data.skillFocus;
+          DEV_STATE.onboarding.preferences.skillFocus = data.skillFocus;
         }
       }
       
-      // Return the updated mockOnboardingStatus object
-      return res.json(mockOnboardingStatus);
+      // Return the updated DEV_STATE.onboarding object
+      return res.json(DEV_STATE.onboarding);
     }
     
     // Normal flow for production
@@ -477,7 +471,7 @@ router.post('/rating/set-preferred', devAuthMiddleware, async (req: Request, res
     
     // Special handling for development environment
     if (process.env.NODE_ENV !== 'production') {
-      console.log('[CourtIQ API] Using mock data for setting preferred rating in development');
+      console.log('[CourtIQ API] Using DEV_STATE for setting preferred rating in development');
       
       // Get mock system data
       const mockSystem = MOCK_RATING_SYSTEMS.find(s => s.code === system) || {
@@ -491,27 +485,24 @@ router.post('/rating/set-preferred', devAuthMiddleware, async (req: Request, res
         isActive: true
       } as MockRatingSystem;
       
+      // Update the centralized DEV_STATE
+      DEV_STATE.onboarding.progress.ratingSystemSelected = true;
+      DEV_STATE.onboarding.progress.ratingProvided = true;
+      DEV_STATE.onboarding.preferences.preferredRatingSystem = system;
+      DEV_STATE.onboarding.preferences.initialRating = rating;
+      DEV_STATE.onboarding.progress_pct = 40;
+      DEV_STATE.onboarding.nextStep = 'experience_summary';
+      
+      // Log the changes
+      console.log('[CourtIQ API] DEV_STATE updated with rating system:', system, 'and rating:', rating);
+      
       return res.json({
         success: true,
         message: `Successfully set ${mockSystem.name} as preferred rating system`,
         userId: userId,
         system: system,
         rating: rating,
-        onboardingStatus: {
-          ...mockOnboardingStatus,
-          progress: {
-            ...mockOnboardingStatus.progress,
-            ratingSystemSelected: true,
-            ratingProvided: true
-          },
-          preferences: {
-            ...mockOnboardingStatus.preferences,
-            preferredRatingSystem: system,
-            initialRating: rating
-          },
-          progress_pct: 40,
-          nextStep: 'experience_summary'
-        }
+        onboardingStatus: DEV_STATE.onboarding
       });
     }
     
@@ -542,46 +533,44 @@ router.post('/onboarding/next-step', devAuthMiddleware, async (req: Request, res
     // Log the request for debugging
     console.log('[CourtIQ API] Onboarding next-step request:', req.body);
     
-    // In development, just use mock data 
+    // In development, just use DEV_STATE
     if (process.env.NODE_ENV !== 'production') {
-      console.log('[CourtIQ API] Using simplified mock data for onboarding progress');
+      console.log('[CourtIQ API] Using DEV_STATE for onboarding progress');
       
       // Get the current step from the request
       const { step, ratingSystem, ratingValue } = req.body;
       
-      let nextStep = 'experience_summary';
-      let progressPct = 40;
-      
       // Update preferences based on what step was completed
       if (step === 'rating_selection') {
-        // Adjust mockOnboardingStatus to move to next step
-        mockOnboardingStatus.progress.ratingSystemSelected = true;
-        mockOnboardingStatus.progress.ratingProvided = true;
-        mockOnboardingStatus.preferences.preferredRatingSystem = ratingSystem;
-        mockOnboardingStatus.preferences.initialRating = ratingValue;
-        mockOnboardingStatus.nextStep = 'experience_summary';
-        mockOnboardingStatus.progress_pct = 40;
+        // Update the centralized state
+        DEV_STATE.onboarding.progress.ratingSystemSelected = true;
+        DEV_STATE.onboarding.progress.ratingProvided = true;
+        DEV_STATE.onboarding.preferences.preferredRatingSystem = ratingSystem;
+        DEV_STATE.onboarding.preferences.initialRating = ratingValue;
+        DEV_STATE.onboarding.nextStep = 'experience_summary';
+        DEV_STATE.onboarding.progress_pct = 40;
+        
+        console.log('[CourtIQ API] Updated DEV_STATE for rating selection step:', {
+          ratingSystem: DEV_STATE.onboarding.preferences.preferredRatingSystem,
+          ratingValue: DEV_STATE.onboarding.preferences.initialRating
+        });
       } else if (step === 'experience_summary') {
         // Adjust to move to play style assessment
-        mockOnboardingStatus.progress.experienceSummaryCompleted = true;
-        mockOnboardingStatus.nextStep = 'play_style_assessment';
-        mockOnboardingStatus.progress_pct = 70;
+        DEV_STATE.onboarding.progress.experienceSummaryCompleted = true;
+        DEV_STATE.onboarding.nextStep = 'play_style_assessment';
+        DEV_STATE.onboarding.progress_pct = 70;
       } else if (step === 'play_style_assessment') {
         // Mark onboarding as complete
-        mockOnboardingStatus.progress.playStyleAssessed = true;
-        mockOnboardingStatus.completed = true;
-        mockOnboardingStatus.progress_pct = 100;
-        // To match the expected null type in the mock object declaration,
-        // we would need to modify the mock object structure if we want to use a string date.
-        // For now, we'll keep it as null to preserve type safety.
-        // mockOnboardingStatus.completedAt = new Date().toISOString(); // Not type compatible
+        DEV_STATE.onboarding.progress.playStyleAssessed = true;
+        DEV_STATE.onboarding.completed = true;
+        DEV_STATE.onboarding.progress_pct = 100;
       }
       
-      // Return the updated onboarding status
+      // Return the updated onboarding status with centralized state
       return res.json({
         success: true,
         userId: userId,
-        onboardingStatus: mockOnboardingStatus
+        onboardingStatus: DEV_STATE.onboarding
       });
     }
     
