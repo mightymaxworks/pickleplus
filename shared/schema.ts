@@ -144,6 +144,24 @@ import {
   apiWebhookDeliveryLogs
 } from './schema/api-gateway';
 
+// Import Referral system schema (PKL-278651-COMM-0007 - Enhanced Referral System & Community Ticker)
+import {
+  referrals,
+  referralAchievements,
+  pickleballTips,
+  referralsRelations,
+  referralAchievementsRelations,
+  insertReferralSchema,
+  insertReferralAchievementSchema,
+  insertPickleballTipSchema,
+  type Referral,
+  type InsertReferral,
+  type ReferralAchievement,
+  type InsertReferralAchievement,
+  type PickleballTip,
+  type InsertPickleballTip
+} from './schema/referrals';
+
 // Import Bounce testing system schema (PKL-278651-BOUNCE-0001-CORE - Bounce Automated Testing System)
 import {
   bounceTestRuns,
