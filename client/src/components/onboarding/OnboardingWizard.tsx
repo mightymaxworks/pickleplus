@@ -215,12 +215,16 @@ export function OnboardingWizard({
       if (devMode) {
         console.log('Dev mode active: simulating successful step completion', payload);
         
+        // Save previous XP value to calculate difference
+        const previousXp = mockOnboardingStatus.xpEarned;
+        
         // Update mock status with the completed step
         if (payload.step === 'rating_selection') {
           mockOnboardingStatus.progress.ratingSystemSelected = true;
           mockOnboardingStatus.progress.ratingProvided = true;
           mockOnboardingStatus.progress_pct = 40;
           mockOnboardingStatus.nextStep = 'experience_summary';
+          mockOnboardingStatus.xpEarned += 50; // Award 50 XP for this step
           
           if (payload.data?.ratingSystem) {
             mockOnboardingStatus.preferences.preferredRatingSystem = payload.data.ratingSystem as string;
@@ -229,6 +233,7 @@ export function OnboardingWizard({
           mockOnboardingStatus.progress.experienceSummaryCompleted = true;
           mockOnboardingStatus.progress_pct = 70;
           mockOnboardingStatus.nextStep = 'play_style_assessment';
+          mockOnboardingStatus.xpEarned += 75; // Award 75 XP for this step
           
           if (payload.data?.experienceYears) {
             mockOnboardingStatus.preferences.experienceYears = Number(payload.data.experienceYears);
@@ -237,9 +242,11 @@ export function OnboardingWizard({
           mockOnboardingStatus.progress.playStyleAssessed = true;
           mockOnboardingStatus.progress_pct = 100;
           mockOnboardingStatus.completed = true;
-          mockOnboardingStatus.xpEarned = 250;
+          mockOnboardingStatus.xpEarned += 125; // Add 125 more XP for completion
           mockOnboardingStatus.completedAt = new Date().toISOString();
         }
+        
+        console.log(`[OnboardingWizard] XP earned for step ${payload.step}:`, mockOnboardingStatus.xpEarned - previousXp);
         
         return mockOnboardingStatus;
       }
@@ -479,87 +486,100 @@ export function OnboardingWizard({
   const progress = status?.progress_pct || 0;
 
   return (
-    <Card className={`w-full max-w-2xl shadow-lg ${className}`}>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {currentStep?.icon}
-            <CardTitle>{currentStep?.title}</CardTitle>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Timer className="h-4 w-4" />
-            <span>Step {currentStepIndex + 1} of {steps.length}</span>
-          </div>
-        </div>
-        <CardDescription>
-          {currentStep?.description}
-        </CardDescription>
-        <div className="mt-4">
-          <Progress value={progress} className="h-2" />
-          <p className="text-xs text-muted-foreground text-right mt-1">
-            {Math.round(progress)}% complete
-          </p>
-        </div>
-      </CardHeader>
+    <>
+      {/* XP Toast Notification */}
+      <AnimatePresence>
+        {xpEarned !== null && (
+          <XpToast 
+            xpAmount={xpEarned} 
+            message={`Great progress on your CourtIQ™ profile!`}
+            onDismiss={() => setXpEarned(null)}
+          />
+        )}
+      </AnimatePresence>
       
-      <CardContent>
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={currentStepIndex}
-            initial={{ 
-              opacity: 0, 
-              x: transitionDirection === 'next' ? 100 : -100 
-            }}
-            animate={{ 
-              opacity: 1, 
-              x: 0 
-            }}
-            exit={{ 
-              opacity: 0, 
-              x: transitionDirection === 'next' ? -100 : 100 
-            }}
-            transition={{ duration: 0.3 }}
+      <Card className={`w-full max-w-2xl shadow-lg ${className}`}>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {currentStep?.icon}
+              <CardTitle>{currentStep?.title}</CardTitle>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Timer className="h-4 w-4" />
+              <span>Step {currentStepIndex + 1} of {steps.length}</span>
+            </div>
+          </div>
+          <CardDescription>
+            {currentStep?.description}
+          </CardDescription>
+          <div className="mt-4">
+            <Progress value={progress} className="h-2" />
+            <p className="text-xs text-muted-foreground text-right mt-1">
+              {Math.round(progress)}% complete
+            </p>
+          </div>
+        </CardHeader>
+        
+        <CardContent>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={currentStepIndex}
+              initial={{ 
+                opacity: 0, 
+                x: transitionDirection === 'next' ? 100 : -100 
+              }}
+              animate={{ 
+                opacity: 1, 
+                x: 0 
+              }}
+              exit={{ 
+                opacity: 0, 
+                x: transitionDirection === 'next' ? -100 : 100 
+              }}
+              transition={{ duration: 0.3 }}
+            >
+              {currentStep?.component}
+            </motion.div>
+          </AnimatePresence>
+        </CardContent>
+        
+        <CardFooter className="justify-between border-t pt-4">
+          <Button 
+            variant="outline" 
+            onClick={handlePrevStep}
+            disabled={currentStepIndex === 0}
           >
-            {currentStep?.component}
-          </motion.div>
-        </AnimatePresence>
-      </CardContent>
-      
-      <CardFooter className="justify-between border-t pt-4">
-        <Button 
-          variant="outline" 
-          onClick={handlePrevStep}
-          disabled={currentStepIndex === 0}
-        >
-          <ChevronLeft className="mr-2 h-4 w-4" />
-          Previous
-        </Button>
-        <div>
-          {currentStepIndex < steps.length - 1 ? (
-            <Button 
-              variant="outline" 
-              onClick={handleNextStep}
-              disabled={currentStep?.isRequired}
-            >
-              {currentStep?.isRequired ? 'Required Step' : 'Skip'}
-              {!currentStep?.isRequired && <ChevronRight className="ml-2 h-4 w-4" />}
-            </Button>
-          ) : (
-            <Button 
-              onClick={handleComplete}
-              disabled={completeStepMutation.isPending}
-            >
-              {completeStepMutation.isPending ? (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : 'Complete Onboarding'}
-            </Button>
-          )}
-        </div>
-      </CardFooter>
-    </Card>
+            <ChevronLeft className="mr-2 h-4 w-4" />
+            Previous
+          </Button>
+          <div>
+            {currentStepIndex < steps.length - 1 ? (
+              <Button 
+                variant="outline" 
+                onClick={handleNextStep}
+                disabled={currentStep?.isRequired}
+              >
+                {currentStep?.isRequired ? 'Required Step' : 'Skip'}
+                {!currentStep?.isRequired && <ChevronRight className="ml-2 h-4 w-4" />}
+              </Button>
+            ) : (
+              <Button 
+                onClick={handleComplete}
+                disabled={completeStepMutation.isPending}
+              >
+                {completeStepMutation.isPending ? (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : 'Complete Onboarding'}
+              </Button>
+            )}
+          </div>
+        </CardFooter>
+      </Card>
+    </>
   );
 }
 
