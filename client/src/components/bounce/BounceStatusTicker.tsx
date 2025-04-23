@@ -49,7 +49,6 @@ export const BounceStatusTicker = ({
   compact = false
 }: BounceStatusTickerProps) => {
   const [tickerItems, setTickerItems] = useState<TickerItem[]>([]);
-  const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [, setLocation] = useLocation();
 
@@ -126,18 +125,6 @@ export const BounceStatusTicker = ({
     };
 
     fetchTickerContent();
-
-    // Rotate items every 3 seconds for tips, 5 seconds for activity
-    const intervalId = setInterval(() => {
-      setCurrentItemIndex((prevIndex) => {
-        // Calculate next index
-        const nextIndex = prevIndex === tickerItems.length - 1 ? 0 : prevIndex + 1;
-        
-        return nextIndex;
-      });
-    }, 3000);
-
-    return () => clearInterval(intervalId);
   }, []);
 
   // Helper function to get default pickleball tips if API fails
@@ -307,7 +294,9 @@ export const BounceStatusTicker = ({
     );
   }
 
-  const currentItem = tickerItems[currentItemIndex];
+  // Pick a random item to display
+  const randomIndex = Math.floor(Math.random() * tickerItems.length);
+  const currentItem = tickerItems[randomIndex];
 
   // Compact view for smaller devices
   if (compact) {
