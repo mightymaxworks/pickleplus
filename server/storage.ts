@@ -416,6 +416,279 @@ export class DatabaseStorage implements IStorage {
   
   // PKL-278651-COMM-0007 - Enhanced Referral System & Community Ticker
   // Referral operations
+  
+  // Get user's referrals for display on referral page
+  async getUserReferrals(userId: number): Promise<any[]> {
+    try {
+      // Join with users table to get referral user details
+      const results = await db
+        .select({
+          id: referrals.id,
+          dateReferred: referrals.dateReferred,
+          status: referrals.status,
+          username: users.username,
+          displayName: users.displayName,
+          userId: users.id,
+          matchesPlayed: users.totalMatches
+        })
+        .from(referrals)
+        .innerJoin(users, eq(referrals.referredId, users.id))
+        .where(eq(referrals.referrerId, userId));
+      
+      // Format results for display
+      return results.map(r => ({
+        id: r.id,
+        username: r.username,
+        displayName: r.displayName,
+        dateReferred: r.dateReferred.toISOString(),
+        // Determine activity level based on matches played
+        activityLevel: r.matchesPlayed > 10 ? 'active' : r.matchesPlayed > 3 ? 'casual' : 'new',
+        matchesPlayed: r.matchesPlayed || 0
+      }));
+    } catch (error) {
+      console.error('Error getting user referrals:', error);
+      return [];
+    }
+  }
+
+  // Get referral stats for the user
+  async getReferralStats(userId: number): Promise<any> {
+    try {
+      // Get total referrals
+      const referralCount = await this.getUserReferralCount(userId);
+      
+      // Calculate active referrals (users who have played 5+ matches)
+      const activeReferrals = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(referrals)
+        .innerJoin(users, eq(referrals.referredId, users.id))
+        .where(and(
+          eq(referrals.referrerId, userId),
+          sql`${users.totalMatches} >= 5`
+        ));
+      
+      // Get total XP earned from referrals
+      const xpResults = await db
+        .select({ total: sql<number>`sum(${xpTransactions.amount})` })
+        .from(xpTransactions)
+        .where(and(
+          eq(xpTransactions.userId, userId),
+          or(
+            eq(xpTransactions.source, 'referral'),
+            eq(xpTransactions.source, 'achievement_referral')
+          )
+        ));
+      
+      // Get next achievement
+      const nextAchievement = await this.getNextAchievement(userId);
+      
+      return {
+        totalReferrals: referralCount,
+        activeReferrals: activeReferrals[0]?.count || 0,
+        totalXpEarned: xpResults[0]?.total || 0,
+        nextAchievement
+      };
+    } catch (error) {
+      console.error('Error getting referral stats:', error);
+      return {
+        totalReferrals: 0,
+        activeReferrals: 0,
+        totalXpEarned: 0,
+        nextAchievement: {
+          name: 'First Steps',
+          requiredReferrals: 1
+        }
+      };
+    }
+  }
+
+  // Get user's referral achievements
+  async getReferralAchievements(userId: number): Promise<any[]> {
+    try {
+      // Get raw achievements data
+      const achievements = await this.getReferralAchievementsByUserId(userId);
+      
+      // Define achievement info map for display
+      const achievementInfo: Record<string, { name: string, description: string }> = {
+        'first_steps': { 
+          name: 'First Steps', 
+          description: 'Refer your first pickleball friend'
+        },
+        'growing_circle': { 
+          name: 'Growing Circle', 
+          description: 'Refer 5 friends to the platform'
+        },
+        'community_builder': { 
+          name: 'Community Builder', 
+          description: 'Refer 15 friends to the platform'
+        },
+        'pickle_evangelist': { 
+          name: 'Pickle Evangelist', 
+          description: 'Refer 30 friends to the platform'
+        },
+        'founders_club': { 
+          name: 'Founders Club', 
+          description: 'Refer 50 friends to the platform'
+        },
+      };
+      
+      // Format achievements for display
+      return achievements.map(achievement => ({
+        id: achievement.id,
+        name: achievementInfo[achievement.achievementId]?.name || achievement.achievementId,
+        description: achievementInfo[achievement.achievementId]?.description || 'Achievement earned',
+        xpAwarded: achievement.xpAwarded,
+        dateEarned: achievement.dateEarned.toISOString()
+      }));
+    } catch (error) {
+      console.error('Error getting user referral achievements:', error);
+      return [];
+    }
+  }
+
+  // Get referral tips for status ticker
+  async getReferralTips(): Promise<any[]> {
+    try {
+      const tips = await db
+        .select()
+        .from(pickleballTips)
+        .orderBy(pickleballTips.priority);
+      
+      return tips;
+    } catch (error) {
+      console.error('Error getting referral tips:', error);
+      return [];
+    }
+  }
+
+  // Get recent referral activity for status ticker
+  async getRecentReferralActivity(): Promise<any[]> {
+    try {
+      // Get recent referrals with user info
+      const activity = await db
+        .select({
+          id: referrals.id,
+          date: referrals.dateReferred,
+          xpAwarded: referrals.xpAwarded,
+          referrerName: users.displayName,
+          referrerUsername: users.username
+        })
+        .from(referrals)
+        .innerJoin(users, eq(referrals.referrerId, users.id))
+        .orderBy(desc(referrals.dateReferred))
+        .limit(10);
+      
+      return activity.map(item => ({
+        id: item.id,
+        message: `${item.referrerName || item.referrerUsername} just earned ${item.xpAwarded} XP for referring a friend!`,
+        timestamp: item.date.toISOString(),
+        type: 'referral'
+      }));
+    } catch (error) {
+      console.error('Error getting referral activity:', error);
+      return [];
+    }
+  }
+  
+  // Helper: Get user's referral count
+  async getUserReferralCount(userId: number): Promise<number> {
+    try {
+      const result = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(referrals)
+        .where(eq(referrals.referrerId, userId));
+      
+      return result[0]?.count || 0;
+    } catch (error) {
+      console.error('Error getting user referral count:', error);
+      return 0;
+    }
+  }
+  
+  // Helper: Get user's earned referral achievements
+  async getUserReferralAchievements(userId: number): Promise<any[]> {
+    try {
+      return await db
+        .select()
+        .from(referralAchievements)
+        .where(eq(referralAchievements.userId, userId));
+    } catch (error) {
+      console.error('Error getting user referral achievements:', error);
+      return [];
+    }
+  }
+  
+  // Get the next achievement a user can earn
+  async getNextAchievement(userId: number): Promise<{ name: string, requiredReferrals: number } | null> {
+    try {
+      const referralCount = await this.getUserReferralCount(userId);
+      const earnedAchievements = await this.getUserReferralAchievements(userId);
+      
+      // Define achievements with their thresholds
+      const achievements = [
+        { id: 'first_steps', name: 'First Steps', threshold: 1 },
+        { id: 'growing_circle', name: 'Growing Circle', threshold: 5 },
+        { id: 'community_builder', name: 'Community Builder', threshold: 15 },
+        { id: 'pickle_evangelist', name: 'Pickle Evangelist', threshold: 30 },
+        { id: 'founders_club', name: 'Founders Club', threshold: 50 }
+      ];
+      
+      // Find the next unearned achievement
+      for (const achievement of achievements) {
+        const achieved = earnedAchievements.some(a => a.achievementId === achievement.id);
+        if (!achieved) {
+          return {
+            name: achievement.name,
+            requiredReferrals: achievement.threshold
+          };
+        }
+      }
+      
+      // If all achievements are earned
+      return null;
+    } catch (error) {
+      console.error('Error getting next achievement:', error);
+      return { 
+        name: 'First Steps',
+        requiredReferrals: 1
+      };
+    }
+  }
+  
+  // Award a referral achievement to a user
+  async awardReferralAchievement(userId: number, achievementId: string): Promise<ReferralAchievement> {
+    try {
+      // XP amounts for different achievements
+      const xpRewards: Record<string, number> = {
+        'first_steps': 20,
+        'growing_circle': 50,
+        'community_builder': 150,
+        'pickle_evangelist': 300,
+        'founders_club': 500
+      };
+      
+      const xpAwarded = xpRewards[achievementId] || 0;
+      
+      const achievementData: InsertReferralAchievement = {
+        userId,
+        achievementId,
+        xpAwarded
+      };
+      
+      const achievement = await this.createReferralAchievement(achievementData);
+      
+      // Create XP transaction for the achievement
+      if (xpAwarded > 0) {
+        await this.awardXpToUser(userId, xpAwarded, 'achievement_referral');
+      }
+      
+      return achievement;
+    } catch (error) {
+      console.error('Error awarding referral achievement:', error);
+      throw error;
+    }
+  }
+  
   async getReferralsByReferrerId(referrerId: number): Promise<Referral[]> {
     try {
       return await db.query.referrals.findMany({
