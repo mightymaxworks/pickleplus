@@ -65,10 +65,24 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
     }
   };
 
-  // Update local avatar URL when user prop changes
+  // Load avatar URL from localStorage on component mount and when user changes
   useEffect(() => {
-    setLocalAvatarUrl(user.avatarUrl || null);
-  }, [user.avatarUrl]);
+    // Try to get cached avatar URL from localStorage first
+    const cachedAvatarUrl = localStorage.getItem(`user_avatar_${user.id}`);
+    
+    if (cachedAvatarUrl) {
+      // Use cached avatar URL if available
+      setLocalAvatarUrl(cachedAvatarUrl);
+    } else if (user.avatarUrl) {
+      // Use user.avatarUrl from props and cache it
+      setLocalAvatarUrl(user.avatarUrl);
+      localStorage.setItem(`user_avatar_${user.id}`, user.avatarUrl);
+    } else {
+      // If no avatar, ensure we use null and clear cache
+      setLocalAvatarUrl(null);
+      localStorage.removeItem(`user_avatar_${user.id}`);
+    }
+  }, [user.id, user.avatarUrl]);
 
   // Clean up any object URLs when component unmounts
   useEffect(() => {
@@ -80,48 +94,41 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
   }, [previewUrl]);
 
   // PKL-278651-PROF-0005-UPLOAD-FIX
+  // Basic file change handler with direct preview
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file
+    // Basic validations
     if (!file.type.startsWith('image/')) {
-      toast({
-        title: "Invalid file type",
-        description: "Please select an image file",
-        variant: "destructive",
-      });
+      toast({ title: "Invalid file type", description: "Please select an image file", variant: "destructive" });
       return;
     }
 
-    // Validate file size (5MB max)
     if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Image must be less than 5MB",
-        variant: "destructive",
-      });
+      toast({ title: "File too large", description: "Image must be less than 5MB", variant: "destructive" });
       return;
     }
 
-    // Create a preview immediately and show it
-    console.log("[ProfileImageEditor] Creating preview for file:", file.name);
-    
-    // Clean up any existing preview URL first
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
-    
-    // Create new object URL and update state
-    const url = URL.createObjectURL(file);
+    // Set selected file first
     setSelectedFile(file);
-    setPreviewUrl(url);
-    setIsModalOpen(true);
     
-    // Reset the file input so the same file can be reselected
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    // Clean up any existing preview URL
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    
+    // Create preview using a simpler approach
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        // Use the FileReader result directly
+        setPreviewUrl(event.target.result as string);
+        setIsModalOpen(true);
+      }
+    };
+    reader.readAsDataURL(file);
+    
+    // Reset file input
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const closeModal = () => {
@@ -153,9 +160,10 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
       // Get the response data with the new avatar URL
       const responseData = await response.json();
       
-      // Update local state immediately for instant UI feedback
+      // Update local state and localStorage immediately for instant UI feedback
       if (responseData.avatarUrl) {
         setLocalAvatarUrl(responseData.avatarUrl);
+        localStorage.setItem(`user_avatar_${user.id}`, responseData.avatarUrl);
       }
 
       // Invalidate both current user and any profile queries
@@ -190,6 +198,12 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
     try {
       await apiRequest("DELETE", "/api/profile/remove-image");
 
+      // Clear localStorage avatar cache
+      localStorage.removeItem(`user_avatar_${user.id}`);
+      
+      // Reset local state
+      setLocalAvatarUrl(null);
+      
       // Update UI
       queryClient.invalidateQueries({ queryKey: ["/api/auth/current-user"] });
 
