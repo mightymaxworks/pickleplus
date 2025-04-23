@@ -52,9 +52,11 @@ export default function OnboardingPage() {
     }
   }, [user, isLoadingUser, setLocation]);
 
-  // Handle onboarding completion
+  // PKL-278651-COURTIQ-0002-GUIDANCE - Do not immediately redirect
+  // Instead, let the OnboardingComplete component handle navigation when user is ready
   const handleOnboardingComplete = () => {
-    setLocation('/dashboard');
+    console.log('[Onboarding] Completed, showing completion screen');
+    // No longer immediately redirecting to dashboard
   };
 
   // Loading state
