@@ -150,9 +150,10 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
     return () => clearTimeout(timer);
   }, [isSmallScreen, isExtraSmallScreen]);
   
-  // Load avatar URL from localStorage
+  // Load avatar URL from localStorage and listen for avatar updates
   useEffect(() => {
     if (user?.id) {
+      // Load from localStorage or user data
       const cachedAvatarUrl = localStorage.getItem(`user_avatar_${user.id}`);
       if (cachedAvatarUrl) {
         setLocalAvatarUrl(cachedAvatarUrl);
@@ -163,6 +164,28 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
       } else {
         setLocalAvatarUrl(null);
       }
+      
+      // Listen for avatar update events
+      const handleAvatarUpdate = (event: CustomEvent) => {
+        const { userId, avatarUrl } = event.detail;
+        if (userId === user.id) {
+          setLocalAvatarUrl(avatarUrl);
+          // If no avatar (removed), clear localStorage
+          if (!avatarUrl) {
+            localStorage.removeItem(`user_avatar_${user.id}`);
+          } else {
+            localStorage.setItem(`user_avatar_${user.id}`, avatarUrl);
+          }
+        }
+      };
+      
+      // Add event listener
+      window.addEventListener('avatarUpdated', handleAvatarUpdate as EventListener);
+      
+      // Remove event listener on cleanup
+      return () => {
+        window.removeEventListener('avatarUpdated', handleAvatarUpdate as EventListener);
+      };
     }
   }, [user?.id, user?.avatarUrl]);
 

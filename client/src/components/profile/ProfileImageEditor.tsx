@@ -160,20 +160,33 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
       // Get the response data with the new avatar URL
       const responseData = await response.json();
       
-      // Update local state and localStorage immediately for instant UI feedback
+      // Clear all avatar caches for this user to prevent stale data
+      localStorage.removeItem(`user_avatar_${user.id}`);
+      
+      // Add a timestamp to force image cache invalidation in browser
+      const timestamp = Date.now();
+      const newAvatarUrl = responseData.avatarUrl + `?t=${timestamp}`;
+      
+      // Update local state and localStorage with the new URL (with timestamp)
       if (responseData.avatarUrl) {
-        setLocalAvatarUrl(responseData.avatarUrl);
-        localStorage.setItem(`user_avatar_${user.id}`, responseData.avatarUrl);
+        setLocalAvatarUrl(newAvatarUrl);
+        localStorage.setItem(`user_avatar_${user.id}`, newAvatarUrl);
       }
 
-      // Invalidate both current user and any profile queries
+      // Invalidate all relevant queries
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["/api/auth/current-user"] }),
-        queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] })
+        queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] }),
+        queryClient.invalidateQueries() // Invalidate all queries to be safe
       ]);
 
       // Force a refresh of user data context
       await refreshUserData();
+
+      // Force refresh on all avatar instances by publishing an event
+      window.dispatchEvent(new CustomEvent('avatarUpdated', { 
+        detail: { userId: user.id, avatarUrl: newAvatarUrl }
+      }));
 
       toast({
         title: "Success", 
@@ -204,8 +217,20 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
       // Reset local state
       setLocalAvatarUrl(null);
       
-      // Update UI
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/current-user"] });
+      // Update UI by invalidating all relevant queries
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/current-user"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] }),
+        queryClient.invalidateQueries() // Invalidate all queries to be safe
+      ]);
+      
+      // Force a refresh of user data context
+      await refreshUserData();
+      
+      // Force refresh on all avatar instances by publishing an event
+      window.dispatchEvent(new CustomEvent('avatarUpdated', { 
+        detail: { userId: user.id, avatarUrl: null }
+      }));
 
       toast({
         title: "Success",
