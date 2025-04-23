@@ -63,8 +63,8 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   app.use('/api/multi-rankings', multiRankingsRoutes);
   app.use('/api/courtiq', courtiqRoutes);
   
-  // Mount simple rating API (Framework 5.3 simplified approach)
-  app.use('/api/simple-rating', simpleRatingApi);
+  // Mount user data API (Framework 5.3 frontend-driven approach)
+  app.use('/api/user-data', simpleRatingApi);
   
   // Basic user info endpoint
   app.get("/api/me", isAuthenticated, async (req: Request, res: Response) => {

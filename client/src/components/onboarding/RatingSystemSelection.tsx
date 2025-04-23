@@ -6,8 +6,8 @@
  * and enter their current rating during the onboarding process.
  */
 
-import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -105,6 +105,21 @@ interface RatingSystemSelectionProps {
 export default function RatingSystemSelection({ onComplete }: RatingSystemSelectionProps) {
   const [selectedSystem, setSelectedSystem] = useState<string | null>(null);
   const { toast } = useToast();
+  
+  // Query to get user data
+  const { data: userData, isLoading } = useQuery({
+    queryKey: ['/api/user-data/get'],
+    queryFn: async () => {
+      const response = await fetch('/api/user-data/get', { 
+        credentials: 'include' 
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+      return response.json();
+    },
+    staleTime: 30000, // Data stays fresh for 30 seconds
+  });
 
   // Set up form with default values
   const form = useForm<RatingFormValues>({
@@ -115,14 +130,41 @@ export default function RatingSystemSelection({ onComplete }: RatingSystemSelect
       selfAssessment: undefined,
     },
   });
+  
+  // When user data is loaded, pre-fill the form
+  useEffect(() => {
+    if (userData?.data?.ratingData) {
+      const { system, rating } = userData.data.ratingData;
+      
+      console.log('[RatingSystemSelection] Pre-filling form with:', system, rating);
+      
+      if (system) {
+        setSelectedSystem(system);
+        form.setValue('ratingSystem', system);
+        
+        // For self-assessment, we need to map back to the appropriate option
+        if (system === 'self') {
+          const selfAssessment = 
+            rating <= 1.5 ? 'beginner' :
+            rating <= 3.5 ? 'intermediate' :
+            rating <= 5.0 ? 'advanced' : 'pro';
+          
+          form.setValue('selfAssessment', selfAssessment);
+        } else if (rating) {
+          form.setValue('ratingValue', rating);
+        }
+      }
+    }
+  }, [userData, form]);
 
-  // Mutation to submit the rating using the simplified API
+  // Mutation to submit the rating using the frontend-driven approach
   const submitRatingMutation = useMutation({
     mutationFn: async (data: RatingFormValues) => {
-      // Convert to the simpler format used by our new API
-      const simplePayload = {
+      // Map the form values to our rating data format
+      const ratingData = {
         system: data.ratingSystem,
         rating: data.ratingValue || (
+          // Default values for self-assessment options
           data.selfAssessment === 'beginner' ? 1.0 :
           data.selfAssessment === 'intermediate' ? 2.5 :
           data.selfAssessment === 'advanced' ? 4.0 :
@@ -130,36 +172,47 @@ export default function RatingSystemSelection({ onComplete }: RatingSystemSelect
         )
       };
       
-      console.log('[RatingSystemSelection] Submitting simplified rating data:', simplePayload);
+      // Also update wizard state to mark this step as completed
+      const wizardState = {
+        currentStep: 'experience_summary', // Next step in the flow
+        completedSteps: ['profile_completion', 'rating_selection'],
+        progress: 40, // 40% progress in onboarding
+        lastUpdated: new Date().toISOString()
+      };
       
-      // Use our new simple API endpoint
-      const response = await apiRequest('POST', '/api/simple-rating/save', simplePayload);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to set rating');
+      console.log('[RatingSystemSelection] Saving data with frontend-driven approach');
+      
+      // Store the rating data first
+      const ratingResponse = await apiRequest('POST', '/api/user-data/store', {
+        dataType: 'ratingData',
+        data: ratingData
+      });
+      
+      if (!ratingResponse.ok) {
+        const errorData = await ratingResponse.json();
+        throw new Error(errorData.error || 'Failed to save rating data');
       }
-      return response.json();
+      
+      // Then update the wizard state
+      const wizardResponse = await apiRequest('POST', '/api/user-data/store', {
+        dataType: 'wizardState',
+        data: wizardState
+      });
+      
+      if (!wizardResponse.ok) {
+        const errorData = await wizardResponse.json();
+        throw new Error(errorData.error || 'Failed to update wizard state');
+      }
+      
+      // Return the final state from the wizard update
+      return wizardResponse.json();
     },
     onSuccess: (data) => {
       toast({
         title: "Rating saved",
         description: "Your preferred rating system has been saved.",
       });
-      // Log to help with debugging
-      console.log('[RatingSystemSelection] Rating saved successfully:', data);
-      
-      // Also submit to the original endpoint just to maintain compatibility
-      try {
-        // We won't await this or handle errors - it's a secondary call
-        apiRequest('POST', '/api/courtiq/onboarding/next-step', {
-          step: 'rating_selection',
-          ratingSystem: form.getValues('ratingSystem'),
-          ratingValue: form.getValues('ratingValue') || form.getValues('selfAssessment')
-        });
-      } catch (err) {
-        console.log('[RatingSystemSelection] Secondary API call failed:', err);
-        // We don't care if this fails
-      }
+      console.log('[RatingSystemSelection] Data saved successfully:', data);
       
       // Pass the selected rating data to parent component
       if (onComplete) {
@@ -194,6 +247,16 @@ export default function RatingSystemSelection({ onComplete }: RatingSystemSelect
     form.setValue('ratingValue', undefined);
     form.setValue('selfAssessment', undefined);
   };
+
+  // Show loading state while fetching user data
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-40 space-y-4">
+        <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-muted-foreground">Loading your rating data...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

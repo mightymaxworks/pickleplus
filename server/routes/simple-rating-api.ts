@@ -2,43 +2,72 @@ import { Request, Response, Router } from 'express';
 import { z } from 'zod';
 
 /**
- * ULTRA-SIMPLE FRAMEWORK 5.3 IMPLEMENTATION
+ * FRONTEND-DRIVEN FRAMEWORK 5.3 IMPLEMENTATION
  * 
- * This file provides an extremely simple API implementation for the rating
- * system selection feature, following Framework 5.3 principles of simplicity.
+ * This file provides an extremely simple API implementation for user data
+ * following Framework 5.3 principles. The frontend completely controls the flow,
+ * and the backend simply stores and retrieves data without any flow control logic.
  * 
- * Instead of complex state management, this uses a simple in-memory variable
- * that stores exactly what's needed without type constraints or overengineering.
+ * This approach is ideal for UI-heavy applications where the interface is the 
+ * primary driver of user experience.
  */
 
 // Simple in-memory storage for development mode
-let savedRatingData = {
-  system: '',
-  rating: 0
-};
+// We'll store by userId to support multiple users
+const userDataStore = new Map<number, any>();
+
+// Initialize with default data for our test user
+userDataStore.set(1, {
+  // General user preferences
+  preferences: {},
+  
+  // Onboarding and wizard state - managed by frontend
+  wizardState: {
+    currentStep: 'rating_selection',
+    completedSteps: []
+  },
+  
+  // Rating data
+  ratingData: {
+    system: '',
+    rating: 0
+  }
+});
 
 const router = Router();
 
 /**
- * Get the current rating information
- * GET /api/simple-rating/get
+ * Get user data
+ * GET /api/user-data/get
  */
 router.get('/get', (req: Request, res: Response) => {
+  // Get user ID (use test user ID 1 for development)
+  const userId = req.user?.id || 1;
+  
+  // Get user data or initialize if not found
+  const userData = userDataStore.get(userId) || {
+    preferences: {},
+    wizardState: { currentStep: 'rating_selection', completedSteps: [] },
+    ratingData: { system: '', rating: 0 }
+  };
+  
+  console.log(`[User Data API] Retrieved data for user ${userId}:`, userData);
+  
   res.json({
     success: true,
-    data: savedRatingData
+    data: userData
   });
 });
 
 /**
- * Save rating information
- * POST /api/simple-rating/save
+ * Store any user data (generic storage endpoint)
+ * POST /api/user-data/store
  */
-router.post('/save', (req: Request, res: Response) => {
-  // Basic request validation
+router.post('/store', (req: Request, res: Response) => {
+  // Basic request validation - we accept any data
   const schema = z.object({
-    system: z.string(),
-    rating: z.union([z.number(), z.string().transform(val => parseFloat(val))])
+    dataType: z.string(),
+    data: z.any()
   });
 
   try {
@@ -46,7 +75,7 @@ router.post('/save', (req: Request, res: Response) => {
     const validationResult = schema.safeParse(req.body);
     
     if (!validationResult.success) {
-      console.log('[Simple Rating API] Validation error:', validationResult.error);
+      console.log('[User Data API] Validation error:', validationResult.error);
       return res.status(400).json({ 
         success: false, 
         error: 'Invalid data format'
@@ -54,28 +83,51 @@ router.post('/save', (req: Request, res: Response) => {
     }
 
     // Get the validated data
-    const { system, rating } = validationResult.data;
+    const { dataType, data } = validationResult.data;
+    
+    // Get user ID (use test user ID 1 for development)
+    const userId = req.user?.id || 1;
+    
+    // Get existing user data or initialize
+    const userData = userDataStore.get(userId) || {
+      preferences: {},
+      wizardState: { currentStep: 'rating_selection', completedSteps: [] },
+      ratingData: { system: '', rating: 0 }
+    };
     
     // Log the received data
-    console.log(`[Simple Rating API] Saving rating data:`, { system, rating });
+    console.log(`[User Data API] Storing ${dataType} data for user ${userId}:`, data);
     
-    // Save the data to our simple variable
-    savedRatingData = {
-      system,
-      rating
-    };
+    // Update the specific data type
+    switch (dataType) {
+      case 'ratingData':
+        userData.ratingData = data;
+        break;
+      case 'wizardState':
+        userData.wizardState = data;
+        break;
+      case 'preferences':
+        userData.preferences = { ...userData.preferences, ...data };
+        break;
+      default:
+        // For any other data type, store it directly
+        userData[dataType] = data;
+    }
+    
+    // Save the updated user data
+    userDataStore.set(userId, userData);
     
     // Return success with the saved data
     res.json({
       success: true,
-      message: `Successfully saved rating information`,
-      data: savedRatingData
+      message: `Successfully stored ${dataType} data`,
+      data: userData
     });
   } catch (error) {
-    console.error('[Simple Rating API] Error saving rating:', error);
+    console.error('[User Data API] Error storing data:', error);
     res.status(500).json({ 
       success: false, 
-      error: 'Server error saving rating information'
+      error: 'Server error storing data'
     });
   }
 });
