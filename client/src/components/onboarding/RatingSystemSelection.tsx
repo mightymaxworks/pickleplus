@@ -136,7 +136,8 @@ export default function RatingSystemSelection({ onComplete }: RatingSystemSelect
       
       // Pass the selected rating data to parent component
       if (onComplete) {
-        // Call onComplete with the submitted form data
+        // Calling onComplete without arguments will trigger the parent's handler
+        // which will progress to the next step in the wizard
         onComplete();
       }
     },
