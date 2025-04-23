@@ -7,7 +7,6 @@
 
 import React from 'react';
 import { Link } from 'wouter';
-import { useQuery } from '@tanstack/react-query';
 import { 
   Card, 
   CardContent, 
@@ -27,8 +26,10 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useMasteryTierStatus } from '@/hooks/use-mastery-tier-status';
 import { useTierByName } from '@/hooks/use-mastery-tiers';
 import { MasteryPath } from '@shared/mastery-paths';
+import { useAuth } from '@/hooks/useAuth';
 import { 
   Shield, 
   Award, 
@@ -73,29 +74,12 @@ const getTierHealthStatus = (healthPercentage: number): { text: string; color: s
 };
 
 const MasteryPathsDisplay: React.FC = () => {
-  // Using the standard React Query hook from TanStack
-  const { data: tierStatus, isLoading, error, refetch } = useQuery({
-    queryKey: ['mastery', 'status'],
-    queryFn: async () => {
-      const response = await fetch('/api/mastery/status');
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('Not authenticated');
-        }
-        throw new Error('Failed to fetch mastery tier status');
-      }
-      return await response.json();
-    },
-    refetchOnWindowFocus: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-  
+  // Using the custom hook that handles authentication and data fetching
+  const { data: tierStatus, isLoading, error, refetch } = useMasteryTierStatus();
   const { data: tierDetails } = useTierByName(tierStatus?.currentTierName);
   
-  // Get current user from global data (this pattern is used throughout the app)
-  // This is a fallback for when the component needs to know about user data
-  // but isn't directly connected to the auth context
-  const currentUser = (window as any)?.__USER_DATA__ || { duprRating: null };
+  // Get authenticated user info
+  const { user } = useAuth();
   
   // Loading state
   if (isLoading) {
