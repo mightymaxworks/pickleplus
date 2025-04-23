@@ -251,8 +251,60 @@ export const BounceStatusTicker = ({
     );
   }
 
+  // Handle empty ticker items array
   if (tickerItems.length === 0) {
-    return null;
+    const defaultMessage = "For better control, hold your paddle with a continental grip.";
+    
+    // Compact view for smaller devices
+    if (compact) {
+      return (
+        <div className={`relative overflow-hidden bg-gradient-to-r from-green-900/90 to-green-800/90 dark:from-green-900 dark:to-black rounded-md shadow-md border border-green-700/30 dark:border-green-700/50 ${className}`}>
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-lime-500 to-green-600"></div>
+          <div className="flex items-center px-3 py-2">
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-lime-500 animate-pulse"></div>
+              <div className="text-xs text-lime-400 font-mono">LIVE</div>
+            </div>
+            <div className="ml-2 text-white text-xs truncate">
+              {truncateText(defaultMessage, 30)}
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    return (
+      <div className={`relative overflow-hidden bg-gradient-to-r from-green-900/90 to-green-800/90 dark:from-green-900 dark:to-black rounded-md shadow-md border border-green-700/30 dark:border-green-700/50 ${className}`}>
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-lime-500 to-green-600"></div>
+        <div className="absolute top-1 right-2 flex items-center gap-1 z-10">
+          <div className="w-2 h-2 rounded-full bg-lime-500 animate-pulse"></div>
+          <div className="text-xs text-lime-400 font-mono">LIVE</div>
+        </div>
+        <div className="flex items-center px-4 py-3">
+          <div className="mr-3 bg-gradient-to-r from-lime-500 to-green-600 p-1.5 rounded-full text-white">
+            <Lightbulb size={16} />
+          </div>
+          <div className="relative overflow-hidden flex-1">
+            <div className="ticker-item">
+              <span className="text-white text-sm">
+                {defaultMessage}
+              </span>
+            </div>
+          </div>
+          <div className="hidden md:flex items-center ml-3 pl-3 border-l border-green-700/30">
+            <button 
+              onClick={() => {
+                setLocation('/refer');
+              }}
+              className="ml-2 text-xs text-white bg-green-600 hover:bg-green-700 transition-colors px-2 py-1 rounded flex items-center"
+            >
+              <UserPlus size={12} className="mr-1" />
+              Refer Friends
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const currentItem = tickerItems[currentItemIndex];
@@ -269,9 +321,9 @@ export const BounceStatusTicker = ({
           </div>
           <div className="ml-2 text-white text-xs truncate">
             {currentItem.type === 'tip' ? (
-              <span>Pickle Tip: {truncateText(currentItem.content, 30)}</span>
+              <span>{truncateText(currentItem.content, 30)}</span>
             ) : (
-              <span>Community: {truncateText(formatActivityMessage(currentItem.activity), 30)}</span>
+              <span>{truncateText(formatActivityMessage(currentItem.activity), 30)}</span>
             )}
           </div>
         </div>
@@ -299,7 +351,6 @@ export const BounceStatusTicker = ({
         <div className="relative overflow-hidden flex-1">
           {currentItem.type === 'tip' ? (
             <div className="ticker-item">
-              <span className="text-lime-400 font-medium mr-2">PICKLE TIP:</span>
               <span className="text-white text-sm">
                 {currentItem.content}
                 {currentItem.source && <span className="text-lime-200 ml-1 italic text-xs"> - {currentItem.source}</span>}
