@@ -294,9 +294,7 @@ export const BounceStatusTicker = ({
     );
   }
 
-  // Pick a random item to display
-  const randomIndex = Math.floor(Math.random() * tickerItems.length);
-  const currentItem = tickerItems[randomIndex];
+  // Now displaying all ticker items in a continuous scroll
 
   // Compact view for smaller devices
   if (compact) {
@@ -309,15 +307,17 @@ export const BounceStatusTicker = ({
             <div className="text-xs text-lime-400 font-mono">LIVE</div>
           </div>
           <div className="ml-2 text-white text-xs relative overflow-hidden ticker-container">
-            {currentItem.type === 'tip' ? (
-              <div className="ticker-scroll">
-                <span>{currentItem.content}</span>
-              </div>
-            ) : (
-              <div className="ticker-scroll">
-                <span>{formatActivityMessage(currentItem.activity)}</span>
-              </div>
-            )}
+            <div className="ticker-scroll">
+              {tickerItems.map((item, index) => (
+                <div key={index} className="ticker-item">
+                  {item.type === 'tip' ? (
+                    <span>{item.content}</span>
+                  ) : (
+                    <span>{formatActivityMessage(item.activity)}</span>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -333,32 +333,28 @@ export const BounceStatusTicker = ({
       </div>
       <div className="flex items-center px-4 py-3">
         <div className="mr-3 bg-gradient-to-r from-lime-500 to-green-600 p-1.5 rounded-full text-white">
-          {currentItem.type === 'tip' ? (
-            <Lightbulb size={16} />
-          ) : currentItem.activity.type === 'join' ? (
-            <UserPlus size={16} />
-          ) : (
-            <Award size={16} />
-          )}
+          <Lightbulb size={16} />
         </div>
         <div className="relative overflow-hidden flex-1 ticker-container h-6">
-          {currentItem.type === 'tip' ? (
-            <div className={`ticker-scroll ${currentItem.content.length > 50 ? 'long-content' : ''}`}>
-              <span className="text-white text-sm">
-                {currentItem.content}
-                {currentItem.source && <span className="text-lime-200 ml-1 italic text-xs"> - {currentItem.source}</span>}
-              </span>
-            </div>
-          ) : (
-            <div className={`ticker-scroll ${formatActivityMessage(currentItem.activity).length > 50 ? 'long-content' : ''}`}>
-              <span className="text-white text-sm">
-                {formatActivityMessage(currentItem.activity)}
-                <span className="text-lime-200 ml-1 italic text-xs">
-                  {formatTimeAgo(currentItem.activity.timestamp)}
-                </span>
-              </span>
-            </div>
-          )}
+          <div className="ticker-scroll">
+            {tickerItems.map((item, index) => (
+              <div key={index} className="ticker-item">
+                {item.type === 'tip' ? (
+                  <span className="text-white text-sm">
+                    {item.content}
+                    {item.source && <span className="text-lime-200 ml-1 italic text-xs"> - {item.source}</span>}
+                  </span>
+                ) : (
+                  <span className="text-white text-sm">
+                    {formatActivityMessage(item.activity)}
+                    <span className="text-lime-200 ml-1 italic text-xs">
+                      {formatTimeAgo(item.activity.timestamp)}
+                    </span>
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
         <div className="hidden md:flex items-center ml-3 pl-3 border-l border-green-700/30">
           <button 

@@ -3,7 +3,7 @@
  * 
  * CSS animations and styles for the BounceStatusTicker component
  * 
- * @version 2.0.0
+ * @version 3.0.0
  * @framework Framework5.3
  */
 
@@ -12,7 +12,7 @@
     transform: translateX(100%);
   }
   100% {
-    transform: translateX(-100%);
+    transform: translateX(-140%);
   }
 }
 
@@ -21,19 +21,15 @@
   width: 100%;
   overflow: hidden;
   position: relative;
+  height: 100%;
 }
 
 /* The scrolling ticker content */
 .ticker-scroll {
-  animation: tickerScroll 15s linear infinite;
-  white-space: nowrap;
-  display: inline-block;
+  display: flex;
   position: absolute;
-}
-
-/* Adjust animation speed for longer content */
-.ticker-scroll.long-content {
-  animation-duration: 20s;
+  white-space: nowrap;
+  animation: tickerScroll 20s linear infinite;
 }
 
 /* Pause animation on hover */
@@ -41,9 +37,34 @@
   animation-play-state: paused;
 }
 
-/* Additional styles for ticker items */
+/* Individual ticker items */
 .ticker-item {
   display: inline-flex;
   align-items: center;
   white-space: nowrap;
+  margin-right: 40px;
+  padding-right: 5px;
+  position: relative;
+}
+
+/* Separator between items */
+.ticker-item:not(:last-child):after {
+  content: "•";
+  color: #4ade80;
+  margin-left: 10px;
+  position: absolute;
+  right: -10px;
+}
+
+/* Speed control for different screen sizes */
+@media (max-width: 640px) {
+  .ticker-scroll {
+    animation-duration: 15s;
+  }
+}
+
+@media (min-width: 1280px) {
+  .ticker-scroll {
+    animation-duration: 30s;
+  }
 }
