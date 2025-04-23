@@ -330,19 +330,26 @@ export async function getMyRegisteredEvents(limit?: number, offset?: number): Pr
           const now = new Date();
           const later = new Date(now.getTime() + 3600000);
           
+          // Create a properly typed event object
           return [
             {
               id: 9999,
-              title: "Dev Community Event",
+              name: "Dev Community Event",
               description: "A special event for developers",
               location: "Online",
               startDateTime: now,
               endDateTime: later,
               organizerId: 1,
+              maxAttendees: 100,
+              currentAttendees: 45,
+              isPrivate: false,
+              requiresCheckIn: true,
+              checkInCode: "DEV123",
+              eventType: "regular",
+              isTestData: true,
+              status: "upcoming",
               isDefault: true,
-              status: "active",
-              capacity: 100,
-              registrationCount: 45,
+              hideParticipantCount: false,
               createdAt: now,
               updatedAt: now
             }
