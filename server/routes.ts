@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from "express";
 import { Server } from "http";
 import * as http from "http";
 import { storage } from "./storage";
+// Use isAuthenticated from auth.ts which has proper passport integration
 import { registerAdminRoutes } from "./routes/admin-routes";
 import { setupAdminDashboardRoutes } from "./routes/admin-dashboard-routes"; // Added for PKL-278651-ADMIN-0012-PERF
 import { registerCommunityRoutes } from "./routes/community-routes";
@@ -20,7 +21,8 @@ import { registerPassportVerificationRoutes } from "./routes/passport-verificati
 import securityRoutes from "./routes/security-routes";
 import multiRankingsRoutes from "./routes/multi-rankings-routes"; // PKL-278651-PRANK-0008-FWK52
 import courtiqRoutes from "./routes/courtiq-routes"; // PKL-278651-CRTIQ-0009-FWK52
-import { isAuthenticated } from "./middleware/auth";
+import { isAuthenticated as isAuthenticatedMiddleware } from "./middleware/auth";
+import { isAuthenticated } from "./auth"; // Import the proper passport-based authentication
 import { specialRouter } from "./special-routes"; // Import special critical routes
 
 /**

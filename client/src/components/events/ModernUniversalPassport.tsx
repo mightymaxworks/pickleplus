@@ -95,11 +95,8 @@ export function ModernUniversalPassport({
   const { data: registeredEvents, isError: isRegisteredEventsError } = useQuery({
     queryKey: ['/api/events/my/registered'],
     queryFn: () => getMyRegisteredEvents(),
-    // Don't throw errors, provide fallback data
-    onError: (error) => {
-      console.error('Error loading registered events:', error);
-      return []; // Return empty array on error
-    }
+    // Use retry: false to avoid repeated attempts when the error is expected
+    retry: false
   });
 
   // Highlight animation
