@@ -329,9 +329,9 @@ router.get("/performance", async (req, res) => {
     
     console.log(`[CourtIQ] User ${userId} has played ${matchCount} unique matches with assessments`);
     
-    if (matchCount < 5) {
+    if (matchCount < 5 || req.query.includeDemoData === 'true') {
       // For demonstration purposes, return test data for the multi-source visualization
-      if (req.query.includeSourceTypes === 'true') {
+      if (req.query.includeSourceTypes === 'true' || req.query.includeDemoData === 'true') {
         // Generate test data for the visualization
         return res.json({
           status: "success",

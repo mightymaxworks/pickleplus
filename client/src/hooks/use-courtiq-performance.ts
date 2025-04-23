@@ -108,8 +108,13 @@ export function useCourtIQPerformance(options: CourtIQPerformanceOptions = {}) {
   if (format) queryParams.append('format', format);
   if (division) queryParams.append('division', division);
   
-  // Include source-specific ratings
+  // Always include source-specific ratings for visualization
   queryParams.append('includeSourceTypes', 'true');
+  
+  // Request demo data when in development mode
+  if (import.meta.env.DEV) {
+    queryParams.append('includeDemoData', 'true');
+  }
 
   return useQuery<CourtIQPerformanceData>({
     queryKey: ['/api/courtiq/performance', { userId, format, division }],

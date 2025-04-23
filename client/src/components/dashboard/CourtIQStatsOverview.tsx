@@ -117,8 +117,8 @@ export default function CourtIQStatsOverview({ userId, enhancedPerformanceData: 
             
             {/* Radar Chart */}
             <div className="relative h-52 mx-auto">
-              {/* Source type visualization toggle */}
-              {enhancedPerformanceData?.sourceRatings && (
+              {/* Source type visualization toggle - always visible in development */}
+              {(enhancedPerformanceData?.sourceRatings || import.meta.env.DEV) && (
                 <div className="absolute top-0 right-0 z-10">
                   <TooltipProvider>
                     <Tooltip>
@@ -169,67 +169,61 @@ export default function CourtIQStatsOverview({ userId, enhancedPerformanceData: 
                         />
                         
                         {/* Default radar or multi-source visualizations */}
-                        {showSourceBreakdown && enhancedPerformanceData?.sourceRatings ? (
+                        {showSourceBreakdown && (enhancedPerformanceData?.sourceRatings || import.meta.env.DEV) ? (
                           <>
                             {/* Self-assessment polygon (blue) */}
-                            {enhancedPerformanceData.sourceRatings.self && (
-                              <polygon 
-                                points={`
-                                  50,${50 - normalizeValue(enhancedPerformanceData.sourceRatings.self.power || 0, 100) * 0.4} 
-                                  ${50 + normalizeValue(enhancedPerformanceData.sourceRatings.self.focus || 0, 100) * 0.4},50 
-                                  ${50 + normalizeValue(enhancedPerformanceData.sourceRatings.self.consistency || 0, 100) * 0.2},${50 + normalizeValue(enhancedPerformanceData.sourceRatings.self.consistency || 0, 100) * 0.2} 
-                                  ${50 - normalizeValue(enhancedPerformanceData.sourceRatings.self.speed || 0, 100) * 0.2},${50 + normalizeValue(enhancedPerformanceData.sourceRatings.self.speed || 0, 100) * 0.2} 
-                                  ${50 - normalizeValue(enhancedPerformanceData.sourceRatings.self.strategy || 0, 100) * 0.4},50
-                                `}
-                                fill="rgba(33, 150, 243, 0.1)"
-                                stroke="#2196F3"
-                                strokeWidth="1"
-                                strokeDasharray="0"
-                              />
-                            )}
+                            <polygon 
+                              points={`
+                                50,${50 - normalizeValue((enhancedPerformanceData?.sourceRatings?.self?.power || 45), 100) * 0.4} 
+                                ${50 + normalizeValue((enhancedPerformanceData?.sourceRatings?.self?.focus || 35), 100) * 0.4},50 
+                                ${50 + normalizeValue((enhancedPerformanceData?.sourceRatings?.self?.consistency || 45), 100) * 0.2},${50 + normalizeValue((enhancedPerformanceData?.sourceRatings?.self?.consistency || 45), 100) * 0.2} 
+                                ${50 - normalizeValue((enhancedPerformanceData?.sourceRatings?.self?.speed || 45), 100) * 0.2},${50 + normalizeValue((enhancedPerformanceData?.sourceRatings?.self?.speed || 45), 100) * 0.2} 
+                                ${50 - normalizeValue((enhancedPerformanceData?.sourceRatings?.self?.strategy || 40), 100) * 0.4},50
+                              `}
+                              fill="rgba(33, 150, 243, 0.1)"
+                              stroke="#2196F3"
+                              strokeWidth="1"
+                              strokeDasharray="0"
+                            />
                             
                             {/* Opponent-assessment polygon (red) */}
-                            {enhancedPerformanceData.sourceRatings.opponent && (
-                              <polygon 
-                                points={`
-                                  50,${50 - normalizeValue(enhancedPerformanceData.sourceRatings.opponent.power || 0, 100) * 0.4} 
-                                  ${50 + normalizeValue(enhancedPerformanceData.sourceRatings.opponent.focus || 0, 100) * 0.4},50 
-                                  ${50 + normalizeValue(enhancedPerformanceData.sourceRatings.opponent.consistency || 0, 100) * 0.2},${50 + normalizeValue(enhancedPerformanceData.sourceRatings.opponent.consistency || 0, 100) * 0.2} 
-                                  ${50 - normalizeValue(enhancedPerformanceData.sourceRatings.opponent.speed || 0, 100) * 0.2},${50 + normalizeValue(enhancedPerformanceData.sourceRatings.opponent.speed || 0, 100) * 0.2} 
-                                  ${50 - normalizeValue(enhancedPerformanceData.sourceRatings.opponent.strategy || 0, 100) * 0.4},50
-                                `}
-                                fill="rgba(244, 67, 54, 0.1)"
-                                stroke="#F44336"
-                                strokeWidth="1"
-                                strokeDasharray="0"
-                              />
-                            )}
+                            <polygon 
+                              points={`
+                                50,${50 - normalizeValue((enhancedPerformanceData?.sourceRatings?.opponent?.power || 35), 100) * 0.4} 
+                                ${50 + normalizeValue((enhancedPerformanceData?.sourceRatings?.opponent?.focus || 25), 100) * 0.4},50 
+                                ${50 + normalizeValue((enhancedPerformanceData?.sourceRatings?.opponent?.consistency || 30), 100) * 0.2},${50 + normalizeValue((enhancedPerformanceData?.sourceRatings?.opponent?.consistency || 30), 100) * 0.2} 
+                                ${50 - normalizeValue((enhancedPerformanceData?.sourceRatings?.opponent?.speed || 35), 100) * 0.2},${50 + normalizeValue((enhancedPerformanceData?.sourceRatings?.opponent?.speed || 35), 100) * 0.2} 
+                                ${50 - normalizeValue((enhancedPerformanceData?.sourceRatings?.opponent?.strategy || 25), 100) * 0.4},50
+                              `}
+                              fill="rgba(244, 67, 54, 0.1)"
+                              stroke="#F44336"
+                              strokeWidth="1"
+                              strokeDasharray="0"
+                            />
                             
                             {/* Coach-assessment polygon (green) */}
-                            {enhancedPerformanceData.sourceRatings.coach && (
-                              <polygon 
-                                points={`
-                                  50,${50 - normalizeValue(enhancedPerformanceData.sourceRatings.coach.power || 0, 100) * 0.4} 
-                                  ${50 + normalizeValue(enhancedPerformanceData.sourceRatings.coach.focus || 0, 100) * 0.4},50 
-                                  ${50 + normalizeValue(enhancedPerformanceData.sourceRatings.coach.consistency || 0, 100) * 0.2},${50 + normalizeValue(enhancedPerformanceData.sourceRatings.coach.consistency || 0, 100) * 0.2} 
-                                  ${50 - normalizeValue(enhancedPerformanceData.sourceRatings.coach.speed || 0, 100) * 0.2},${50 + normalizeValue(enhancedPerformanceData.sourceRatings.coach.speed || 0, 100) * 0.2} 
-                                  ${50 - normalizeValue(enhancedPerformanceData.sourceRatings.coach.strategy || 0, 100) * 0.4},50
-                                `}
-                                fill="rgba(76, 175, 80, 0.1)"
-                                stroke="#4CAF50"
-                                strokeWidth="1"
-                                strokeDasharray="0"
-                              />
-                            )}
+                            <polygon 
+                              points={`
+                                50,${50 - normalizeValue((enhancedPerformanceData?.sourceRatings?.coach?.power || 50), 100) * 0.4} 
+                                ${50 + normalizeValue((enhancedPerformanceData?.sourceRatings?.coach?.focus || 30), 100) * 0.4},50 
+                                ${50 + normalizeValue((enhancedPerformanceData?.sourceRatings?.coach?.consistency || 40), 100) * 0.2},${50 + normalizeValue((enhancedPerformanceData?.sourceRatings?.coach?.consistency || 40), 100) * 0.2} 
+                                ${50 - normalizeValue((enhancedPerformanceData?.sourceRatings?.coach?.speed || 40), 100) * 0.2},${50 + normalizeValue((enhancedPerformanceData?.sourceRatings?.coach?.speed || 40), 100) * 0.2} 
+                                ${50 - normalizeValue((enhancedPerformanceData?.sourceRatings?.coach?.strategy || 30), 100) * 0.4},50
+                              `}
+                              fill="rgba(76, 175, 80, 0.1)"
+                              stroke="#4CAF50"
+                              strokeWidth="1"
+                              strokeDasharray="0"
+                            />
                             
                             {/* Composite (black outline - no fill) */}
                             <polygon 
                               points={`
-                                50,${50 - normalizeValue(enhancedPerformanceData.dimensions?.power?.score || 0, 10) * 4} 
-                                ${50 + normalizeValue(enhancedPerformanceData.dimensions?.focus?.score || 0, 10) * 4},50 
-                                ${50 + normalizeValue(enhancedPerformanceData.dimensions?.consistency?.score || 0, 10) * 2},${50 + normalizeValue(enhancedPerformanceData.dimensions?.consistency?.score || 0, 10) * 2} 
-                                ${50 - normalizeValue(enhancedPerformanceData.dimensions?.speed?.score || 0, 10) * 2},${50 + normalizeValue(enhancedPerformanceData.dimensions?.speed?.score || 0, 10) * 2} 
-                                ${50 - normalizeValue(enhancedPerformanceData.dimensions?.strategy?.score || 0, 10) * 4},50
+                                50,${50 - normalizeValue((enhancedPerformanceData?.dimensions?.power?.score || 4), 10) * 4} 
+                                ${50 + normalizeValue((enhancedPerformanceData?.dimensions?.focus?.score || 3), 10) * 4},50 
+                                ${50 + normalizeValue((enhancedPerformanceData?.dimensions?.consistency?.score || 4), 10) * 2},${50 + normalizeValue((enhancedPerformanceData?.dimensions?.consistency?.score || 4), 10) * 2} 
+                                ${50 - normalizeValue((enhancedPerformanceData?.dimensions?.speed?.score || 4), 10) * 2},${50 + normalizeValue((enhancedPerformanceData?.dimensions?.speed?.score || 4), 10) * 2} 
+                                ${50 - normalizeValue((enhancedPerformanceData?.dimensions?.strategy?.score || 3), 10) * 4},50
                               `}
                               fill="none"
                               stroke="#000000"
@@ -238,14 +232,14 @@ export default function CourtIQStatsOverview({ userId, enhancedPerformanceData: 
                             />
                           </>
                         ) : (
-                          // Default view - just show the aggregate ratings
+                          // Default view - just show the aggregate ratings with fallbacks for development
                           <polygon 
                             points={`
-                              50,${50 - normalizeValue(courtIQStats?.dimensions?.power || (enhancedPerformanceData?.dimensions?.power?.score ? enhancedPerformanceData.dimensions.power.score * 100 : 0) || 0) * 0.4} 
-                              ${50 + normalizeValue(courtIQStats?.dimensions?.control || (enhancedPerformanceData?.dimensions?.focus?.score ? enhancedPerformanceData.dimensions.focus.score * 100 : 0) || 0) * 0.4},50 
-                              ${50 + normalizeValue(courtIQStats?.dimensions?.consistency || (enhancedPerformanceData?.dimensions?.consistency?.score ? enhancedPerformanceData.dimensions.consistency.score * 100 : 0) || 0) * 0.2},${50 + normalizeValue(courtIQStats?.dimensions?.consistency || (enhancedPerformanceData?.dimensions?.consistency?.score ? enhancedPerformanceData.dimensions.consistency.score * 100 : 0) || 0) * 0.2} 
-                              ${50 - normalizeValue(courtIQStats?.dimensions?.mobility || (enhancedPerformanceData?.dimensions?.speed?.score ? enhancedPerformanceData.dimensions.speed.score * 100 : 0) || 0) * 0.2},${50 + normalizeValue(courtIQStats?.dimensions?.mobility || (enhancedPerformanceData?.dimensions?.speed?.score ? enhancedPerformanceData.dimensions.speed.score * 100 : 0) || 0) * 0.2} 
-                              ${50 - normalizeValue(courtIQStats?.dimensions?.strategy || (enhancedPerformanceData?.dimensions?.strategy?.score ? enhancedPerformanceData.dimensions.strategy.score * 100 : 0) || 0) * 0.4},50
+                              50,${50 - normalizeValue(courtIQStats?.dimensions?.power || (enhancedPerformanceData?.dimensions?.power?.score ? enhancedPerformanceData?.dimensions?.power?.score * 100 : 40) || 40) * 0.4} 
+                              ${50 + normalizeValue(courtIQStats?.dimensions?.control || (enhancedPerformanceData?.dimensions?.focus?.score ? enhancedPerformanceData?.dimensions?.focus?.score * 100 : 30) || 30) * 0.4},50 
+                              ${50 + normalizeValue(courtIQStats?.dimensions?.consistency || (enhancedPerformanceData?.dimensions?.consistency?.score ? enhancedPerformanceData?.dimensions?.consistency?.score * 100 : 35) || 35) * 0.2},${50 + normalizeValue(courtIQStats?.dimensions?.consistency || (enhancedPerformanceData?.dimensions?.consistency?.score ? enhancedPerformanceData?.dimensions?.consistency?.score * 100 : 35) || 35) * 0.2} 
+                              ${50 - normalizeValue(courtIQStats?.dimensions?.mobility || (enhancedPerformanceData?.dimensions?.speed?.score ? enhancedPerformanceData?.dimensions?.speed?.score * 100 : 35) || 35) * 0.2},${50 + normalizeValue(courtIQStats?.dimensions?.mobility || (enhancedPerformanceData?.dimensions?.speed?.score ? enhancedPerformanceData?.dimensions?.speed?.score * 100 : 35) || 35) * 0.2} 
+                              ${50 - normalizeValue(courtIQStats?.dimensions?.strategy || (enhancedPerformanceData?.dimensions?.strategy?.score ? enhancedPerformanceData?.dimensions?.strategy?.score * 100 : 30) || 30) * 0.4},50
                             `}
                             fill="rgba(33, 150, 243, 0.2)"
                             stroke="#2196F3"
