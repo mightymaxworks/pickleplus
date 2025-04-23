@@ -30,6 +30,18 @@ import {
   FormMessage
 } from "@/components/ui/form";
 import { 
+  User, 
+  Users, 
+  Calendar as CalendarDays, 
+  Circle as CircleIcon, 
+  Wrench as Tool, 
+  FileText, 
+  Save, 
+  CheckCircle,
+  Loader2,
+  ArrowRight
+} from "lucide-react";
+import { 
   RadioGroup, 
   RadioGroupItem 
 } from "@/components/ui/radio-group";
@@ -42,7 +54,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, User, Users, ArrowRight, Save } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -1219,32 +1230,86 @@ export function PostMatchAssessment({
                 <ScrollArea className="h-[400px] pr-4">
                   <div className="space-y-6">
                     <div>
-                      <h3 className="text-base font-semibold mb-2">Self-Assessment</h3>
-                      <div className="space-y-2">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="text-sm text-gray-500">Technical Skills:</div>
-                          <div className="text-sm font-medium">
-                            {ratingOptions.find(o => o.value === form.getValues().technicalSelfRating)?.label || "Not rated"}
+                      <h3 className="text-base font-semibold mb-2 flex items-center">
+                        <User className="h-5 w-5 mr-2 text-primary" />
+                        Self-Assessment
+                      </h3>
+                      <div className="space-y-4">
+                        {/* Visual rating bars */}
+                        <div className="grid grid-cols-1 gap-3">
+                          <div>
+                            <div className="flex justify-between mb-1">
+                              <div className="text-sm font-medium">Technical Skills</div>
+                              <div className="text-sm font-medium">
+                                {ratingOptions.find(o => o.value === form.getValues().technicalSelfRating)?.label || "Not rated"}
+                              </div>
+                            </div>
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-primary rounded-full" 
+                                style={{ width: `${(parseInt(form.getValues().technicalSelfRating || "0") / 5) * 100}%` }}
+                              ></div>
+                            </div>
                           </div>
                           
-                          <div className="text-sm text-gray-500">Tactical Awareness:</div>
-                          <div className="text-sm font-medium">
-                            {ratingOptions.find(o => o.value === form.getValues().tacticalSelfRating)?.label || "Not rated"}
+                          <div>
+                            <div className="flex justify-between mb-1">
+                              <div className="text-sm font-medium">Tactical Awareness</div>
+                              <div className="text-sm font-medium">
+                                {ratingOptions.find(o => o.value === form.getValues().tacticalSelfRating)?.label || "Not rated"}
+                              </div>
+                            </div>
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-primary rounded-full" 
+                                style={{ width: `${(parseInt(form.getValues().tacticalSelfRating || "0") / 5) * 100}%` }}
+                              ></div>
+                            </div>
                           </div>
                           
-                          <div className="text-sm text-gray-500">Physical Fitness:</div>
-                          <div className="text-sm font-medium">
-                            {ratingOptions.find(o => o.value === form.getValues().physicalSelfRating)?.label || "Not rated"}
+                          <div>
+                            <div className="flex justify-between mb-1">
+                              <div className="text-sm font-medium">Physical Fitness</div>
+                              <div className="text-sm font-medium">
+                                {ratingOptions.find(o => o.value === form.getValues().physicalSelfRating)?.label || "Not rated"}
+                              </div>
+                            </div>
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-primary rounded-full" 
+                                style={{ width: `${(parseInt(form.getValues().physicalSelfRating || "0") / 5) * 100}%` }}
+                              ></div>
+                            </div>
                           </div>
                           
-                          <div className="text-sm text-gray-500">Mental Toughness:</div>
-                          <div className="text-sm font-medium">
-                            {ratingOptions.find(o => o.value === form.getValues().mentalSelfRating)?.label || "Not rated"}
+                          <div>
+                            <div className="flex justify-between mb-1">
+                              <div className="text-sm font-medium">Mental Toughness</div>
+                              <div className="text-sm font-medium">
+                                {ratingOptions.find(o => o.value === form.getValues().mentalSelfRating)?.label || "Not rated"}
+                              </div>
+                            </div>
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-primary rounded-full" 
+                                style={{ width: `${(parseInt(form.getValues().mentalSelfRating || "0") / 5) * 100}%` }}
+                              ></div>
+                            </div>
                           </div>
                           
-                          <div className="text-sm text-gray-500">Consistency:</div>
-                          <div className="text-sm font-medium">
-                            {ratingOptions.find(o => o.value === form.getValues().consistencySelfRating)?.label || "Not rated"}
+                          <div>
+                            <div className="flex justify-between mb-1">
+                              <div className="text-sm font-medium">Consistency</div>
+                              <div className="text-sm font-medium">
+                                {ratingOptions.find(o => o.value === form.getValues().consistencySelfRating)?.label || "Not rated"}
+                              </div>
+                            </div>
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-primary rounded-full" 
+                                style={{ width: `${(parseInt(form.getValues().consistencySelfRating || "0") / 5) * 100}%` }}
+                              ></div>
+                            </div>
                           </div>
                         </div>
                         
@@ -1262,59 +1327,104 @@ export function PostMatchAssessment({
                     <Separator />
                     
                     <div>
-                      <h3 className="text-base font-semibold mb-2">Opponent Assessment</h3>
+                      <h3 className="text-base font-semibold mb-2 flex items-center">
+                        <Users className="h-5 w-5 mr-2 text-primary" />
+                        Opponent Assessment
+                      </h3>
                       {!form.getValues().technicalOpponentRating && 
                        !form.getValues().tacticalOpponentRating && 
                        !form.getValues().physicalOpponentRating && 
                        !form.getValues().mentalOpponentRating && 
                        !form.getValues().consistencyOpponentRating ? (
-                        <p className="text-sm text-gray-500 italic">No opponent assessment provided</p>
+                        <div className="rounded-md bg-muted/50 p-4 flex items-center justify-center">
+                          <p className="text-sm text-muted-foreground">No opponent assessment provided</p>
+                        </div>
                       ) : (
-                        <div className="space-y-2">
-                          <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-1 gap-3">
                             {form.getValues().technicalOpponentRating && (
-                              <>
-                                <div className="text-sm text-gray-500">Technical Skills:</div>
-                                <div className="text-sm font-medium">
-                                  {ratingOptions.find(o => o.value === form.getValues().technicalOpponentRating)?.label || "Not rated"}
+                              <div>
+                                <div className="flex justify-between mb-1">
+                                  <div className="text-sm font-medium">Technical Skills</div>
+                                  <div className="text-sm font-medium">
+                                    {ratingOptions.find(o => o.value === form.getValues().technicalOpponentRating)?.label || "Not rated"}
+                                  </div>
                                 </div>
-                              </>
+                                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                                  <div 
+                                    className="h-full bg-blue-500 rounded-full" 
+                                    style={{ width: `${(parseInt(form.getValues().technicalOpponentRating || "0") / 5) * 100}%` }}
+                                  ></div>
+                                </div>
+                              </div>
                             )}
                             
                             {form.getValues().tacticalOpponentRating && (
-                              <>
-                                <div className="text-sm text-gray-500">Tactical Awareness:</div>
-                                <div className="text-sm font-medium">
-                                  {ratingOptions.find(o => o.value === form.getValues().tacticalOpponentRating)?.label || "Not rated"}
+                              <div>
+                                <div className="flex justify-between mb-1">
+                                  <div className="text-sm font-medium">Tactical Awareness</div>
+                                  <div className="text-sm font-medium">
+                                    {ratingOptions.find(o => o.value === form.getValues().tacticalOpponentRating)?.label || "Not rated"}
+                                  </div>
                                 </div>
-                              </>
+                                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                                  <div 
+                                    className="h-full bg-blue-500 rounded-full" 
+                                    style={{ width: `${(parseInt(form.getValues().tacticalOpponentRating || "0") / 5) * 100}%` }}
+                                  ></div>
+                                </div>
+                              </div>
                             )}
                             
                             {form.getValues().physicalOpponentRating && (
-                              <>
-                                <div className="text-sm text-gray-500">Physical Fitness:</div>
-                                <div className="text-sm font-medium">
-                                  {ratingOptions.find(o => o.value === form.getValues().physicalOpponentRating)?.label || "Not rated"}
+                              <div>
+                                <div className="flex justify-between mb-1">
+                                  <div className="text-sm font-medium">Physical Fitness</div>
+                                  <div className="text-sm font-medium">
+                                    {ratingOptions.find(o => o.value === form.getValues().physicalOpponentRating)?.label || "Not rated"}
+                                  </div>
                                 </div>
-                              </>
+                                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                                  <div 
+                                    className="h-full bg-blue-500 rounded-full" 
+                                    style={{ width: `${(parseInt(form.getValues().physicalOpponentRating || "0") / 5) * 100}%` }}
+                                  ></div>
+                                </div>
+                              </div>
                             )}
                             
                             {form.getValues().mentalOpponentRating && (
-                              <>
-                                <div className="text-sm text-gray-500">Mental Toughness:</div>
-                                <div className="text-sm font-medium">
-                                  {ratingOptions.find(o => o.value === form.getValues().mentalOpponentRating)?.label || "Not rated"}
+                              <div>
+                                <div className="flex justify-between mb-1">
+                                  <div className="text-sm font-medium">Mental Toughness</div>
+                                  <div className="text-sm font-medium">
+                                    {ratingOptions.find(o => o.value === form.getValues().mentalOpponentRating)?.label || "Not rated"}
+                                  </div>
                                 </div>
-                              </>
+                                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                                  <div 
+                                    className="h-full bg-blue-500 rounded-full" 
+                                    style={{ width: `${(parseInt(form.getValues().mentalOpponentRating || "0") / 5) * 100}%` }}
+                                  ></div>
+                                </div>
+                              </div>
                             )}
                             
                             {form.getValues().consistencyOpponentRating && (
-                              <>
-                                <div className="text-sm text-gray-500">Consistency:</div>
-                                <div className="text-sm font-medium">
-                                  {ratingOptions.find(o => o.value === form.getValues().consistencyOpponentRating)?.label || "Not rated"}
+                              <div>
+                                <div className="flex justify-between mb-1">
+                                  <div className="text-sm font-medium">Consistency</div>
+                                  <div className="text-sm font-medium">
+                                    {ratingOptions.find(o => o.value === form.getValues().consistencyOpponentRating)?.label || "Not rated"}
+                                  </div>
                                 </div>
-                              </>
+                                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                                  <div 
+                                    className="h-full bg-blue-500 rounded-full" 
+                                    style={{ width: `${(parseInt(form.getValues().consistencyOpponentRating || "0") / 5) * 100}%` }}
+                                  ></div>
+                                </div>
+                              </div>
                             )}
                           </div>
                           
@@ -1333,57 +1443,77 @@ export function PostMatchAssessment({
                     <Separator />
                     
                     <div>
-                      <h3 className="text-base font-semibold mb-2">Match Context</h3>
+                      <h3 className="text-base font-semibold mb-2 flex items-center">
+                        <CalendarDays className="h-5 w-5 mr-2 text-primary" />
+                        Match Context
+                      </h3>
                       {!form.getValues().courtSurface && 
                        !form.getValues().weatherConditions && 
                        !form.getValues().physicalCondition && 
                        !form.getValues().equipmentIssues && 
                        !form.getValues().pressureLevel ? (
-                        <p className="text-sm text-gray-500 italic">No match context provided</p>
+                        <div className="rounded-md bg-muted/50 p-4 flex items-center justify-center">
+                          <p className="text-sm text-muted-foreground">No match context provided</p>
+                        </div>
                       ) : (
-                        <div className="space-y-2">
-                          <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {form.getValues().courtSurface && (
-                              <>
-                                <div className="text-sm text-gray-500">Court Surface:</div>
-                                <div className="text-sm font-medium">
-                                  {courtSurfaceOptions.find(o => o.value === form.getValues().courtSurface)?.label || "Not specified"}
+                              <div className="flex items-center p-3 rounded-md bg-muted/40">
+                                <CircleIcon className="h-2 w-2 mr-2 text-green-500" />
+                                <div className="flex flex-col">
+                                  <span className="text-xs text-muted-foreground">Court Surface</span>
+                                  <span className="text-sm font-medium">
+                                    {courtSurfaceOptions.find(o => o.value === form.getValues().courtSurface)?.label || "Not specified"}
+                                  </span>
                                 </div>
-                              </>
+                              </div>
                             )}
                             
                             {form.getValues().weatherConditions && (
-                              <>
-                                <div className="text-sm text-gray-500">Weather Conditions:</div>
-                                <div className="text-sm font-medium">
-                                  {weatherConditionOptions.find(o => o.value === form.getValues().weatherConditions)?.label || "Not specified"}
+                              <div className="flex items-center p-3 rounded-md bg-muted/40">
+                                <CircleIcon className="h-2 w-2 mr-2 text-blue-500" />
+                                <div className="flex flex-col">
+                                  <span className="text-xs text-muted-foreground">Weather Conditions</span>
+                                  <span className="text-sm font-medium">
+                                    {weatherConditionOptions.find(o => o.value === form.getValues().weatherConditions)?.label || "Not specified"}
+                                  </span>
                                 </div>
-                              </>
+                              </div>
                             )}
                             
                             {form.getValues().physicalCondition && (
-                              <>
-                                <div className="text-sm text-gray-500">Physical Condition:</div>
-                                <div className="text-sm font-medium">
-                                  {physicalConditionOptions.find(o => o.value === form.getValues().physicalCondition)?.label || "Not specified"}
+                              <div className="flex items-center p-3 rounded-md bg-muted/40">
+                                <CircleIcon className="h-2 w-2 mr-2 text-orange-500" />
+                                <div className="flex flex-col">
+                                  <span className="text-xs text-muted-foreground">Physical Condition</span>
+                                  <span className="text-sm font-medium">
+                                    {physicalConditionOptions.find(o => o.value === form.getValues().physicalCondition)?.label || "Not specified"}
+                                  </span>
                                 </div>
-                              </>
+                              </div>
                             )}
                             
                             {form.getValues().pressureLevel && (
-                              <>
-                                <div className="text-sm text-gray-500">Pressure Level:</div>
-                                <div className="text-sm font-medium">
-                                  {pressureLevelOptions.find(o => o.value === form.getValues().pressureLevel)?.label || "Not specified"}
+                              <div className="flex items-center p-3 rounded-md bg-muted/40">
+                                <CircleIcon className="h-2 w-2 mr-2 text-purple-500" />
+                                <div className="flex flex-col">
+                                  <span className="text-xs text-muted-foreground">Pressure Level</span>
+                                  <span className="text-sm font-medium">
+                                    {pressureLevelOptions.find(o => o.value === form.getValues().pressureLevel)?.label || "Not specified"}
+                                  </span>
                                 </div>
-                              </>
+                              </div>
                             )}
                           </div>
                           
                           {form.getValues().equipmentIssues && (
                             <div className="mt-2">
-                              <div className="text-sm text-gray-500">Equipment Issues:</div>
-                              <div className="text-sm mt-1 border rounded p-2">
+                              <div className="flex items-center mb-1">
+                                <Tool className="h-4 w-4 mr-1 text-muted-foreground" />
+                                <span className="text-sm text-muted-foreground">Equipment Issues</span>
+                              </div>
+                              <div className="text-sm mt-1 border rounded-md p-3 bg-muted/30">
                                 {form.getValues().equipmentIssues}
                               </div>
                             </div>
@@ -1391,8 +1521,11 @@ export function PostMatchAssessment({
                           
                           {form.getValues().contextNotes && (
                             <div className="mt-2">
-                              <div className="text-sm text-gray-500">Additional Context:</div>
-                              <div className="text-sm mt-1 border rounded p-2">
+                              <div className="flex items-center mb-1">
+                                <FileText className="h-4 w-4 mr-1 text-muted-foreground" />
+                                <span className="text-sm text-muted-foreground">Additional Context</span>
+                              </div>
+                              <div className="text-sm mt-1 border rounded-md p-3 bg-muted/30">
                                 {form.getValues().contextNotes}
                               </div>
                             </div>
@@ -1403,27 +1536,52 @@ export function PostMatchAssessment({
                   </div>
                 </ScrollArea>
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={prevStep}
-                >
-                  Back
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    "Submit Assessment"
-                  )}
-                </Button>
+              <CardFooter className="flex flex-col space-y-4">
+                {hasIncompleteAssessment && lastSaved && (
+                  <Alert className="bg-muted/50">
+                    <AlertDescription className="flex items-center text-xs text-muted-foreground">
+                      <Save className="h-3 w-3 mr-2" />
+                      Auto-saved at {lastSaved}
+                    </AlertDescription>
+                  </Alert>
+                )}
+                <div className="flex justify-between w-full">
+                  <div className="flex space-x-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={prevStep}
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={saveAssessmentProgress}
+                      title="Save progress"
+                      disabled={isSubmitting}
+                    >
+                      <Save className="h-4 w-4 mr-2" /> Save Draft
+                    </Button>
+                  </div>
+                  <Button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="mr-2 h-4 w-4" />
+                        Submit Assessment
+                      </>
+                    )}
+                  </Button>
+                </div>
               </CardFooter>
             </Card>
           </TabsContent>
