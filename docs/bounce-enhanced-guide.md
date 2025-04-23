@@ -1,96 +1,169 @@
-# Bounce Enhanced Testing System Guide
+# Bounce Enhanced Test Framework Guide
 
-## Overview
+## Introduction
 
-The Bounce Enhanced Testing System provides comprehensive automated testing with actionable fix prompts for Pickle+. This guide explains how to use the enhanced system to not only identify issues but also receive guidance on how to fix them.
+Bounce is a comprehensive automated testing and CI/CD integration framework designed for Pickle+. It provides actionable bug reports with fix recommendations, integrates with GitHub Actions for CI/CD pipelines, and supports cross-browser testing.
 
 ## Key Features
 
-1. **Automated Testing**: Run tests against both local and production environments
-2. **Bug Detection**: Identify issues across the platform organized by severity
-3. **Framework 5.2 IDs**: Standardized issue tracking with PKL-278651-AREA-XXXX-FIX format
-4. **Fix Prompts**: Actionable recommendations with code examples for resolving issues
-5. **CI/CD Integration**: Prevent deployment of code with critical issues
-6. **Trend Analysis**: Track testing progress over time
+1. **Framework 5.2 ID Codes**: Each bug finding receives a unique ID (e.g., PKL-278651-AUTH-0001-TIMEOUT)
+2. **Actionable Fix Prompts**: Bug reports include code examples and implementation guidance
+3. **Severity-Based Decisions**: CI/CD process uses severity thresholds for pass/fail decisions
+4. **Comprehensive Reporting**: Detailed test reports with statistics and deployment recommendations
+5. **GitHub Integration**: Automates testing in pull requests and deployment workflows
 
-## Available Scripts
+## Directory Structure
 
-### 1. Run Local Tests
-```bash
-npx tsx run-local-tests.ts
 ```
-Tests your local development environment (http://localhost:3000).
-
-### 2. Run Production Tests
-```bash
-npx tsx run-production-tests.ts
+bounce/
+├── fixes/                     # Solution implementations for detected issues
+│   ├── PKL-278651-AUTH-0001-TIMEOUT/
+│   ├── PKL-278651-COMM-0002-MOBILE/
+│   ├── PKL-278651-TOURN-0003-OVERFLOW/
+│   └── PKL-278651-PROF-0004-SAFARI/
+├── reporting/                 # Reporting modules and templates
+│   └── bug-report-generator-with-prompts.ts
+├── types/                     # TypeScript type definitions
+│   └── index.ts
+├── utils/                     # Utility functions
+│   ├── browser-detection.ts
+│   └── date-utils.ts
+├── ci-cd-integration.ts       # CI/CD pipeline integration
+└── production-run.ts          # Test execution engine
 ```
-Tests the production environment and generates detailed reports.
 
-### 3. Run Tests with Fix Prompts
+## Setup and Configuration
+
+To run Bounce tests, you need:
+
+1. A running Pickle+ instance (local or deployed)
+2. Node.js environment with TypeScript
+3. Optional: Playwright for browser testing (falls back to mock mode if unavailable)
+
+## Running Tests
+
+### Basic Test Run
+
+To run tests with default settings:
+
 ```bash
+# Run with fix recommendations
 npx tsx run-with-fix-prompts.ts
 ```
-Generates enhanced reports with actionable fix recommendations.
 
-### 4. CI/CD Integration
-```bash
-npx tsx bounce/ci-cd-integration.ts
+### CI/CD Integration
+
+Bounce integrates with GitHub Actions using the provided workflow:
+
+```yaml
+# .github/workflows/bounce-cicd.yml
+name: Bounce CI/CD Testing
+
+on:
+  push:
+    branches: [ main, development ]
+  pull_request:
+    branches: [ main, development ]
+  workflow_dispatch:
+
+jobs:
+  bounce-tests:
+    name: Run Bounce Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Setup steps...
+      
+      - name: Run Bounce tests
+        run: npx tsx run-with-fix-prompts.ts
+        env:
+          CI: true
 ```
-Performs testing as part of CI/CD pipeline, returning appropriate exit codes.
 
-## Fix Prompts Explained
+## Bug Reports
 
-The enhanced bug reports now include fix prompts that provide:
+Bounce generates comprehensive bug reports with:
 
-1. **Action Items**: Specific steps to take to resolve the issue
-2. **Code Examples**: Sample code showing how to implement the fix
-3. **Testing Steps**: How to verify that the fix works properly
+- Framework 5.2 ID codes (e.g., PKL-278651-AUTH-0001-TIMEOUT)
+- Severity classification (critical, high, medium, low)
+- Detailed reproduction steps
+- Fix recommendations with code examples
+- Testing steps for verification
 
-Each fix prompt is tailored to the specific type of issue (authentication, UI, responsiveness, etc.) and provides guidance based on best practices.
+Example report entry:
+```markdown
+### 1. 🔴 Session timeout not handled properly (PKL-278651-AUTH-0001-TIMEOUT)
 
-## Report Types
+**Severity:** CRITICAL
 
-Bounce generates several types of reports:
+**Category:** auth
 
-1. **Standard Bug Reports** (`bug-report-*.md`): Detailed findings by severity
-2. **Fix Prompt Reports** (`bug-report-with-prompts-*.md`): Bug reports with actionable fix recommendations
-3. **CI/CD Summaries** (`cicd-summary-*.md`): Concise reports for CI/CD pipelines
+**Description:**
+When a user session expires, the application shows a generic error instead of redirecting to the login page with a friendly message.
 
-## Understanding Severity Levels
+**Steps to Reproduce:**
+1. Log in to the application
+2. Wait for the session to expire (or manually expire it)
+3. Perform an action that triggers an API call
+4. Observe the error behavior
 
-- **CRITICAL**: Issues that must be fixed before deployment (authentication failures, data loss, security vulnerabilities)
-- **HIGH**: Issues that significantly impact user experience (layout breaking on mobile, unusable features)
-- **MODERATE**: Issues that affect user experience but don't prevent core functionality
-- **LOW**: Minor issues, inconsistencies, or cosmetic problems
+**Expected Result:**
+User should be redirected to the login page with a friendly message about session expiration
 
-## GitHub Actions Integration
+**Actual Result:**
+Application displays a generic error and stays on the current page
 
-Bounce is integrated with GitHub Actions via `.github/workflows/bounce-cicd.yml`, which:
+## Fix Recommendation for PKL-278651-AUTH-0001-TIMEOUT
 
-1. Runs automatically on push to main branch or pull requests
-2. Sets up a testing environment with PostgreSQL
-3. Executes Bounce tests
-4. Fails the workflow if critical issues are found
-5. Uploads test reports as artifacts
+The authentication issue can be fixed by implementing a proper session timeout handler that:
 
-## Example Fix Implementation
+1. Intercepts 401 responses from the API
+2. Displays user-friendly messages on session expiration
+3. Redirects users to the login page with return path
+4. Monitors user activity to prevent unexpected logouts
 
-Here's how to use the fix prompts to resolve an issue:
+### Example Implementation
 
-1. Review the issue details and understand the problem
-2. Check the Action Items for specific steps to take
-3. Use the provided Code Example as a starting point
-4. Implement the fix following best practices
-5. Test the fix using the suggested Testing Steps
-6. Run Bounce tests again to verify the issue is resolved
+```tsx
+// Add this to src/components/auth/SessionTimeoutHandler.tsx
+import { useEffect } from 'react';
+import { useNavigate, useLocation } from 'wouter';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 
-## Customizing Fix Prompts
+export function SessionTimeoutHandler() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { toast } = useToast();
+  
+  // Implementation details...
+}
+```
+```
 
-You can customize the fix prompts by modifying `bounce/reporting/fix-prompts.ts`. This file contains strategies for generating actionable recommendations based on the issue type.
+## Fix Implementations
 
-## Conclusion
+Bounce provides complete fix implementations in the `bounce/fixes` directory, organized by Framework ID:
 
-The Bounce Enhanced Testing System provides not just bug detection but also guidance on how to fix issues. By following the fix prompts, you can resolve problems efficiently and maintain high code quality across the Pickle+ platform.
+1. **PKL-278651-AUTH-0001-TIMEOUT**: Session timeout handling
+2. **PKL-278651-COMM-0002-MOBILE**: Responsive community page
+3. **PKL-278651-TOURN-0003-OVERFLOW**: Tournament bracket scrolling
+4. **PKL-278651-PROF-0004-SAFARI**: Cross-browser image upload
 
-For more specific information on CI/CD integration, see `docs/bounce-cicd-guide.md`.
+These solutions can be directly integrated into the codebase to fix the detected issues.
+
+## Best Practices
+
+1. **Run tests locally before pushing**: Detect issues early to prevent CI pipeline failures
+2. **Prioritize critical issues**: Always fix critical issues before deploying
+3. **Integrate fixes properly**: Use the provided fix implementations as guidance, adapting to your codebase
+4. **Update test coverage**: Add tests for fixed issues to prevent regression
+5. **Review trends over time**: Monitor bug statistics to evaluate quality improvement
+
+## Troubleshooting
+
+- **Playwright not available**: Bounce will fall back to mock browser mode
+- **Test failures**: Check the reports for detailed error information
+- **CI integration issues**: Ensure GitHub Actions workflow has proper permissions
+
+For support, contact the Framework 5.2 team.

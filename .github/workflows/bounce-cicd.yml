@@ -1,42 +1,32 @@
-name: Bounce Automated Testing
+# PKL-278651-BOUNCE-0002-CICD
+# Bounce Testing GitHub Actions Workflow
+#
+# This workflow runs the Bounce testing suite for Pickle+
+# and reports test results with deployment recommendations.
+#
+# @framework Framework5.2
+# @version 1.0.0
+# @lastModified 2025-04-23
+
+name: Bounce CI/CD Testing
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, development ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main, development ]
   workflow_dispatch:
-    inputs:
-      target_url:
-        description: 'Target URL to test'
-        required: false
-        default: 'https://pickle-plus.replit.app'
 
 jobs:
-  bounce-test:
+  bounce-tests:
     name: Run Bounce Tests
     runs-on: ubuntu-latest
     
-    services:
-      postgres:
-        image: postgres:latest
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_USER: postgres
-          POSTGRES_DB: bounce_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
       
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
@@ -48,30 +38,34 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chrome
       
-      - name: Set environment variables
-        run: |
-          echo "DATABASE_URL=postgres://postgres:postgres@localhost:5432/bounce_test" >> $GITHUB_ENV
-          echo "NODE_ENV=test" >> $GITHUB_ENV
+      - name: Start server in background
+        run: npm run dev &
+        env:
+          NODE_ENV: test
       
-      - name: Create Bounce directories
-        run: |
-          mkdir -p bounce/data
-          mkdir -p evidence
-          mkdir -p reports
+      - name: Wait for server to start
+        run: npx wait-on http://localhost:3000 -t 60000
       
-      - name: Run Bounce CI/CD tests
-        run: npx tsx bounce/ci-cd-integration.ts ${{ github.event.inputs.target_url || 'https://pickle-plus.replit.app' }}
+      - name: Run Bounce tests
+        run: npx tsx run-with-fix-prompts.ts
+        env:
+          CI: true
       
       - name: Upload test reports
         uses: actions/upload-artifact@v3
         with:
           name: bounce-reports
           path: reports/
-          retention-days: 14
+          if-no-files-found: error
       
-      - name: Upload test evidence
-        uses: actions/upload-artifact@v3
-        with:
-          name: bounce-evidence
-          path: evidence/
-          retention-days: 7
+      - name: Check for critical issues
+        id: check-issues
+        run: |
+          if grep -q "BUILD STATUS: FAIL" reports/bounce-summary-*.txt; then
+            echo "::set-output name=has_critical::true"
+            echo "⛔ Critical issues detected. See test reports for details."
+            exit 1
+          else
+            echo "::set-output name=has_critical::false"
+            echo "✅ No critical issues detected."
+          fi
