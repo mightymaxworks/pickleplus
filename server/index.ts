@@ -14,7 +14,7 @@ app.use(express.urlencoded({ extended: false }));
 
 // Configure CORS to allow credentials
 app.use(cors({
-  origin: true, // Allow the request origin (will reflect the request origin)
+  origin: ['http://localhost:5000', 'https://localhost:5000', '*'], // Allow localhost 
   credentials: true, // Allow cookies to be sent with the request
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'Set-Cookie', 'X-Requested-With']
@@ -22,6 +22,10 @@ app.use(cors({
 
 // Add headers for better cookie handling
 app.use((req, res, next) => {
+  // PKL-278651-AUTH-0017-CORS - Enhanced CORS settings for authentication
+  // Add wildcard for development
+  const origin = req.headers.origin || '*';
+  res.header('Access-Control-Allow-Origin', origin);
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie, Set-Cookie');
   next();

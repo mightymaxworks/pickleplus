@@ -63,35 +63,9 @@ export function isAuthenticated(req: Request, res: Response, next: any) {
     return next();
   }
   
-  // PKL-278651-AUTH-0016-DEV - Development-only test user mode
-  if (process.env.NODE_ENV !== 'production') {
-    // Log that we're using development mode authentication
-    console.log(`[DEV MODE] Authentication bypass for ${req.path} - Using test user`);
-    
-    // Create a mock user request for development testing
-    req.user = {
-      id: 1,
-      username: 'testdev',
-      email: 'dev@pickle.plus',
-      isAdmin: true,
-      passportId: '1000MM7',
-      firstName: 'Mighty',
-      lastName: 'Max',
-      displayName: 'Mighty Max',
-      dateOfBirth: null,
-      avatarUrl: null,
-      avatarInitials: 'MM',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      verifiedEmail: true,
-      xp: 1000,
-      level: 10
-    };
-    return next();
-  }
-  
   // Log authentication failure for debugging
   console.log(`Authentication failed for ${req.path} - Session ID: ${req.sessionID}`);
+  console.log('Cookies available:', req.headers.cookie);
   
   // Return standard 401 Unauthorized response
   res.status(401).json({ message: "Not authenticated" });
@@ -136,16 +110,17 @@ export function setupAuth(app: Express) {
   // Create session configuration
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "pickle-plus-secret-key",
-    resave: false,
-    saveUninitialized: false,
+    resave: true, // Changed to true to ensure session is saved on each request
+    saveUninitialized: true, // Changed to true to create session for all requests
     store: storage.sessionStore,
     cookie: {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       httpOnly: true,
       secure: false, // Set to false for development to work in Replit
-      sameSite: "lax"
+      sameSite: "lax",
+      path: '/'
     },
-    name: "connect.sid" // Use default cookie name
+    name: "pickle_session_id" // Custom cookie name to avoid conflicts
   };
 
   // Configure session middleware
@@ -508,6 +483,30 @@ export function setupAuth(app: Express) {
     // Ensure CORS headers for credentials
     res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
     res.header('Access-Control-Allow-Credentials', 'true');
+    
+    // PKL-278651-AUTH-0017-DEBUG - Development-only test user
+    // For development, allow a test user to be returned automatically
+    if (process.env.NODE_ENV !== 'production' && !req.isAuthenticated()) {
+      console.log('[DEV MODE] Returning development test user');
+      return res.json({
+        id: 1,
+        username: 'testdev',
+        email: 'dev@pickle.plus',
+        isAdmin: true,
+        passportId: '1000MM7',
+        firstName: 'Mighty',
+        lastName: 'Max',
+        displayName: 'Mighty Max',
+        dateOfBirth: null,
+        avatarUrl: null,
+        avatarInitials: 'MM',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        verifiedEmail: true,
+        xp: 1000,
+        level: 10
+      });
+    }
     
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Not authenticated" });
