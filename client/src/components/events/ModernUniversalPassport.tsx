@@ -86,7 +86,7 @@ export function ModernUniversalPassport({
     queryKey: ['/api/user/passport/code'],
     queryFn: getUserPassportCode,
   });
-  
+
   // Extract passport code and founding member status
   const passportCode = passportData?.code || '';
   const isFoundingMember = passportData?.isFoundingMember || false;
@@ -106,26 +106,26 @@ export function ModernUniversalPassport({
       setHighlightCode(true);
       setTimeout(() => setHighlightCode(false), 1500);
     }, 7000);
-    
+
     return () => clearInterval(interval);
   }, []);
 
   // Handle quick registration
   const handleQuickRegistration = async () => {
     if (!upcomingEvent?.id) return;
-    
+
     setIsRegistering(true);
     try {
       await registerForEvent(upcomingEvent.id, '');
-      
+
       toast({
         title: "Success!",
         description: `You're registered for ${upcomingEvent.name}`,
         variant: "success"
       });
-      
+
       setShowQuickRegDialog(false);
-      
+
       // Notify parent component about successful registration
       if (onRegistrationComplete) {
         onRegistrationComplete(upcomingEvent.id);
@@ -144,14 +144,14 @@ export function ModernUniversalPassport({
   // Handle sharing passport
   const sharePassport = async () => {
     if (!passportCode) return;
-    
+
     try {
       if (navigator.share) {
         await navigator.share({
           title: 'My PicklePass™ Code',
           text: `My PicklePass™ Code: ${passportCode}`,
         });
-        
+
         toast({
           title: "Passport Shared",
           description: "Your passport has been shared successfully.",
@@ -177,7 +177,7 @@ export function ModernUniversalPassport({
             description: 'Your passport code has been copied to clipboard.',
             variant: 'success',
           });
-          
+
           setTimeout(() => setCopiedCode(false), 2000);
         })
         .catch(() => {
@@ -208,18 +208,18 @@ export function ModernUniversalPassport({
           <div className="absolute top-2 right-2">
             <Skeleton className="h-6 w-20 rounded-full" />
           </div>
-          
+
           {/* Skeleton for QR code */}
           <div className="relative">
             <Skeleton className="h-[250px] w-[250px] rounded-xl" />
           </div>
-          
+
           {/* Skeleton for passport code */}
           <div className="mt-8 flex flex-col items-center w-full">
             <Skeleton className="h-10 w-3/4 rounded-full" />
             <Skeleton className="h-7 w-2/3 rounded-full mt-3" />
           </div>
-          
+
           {/* Skeleton for events badge */}
           <div className="mt-8 w-full flex justify-center">
             <Skeleton className="h-8 w-40 rounded-full" />
@@ -361,7 +361,7 @@ export function ModernUniversalPassport({
                 </p>
               </div>
             </div>
-            
+
             <div className="flex gap-3 items-start p-3 bg-muted/20 rounded-lg">
               <div className="bg-primary/10 rounded-full p-2 mt-0.5">
                 <TicketIcon className="h-5 w-5 text-primary" />
@@ -373,7 +373,7 @@ export function ModernUniversalPassport({
                 </p>
               </div>
             </div>
-            
+
             <div className="flex gap-3 items-start p-3 bg-muted/20 rounded-lg">
               <div className="bg-primary/10 rounded-full p-2 mt-0.5">
                 <ShareIcon className="h-5 w-5 text-primary" />
@@ -414,7 +414,7 @@ export function ModernUniversalPassport({
               : "bg-gradient-to-r from-primary via-primary/70 to-primary/40"
             )} 
           />
-          
+
           <CardHeader className="pb-2 pt-6 px-6">
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -444,7 +444,7 @@ export function ModernUniversalPassport({
                   }
                 </CardDescription>
               </div>
-              
+
               {/* Verification badge with enhanced animation */}
               <motion.div 
                 initial={{ scale: 0.8, opacity: 0 }}
@@ -475,7 +475,7 @@ export function ModernUniversalPassport({
               </motion.div>
             </motion.div>
           </CardHeader>
-          
+
           <CardContent className="flex flex-col items-center justify-center pt-4 pb-6 relative px-6">
             {/* Background decoration elements */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -492,7 +492,7 @@ export function ModernUniversalPassport({
                 transition={{ duration: 0.8, delay: 0.2 }}
               />
             </div>
-            
+
             {/* Enhanced QR Code Display with premium styling */}
             <motion.div
               className={cn(
@@ -553,7 +553,7 @@ export function ModernUniversalPassport({
                   />
                 </motion.svg>
               </div>
-              
+
               <div className="absolute top-0 right-0 w-16 h-16">
                 <motion.svg 
                   viewBox="0 0 64 64" 
@@ -572,7 +572,7 @@ export function ModernUniversalPassport({
                   />
                 </motion.svg>
               </div>
-              
+
               <div className="absolute bottom-0 left-0 w-16 h-16">
                 <motion.svg 
                   viewBox="0 0 64 64" 
@@ -591,7 +591,7 @@ export function ModernUniversalPassport({
                   />
                 </motion.svg>
               </div>
-              
+
               <div className="absolute bottom-0 right-0 w-16 h-16">
                 <motion.svg 
                   viewBox="0 0 64 64" 
@@ -610,7 +610,7 @@ export function ModernUniversalPassport({
                   />
                 </motion.svg>
               </div>
-              
+
               {/* Enhanced background pattern */}
               <div className="absolute inset-0 opacity-5 pointer-events-none overflow-hidden">
                 {isFoundingMember ? (
@@ -629,7 +629,7 @@ export function ModernUniversalPassport({
                   </svg>
                 )}
               </div>
-              
+
               {/* Gold sparkle effect for founding members */}
               {isFoundingMember && (
                 <motion.div 
@@ -646,7 +646,7 @@ export function ModernUniversalPassport({
                   </div>
                 </motion.div>
               )}
-              
+
               {/* Premium QR code with custom styling */}
               <div className="relative">
                 {/* Subtle glow effect behind QR */}
@@ -657,7 +657,7 @@ export function ModernUniversalPassport({
                   )}
                   style={{ transform: 'scale(0.7)' }}
                 />
-                
+
                 {passportCode && (
                   <div className="relative">
                     <QRCodeSVG
@@ -674,7 +674,7 @@ export function ModernUniversalPassport({
                         excavate: true,
                       }}
                     />
-                    
+
                     {/* Additional gold accent elements for founding members */}
                     {isFoundingMember && (
                       <div className="absolute inset-0 pointer-events-none">
@@ -688,7 +688,7 @@ export function ModernUniversalPassport({
                 )}
               </div>
             </motion.div>
-            
+
             {/* Passport code display with improved design */}
             <motion.div 
               className="mt-6 flex flex-col items-center w-full"
@@ -742,7 +742,7 @@ export function ModernUniversalPassport({
                   )}
                 </motion.div>
               </div>
-              
+
               <div className="mt-2.5 text-xs text-muted-foreground">
                 {registeredEvents?.length ? (
                   <motion.div 
@@ -752,7 +752,7 @@ export function ModernUniversalPassport({
                     transition={{ delay: 0.6 }}
                   >
                     <Badge 
-                      variant="outline" 
+                                          variant="outline" 
                       className="bg-primary/5 hover:bg-primary/10 text-primary/90 border-primary/20"
                     >
                       {registeredEvents.length} {registeredEvents.length === 1 ? 'Event' : 'Events'} Registered
@@ -773,7 +773,7 @@ export function ModernUniversalPassport({
                 )}
               </div>
             </motion.div>
-            
+
             {/* How to use section - collapsible */}
             <motion.div 
               layout
@@ -794,7 +794,7 @@ export function ModernUniversalPassport({
               </Button>
             </motion.div>
           </CardContent>
-          
+
           <CardFooter className="flex justify-between items-center gap-4 pt-0 pb-5 border-t border-muted/20 px-6 bg-muted/5">
             <motion.div 
               className="flex gap-2 w-full"
@@ -827,7 +827,7 @@ export function ModernUniversalPassport({
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              
+
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -853,7 +853,7 @@ export function ModernUniversalPassport({
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              
+
               {upcomingEvent && (
                 <Button
                   className={cn(
@@ -871,7 +871,7 @@ export function ModernUniversalPassport({
                   Quick Register for Event
                 </Button>
               )}
-              
+
               {!upcomingEvent && onViewRegisteredEvents && (
                 <Button
                   className={cn(

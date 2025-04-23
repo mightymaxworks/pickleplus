@@ -18,35 +18,35 @@ export default function QuickMatchFAB() {
   const { user } = useAuth();
   const [location, navigate] = useLocation();
   const [isOnMatchPage] = useRoute('/matches');
-  
+
   // PKL-278651-UI-0023-FAB - Add explicit check for landing page
   const isOnLandingPage = location === '/';
-  
+
   // PKL-278651-LAYC-0008-FLOAT - Fix Record Match button position to avoid element overlap
   // Note: Hooks must be called in the same order on every render
   // IMPORTANT: Always declare hooks at the top level, before any conditional returns
   const [position, setPosition] = useState({ bottom: 0 });
-  
+
   // PKL-278651-LAYC-0008-FLOAT - Enhanced adjustment for position based on content and viewport
   useEffect(() => {
     // Only run the effect if the button should be shown
     if (!user || isOnMatchPage || isOnLandingPage) {
       return;
     }
-    
+
     const checkPosition = () => {
       // Check for footer visibility
       const footer = document.querySelector('footer');
       const isFooterVisible = footer && footer.getBoundingClientRect().top < window.innerHeight;
-      
+
       // Determine current page for context-aware adjustments
       const currentPage = window.location.pathname;
-      
+
       // Enhanced page context detection
       const isEventsPage = currentPage.includes('/events');
       const isProfilePage = currentPage.includes('/profile');
       const isDashboardPage = currentPage === '/dashboard';
-      
+
       // PKL-278651-PASS-0014-DEFT-FIX - Customized spacing based on page context
       // Events page needs more space for scrolling through events cards
       // Profile page needs space for bottom action buttons
@@ -60,7 +60,7 @@ export default function QuickMatchFAB() {
       } else {
         extraSpace = 30; // Default extra space for other pages
       }
-      
+
       // Responsive adjustment based on viewport size
       if (window.innerWidth < 768) {
         // Mobile devices: position higher to avoid navigation and ensure content visibility
@@ -76,16 +76,16 @@ export default function QuickMatchFAB() {
         setPosition({ bottom: desktopOffset });
       }
     };
-    
+
     // Check position on initial render and on relevant events
     checkPosition();
     window.addEventListener('scroll', checkPosition);
     window.addEventListener('resize', checkPosition);
     window.addEventListener('popstate', checkPosition);
-    
+
     // Periodic check to handle dynamic content changes
     const intervalCheck = setInterval(checkPosition, 1000);
-    
+
     return () => {
       window.removeEventListener('scroll', checkPosition);
       window.removeEventListener('resize', checkPosition);
@@ -93,25 +93,25 @@ export default function QuickMatchFAB() {
       clearInterval(intervalCheck);
     };
   }, [user, isOnMatchPage, isOnLandingPage, location]);
-  
+
   // Don't show FAB on landing page, match page, or if not logged in
   if (!user || isOnMatchPage || isOnLandingPage) {
     return null;
   }
 
   // Determine if user is a founding member for special styling
-  const isFoundingMember = user?.isFoundingMember === true;
+  const isFoundingMember = user?.badges?.includes('founding_member');
 
   // Set button colors based on founding member status
   const buttonClass = isFoundingMember 
     ? "bg-gradient-to-br from-orange-500 to-orange-700 hover:from-orange-600 hover:to-orange-800 focus:ring-orange-500"
-    : "bg-[#FF9800] hover:bg-[#F57C00] focus:ring-[#FF9800]";
+    : "bg-primary hover:bg-primary/90 focus:ring-primary";
 
   // Handle record match button click
   const handleRecordMatch = () => {
     navigate('/matches?dialog=open');
   };
-  
+
   // PKL-278651-LAYC-0008-FLOAT - New circular floating action button design
   return (
     <div 
@@ -136,7 +136,7 @@ export default function QuickMatchFAB() {
             <span className="sr-only">Record Match</span>
           </Button>
         </div>
-        
+
         {/* Tooltip that appears on hover */}
         <div className="absolute bottom-full right-0 mb-2 opacity-0 group-hover:opacity-100
                      shadow-md rounded-md bg-white dark:bg-gray-800 text-sm font-medium 
