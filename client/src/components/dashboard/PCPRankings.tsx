@@ -458,33 +458,27 @@ export function PCPRankings({ user }: PCPRankingsProps) {
                   <p className="text-gray-600 dark:text-gray-400 text-sm">
                     {leaderboardMessage || `This leaderboard will be available once ${requiredCount || 20} players have competed in this category. Currently ${playerCount || 0} players.`}
                   </p>
-                  {/* Invite Friends Button - Replace existing action */}
-                  <motion.button
+                  {/* Invite Friends Button - Simple version */}
+                  <button
                     onClick={() => {
                       // Generate a referral link with the current user's ID
                       const referralLink = `${window.location.origin}/register?ref=${user.id}`;
                       
                       // Copy to clipboard
-                      navigator.clipboard.writeText(referralLink).then(() => {
-                        // Show success message using toast notification
-                        toast({
-                          title: "Referral Link Copied!",
-                          description: "Share this link with friends and earn 20-40 XP when they register!",
-                          variant: "default",
-                          duration: 5000,
-                        });
-                      }, (err) => {
-                        console.error('Failed to copy: ', err);
-                        // Handle fallback if clipboard fails
-                        prompt("Copy this referral link to invite friends (you'll earn 20-40 XP when they register):", referralLink);
+                      navigator.clipboard.writeText(referralLink);
+                      
+                      // Show success message using toast notification
+                      toast({
+                        title: "Referral Link Copied!",
+                        description: "Share this link with friends and earn 20-40 XP when they register!",
+                        variant: "default",
+                        duration: 5000,
                       });
                     }}
                     className="mt-2 inline-block px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium"
-                    whileHover={{ y: -2 }}
-                    whileTap={{ y: 0 }}
                   >
                     Invite Friends (Earn XP)
-                  </motion.button>
+                  </button>
                   
                   {/* Secondary Action - If still needed */}
                   {leaderboardGuidance?.secondaryAction && (
