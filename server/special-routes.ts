@@ -370,7 +370,7 @@ specialRouter.get('/user/rating-detail', async (req: Request, res: Response) => 
     // Generate the response
     return res.json({
       userId: userId,
-      rating: userRating.overallRating,
+      rating: Math.round(userRating.overallRating * 250 + 750), // Convert 1-5 scale to 1000-2000 scale
       format: format,
       division: division,
       recentChange: userRating.version > 1 ? 5 : 0, // Only show change if we have version history
@@ -458,6 +458,7 @@ specialRouter.get('/courtiq/tiers', async (req: Request, res: Response) => {
   try {
     // Import required modules
     const { db } = await import('./db');
+    const { sql } = await import('drizzle-orm');
     
     // Fetch courtiq tiers from the database
     let tiers;

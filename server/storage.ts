@@ -1072,12 +1072,16 @@ export class DatabaseStorage implements IStorage {
           whereClause = searchCondition;
           console.log("[Storage] searchUsers - Admin user, including test data in results");
         } else {
-          // Non-admin users should not see test data
+          // Non-admin users should not see test data or test users
           whereClause = and(
             searchCondition,
-            sql`(${users.isTestData} = FALSE OR ${users.isTestData} IS NULL)`
+            sql`(${users.isTestData} = FALSE OR ${users.isTestData} IS NULL)`,
+            // Filter out any username containing "test" (case insensitive)
+            sql`LOWER(${users.username}) NOT LIKE '%test%'`,
+            // Filter out any displayName containing "test" (case insensitive)
+            sql`(${users.displayName} IS NULL OR LOWER(${users.displayName}) NOT LIKE '%test%')`
           );
-          console.log("[Storage] searchUsers - Non-admin user, excluding test data from results");
+          console.log("[Storage] searchUsers - Non-admin user, excluding test data and test users from results");
         }
         
         console.log("Search SQL:", whereClause);
@@ -1164,6 +1168,13 @@ export class DatabaseStorage implements IStorage {
           const filteredUsers = allUsers.filter(user => {
             // Skip the excluded user if specified
             if (numericExcludeId && user.id === numericExcludeId) return false;
+            
+            // For non-admin users, filter out any test users (usernames containing "test")
+            if (!isAdmin && 
+                (user.username?.toLowerCase().includes("test") || 
+                 user.displayName?.toLowerCase().includes("test"))) {
+              return false;
+            }
             
             // Match on username and displayName
             return (
