@@ -369,51 +369,63 @@ router.post('/onboarding/complete-step', devAuthMiddleware, async (req: Request,
     if (process.env.NODE_ENV !== 'production') {
       console.log('[CourtIQ API] Using mock data for step completion in development');
       
-      // Create updated mock data based on the step that was completed
-      const updatedMockStatus = { ...mockOnboardingStatus };
+      // IMPORTANT: We need to directly modify the mockOnboardingStatus reference
+      // instead of using a copy, to ensure changes persist between API calls
+      
+      console.log('[CourtIQ API] Processing step completion:', step, 'with data:', data);
       
       if (step === 'profile_completion') {
-        updatedMockStatus.progress.profileCompleted = true;
-        updatedMockStatus.progress_pct = 20;
-        updatedMockStatus.nextStep = 'rating_selection';
-        updatedMockStatus.xpEarned = 50;
+        mockOnboardingStatus.progress.profileCompleted = true;
+        mockOnboardingStatus.progress_pct = 20;
+        mockOnboardingStatus.nextStep = 'rating_selection';
+        mockOnboardingStatus.xpEarned = 50;
       } else if (step === 'rating_selection') {
-        updatedMockStatus.progress.ratingSystemSelected = true;
-        updatedMockStatus.progress.ratingProvided = true;
-        updatedMockStatus.progress_pct = 40;
-        updatedMockStatus.nextStep = 'experience_summary';
-        updatedMockStatus.xpEarned = 100;
-        if (data.system) {
-          updatedMockStatus.preferences.preferredRatingSystem = data.system;
+        mockOnboardingStatus.progress.ratingSystemSelected = true;
+        mockOnboardingStatus.progress.ratingProvided = true;
+        mockOnboardingStatus.progress_pct = 40;
+        mockOnboardingStatus.nextStep = 'experience_summary';
+        mockOnboardingStatus.xpEarned = 100;
+        
+        // This is the critical part - we need to preserve rating data
+        console.log('[CourtIQ API] Rating step - data before update:', mockOnboardingStatus.preferences);
+        
+        // Check if rating data was passed via /api/courtiq/rating/set-preferred
+        // If not, use data from the request
+        if (mockOnboardingStatus.preferences.preferredRatingSystem === null && data.system) {
+          mockOnboardingStatus.preferences.preferredRatingSystem = data.system;
         }
-        if (data.rating) {
-          updatedMockStatus.preferences.initialRating = data.rating;
+        
+        if (mockOnboardingStatus.preferences.initialRating === null && data.rating) {
+          mockOnboardingStatus.preferences.initialRating = data.rating;
         }
+        
+        console.log('[CourtIQ API] Rating step - data after update:', mockOnboardingStatus.preferences);
       } else if (step === 'experience_summary') {
-        updatedMockStatus.progress.experienceSummaryCompleted = true;
-        updatedMockStatus.progress_pct = 70;
-        updatedMockStatus.nextStep = 'play_style_assessment';
-        updatedMockStatus.xpEarned = 150;
+        mockOnboardingStatus.progress.experienceSummaryCompleted = true;
+        mockOnboardingStatus.progress_pct = 70;
+        mockOnboardingStatus.nextStep = 'play_style_assessment';
+        mockOnboardingStatus.xpEarned = 150;
         if (data.experienceYears) {
-          updatedMockStatus.preferences.experienceYears = data.experienceYears;
+          mockOnboardingStatus.preferences.experienceYears = data.experienceYears;
         }
       } else if (step === 'play_style_assessment') {
-        updatedMockStatus.progress.playStyleAssessed = true;
-        updatedMockStatus.progress_pct = 100;
-        updatedMockStatus.nextStep = 'completed';
-        updatedMockStatus.completed = true;
-        updatedMockStatus.xpEarned = 200;
+        mockOnboardingStatus.progress.playStyleAssessed = true;
+        mockOnboardingStatus.progress_pct = 100;
+        mockOnboardingStatus.nextStep = 'completed';
+        mockOnboardingStatus.completed = true;
+        mockOnboardingStatus.xpEarned = 200;
         // Cast to any to avoid type error
-        updatedMockStatus.completedAt = new Date().toISOString() as any;
+        // mockOnboardingStatus.completedAt = new Date().toISOString() as any;
         if (data.playStyle) {
-          updatedMockStatus.preferences.playStyle = data.playStyle;
+          mockOnboardingStatus.preferences.playStyle = data.playStyle;
         }
         if (data.skillFocus) {
-          updatedMockStatus.preferences.skillFocus = data.skillFocus;
+          mockOnboardingStatus.preferences.skillFocus = data.skillFocus;
         }
       }
       
-      return res.json(updatedMockStatus);
+      // Return the updated mockOnboardingStatus object
+      return res.json(mockOnboardingStatus);
     }
     
     // Normal flow for production
