@@ -18,6 +18,7 @@ import featureFlags from '../featureFlags';
 import { matchService } from './match-service';
 import { assessmentService } from './assessment-service';
 import { profileService } from './profile-service';
+import { tournamentService } from './tournament-service';
 
 // Storage key for failed sync attempts
 const FAILED_SYNCS_STORAGE_KEY = 'pickle_plus_failed_syncs';
@@ -297,8 +298,11 @@ export class SyncManager {
         await this.syncProfile(item.id);
         break;
       case 'tournaments':
-        // TODO: Implement tournament sync
-        throw new Error('Tournament sync not yet implemented');
+        await this.syncTournament(item.id);
+        break;
+      case 'tournament-registrations':
+        await this.syncTournamentRegistration(item.id);
+        break;
       case 'communities':
         // TODO: Implement community sync
         throw new Error('Community sync not yet implemented');
@@ -352,6 +356,36 @@ export class SyncManager {
     
     // Use profile service to sync with server
     return profileService.syncProfileWithServer(profile);
+  }
+  
+  /**
+   * Sync a tournament with the server
+   */
+  private async syncTournament(id: string | number): Promise<void> {
+    // Get the tournament from storage service
+    const tournament = await tournamentService.tournamentStorage.getById(id);
+    
+    if (!tournament) {
+      throw new Error(`Tournament ${id} not found in local storage`);
+    }
+    
+    // Use tournament service to sync with server
+    return tournamentService.syncTournamentWithServer(tournament);
+  }
+  
+  /**
+   * Sync a tournament registration with the server
+   */
+  private async syncTournamentRegistration(id: string | number): Promise<void> {
+    // Get the registration from storage service
+    const registration = await tournamentService.registrationStorage.getById(id);
+    
+    if (!registration) {
+      throw new Error(`Tournament registration ${id} not found in local storage`);
+    }
+    
+    // Use tournament service to sync with server
+    return tournamentService.syncRegistrationWithServer(registration);
   }
   
   /**

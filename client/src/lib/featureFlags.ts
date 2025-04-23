@@ -24,8 +24,8 @@ const defaultFlags: FeatureFlags = {
   // Form-specific frontend-first flags
   enableMatchRecordingFrontendFirst: true,
   enableMatchAssessmentFrontendFirst: true,
-  enableProfileUpdatesFrontendFirst: false,
-  enableTournamentsFrontendFirst: false,
+  enableProfileUpdatesFrontendFirst: true,
+  enableTournamentsFrontendFirst: true,
   enableCommunityPostsFrontendFirst: false,
   
   // Optimization features
@@ -206,6 +206,8 @@ export function resetFeature<K extends keyof FeatureFlags>(flagName: K): void {
 // For backward compatibility with older code
 export const Features = {
   ENHANCED_PROFILE: 'enableOptimisticUI',
+  PASSPORT_QR: 'enableOptimisticUI',
+  GUIDANCE_MASCOT: 'enableOptimisticUI',
   FRONTEND_FIRST: 'enableLocalStorageFirst',
   BACKGROUND_SYNC: 'enableBackgroundSync',
   SHOW_SYNC_STATUS: 'showSyncStatus'
@@ -222,5 +224,17 @@ const featureFlags = {
   disableFeature,
   resetFeature
 };
+
+/**
+ * React hook to access feature flag state
+ * @param flagName The name of the flag to get
+ * @returns The current value of the flag
+ */
+export function useFeatureFlag<K extends keyof FeatureFlags>(flagName: K): FeatureFlags[K] {
+  // Simple hook that just returns the current flag value
+  // In a more complex implementation, this would use useState and useEffect
+  // to update when flags change
+  return getFeatureFlag(flagName);
+}
 
 export default featureFlags;
