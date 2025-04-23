@@ -103,10 +103,17 @@ export function ProfileImageEditor({ user }: ProfileImageEditorProps) {
         throw new Error(errorData.message || 'Failed to upload avatar');
       }
 
-      await queryClient.invalidateQueries({ queryKey: ["/api/auth/current-user"] });
+      // Invalidate both current user and any profile queries
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/current-user"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] })
+      ]);
+
+      // Force a refetch of current user data
+      await queryClient.refetchQueries({ queryKey: ["/api/auth/current-user"] });
 
       toast({
-        title: "Success",
+        title: "Success", 
         description: "Profile picture updated successfully",
       });
 
