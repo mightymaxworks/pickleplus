@@ -5,7 +5,7 @@
  * A simple standalone page that shows next steps after onboarding
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { 
   CheckCircle, 
@@ -14,7 +14,8 @@ import {
   Users, 
   Calendar,
   Trophy,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,24 @@ import { Separator } from '@/components/ui/separator';
  */
 export default function OnboardingCompletePage() {
   const [, setLocation] = useLocation();
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Handle initial loading effect
+  useEffect(() => {
+    // Page loaded - immediately set loading to false
+    // This will ensure faster rendering and better UX
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 200); // Short timeout for smooth transition
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Handle direct navigation
+  const navigateTo = (url: string) => {
+    // Use window.location for faster navigation on completion
+    window.location.href = url;
+  };
 
   // Simple list of next steps with URLs
   const nextSteps = [
@@ -55,6 +74,23 @@ export default function OnboardingCompletePage() {
     }
   ];
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
+        <Card className="w-full max-w-lg">
+          <CardContent className="flex flex-col items-center justify-center min-h-[300px]">
+            <Loader2 className="h-10 w-10 text-blue-500 animate-spin mb-4" />
+            <p className="text-lg font-medium text-center">Loading your completion page...</p>
+            <p className="text-muted-foreground text-center mt-2">
+              We're preparing your next steps
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
       <Card className="w-full max-w-lg">
@@ -80,7 +116,7 @@ export default function OnboardingCompletePage() {
               <React.Fragment key={index}>
                 <div 
                   className="flex items-center gap-3 p-3 border rounded-md hover:bg-slate-50 cursor-pointer transition-colors"
-                  onClick={() => setLocation(step.url)}
+                  onClick={() => navigateTo(step.url)}
                 >
                   <div className="flex-shrink-0">
                     {step.icon}
@@ -98,7 +134,7 @@ export default function OnboardingCompletePage() {
         </CardContent>
         
         <CardFooter className="flex justify-end border-t pt-4">
-          <Button onClick={() => setLocation('/dashboard')}>
+          <Button onClick={() => navigateTo('/dashboard')}>
             Go to Dashboard
           </Button>
         </CardFooter>

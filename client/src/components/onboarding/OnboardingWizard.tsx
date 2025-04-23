@@ -362,9 +362,18 @@ export function OnboardingWizard({
   // All hooks need to be at the top level and in the same order every render
   const [, navigate] = useLocation();
   
-  // Navigation handlers
+  // Fast direct navigation to improve performance
   const goToCompletionPage = useCallback(() => {
-    window.location.href = '/onboarding-complete';
+    console.log("[OnboardingWizard] Redirecting to completion page");
+    
+    // Show a mini loading message in the console
+    console.log("[OnboardingWizard] Preparing navigation...");
+    
+    // Use setTimeout with 0ms to allow the toast to render before navigation
+    setTimeout(() => {
+      // Direct use of window.location.href for faster navigation
+      window.location.href = '/onboarding-complete';
+    }, 0);
   }, []);
   
   // Dev mode toggle callback
@@ -387,26 +396,33 @@ export function OnboardingWizard({
   useEffect(() => {
     if (status?.completed) {
       console.log("[OnboardingWizard] Onboarding already completed, redirecting to completion page");
+      // Immediate redirect for already-completed status
       goToCompletionPage();
     }
   }, [status?.completed, goToCompletionPage]);
   
-  // Handler for completing onboarding
+  // Optimized handler for completing onboarding
   const handleComplete = useCallback(() => {
+    // Prevent multiple click issues
+    if (completeStepMutation.isPending) {
+      return;
+    }
+    
     // Simple toast notification
     toast({
       title: "Onboarding completed",
       description: "You've completed the CourtIQ™ onboarding process. Welcome to Pickle+!",
+      duration: 2000, // Shorter duration for better UX
     });
-    
-    // Navigate to completion page
-    goToCompletionPage();
     
     // Call parent handler if provided
     if (onComplete) {
       onComplete();
     }
-  }, [toast, goToCompletionPage, onComplete]);
+    
+    // Immediate navigation
+    goToCompletionPage();
+  }, [toast, goToCompletionPage, onComplete, completeStepMutation.isPending]);
   
   // Render loading state
   if (isLoadingStatus) {
@@ -478,12 +494,36 @@ export function OnboardingWizard({
   
   // Show loading state while checking completion status
   if (status?.completed) {
+    // Pre-load the onboarding-complete page in the background
+    // This creates an invisible iframe that loads the completion page
+    // to make the redirect faster when it happens
+    useEffect(() => {
+      const preloadIframe = document.createElement('iframe');
+      preloadIframe.style.display = 'none';
+      preloadIframe.src = '/onboarding-complete';
+      document.body.appendChild(preloadIframe);
+      
+      // Start redirect after a short timeout
+      const redirectTimer = setTimeout(() => {
+        goToCompletionPage();
+      }, 500);
+      
+      return () => {
+        // Clean up
+        clearTimeout(redirectTimer);
+        if (document.body.contains(preloadIframe)) {
+          document.body.removeChild(preloadIframe);
+        }
+      };
+    }, [goToCompletionPage]);
+
     return (
       <Card className={`w-full max-w-2xl shadow-lg ${className}`}>
         <CardContent className="p-8">
           <div className="flex flex-col items-center justify-center">
             <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mb-4"></div>
             <p className="text-muted-foreground">Redirecting to completion page...</p>
+            <p className="text-xs text-muted-foreground mt-2">Preparing your next steps...</p>
           </div>
         </CardContent>
       </Card>
