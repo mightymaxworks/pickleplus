@@ -458,22 +458,14 @@ export function PCPRankings({ user }: PCPRankingsProps) {
                   <p className="text-gray-600 dark:text-gray-400 text-sm">
                     {leaderboardMessage || `This leaderboard will be available once ${requiredCount || 20} players have competed in this category. Currently ${playerCount || 0} players.`}
                   </p>
-                  {/* Invite Friends Button - Simple version */}
+                  {/* Invite Friends Button - Super Simple Alert Version */}
                   <button
                     onClick={() => {
                       // Generate a referral link with the current user's ID
                       const referralLink = `${window.location.origin}/register?ref=${user.id}`;
                       
-                      // Copy to clipboard
-                      navigator.clipboard.writeText(referralLink);
-                      
-                      // Show success message using toast notification
-                      toast({
-                        title: "Referral Link Copied!",
-                        description: "Share this link with friends and earn 20-40 XP when they register!",
-                        variant: "default",
-                        duration: 5000,
-                      });
+                      // Show alert with the link
+                      alert(`Copy this link and share with friends to earn 20-40 XP:\n\n${referralLink}`);
                     }}
                     className="mt-2 inline-block px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium"
                   >
