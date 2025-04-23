@@ -526,19 +526,34 @@ class CourtIQStorageService {
    */
   async getAllUserRatings(limit = 100, offset = 0): Promise<(CourtiqUserRating & { username: string, displayName: string | null })[]> {
     try {
-      const ratings = await db
-        .select({
-          ...courtiqUserRatings,
-          username: users.username,
-          displayName: users.displayName
-        })
+      // First get all the user ratings
+      const ratingsQuery = await db
+        .select()
         .from(courtiqUserRatings)
-        .innerJoin(users, eq(courtiqUserRatings.userId, users.id))
         .orderBy(desc(courtiqUserRatings.overallRating))
         .limit(limit)
         .offset(offset);
+        
+      // Then get user information separately and combine them
+      const ratingsWithUserInfo = await Promise.all(
+        ratingsQuery.map(async (rating) => {
+          const [userInfo] = await db
+            .select({
+              username: users.username,
+              displayName: users.displayName
+            })
+            .from(users)
+            .where(eq(users.id, rating.userId));
+            
+          return {
+            ...rating,
+            username: userInfo.username,
+            displayName: userInfo.displayName
+          };
+        })
+      );
       
-      return ratings;
+      return ratingsWithUserInfo;
     } catch (error) {
       console.error("Error getting all user ratings:", error);
       throw error;

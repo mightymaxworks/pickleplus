@@ -396,6 +396,12 @@ router.get("/performance", async (req, res) => {
     // Get recommendations for areas of improvement
     const recommendations = await courtiqCalculator.generateCoachingRecommendations(userId);
     
+    // Get ratings by assessment type for the multi-source visualization
+    let ratingsByType = null;
+    if (req.query.includeSourceTypes === 'true') {
+      ratingsByType = await courtiqCalculator.calculateRatingsByType(userId);
+    }
+    
     res.json({
       status: "success",
       message: "Performance data retrieved successfully.",
@@ -405,7 +411,9 @@ router.get("/performance", async (req, res) => {
         confidenceScore: ratings.confidenceScore || 0,
         assessmentCount: ratings.assessmentCount || 0,
         priorityImprovement: recommendations.priorityArea,
-        recommendationSummary: recommendations.overallAdvice
+        recommendationSummary: recommendations.overallAdvice,
+        // Include source-specific ratings if requested
+        ratingsByType: ratingsByType
       }
     });
   } catch (error) {

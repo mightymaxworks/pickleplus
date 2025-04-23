@@ -671,6 +671,130 @@ class CourtIQCalculationEngine {
       return "Fine-tune your adaptation to different playing surfaces, weather conditions, and opponent styles to maintain consistency in all environments.";
     }
   }
+
+  /**
+   * Calculate the average ratings by assessment type
+   * @param userId The user ID to calculate ratings for
+   * @returns Promise resolving to ratings grouped by assessment type
+   */
+  async calculateRatingsByType(userId: number): Promise<{
+    overall: { [key in RatingDimension]?: number };
+    self: { [key in RatingDimension]?: number };
+    opponent: { [key in RatingDimension]?: number };
+    coach: { [key in RatingDimension]?: number };
+    system: { [key in RatingDimension]?: number };
+  }> {
+    try {
+      // Get assessments grouped by type
+      const assessmentsByType = await courtiqStorage.getUserAssessmentsByType(userId);
+      
+      // Calculate average ratings for each assessment type and dimension
+      const selfRatings = this.calculateAverageRatingsByDimension(assessmentsByType.self);
+      const opponentRatings = this.calculateAverageRatingsByDimension(assessmentsByType.opponent);
+      const coachRatings = this.calculateAverageRatingsByDimension(assessmentsByType.coach);
+      const systemRatings = this.calculateAverageRatingsByDimension(assessmentsByType.system);
+      
+      // Get the user's official overall ratings
+      const userRating = await courtiqStorage.getUserRatings(userId);
+      const overallRatings: { [key in RatingDimension]?: number } = {};
+      
+      if (userRating) {
+        overallRatings.TECH = userRating.technicalRating || 0;
+        overallRatings.TACT = userRating.tacticalRating || 0;
+        overallRatings.PHYS = userRating.physicalRating || 0;
+        overallRatings.MENT = userRating.mentalRating || 0;
+        overallRatings.CONS = userRating.consistencyRating || 0;
+        overallRatings.OVERALL = userRating.overallRating || 0;
+      }
+      
+      return {
+        overall: overallRatings,
+        self: selfRatings,
+        opponent: opponentRatings,
+        coach: coachRatings,
+        system: systemRatings
+      };
+    } catch (error) {
+      console.error("Error calculating ratings by type:", error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Calculate average ratings for each dimension from a set of assessments
+   * @param assessments Assessment data points
+   * @returns Object containing average ratings by dimension
+   */
+  private calculateAverageRatingsByDimension(
+    assessments: MatchAssessment[]
+  ): { [key in RatingDimension]?: number } {
+    if (!assessments || assessments.length === 0) {
+      return {};
+    }
+    
+    // Initialize accumulators
+    const sums: { [key in RatingDimension]?: number } = {
+      TECH: 0,
+      TACT: 0,
+      PHYS: 0,
+      MENT: 0,
+      CONS: 0,
+    };
+    
+    const counts: { [key in RatingDimension]?: number } = {
+      TECH: 0,
+      TACT: 0,
+      PHYS: 0,
+      MENT: 0,
+      CONS: 0,
+    };
+    
+    // Calculate sums and counts
+    for (const assessment of assessments) {
+      if (assessment.technicalRating !== null) {
+        sums.TECH! += assessment.technicalRating;
+        counts.TECH!++;
+      }
+      
+      if (assessment.tacticalRating !== null) {
+        sums.TACT! += assessment.tacticalRating;
+        counts.TACT!++;
+      }
+      
+      if (assessment.physicalRating !== null) {
+        sums.PHYS! += assessment.physicalRating;
+        counts.PHYS!++;
+      }
+      
+      if (assessment.mentalRating !== null) {
+        sums.MENT! += assessment.mentalRating;
+        counts.MENT!++;
+      }
+      
+      if (assessment.consistencyRating !== null) {
+        sums.CONS! += assessment.consistencyRating;
+        counts.CONS!++;
+      }
+    }
+    
+    // Calculate averages
+    const averages: { [key in RatingDimension]?: number } = {};
+    
+    if (counts.TECH! > 0) averages.TECH = parseFloat((sums.TECH! / counts.TECH!).toFixed(2));
+    if (counts.TACT! > 0) averages.TACT = parseFloat((sums.TACT! / counts.TACT!).toFixed(2));
+    if (counts.PHYS! > 0) averages.PHYS = parseFloat((sums.PHYS! / counts.PHYS!).toFixed(2));
+    if (counts.MENT! > 0) averages.MENT = parseFloat((sums.MENT! / counts.MENT!).toFixed(2));
+    if (counts.CONS! > 0) averages.CONS = parseFloat((sums.CONS! / counts.CONS!).toFixed(2));
+    
+    // Calculate overall average if we have at least some dimension data
+    const dimensionCount = Object.keys(averages).length;
+    if (dimensionCount > 0) {
+      const dimensionSum = Object.values(averages).reduce((sum, val) => sum + val, 0);
+      averages.OVERALL = parseFloat((dimensionSum / dimensionCount).toFixed(2));
+    }
+    
+    return averages;
+  }
 }
 
 export const courtiqCalculator = new CourtIQCalculationEngine();
