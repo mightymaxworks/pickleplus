@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { Bolt, BarChart3, Trophy, Award, Star, TrendingUp, TrendingDown, Activity, Copy, Check, Loader2, AlertCircle } from 'lucide-react';
 import CourtIQPerformanceChart from '@/components/dashboard/CourtIQPerformanceChart';
+import CourtIQStatsOverview from '@/components/dashboard/CourtIQStatsOverview';
 import { BounceStatusTicker } from '@/components/bounce/BounceStatusTicker';
 import { BounceAssistancePanel } from '@/components/bounce/BounceAssistancePanel';
 import { useToast } from '@/hooks/use-toast';
@@ -290,6 +291,29 @@ export default function DashboardContent() {
             transition={{ delay: 0.2, duration: 0.5 }}
           >
             <PCPRankings user={user} />
+          </motion.div>
+          
+          {/* CourtIQ Multi-Source Visualization */}
+          <motion.div 
+            className="md:col-span-12"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25, duration: 0.5 }}
+          >
+            <div className="flex items-center mb-4">
+              <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-400 to-cyan-500 text-transparent bg-clip-text">
+                CourtIQ™ Performance
+              </h3>
+              <div className="ml-2 text-xs bg-gradient-to-r from-blue-400 to-cyan-500 text-white px-2 py-0.5 rounded-full">
+                Multi-Source Analysis
+              </div>
+            </div>
+            <Card className="shadow-lg border border-gray-100/20 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+              <CardContent className="p-4 relative z-10">
+                <CourtIQStatsOverview enhancedPerformanceData={courtIQData} />
+              </CardContent>
+            </Card>
           </motion.div>
           
           {/* Mastery Paths Section */}

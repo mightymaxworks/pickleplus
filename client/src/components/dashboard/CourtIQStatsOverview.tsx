@@ -14,10 +14,11 @@ import {
 import { useCourtIQPerformance, CourtIQPerformanceData } from "@/hooks/use-courtiq-performance";
 
 interface CourtIQStatsOverviewProps {
-  userId: number;
+  userId?: number;
+  enhancedPerformanceData?: CourtIQPerformanceData;
 }
 
-export default function CourtIQStatsOverview({ userId }: CourtIQStatsOverviewProps) {
+export default function CourtIQStatsOverview({ userId, enhancedPerformanceData: propData }: CourtIQStatsOverviewProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showSourceBreakdown, setShowSourceBreakdown] = useState(false);
   const [, navigate] = useLocation();
