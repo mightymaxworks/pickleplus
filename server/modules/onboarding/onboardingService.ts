@@ -159,7 +159,7 @@ export class OnboardingService {
       });
       
       // Give XP for completing this step
-      await xpSystem.awardXP(userId, 50, "onboarding_step_completion", "Completed rating selection step in onboarding");
+      await xpSystem.awardXP(userId.toString(), 50, "onboarding_step_completion", "Completed rating selection step in onboarding");
 
       return {
         success: true,
@@ -255,14 +255,16 @@ export class OnboardingService {
       
       // Store any additional data provided
       if (Object.keys(data).length > 0) {
+        const currentAdditionalData = (progress.additionalData || {}) as Record<string, any>;
         updates.additionalData = {
-          ...progress.additionalData,
+          ...currentAdditionalData,
           [step]: data
         };
       }
       
       // Update XP earned
-      updates.xpEarned = (progress.xpEarned || 0) + xpToAward;
+      const currentXp = typeof progress.xpEarned === 'number' ? progress.xpEarned : 0;
+      updates.xpEarned = currentXp + xpToAward;
       
       // Store preferences if provided
       if (data.preferredDivision) updates.preferredDivision = data.preferredDivision;
@@ -275,7 +277,7 @@ export class OnboardingService {
       
       // Award XP
       await xpSystem.awardXP(
-        userId, 
+        userId.toString(), 
         xpToAward, 
         "onboarding_step_completion", 
         `Completed ${step} step in onboarding`
@@ -344,34 +346,37 @@ export class OnboardingService {
    */
   private convertToOnboardingProgress(record: SqlResultRow | OnboardingProgress): OnboardingProgress {
     // If it's already an OnboardingProgress type, return it directly
-    if ('id' in record && typeof record.id === 'number') {
+    if ('userId' in record && 'profileCompleted' in record) {
       return record as OnboardingProgress;
     }
     
     // Convert from SQL row to OnboardingProgress
+    const sqlRecord = record as Record<string, unknown>;
     return {
-      id: record.id as number,
-      userId: record.user_id as number,
-      startedAt: record.started_at as Date | null,
-      completedAt: record.completed_at as Date | null,
-      currentStep: record.current_step as string | null,
-      lastStepCompleted: record.last_step_completed as string | null,
-      lastStepCompletedAt: record.last_step_completed_at as Date | null,
-      profileCompleted: Boolean(record.profile_completed),
-      ratingSystemSelected: Boolean(record.rating_system_selected),
-      ratingProvided: Boolean(record.rating_provided),
-      experienceSummaryCompleted: Boolean(record.experience_summary_completed),
-      equipmentPreferencesSet: Boolean(record.equipment_preferences_set),
-      playStyleAssessed: Boolean(record.play_style_assessed),
-      initialAssessmentCompleted: Boolean(record.initial_assessment_completed),
-      tourCompleted: Boolean(record.tour_completed),
-      preferredDivision: record.preferred_division as string | null,
-      preferredFormat: record.preferred_format as string | null,
-      preferredRatingSystem: record.preferred_rating_system as string | null,
-      experienceYears: record.experience_years as number | null,
-      additionalData: record.additional_data as Record<string, any> | null,
-      deviceInfo: record.device_info as string | null,
-      xpEarned: record.xp_earned as number | null || 0
+      id: Number(sqlRecord.id),
+      userId: Number(sqlRecord.user_id),
+      startedAt: sqlRecord.started_at ? new Date(sqlRecord.started_at as string) : null,
+      completedAt: sqlRecord.completed_at ? new Date(sqlRecord.completed_at as string) : null,
+      currentStep: sqlRecord.current_step as string | null,
+      lastStepCompleted: sqlRecord.last_step_completed as string | null,
+      lastStepCompletedAt: sqlRecord.last_step_completed_at ? new Date(sqlRecord.last_step_completed_at as string) : null,
+      profileCompleted: Boolean(sqlRecord.profile_completed),
+      ratingSystemSelected: Boolean(sqlRecord.rating_system_selected),
+      ratingProvided: Boolean(sqlRecord.rating_provided),
+      experienceSummaryCompleted: Boolean(sqlRecord.experience_summary_completed),
+      equipmentPreferencesSet: Boolean(sqlRecord.equipment_preferences_set),
+      playStyleAssessed: Boolean(sqlRecord.play_style_assessed),
+      initialAssessmentCompleted: Boolean(sqlRecord.initial_assessment_completed),
+      tourCompleted: Boolean(sqlRecord.tour_completed),
+      preferredDivision: sqlRecord.preferred_division as string | null,
+      preferredFormat: sqlRecord.preferred_format as string | null,
+      preferredRatingSystem: sqlRecord.preferred_rating_system as string | null,
+      experienceYears: sqlRecord.experience_years ? Number(sqlRecord.experience_years) : null,
+      additionalData: sqlRecord.additional_data as Record<string, any> | null,
+      deviceInfo: sqlRecord.device_info as string | null,
+      referredBy: sqlRecord.referred_by as string | null,
+      totalTimeSpentSeconds: sqlRecord.total_time_spent_seconds ? Number(sqlRecord.total_time_spent_seconds) : 0,
+      xpEarned: sqlRecord.xp_earned ? Number(sqlRecord.xp_earned) : 0
     };
   }
   
