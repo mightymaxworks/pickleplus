@@ -365,13 +365,13 @@ export function PostMatchAssessment({
       }
       
       // Collect match context information if provided
-      const matchContext = {};
-      if (values.courtSurface) matchContext["courtSurface"] = values.courtSurface;
-      if (values.weatherConditions) matchContext["weatherConditions"] = values.weatherConditions;
-      if (values.physicalCondition) matchContext["physicalCondition"] = values.physicalCondition;
-      if (values.equipmentIssues) matchContext["equipmentIssues"] = values.equipmentIssues;
-      if (values.pressureLevel) matchContext["pressureLevel"] = values.pressureLevel;
-      if (values.contextNotes) matchContext["notes"] = values.contextNotes;
+      const matchContext: Record<string, string> = {};
+      if (values.courtSurface) matchContext.courtSurface = values.courtSurface;
+      if (values.weatherConditions) matchContext.weatherConditions = values.weatherConditions;
+      if (values.physicalCondition) matchContext.physicalCondition = values.physicalCondition;
+      if (values.equipmentIssues) matchContext.equipmentIssues = values.equipmentIssues;
+      if (values.pressureLevel) matchContext.pressureLevel = values.pressureLevel;
+      if (values.contextNotes) matchContext.notes = values.contextNotes;
       
       // Update match metadata with context if available
       if (Object.keys(matchContext).length > 0) {

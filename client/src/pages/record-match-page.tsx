@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { QuickMatchRecorder } from '@/components/match/QuickMatchRecorder';
+import { PostMatchAssessment } from '@/components/match/PostMatchAssessment';
 import { 
   Card, 
   CardContent, 
@@ -22,7 +23,8 @@ import {
   Zap, 
   Calendar,
   Award,
-  CheckCircle
+  CheckCircle,
+  BarChart3
 } from 'lucide-react';
 import { 
   motion, 
@@ -37,6 +39,9 @@ import { eventBus } from '@/core/events/eventBus';
  * Enhanced Record Match Page using the wizard interface 
  * Reference: PKL-278651-UI-UX-Framework
  * Module: match@0.8.0
+ * 
+ * PKL-278651-COURTIQ-0002-ASSESS
+ * Updated to include post-match assessment for CourtIQ™
  */
 export default function RecordMatchPage() {
   const { user } = useAuth();
@@ -52,6 +57,10 @@ export default function RecordMatchPage() {
   const [matchData, setMatchData] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  
+  // Post-match assessment state
+  const [showAssessment, setShowAssessment] = useState(false);
+  const [assessmentComplete, setAssessmentComplete] = useState(false);
   
   // Initialize with user's data
   useEffect(() => {
@@ -73,17 +82,40 @@ export default function RecordMatchPage() {
   // Handle a completed match from the QuickMatchRecorder
   const handleMatchComplete = (data: any) => {
     setMatchData(data);
-    setShowSuccess(true);
+    
+    // Show assessment instead of success immediately
+    setShowAssessment(true);
     
     // Publish event that match recording was completed
     eventBus.publish('match:record:completed', { 
       userId: user?.id,
       matchId: data?.id,
-      matchType: 'casual'
+      matchType: data?.matchType || 'casual'
     });
+  };
+  
+  // Handle assessment completion
+  const handleAssessmentComplete = () => {
+    setAssessmentComplete(true);
+    setShowAssessment(false);
+    setShowSuccess(true);
+    
+    // Invalidate CourtIQ queries to ensure fresh data
+    queryClient.invalidateQueries({ queryKey: ['/api/courtiq'] });
+    
+    // Redirect to matches page after a short delay (1.5 seconds)
+    // This gives time for the success message to be seen
+    setTimeout(() => {
+      navigate('/matches');
+    }, 1500);
+  };
+  
+  // Handle assessment skip
+  const handleAssessmentCancel = () => {
+    setShowAssessment(false);
+    setShowSuccess(true);
     
     // Redirect to matches page after a short delay (1 second)
-    // This gives time for the success message to be seen
     setTimeout(() => {
       navigate('/matches');
     }, 1000);
@@ -161,8 +193,8 @@ export default function RecordMatchPage() {
           )}
         </AnimatePresence>
         
-        {/* Main Content - Only show if not in success state */}
-        {!showSuccess && (
+        {/* Main Content - Only show match recorder if not in success or assessment state */}
+        {!showSuccess && !showAssessment && (
           <Card className="border-0 shadow-lg overflow-hidden">
             <CardContent className="p-0">
               {/* The actual match recording form */}
@@ -170,6 +202,38 @@ export default function RecordMatchPage() {
             </CardContent>
           </Card>
         )}
+        
+        {/* Post-Match Assessment - Only show if assessment state is active */}
+        <AnimatePresence>
+          {showAssessment && matchData && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <BarChart3 className="h-5 w-5 mr-2 text-primary" />
+                    CourtIQ™ Post-Match Assessment
+                  </CardTitle>
+                  <CardDescription>
+                    Help improve your CourtIQ™ rating by providing details about your match performance
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <PostMatchAssessment 
+                    matchId={matchData.id} 
+                    matchData={matchData}
+                    onComplete={handleAssessmentComplete}
+                    onCancel={handleAssessmentCancel}
+                  />
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </DashboardLayout>
   );

@@ -12,10 +12,11 @@ import { storage } from '../storage';
 import { isAuthenticated } from '../auth';
 import { 
   insertPerformanceImpactSchema,
-  InsertPerformanceImpact
+  InsertPerformanceImpact,
+  performanceImpacts
 } from '@shared/match-statistics-schema';
 import { db } from '../db';
-import { matches, performanceImpacts } from '@shared/match-statistics-schema';
+import { matches } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
 const router = Router();
