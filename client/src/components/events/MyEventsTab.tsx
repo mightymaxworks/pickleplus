@@ -70,11 +70,16 @@ export function MyEventsTab({ className, onEventClick, onPassportClick }: MyEven
   const [eventToCancel, setEventToCancel] = useState<Event | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
 
-  // Fetch registered events
-  const { data: events, isLoading, error } = useQuery({
+  // PKL-278651-PASS-0014-DEFT - Fetch registered events
+  const { data: apiEvents, isLoading, error } = useQuery({
     queryKey: ['/api/events/my/registered'],
     queryFn: () => getMyRegisteredEvents(),
   });
+  
+  // PKL-278651-PASS-0014-DEFT - Always ensure the default community event is included
+  const events = useMemo(() => {
+    return ensureDefaultCommunityEvent(apiEvents || []);
+  }, [apiEvents]);
 
   const handleEventClick = (event: Event) => {
     if (onEventClick) {
