@@ -27,6 +27,11 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
   const { data: rankingPosition, isLoading: isRankingLoading } = useUserGlobalRankingPosition(user.id);
   const { data: matchStats, isLoading: isMatchStatsLoading } = useMatchStatistics({ userId: user.id });
   
+  // Get actual XP data - use fresh values over stale user object
+  const userXp = user.xp || 0;
+  const userLevel = user.level || 1;
+  const xpProgressPercent = Math.min((userXp / 10), 100);
+  
   // Debug log function to help us identify sizing issues
   const logDimensions = () => {
     if (frontRef.current && backRef.current) {
@@ -178,14 +183,14 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
           {/* Stats section */}
           <div className="p-3">
             <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Level {user.level || 5} • {user.xp || 520} XP
+              Level {userLevel} • {userXp} XP
             </div>
             
             {/* XP Progress Bar */}
             <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-3">
               <div 
                 className="h-full bg-gradient-to-r from-[#FF5722] to-[#FF9800] rounded-full"
-                style={{ width: `${Math.min((user.xp || 520) / 10, 100)}%` }}
+                style={{ width: `${xpProgressPercent}%` }}
               ></div>
             </div>
             
@@ -330,14 +335,14 @@ export function PlayerPassport({ user }: PlayerPassportProps) {
           {/* Stats section with glass morphism effect */}
           <div className="p-4 flex-grow flex flex-col">
             <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Level {user.level || 5} • {user.xp || 520} XP
+              Level {userLevel} • {userXp} XP
             </div>
             
             {/* XP Progress Bar */}
             <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-4">
               <div 
                 className="h-full bg-gradient-to-r from-[#FF5722] to-[#FF9800] rounded-full"
-                style={{ width: `${Math.min((user.xp || 520) / 10, 100)}%` }}
+                style={{ width: `${xpProgressPercent}%` }}
               ></div>
             </div>
             

@@ -101,22 +101,31 @@ const MasteryPathsDisplay: React.FC = () => {
     );
   }
   
-  // Error state
+  // Error state - handle authentication errors gracefully
   if (error || !tierStatus) {
+    // Check if it's an authentication error (most common cause)
+    const isAuthError = error?.message?.includes('Not authenticated') ||
+                        error?.message?.includes('401') ||
+                        error?.message?.includes('Failed to fetch');
+                        
     return (
       <Card className="w-full">
         <CardHeader>
-          <CardTitle className="text-lg">Mastery Tier Status</CardTitle>
-          <CardDescription>There was an error loading your tier status</CardDescription>
+          <CardTitle className="text-lg">CourtIQ™ Mastery</CardTitle>
+          <CardDescription>
+            {isAuthError ? 'Your session may need to be refreshed' : 'There was an error loading your tier status'}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="p-4 bg-red-50 text-red-500 rounded-md">
-            Unable to load your mastery path information. Please try again later.
+          <div className={`p-4 ${isAuthError ? 'bg-blue-50 text-blue-700' : 'bg-red-50 text-red-500'} rounded-md`}>
+            {isAuthError 
+              ? 'Please refresh your browser to see your latest mastery data.' 
+              : 'Unable to load your mastery path information. Please try again later.'}
           </div>
         </CardContent>
         <CardFooter>
           <Button variant="outline" onClick={() => window.location.reload()}>
-            Retry
+            Refresh
           </Button>
         </CardFooter>
       </Card>
