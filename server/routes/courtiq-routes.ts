@@ -436,10 +436,11 @@ router.post('/rating/set-preferred', devAuthMiddleware, async (req: Request, res
     // Debug log the request body
     console.log('[CourtIQ API] Rating set-preferred request body:', req.body);
     
-    // Validate request body - make the schema more flexible
+    // This is the actual schema the frontend is using
     const schema = z.object({
-      system: z.string(),
-      rating: z.union([z.number(), z.string().transform(val => parseFloat(val))])
+      ratingSystem: z.string(),
+      ratingValue: z.union([z.number(), z.string(), z.undefined()]).optional(),
+      selfAssessment: z.string().optional()
     });
     
     const validationResult = schema.safeParse(req.body);
@@ -448,7 +449,13 @@ router.post('/rating/set-preferred', devAuthMiddleware, async (req: Request, res
       return res.status(400).json({ error: 'Invalid request body', details: validationResult.error });
     }
     
-    const { system, rating } = validationResult.data;
+    // Extract the data with the frontend's field names
+    const { ratingSystem, ratingValue, selfAssessment } = validationResult.data;
+    
+    // Map to our internal field names
+    const system = ratingSystem;
+    const rating = ratingValue !== undefined ? ratingValue : 
+                  (selfAssessment ? selfAssessment : 0);
     
     // Special handling for development environment
     if (process.env.NODE_ENV !== 'production') {
