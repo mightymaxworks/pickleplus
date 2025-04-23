@@ -79,9 +79,6 @@ import TestLoginPage from './pages/test-login-page'
 // Import icons test page (PKL-278651-COMM-0007-ICONS)
 import IconsPage from './pages/icons'
 
-// Import passport test page
-import TestPassportDataPage from './pages/TestPassportDataPage'
-
 // Keep imports for non-lazy loaded pages
 import TestAuthPage from './pages/TestAuthPage'
 import TestRoutingPage from './pages/TestRoutingPage'
@@ -202,7 +199,6 @@ export default function App() {
                   <Route path="/test-routing" component={TestRoutingPage} />
                   <Route path="/landing-test" component={LandingPageTest} />
                   <Route path="/test-login" component={TestLoginPage} />
-                  <Route path="/test-passport" component={TestPassportDataPage} />
                 
                   {/* Protected Routes - Now using StandardLayout */}
                   <ProtectedRouteWithLayout 
