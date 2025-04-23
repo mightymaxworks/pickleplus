@@ -27,6 +27,73 @@ export default function QuickMatchFAB() {
   // IMPORTANT: Always declare hooks at the top level, before any conditional returns
   const [position, setPosition] = useState({ bottom: 0 });
   
+  // PKL-278651-LAYC-0008-FLOAT - Enhanced adjustment for position based on content and viewport
+  useEffect(() => {
+    // Only run the effect if the button should be shown
+    if (!user || isOnMatchPage || isOnLandingPage) {
+      return;
+    }
+    
+    const checkPosition = () => {
+      // Check for footer visibility
+      const footer = document.querySelector('footer');
+      const isFooterVisible = footer && footer.getBoundingClientRect().top < window.innerHeight;
+      
+      // Determine current page for context-aware adjustments
+      const currentPage = window.location.pathname;
+      
+      // Enhanced page context detection
+      const isEventsPage = currentPage.includes('/events');
+      const isProfilePage = currentPage.includes('/profile');
+      const isDashboardPage = currentPage === '/dashboard';
+      
+      // PKL-278651-PASS-0014-DEFT-FIX - Customized spacing based on page context
+      // Events page needs more space for scrolling through events cards
+      // Profile page needs space for bottom action buttons
+      let extraSpace = 0;
+      if (isEventsPage) {
+        extraSpace = 80; // Significant extra space to ensure multiple event cards are visible
+      } else if (isProfilePage) {
+        extraSpace = 60; // Extra space for profile action buttons
+      } else if (isDashboardPage) {
+        extraSpace = 50; // Space for dashboard content
+      } else {
+        extraSpace = 30; // Default extra space for other pages
+      }
+      
+      // Responsive adjustment based on viewport size
+      if (window.innerWidth < 768) {
+        // Mobile devices: position higher to avoid navigation and ensure content visibility
+        const mobileOffset = isFooterVisible ? 90 + extraSpace : 10 + extraSpace;
+        setPosition({ bottom: mobileOffset });
+      } else if (window.innerWidth < 1024) {
+        // Tablet devices: intermediate positioning
+        const tabletOffset = isFooterVisible ? 40 + (extraSpace * 0.7) : extraSpace * 0.7;
+        setPosition({ bottom: tabletOffset });
+      } else {
+        // Desktop: more subtle positioning
+        const desktopOffset = isFooterVisible ? 30 + (extraSpace * 0.5) : extraSpace * 0.5;
+        setPosition({ bottom: desktopOffset });
+      }
+    };
+    
+    // Check position on initial render and on relevant events
+    checkPosition();
+    window.addEventListener('scroll', checkPosition);
+    window.addEventListener('resize', checkPosition);
+    window.addEventListener('popstate', checkPosition);
+    
+    // Periodic check to handle dynamic content changes
+    const intervalCheck = setInterval(checkPosition, 1000);
+    
+    return () => {
+      window.removeEventListener('scroll', checkPosition);
+      window.removeEventListener('resize', checkPosition);
+      window.removeEventListener('popstate', checkPosition);
+      clearInterval(intervalCheck);
+    };
+  }, [user, isOnMatchPage, isOnLandingPage, location]);
+  
   // Don't show FAB on landing page, match page, or if not logged in
   if (!user || isOnMatchPage || isOnLandingPage) {
     return null;
