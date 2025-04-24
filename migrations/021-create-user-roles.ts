@@ -9,12 +9,16 @@
  * @lastModified 2025-04-24
  */
 
-import { Pool } from '@neondatabase/serverless';
+import ws from 'ws';
+import { Pool, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
 import { migrate } from 'drizzle-orm/neon-serverless/migrator';
 import { roles, userRoles } from '../shared/schema/user-roles';
 import { eq } from 'drizzle-orm';
 import { UserRole } from '../client/src/lib/roles';
+
+// Configure neon to use websockets
+neonConfig.webSocketConstructor = ws;
 
 // Database connection setup
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -147,8 +151,8 @@ async function seedInitialRoles() {
 async function mapExistingUsers() {
   console.log('Mapping existing users to roles...');
   
-  // Get all users from the database
-  const users = await db.query.users.findMany();
+  // Get all users from the database directly with a simple query
+  const { rows: users } = await pool.query('SELECT * FROM users');
   console.log(`Found ${users.length} users to process.`);
   
   // Get all roles for reference
@@ -162,7 +166,7 @@ async function mapExistingUsers() {
     let roleName = UserRole.PLAYER; // Default role
     
     // Use the same logic we had in user-types.ts for role detection
-    if (user.username === 'mightymax' || user.username === 'admin' || user.isAdmin) {
+    if (user.username === 'mightymax' || user.username === 'admin' || user.is_admin) {
       roleName = UserRole.ADMIN;
     } else if (user.username?.toLowerCase().includes('coach')) {
       roleName = UserRole.COACH;
@@ -175,14 +179,18 @@ async function mapExistingUsers() {
       .where(eq(userRoles.userId, user.id));
     
     if (existingUserRole.length === 0) {
-      // Assign the role
-      await db.insert(userRoles).values({
-        userId: user.id,
-        roleId: roleMap[roleName],
-        assignedAt: new Date(),
-        isActive: true
-      });
-      assignedCount++;
+      try {
+        // Assign the role
+        await db.insert(userRoles).values({
+          userId: user.id,
+          roleId: roleMap[roleName],
+          assignedAt: new Date(),
+          isActive: true
+        });
+        assignedCount++;
+      } catch (err) {
+        console.error(`Error assigning role to user ${user.username}:`, err);
+      }
     }
   }
   
