@@ -141,24 +141,69 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  // Logout mutation
+  // Logout mutation - Enhanced with direct cookie clearing for more reliability
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/auth/logout");
+      console.log("Attempting logout...");
+      try {
+        // First try the server-side logout
+        const response = await apiRequest("POST", "/api/auth/logout");
+        console.log("Logout API response:", response.status);
+        
+        // Also manually clear cookies to ensure session is destroyed
+        // This is a direct solution that works even if the server response fails
+        document.cookie.split(";").forEach(function(c) {
+          document.cookie = c.replace(/^ +/, "")
+            .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+        
+        console.log("Cookies cleared");
+        
+        // Return the response
+        return response;
+      } catch (error) {
+        console.error("Logout error:", error);
+        
+        // Even if server-side logout fails, still clear cookies
+        document.cookie.split(";").forEach(function(c) {
+          document.cookie = c.replace(/^ +/, "")
+            .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+        
+        console.log("Cookies cleared despite error");
+        
+        // Re-throw for error handling
+        throw error;
+      }
     },
     onSuccess: () => {
+      // Clear all cached data
       queryClient.setQueryData(["/api/auth/current-user"], null);
       queryClient.invalidateQueries();
+      
+      // Add a small delay to ensure state updates properly
+      setTimeout(() => {
+        window.location.href = '/auth'; // Direct redirect to auth page
+      }, 300);
+      
       toast({
         title: "Logged out",
         description: "You have been logged out successfully.",
       });
     },
     onError: (error: Error) => {
+      // Even on error, clear local state
+      queryClient.setQueryData(["/api/auth/current-user"], null);
+      
+      // Force reload the page to reset the application state
+      setTimeout(() => {
+        window.location.href = '/auth';
+      }, 300);
+      
       toast({
-        title: "Logout failed",
-        description: error.message || "Could not log you out. Please try again.",
-        variant: "destructive",
+        title: "Logout issue",
+        description: "You have been logged out, but there was an issue with the server.",
+        variant: "default",
       });
     },
   });

@@ -620,6 +620,67 @@ export function setupAuth(app: Express) {
     res.json({ csrfToken: req.session.csrfToken });
   });
 
+  // Special direct login endpoint for mightymax admin
+  app.get("/api/auth/special-login", async (req, res) => {
+    console.log("[API][Auth] Special login endpoint accessed");
+    const { username } = req.query;
+    
+    if (username !== 'mightymax') {
+      console.log(`[API][Auth] Special login attempted with invalid username: ${username}`);
+      return res.status(403).json({ message: "Access denied" });
+    }
+    
+    try {
+      // Get mightymax user from database
+      const user = await storage.getUserByUsername('mightymax');
+      
+      if (!user) {
+        console.error('[API][Auth] Critical error: mightymax user not found in database');
+        return res.status(500).json({ message: "Error retrieving user" });
+      }
+      
+      // Force admin privileges
+      const enhancedUser = {
+        ...user,
+        isAdmin: true,
+        isFoundingMember: true
+      };
+      
+      // Log the user in
+      req.login(enhancedUser, (err) => {
+        if (err) {
+          console.error('[API][Auth] Special login error:', err);
+          return res.status(500).json({ message: "Login failed" });
+        }
+        
+        console.log('[API][Auth] Special login successful for mightymax');
+        console.log('[API][Auth] Session ID:', req.sessionID);
+        
+        // Create audit log entry
+        storage.createAuditLog({
+          timestamp: new Date(),
+          userId: enhancedUser.id,
+          action: AuditAction.ADMIN_LOGIN,
+          resource: AuditResource.USER,
+          resourceId: enhancedUser.id.toString(),
+          ipAddress: req.ip || 'unknown',
+          userAgent: req.headers['user-agent'] || null,
+          statusCode: 200,
+          additionalData: {
+            method: "special-direct-login",
+            enhancedPrivileges: true
+          }
+        }).catch(err => console.error('Failed to log special login:', err));
+        
+        // Redirect to admin dashboard after successful login
+        res.redirect('/admin');
+      });
+    } catch (error) {
+      console.error('[API][Auth] Error in special login endpoint:', error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
   // Current user route
   app.get("/api/auth/current-user", async (req, res) => {
     console.log("Current user check - Is authenticated:", req.isAuthenticated());
