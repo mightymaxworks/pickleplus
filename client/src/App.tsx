@@ -48,6 +48,9 @@ import {
   LazyPrizeDrawingPage,
   LazyGoldenTicketAdmin,
   LazyPassportVerificationPage,
+  
+  // PKL-278651-COACH-0001-CORE - S.A.G.E. Coaching System
+  LazySageCoachingPage,
   LazyReportsPage,
   LazySettingsPage,
   LazyMobileTestPage,
@@ -252,6 +255,13 @@ export default function App() {
                   <Route path="/passport">
                     {(params) => <CentralProtectedRoute component={LazyPassportPage} path="/passport" />}
                   </Route>
+                  
+                  {/* PKL-278651-COACH-0001-CORE - S.A.G.E. Coaching System */}
+                  <ProtectedRouteWithLayout
+                    path="/coach/sage"
+                    component={LazySageCoachingPage}
+                    pageTitle="S.A.G.E. Coaching"
+                  />
                   
                   {/* PKL-278651-AUTH-0008-ROLES - Role protected routes demo */}
                   <Route path="/roles/demo">

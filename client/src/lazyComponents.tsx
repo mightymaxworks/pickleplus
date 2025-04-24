@@ -87,6 +87,9 @@ export const LazyCourtIQDetailedAnalysisPage = lazyLoad(() => import('./pages/Co
 // Passport page (PKL-278651-CONN-0008-UX-MOD2)
 export const LazyPassportPage = lazyLoad(() => import('./pages/PassportPage'));
 
+// S.A.G.E. Coaching System (PKL-278651-COACH-0001-CORE)
+export const LazySageCoachingPage = lazyLoad(() => import('./pages/SageCoachingPage'));
+
 // Preloading functions by route group
 export const preloadProfilePages = () => {
   LazyProfilePage.preload();
