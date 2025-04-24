@@ -20,7 +20,8 @@
 export enum UserRole {
   PLAYER = "PLAYER",
   COACH = "COACH", 
-  ADMIN = "ADMIN"
+  ADMIN = "ADMIN",
+  REFEREE = "REFEREE"
 }
 
 /**
@@ -36,6 +37,8 @@ export function getRoleLabel(role: UserRole): string {
       return "Coach";
     case UserRole.ADMIN:
       return "Administrator";
+    case UserRole.REFEREE:
+      return "Referee";
     default:
       return "Unknown Role";
   }
@@ -47,6 +50,7 @@ export function getRoleLabel(role: UserRole): string {
  * This function follows a simple hierarchical approach:
  * - ADMIN can access anything
  * - COACH can access COACH and PLAYER features
+ * - REFEREE can access REFEREE and PLAYER features
  * - PLAYER can only access PLAYER features
  * 
  * @param userRole The user's current role
@@ -62,6 +66,11 @@ export function hasRequiredRole(userRole: UserRole, requiredRole: UserRole): boo
   // Coach can access coach and player features
   if (userRole === UserRole.COACH) {
     return requiredRole === UserRole.COACH || requiredRole === UserRole.PLAYER;
+  }
+  
+  // Referee can access referee and player features
+  if (userRole === UserRole.REFEREE) {
+    return requiredRole === UserRole.REFEREE || requiredRole === UserRole.PLAYER;
   }
   
   // Player can only access player features
@@ -85,6 +94,10 @@ export function getHighestRole(roles: string[]): UserRole {
   
   if (roles.includes(UserRole.COACH)) {
     return UserRole.COACH;
+  }
+  
+  if (roles.includes(UserRole.REFEREE)) {
+    return UserRole.REFEREE;
   }
   
   return UserRole.PLAYER;

@@ -52,6 +52,10 @@ export function ensureUserHasRole(user: User): UserWithRole {
   else if (user.username?.toLowerCase().includes('coach')) {
     derivedRole = UserRole.COACH;
   }
+  // Special handling for referee users
+  else if (user.username?.toLowerCase().includes('referee') || user.username?.toLowerCase().includes('ref')) {
+    derivedRole = UserRole.REFEREE;
+  }
   
   return {
     ...user,
