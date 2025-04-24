@@ -31,6 +31,7 @@ import { initializeOpenAI } from "./services/aiCoach"; // AI Coach service initi
 import { isAuthenticated as isAuthenticatedMiddleware } from "./middleware/auth";
 import { isAuthenticated, setupAuth } from "./auth"; // Import the proper passport-based authentication
 import { specialRouter } from "./special-routes"; // Import special critical routes
+import { registerJournalRoutes } from "./routes/journal-routes"; // PKL-278651-SAGE-0003-JOURNAL - SAGE Journaling System
 
 /**
  * Register all application routes with the Express app
@@ -66,6 +67,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   registerHealthCheckRoutes(app); // Simple health check route
   registerPassportVerificationRoutes(app); // PKL-278651-CONN-0004-PASS-ADMIN - Passport verification routes
   registerUserRolesRoutes(app); // PKL-278651-AUTH-0016-PROLES - Role Management
+  registerJournalRoutes(app); // PKL-278651-SAGE-0003-JOURNAL - SAGE Journaling System
   
   // Mount security routes
   app.use('/api/security', securityRoutes);

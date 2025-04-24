@@ -60,7 +60,7 @@ async function main() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         is_private BOOLEAN DEFAULT TRUE NOT NULL,
-        session_id INTEGER REFERENCES coaching_sessions(id),
+        session_id INTEGER, -- Removed foreign key reference temporarily
         match_id INTEGER REFERENCES matches(id),
         dimension_code TEXT,
         tags TEXT,
@@ -134,77 +134,23 @@ async function checkTablesExist(db: any): Promise<boolean> {
  * Seed initial journal prompts
  */
 async function seedInitialPrompts(db: any) {
-  const initialPrompts = [
-    {
-      promptText: "How did you feel about your performance in your last match?",
-      promptType: "reflection",
-      dimensionCode: "MENT",
-      skillLevel: "beginner"
-    },
-    {
-      promptText: "What skill are you most proud of improving recently?",
-      promptType: "reflection",
-      dimensionCode: "TECH",
-      skillLevel: "beginner"
-    },
-    {
-      promptText: "Describe a moment in your last match where your mental game was tested. How did you respond?",
-      promptType: "emotional",
-      dimensionCode: "MENT",
-      skillLevel: "intermediate"
-    },
-    {
-      promptText: "What's one technique you want to master in the next month?",
-      promptType: "goal_setting",
-      dimensionCode: "TECH",
-      skillLevel: "intermediate"
-    },
-    {
-      promptText: "How did your body feel during your last training session?",
-      promptType: "reflection",
-      dimensionCode: "PHYS",
-      skillLevel: "beginner"
-    },
-    {
-      promptText: "What strategic adjustments did you make during your last match?",
-      promptType: "technical",
-      dimensionCode: "TACT",
-      skillLevel: "advanced"
-    },
-    {
-      promptText: "What helps you stay consistent when under pressure?",
-      promptType: "reflection",
-      dimensionCode: "CONS",
-      skillLevel: "intermediate"
-    },
-    {
-      promptText: "Set three specific tactical goals for your next match.",
-      promptType: "goal_setting",
-      dimensionCode: "TACT",
-      skillLevel: "advanced"
-    },
-    {
-      promptText: "How do you feel before competitions? Describe your pre-match emotions.",
-      promptType: "emotional",
-      dimensionCode: "MENT",
-      skillLevel: "beginner"
-    },
-    {
-      promptText: "What's your biggest strength on the court and how do you leverage it?",
-      promptType: "reflection",
-      dimensionCode: "TECH",
-      skillLevel: "intermediate"
-    }
-  ];
+  // Create the initial prompts directly with SQL to avoid parameter issues
+  await db.execute(`
+    INSERT INTO journal_prompts (prompt_text, prompt_type, dimension_code, skill_level, is_active)
+    VALUES 
+      ('How did you feel about your performance in your last match?', 'reflection', 'MENT', 'beginner', TRUE),
+      ('What skill are you most proud of improving recently?', 'reflection', 'TECH', 'beginner', TRUE),
+      ('Describe a moment in your last match where your mental game was tested. How did you respond?', 'emotional', 'MENT', 'intermediate', TRUE),
+      ('What''s one technique you want to master in the next month?', 'goal_setting', 'TECH', 'intermediate', TRUE),
+      ('How did your body feel during your last training session?', 'reflection', 'PHYS', 'beginner', TRUE),
+      ('What strategic adjustments did you make during your last match?', 'technical', 'TACT', 'advanced', TRUE),
+      ('What helps you stay consistent when under pressure?', 'reflection', 'CONS', 'intermediate', TRUE),
+      ('Set three specific tactical goals for your next match.', 'goal_setting', 'TACT', 'advanced', TRUE),
+      ('How do you feel before competitions? Describe your pre-match emotions.', 'emotional', 'MENT', 'beginner', TRUE),
+      ('What''s your biggest strength on the court and how do you leverage it?', 'reflection', 'TECH', 'intermediate', TRUE)
+  `);
   
-  for (const prompt of initialPrompts) {
-    await db.execute(`
-      INSERT INTO journal_prompts (prompt_text, prompt_type, dimension_code, skill_level, is_active)
-      VALUES ($1, $2, $3, $4, TRUE)
-    `, [prompt.promptText, prompt.promptType, prompt.dimensionCode, prompt.skillLevel]);
-  }
-  
-  console.log(`[SAGE-JOURNAL] Seeded ${initialPrompts.length} journal prompts`);
+  console.log(`[SAGE-JOURNAL] Seeded 10 journal prompts`);
 }
 
 // Run the migration

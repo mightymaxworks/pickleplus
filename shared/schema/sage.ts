@@ -332,7 +332,7 @@ export const journalEntries = pgTable("journal_entries", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   isPrivate: boolean("is_private").default(true).notNull(),
-  sessionId: integer("session_id").references(() => coachingSessions.id), // Optional link to coaching session
+  sessionId: integer("session_id"), // Optional link to coaching session (reference temporarily removed)
   matchId: integer("match_id").references(() => matches.id), // Optional link to match
   dimensionCode: text("dimension_code"), // Optional focus dimension
   tags: text("tags"), // Comma-separated tags
@@ -375,10 +375,7 @@ export const journalEntriesRelations = relations(journalEntries, ({ one, many })
     fields: [journalEntries.userId],
     references: [users.id],
   }),
-  session: one(coachingSessions, {
-    fields: [journalEntries.sessionId],
-    references: [coachingSessions.id],
-  }),
+  // Session relation temporarily removed
   match: one(matches, {
     fields: [journalEntries.matchId],
     references: [matches.id],
