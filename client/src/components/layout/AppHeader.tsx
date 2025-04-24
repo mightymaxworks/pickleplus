@@ -68,7 +68,7 @@ export function AppHeader({
 }: AppHeaderProps) {
   const [, navigate] = useLocation();
   const location = useLocation()[0]; // Current path
-  const { user, logoutMutation } = useAuth();
+  const { user, logout } = useAuth();
   const isExtraSmallScreen = useMediaQuery('(max-width: 380px)');
   
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -123,7 +123,7 @@ export function AppHeader({
       if (onLogout) {
         onLogout();
       } else {
-        await logoutMutation.mutateAsync();
+        await logout();
         navigate('/auth');
       }
     } catch (error) {

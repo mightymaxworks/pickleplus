@@ -11,7 +11,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { PlayerPassport } from '@/components/dashboard/PlayerPassport';
 import { PCPRankings } from '@/components/dashboard/PCPRankings';
 import MasteryPathsDisplay from '@/components/mastery/MasteryPathsDisplay';
