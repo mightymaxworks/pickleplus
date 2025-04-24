@@ -5,6 +5,19 @@ import {
   type XpTransaction, type InsertXpTransaction
 } from "@shared/schema";
 
+// Import SAGE coaching schema (PKL-278651-COACH-0001-CORE - Skills Assessment & Growth Engine)
+import {
+  coachingSessions, coachingInsights, trainingPlans, trainingExercises, 
+  coachingContentLibrary, userProgressLogs,
+  type CoachingSession, type InsertCoachingSession,
+  type CoachingInsight, type InsertCoachingInsight,
+  type TrainingPlan, type InsertTrainingPlan,
+  type TrainingExercise, type InsertTrainingExercise,
+  type CoachingContentLibrary, type InsertCoachingContentLibrary,
+  type UserProgressLog, type InsertUserProgressLog,
+  DimensionCodes, type DimensionCode
+} from "@shared/schema/sage";
+
 // Import XP tables from their new modular location
 import { xpTransactions } from "@shared/schema/xp";
 
@@ -308,6 +321,46 @@ export interface IStorage {
     score: string;
     scoreDetails?: any;
   }): Promise<TournamentBracketMatch | undefined>;
+  
+  // PKL-278651-COACH-0001-CORE - S.A.G.E. (Skills Assessment & Growth Engine)
+  // Coaching Session operations
+  createCoachingSession(data: InsertCoachingSession): Promise<CoachingSession>;
+  getCoachingSession(id: number): Promise<CoachingSession | undefined>;
+  getCoachingSessionsByUserId(userId: number): Promise<CoachingSession[]>;
+  updateCoachingSession(id: number, data: Partial<InsertCoachingSession>): Promise<CoachingSession>;
+  
+  // Coaching Insight operations
+  createCoachingInsight(data: InsertCoachingInsight): Promise<CoachingInsight>;
+  getCoachingInsightsBySessionId(sessionId: number): Promise<CoachingInsight[]>;
+  getCoachingInsightsByUserId(userId: number): Promise<CoachingInsight[]>;
+  updateCoachingInsight(id: number, data: Partial<InsertCoachingInsight>): Promise<CoachingInsight>;
+  
+  // Training Plan operations
+  createTrainingPlan(data: InsertTrainingPlan): Promise<TrainingPlan>;
+  getTrainingPlan(id: number): Promise<TrainingPlan | undefined>;
+  getTrainingPlansByUserId(userId: number): Promise<TrainingPlan[]>;
+  updateTrainingPlan(id: number, data: Partial<InsertTrainingPlan>): Promise<TrainingPlan>;
+  
+  // Training Exercise operations
+  createTrainingExercise(data: InsertTrainingExercise): Promise<TrainingExercise>;
+  getTrainingExercisesByPlanId(planId: number): Promise<TrainingExercise[]>;
+  updateTrainingExercise(id: number, data: Partial<InsertTrainingExercise>): Promise<TrainingExercise>;
+  markExerciseComplete(id: number, completed: boolean): Promise<TrainingExercise>;
+  
+  // Coaching Content Library operations
+  getCoachingContent(options?: { 
+    contentType?: string, 
+    dimensionCode?: DimensionCode, 
+    skillLevel?: string, 
+    tags?: string[],
+    limit?: number
+  }): Promise<CoachingContentLibrary[]>;
+  createCoachingContent(data: InsertCoachingContentLibrary): Promise<CoachingContentLibrary>;
+  
+  // User Progress tracking
+  logUserProgress(data: InsertUserProgressLog): Promise<UserProgressLog>;
+  getUserProgressBySessionId(sessionId: number): Promise<UserProgressLog[]>;
+  getUserProgressByPlanId(planId: number): Promise<UserProgressLog[]>;
   
   // PKL-278651-COMM-0028-NOTIF-REALTIME - Notification Operations
   // User notification operations
@@ -4581,6 +4634,320 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('[Storage] updateNotificationPreference error:', error);
       throw error;
+    }
+  }
+
+  /**
+   * PKL-278651-COACH-0001-CORE - S.A.G.E. (Skills Assessment & Growth Engine)
+   * SAGE Coaching Session operations
+   */
+  
+  async createCoachingSession(data: InsertCoachingSession): Promise<CoachingSession> {
+    try {
+      const [session] = await db.insert(coachingSessions).values(data).returning();
+      return session;
+    } catch (error) {
+      console.error('[Storage] createCoachingSession error:', error);
+      throw error;
+    }
+  }
+
+  async getCoachingSession(id: number): Promise<CoachingSession | undefined> {
+    try {
+      const [session] = await db.select().from(coachingSessions).where(eq(coachingSessions.id, id));
+      return session;
+    } catch (error) {
+      console.error('[Storage] getCoachingSession error:', error);
+      return undefined;
+    }
+  }
+
+  async getCoachingSessionsByUserId(userId: number): Promise<CoachingSession[]> {
+    try {
+      return await db.select()
+        .from(coachingSessions)
+        .where(eq(coachingSessions.userId, userId))
+        .orderBy(desc(coachingSessions.createdAt));
+    } catch (error) {
+      console.error('[Storage] getCoachingSessionsByUserId error:', error);
+      return [];
+    }
+  }
+
+  async updateCoachingSession(id: number, data: Partial<InsertCoachingSession>): Promise<CoachingSession> {
+    try {
+      const [updatedSession] = await db.update(coachingSessions)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(coachingSessions.id, id))
+        .returning();
+      return updatedSession;
+    } catch (error) {
+      console.error('[Storage] updateCoachingSession error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * SAGE Coaching Insight operations
+   */
+  
+  async createCoachingInsight(data: InsertCoachingInsight): Promise<CoachingInsight> {
+    try {
+      const [insight] = await db.insert(coachingInsights).values(data).returning();
+      return insight;
+    } catch (error) {
+      console.error('[Storage] createCoachingInsight error:', error);
+      throw error;
+    }
+  }
+
+  async getCoachingInsightsBySessionId(sessionId: number): Promise<CoachingInsight[]> {
+    try {
+      return await db.select()
+        .from(coachingInsights)
+        .where(eq(coachingInsights.sessionId, sessionId))
+        .orderBy([desc(coachingInsights.priority), asc(coachingInsights.id)]);
+    } catch (error) {
+      console.error('[Storage] getCoachingInsightsBySessionId error:', error);
+      return [];
+    }
+  }
+
+  async getCoachingInsightsByUserId(userId: number): Promise<CoachingInsight[]> {
+    try {
+      // Join with sessions to filter by user
+      const results = await db.select({
+        insight: coachingInsights
+      })
+      .from(coachingInsights)
+      .innerJoin(
+        coachingSessions,
+        eq(coachingInsights.sessionId, coachingSessions.id)
+      )
+      .where(eq(coachingSessions.userId, userId))
+      .orderBy(desc(coachingInsights.createdAt));
+      
+      return results.map(r => r.insight);
+    } catch (error) {
+      console.error('[Storage] getCoachingInsightsByUserId error:', error);
+      return [];
+    }
+  }
+
+  async updateCoachingInsight(id: number, data: Partial<InsertCoachingInsight>): Promise<CoachingInsight> {
+    try {
+      const [updatedInsight] = await db.update(coachingInsights)
+        .set(data)
+        .where(eq(coachingInsights.id, id))
+        .returning();
+      return updatedInsight;
+    } catch (error) {
+      console.error('[Storage] updateCoachingInsight error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * SAGE Training Plan operations
+   */
+  
+  async createTrainingPlan(data: InsertTrainingPlan): Promise<TrainingPlan> {
+    try {
+      const [plan] = await db.insert(trainingPlans).values(data).returning();
+      return plan;
+    } catch (error) {
+      console.error('[Storage] createTrainingPlan error:', error);
+      throw error;
+    }
+  }
+
+  async getTrainingPlan(id: number): Promise<TrainingPlan | undefined> {
+    try {
+      const [plan] = await db.select().from(trainingPlans).where(eq(trainingPlans.id, id));
+      return plan;
+    } catch (error) {
+      console.error('[Storage] getTrainingPlan error:', error);
+      return undefined;
+    }
+  }
+
+  async getTrainingPlansByUserId(userId: number): Promise<TrainingPlan[]> {
+    try {
+      // Join with sessions to filter by user
+      const results = await db.select({
+        plan: trainingPlans
+      })
+      .from(trainingPlans)
+      .innerJoin(
+        coachingSessions,
+        eq(trainingPlans.sessionId, coachingSessions.id)
+      )
+      .where(eq(coachingSessions.userId, userId))
+      .orderBy(desc(trainingPlans.createdAt));
+      
+      return results.map(r => r.plan);
+    } catch (error) {
+      console.error('[Storage] getTrainingPlansByUserId error:', error);
+      return [];
+    }
+  }
+
+  async updateTrainingPlan(id: number, data: Partial<InsertTrainingPlan>): Promise<TrainingPlan> {
+    try {
+      const [updatedPlan] = await db.update(trainingPlans)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(trainingPlans.id, id))
+        .returning();
+      return updatedPlan;
+    } catch (error) {
+      console.error('[Storage] updateTrainingPlan error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * SAGE Training Exercise operations
+   */
+  
+  async createTrainingExercise(data: InsertTrainingExercise): Promise<TrainingExercise> {
+    try {
+      const [exercise] = await db.insert(trainingExercises).values(data).returning();
+      return exercise;
+    } catch (error) {
+      console.error('[Storage] createTrainingExercise error:', error);
+      throw error;
+    }
+  }
+
+  async getTrainingExercisesByPlanId(planId: number): Promise<TrainingExercise[]> {
+    try {
+      return await db.select()
+        .from(trainingExercises)
+        .where(eq(trainingExercises.planId, planId))
+        .orderBy([asc(trainingExercises.dayNumber), asc(trainingExercises.orderInDay)]);
+    } catch (error) {
+      console.error('[Storage] getTrainingExercisesByPlanId error:', error);
+      return [];
+    }
+  }
+
+  async updateTrainingExercise(id: number, data: Partial<InsertTrainingExercise>): Promise<TrainingExercise> {
+    try {
+      const [updatedExercise] = await db.update(trainingExercises)
+        .set(data)
+        .where(eq(trainingExercises.id, id))
+        .returning();
+      return updatedExercise;
+    } catch (error) {
+      console.error('[Storage] updateTrainingExercise error:', error);
+      throw error;
+    }
+  }
+
+  async markExerciseComplete(id: number, completed: boolean): Promise<TrainingExercise> {
+    try {
+      const [updatedExercise] = await db.update(trainingExercises)
+        .set({ isCompleted: completed })
+        .where(eq(trainingExercises.id, id))
+        .returning();
+      return updatedExercise;
+    } catch (error) {
+      console.error('[Storage] markExerciseComplete error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * SAGE Coaching Content Library operations
+   */
+  
+  async getCoachingContent(options?: { 
+    contentType?: string, 
+    dimensionCode?: DimensionCode, 
+    skillLevel?: string, 
+    tags?: string[],
+    limit?: number
+  }): Promise<CoachingContentLibrary[]> {
+    try {
+      let query = db.select().from(coachingContentLibrary);
+      
+      if (options) {
+        if (options.contentType) {
+          query = query.where(eq(coachingContentLibrary.contentType, options.contentType));
+        }
+        
+        if (options.dimensionCode) {
+          query = query.where(eq(coachingContentLibrary.dimensionCode, options.dimensionCode));
+        }
+        
+        if (options.skillLevel) {
+          query = query.where(eq(coachingContentLibrary.skillLevel, options.skillLevel));
+        }
+        
+        if (options.tags && options.tags.length > 0) {
+          // Find content that contains any of the tags
+          for (const tag of options.tags) {
+            query = query.where(sql`${coachingContentLibrary.tags} LIKE ${`%${tag}%`}`);
+          }
+        }
+        
+        if (options.limit) {
+          query = query.limit(options.limit);
+        }
+      }
+      
+      return await query.orderBy(desc(coachingContentLibrary.updatedAt));
+    } catch (error) {
+      console.error('[Storage] getCoachingContent error:', error);
+      return [];
+    }
+  }
+
+  async createCoachingContent(data: InsertCoachingContentLibrary): Promise<CoachingContentLibrary> {
+    try {
+      const [content] = await db.insert(coachingContentLibrary).values(data).returning();
+      return content;
+    } catch (error) {
+      console.error('[Storage] createCoachingContent error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * SAGE User Progress tracking
+   */
+  
+  async logUserProgress(data: InsertUserProgressLog): Promise<UserProgressLog> {
+    try {
+      const [progressLog] = await db.insert(userProgressLogs).values(data).returning();
+      return progressLog;
+    } catch (error) {
+      console.error('[Storage] logUserProgress error:', error);
+      throw error;
+    }
+  }
+
+  async getUserProgressBySessionId(sessionId: number): Promise<UserProgressLog[]> {
+    try {
+      return await db.select()
+        .from(userProgressLogs)
+        .where(eq(userProgressLogs.sessionId, sessionId))
+        .orderBy(desc(userProgressLogs.createdAt));
+    } catch (error) {
+      console.error('[Storage] getUserProgressBySessionId error:', error);
+      return [];
+    }
+  }
+
+  async getUserProgressByPlanId(planId: number): Promise<UserProgressLog[]> {
+    try {
+      return await db.select()
+        .from(userProgressLogs)
+        .where(eq(userProgressLogs.planId, planId))
+        .orderBy(desc(userProgressLogs.createdAt));
+    } catch (error) {
+      console.error('[Storage] getUserProgressByPlanId error:', error);
+      return [];
     }
   }
 }

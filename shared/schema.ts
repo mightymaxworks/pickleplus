@@ -367,6 +367,45 @@ import {
   type InsertNotificationPreference
 } from './schema/notifications';
 
+// Import S.A.G.E. coaching schema (PKL-278651-COACH-0001-CORE - Skills Assessment & Growth Engine)
+import {
+  coachingSessions,
+  coachingInsights,
+  trainingPlans,
+  trainingExercises,
+  coachingContentLibrary,
+  userProgressLogs,
+  coachingSessionsRelations,
+  coachingInsightsRelations,
+  trainingPlansRelations,
+  trainingExercisesRelations,
+  userProgressLogsRelations,
+  insertCoachingSessionSchema,
+  insertCoachingInsightSchema,
+  insertTrainingPlanSchema,
+  insertTrainingExerciseSchema,
+  insertCoachingContentLibrarySchema,
+  insertUserProgressLogSchema,
+  type CoachingSession,
+  type InsertCoachingSession,
+  type CoachingInsight,
+  type InsertCoachingInsight,
+  type TrainingPlan,
+  type InsertTrainingPlan,
+  type TrainingExercise,
+  type InsertTrainingExercise,
+  type CoachingContentLibrary,
+  type InsertCoachingContentLibrary,
+  type UserProgressLog,
+  type InsertUserProgressLog,
+  DimensionCodes,
+  InsightTypes,
+  SessionTypes,
+  type DimensionCode,
+  type InsightType,
+  type SessionType
+} from './schema/sage';
+
 // User table
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
