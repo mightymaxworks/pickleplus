@@ -266,6 +266,15 @@ export default function App() {
                     />}
                   </Route>
                   
+                  {/* Referee-specific route example */}
+                  <Route path="/referee/matches">
+                    {() => <RoleProtectedRoute 
+                      component={RoleProtectedDemoPage} 
+                      path="/referee/matches" 
+                      requiredRole={UserRole.REFEREE} 
+                    />}
+                  </Route>
+                  
                   {/* Admin-specific route example */}
                   <Route path="/admin/system">
                     {() => <RoleProtectedRoute 
