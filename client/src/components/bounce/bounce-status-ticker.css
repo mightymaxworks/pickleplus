@@ -3,8 +3,9 @@
  * 
  * Simple CSS animations for BounceStatusTicker component
  * 
- * @version 1.0.0
+ * @version 1.1.0
  * @framework Framework5.3
+ * @lastModified 2025-04-24
  */
 
 @keyframes scroll {
@@ -25,7 +26,7 @@
 .ticker-content {
   display: inline-block;
   white-space: nowrap;
-  animation: scroll 30s linear infinite; /* Faster speed: 30s instead of 60s */
+  animation: scroll 45s linear infinite; /* Optimized speed: 45s for better readability */
   position: relative;
 }
 

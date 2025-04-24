@@ -1,11 +1,13 @@
 /**
  * PKL-278651-COMM-0007 - Enhanced Referral System & Community Ticker
+ * PKL-278651-COMM-0007.1 - Content and Speed Improvements
  * 
  * Simplified BounceStatusTicker - A scrolling ticker that shows pickleball tips
- * and community activity.
+ * and community activity with contextual content based on page.
  * 
- * @version 1.0.0
+ * @version 1.1.0
  * @framework Framework5.3
+ * @lastModified 2025-04-24
  */
 
 import { useState, useEffect } from 'react';
@@ -42,6 +44,54 @@ export const BounceStatusTicker = ({
   const [isLoading, setIsLoading] = useState(true);
   const [tickerText, setTickerText] = useState('');
   const [, setLocation] = useLocation();
+  const [currentPath, setCurrentPath] = useState('/');
+
+  // Update current path for contextual messages
+  useEffect(() => {
+    setCurrentPath(window.location.pathname);
+  }, []);
+
+  // Helper function to get contextual messages based on current page
+  const getContextualMessages = (path: string): string[] => {
+    // Default action-oriented messages that apply everywhere
+    const actionMessages = [
+      '🔥 Record matches regularly to improve your CourtIQ™ score',
+      '💪 Complete your player profile to get matched with compatible partners',
+      '🌟 Earn XP by participating in community events and tournaments'
+    ];
+    
+    // Page-specific contextual messages
+    if (path.includes('/dashboard')) {
+      return [
+        '📊 Your win rate is displayed in the statistics card below',
+        '📈 CourtIQ™ ratings update after every 5 matches you play',
+        ...actionMessages
+      ];
+    } else if (path.includes('/matches')) {
+      return [
+        '🏆 Record your matches to track your progress over time',
+        '📱 Use the quick match button to log matches in seconds',
+        '📊 Match history shows your performance trends',
+        ...actionMessages
+      ];
+    } else if (path.includes('/refer')) {
+      return [
+        '🎁 Earn 20-40 XP for each friend who joins with your referral code',
+        '🏅 Refer 5 friends to earn the "Influencer" badge and 50 XP',
+        '🏆 Reach 30 referrals to become a "Community Legend"',
+        ...actionMessages
+      ];
+    } else if (path.includes('/profile')) {
+      return [
+        '🔄 Update your preferences to find better match partners',
+        '📝 A complete profile increases your visibility in the community',
+        '🏆 Showcase your achievements on your profile page',
+        ...actionMessages
+      ];
+    } else {
+      return actionMessages;
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -55,8 +105,16 @@ export const BounceStatusTicker = ({
         const activityResponse = await fetch('/api/referrals/activity');
         const activityData = activityResponse.ok ? await activityResponse.json() : { activity: [] };
         
+        // Get contextual messages for current page
+        const contextualMessages = getContextualMessages(currentPath);
+        
         // Format the ticker text
         let text = '';
+        
+        // Add contextual messages first
+        contextualMessages.forEach(message => {
+          text += `${message} • `;
+        });
         
         // Add tips
         if (tipsData && Array.isArray(tipsData) && tipsData.length > 0) {
@@ -90,14 +148,20 @@ export const BounceStatusTicker = ({
         setIsLoading(false);
       } catch (error) {
         console.error('Error fetching ticker data:', error);
-        // Fallback text
-        setTickerText('Keep your paddle up and ready between shots for quicker reactions • Practice dinking to improve your soft game at the kitchen line • ');
+        // Fallback text with contextual messages
+        const contextualMessages = getContextualMessages(currentPath);
+        let fallbackText = '';
+        contextualMessages.forEach(message => {
+          fallbackText += `${message} • `;
+        });
+        fallbackText += 'Keep your paddle up and ready between shots for quicker reactions • Practice dinking to improve your soft game at the kitchen line • ';
+        setTickerText(fallbackText);
         setIsLoading(false);
       }
     };
     
     fetchData();
-  }, []);
+  }, [currentPath]);
 
   if (isLoading) {
     return (
