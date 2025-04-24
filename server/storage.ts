@@ -453,6 +453,416 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   sessionStore: Store;
   
+  /**
+   * PKL-278651-AUTH-0016-PROLES - Role Management Implementation
+   * Role operations
+   */
+  
+  // Get all available roles
+  async getAllRoles(): Promise<Role[]> {
+    try {
+      return await db.select().from(roles).orderBy(roles.priority);
+    } catch (error) {
+      console.error('[Storage] getAllRoles error:', error);
+      return [];
+    }
+  }
+  
+  // Get a specific role by ID
+  async getRoleById(id: number): Promise<Role | undefined> {
+    try {
+      const [role] = await db.select().from(roles).where(eq(roles.id, id));
+      return role;
+    } catch (error) {
+      console.error('[Storage] getRoleById error:', error);
+      return undefined;
+    }
+  }
+  
+  // Get a specific role by name
+  async getRoleByName(name: string): Promise<Role | undefined> {
+    try {
+      const [role] = await db.select().from(roles).where(eq(roles.name, name));
+      return role;
+    } catch (error) {
+      console.error('[Storage] getRoleByName error:', error);
+      return undefined;
+    }
+  }
+  
+  // Create a new role
+  async createRole(roleData: InsertRole): Promise<Role> {
+    try {
+      const [role] = await db.insert(roles).values(roleData).returning();
+      return role;
+    } catch (error) {
+      console.error('[Storage] createRole error:', error);
+      throw error;
+    }
+  }
+  
+  // Update an existing role
+  async updateRole(id: number, updates: Partial<InsertRole>): Promise<Role | undefined> {
+    try {
+      const [updatedRole] = await db.update(roles)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(roles.id, id))
+        .returning();
+      return updatedRole;
+    } catch (error) {
+      console.error('[Storage] updateRole error:', error);
+      return undefined;
+    }
+  }
+  
+  // Delete a role
+  async deleteRole(id: number): Promise<boolean> {
+    try {
+      // Check if role is in use
+      const usersWithRole = await db.select().from(userRoles).where(eq(userRoles.roleId, id));
+      if (usersWithRole.length > 0) {
+        throw new Error('Cannot delete role that is assigned to users');
+      }
+      
+      // Delete role permissions first
+      await db.delete(rolePermissions).where(eq(rolePermissions.roleId, id));
+      
+      // Then delete the role
+      const result = await db.delete(roles).where(eq(roles.id, id)).returning({ id: roles.id });
+      return result.length > 0;
+    } catch (error) {
+      console.error('[Storage] deleteRole error:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * User role operations
+   */
+  
+  // Get all roles for a user
+  async getUserRoles(userId: number): Promise<(DbUserRole & { role: Role })[]> {
+    try {
+      return await db.select({
+        userRole: userRoles,
+        role: roles
+      })
+      .from(userRoles)
+      .innerJoin(roles, eq(userRoles.roleId, roles.id))
+      .where(eq(userRoles.userId, userId))
+      .then(results => results.map(({ userRole, role }) => ({ ...userRole, role })));
+    } catch (error) {
+      console.error('[Storage] getUserRoles error:', error);
+      return [];
+    }
+  }
+  
+  // Assign a role to a user
+  async assignRoleToUser(userId: number, roleId: number, assignedBy?: number): Promise<DbUserRole> {
+    try {
+      // Check if user already has this role
+      const existingRole = await db.select()
+        .from(userRoles)
+        .where(and(
+          eq(userRoles.userId, userId),
+          eq(userRoles.roleId, roleId)
+        ));
+      
+      if (existingRole.length > 0) {
+        // If role exists but is inactive, reactivate it
+        if (!existingRole[0].isActive) {
+          const [updatedRole] = await db.update(userRoles)
+            .set({ 
+              isActive: true,
+              assignedBy: assignedBy || null,
+              assignedAt: new Date()
+            })
+            .where(and(
+              eq(userRoles.userId, userId),
+              eq(userRoles.roleId, roleId)
+            ))
+            .returning();
+            
+          // Log the reactivation
+          await this.createRoleAuditLog({
+            userId,
+            roleId,
+            action: 'REACTIVATE',
+            performedBy: assignedBy,
+            performedAt: new Date(),
+            notes: 'Role reactivated'
+          });
+          
+          return updatedRole;
+        }
+        
+        // Return the existing role
+        return existingRole[0];
+      }
+      
+      // Create a new role assignment
+      const [newUserRole] = await db.insert(userRoles)
+        .values({
+          userId,
+          roleId,
+          assignedBy: assignedBy || null,
+          assignedAt: new Date(),
+          isActive: true
+        })
+        .returning();
+      
+      // Log the role assignment
+      await this.createRoleAuditLog({
+        userId,
+        roleId,
+        action: 'ASSIGN',
+        performedBy: assignedBy,
+        performedAt: new Date(),
+        notes: 'Role assigned'
+      });
+      
+      return newUserRole;
+    } catch (error) {
+      console.error('[Storage] assignRoleToUser error:', error);
+      throw error;
+    }
+  }
+  
+  // Remove a role from a user
+  async removeRoleFromUser(userId: number, roleId: number): Promise<boolean> {
+    try {
+      // Soft delete by setting isActive to false
+      const result = await db.update(userRoles)
+        .set({ isActive: false })
+        .where(and(
+          eq(userRoles.userId, userId),
+          eq(userRoles.roleId, roleId)
+        ))
+        .returning({ id: userRoles.id });
+      
+      if (result.length > 0) {
+        // Log the role removal
+        await this.createRoleAuditLog({
+          userId,
+          roleId,
+          action: 'REMOVE',
+          performedAt: new Date(),
+          notes: 'Role removed'
+        });
+        
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('[Storage] removeRoleFromUser error:', error);
+      return false;
+    }
+  }
+  
+  // Check if a user has a specific role
+  async hasRole(userId: number, roleName: string): Promise<boolean> {
+    try {
+      const role = await this.getRoleByName(roleName);
+      if (!role) return false;
+      
+      const userRolesResult = await db.select()
+        .from(userRoles)
+        .where(and(
+          eq(userRoles.userId, userId),
+          eq(userRoles.roleId, role.id),
+          eq(userRoles.isActive, true)
+        ));
+      
+      return userRolesResult.length > 0;
+    } catch (error) {
+      console.error('[Storage] hasRole error:', error);
+      return false;
+    }
+  }
+  
+  // Get all users with a specific role
+  async getUsersWithRole(roleId: number, options?: { limit?: number, offset?: number }): Promise<(DbUserRole & { user: User })[]> {
+    try {
+      const limit = options?.limit || 100;
+      const offset = options?.offset || 0;
+      
+      return await db.select({
+        userRole: userRoles,
+        user: users
+      })
+      .from(userRoles)
+      .innerJoin(users, eq(userRoles.userId, users.id))
+      .where(and(
+        eq(userRoles.roleId, roleId),
+        eq(userRoles.isActive, true)
+      ))
+      .limit(limit)
+      .offset(offset)
+      .then(results => results.map(({ userRole, user }) => ({ ...userRole, user })));
+    } catch (error) {
+      console.error('[Storage] getUsersWithRole error:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * Role permissions operations
+   */
+  
+  // Get all permissions
+  async getAllPermissions(): Promise<Permission[]> {
+    try {
+      return await db.select().from(permissions).orderBy(permissions.name);
+    } catch (error) {
+      console.error('[Storage] getAllPermissions error:', error);
+      return [];
+    }
+  }
+  
+  // Get a specific permission by ID
+  async getPermissionById(id: number): Promise<Permission | undefined> {
+    try {
+      const [permission] = await db.select().from(permissions).where(eq(permissions.id, id));
+      return permission;
+    } catch (error) {
+      console.error('[Storage] getPermissionById error:', error);
+      return undefined;
+    }
+  }
+  
+  // Get a specific permission by name
+  async getPermissionByName(name: string): Promise<Permission | undefined> {
+    try {
+      const [permission] = await db.select().from(permissions).where(eq(permissions.name, name));
+      return permission;
+    } catch (error) {
+      console.error('[Storage] getPermissionByName error:', error);
+      return undefined;
+    }
+  }
+  
+  // Create a new permission
+  async createPermission(permissionData: InsertPermission): Promise<Permission> {
+    try {
+      const [permission] = await db.insert(permissions).values(permissionData).returning();
+      return permission;
+    } catch (error) {
+      console.error('[Storage] createPermission error:', error);
+      throw error;
+    }
+  }
+  
+  // Get all permissions assigned to a role
+  async getRolePermissions(roleId: number): Promise<(RolePermission & { permission: Permission })[]> {
+    try {
+      return await db.select({
+        rolePermission: rolePermissions,
+        permission: permissions
+      })
+      .from(rolePermissions)
+      .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
+      .where(eq(rolePermissions.roleId, roleId))
+      .then(results => results.map(({ rolePermission, permission }) => ({ ...rolePermission, permission })));
+    } catch (error) {
+      console.error('[Storage] getRolePermissions error:', error);
+      return [];
+    }
+  }
+  
+  // Assign a permission to a role
+  async assignPermissionToRole(roleId: number, permissionId: number): Promise<RolePermission> {
+    try {
+      // Check if permission is already assigned to role
+      const existingPermission = await db.select()
+        .from(rolePermissions)
+        .where(and(
+          eq(rolePermissions.roleId, roleId),
+          eq(rolePermissions.permissionId, permissionId)
+        ));
+      
+      if (existingPermission.length > 0) {
+        return existingPermission[0];
+      }
+      
+      // Create a new role permission
+      const [newRolePermission] = await db.insert(rolePermissions)
+        .values({
+          roleId,
+          permissionId
+        })
+        .returning();
+      
+      return newRolePermission;
+    } catch (error) {
+      console.error('[Storage] assignPermissionToRole error:', error);
+      throw error;
+    }
+  }
+  
+  // Remove a permission from a role
+  async removePermissionFromRole(roleId: number, permissionId: number): Promise<boolean> {
+    try {
+      const result = await db.delete(rolePermissions)
+        .where(and(
+          eq(rolePermissions.roleId, roleId),
+          eq(rolePermissions.permissionId, permissionId)
+        ))
+        .returning({ id: rolePermissions.id });
+      
+      return result.length > 0;
+    } catch (error) {
+      console.error('[Storage] removePermissionFromRole error:', error);
+      return false;
+    }
+  }
+  
+  /**
+   * Role audit operations
+   */
+  
+  // Create a role audit log entry
+  async createRoleAuditLog(logData: InsertRoleAuditLog): Promise<RoleAuditLog> {
+    try {
+      const [log] = await db.insert(roleAuditLogs).values(logData).returning();
+      return log;
+    } catch (error) {
+      console.error('[Storage] createRoleAuditLog error:', error);
+      throw error;
+    }
+  }
+  
+  // Get role audit logs with filtering
+  async getRoleAuditLogs(filters?: { userId?: number, roleId?: number, action?: string, limit?: number, offset?: number }): Promise<RoleAuditLog[]> {
+    try {
+      const limit = filters?.limit || 100;
+      const offset = filters?.offset || 0;
+      
+      let query = db.select().from(roleAuditLogs);
+      
+      // Apply filters
+      if (filters?.userId) {
+        query = query.where(eq(roleAuditLogs.userId, filters.userId));
+      }
+      
+      if (filters?.roleId) {
+        query = query.where(eq(roleAuditLogs.roleId, filters.roleId));
+      }
+      
+      if (filters?.action) {
+        query = query.where(eq(roleAuditLogs.action, filters.action));
+      }
+      
+      // Apply pagination
+      query = query.limit(limit).offset(offset).orderBy(desc(roleAuditLogs.performedAt));
+      
+      return await query;
+    } catch (error) {
+      console.error('[Storage] getRoleAuditLogs error:', error);
+      return [];
+    }
+  }
+  
   // PKL-278651-COMM-0007 - Enhanced Referral System & Community Ticker
   // Referral operations
   

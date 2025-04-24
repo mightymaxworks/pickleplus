@@ -19,6 +19,7 @@ import { registerUserSearchRoutes } from "./routes/user-search-routes"; // PKL-2
 import { registerMasteryPathsRoutes } from "./modules/mastery/masteryPathsRoutes"; // PKL-278651-RATE-0004-MADV
 import { registerHealthCheckRoutes } from "./routes/health-check-routes"; // Simple health check routes
 import { registerPassportVerificationRoutes } from "./routes/passport-verification-routes"; // PKL-278651-CONN-0004-PASS-ADMIN
+import { registerUserRolesRoutes } from "./routes/user-roles-routes"; // PKL-278651-AUTH-0016-PROLES - Role Management
 import securityRoutes from "./routes/security-routes";
 import multiRankingsRoutes from "./routes/multi-rankings-routes"; // PKL-278651-PRANK-0008-FWK52
 import courtiqRoutes from "./routes/courtiq-routes"; // PKL-278651-CRTIQ-0009-FWK52
@@ -62,6 +63,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   registerMasteryPathsRoutes(app); // PKL-278651-RATE-0004-MADV - CourtIQ Mastery Paths
   registerHealthCheckRoutes(app); // Simple health check route
   registerPassportVerificationRoutes(app); // PKL-278651-CONN-0004-PASS-ADMIN - Passport verification routes
+  registerUserRolesRoutes(app); // PKL-278651-AUTH-0016-PROLES - Role Management
   
   // Mount security routes
   app.use('/api/security', securityRoutes);

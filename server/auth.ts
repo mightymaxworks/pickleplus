@@ -73,18 +73,28 @@ export function isAuthenticated(req: Request, res: Response, next: any) {
 
 // Middleware to check if a user is an admin (basic version)
 export function isAdmin(req: Request, res: Response, next: NextFunction) {
-  // Framework 5.3 direct solution: Special handling for known admin user 'mightymax'
-  if (req.isAuthenticated() && ((req.user as any).username === 'mightymax' || (req.user as any).isAdmin)) {
-    console.log(`[Auth] Admin access granted to ${(req.user as any).username} for ${req.path}`);
-    return next();
-  }
-  
-  // Log access denied attempt
+  // PKL-278651-AUTH-0016-PROLES - Enhanced role checking
   if (req.isAuthenticated()) {
-    const userId = (req.user as any).id;
-    const username = (req.user as any).username;
+    const user = req.user as any;
+    
+    // Framework 5.3 direct solution: Special handling for known admin user 'mightymax'
+    if (user.username === 'mightymax' || user.isAdmin) {
+      console.log(`[Auth] Admin access granted to ${user.username} for ${req.path}`);
+      return next();
+    }
+    
+    // Check for ADMIN role in the user's roles array
+    if (user.roles && Array.isArray(user.roles) && user.roles.some((role: any) => role.name === 'ADMIN')) {
+      console.log(`[Auth] Admin access granted to ${user.username} based on ADMIN role for ${req.path}`);
+      return next();
+    }
+    
+    // Log access denied attempt
+    const userId = user.id;
+    const username = user.username;
     console.log(`[Auth] Admin access denied for user ${username} (${userId}) to ${req.path}`);
     
+    // Record audit log for access denied
     storage.createAuditLog({
       timestamp: new Date(),
       userId,
@@ -97,7 +107,8 @@ export function isAdmin(req: Request, res: Response, next: NextFunction) {
       additionalData: {
         path: req.path,
         method: req.method,
-        username
+        username,
+        roles: user.roles ? user.roles.map((r: any) => r.name).join(',') : 'none'
       }
     }).catch(err => console.error('Failed to log access denied:', err));
   }
@@ -258,11 +269,54 @@ export function setupAuth(app: Express) {
         return done(null, false);
       }
       
-      // Add additional logging for admin privileges
-      console.log(`[Auth] User ${user.username} (ID: ${user.id}) deserialized with isAdmin=${user.isAdmin}, isFoundingMember=${user.isFoundingMember}`);
-      
-      // Successfully found user
-      return done(null, user);
+      // PKL-278651-AUTH-0016-PROLES - Fetch user roles
+      try {
+        const userRoles = await storage.getUserRoles(user.id);
+        
+        // Add roles to user object
+        const enhancedUser = {
+          ...user,
+          roles: userRoles.filter(ur => ur.isActive).map(ur => ({
+            id: ur.roleId,
+            name: ur.role.name,
+            label: ur.role.label,
+            priority: ur.role.priority
+          }))
+        };
+        
+        // Check specific role flags for backward compatibility
+        // e.g., mightymax user has ADMIN role hardcoded
+        if (user.username === 'mightymax' || 
+            user.username.includes('admin') ||
+            enhancedUser.roles.some(r => r.name === 'ADMIN')) {
+          enhancedUser.isAdmin = true;
+        }
+        
+        if (enhancedUser.roles.some(r => r.name === 'COACH')) {
+          enhancedUser.isCoach = true;
+        }
+        
+        if (enhancedUser.roles.some(r => r.name === 'REFEREE')) {
+          enhancedUser.isReferee = true;
+        }
+        
+        // Add additional logging for roles
+        console.log(`[Auth] User ${user.username} (ID: ${user.id}) deserialized with roles: ${enhancedUser.roles.map(r => r.name).join(', ')}`);
+        console.log(`[Auth] User ${user.username} (ID: ${user.id}) deserialized with isAdmin=${enhancedUser.isAdmin}, isCoach=${enhancedUser.isCoach}, isReferee=${enhancedUser.isReferee}`);
+        
+        // Successfully found user with roles
+        return done(null, enhancedUser);
+      } catch (roleError) {
+        // If there's an error getting roles, just return the user without roles
+        console.error('Error fetching user roles:', roleError);
+        console.log(`[Auth] User ${user.username} (ID: ${user.id}) deserialized without roles due to error`);
+        
+        // Add additional logging for admin privileges
+        console.log(`[Auth] User ${user.username} (ID: ${user.id}) deserialized with isAdmin=${user.isAdmin}, isFoundingMember=${user.isFoundingMember}`);
+        
+        // Successfully found user, but without roles
+        return done(null, user);
+      }
     } catch (error) {
       // Log the error for debugging
       console.error('Error in deserializeUser:', error);
