@@ -14,7 +14,7 @@ import React from 'react';
 import { useLocation } from 'wouter';
 import { motion } from 'framer-motion';
 import { Home, Calendar, Users, Award, User } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 
 // No props needed as we get the user from useAuth hook
 

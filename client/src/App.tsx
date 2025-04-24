@@ -520,8 +520,8 @@ export default function App() {
             </TournamentChangeProvider>
           </UserDataProvider>
         </AuthProvider>
+        <Toaster />
       </QueryClientProvider>
-      <Toaster />
     </div>
   )
 }
