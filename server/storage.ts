@@ -9,6 +9,7 @@ import {
 import {
   coachingSessions, coachingInsights, trainingPlans, trainingExercises, 
   coachingContentLibrary, userProgressLogs, coachingConversations, coachingMessages,
+  coachingProfiles, journalEntries, journalPrompts, journalReflections,
   type CoachingSession, type InsertCoachingSession,
   type CoachingInsight, type InsertCoachingInsight,
   type TrainingPlan, type InsertTrainingPlan,
@@ -17,6 +18,10 @@ import {
   type UserProgressLog, type InsertUserProgressLog,
   type CoachingConversation, type InsertCoachingConversation,
   type CoachingMessage, type InsertCoachingMessage,
+  type CoachingProfile, type InsertCoachingProfile,
+  type JournalEntry, type InsertJournalEntry,
+  type JournalPrompt, type InsertJournalPrompt,
+  type JournalReflection, type InsertJournalReflection,
   DimensionCodes, type DimensionCode
 } from "@shared/schema/sage";
 
@@ -145,7 +150,19 @@ export interface IStorage {
   // Message operations
   createMessage(data: InsertCoachingMessage): Promise<CoachingMessage>;
   getMessagesByConversationId(conversationId: number): Promise<CoachingMessage[]>;
+  getRecentMessages(conversationId: number, limit: number): Promise<CoachingMessage[]>;
   updateMessageFeedback(id: number, feedback: 'positive' | 'negative' | null): Promise<CoachingMessage>;
+  
+  // Coaching profile operations
+  getCoachingProfile(userId: number): Promise<CoachingProfile | undefined>;
+  createCoachingProfile(data: InsertCoachingProfile): Promise<CoachingProfile>;
+  updateCoachingProfile(userId: number, data: Partial<InsertCoachingProfile>): Promise<CoachingProfile>;
+  
+  // Journal integration operations
+  getRecentJournalEntries(userId: number, limit: number): Promise<JournalEntry[]>;
+  
+  // Court IQ operations
+  getCourtIQRatings(userId: number): Promise<Record<DimensionCode, number>>;
   
   // PKL-278651-AUTH-0016-PROLES - Role Management
   // Role operations
@@ -5079,6 +5096,162 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('[Storage] updateMessageFeedback error:', error);
       throw error;
+    }
+  }
+  
+  /**
+   * PKL-278651-SAGE-0002-ADV - Advanced Dialogue Support
+   * Get the most recent messages in a conversation
+   */
+  async getRecentMessages(conversationId: number, limit: number): Promise<CoachingMessage[]> {
+    try {
+      // Get the most recent messages in chronological order
+      return await db
+        .select()
+        .from(coachingMessages)
+        .where(eq(coachingMessages.conversationId, conversationId))
+        .orderBy(desc(coachingMessages.sentAt))
+        .limit(limit)
+        .then(messages => messages.reverse()); // Reverse to get chronological order
+    } catch (error) {
+      console.error('[Storage] getRecentMessages error:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * PKL-278651-SAGE-0004-COACH - SAGE Coaching Profiles
+   * Get a user's coaching profile for personalized interactions
+   */
+  async getCoachingProfile(userId: number): Promise<CoachingProfile | undefined> {
+    try {
+      const [profile] = await db
+        .select()
+        .from(coachingProfiles)
+        .where(eq(coachingProfiles.userId, userId));
+      return profile;
+    } catch (error) {
+      console.error('[Storage] getCoachingProfile error:', error);
+      return undefined;
+    }
+  }
+  
+  /**
+   * Create a new coaching profile for a user
+   */
+  async createCoachingProfile(data: InsertCoachingProfile): Promise<CoachingProfile> {
+    try {
+      const [profile] = await db
+        .insert(coachingProfiles)
+        .values(data)
+        .returning();
+      return profile;
+    } catch (error) {
+      console.error('[Storage] createCoachingProfile error:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Update a user's coaching profile, creating it if it doesn't exist
+   */
+  async updateCoachingProfile(userId: number, data: Partial<InsertCoachingProfile>): Promise<CoachingProfile> {
+    try {
+      // First check if profile exists
+      const existingProfile = await this.getCoachingProfile(userId);
+      
+      if (existingProfile) {
+        // Update existing profile
+        const [profile] = await db
+          .update(coachingProfiles)
+          .set(data)
+          .where(eq(coachingProfiles.userId, userId))
+          .returning();
+        return profile;
+      } else {
+        // Create new profile if doesn't exist
+        return this.createCoachingProfile({
+          userId,
+          ...data,
+          lastInteractionAt: data.lastInteractionAt || new Date(),
+          conversationCount: data.conversationCount || 0,
+          trainingPlanCount: data.trainingPlanCount || 0,
+          journalEntryCount: data.journalEntryCount || 0,
+          interestsData: data.interestsData || {}
+        });
+      }
+    } catch (error) {
+      console.error('[Storage] updateCoachingProfile error:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * PKL-278651-SAGE-0003-JOURNAL - Journal Integration
+   * Get the user's most recent journal entries
+   */
+  async getRecentJournalEntries(userId: number, limit: number): Promise<JournalEntry[]> {
+    try {
+      return await db
+        .select()
+        .from(journalEntries)
+        .where(eq(journalEntries.userId, userId))
+        .orderBy(desc(journalEntries.createdAt))
+        .limit(limit);
+    } catch (error) {
+      console.error('[Storage] getRecentJournalEntries error:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * Get the user's CourtIQ ratings for each dimension
+   */
+  async getCourtIQRatings(userId: number): Promise<Record<DimensionCode, number>> {
+    try {
+      // Check if user already has courtIQ ratings in their profile
+      const profile = await this.getCoachingProfile(userId);
+      if (profile?.metadata && typeof profile.metadata === 'object' && 'courtIQRatings' in profile.metadata) {
+        return profile.metadata.courtIQRatings as Record<DimensionCode, number>;
+      }
+      
+      // If not in profile, check for matches and calculate based on performance
+      const matches = await this.getMatchesByUser(userId, 10);
+      if (matches.length > 0) {
+        // Calculate ratings based on match history
+        // This is a simplified implementation - in a real system, this would be more sophisticated
+        const winRate = matches.filter(m => 
+          (m.playerAId === userId && m.scoreA > m.scoreB) || 
+          (m.playerBId === userId && m.scoreB > m.scoreA)
+        ).length / matches.length;
+        
+        const baseRating = Math.max(1, Math.min(5, Math.floor(winRate * 5) + 1));
+        
+        // Get user to check experience level
+        const user = await this.getUser(userId);
+        const xpFactor = user?.xp ? Math.min(1, user.xp / 1000) : 0;
+        
+        // Return ratings with slight variations
+        return {
+          TECH: Math.max(1, Math.min(5, baseRating + (Math.random() > 0.5 ? 1 : 0))),
+          TACT: Math.max(1, Math.min(5, baseRating + (Math.random() > 0.7 ? 1 : 0))),
+          PHYS: Math.max(1, Math.min(5, baseRating)),
+          MENT: Math.max(1, Math.min(5, baseRating - (Math.random() > 0.6 ? 1 : 0) + (xpFactor > 0.5 ? 1 : 0))),
+          CONS: Math.max(1, Math.min(5, baseRating + (xpFactor > 0.7 ? 1 : 0)))
+        };
+      }
+      
+      // Return default ratings if no matches or profile
+      return { 
+        TECH: 3, 
+        TACT: 3, 
+        PHYS: 3, 
+        MENT: 3, 
+        CONS: 3 
+      };
+    } catch (error) {
+      console.error('[Storage] getCourtIQRatings error:', error);
+      return { TECH: 3, TACT: 3, PHYS: 3, MENT: 3, CONS: 3 };
     }
   }
 }

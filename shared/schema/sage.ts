@@ -405,6 +405,39 @@ export type InsertJournalPrompt = typeof journalPrompts.$inferInsert;
 export type JournalReflection = typeof journalReflections.$inferSelect;
 export type InsertJournalReflection = typeof journalReflections.$inferInsert;
 
+/**
+ * PKL-278651-SAGE-0004-COACH - User Coaching Profiles
+ * Stores user coaching profiles for personalized SAGE interactions
+ */
+export const coachingProfiles = pgTable("coaching_profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  primaryFocus: text("primary_focus"), // Optional primary focus dimension (TECH, TACT, etc.)
+  lastInteractionAt: timestamp("last_interaction_at").defaultNow().notNull(),
+  conversationCount: integer("conversation_count").default(0).notNull(),
+  trainingPlanCount: integer("training_plan_count").default(0).notNull(),
+  journalEntryCount: integer("journal_entry_count").default(0).notNull(),
+  preferredLearningStyle: text("preferred_learning_style"), // Optional learning style preference
+  skillLevel: text("skill_level"), // Overall skill assessment ("beginner", "intermediate", "advanced")
+  interestsData: jsonb("interests_data").default({}).notNull(), // Tracks user interests across dimensions
+  metadata: jsonb("metadata").default({}).notNull(),
+});
+
+// Define relationships
+export const coachingProfilesRelations = relations(coachingProfiles, ({ one }) => ({
+  user: one(users, {
+    fields: [coachingProfiles.userId],
+    references: [users.id],
+  }),
+}));
+
+// Create Zod schema for insertion validation
+export const insertCoachingProfileSchema = createInsertSchema(coachingProfiles);
+
+// Export types
+export type CoachingProfile = typeof coachingProfiles.$inferSelect;
+export type InsertCoachingProfile = typeof coachingProfiles.$inferInsert;
+
 // Export journal entry types as a type for type safety
 export const JournalEntryTypes = {
   free_form: "free_form",

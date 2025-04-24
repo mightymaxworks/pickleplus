@@ -34,6 +34,384 @@ import { eq } from 'drizzle-orm';
  */
 export class SageEngine {
   /**
+   * Determine the primary dimension to focus on based on message and user history
+   * 
+   * @param message The user message
+   * @param courtiqRatings The user's CourtIQ ratings
+   * @param recentJournalEntries Recent journal entries
+   * @returns The determined dimension code
+   */
+  private determineFocusDimension(
+    message: string,
+    courtiqRatings: any,
+    recentJournalEntries: any[]
+  ): DimensionCode {
+    const lowerMessage = message.toLowerCase();
+    
+    // First, check if the message explicitly mentions a dimension
+    if (lowerMessage.includes('technique') || lowerMessage.includes('dink') || 
+        lowerMessage.includes('shot') || lowerMessage.includes('technical')) {
+      return 'TECH';
+    } else if (lowerMessage.includes('strategy') || lowerMessage.includes('position') || 
+               lowerMessage.includes('court') || lowerMessage.includes('tactical')) {
+      return 'TACT';
+    } else if (lowerMessage.includes('stamina') || lowerMessage.includes('fitness') || 
+               lowerMessage.includes('tired') || lowerMessage.includes('physical')) {
+      return 'PHYS';
+    } else if (lowerMessage.includes('mental') || lowerMessage.includes('nervous') || 
+               lowerMessage.includes('focus') || lowerMessage.includes('confidence')) {
+      return 'MENT';
+    } else if (lowerMessage.includes('consistency') || lowerMessage.includes('practice') || 
+               lowerMessage.includes('routine') || lowerMessage.includes('consistent')) {
+      return 'CONS';
+    }
+    
+    // If not explicitly mentioned, check recent journal entries for trends
+    if (recentJournalEntries && recentJournalEntries.length > 0) {
+      const dimensionCounts: Record<string, number> = {
+        'TECH': 0,
+        'TACT': 0,
+        'PHYS': 0,
+        'MENT': 0,
+        'CONS': 0
+      };
+      
+      // Count dimensions in recent entries
+      recentJournalEntries.forEach(entry => {
+        if (entry.dimensionCode && dimensionCounts[entry.dimensionCode] !== undefined) {
+          dimensionCounts[entry.dimensionCode]++;
+        }
+      });
+      
+      // Find the most frequent dimension
+      let mostFrequentDimension: DimensionCode = 'TECH';
+      let highestCount = 0;
+      
+      for (const [dimension, count] of Object.entries(dimensionCounts)) {
+        if (count > highestCount) {
+          highestCount = count;
+          mostFrequentDimension = dimension as DimensionCode;
+        }
+      }
+      
+      // If we found a dimension with at least one occurrence, use it
+      if (highestCount > 0) {
+        return mostFrequentDimension;
+      }
+    }
+    
+    // If no journal entries with dimensions, use the lowest CourtIQ rating
+    return this.determinePrimaryDimensionFocus(courtiqRatings);
+  }
+  
+  /**
+   * Generate a context-aware response considering conversation history and user data
+   * 
+   * @param message The user message
+   * @param user The user object
+   * @param context Additional context information
+   * @returns The SAGE response text
+   */
+  private generateContextAwareResponse(
+    message: string, 
+    user: any, 
+    context: {
+      recentMessages: any[],
+      courtiqRatings: any,
+      recentMatches: any[],
+      recentJournalEntries: any[],
+      dimensionFocus: DimensionCode
+    }
+  ): string {
+    const lowerMessage = message.toLowerCase();
+    const { 
+      recentMessages, 
+      courtiqRatings, 
+      recentMatches, 
+      recentJournalEntries, 
+      dimensionFocus 
+    } = context;
+    
+    // Check if we're in a multi-turn conversation by examining recent messages
+    const isFollowUp = recentMessages && recentMessages.length > 1;
+    const previousSageMessage = isFollowUp ? 
+      recentMessages.filter(msg => msg.role === 'sage').pop() : null;
+    
+    // Provide personalized greeting for new conversation
+    if (!isFollowUp && lowerMessage.match(/^(hi|hello|hey|greetings|howdy)/i)) {
+      const timeOfDay = this.getTimeOfDay();
+      return `Good ${timeOfDay}, ${user.firstName || user.username || 'there'}! I'm S.A.G.E. (Skills Assessment & Growth Engine), your personalized pickleball coach. How can I help improve your game today? You can ask me about specific skills, request a training plan, or get advice on your playing strategy.`;
+    }
+    
+    // Reference recent journal entry if relevant
+    if (recentJournalEntries && recentJournalEntries.length > 0 && 
+        this.isMessageRelatedToJournalEntry(message, recentJournalEntries[0])) {
+      const entry = recentJournalEntries[0];
+      const entryDate = new Date(entry.createdAt);
+      const dateString = entryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      
+      return `I see from your journal entry on ${dateString} that you've been reflecting on your ${this.getDimensionName(entry.dimensionCode as DimensionCode).toLowerCase()} skills. ${this.generateJournalBasedResponse(entry, dimensionFocus)}`;
+    }
+    
+    // Reference recent match if asking about match performance
+    if (recentMatches && recentMatches.length > 0 && 
+        (lowerMessage.includes('match') || lowerMessage.includes('game') || lowerMessage.includes('played'))) {
+      const match = recentMatches[0];
+      const matchDate = new Date(match.createdAt);
+      const dateString = matchDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      
+      // Build a response based on match outcome
+      const outcome = match.userScore > match.opponentScore ? 'won' : 'lost';
+      return `Based on your ${outcome} match on ${dateString} (${match.userScore}-${match.opponentScore}), I notice that ${this.generateMatchBasedInsight(match, dimensionFocus)}. Would you like me to create a targeted training plan to address this area?`;
+    }
+    
+    // Continue previous conversation if this is a follow-up
+    if (isFollowUp && previousSageMessage) {
+      // Extract the topic from previous message
+      const prevResponseLower = previousSageMessage.content.toLowerCase();
+      
+      // If previous message asked about focus area and user specifies one
+      if (prevResponseLower.includes('which aspect') || prevResponseLower.includes('focus on')) {
+        if (lowerMessage.includes('technical') || lowerMessage.includes('technique') || lowerMessage.includes('shots')) {
+          return `Great! Let's focus on your technical skills. Based on your CourtIQ profile, your current technical rating is ${courtiqRatings.TECH || 3}/5. Here are three specific areas we could work on:\n\n1. Dinking precision and control\n2. Third shot drop consistency\n3. Serve placement and variety\n\nWhich of these would you like to prioritize in your training?`;
+        } else if (lowerMessage.includes('tactical') || lowerMessage.includes('strategy') || lowerMessage.includes('position')) {
+          return `Excellent choice! Tactical awareness is crucial for advancing your game. Your current tactical rating is ${courtiqRatings.TACT || 3}/5. I recommend focusing on:\n\n1. Court positioning in doubles play\n2. Shot selection based on opponent position\n3. Defensive-to-offensive transition strategies\n\nWhich aspect of tactical play interests you most?`;
+        } else if (lowerMessage.includes('physical') || lowerMessage.includes('fitness') || lowerMessage.includes('stamina')) {
+          return `Physical conditioning is a great focus area! Your current physical fitness rating is ${courtiqRatings.PHYS || 3}/5. Let's consider these key areas:\n\n1. Lateral movement and quick direction changes\n2. Sustained energy for tournament play\n3. Recovery between points and games\n\nWould you like me to create a pickleball-specific fitness routine for you?`;
+        } else if (lowerMessage.includes('mental') || lowerMessage.includes('focus') || lowerMessage.includes('confidence')) {
+          return `Mental toughness is often the differentiator at higher levels! Your current mental game rating is ${courtiqRatings.MENT || 3}/5. Here are key areas we could develop:\n\n1. Focus maintenance during critical points\n2. Confidence building after errors\n3. Pre-point routines for consistency\n\nWhich of these mental skills would you like to strengthen first?`;
+        } else if (lowerMessage.includes('consistency') || lowerMessage.includes('reliable') || lowerMessage.includes('steady')) {
+          return `Consistency is fundamental to pickleball success! Your consistency rating is currently ${courtiqRatings.CONS || 3}/5. To improve this, we should work on:\n\n1. Structured practice routines\n2. Skill measurement and tracking\n3. Progressive difficulty training\n\nWould you like me to create a consistency-focused training plan for you?`;
+        }
+      }
+      
+      // If previous message suggested a training plan and user expressed interest
+      if ((prevResponseLower.includes('training plan') || prevResponseLower.includes('would you like me to create')) &&
+          (lowerMessage.includes('yes') || lowerMessage.includes('sure') || lowerMessage.includes('please') || lowerMessage.includes('create'))) {
+        return `I'll design a customized training plan focusing on ${this.getDimensionName(dimensionFocus).toLowerCase()}. The plan will include specific exercises, drills, and progression metrics tailored to your current skill level. It should be available in your training dashboard shortly. Is there anything specific you'd like to emphasize in this plan?`;
+      }
+    }
+    
+    // If none of the contextual responses match, fall back to the standard response
+    return this.generateSageResponse(message, user);
+  }
+  
+  /**
+   * Determine if we should suggest a journal entry based on conversation
+   * 
+   * @param message The user message
+   * @param recentJournalEntries Recent journal entries
+   * @returns Journal suggestion if appropriate
+   */
+  private shouldSuggestJournaling(
+    message: string, 
+    recentJournalEntries: any[]
+  ): { prompt: string, type: string } | null {
+    const lowerMessage = message.toLowerCase();
+    const hasRecentJournal = recentJournalEntries && recentJournalEntries.length > 0;
+    const lastJournalDate = hasRecentJournal ? new Date(recentJournalEntries[0].createdAt) : null;
+    const daysSinceLastJournal = lastJournalDate ? 
+      Math.floor((Date.now() - lastJournalDate.getTime()) / (1000 * 60 * 60 * 24)) : 999;
+    
+    // Don't suggest if user just journaled within last day
+    if (daysSinceLastJournal < 1) {
+      return null;
+    }
+    
+    // Suggest match reflection if discussing a match
+    if (lowerMessage.includes('match') || lowerMessage.includes('played') || 
+        lowerMessage.includes('won') || lowerMessage.includes('lost')) {
+      return {
+        prompt: "Reflect on your recent match: What went well? What could be improved? How did you mentally handle challenging moments?",
+        type: "reflection"
+      };
+    }
+    
+    // Suggest training log if discussing practice
+    if (lowerMessage.includes('practice') || lowerMessage.includes('training') || 
+        lowerMessage.includes('drill') || lowerMessage.includes('exercise')) {
+      return {
+        prompt: "Record your training session: What drills did you complete? How did they feel? What progress did you notice?",
+        type: "training_log"
+      };
+    }
+    
+    // Suggest guided reflection if discussing mental aspects
+    if (lowerMessage.includes('nervous') || lowerMessage.includes('anxiety') || 
+        lowerMessage.includes('pressure') || lowerMessage.includes('mental')) {
+      return {
+        prompt: "Explore your mental game: What situations cause the most stress during play? What tools have helped you maintain focus?",
+        type: "guided"
+      };
+    }
+    
+    // If no recent journal entries at all, suggest starting a journaling practice
+    if (!hasRecentJournal) {
+      return {
+        prompt: "Start your pickleball journal by reflecting on your current game: What are your strengths and areas for improvement?",
+        type: "free_form"
+      };
+    }
+    
+    // Default: no suggestion
+    return null;
+  }
+  
+  /**
+   * Generate a response that references the user's journal entry
+   * 
+   * @param entry The journal entry
+   * @param dimensionFocus The current dimension focus
+   * @returns A personalized response referencing the journal entry
+   */
+  private generateJournalBasedResponse(entry: any, dimensionFocus: DimensionCode): string {
+    const entryType = entry.entryType;
+    const mood = entry.mood;
+    
+    // Reference mood if specified
+    const moodPhrase = mood ? 
+      `I notice you were feeling ${mood === 'excellent' || mood === 'good' ? 'positive' : 
+        mood === 'neutral' ? 'neutral' : 'challenged'} at that time. ` : '';
+    
+    // Generate different responses based on entry type
+    if (entryType === 'reflection') {
+      return `${moodPhrase}Your post-match reflections provide valuable insights into your performance patterns. Using these observations, I'd recommend focusing on specific ${this.getDimensionName(dimensionFocus).toLowerCase()} drills that address the patterns you've identified. Would you like me to suggest some targeted exercises?`;
+    } else if (entryType === 'training_log') {
+      return `${moodPhrase}Your training log shows commitment to structured practice. To build on this, I suggest incorporating progressive ${this.getDimensionName(dimensionFocus).toLowerCase()} challenges to your routine. Would you like me to design a training progression based on your recent practice focus?`;
+    } else if (entryType === 'guided') {
+      return `${moodPhrase}Your guided reflection shows thoughtful analysis of your game. Based on your insights, I recommend focusing on ${this.getDimensionName(dimensionFocus).toLowerCase()} development to complement your self-awareness. Would you like specific recommendations in this area?`;
+    } else {
+      // Free-form entries
+      return `${moodPhrase}Your journaling practice shows commitment to improvement through reflection. To enhance your ${this.getDimensionName(dimensionFocus).toLowerCase()} skills, try connecting your journal observations to specific practice goals. Would you like me to suggest a structured approach to this?`;
+    }
+  }
+  
+  /**
+   * Generate an insight based on match results
+   * 
+   * @param match Match data
+   * @param dimensionFocus Current dimension focus
+   * @returns Insight text based on match data
+   */
+  private generateMatchBasedInsight(match: any, dimensionFocus: DimensionCode): string {
+    const outcome = match.userScore > match.opponentScore ? 'won' : 'lost';
+    const scoreDifference = Math.abs(match.userScore - match.opponentScore);
+    const closeMatch = scoreDifference <= 2;
+    
+    // Generate different insights based on dimension focus
+    switch (dimensionFocus) {
+      case 'TECH':
+        return outcome === 'won' 
+          ? `your technical execution was solid, but consistent third shot drops could further improve your control` 
+          : `focusing on shot consistency, especially dinking precision, could improve your technical performance`;
+          
+      case 'TACT':
+        return closeMatch
+          ? `small tactical adjustments could make the difference in close games like this one`
+          : `strategic court positioning and shot selection are areas that could improve your competitive edge`;
+          
+      case 'PHYS':
+        return outcome === 'won'
+          ? `maintaining your energy throughout multiple games will help sustain your winning performance`
+          : `improved physical conditioning might help maintain performance level throughout the entire match`;
+          
+      case 'MENT':
+        return closeMatch
+          ? `mental focus during critical points often determines the outcome of close matches like this one`
+          : `developing pre-point routines and positive self-talk could enhance your mental resilience`;
+          
+      case 'CONS':
+        return outcome === 'won'
+          ? `building on consistent performance will help maintain your winning record`
+          : `establishing more consistent shot patterns could reduce unforced errors and improve results`;
+          
+      default:
+        return `there are specific skills we could develop to enhance your performance`;
+    }
+  }
+  
+  /**
+   * Update the user's coaching profile with insights from conversation
+   * 
+   * @param userId User ID
+   * @param message User message
+   * @param dimensionFocus Current dimension focus
+   */
+  private async updateCoachingProfile(
+    userId: number, 
+    message: string, 
+    dimensionFocus: DimensionCode
+  ): Promise<void> {
+    try {
+      // Get current coaching profile if exists
+      const profile = await storage.getCoachingProfile(userId);
+      
+      // Update user's coaching profile with interaction data
+      if (profile) {
+        await storage.updateCoachingProfile(userId, {
+          lastInteractionAt: new Date(),
+          conversationCount: (profile.conversationCount || 0) + 1,
+          primaryFocus: dimensionFocus,
+          interestsData: {
+            ...(profile.interestsData || {}),
+            [dimensionFocus]: ((profile.interestsData || {})[dimensionFocus] || 0) + 1
+          }
+        });
+      } else {
+        // Create new profile if none exists
+        await storage.createCoachingProfile({
+          userId,
+          lastInteractionAt: new Date(),
+          conversationCount: 1,
+          primaryFocus: dimensionFocus,
+          interestsData: {
+            [dimensionFocus]: 1
+          }
+        });
+      }
+    } catch (error) {
+      console.error('[SageEngine] updateCoachingProfile error:', error);
+      // Non-critical error, don't rethrow
+    }
+  }
+  
+  /**
+   * Get time of day for personalized greetings
+   */
+  private getTimeOfDay(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'morning';
+    if (hour < 17) return 'afternoon';
+    return 'evening';
+  }
+  
+  /**
+   * Check if a message is related to a journal entry
+   */
+  private isMessageRelatedToJournalEntry(message: string, entry: any): boolean {
+    if (!entry) return false;
+    
+    const lowerMessage = message.toLowerCase();
+    const lowerTitle = entry.title.toLowerCase();
+    const lowerContent = entry.content.toLowerCase();
+    
+    // Check for direct references to journaling
+    if (lowerMessage.includes('journal') || lowerMessage.includes('entry') || 
+        lowerMessage.includes('wrote') || lowerMessage.includes('recorded')) {
+      return true;
+    }
+    
+    // Check for content overlap with journal title or content
+    const messageWords = lowerMessage.split(/\s+/).filter(word => word.length > 4);
+    const titleWords = lowerTitle.split(/\s+/).filter(word => word.length > 4);
+    const contentWords = lowerContent.split(/\s+/).filter(word => word.length > 4);
+    
+    // If any significant words from the message appear in the journal entry
+    return messageWords.some(word => 
+      titleWords.includes(word) || contentWords.includes(word)
+    );
+  }
+  /**
    * Generate a coaching session with insights based on player data
    * 
    * @param userId The user ID to generate coaching for
@@ -675,6 +1053,14 @@ export class SageEngine {
    * @param conversationId Optional existing conversation ID
    * @returns The conversation with new messages
    */
+  /**
+   * Process a user message in a SAGE conversation with enhanced contextual awareness
+   * 
+   * @param userId The user ID
+   * @param message The user message content
+   * @param conversationId Optional conversation ID
+   * @returns Updated conversation with new messages
+   */
   async processConversationMessage(
     userId: number,
     message: string,
@@ -714,44 +1100,83 @@ export class SageEngine {
           isNewConversation = true;
         }
       }
-      
+
       // Create the user message
       const userMessage = await storage.createMessage({
         conversationId: conversation.id,
         content: message,
         sentAt: new Date(),
-        type: 'USER',
+        role: 'user',
+        metadata: { type: 'USER' },
         feedback: null
       });
       
-      // Generate SAGE response based on the message content
-      const sageResponseContent = this.generateSageResponse(message, user);
+      // Get conversation history for context (up to 5 previous messages)
+      const recentMessages = await storage.getRecentMessages(conversation.id, 5);
+      
+      // Enhanced context-gathering: Get user's CourtIQ ratings, recent matches and journal entries
+      const courtiqRatings = await storage.getCourtIQRatings(userId);
+      const recentMatches = await storage.getMatchesByUser(userId, 3);
+      const recentJournalEntries = await storage.getRecentJournalEntries(userId, 3);
+      
+      // Determine primary focus based on message content or user history
+      const dimensionFocus = this.determineFocusDimension(message, courtiqRatings, recentJournalEntries);
+      
+      // Generate personalized SAGE response based on all gathered context
+      const sageResponseContent = this.generateContextAwareResponse(
+        message, 
+        user, 
+        {
+          recentMessages,
+          courtiqRatings,
+          recentMatches,
+          recentJournalEntries,
+          dimensionFocus
+        }
+      );
       
       // Determine if the response contains a recommendation
-      const recommendation = this.determineRecommendationType(message, sageResponseContent);
+      const recommendation = this.determineRecommendationType(message, sageResponseContent, dimensionFocus);
       
-      // Create the SAGE response message
+      // Determine if we should suggest a journal entry based on conversation
+      const journalSuggestion = this.shouldSuggestJournaling(message, recentJournalEntries);
+      
+      // Create the SAGE response message with enhanced metadata
       const sageMessage = await storage.createMessage({
         conversationId: conversation.id,
         content: sageResponseContent,
         sentAt: new Date(),
-        type: 'SAGE',
+        role: 'assistant',
         feedback: null,
-        metadata: recommendation ? {
-          recommendationType: recommendation.type,
-          dimensionFocus: recommendation.dimensionFocus
-        } : undefined
+        metadata: {
+          type: 'SAGE',
+          ...(recommendation ? {
+            recommendationType: recommendation.type,
+            dimensionFocus: recommendation.dimensionFocus
+          } : {}),
+          ...(journalSuggestion ? {
+            suggestJournal: true,
+            journalPrompt: journalSuggestion.prompt,
+            journalType: journalSuggestion.type
+          } : {})
+        }
       });
       
-      // If new conversation, update the topic based on the first message
+      // If new conversation, update the topic and dimension focus based on the first message
       if (isNewConversation) {
         const conversationTopic = this.deriveTopic(message);
         await storage.updateConversation(conversation.id, {
-          topic: conversationTopic
+          topic: conversationTopic,
+          dimensionFocus
         });
         conversation.topic = conversationTopic;
+        conversation.dimensionFocus = dimensionFocus;
       }
       
+      // Update user's coaching profile with insights from this conversation
+      await this.updateCoachingProfile(userId, message, dimensionFocus);
+      
+      // Return updated conversation with new messages
       return {
         conversation,
         newMessages: [userMessage, sageMessage]
@@ -859,36 +1284,32 @@ export class SageEngine {
    * @param sageResponse The SAGE response
    * @returns Recommendation type and dimension focus if present
    */
-  private determineRecommendationType(userMessage: string, sageResponse: string): { type: 'training' | 'insight' | 'schedule', dimensionFocus: DimensionCode } | null {
+  /**
+   * Determine if the SAGE response contains a recommendation
+   * 
+   * @param userMessage The user message
+   * @param sageResponse The SAGE response
+   * @param dimensionFocus The current dimension focus
+   * @returns Recommendation type and dimension focus if present
+   */
+  private determineRecommendationType(
+    userMessage: string, 
+    sageResponse: string,
+    dimensionFocus: DimensionCode = 'TECH'
+  ): { type: 'training' | 'insight' | 'schedule', dimensionFocus: DimensionCode } | null {
     const lowerUserMessage = userMessage.toLowerCase();
     const lowerSageResponse = sageResponse.toLowerCase();
     
-    // Determine dimension focus
-    let dimensionFocus: DimensionCode = 'TECH'; // Default to technical
-    
-    if (lowerUserMessage.includes('technique') || lowerUserMessage.includes('dink') || lowerUserMessage.includes('shot') || 
-        lowerSageResponse.includes('technique') || lowerSageResponse.includes('dinking') || lowerSageResponse.includes('paddle')) {
-      dimensionFocus = 'TECH';
-    } else if (lowerUserMessage.includes('strategy') || lowerUserMessage.includes('position') || lowerUserMessage.includes('court') || 
-               lowerSageResponse.includes('positioning') || lowerSageResponse.includes('strategy') || lowerSageResponse.includes('tactical')) {
-      dimensionFocus = 'TACT';
-    } else if (lowerUserMessage.includes('fitness') || lowerUserMessage.includes('stamina') || lowerUserMessage.includes('tired') || 
-               lowerSageResponse.includes('fitness') || lowerSageResponse.includes('stamina') || lowerSageResponse.includes('physical')) {
-      dimensionFocus = 'PHYS';
-    } else if (lowerUserMessage.includes('nervous') || lowerUserMessage.includes('focus') || lowerUserMessage.includes('pressure') || 
-               lowerSageResponse.includes('mental') || lowerSageResponse.includes('focus') || lowerSageResponse.includes('confidence')) {
-      dimensionFocus = 'MENT';
-    } else if (lowerUserMessage.includes('consistency') || lowerUserMessage.includes('practice') || lowerUserMessage.includes('routine') || 
-               lowerSageResponse.includes('consistency') || lowerSageResponse.includes('practice') || lowerSageResponse.includes('routine')) {
-      dimensionFocus = 'CONS';
-    }
-    
     // Determine recommendation type
-    if (lowerSageResponse.includes('training plan') || lowerSageResponse.includes('create a plan')) {
+    if (lowerSageResponse.includes('training plan') || lowerSageResponse.includes('create a plan') || 
+        lowerSageResponse.includes('design a') || lowerSageResponse.includes('would you like me to create')) {
       return { type: 'training', dimensionFocus };
-    } else if (lowerSageResponse.includes('schedule') || lowerSageResponse.includes('weekly practice')) {
+    } else if (lowerSageResponse.includes('schedule') || lowerSageResponse.includes('routine') || 
+               lowerSageResponse.includes('practice schedule') || lowerSageResponse.includes('weekly')) {
       return { type: 'schedule', dimensionFocus };
-    } else if (lowerSageResponse.includes('analyze') || lowerSageResponse.includes('assessment')) {
+    } else if (sageResponse.length > 100 && (
+               lowerSageResponse.includes('try') || lowerSageResponse.includes('focus on') || 
+               lowerSageResponse.includes('remember to') || lowerSageResponse.includes('important'))) {
       return { type: 'insight', dimensionFocus };
     }
     
