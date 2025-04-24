@@ -59,17 +59,20 @@ export const BounceStatusTicker = ({
         let text = '';
         
         // Add tips
-        if (tipsData && tipsData.length > 0) {
+        if (tipsData && Array.isArray(tipsData) && tipsData.length > 0) {
           // Randomize the tips order
           const shuffledTips = [...tipsData].sort(() => 0.5 - Math.random());
           
           // Use the randomized tips
           shuffledTips.forEach((tip: PickleballTip) => {
-            text += `${tip.tip} • `;
+            text += `${tip.tip || ''} • `;
           });
         } else {
-          // Fallback tip
+          // Fallback tips
           text += 'Keep your paddle up and ready between shots for quicker reactions • ';
+          text += 'Position yourself in the middle of the court when your partner is returning serve • ';
+          text += 'For better control, hold your paddle with a continental grip • ';
+          text += 'Practice third shot drops to improve your transition game • ';
         }
         
         // Add activity

@@ -550,7 +550,7 @@ export class DatabaseStorage implements IStorage {
   async getReferralTips(): Promise<any[]> {
     try {
       // Using SQL query to accommodate column name mismatch
-      const tips = await db.execute(
+      const result = await db.execute(
         `SELECT id, tip_content, display_priority, is_active, source 
          FROM pickleball_tips 
          WHERE is_active = true 
@@ -558,10 +558,13 @@ export class DatabaseStorage implements IStorage {
          LIMIT 10`
       );
       
-      return tips.map(tip => ({
+      // Convert the result to an array if it's not already
+      const rows = Array.isArray(result) ? result : result.rows || [];
+      
+      return rows.map((tip: any) => ({
         id: tip.id,
         tip: tip.tip_content, // Map tip_content to tip for frontend consistency
-        priority: tip.display_priority
+        priority: tip.display_priority || 1
       }));
     } catch (error) {
       console.error('Error getting referral tips:', error);
