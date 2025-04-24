@@ -116,8 +116,8 @@ export const pickleballRules: PickleballRule[] = [
     id: 'kitchen-volley',
     name: 'Kitchen Volley Restriction',
     category: RuleCategory.KITCHEN,
-    description: 'A player cannot volley a ball while standing in the non-volley zone or touching any part of the non-volley zone, including the lines. It\'s a fault if a player\'s momentum carries them into the kitchen after performing a volley.',
-    keywords: ['kitchen', 'volley', 'restriction', 'fault', 'momentum', 'touch']
+    description: 'A player cannot volley a ball (hit it in the air before it bounces) while standing in the non-volley zone or touching any part of the non-volley zone, including the lines. It\'s a fault if a player\'s momentum carries them into the kitchen after performing a volley. If this happens, the player loses the rally and the opposing team gets the point (if they were serving) or the serve.',
+    keywords: ['kitchen', 'volley', 'restriction', 'fault', 'momentum', 'touch', 'step', 'foot', 'violation', 'penalty']
   },
   // Gameplay Rules
   {

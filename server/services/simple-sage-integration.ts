@@ -35,8 +35,78 @@ export function processPickleballQuery(
     ...options
   };
   
-  // Special handling for kitchen/non-volley zone questions
+  // Special handling for various rule categories
   const lowerMessage = message.toLowerCase();
+  
+  // Special handling for serving questions
+  if (lowerMessage.includes('serve') || 
+      lowerMessage.includes('service') || 
+      lowerMessage.includes('serving') ||
+      lowerMessage.includes('how do i serve')) {
+    
+    // Look for the underhand serve rule first
+    const serveRule = pickleballRules.find(rule => rule.id === 'serve-underhand');
+    if (serveRule) {
+      let response = `${serveRule.name}: ${serveRule.description}`;
+      
+      // Add coaching tip if requested
+      if (resolvedOptions.includeCoachingTips) {
+        const tip = generateCoachingTip(serveRule);
+        if (tip) {
+          response += `\n\nCoaching Tip: ${tip}`;
+        }
+      }
+      
+      // Add follow-up
+      response += "\n\nWould you like to know more about service sequence or common serving faults?";
+      
+      return response;
+    }
+  }
+  
+  // Special handling for scoring questions
+  if (lowerMessage.includes('score') || 
+      lowerMessage.includes('scoring') || 
+      lowerMessage.includes('point') ||
+      lowerMessage.includes('win') ||
+      lowerMessage.includes('how do i score') ||
+      lowerMessage.includes('how is score') ||
+      lowerMessage.includes('how to call')) {
+    
+    // Determine if this is about regular scoring or doubles scoring
+    let scoreRule;
+    
+    // For doubles-specific scoring
+    if (lowerMessage.includes('double') || 
+        lowerMessage.includes('partner') || 
+        lowerMessage.includes('team') ||
+        lowerMessage.includes('two player')) {
+      scoreRule = pickleballRules.find(rule => rule.id === 'doubles-scoring');
+    } 
+    // General scoring
+    else {
+      scoreRule = pickleballRules.find(rule => rule.id === 'scoring-points');
+    }
+    
+    if (scoreRule) {
+      let response = `${scoreRule.name}: ${scoreRule.description}`;
+      
+      // Add coaching tip if requested
+      if (resolvedOptions.includeCoachingTips) {
+        const tip = generateCoachingTip(scoreRule);
+        if (tip) {
+          response += `\n\nCoaching Tip: ${tip}`;
+        }
+      }
+      
+      // Add follow-up
+      response += "\n\nWould you like to learn about rally scoring or how to properly call the score in doubles?";
+      
+      return response;
+    }
+  }
+  
+  // Special handling for kitchen/non-volley zone questions
   if (lowerMessage.includes('kitchen') || 
       lowerMessage.includes('non-volley') || 
       lowerMessage.includes('nvz')) {
@@ -50,9 +120,17 @@ export function processPickleballQuery(
         lowerMessage.includes('fault') || 
         lowerMessage.includes('violation') || 
         lowerMessage.includes('momentum') ||
-        lowerMessage.includes('touch')) {
-      // Use the kitchen-volley restriction rule
-      kitchenRule = pickleballRules.find(rule => rule.id === 'kitchen-volley');
+        lowerMessage.includes('touch') ||
+        lowerMessage.includes('happen') ||
+        lowerMessage.includes('allowed') ||
+        lowerMessage.includes('can i') ||
+        lowerMessage.includes('penalty')) {
+      
+      // Use the kitchen-volley restriction rule as highest priority for these queries
+      const violationRule = pickleballRules.find(rule => rule.id === 'kitchen-volley');
+      if (violationRule) {
+        kitchenRule = violationRule;
+      }
     }
     // For general "what is" questions about the kitchen
     else if (lowerMessage.includes('what') || 
@@ -171,7 +249,7 @@ function generateCoachingTip(rule: PickleballRule): string | null {
     'scoring-points': 'Mentally track the score during play to avoid confusion. In recreational play, announce the score clearly before each serve.',
     'doubles-scoring': 'When calling the score in doubles, always use the three-number format: serving team\'s score, receiving team\'s score, server number.',
     'non-volley-zone': 'Always be conscious of the kitchen line when moving forward. Many players lose points by forgetting how close they are to the non-volley zone.',
-    'kitchen-volley': 'After hitting a volley, be sure your momentum doesn\'t carry you into the kitchen. Step back if needed after hitting the ball.',
+    'kitchen-volley': 'After hitting a volley, be sure your momentum doesn\'t carry you into the kitchen. This is a common fault that many new players make. Practice stepping backward after your volley to avoid momentum carrying you into the kitchen.',
     'double-bounce-rule': 'During the return of serve, don\'t rush to the net immediately. Wait until you\'ve made your return, then advance strategically.',
     'line-calls': 'When making line calls, be fair and consistent. If you\'re not sure, give the benefit of the doubt to your opponent.',
     'fault-rules': 'Understanding faults clearly helps prevent unnecessary point loss. Review these rules periodically, especially before tournaments.'
