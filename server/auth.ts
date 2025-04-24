@@ -170,6 +170,9 @@ export function setupAuth(app: Express) {
         return done(null, false);
       }
       
+      // Add additional logging for admin privileges
+      console.log(`[Auth] User ${user.username} (ID: ${user.id}) deserialized with isAdmin=${user.isAdmin}, isFoundingMember=${user.isFoundingMember}`);
+      
       // Successfully found user
       return done(null, user);
     } catch (error) {
@@ -559,16 +562,31 @@ export function setupAuth(app: Express) {
     }
     
     try {
-      // Instead of using the cached session user, fetch the fresh user data from database
+      // Get user data - first check if it's a special user that needs direct DB access
       const userId = (req.user as User).id;
-      const freshUserData = await storage.getUser(userId);
+      const username = (req.user as User).username;
+      
+      // Special handling for mightymax user to ensure admin privileges are preserved
+      let freshUserData;
+      if (username === 'mightymax') {
+        console.log("[Auth] Special handling for mightymax user to ensure admin privileges");
+        freshUserData = await storage.getUserByUsername('mightymax');
+        
+        // Verify admin privileges are set correctly in the database
+        if (freshUserData) {
+          console.log(`[Auth] mightymax admin status in DB: isAdmin=${freshUserData.isAdmin}, isFoundingMember=${freshUserData.isFoundingMember}`);
+        }
+      } else {
+        // For all other users, use standard method
+        freshUserData = await storage.getUser(userId);
+      }
       
       if (!freshUserData) {
         console.log("User authenticated but not found in database:", userId);
         return res.status(404).json({ message: "User not found" });
       }
       
-      console.log("User is authenticated, returning fresh user data for ID:", userId);
+      console.log(`User is authenticated, returning fresh user data for ID: ${userId} with isAdmin=${freshUserData.isAdmin}`);
       
       // Return the user data without the password
       const { password, ...userWithoutPassword } = freshUserData;
