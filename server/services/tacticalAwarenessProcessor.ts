@@ -793,7 +793,7 @@ export function generateTacticalTips(
           "Create transition strategies that complement both players' strengths"
         ],
         'kitchen': [
-          "At the kitchen in doubles, target the middle and "feet" of opponents",
+          "At the kitchen in doubles, target the middle and feet of opponents",
           "Develop cross-court dinking patterns that create openings for your partner",
           "Use kitchen strategies that maintain pressure while minimizing errors",
           "Create predetermined attack signals for kitchen play"

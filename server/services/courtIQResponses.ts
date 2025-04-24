@@ -10,7 +10,8 @@
  * @lastModified 2025-04-24
  */
 
-import { type DimensionCode } from '../types/courtiq';
+// Define the DimensionCode type directly in this file to avoid circular dependencies
+export type DimensionCode = 'TECH' | 'TACT' | 'PHYS' | 'MENT' | 'CONS';
 
 /**
  * Generic responses for each CourtIQ dimension
