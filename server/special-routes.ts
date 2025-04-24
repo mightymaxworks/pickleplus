@@ -642,4 +642,324 @@ specialRouter.get('/courtiq/tiers', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * PKL-278651-STATS-0001-CORE - Match Statistics API Endpoint
+ * GET /api/match/stats
+ * 
+ * This endpoint provides match statistics for users following Framework 5.3 principles
+ * of simplicity and directness.
+ */
+specialRouter.get('/match/stats', async (req: Request, res: Response) => {
+  console.log("[API][CRITICAL][MatchStats] Direct handler called, query:", req.query);
+  
+  try {
+    // Import required modules
+    const { db } = await import('./db');
+    const { matches } = await import('../shared/schema');
+    const { eq, sql, desc, and, or } = await import('drizzle-orm');
+    
+    // Get userId from query, default to current user ID if authenticated
+    let userId: number = parseInt(req.query.userId as string) || 1;
+    if (isNaN(userId)) userId = 1;
+
+    // Get time range from query params
+    const timeRange = req.query.timeRange as string || 'all';
+    
+    // Get match type and format type from query params
+    const matchType = req.query.matchType as string;
+    const formatType = req.query.formatType as string;
+    
+    // Build the query conditions
+    let conditions = [
+      or(
+        eq(matches.playerOneId, userId),
+        eq(matches.playerTwoId, userId),
+        eq(matches.playerOnePartnerId, userId),
+        eq(matches.playerTwoPartnerId, userId)
+      )
+    ];
+    
+    // Add time range filter
+    if (timeRange !== 'all') {
+      let startDate = new Date();
+      
+      // Calculate the start date based on the time range
+      switch (timeRange) {
+        case '30days':
+          startDate.setDate(startDate.getDate() - 30);
+          break;
+        case '90days':
+          startDate.setDate(startDate.getDate() - 90);
+          break;
+        case '6months':
+          startDate.setMonth(startDate.getMonth() - 6);
+          break;
+        case '1year':
+          startDate.setFullYear(startDate.getFullYear() - 1);
+          break;
+      }
+      
+      conditions.push(sql`${matches.matchDate} >= ${startDate}`);
+    }
+    
+    // Add match type filter
+    if (matchType) {
+      conditions.push(eq(matches.matchType, matchType));
+    }
+    
+    // Add format type filter
+    if (formatType) {
+      conditions.push(eq(matches.formatType, formatType));
+    }
+    
+    // Fetch the user's matches
+    const userMatches = await db
+      .select()
+      .from(matches)
+      .where(and(...conditions))
+      .orderBy(desc(matches.matchDate));
+    
+    console.log(`[API][CRITICAL][MatchStats] Found ${userMatches.length} matches for user ${userId}`);
+    
+    // Calculate statistics
+    let totalMatches = 0;
+    let matchesWon = 0;
+    let matchesLost = 0;
+    let totalSets = 0;
+    let setsWon = 0;
+    let totalPoints = 0;
+    let pointsWon = 0;
+    let currentWinStreak = 0;
+    let longestWinStreak = 0;
+    let tempWinStreak = 0;
+    let currentLossStreak = 0;
+    let tempLossStreak = 0;
+    let recentWinRate = 0;
+    let previousWinRate = 0;
+    
+    // Format-specific stats
+    let singlesMatches = 0;
+    let singlesWins = 0;
+    let doublesMatches = 0;
+    let doublesWins = 0;
+    
+    // Match type stats
+    let casualMatches = 0;
+    let casualWins = 0;
+    let competitiveMatches = 0;
+    let competitiveWins = 0;
+    let tournamentMatches = 0;
+    let tournamentWins = 0;
+    let leagueMatches = 0;
+    let leagueWins = 0;
+    
+    // Process matches to calculate statistics
+    for (let i = 0; i < userMatches.length; i++) {
+      const match = userMatches[i];
+      totalMatches++;
+      
+      // Determine if the user won this match
+      const userIsWinner = match.winnerId === userId;
+      
+      if (userIsWinner) {
+        matchesWon++;
+        tempWinStreak++;
+        tempLossStreak = 0;
+        
+        // Update longest win streak
+        if (tempWinStreak > longestWinStreak) {
+          longestWinStreak = tempWinStreak;
+        }
+      } else {
+        matchesLost++;
+        tempLossStreak++;
+        tempWinStreak = 0;
+        
+        // Update current loss streak if this is the most recent match
+        if (i === 0) {
+          currentLossStreak = tempLossStreak;
+        }
+      }
+      
+      // Set the current win streak at the end of most recent match
+      if (i === 0) {
+        currentWinStreak = tempWinStreak;
+      }
+      
+      // Count by format type
+      if (match.formatType === 'singles') {
+        singlesMatches++;
+        if (userIsWinner) singlesWins++;
+      } else if (match.formatType === 'doubles') {
+        doublesMatches++;
+        if (userIsWinner) doublesWins++;
+      }
+      
+      // Count by match type
+      switch (match.matchType) {
+        case 'casual':
+          casualMatches++;
+          if (userIsWinner) casualWins++;
+          break;
+        case 'competitive':
+          competitiveMatches++;
+          if (userIsWinner) competitiveWins++;
+          break;
+        case 'tournament':
+          tournamentMatches++;
+          if (userIsWinner) tournamentWins++;
+          break;
+        case 'league':
+          leagueMatches++;
+          if (userIsWinner) leagueWins++;
+          break;
+      }
+      
+      // Process score data for more detailed statistics
+      // For simplicity, assuming scores are in format like "11-5,11-7"
+      try {
+        // Process player one score
+        let userScoreParts: string[] = [];
+        let opponentScoreParts: string[] = [];
+        
+        // Determine which score belongs to the user
+        if (match.playerOneId === userId || match.playerOnePartnerId === userId) {
+          userScoreParts = match.scorePlayerOne.split(',');
+          opponentScoreParts = match.scorePlayerTwo.split(',');
+        } else {
+          userScoreParts = match.scorePlayerTwo.split(',');
+          opponentScoreParts = match.scorePlayerOne.split(',');
+        }
+        
+        // Count sets
+        totalSets += userScoreParts.length;
+        
+        // Process each set
+        for (let j = 0; j < userScoreParts.length; j++) {
+          const userSetScore = parseInt(userScoreParts[j]?.split('-')[0] || '0');
+          const opponentSetScore = parseInt(opponentScoreParts[j]?.split('-')[0] || '0');
+          
+          if (userSetScore > opponentSetScore) {
+            setsWon++;
+          }
+          
+          // Add to point totals
+          totalPoints += userSetScore + opponentSetScore;
+          pointsWon += userSetScore;
+        }
+      } catch (error) {
+        console.error('[API][CRITICAL][MatchStats] Error processing match score:', error);
+        // Continue with the next match
+      }
+    }
+    
+    // Calculate win rate
+    const winRate = totalMatches > 0 ? (matchesWon / totalMatches) * 100 : 0;
+    
+    // Calculate recent performance trend
+    if (userMatches.length >= 10) {
+      // Calculate win rate for most recent 5 matches
+      const recentMatches = userMatches.slice(0, 5);
+      const recentWins = recentMatches.filter(match => match.winnerId === userId).length;
+      recentWinRate = (recentWins / recentMatches.length) * 100;
+      
+      // Calculate win rate for previous 5 matches
+      const previousMatches = userMatches.slice(5, 10);
+      const previousWins = previousMatches.filter(match => match.winnerId === userId).length;
+      previousWinRate = (previousWins / previousMatches.length) * 100;
+    }
+    
+    // Calculate performance change (percentage points difference)
+    const recentPerformance = recentWinRate > 0 && previousWinRate > 0 
+      ? recentWinRate - previousWinRate 
+      : undefined;
+    
+    // Prepare recent matches data for display
+    const recentMatches = userMatches.slice(0, 5).map(match => {
+      // Determine opponent name (simplification: using IDs as names)
+      const opponentId = match.playerOneId === userId ? match.playerTwoId : match.playerOneId;
+      
+      // Determine score display
+      let score: string;
+      if (match.playerOneId === userId || match.playerOnePartnerId === userId) {
+        score = match.scorePlayerOne;
+      } else {
+        score = match.scorePlayerTwo;
+      }
+      
+      return {
+        id: match.id,
+        date: match.matchDate ? match.matchDate.toISOString() : new Date().toISOString(),
+        opponent: `Player ${opponentId}`, // In a real implementation, we'd fetch user names
+        result: match.winnerId === userId ? 'win' : 'loss',
+        score: score,
+        format: match.formatType as 'singles' | 'doubles' | 'mixed'
+      };
+    });
+    
+    // Prepare and return the statistics response
+    const statistics = {
+      totalMatches,
+      matchesWon,
+      matchesLost,
+      winRate: Math.round(winRate), // Round to nearest integer
+      totalSets,
+      setsWon,
+      totalPoints,
+      pointsWon,
+      avgPointsPerMatch: totalMatches > 0 ? Math.round(totalPoints / totalMatches) : 0,
+      longestWinStreak,
+      currentStreak: currentWinStreak > 0 ? currentWinStreak : -currentLossStreak,
+      recentPerformance,
+      recentMatches,
+      
+      // Additional breakdown statistics
+      formatBreakdown: {
+        singles: {
+          matches: singlesMatches,
+          wins: singlesWins,
+          winRate: singlesMatches > 0 ? Math.round((singlesWins / singlesMatches) * 100) : 0
+        },
+        doubles: {
+          matches: doublesMatches,
+          wins: doublesWins,
+          winRate: doublesMatches > 0 ? Math.round((doublesWins / doublesMatches) * 100) : 0
+        }
+      },
+      
+      matchTypeBreakdown: {
+        casual: {
+          matches: casualMatches,
+          wins: casualWins,
+          winRate: casualMatches > 0 ? Math.round((casualWins / casualMatches) * 100) : 0
+        },
+        competitive: {
+          matches: competitiveMatches,
+          wins: competitiveWins,
+          winRate: competitiveMatches > 0 ? Math.round((competitiveWins / competitiveMatches) * 100) : 0
+        },
+        tournament: {
+          matches: tournamentMatches,
+          wins: tournamentWins,
+          winRate: tournamentMatches > 0 ? Math.round((tournamentWins / tournamentMatches) * 100) : 0
+        },
+        league: {
+          matches: leagueMatches,
+          wins: leagueWins,
+          winRate: leagueMatches > 0 ? Math.round((leagueWins / leagueMatches) * 100) : 0
+        }
+      }
+    };
+    
+    console.log('[API][CRITICAL][MatchStats] Successfully calculated match statistics');
+    return res.json(statistics);
+  } catch (error) {
+    console.error('[API][CRITICAL][MatchStats] Error calculating match statistics:', error);
+    res.status(500).json({ 
+      error: "Server error",
+      message: "Error calculating match statistics" 
+    });
+  }
+});
+
 export { specialRouter };
