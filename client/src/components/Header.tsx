@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
 import { Menu, Bell, Shield, User, LogOut } from "lucide-react";
 import {

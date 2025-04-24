@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/lib/auth";
 import { tournamentApi } from "@/lib/apiClient";
 import { TournamentCard } from "@/components/TournamentCard";
 import { Skeleton } from "@/components/ui/skeleton";

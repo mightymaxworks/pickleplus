@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/lib/auth";
 import { Link, Redirect } from "wouter";
 import { MainLayout } from "@/components/MainLayout";
 import { PartnerPreferences } from "@/components/preferences/PartnerPreferences";

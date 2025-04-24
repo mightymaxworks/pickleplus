@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/lib/auth";
 import RedemptionCodesList from "@/components/admin/RedemptionCodesList";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, KeyRound } from "lucide-react";

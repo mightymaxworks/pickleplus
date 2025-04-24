@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/lib/auth";
 
 interface AuthLayoutProps {
   children: React.ReactNode;

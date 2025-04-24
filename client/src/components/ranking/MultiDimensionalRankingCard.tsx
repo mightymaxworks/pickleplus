@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/lib/auth";
 import { useMultiDimensionalRankingData } from "@/hooks/use-multi-dimensional-rankings";
 import { PlayFormat, AgeDivision, LeaderboardEntry } from "../../../shared/multi-dimensional-rankings";
 import { motion, AnimatePresence } from "framer-motion";

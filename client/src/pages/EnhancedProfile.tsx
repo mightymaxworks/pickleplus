@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/lib/auth";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useFeatureFlag, Features } from '@/lib/featureFlags';

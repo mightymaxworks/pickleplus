@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { AlertCircle, RefreshCw, Home } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/lib/auth";
 
 export default function NotFound() {
   // PKL-278651-ROUT-0013-LOGOT - Fix logout issue on 404 page

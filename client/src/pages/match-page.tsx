@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter }
 import { AlertTriangle, Calendar, TrophyIcon, CheckCircle2, BarChart4, PlusCircle, Loader2, AlertCircle, Award, ThumbsUp, Zap as ZapIcon, Trophy } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { matchSDK, type RecordedMatch } from "@/lib/sdk/matchSDK";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/lib/auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { useLocation } from "wouter";

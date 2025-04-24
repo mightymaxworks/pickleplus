@@ -47,7 +47,7 @@ import {
   ToggleGroupItem,
 } from "@/components/ui/toggle-group";
 import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/lib/auth";
 import { apiRequest } from "@/lib/queryClient";
 import { DialogPlayerSelect } from "../player-search/DialogPlayerSelect";
 import { MultiGameScoreInput } from "./MultiGameScoreInput";
