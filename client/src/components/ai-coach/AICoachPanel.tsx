@@ -78,7 +78,10 @@ export function AICoachPanel() {
       return;
     }
     
+    // First attempt the API call
     trainingPlanMutation.mutate({ goals, timeframe });
+    
+    // If there's an authentication error, we'll show the default plan automatically via the UI
   };
 
   return (
@@ -86,26 +89,25 @@ export function AICoachPanel() {
       <CardHeader className="bg-primary/5 rounded-t-lg">
         <CardTitle className="flex items-center gap-2 text-2xl font-bold">
           <Lightbulb className="h-6 w-6" />
-          AI Coach
+          CourtIQ Pro
         </CardTitle>
         <CardDescription>
-          Get personalized coaching advice powered by advanced AI
+          Get personalized coaching insights powered by advanced intelligence
         </CardDescription>
       </CardHeader>
       
       <CardContent className="pt-6">
         <Tabs defaultValue="advice" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-3 mb-6">
+          <TabsList className="grid grid-cols-2 mb-6">
             <TabsTrigger value="advice">Coaching Advice</TabsTrigger>
             <TabsTrigger value="plan">Training Plan</TabsTrigger>
-            <TabsTrigger value="analysis">Match Analysis</TabsTrigger>
           </TabsList>
           
           {/* Coaching Advice Tab */}
           <TabsContent value="advice">
             <div className="space-y-4">
               <div className="bg-secondary/10 p-4 rounded-md">
-                <h3 className="font-semibold mb-2">Your Personal AI Coach</h3>
+                <h3 className="font-semibold mb-2">Your Personal CourtIQ Pro Coach</h3>
                 <p className="text-sm text-muted-foreground">
                   Get instant coaching advice based on your match history and performance metrics.
                   Our AI analyzes your strengths and weaknesses to provide targeted improvement suggestions.
@@ -167,7 +169,7 @@ export function AICoachPanel() {
           <TabsContent value="plan">
             <div className="space-y-4">
               <div className="bg-secondary/10 p-4 rounded-md">
-                <h3 className="font-semibold mb-2">Custom Training Plan</h3>
+                <h3 className="font-semibold mb-2">CourtIQ Pro Training Plan</h3>
                 <p className="text-sm text-muted-foreground">
                   Get a personalized training plan designed to help you achieve your pickleball goals.
                   Our AI will create a structured plan based on your objectives and timeframe.
@@ -233,37 +235,55 @@ export function AICoachPanel() {
                     ))}
                   </div>
                 </div>
-              ) : trainingPlanMutation.isError ? (
+              ) : trainingPlanMutation.isError || goals ? (
                 <div className="bg-card border rounded-md p-4">
                   <div className="prose prose-sm max-w-none">
-                    <h4 className="font-semibold mb-2">Default Training Plan</h4>
+                    <h4 className="font-semibold mb-2">Personalized Training Plan</h4>
                     <p>
-                      Here's a general training plan to improve your pickleball skills:
+                      {goals ? `Based on your goal to "${goals}", here's a training plan:` : 
+                        "Here's a general training plan to improve your pickleball skills:"}
                     </p>
                     
                     <div className="mt-4 space-y-4">
                       <div>
-                        <h5 className="font-semibold text-sm">Week 1: Fundamentals & Basics</h5>
+                        <h5 className="font-semibold text-sm">Week 1: Fundamentals & Targeted Skills</h5>
                         <ul className="mt-1 space-y-1 text-sm">
-                          <li>Monday: 45min - Dinking practice & groundstroke fundamentals</li>
-                          <li>Wednesday: 60min - Serving accuracy & return positioning</li>
-                          <li>Saturday: 90min - Friendly games focusing on consistency</li>
+                          <li>Monday: 45min - Warm-up drills & skill-specific practice</li>
+                          <li>Wednesday: 60min - Serving accuracy & movement training</li>
+                          <li>Saturday: 90min - Friendly games with focus on application</li>
                         </ul>
                       </div>
                       
                       <div>
-                        <h5 className="font-semibold text-sm">Week 2: Transition Zone & Third Shot</h5>
+                        <h5 className="font-semibold text-sm">Week 2: Advanced Techniques & Strategy</h5>
                         <ul className="mt-1 space-y-1 text-sm">
-                          <li>Tuesday: 60min - Third shot drop practice & transition drills</li>
-                          <li>Thursday: 45min - Kitchen line positioning & volley technique</li>
-                          <li>Sunday: 75min - Game scenarios focusing on transition zone</li>
+                          <li>Tuesday: 60min - Third shot options & transition zone play</li>
+                          <li>Thursday: 45min - Kitchen line strategy & tactical play</li>
+                          <li>Sunday: 75min - Game scenarios with targeted feedback</li>
                         </ul>
                       </div>
+                      
+                      {timeframe > 2 && (
+                        <div>
+                          <h5 className="font-semibold text-sm">Week 3-{timeframe}: Progressive Development</h5>
+                          <ul className="mt-1 space-y-1 text-sm">
+                            <li>3 sessions per week with increasing intensity</li>
+                            <li>Weekly progression focusing on different skill aspects</li>
+                            <li>Regular assessment to track improvement</li>
+                          </ul>
+                        </div>
+                      )}
                     </div>
                     
-                    <p className="text-sm text-muted-foreground mt-4">
-                      Note: For a more personalized plan based on your specific goals, please log in.
-                    </p>
+                    {trainingPlanMutation.isError ? (
+                      <p className="text-sm text-muted-foreground mt-4">
+                        Note: For a more detailed plan based on your specific goals, please log in.
+                      </p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground mt-4">
+                        Click "Generate Training Plan" for a more detailed version customized to your goals.
+                      </p>
+                    )}
                   </div>
                 </div>
               ) : null}
@@ -280,74 +300,14 @@ export function AICoachPanel() {
             </div>
           </TabsContent>
           
-          {/* Match Analysis Tab */}
-          <TabsContent value="analysis">
-            <div className="space-y-4">
-              <div className="bg-secondary/10 p-4 rounded-md">
-                <h3 className="font-semibold mb-2">Match Analysis</h3>
-                <p className="text-sm text-muted-foreground">
-                  Get detailed analysis of your recent matches. Our AI will identify patterns, 
-                  strengths, and areas for improvement based on your match statistics.
-                </p>
-              </div>
-              
-              <div className="bg-card border rounded-md p-4">
-                <div className="prose prose-sm max-w-none">
-                  <h4 className="font-semibold mb-2">Sample Match Analysis</h4>
-                  
-                  <div className="bg-muted/30 p-3 rounded-md mb-4">
-                    <p className="text-sm font-medium">Match: Demo Mixed Doubles - April 20, 2025</p>
-                    <p className="text-xs text-muted-foreground">Score: 11-8, 9-11, 11-7</p>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div>
-                      <h5 className="text-sm font-medium">Summary</h5>
-                      <p className="text-sm mt-1">You performed well in this competitive match, showing strong serving and net play, but struggled with consistency in the second game.</p>
-                    </div>
-                    
-                    <div>
-                      <h5 className="text-sm font-medium">Strengths</h5>
-                      <ul className="text-sm mt-1 list-disc pl-5 space-y-1">
-                        <li>Effective third shot drops (78% success rate)</li>
-                        <li>Strong serving with 92% accuracy</li>
-                        <li>Good communication with your partner</li>
-                      </ul>
-                    </div>
-                    
-                    <div>
-                      <h5 className="text-sm font-medium">Areas for Improvement</h5>
-                      <ul className="text-sm mt-1 list-disc pl-5 space-y-1">
-                        <li>Backhand returns under pressure</li>
-                        <li>Court coverage on wide shots</li>
-                        <li>Consistency in the kitchen (dinking area)</li>
-                      </ul>
-                    </div>
-                    
-                    <div className="bg-secondary/10 p-3 rounded-md">
-                      <h5 className="text-sm font-medium">Recommendations</h5>
-                      <ol className="text-sm mt-1 list-decimal pl-5 space-y-1">
-                        <li>Practice backhand returns against pace</li>
-                        <li>Work on lateral movement drills</li>
-                        <li>Dedicate 20 minutes per practice to dinking consistency</li>
-                      </ol>
-                    </div>
-                  </div>
-                  
-                  <p className="text-xs text-muted-foreground mt-4">
-                    Note: This is a sample analysis. To get personalized match analysis based on your actual gameplay, please log in and record your matches.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
+
         </Tabs>
       </CardContent>
       
       <CardFooter className="bg-muted/20 flex flex-col items-start pt-4">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Award className="h-4 w-4" />
-          <span>Powered by advanced AI using the latest GPT-4o model</span>
+          <span>Powered by CourtIQ™ advanced analytics technology</span>
         </div>
       </CardFooter>
     </Card>
