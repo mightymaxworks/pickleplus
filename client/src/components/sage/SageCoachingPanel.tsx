@@ -92,14 +92,14 @@ export default function SageCoachingPanel() {
   
   // Fetch session details when a session is selected
   const { data: sessionDetails, isLoading: isLoadingSessionDetails } = useQuery({
-    queryKey: ["/api/coach/sage/sessions", activeSessionId],
+    queryKey: activeSessionId ? [`/api/coach/sage/sessions/${activeSessionId}`] : ["/api/coach/sage/sessions", "detail"],
     queryFn: getQueryFn(),
     enabled: !!activeSessionId,
   });
   
   // Fetch training plan details when a plan is selected
   const { data: planDetails, isLoading: isLoadingPlanDetails } = useQuery({
-    queryKey: ["/api/coach/sage/training-plans", activePlanId],
+    queryKey: activePlanId ? [`/api/coach/sage/training-plans/${activePlanId}`] : ["/api/coach/sage/training-plans", "detail"],
     queryFn: getQueryFn(),
     enabled: !!activePlanId,
   });
@@ -151,7 +151,9 @@ export default function SageCoachingPanel() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/coach/sage/sessions", activeSessionId] });
+      if (activeSessionId) {
+        queryClient.invalidateQueries({ queryKey: [`/api/coach/sage/sessions/${activeSessionId}`] });
+      }
       toast({
         title: "Training plan created",
         description: "Your new training plan has been generated.",
@@ -184,7 +186,9 @@ export default function SageCoachingPanel() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/coach/sage/training-plans", activePlanId] });
+      if (activePlanId) {
+        queryClient.invalidateQueries({ queryKey: [`/api/coach/sage/training-plans/${activePlanId}`] });
+      }
       toast({
         title: "Exercise updated",
         description: "Exercise status has been updated.",
@@ -554,7 +558,7 @@ export default function SageCoachingPanel() {
                         </CardHeader>
                         <CardContent className="space-y-3">
                           {dayExercises
-                            .sort((a, b) => a.orderInDay - b.orderInDay)
+                            .sort((a: TrainingExercise, b: TrainingExercise) => a.orderInDay - b.orderInDay)
                             .map((exercise: TrainingExercise) => (
                               <div 
                                 key={exercise.id}
