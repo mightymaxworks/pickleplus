@@ -17,7 +17,7 @@ type AuthContextType = {
   isLoading: boolean;
   error: Error | null;
   loginMutation: UseMutationResult<User, Error, LoginData>;
-  logoutMutation: UseMutationResult<void, Error, void>;
+  logoutMutation: UseMutationResult<any, Error, void>;
   registerMutation: UseMutationResult<User, Error, RegisterData>;
 };
 

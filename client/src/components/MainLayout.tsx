@@ -41,7 +41,29 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   const handleLogout = () => {
-    logoutMutation.mutate();
+    console.log("Logout button clicked - direct approach");
+    
+    // Framework 5.3 Direct Solution: Simple approach with multiple fallbacks
+    try {
+      // 1. Try the logout mutation
+      logoutMutation.mutate();
+      
+      // 2. Direct cookie clearing regardless of mutation success
+      document.cookie.split(";").forEach(function(c) {
+        document.cookie = c.replace(/^ +/, "")
+          .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      });
+      
+      // 3. Force redirection to auth page after a brief timeout
+      setTimeout(() => {
+        window.location.href = '/auth';
+      }, 100);
+    } catch (e) {
+      console.error("Error during logout:", e);
+      
+      // Even on error, force a redirect
+      window.location.href = '/auth';
+    }
   };
 
   // Create the base navigation items
