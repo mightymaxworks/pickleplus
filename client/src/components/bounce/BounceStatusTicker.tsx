@@ -22,7 +22,8 @@ interface BounceStatusTickerProps {
 // Type definitions
 interface PickleballTip {
   id: number;
-  tipContent: string;
+  tip: string; // Match the property name from the server response
+  priority?: number;
   source?: string;
 }
 
@@ -58,9 +59,13 @@ export const BounceStatusTicker = ({
         let text = '';
         
         // Add tips
-        if (tipsData.tips && tipsData.tips.length > 0) {
-          tipsData.tips.forEach((tip: PickleballTip) => {
-            text += `${tip.tipContent} • `;
+        if (tipsData && tipsData.length > 0) {
+          // Randomize the tips order
+          const shuffledTips = [...tipsData].sort(() => 0.5 - Math.random());
+          
+          // Use the randomized tips
+          shuffledTips.forEach((tip: PickleballTip) => {
+            text += `${tip.tip} • `;
           });
         } else {
           // Fallback tip

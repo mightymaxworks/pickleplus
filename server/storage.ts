@@ -549,12 +549,20 @@ export class DatabaseStorage implements IStorage {
   // Get referral tips for status ticker
   async getReferralTips(): Promise<any[]> {
     try {
-      const tips = await db
-        .select()
-        .from(pickleballTips)
-        .orderBy(pickleballTips.priority);
+      // Using SQL query to accommodate column name mismatch
+      const tips = await db.execute(
+        `SELECT id, tip_content, display_priority, is_active, source 
+         FROM pickleball_tips 
+         WHERE is_active = true 
+         ORDER BY RANDOM() 
+         LIMIT 10`
+      );
       
-      return tips;
+      return tips.map(tip => ({
+        id: tip.id,
+        tip: tip.tip_content, // Map tip_content to tip for frontend consistency
+        priority: tip.display_priority
+      }));
     } catch (error) {
       console.error('Error getting referral tips:', error);
       return [];
