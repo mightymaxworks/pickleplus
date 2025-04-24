@@ -53,17 +53,17 @@ export default function SageCoachingPage() {
       
       <Tabs defaultValue="conversation" onValueChange={setActiveTab} className="w-full">
         <div className="flex justify-center mb-6">
-          <TabsList className="grid w-full max-w-md grid-cols-3">
+          <TabsList className="w-full max-w-md">
             <TabsTrigger value="conversation" className="flex items-center justify-center gap-2">
-              <MessageSquare className="h-4 w-4" />
-              <span>Chat with SAGE</span>
+              <MessageSquare className="h-5 w-5" />
+              <span>Chat</span>
             </TabsTrigger>
             <TabsTrigger value="structured" className="flex items-center justify-center gap-2">
-              <ListChecks className="h-4 w-4" />
-              <span>Training Dashboard</span>
+              <ListChecks className="h-5 w-5" />
+              <span>Training</span>
             </TabsTrigger>
             <TabsTrigger value="journal" className="flex items-center justify-center gap-2">
-              <BookText className="h-4 w-4" />
+              <BookText className="h-5 w-5" />
               <span>Journal</span>
             </TabsTrigger>
           </TabsList>
