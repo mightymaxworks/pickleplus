@@ -144,8 +144,8 @@ export default function SageJournalPanel() {
     entryType: 'free_form',
     isPrivate: false
   });
-  const [filterDimension, setFilterDimension] = useState<string | undefined>(undefined);
-  const [filterEntryType, setFilterEntryType] = useState<string | undefined>(undefined);
+  const [filterDimension, setFilterDimension] = useState<string>("all_dimensions");
+  const [filterEntryType, setFilterEntryType] = useState<string>("all_types");
   const [journalPrompt, setJournalPrompt] = useState<JournalPrompt | null>(null);
   
   // Fetch journal entries
@@ -424,11 +424,11 @@ export default function SageJournalPanel() {
   // Filter entries based on selected filters
   // Ensure entries is always treated as an array even if it's undefined
   const filteredEntries = Array.isArray(entries) ? entries.filter((entry: JournalEntry) => {
-    if (filterDimension && entry.dimensionCode !== filterDimension) {
+    if (filterDimension && filterDimension !== "all_dimensions" && entry.dimensionCode !== filterDimension) {
       return false;
     }
     
-    if (filterEntryType && entry.entryType !== filterEntryType) {
+    if (filterEntryType && filterEntryType !== "all_types" && entry.entryType !== filterEntryType) {
       return false;
     }
     
@@ -529,7 +529,7 @@ export default function SageJournalPanel() {
                     <SelectValue placeholder="All Dimensions" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Dimensions</SelectItem>
+                    <SelectItem value="all_dimensions">All Dimensions</SelectItem>
                     <SelectItem value="TECH">Technical Skills</SelectItem>
                     <SelectItem value="TACT">Tactical Awareness</SelectItem>
                     <SelectItem value="PHYS">Physical Fitness</SelectItem>
@@ -543,7 +543,7 @@ export default function SageJournalPanel() {
                     <SelectValue placeholder="All Types" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Types</SelectItem>
+                    <SelectItem value="all_types">All Types</SelectItem>
                     <SelectItem value="free_form">Free-form</SelectItem>
                     <SelectItem value="guided">Guided</SelectItem>
                     <SelectItem value="reflection">Reflection</SelectItem>
@@ -647,7 +647,7 @@ export default function SageJournalPanel() {
                   variant="outline" 
                   size="sm"
                   onClick={() => getRandomPromptMutation.mutate({
-                    dimension: filterDimension
+                    dimension: filterDimension === "all_dimensions" ? undefined : filterDimension
                   })}
                 >
                   <Lightbulb className="h-4 w-4 mr-1" />
@@ -726,14 +726,14 @@ export default function SageJournalPanel() {
                       Dimension Focus (Optional)
                     </label>
                     <Select 
-                      value={entryFormData.dimensionCode || ""} 
-                      onValueChange={(value) => setEntryFormData({ ...entryFormData, dimensionCode: value || undefined })}
+                      value={entryFormData.dimensionCode || "none"} 
+                      onValueChange={(value) => setEntryFormData({ ...entryFormData, dimensionCode: value === "none" ? undefined : value })}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select dimension" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         <SelectItem value="TECH">Technical Skills</SelectItem>
                         <SelectItem value="TACT">Tactical Awareness</SelectItem>
                         <SelectItem value="PHYS">Physical Fitness</SelectItem>
