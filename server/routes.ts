@@ -27,6 +27,7 @@ import simpleRatingApi from "./routes/simple-rating-api"; // Simple rating API (
 import matchAssessmentRoutes from "./api/match-assessment"; // PKL-278651-COURTIQ-0002-ASSESS
 import referralRoutes from "./modules/referrals/routes"; // PKL-278651-COMM-0007 - Enhanced Referral System
 import coachRoutes from "./routes/coach-routes"; // PKL-278651-COACH-0001-AI - AI Coach
+import simpleSageRoutes from "./routes/simple-sage-routes"; // Simplified version for testing
 import { initializeOpenAI } from "./services/aiCoach"; // AI Coach service initialization
 import { isAuthenticated as isAuthenticatedMiddleware } from "./middleware/auth";
 import { isAuthenticated, setupAuth } from "./auth"; // Import the proper passport-based authentication
@@ -87,6 +88,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Mount AI Coach routes - PKL-278651-COACH-0001-AI
   app.use('/api/coach', coachRoutes);
+  
+  // Mount simplified SAGE Pickleball Knowledge routes for testing
+  app.use('/api/simple-sage', simpleSageRoutes);
   
   // Initialize OpenAI client if API key is available
   initializeOpenAI();
