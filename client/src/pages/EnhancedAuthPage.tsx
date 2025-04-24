@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { PicklePlusNewLogo } from "../components/icons/PicklePlusNewLogo";
@@ -72,7 +72,7 @@ const fadeIn = {
 };
 
 export default function EnhancedAuthPage() {
-  const { loginMutation, registerMutation, user } = useAuth();
+  const { login, register, user, isLoading } = useAuth();
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<string>("login");
   const [showFounderSection, setShowFounderSection] = useState(false);
@@ -128,73 +128,26 @@ export default function EnhancedAuthPage() {
 
   const handleLogin = async (data: LoginFormData) => {
     try {
-      try {
-        // Make direct fetch call to get detailed error information
-        const response = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            username: data.username,
-            password: data.password
-          }),
-        });
-        
-        console.log("[DEBUG] Login response status:", response.status);
-        
-        if (response.ok) {
-          const userData = await response.json();
-          console.log("[DEBUG] Login successful, user data:", userData);
-          // Update query client data
-          queryClient.setQueryData(["/api/auth/current-user"], userData);
-          
-          // Show success toast
-          toast({
-            title: "Login successful!",
-            description: `Welcome back, ${userData.firstName || userData.username}!`,
-            variant: "default",
-          });
-          
-          navigate("/dashboard");
-        } else {
-          // Handle specific error responses
-          const errorData = await response.json();
-          console.error("[DEBUG] Login error response:", errorData);
-          
-          // Handle invalid credentials
-          if (errorData.message.includes("Invalid credentials")) {
-            loginForm.setError("root", { 
-              type: "manual",
-              message: "Invalid username or password. Please try again."
-            });
-          } else {
-            // Generic error at form level
-            loginForm.setError("root", { 
-              type: "manual",
-              message: errorData.message || "Login failed. Please try again."
-            });
-          }
-        }
-      } catch (fetchError) {
-        console.error("[DEBUG] Fetch error during login:", fetchError);
-        loginForm.setError("root", { 
-          type: "manual",
-          message: "Network error occurred. Please check your connection and try again."
-        });
-      }
+      // Use the login function from AuthContext
+      await login({
+        username: data.username,
+        password: data.password,
+        rememberMe: data.rememberMe || false
+      });
+      
+      // Navigate happens in the success handler of login
     } catch (error) {
       console.error("Login error:", error);
       loginForm.setError("root", { 
         type: "manual",
-        message: "An unexpected error occurred during login. Please try again."
+        message: error instanceof Error ? error.message : "An unexpected error occurred during login. Please try again."
       });
     }
   };
 
   const handleRegister = async (formData: RegisterFormData) => {
     try {
-      // Now that we've added firstName and lastName fields, we can proceed with registration
-      // Create a properly formatted registration object with all required fields
+      // Create a properly formatted registration object
       const registrationData = {
         username: formData.username,
         email: formData.email || "",
@@ -208,71 +161,39 @@ export default function EnhancedAuthPage() {
         skillLevel: formData.skillLevel || null,
       };
       
-      try {
-        // Make direct fetch call to get detailed error information
-        const response = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify(registrationData),
-        });
-        
-        console.log("[DEBUG] Registration response status:", response.status);
-        
-        if (response.ok) {
-          const userData = await response.json();
-          console.log("[DEBUG] Registration successful, user data:", userData);
-          // Update query client data
-          // @ts-ignore - TypeScript doesn't know about the specific query key
-          queryClient.setQueryData(["/api/auth/current-user"], userData);
-          
-          // Show success toast with welcome message
-          toast({
-            title: "Account created successfully!",
-            description: `Welcome to PICKLE+, ${formData.firstName}! Your account has been created.`,
-            variant: "default",
-          });
-          
-          navigate("/dashboard");
-        } else {
-          // Handle specific error responses
-          const errorData = await response.json();
-          console.error("[DEBUG] Registration error response:", errorData);
-          
-          // Set appropriate field errors based on server response
-          if (errorData.message.includes("Username already exists")) {
-            registerForm.setError("username", { 
-              type: "manual",
-              message: "This username is already taken. Please choose another."
-            });
-          } else if (errorData.message.includes("Email already exists")) {
-            registerForm.setError("email", { 
-              type: "manual",
-              message: "This email is already registered. Please use another email or try logging in."
-            });
-          } else {
-            // Generic error at form level
-            registerForm.setError("root", { 
-              type: "manual",
-              message: errorData.message || "Registration failed. Please try again."
-            });
-          }
-        }
-      } catch (fetchError) {
-        console.error("[DEBUG] Fetch error during registration:", fetchError);
-        registerForm.setError("root", { 
-          type: "manual",
-          message: "Network error occurred. Please check your connection and try again."
-        });
-      }
+      // Use the register function from AuthContext
+      await register(registrationData);
+      
+      // Navigation happens in the success handler of register
     } catch (error) {
       console.error("Registration error:", error);
-      registerForm.setError("root", { 
-        type: "manual",
-        message: "An unexpected error occurred during registration. Please try again."
-      });
+      
+      // Handle field-specific errors
+      if (error instanceof Error) {
+        const errorMessage = error.message;
+        
+        if (errorMessage.includes("Username already exists")) {
+          registerForm.setError("username", { 
+            type: "manual", 
+            message: "This username is already taken. Please choose another." 
+          });
+        } else if (errorMessage.includes("Email already exists")) {
+          registerForm.setError("email", { 
+            type: "manual", 
+            message: "This email is already registered. Please use another email or try logging in." 
+          });
+        } else {
+          registerForm.setError("root", { 
+            type: "manual", 
+            message: errorMessage || "Registration failed. Please try again." 
+          });
+        }
+      } else {
+        registerForm.setError("root", { 
+          type: "manual", 
+          message: "An unexpected error occurred during registration. Please try again." 
+        });
+      }
     }
   };
 
@@ -439,9 +360,9 @@ export default function EnhancedAuthPage() {
                           <Button 
                             type="submit" 
                             className="w-full bg-[#FF5722] hover:bg-[#E64A19]"
-                            disabled={loginMutation.isPending}
+                            disabled={isLoading}
                           >
-                            {loginMutation.isPending ? "Logging in..." : "Login"}
+                            {isLoading ? "Logging in..." : "Login"}
                           </Button>
                           <p className="mt-4 text-sm text-center text-gray-500">
                             Don't have an account?{" "}
@@ -777,9 +698,9 @@ export default function EnhancedAuthPage() {
                           <Button 
                             type="submit" 
                             className="w-full bg-[#FF5722] hover:bg-[#E64A19]"
-                            disabled={registerMutation.isPending}
+                            disabled={isLoading}
                           >
-                            {registerMutation.isPending ? "Creating account..." : "Create Account"}
+                            {isLoading ? "Creating account..." : "Create Account"}
                           </Button>
                           <p className="mt-4 text-sm text-center text-gray-500">
                             Already have an account?{" "}
