@@ -665,6 +665,263 @@ export class SageEngine {
     
     return dimensionNames[dimensionCode] || 'Skills';
   }
+  
+  /**
+   * PKL-278651-SAGE-0002-CONV - SAGE Conversational UI Implementation
+   * Process a conversation message and generate a response based on user input
+   * 
+   * @param userId The user ID
+   * @param message The user message content
+   * @param conversationId Optional existing conversation ID
+   * @returns The conversation with new messages
+   */
+  async processConversationMessage(
+    userId: number,
+    message: string,
+    conversationId?: number
+  ): Promise<{
+    conversation: any,
+    newMessages: any[]
+  }> {
+    try {
+      // Get the user
+      const user = await storage.getUser(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+      
+      let conversation;
+      let isNewConversation = false;
+      
+      // Get or create conversation
+      if (conversationId) {
+        conversation = await storage.getConversation(conversationId);
+        if (!conversation || conversation.userId !== userId) {
+          throw new Error('Conversation not found or unauthorized');
+        }
+      } else {
+        // Try to get the active conversation
+        conversation = await storage.getActiveConversation(userId);
+        
+        // Create new conversation if none is active
+        if (!conversation) {
+          conversation = await storage.createConversation({
+            userId,
+            topic: 'New Coaching Conversation',
+            isArchived: false,
+            lastMessageAt: new Date()
+          });
+          isNewConversation = true;
+        }
+      }
+      
+      // Create the user message
+      const userMessage = await storage.createMessage({
+        conversationId: conversation.id,
+        content: message,
+        sentAt: new Date(),
+        type: 'USER',
+        feedback: null
+      });
+      
+      // Generate SAGE response based on the message content
+      const sageResponseContent = this.generateSageResponse(message, user);
+      
+      // Determine if the response contains a recommendation
+      const recommendation = this.determineRecommendationType(message, sageResponseContent);
+      
+      // Create the SAGE response message
+      const sageMessage = await storage.createMessage({
+        conversationId: conversation.id,
+        content: sageResponseContent,
+        sentAt: new Date(),
+        type: 'SAGE',
+        feedback: null,
+        metadata: recommendation ? {
+          recommendationType: recommendation.type,
+          dimensionFocus: recommendation.dimensionFocus
+        } : undefined
+      });
+      
+      // If new conversation, update the topic based on the first message
+      if (isNewConversation) {
+        const conversationTopic = this.deriveTopic(message);
+        await storage.updateConversation(conversation.id, {
+          topic: conversationTopic
+        });
+        conversation.topic = conversationTopic;
+      }
+      
+      return {
+        conversation,
+        newMessages: [userMessage, sageMessage]
+      };
+    } catch (error) {
+      console.error('[SageEngine] processConversationMessage error:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Record user feedback on a SAGE message
+   * 
+   * @param userId The user ID
+   * @param messageId The message ID
+   * @param feedbackType 'positive' or 'negative'
+   * @param conversationId The conversation ID
+   * @returns Updated message with feedback
+   */
+  async recordMessageFeedback(
+    userId: number,
+    messageId: number,
+    feedbackType: 'positive' | 'negative',
+    conversationId: number
+  ): Promise<any> {
+    try {
+      // Verify the conversation belongs to the user
+      const conversation = await storage.getConversation(conversationId);
+      if (!conversation || conversation.userId !== userId) {
+        throw new Error('Conversation not found or unauthorized');
+      }
+      
+      // Update the message feedback
+      const updatedMessage = await storage.updateMessageFeedback(messageId, feedbackType);
+      
+      // Log the feedback for future improvement (in a real system, this would
+      // be used to train the model or adjust rule-based responses)
+      console.log(`[SAGE] User ${userId} gave ${feedbackType} feedback on message ${messageId}`);
+      
+      return updatedMessage;
+    } catch (error) {
+      console.error('[SageEngine] recordMessageFeedback error:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Generate a response from SAGE based on user input using rule-based system
+   * 
+   * @param message The user message
+   * @param user The user object
+   * @returns The SAGE response text
+   */
+  private generateSageResponse(message: string, user: any): string {
+    const lowerMessage = message.toLowerCase();
+    
+    // Welcome and introduction for first message in conversation
+    if (lowerMessage.match(/^(hi|hello|hey|greetings|howdy)/i)) {
+      return `Hello ${user.firstName || user.username || 'there'}! I'm S.A.G.E. (Skills Assessment & Growth Engine), your personalized pickleball coach. How can I help improve your game today? You can ask me about specific skills, request a training plan, or get advice on your playing strategy.`;
+    }
+    
+    // Technical skills
+    if (lowerMessage.includes('dink') || lowerMessage.includes('third shot') || lowerMessage.includes('technique')) {
+      return `Your dinking technique is crucial for controlling the game. Focus on a stable paddle face and keeping your wrist firm. For effective third shots and dinks, remember to bend your knees slightly and maintain a relaxed grip. Would you like me to create a technical skills training plan that focuses on these shot fundamentals?`;
+    }
+    
+    // Tactical awareness
+    if (lowerMessage.includes('strategy') || lowerMessage.includes('position') || lowerMessage.includes('court') || lowerMessage.includes('tactic')) {
+      return `Good court positioning is the foundation of tactical success in pickleball. Always try to maintain the center of the court with your partner, and move as a unit when playing doubles. When your opponents are at the kitchen line, aim deep to push them back. Would you like me to generate a tactical training plan focusing on court positioning and game strategy?`;
+    }
+    
+    // Physical fitness
+    if (lowerMessage.includes('fitness') || lowerMessage.includes('stamina') || lowerMessage.includes('endurance') || lowerMessage.includes('tired') || lowerMessage.includes('energy')) {
+      return `Pickleball-specific fitness is essential for sustained performance. I recommend incorporating lateral movement drills, short sprints, and recovery exercises into your routine. Even 15 minutes of targeted exercises before play can improve your on-court stamina significantly. Should I create a fitness training plan customized for pickleball players?`;
+    }
+    
+    // Mental toughness
+    if (lowerMessage.includes('nervous') || lowerMessage.includes('anxiety') || lowerMessage.includes('focus') || lowerMessage.includes('concentrate') || lowerMessage.includes('pressure') || lowerMessage.includes('mental')) {
+      return `Mental toughness is often the difference between good and great players. Try implementing a pre-point routine to reset your focus: take a deep breath, tap your paddle twice, and visualize successful execution. Would you like me to design a mental performance plan with specific exercises to build your confidence and focus?`;
+    }
+    
+    // Consistency
+    if (lowerMessage.includes('consistency') || lowerMessage.includes('inconsistent') || lowerMessage.includes('variable') || lowerMessage.includes('practice') || lowerMessage.includes('routine')) {
+      return `Consistent play comes from disciplined practice and reliable mechanics. I recommend creating a practice routine that includes dedicated drills for each shot type. Start with 10 minutes of dinking, followed by 10 minutes of serve and return practice. Would you like me to create a structured weekly practice schedule to help you develop consistency?`;
+    }
+    
+    // Training plan request
+    if (lowerMessage.includes('training plan') || lowerMessage.includes('exercise') || lowerMessage.includes('workout') || lowerMessage.includes('drill')) {
+      return `I'd be happy to create a personalized training plan for you. To make it most effective, could you tell me which aspect of your game you'd like to focus on most? Technical skills, tactical awareness, physical fitness, mental toughness, or consistency? This will help me tailor the plan to your specific needs.`;
+    }
+    
+    // Match analysis
+    if (lowerMessage.includes('match') || lowerMessage.includes('game') || lowerMessage.includes('tournament') || lowerMessage.includes('played') || lowerMessage.includes('lost') || lowerMessage.includes('won')) {
+      return `Post-match analysis is a powerful tool for improvement. Try recording key statistics in your next match: unforced errors, winners, and net play success rate. This data will help identify patterns and areas for focused practice. Would you like guidance on how to effectively analyze your match performance?`;
+    }
+    
+    // Default response for unrecognized topics
+    return `I understand you want to improve your pickleball skills. To offer more specific guidance, could you tell me which aspect of your game you want to focus on? Technical skills (shots and mechanics), tactical awareness (strategy and court positioning), physical fitness (movement and stamina), mental toughness (focus and confidence), or consistency (reliable performance)?`;
+  }
+  
+  /**
+   * Determine if the SAGE response contains a recommendation
+   * 
+   * @param userMessage The user message
+   * @param sageResponse The SAGE response
+   * @returns Recommendation type and dimension focus if present
+   */
+  private determineRecommendationType(userMessage: string, sageResponse: string): { type: 'training' | 'insight' | 'schedule', dimensionFocus: DimensionCode } | null {
+    const lowerUserMessage = userMessage.toLowerCase();
+    const lowerSageResponse = sageResponse.toLowerCase();
+    
+    // Determine dimension focus
+    let dimensionFocus: DimensionCode = 'TECH'; // Default to technical
+    
+    if (lowerUserMessage.includes('technique') || lowerUserMessage.includes('dink') || lowerUserMessage.includes('shot') || 
+        lowerSageResponse.includes('technique') || lowerSageResponse.includes('dinking') || lowerSageResponse.includes('paddle')) {
+      dimensionFocus = 'TECH';
+    } else if (lowerUserMessage.includes('strategy') || lowerUserMessage.includes('position') || lowerUserMessage.includes('court') || 
+               lowerSageResponse.includes('positioning') || lowerSageResponse.includes('strategy') || lowerSageResponse.includes('tactical')) {
+      dimensionFocus = 'TACT';
+    } else if (lowerUserMessage.includes('fitness') || lowerUserMessage.includes('stamina') || lowerUserMessage.includes('tired') || 
+               lowerSageResponse.includes('fitness') || lowerSageResponse.includes('stamina') || lowerSageResponse.includes('physical')) {
+      dimensionFocus = 'PHYS';
+    } else if (lowerUserMessage.includes('nervous') || lowerUserMessage.includes('focus') || lowerUserMessage.includes('pressure') || 
+               lowerSageResponse.includes('mental') || lowerSageResponse.includes('focus') || lowerSageResponse.includes('confidence')) {
+      dimensionFocus = 'MENT';
+    } else if (lowerUserMessage.includes('consistency') || lowerUserMessage.includes('practice') || lowerUserMessage.includes('routine') || 
+               lowerSageResponse.includes('consistency') || lowerSageResponse.includes('practice') || lowerSageResponse.includes('routine')) {
+      dimensionFocus = 'CONS';
+    }
+    
+    // Determine recommendation type
+    if (lowerSageResponse.includes('training plan') || lowerSageResponse.includes('create a plan')) {
+      return { type: 'training', dimensionFocus };
+    } else if (lowerSageResponse.includes('schedule') || lowerSageResponse.includes('weekly practice')) {
+      return { type: 'schedule', dimensionFocus };
+    } else if (lowerSageResponse.includes('analyze') || lowerSageResponse.includes('assessment')) {
+      return { type: 'insight', dimensionFocus };
+    }
+    
+    return null;
+  }
+  
+  /**
+   * Derive a topic for the conversation based on the first message
+   * 
+   * @param message The user message
+   * @returns A topic for the conversation
+   */
+  private deriveTopic(message: string): string {
+    const lowerMessage = message.toLowerCase();
+    
+    if (lowerMessage.includes('dink') || lowerMessage.includes('third shot') || lowerMessage.includes('technique')) {
+      return 'Technical Skills Discussion';
+    } else if (lowerMessage.includes('strategy') || lowerMessage.includes('position') || lowerMessage.includes('tactic')) {
+      return 'Tactical Awareness Coaching';
+    } else if (lowerMessage.includes('fitness') || lowerMessage.includes('stamina') || lowerMessage.includes('endurance')) {
+      return 'Physical Fitness Planning';
+    } else if (lowerMessage.includes('nervous') || lowerMessage.includes('focus') || lowerMessage.includes('mental')) {
+      return 'Mental Performance Coaching';
+    } else if (lowerMessage.includes('consistency') || lowerMessage.includes('practice') || lowerMessage.includes('routine')) {
+      return 'Consistency Development';
+    } else if (lowerMessage.includes('training') || lowerMessage.includes('plan') || lowerMessage.includes('exercise')) {
+      return 'Training Plan Discussion';
+    } else if (lowerMessage.includes('match') || lowerMessage.includes('game') || lowerMessage.includes('tournament')) {
+      return 'Match Analysis & Feedback';
+    } else {
+      return 'Pickleball Coaching Conversation';
+    }
+  }
 }
 
 // Export a singleton instance

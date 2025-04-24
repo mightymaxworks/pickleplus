@@ -637,9 +637,8 @@ router.post('/sage/feedback', isAuthenticated, async (req: Request, res: Respons
       return res.status(401).json({ error: 'Unauthorized' });
     }
     
-    // In a real implementation, we would record the feedback in the database
-    // and use it to improve the SAGE engine. For this sprint, we'll use the development test data.
-    const result = await storage.recordSageFeedback(userId, messageId, feedbackType, conversationId);
+    // Use the SageEngine to record the feedback
+    const result = await sageEngine.recordMessageFeedback(userId, parseInt(messageId), feedbackType, conversationId);
     return res.json(result);
   } catch (error) {
     console.error('[SAGE] Record feedback error:', error);
