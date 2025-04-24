@@ -43,7 +43,7 @@ import {
 } from 'lucide-react';
 import { PicklePlusNewLogo } from '@/components/icons/PicklePlusNewLogo';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 
 // Import default avatar image
