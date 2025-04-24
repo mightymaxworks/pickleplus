@@ -8,9 +8,10 @@
  * 
  * PKL-278651-SAGE-0002-CONV - Added conversation support for SAGE Conversational UI
  * PKL-278651-COACH-0003-TERMS - Added pickleball terminology recognition
+ * PKL-278651-COACH-0004-MENT-STATE - Added mental state recognition for match outcomes
  * 
  * @framework Framework5.3
- * @version 1.2.0
+ * @version 1.3.0
  * @lastModified 2025-04-24
  */
 
@@ -30,6 +31,7 @@ import { storage } from '../storage';
 import { User } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { analyzePickleballTerminology, generateTerminologyResponse } from './pickleballTermProcessor';
+import { analyzeMentalState, generateMentalStateResponse } from './mentalStateProcessor';
 
 /**
  * Rule-based coaching engine for generating insights and training plans
@@ -1496,7 +1498,23 @@ export class SageEngine {
       return `Hello ${user.firstName || user.username || 'there'}! I'm S.A.G.E. (Skills Assessment & Growth Engine), your personalized pickleball coach. How can I help improve your game today? You can ask me about specific skills, request a training plan, or get advice on your playing strategy.`;
     }
     
-    // First, check for pickleball terminology in the message
+    // First, check for mental state related to winning/losing matches
+    const mentalStateAnalysis = analyzeMentalState(message);
+    
+    // If the mental state is related to matches and has high intensity or seeks advice,
+    // prioritize responding to the emotional/mental state
+    if (mentalStateAnalysis.isMatchRelated && 
+        (mentalStateAnalysis.intensity > 2 || mentalStateAnalysis.seeksAdvice) && 
+        mentalStateAnalysis.primaryState !== 'neutral') {
+      const mentalStateResponse = generateMentalStateResponse(
+        mentalStateAnalysis,
+        user.firstName || user.username || 'there'
+      );
+      
+      return mentalStateResponse;
+    }
+    
+    // Next, check for pickleball terminology in the message
     const termAnalysis = analyzePickleballTerminology(message);
     
     // If we found pickleball terms, generate a terminology-specific response
@@ -1513,7 +1531,18 @@ export class SageEngine {
       }
     }
     
-    // Fall back to standard responses if no terminology recognized
+    // If we have a mental state but it wasn't prioritized earlier (not match-related or low intensity),
+    // use it now before falling back to standard responses
+    if (mentalStateAnalysis.primaryState !== 'neutral') {
+      const mentalStateResponse = generateMentalStateResponse(
+        mentalStateAnalysis,
+        user.firstName || user.username || 'there'
+      );
+      
+      return mentalStateResponse;
+    }
+    
+    // Fall back to standard responses if no special cases recognized
     
     // Technical skills
     if (lowerMessage.includes('dink') || lowerMessage.includes('third shot') || lowerMessage.includes('technique')) {
@@ -1570,7 +1599,20 @@ export class SageEngine {
     const lowerUserMessage = userMessage.toLowerCase();
     const lowerSageResponse = sageResponse.toLowerCase();
     
-    // Check for terminology focus first
+    // Check for mental state first
+    const mentalStateAnalysis = analyzeMentalState(userMessage);
+    if (mentalStateAnalysis.relevantDimension) {
+      dimensionFocus = mentalStateAnalysis.relevantDimension;
+    }
+    
+    // If mental state is strong and match-related, suggest an insight
+    if (mentalStateAnalysis.isMatchRelated && 
+        mentalStateAnalysis.intensity > 3 && 
+        mentalStateAnalysis.primaryState !== 'neutral') {
+      return { type: 'insight', dimensionFocus: 'MENT' };
+    }
+    
+    // Next, check for terminology focus
     const termAnalysis = analyzePickleballTerminology(userMessage);
     if (termAnalysis.suggestedDimension) {
       dimensionFocus = termAnalysis.suggestedDimension;
@@ -1591,6 +1633,14 @@ export class SageEngine {
               (lowerSageResponse.includes('drill') || lowerSageResponse.includes('practice') || 
                lowerSageResponse.includes('improve') || lowerSageResponse.includes('technique'))) {
       return { type: 'training', dimensionFocus };
+    } else if (mentalStateAnalysis.seeksAdvice && mentalStateAnalysis.primaryState !== 'neutral') {
+      // If seeking advice with any mental state, suggest either training or insight
+      if (lowerSageResponse.includes('journal') || lowerSageResponse.includes('reflect') || 
+          lowerSageResponse.includes('consider') || lowerSageResponse.includes('mental game')) {
+        return { type: 'insight', dimensionFocus };
+      } else {
+        return { type: 'training', dimensionFocus };
+      }
     }
     
     return null;
@@ -1605,7 +1655,40 @@ export class SageEngine {
   private deriveTopic(message: string): string {
     const lowerMessage = message.toLowerCase();
     
-    // First, check for specific pickleball terminology in the message
+    // First, check for mental state in the message
+    const mentalStateAnalysis = analyzeMentalState(message);
+    
+    // If we found a significant mental state related to matches, prioritize it
+    if (mentalStateAnalysis.isMatchRelated && 
+        mentalStateAnalysis.intensity > 2 && 
+        mentalStateAnalysis.primaryState !== 'neutral') {
+      
+      // Create topic based on the mental state
+      switch (mentalStateAnalysis.primaryState) {
+        case 'victory_elation':
+        case 'victory_relief':
+          return 'Match Victory Reflection';
+        case 'defeat_frustration':
+        case 'defeat_disappointment':
+          return 'Match Loss Processing';
+        case 'pressure_anxiety':
+          return 'Competition Pressure Management';
+        case 'focus_issue':
+          return 'Mental Focus Development';
+        case 'confidence_loss':
+          return 'Confidence Rebuilding';
+        case 'confidence_gain':
+          return 'Confidence Reinforcement';
+        case 'motivation_high':
+          return 'Motivation Enhancement';
+        case 'motivation_low':
+          return 'Motivation Restoration';
+        default:
+          return 'Match Mentality Coaching';
+      }
+    }
+    
+    // Next, check for specific pickleball terminology in the message
     const termAnalysis = analyzePickleballTerminology(message);
     
     // If we found pickleball terms, use the primary term in the topic
@@ -1626,6 +1709,32 @@ export class SageEngine {
           return `${term.term.charAt(0).toUpperCase() + term.term.slice(1)} Consistency Training`;
         default:
           return `${term.term.charAt(0).toUpperCase() + term.term.slice(1)} Skill Development`;
+      }
+    }
+    
+    // If mental state exists but wasn't match-related or high intensity, use it now
+    if (mentalStateAnalysis.primaryState !== 'neutral') {
+      switch (mentalStateAnalysis.primaryState) {
+        case 'victory_elation':
+        case 'victory_relief':
+          return 'Success Mindset Development';
+        case 'defeat_frustration':
+        case 'defeat_disappointment':
+          return 'Resilience Building';
+        case 'pressure_anxiety':
+          return 'Performance Anxiety Management';
+        case 'focus_issue':
+          return 'Concentration Enhancement';
+        case 'confidence_loss':
+          return 'Self-Belief Building';
+        case 'confidence_gain':
+          return 'Confidence Amplification';
+        case 'motivation_high':
+          return 'Motivation Channeling';
+        case 'motivation_low':
+          return 'Inspiration Rekindling';
+        default:
+          return 'Pickleball Mental Game';
       }
     }
     
