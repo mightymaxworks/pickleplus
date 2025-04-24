@@ -26,6 +26,8 @@ import courtiqRoutes from "./routes/courtiq-routes"; // PKL-278651-CRTIQ-0009-FW
 import simpleRatingApi from "./routes/simple-rating-api"; // Simple rating API (Framework 5.3)
 import matchAssessmentRoutes from "./api/match-assessment"; // PKL-278651-COURTIQ-0002-ASSESS
 import referralRoutes from "./modules/referrals/routes"; // PKL-278651-COMM-0007 - Enhanced Referral System
+import coachRoutes from "./routes/coach-routes"; // PKL-278651-COACH-0001-AI - AI Coach
+import { initializeOpenAI } from "./services/aiCoach"; // AI Coach service initialization
 import { isAuthenticated as isAuthenticatedMiddleware } from "./middleware/auth";
 import { isAuthenticated, setupAuth } from "./auth"; // Import the proper passport-based authentication
 import { specialRouter } from "./special-routes"; // Import special critical routes
@@ -80,6 +82,12 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Mount referral system routes - PKL-278651-COMM-0007
   app.use('/api/referrals', referralRoutes);
+  
+  // Mount AI Coach routes - PKL-278651-COACH-0001-AI
+  app.use('/api/coach', coachRoutes);
+  
+  // Initialize OpenAI client if API key is available
+  initializeOpenAI();
   
   // Basic user info endpoint
   app.get("/api/me", isAuthenticated, async (req: Request, res: Response) => {

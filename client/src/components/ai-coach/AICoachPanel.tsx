@@ -39,7 +39,7 @@ export function AICoachPanel() {
     isLoading: isAdviceLoading,
     error: adviceError,
     refetch: refetchAdvice
-  } = useQuery({
+  } = useQuery<{ advice: string }>({
     queryKey: ['/api/coach/advice'],
     enabled: activeTab === 'advice',
   });

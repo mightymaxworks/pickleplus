@@ -110,6 +110,7 @@ import FixedTwitterDashboard from './pages/FixedTwitterDashboard' // PKL-278651-
 import UnifiedActivityDashboard from './pages/UnifiedActivityDashboard' // PKL-278651-COMM-0005-DASH-UNIFIED
 import SimpleUnifiedDashboard from './pages/SimpleUnifiedDashboard' // PKL-278651-COMM-0005-DASH-SIMPLE
 import XpDashboardPage from './pages/xp-dashboard' // PKL-278651-XP-0002-UI
+import CoachPage from './pages/CoachPage' // PKL-278651-COACH-0001-AI - AI Coach
 
 import { useAuth } from '@/contexts/AuthContext'
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute'
@@ -318,6 +319,12 @@ export default function App() {
                     path="/courtiq/analysis/:userId"
                     component={LazyCourtIQDetailedAnalysisPage}
                     pageTitle="CourtIQ Analysis"
+                  />
+                  {/* PKL-278651-COACH-0001-AI - AI Coach */}
+                  <ProtectedRouteWithLayout 
+                    path="/coach"
+                    component={CoachPage}
+                    pageTitle="AI Coach"
                   />
                   <Route path="/record-match">
                     {(params) => <CentralProtectedRoute component={LazyRecordMatchPage} path="/record-match" />}
