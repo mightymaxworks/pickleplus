@@ -11,7 +11,7 @@ import { throttle } from 'lodash';
 import { checkForGoldenTicket, getGoldenTicketById, claimGoldenTicket } from '../api/goldenTicketApi';
 import type { GoldenTicket, GoldenTicketClaim } from '@shared/golden-ticket.schema';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/lib/auth';
 
 interface GoldenTicketContextType {
   currentTicket: (GoldenTicket & { 

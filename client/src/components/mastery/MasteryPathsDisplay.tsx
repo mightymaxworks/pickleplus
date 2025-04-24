@@ -29,7 +29,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useMasteryTierStatus } from '@/hooks/use-mastery-tier-status';
 import { useTierByName } from '@/hooks/use-mastery-tiers';
 import { MasteryPath } from '@shared/mastery-paths';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/lib/auth';
 import { 
   Shield, 
   Award, 

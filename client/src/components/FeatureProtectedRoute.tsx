@@ -1,6 +1,6 @@
 import React from 'react';
 import { Route, Redirect } from 'wouter';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/lib/auth';
 import { useFeatureFlag } from '@/lib/featureFlags';
 import ComingSoonPage from '@/pages/ComingSoonPage';
 import TournamentsComingSoon from '@/pages/TournamentsComingSoon';

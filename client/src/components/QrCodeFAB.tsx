@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/lib/auth';
 import { QRCodeSVG } from 'qrcode.react';
 import { useLocation } from 'wouter';
 import { toast } from "@/hooks/use-toast";

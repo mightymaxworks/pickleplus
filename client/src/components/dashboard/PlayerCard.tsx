@@ -1,6 +1,6 @@
 import { User } from "@/types";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/lib/auth";
 import { FoundingMemberBadge } from "@/components/ui/founding-member-badge";
 import { XpMultiplierIndicator } from "@/components/ui/xp-multiplier-indicator";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";

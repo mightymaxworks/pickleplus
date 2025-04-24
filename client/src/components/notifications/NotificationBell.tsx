@@ -9,7 +9,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '@/hooks/useAuth.tsx';
+import { useAuth } from '@/lib/auth';
 import { useNotificationSocket } from '@/lib/hooks/useNotificationSocket';
 import { Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';

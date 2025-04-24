@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Find all files importing useAuth from hooks and update them to use the context version
-grep -l "import { useAuth } from '@/hooks/useAuth'" client/src/ | xargs sed -i "s|import { useAuth } from '@/hooks/useAuth'|import { useAuth } from '@/lib/auth'|g"
+# Update all imports to use the lib/auth centralized approach
+find client/src -type f -name "*.tsx" -o -name "*.ts" | xargs grep -l "from '@/hooks/useAuth'" | xargs sed -i "s|from '@/hooks/useAuth'|from '@/lib/auth'|g"
 
-# Show how many files were updated
-echo "Updated $(grep -l "import { useAuth } from '@/lib/auth'" client/src/ | wc -l) files"
+# Show the updated files count
+echo "Updated $(find client/src -type f -name "*.tsx" -o -name "*.ts" | xargs grep -l "from '@/lib/auth'" | wc -l) files"

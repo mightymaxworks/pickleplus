@@ -34,7 +34,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
 import { QRCodeSVG } from 'qrcode.react'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth } from '@/lib/auth'
 
 // Test data for the components
 const currentUser = {

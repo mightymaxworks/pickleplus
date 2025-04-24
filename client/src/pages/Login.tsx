@@ -19,7 +19,7 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function Login() {
-  const { loginMutation } = useAuth();
+  const { login } = useAuth();
   const [, navigate] = useLocation();
 
   const form = useForm<LoginFormData>({
@@ -40,7 +40,7 @@ export default function Login() {
         return;
       }
       
-      await loginMutation.mutateAsync({
+      await loginAsync({
         username: data.username,
         password: data.password
       });

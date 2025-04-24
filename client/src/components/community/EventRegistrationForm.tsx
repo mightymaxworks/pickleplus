@@ -59,7 +59,7 @@ export default function EventRegistrationForm({
   
   // Handle form submission
   const onSubmit = async (values: FormValues) => {
-    registerMutation.mutate(
+    register(
       { 
         communityId,
         eventId,

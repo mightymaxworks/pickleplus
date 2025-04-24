@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CalendarIcon, MapPinIcon, Trophy, XCircle, CheckCircle, ClockIcon } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/lib/auth';
 import { MatchFilters, MatchFiltersState } from './MatchFilters';
 import MatchTrends from './MatchTrends';
 import MatchDetails from './MatchDetails';

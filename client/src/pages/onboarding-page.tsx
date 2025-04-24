@@ -12,7 +12,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 
 import { OnboardingWizard } from '@/components/onboarding';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/lib/auth';
 
 /**
  * OnboardingPage Component

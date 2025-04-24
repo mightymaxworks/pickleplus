@@ -17,7 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { PicklePlusWhiteLogo } from "@/components/icons/PicklePlusWhiteLogo";
 import { User } from "@shared/schema";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/lib/auth";
 
 interface DesktopSidebarProps {
   user: User;
@@ -26,10 +26,10 @@ interface DesktopSidebarProps {
 export default function DesktopSidebar({ user }: DesktopSidebarProps) {
   const [location, navigate] = useLocation();
   const [collapsed, setCollapsed] = useState(false);
-  const { logoutMutation } = useAuth();
+  const { logout } = useAuth();
   
   const handleLogout = () => {
-    logoutMutation.mutate();
+    logout();
   };
   
   const toggleCollapse = () => {

@@ -17,7 +17,7 @@ import { useLocation } from "wouter";
 import { Community, CommunityMemberRole } from "@/types/community";
 import { useCommunityContext } from "@/lib/providers/CommunityProvider";
 import { useJoinCommunity, useLeaveCommunity } from "@/lib/hooks/useCommunity";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/lib/auth";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

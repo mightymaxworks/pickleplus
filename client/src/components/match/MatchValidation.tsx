@@ -8,7 +8,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format, parseISO, formatDistance, isAfter } from 'date-fns';
 import { RecordedMatch, matchSDK, ParticipantValidation } from '@/lib/sdk/matchSDK';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/lib/auth';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";

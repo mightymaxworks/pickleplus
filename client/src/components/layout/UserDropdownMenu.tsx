@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { User } from "@shared/schema";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/lib/auth";
 
 interface UserDropdownMenuProps {
   user: User;
@@ -22,14 +22,14 @@ interface UserDropdownMenuProps {
 export default function UserDropdownMenu({ user }: UserDropdownMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [, navigate] = useLocation();
-  const { logoutMutation } = useAuth();
+  const { logout } = useAuth();
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
 
   const handleLogout = () => {
-    logoutMutation.mutate();
+    logout();
   };
 
   // Close dropdown when clicking outside

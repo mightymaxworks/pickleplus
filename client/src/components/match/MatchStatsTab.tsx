@@ -51,7 +51,7 @@ import {
   Radar
 } from 'recharts';
 import { formatDistanceToNow } from 'date-fns';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/lib/auth';
 import { getMatchStats } from '@/lib/sdk/matchSDK';
 import { Separator } from '@/components/ui/separator';
 

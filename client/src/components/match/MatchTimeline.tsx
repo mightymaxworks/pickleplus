@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { format, parseISO, isSameMonth, differenceInCalendarMonths } from 'date-fns';
 import { ChevronLeft, ChevronRight, Calendar, MapPin, Users, Clock, Trophy, Zap } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/lib/auth';
 
 interface MatchTimelineProps {
   matches: RecordedMatch[];

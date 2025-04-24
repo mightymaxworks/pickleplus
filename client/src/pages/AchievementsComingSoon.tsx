@@ -1,7 +1,7 @@
 import { Award, Star, Zap } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/lib/auth';
 
 export default function AchievementsComingSoon() {
   const { user } = useAuth();

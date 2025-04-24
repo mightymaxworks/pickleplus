@@ -14,7 +14,7 @@ import {
   CheckCircle2,
   Palette
 } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import pickleLogoPath from "../assets/Pickle (2).png";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -36,7 +36,7 @@ interface MainLayoutProps {
 }
 
 export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
-  const { user, logoutMutation } = useAuth();
+  const { user, logout } = useAuth();
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
@@ -50,7 +50,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       console.log("Logout flag set to prevent redirect loop");
       
       // 1. Try the logout mutation
-      logoutMutation.mutate();
+      logout();
       
       // 2. Direct cookie clearing regardless of mutation success
       document.cookie.split(";").forEach(function(c) {

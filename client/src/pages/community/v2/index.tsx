@@ -10,7 +10,7 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';

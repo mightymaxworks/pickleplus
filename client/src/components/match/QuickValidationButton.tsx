@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/lib/auth';
 import { RecordedMatch, matchSDK } from '@/lib/sdk/matchSDK';
 import { queryClient } from '@/lib/queryClient';
 import { 

@@ -4,8 +4,8 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from './useAuth';
-import type { TierProgressionEntry } from '@shared/mastery-paths';
+import { useAuth } from '@/lib/auth';
+import type { TierProgression as TierProgressionEntry } from '@shared/mastery-paths';
 
 /**
  * Hook to fetch the current user's tier progression history

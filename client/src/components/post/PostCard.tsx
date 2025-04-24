@@ -40,7 +40,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { ReportButton } from "@/components/moderation/ReportButton";
 import { CommentSection } from "@/components/post";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/lib/auth";
 
 interface PostCardProps {
   post: {

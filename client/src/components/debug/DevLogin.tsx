@@ -6,11 +6,11 @@
 import React from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/lib/auth';
 
 export function DevLogin() {
   const { toast } = useToast();
-  const { loginMutation } = useAuth();
+  const { login } = useAuth();
   
   // Test user credentials (using standard test accounts)
   const testUsers = [
@@ -21,7 +21,7 @@ export function DevLogin() {
   
   const handleLogin = async (username: string, password: string) => {
     try {
-      await loginMutation.mutateAsync({ username, password });
+      await loginAsync({ username, password });
       toast({
         title: 'Development Login',
         description: `Logged in as ${username} successfully.`,

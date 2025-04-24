@@ -39,7 +39,7 @@ import { CommunitySearchResults } from '@/components/community/CommunitySearchRe
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/lib/auth';
 import { useMyCommunityIds } from '@/lib/hooks/useCommunity';
 import { MapPin, Users, Search, Filter, Star } from 'lucide-react';
 

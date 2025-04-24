@@ -23,7 +23,7 @@ import {
   Filter,
   LayoutDashboard
 } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/lib/auth';
 
 interface MatchDashboardProps {
   matches: RecordedMatch[];

@@ -3,7 +3,7 @@
  * This component provides a modern, visually appealing match card with improved validation controls
  */
 import { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/lib/auth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import { RecordedMatch, validateMatch } from '@/lib/sdk/matchSDK';

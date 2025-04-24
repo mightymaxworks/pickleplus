@@ -38,7 +38,7 @@ interface AdminLayoutProps {
 }
 
 export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs = [] }: AdminLayoutProps) {
-  const { user, logoutMutation } = useAuth();
+  const { user, logout } = useAuth();
   const [location, navigate] = useLocation();
   const adminNavItems = useAdminNavItems();
   const categorizedNavItems = useCategorizedNavItems();
@@ -322,7 +322,7 @@ export function AdminLayout({ children, title = 'Admin Dashboard', breadcrumbs =
                 <Button 
                   variant="ghost"
                   size="icon"
-                  onClick={() => logoutMutation.mutate()}
+                  onClick={() => logout()}
                   className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors"
                 >
                   <LogOut size={18} />

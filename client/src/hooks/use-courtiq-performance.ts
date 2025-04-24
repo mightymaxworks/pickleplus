@@ -3,7 +3,7 @@
  * This hook fetches CourtIQ performance data for a user
  */
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from './useAuth';
+import { useAuth } from '@/lib/auth';
 
 export interface CourtIQSkillRating {
   power: number;

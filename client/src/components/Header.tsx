@@ -16,13 +16,13 @@ import { FoundingMemberBadge } from "@/components/ui/founding-member-badge";
 import { useToast } from "@/hooks/use-toast";
 
 export function Header() {
-  const { user, logoutMutation } = useAuth();
+  const { user, logout } = useAuth();
   const [, setLocation] = useLocation();
   const [notificationCount] = useState(3);
   const { toast } = useToast();
   
   const handleLogout = async () => {
-    await logoutMutation.mutateAsync();
+    await logout();
     setLocation("/login");
   };
   

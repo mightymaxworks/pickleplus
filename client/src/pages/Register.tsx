@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth.tsx";
+import { useAuth } from "@/lib/auth";
 import { PicklePlusTextLogo } from "@/components/icons/PicklePlusTextLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +33,7 @@ const registerSchema = insertUserSchema.extend({
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function Register() {
-  const { registerMutation } = useAuth();
+  const { register } = useAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [referrerId, setReferrerId] = useState<string | null>(null);
@@ -441,9 +441,8 @@ export default function Register() {
               <Button 
                 type="submit" 
                 className="w-full bg-[#FF5722] hover:bg-[#E64A19]"
-                disabled={registerMutation.isPending}
               >
-                {registerMutation.isPending ? "Creating account..." : "Create Account"}
+                {"Create Account"}
               </Button>
               <p className="mt-3 text-sm text-center text-gray-500">
                 Already have an account?{" "}
