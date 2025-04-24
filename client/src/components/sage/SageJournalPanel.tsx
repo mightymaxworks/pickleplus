@@ -422,7 +422,8 @@ export default function SageJournalPanel() {
   };
   
   // Filter entries based on selected filters
-  const filteredEntries = entries.filter((entry: JournalEntry) => {
+  // Ensure entries is always treated as an array even if it's undefined
+  const filteredEntries = Array.isArray(entries) ? entries.filter((entry: JournalEntry) => {
     if (filterDimension && entry.dimensionCode !== filterDimension) {
       return false;
     }
@@ -432,7 +433,7 @@ export default function SageJournalPanel() {
     }
     
     return true;
-  });
+  }) : [];
   
   // Function to get dimension icon
   const getDimensionIcon = (code?: string) => {
@@ -824,7 +825,7 @@ export default function SageJournalPanel() {
               </div>
             </CardFooter>
           </Card>
-        ) : activeEntryId && activeEntry ? (
+        ) : activeEntryId && activeEntry && Object.keys(activeEntry).length > 0 ? (
           <Card className="h-full flex flex-col">
             <CardHeader>
               <div className="flex justify-between items-start">
@@ -868,7 +869,7 @@ export default function SageJournalPanel() {
               </div>
               
               {/* Reflections Section */}
-              {activeEntry.reflections && activeEntry.reflections.length > 0 && (
+              {activeEntry.reflections && Array.isArray(activeEntry.reflections) && activeEntry.reflections.length > 0 && (
                 <div className="mt-8">
                   <h3 className="text-lg font-semibold mb-4 flex items-center">
                     <Lightbulb className="h-4 w-4 mr-2" />
