@@ -3,7 +3,7 @@ import { Route, Switch, useLocation } from 'wouter'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from './lib/queryClient'
 import { Toaster } from '@/components/ui/toaster'
-import { AuthProvider } from '@/hooks/useAuth'
+import { AuthProvider } from '@/contexts/AuthContext'
 import { TournamentChangeProvider } from './core/modules/tournament/context/TournamentChangeContext'
 import { UserDataProvider } from '@/contexts/UserDataContext' // PKL-278651-PERF-0001.1-CACHE
 import { TutorialProvider } from '@/components/onboarding' // PKL-278651-GAME-0002-TUT
@@ -108,29 +108,11 @@ import UnifiedActivityDashboard from './pages/UnifiedActivityDashboard' // PKL-2
 import SimpleUnifiedDashboard from './pages/SimpleUnifiedDashboard' // PKL-278651-COMM-0005-DASH-SIMPLE
 import XpDashboardPage from './pages/xp-dashboard' // PKL-278651-XP-0002-UI
 
-import { useAuth } from './hooks/useAuth'
+import { useAuth } from '@/contexts/AuthContext'
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute'
 
-// Protected route component
-function ProtectedRoute({ 
-  component: Component,
-  ...rest
-}: { 
-  component: React.ComponentType<any>;
-  path: string;
-}) {
-  const { user, isLoading } = useAuth();
-  const [, navigate] = useLocation();
-  
-  if (isLoading) return null;
-
-  if (!user) {
-    navigate("/auth");
-    return null;
-  }
-  
-  return <Component {...rest} />;
-}
+// Import the centralized ProtectedRoute component
+import { ProtectedRoute as CentralProtectedRoute } from '@/components/auth/ProtectedRoute';
 
 // Authentication wrapper component that only renders children when user is authenticated
 function AuthenticationWrapper({ children }: { children: React.ReactNode }) {
@@ -252,7 +234,7 @@ export default function App() {
                     )}
                   </Route>
                   <Route path="/training">
-                    {(params) => <ProtectedRoute component={LazyDashboardPage} path="/training" />}
+                    {(params) => <CentralProtectedRoute component={LazyDashboardPage} path="/training" />}
                   </Route>
                   {/* Redirect old /community route to /communities */}
                   <Route path="/community">
@@ -264,7 +246,7 @@ export default function App() {
                     }}
                   </Route>
                   <Route path="/passport">
-                    {(params) => <ProtectedRoute component={LazyPassportPage} path="/passport" />}
+                    {(params) => <CentralProtectedRoute component={LazyPassportPage} path="/passport" />}
                   </Route>
                   <ProtectedRouteWithLayout
                     path="/profile"
@@ -303,7 +285,7 @@ export default function App() {
                     pageTitle="CourtIQ Analysis"
                   />
                   <Route path="/record-match">
-                    {(params) => <ProtectedRoute component={LazyRecordMatchPage} path="/record-match" />}
+                    {(params) => <CentralProtectedRoute component={LazyRecordMatchPage} path="/record-match" />}
                   </Route>
                   <Route path="/admin">
                     {(params) => (
@@ -407,7 +389,7 @@ export default function App() {
                     )}
                   </Route>
                   <Route path="/settings">
-                    {(params) => <ProtectedRoute component={SettingsPage} path="/settings" />}
+                    {(params) => <CentralProtectedRoute component={SettingsPage} path="/settings" />}
                   </Route>
                   <ProtectedRouteWithLayout
                     path="/leaderboard"
@@ -434,19 +416,19 @@ export default function App() {
                   <Route path="/demo/match-reward" component={MatchRewardDemo} />
                   <Route path="/dev/qr-test" component={QRTestPage} />
                   <Route path="/events">
-                    {(params) => <ProtectedRoute component={LazyEventDiscoveryPage} path="/events" />}
+                    {(params) => <CentralProtectedRoute component={LazyEventDiscoveryPage} path="/events" />}
                   </Route>
                   <Route path="/events/my">
-                    {(params) => <ProtectedRoute component={LazyMyEventsPage} path="/events/my" />}
+                    {(params) => <CentralProtectedRoute component={LazyMyEventsPage} path="/events/my" />}
                   </Route>
                   <Route path="/events/test">
-                    {(params) => <ProtectedRoute component={EventTestPage} path="/events/test" />}
+                    {(params) => <CentralProtectedRoute component={EventTestPage} path="/events/test" />}
                   </Route>
                   <Route path="/search-test">
-                    {(params) => <ProtectedRoute component={SearchTestPage} path="/search-test" />}
+                    {(params) => <CentralProtectedRoute component={SearchTestPage} path="/search-test" />}
                   </Route>
                   <Route path="/player-search-test">
-                    {(params) => <ProtectedRoute component={PlayerSearchTestPage} path="/player-search-test" />}
+                    {(params) => <CentralProtectedRoute component={PlayerSearchTestPage} path="/player-search-test" />}
                   </Route>
                   
                   {/* PKL-278651-COMM-0001-UIMOCK - Community Module UI Test Route */}
@@ -463,7 +445,7 @@ export default function App() {
                   
                   {/* PKL-278651-XP-0002-UI - XP System Dashboard */}
                   <Route path="/xp-dashboard">
-                    {(params) => <ProtectedRoute component={XpDashboardPage} path="/xp-dashboard" />}
+                    {(params) => <CentralProtectedRoute component={XpDashboardPage} path="/xp-dashboard" />}
                   </Route>
                   
                   {/* PKL-278651-COMM-0005-DASH-UNIFIED - Unified Activity-Centric Dashboard Route */}
@@ -474,27 +456,27 @@ export default function App() {
                   
                   {/* PKL-278651-COMM-0006-HUB - Community Hub Implementation */}
                   <Route path="/communities/create">
-                    {(params) => <ProtectedRoute component={CreateCommunityPage} path="/communities/create" />}
+                    {(params) => <CentralProtectedRoute component={CreateCommunityPage} path="/communities/create" />}
                   </Route>
                   <Route path="/communities/:id">
-                    {(params) => <ProtectedRoute component={CommunityDetailPage} path="/communities/:id" />}
+                    {(params) => <CentralProtectedRoute component={CommunityDetailPage} path="/communities/:id" />}
                   </Route>
                   
                   {/* PKL-278651-COMM-0021-ENGAGE - Community Engagement Page */}
                   <Route path="/communities/:communityId/engagement">
-                    {(params) => <ProtectedRoute component={CommunityEngagementPage} path="/communities/:communityId/engagement" />}
+                    {(params) => <CentralProtectedRoute component={CommunityEngagementPage} path="/communities/:communityId/engagement" />}
                   </Route>
                   
                   {/* PKL-278651-COMM-0016-RSVP - Community Event Detail Page with RSVP */}
                   <Route path="/communities/:communityId/events/:eventId">
-                    {(params) => <ProtectedRoute component={CommunityEventDetailPage} path="/communities/:communityId/events/:eventId" />}
+                    {(params) => <CentralProtectedRoute component={CommunityEventDetailPage} path="/communities/:communityId/events/:eventId" />}
                   </Route>
                   
                   {/* PKL-278651-COMM-0036-MEDIA - Community Media Management */}
                   <Route path="/communities/:communityId/media">
                     {(params) => {
                       const MediaManagementPage = lazyLoad(() => import('./pages/community/MediaManagementPage'));
-                      return <ProtectedRoute component={MediaManagementPage} path="/communities/:communityId/media" />;
+                      return <CentralProtectedRoute component={MediaManagementPage} path="/communities/:communityId/media" />;
                     }}
                   </Route>
                   
@@ -506,12 +488,12 @@ export default function App() {
                   
                   {/* PKL-278651-COMM-0022-DISC - Enhanced Community Discovery */}
                   <Route path="/communities/discover">
-                    {(params) => <ProtectedRoute component={CommunityDiscoveryPage} path="/communities/discover" />}
+                    {(params) => <CentralProtectedRoute component={CommunityDiscoveryPage} path="/communities/discover" />}
                   </Route>
                   
                   {/* PKL-278651-COMM-0011-OSI - NodeBB Community Hub v2 */}
                   <Route path="/community/v2">
-                    {(params) => <ProtectedRoute component={(props) => {
+                    {(params) => <CentralProtectedRoute component={(props: any) => {
                       const CommunityHubV2 = lazyLoad(() => import('./pages/community/v2'));
                       return <CommunityHubV2 {...props} />;
                     }} path="/community/v2" />}

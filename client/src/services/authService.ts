@@ -1,228 +1,175 @@
 /**
- * PKL-278651-AUTH-0001-SERVICE - Centralized Authentication Service
+ * PKL-278651-AUTH-0001-CORE
+ * Authentication Service
  * 
- * This service centralizes all authentication-related functions to provide
- * a consistent interface for login, logout, and session management.
+ * A centralized service to handle all authentication-related operations
+ * following Framework 5.3 principles of simplicity and reliability.
  * 
  * @framework Framework5.3
  * @version 1.0.0
  * @lastModified 2025-04-24
  */
 
-import { queryClient } from "@/lib/queryClient";
-import { apiRequest } from "@/lib/queryClient";
-import { User } from "@shared/schema";
+import { User } from '@shared/schema';
+import { apiRequest } from '@/lib/queryClient';
 
-// Type definitions
-export type LoginCredentials = {
+// Define the types for login and registration
+export interface LoginCredentials {
   username: string;
   password: string;
-};
+  rememberMe?: boolean;
+}
 
-export type RegisterData = {
+export interface RegisterCredentials {
   username: string;
   email: string;
   password: string;
-  displayName: string;
-  firstName: string;
-  lastName: string;
-  yearOfBirth?: number | null;
-  location?: string | null;
-  playingSince?: string | null;
-  skillLevel?: string | null;
-};
-
-// AuthResult interface for better error handling
-export interface AuthResult<T = any> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  code?: string;
+  confirmPassword?: string;
 }
 
+// Constants
+const AUTH_ENDPOINTS = {
+  LOGIN: '/api/login',
+  REGISTER: '/api/register',
+  LOGOUT: '/api/logout',
+  CURRENT_USER: '/api/user',
+};
+
+// Storage keys
+const STORAGE_KEYS = {
+  REDIRECT_AFTER_LOGIN: 'pickle_redirect_after_login',
+};
+
 /**
- * Centralized authentication service that handles all auth-related operations
+ * The AuthService class that handles all authentication operations
  */
-const authService = {
+export class AuthService {
   /**
-   * Check if a user is currently authenticated
+   * Attempts to log in a user with the given credentials
    */
-  isAuthenticated(): boolean {
-    return !!queryClient.getQueryData(["/api/auth/current-user"]);
-  },
-
-  /**
-   * Get the current authenticated user
-   */
-  getCurrentUser(): User | null {
-    return queryClient.getQueryData<User>(["/api/auth/current-user"]) || null;
-  },
-
-  /**
-   * Log in a user with username/email and password
-   */
-  async login(credentials: LoginCredentials): Promise<AuthResult<User>> {
+  async login(credentials: LoginCredentials): Promise<User> {
     try {
-      // Clear any previous logout flags
-      sessionStorage.removeItem('just_logged_out');
-      
-      const response = await apiRequest("POST", "/api/login", credentials);
+      const response = await apiRequest('POST', AUTH_ENDPOINTS.LOGIN, credentials);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        return {
-          success: false,
-          error: errorData.message || "Login failed. Please check your credentials.",
-          code: "AUTH_INVALID_CREDENTIALS"
-        };
+        throw new Error(errorData.message || 'Login failed. Please check your credentials.');
       }
       
       const user = await response.json();
-      
-      // Update the auth state in React Query
-      queryClient.setQueryData(["/api/auth/current-user"], user);
-      
-      return { success: true, data: user };
-    } catch (error: any) {
-      console.error("Login error:", error);
-      return {
-        success: false,
-        error: "An unexpected error occurred. Please try again.",
-        code: "AUTH_UNKNOWN_ERROR"
-      };
-    }
-  },
-
-  /**
-   * Register a new user
-   */
-  async register(userData: RegisterData): Promise<AuthResult<User>> {
-    try {
-      const response = await apiRequest("POST", "/api/register", userData);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        return {
-          success: false,
-          error: errorData.message || "Registration failed. Please try again.",
-          code: errorData.code || "AUTH_REGISTRATION_FAILED" 
-        };
-      }
-      
-      const user = await response.json();
-      
-      // Update the auth state in React Query
-      queryClient.setQueryData(["/api/auth/current-user"], user);
-      
-      return { success: true, data: user };
-    } catch (error: any) {
-      console.error("Registration error:", error);
-      return {
-        success: false,
-        error: "An unexpected error occurred. Please try again.",
-        code: "AUTH_UNKNOWN_ERROR"
-      };
-    }
-  },
-
-  /**
-   * Log out the current user
-   */
-  async logout(): Promise<AuthResult<void>> {
-    try {
-      // 1. Set flag to prevent redirect loops
-      sessionStorage.setItem('just_logged_out', 'true');
-      console.log("[AuthService] Set logout flag to prevent redirect loops");
-      
-      // 2. Call the logout API endpoint
-      const response = await apiRequest("POST", "/api/logout");
-      
-      // 3. Clear all client-side state regardless of API response
-      this.clearAuthState();
-      
-      if (!response.ok) {
-        console.warn("[AuthService] Logout API returned error, but client state was cleared");
-        return {
-          success: true,
-          error: "Warning: Server logout failed, but you've been logged out locally.",
-          code: "AUTH_PARTIAL_LOGOUT"
-        };
-      }
-      
-      return { success: true };
-    } catch (error: any) {
-      console.error("[AuthService] Logout error:", error);
-      
-      // Even on error, clear client state
-      this.clearAuthState();
-      
-      return {
-        success: true,
-        error: "Warning: Server logout failed, but you've been logged out locally.",
-        code: "AUTH_PARTIAL_LOGOUT"
-      };
-    }
-  },
-
-  /**
-   * Clear all authentication state on the client
-   */
-  clearAuthState(): void {
-    // 1. Clear React Query cache
-    queryClient.setQueryData(["/api/auth/current-user"], null);
-    queryClient.invalidateQueries({queryKey: ["/api/auth/current-user"]});
-    
-    // 2. Clear any JWT or auth tokens from localStorage
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("user_data");
-    
-    // 3. Clear cookies (best effort approach)
-    document.cookie.split(";").forEach(c => {
-      document.cookie = c.replace(/^ +/, "")
-        .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-    });
-    
-    console.log("[AuthService] All auth state cleared");
-  },
-
-  /**
-   * Check if the current user has a specific role
-   */
-  hasRole(role: string): boolean {
-    const user = this.getCurrentUser();
-    
-    if (!user) return false;
-    
-    // Handle admin role specially
-    if (role === 'admin') return !!user.isAdmin;
-    
-    // For future role implementations
-    return false;
-  },
-
-  /**
-   * Refresh the current user's data
-   */
-  async refreshUserData(): Promise<User | null> {
-    try {
-      queryClient.invalidateQueries({queryKey: ["/api/auth/current-user"]});
-      const data = await queryClient.fetchQuery({
-        queryKey: ["/api/auth/current-user"],
-        queryFn: async () => {
-          const response = await fetch('/api/auth/current-user', {
-            credentials: 'include'
-          });
-          if (!response.ok) return null;
-          return response.json();
-        }
-      });
-      
-      return data;
+      return user;
     } catch (error) {
-      console.error("[AuthService] Error refreshing user data:", error);
+      console.error('Login error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Registers a new user
+   */
+  async register(credentials: RegisterCredentials): Promise<User> {
+    try {
+      // Validation
+      if (credentials.password !== credentials.confirmPassword) {
+        throw new Error('Passwords do not match');
+      }
+      
+      // Remove confirmPassword before sending to API
+      const { confirmPassword, ...registerData } = credentials;
+      
+      const response = await apiRequest('POST', AUTH_ENDPOINTS.REGISTER, registerData);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Registration failed. Please try again.');
+      }
+      
+      const user = await response.json();
+      return user;
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Logs out the current user
+   */
+  async logout(): Promise<void> {
+    try {
+      const response = await apiRequest('POST', AUTH_ENDPOINTS.LOGOUT);
+      
+      if (!response.ok) {
+        throw new Error('Logout failed');
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Gets the current user
+   */
+  async getCurrentUser(): Promise<User | null> {
+    try {
+      const response = await apiRequest('GET', AUTH_ENDPOINTS.CURRENT_USER);
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Not authenticated
+          return null;
+        }
+        throw new Error('Failed to get current user');
+      }
+      
+      const user = await response.json();
+      return user;
+    } catch (error) {
+      console.error('Get current user error:', error);
+      // Don't throw here - return null to indicate not authenticated
       return null;
     }
   }
-};
+
+  /**
+   * Checks if a user has a specific role
+   */
+  hasRole(user: User | null, role: string): boolean {
+    if (!user) return false;
+    
+    // For admin role check
+    if (role === 'admin') {
+      return user.isAdmin === true;
+    }
+    
+    // For other roles, can be expanded in the future
+    return false;
+  }
+
+  /**
+   * Saves a redirect URL to use after login
+   */
+  saveRedirectUrl(url: string): void {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEYS.REDIRECT_AFTER_LOGIN, url);
+    }
+  }
+
+  /**
+   * Gets the saved redirect URL and clears it from storage
+   */
+  getAndClearRedirectUrl(): string | null {
+    if (typeof window !== 'undefined') {
+      const url = localStorage.getItem(STORAGE_KEYS.REDIRECT_AFTER_LOGIN);
+      localStorage.removeItem(STORAGE_KEYS.REDIRECT_AFTER_LOGIN);
+      return url;
+    }
+    return null;
+  }
+}
+
+// Create a singleton instance
+export const authService = new AuthService();
 
 export default authService;
