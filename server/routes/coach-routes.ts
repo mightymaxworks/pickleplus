@@ -2,6 +2,8 @@
  * PKL-278651-COACH-0001-CORE
  * S.A.G.E. (Skills Assessment & Growth Engine) Coaching Routes
  * 
+ * @imports Import the sageEngine service for rule-based coaching
+ * 
  * This file defines the API routes for the SAGE coaching feature.
  * It contains endpoints for creating and managing coaching sessions, training plans,
  * insights, and user progress tracking.

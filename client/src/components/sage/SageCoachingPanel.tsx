@@ -10,21 +10,17 @@
  * @lastModified 2025-04-24
  */
 
-import React, { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/use-auth';
-import { Loader2, ChevronDown, ChevronRight, CheckCircle2, CircleDashed, Brain, Award, Dumbbell, PenTool, Target } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { queryClient, apiRequest } from '@/lib/queryClient';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Progress } from '@/components/ui/progress';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, PlusCircle, ClipboardList, Book, Brain, Dumbbell, Star } from "lucide-react";
 
-// Interface for coaching session
+// Type definitions for SAGE coaching data
 interface CoachingSession {
   id: number;
   userId: number;
@@ -38,7 +34,6 @@ interface CoachingSession {
   updatedAt: string;
 }
 
-// Interface for coaching insight
 interface CoachingInsight {
   id: number;
   sessionId: number;
@@ -51,7 +46,6 @@ interface CoachingInsight {
   createdAt: string;
 }
 
-// Interface for training plan
 interface TrainingPlan {
   id: number;
   sessionId: number;
@@ -65,7 +59,6 @@ interface TrainingPlan {
   updatedAt: string;
 }
 
-// Interface for training exercise
 interface TrainingExercise {
   id: number;
   planId: number;
@@ -82,527 +75,582 @@ interface TrainingExercise {
   updatedAt: string;
 }
 
-// Dimension mappings for icons and colors
-const dimensionIcons = {
-  TECH: <PenTool className="h-5 w-5" />,
-  TACT: <Brain className="h-5 w-5" />,
-  PHYS: <Dumbbell className="h-5 w-5" />,
-  MENT: <Award className="h-5 w-5" />,
-  CONS: <Target className="h-5 w-5" />
-};
-
-const dimensionColors = {
-  TECH: "text-blue-500",
-  TACT: "text-purple-500",
-  PHYS: "text-orange-500",
-  MENT: "text-green-500",
-  CONS: "text-yellow-500"
-};
-
-const dimensionNames = {
-  TECH: "Technical Skills",
-  TACT: "Tactical Awareness",
-  PHYS: "Physical Fitness",
-  MENT: "Mental Toughness",
-  CONS: "Consistency"
-};
-
-const sessionTypes = [
-  { value: "ASSESSMENT", label: "Skill Assessment" },
-  { value: "MATCH_REVIEW", label: "Match Review" },
-  { value: "TRAINING", label: "Training Session" },
-  { value: "MENTAL_COACHING", label: "Mental Coaching" }
-];
-
-export function SageCoachingPanel() {
-  const { toast } = useToast();
+export default function SageCoachingPanel() {
   const { user } = useAuth();
-  const [selectedSession, setSelectedSession] = useState<number | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [sessionType, setSessionType] = useState("ASSESSMENT");
-  const [dimensionFocus, setDimensionFocus] = useState("TECH");
-
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [activeSessionId, setActiveSessionId] = useState<number | null>(null);
+  const [activePlanId, setActivePlanId] = useState<number | null>(null);
+  
   // Fetch coaching sessions
-  const {
-    data: sessions,
-    isLoading: isLoadingSessions,
-    error: sessionsError
-  } = useQuery({
-    queryKey: ['/api/coach/sage/sessions'],
-    enabled: !!user
+  const { data: sessions, isLoading: isLoadingSessions } = useQuery({
+    queryKey: ["/api/coach/sage/sessions"],
+    enabled: !!user,
   });
-
-  // Fetch specific session details when selected
-  const {
-    data: sessionDetails,
-    isLoading: isLoadingDetails,
-    error: detailsError
-  } = useQuery({
-    queryKey: ['/api/coach/sage/sessions', selectedSession],
-    enabled: !!selectedSession
+  
+  // Fetch session details when a session is selected
+  const { data: sessionDetails, isLoading: isLoadingSessionDetails } = useQuery({
+    queryKey: ["/api/coach/sage/sessions", activeSessionId],
+    enabled: !!activeSessionId,
   });
-
-  // Fetch training plan details when selected
-  const {
-    data: planDetails,
-    isLoading: isLoadingPlan,
-    error: planError
-  } = useQuery({
-    queryKey: ['/api/coach/sage/training-plans', selectedPlan],
-    enabled: !!selectedPlan
+  
+  // Fetch training plan details when a plan is selected
+  const { data: planDetails, isLoading: isLoadingPlanDetails } = useQuery({
+    queryKey: ["/api/coach/sage/training-plans", activePlanId],
+    enabled: !!activePlanId,
   });
-
+  
   // Generate a new coaching session
   const generateSessionMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await apiRequest(
-        'POST',
-        '/api/coach/sage/generate-session',
-        data
-      );
-      return await res.json();
-    },
-    onSuccess: (data) => {
-      toast({
-        title: 'Coaching session created',
-        description: 'Your personalized coaching insights are ready',
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/coach/sage/sessions'] });
-      setSelectedSession(data.session.id);
-      setCreateDialogOpen(false);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: 'Failed to create coaching session',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
-
-  // Generate a training plan for a session
-  const generatePlanMutation = useMutation({
-    mutationFn: async (data: { sessionId: number, durationDays: number }) => {
-      const res = await apiRequest(
-        'POST',
-        `/api/coach/sage/sessions/${data.sessionId}/generate-plan`,
-        { durationDays: data.durationDays }
-      );
-      return await res.json();
-    },
-    onSuccess: (data) => {
-      toast({
-        title: 'Training plan created',
-        description: 'Your personalized training plan is ready',
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/coach/sage/sessions', selectedSession] });
-      setSelectedPlan(data.plan.id);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: 'Failed to create training plan',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
-
-  // Mark exercise as complete
-  const markExerciseMutation = useMutation({
-    mutationFn: async ({ id, completed }: { id: number, completed: boolean }) => {
-      const res = await apiRequest(
-        'PATCH',
-        `/api/coach/sage/exercises/${id}/complete`,
-        { completed }
-      );
-      return await res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/coach/sage/training-plans', selectedPlan] });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: 'Failed to update exercise',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
-
-  // Handle generating a new coaching session
-  const handleGenerateSession = () => {
-    generateSessionMutation.mutate({
-      sessionType,
-      dimensionFocus
-    });
-  };
-
-  // Handle generating a training plan
-  const handleGeneratePlan = (sessionId: number) => {
-    generatePlanMutation.mutate({
-      sessionId,
-      durationDays: 7
-    });
-  };
-
-  // Handle marking an exercise as complete
-  const handleMarkExercise = (id: number, completed: boolean) => {
-    markExerciseMutation.mutate({ id, completed });
-  };
-
-  // Calculate completion percentage for a plan
-  const calculatePlanCompletion = (exercises: TrainingExercise[]) => {
-    if (!exercises || exercises.length === 0) return 0;
-    const completed = exercises.filter(ex => ex.isCompleted).length;
-    return Math.round((completed / exercises.length) * 100);
-  };
-
-  // Group exercises by day
-  const groupExercisesByDay = (exercises: TrainingExercise[]) => {
-    const grouped: Record<number, TrainingExercise[]> = {};
-    
-    if (exercises) {
-      exercises.forEach(exercise => {
-        if (!grouped[exercise.dayNumber]) {
-          grouped[exercise.dayNumber] = [];
-        }
-        grouped[exercise.dayNumber].push(exercise);
+    mutationFn: async (data: { sessionType: string; dimensionFocus: string }) => {
+      const response = await fetch("/api/coach/sage/generate-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
       });
       
-      // Sort exercises by orderInDay within each day
-      Object.keys(grouped).forEach(day => {
-        grouped[parseInt(day)].sort((a, b) => a.orderInDay - b.orderInDay);
+      if (!response.ok) {
+        throw new Error("Failed to generate coaching session");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/coach/sage/sessions"] });
+      toast({
+        title: "Coaching session created",
+        description: "Your new coaching session has been generated.",
       });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Error creating session",
+        description: error.message,
+      });
+    },
+  });
+  
+  // Generate a training plan for a session
+  const generatePlanMutation = useMutation({
+    mutationFn: async ({ sessionId, durationDays }: { sessionId: number; durationDays?: number }) => {
+      const response = await fetch(`/api/coach/sage/sessions/${sessionId}/generate-plan`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ durationDays: durationDays || 7 }),
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to generate training plan");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/coach/sage/sessions", activeSessionId] });
+      toast({
+        title: "Training plan created",
+        description: "Your new training plan has been generated.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Error creating plan",
+        description: error.message,
+      });
+    },
+  });
+  
+  // Mark exercise as complete/incomplete
+  const markExerciseMutation = useMutation({
+    mutationFn: async ({ exerciseId, completed }: { exerciseId: number; completed: boolean }) => {
+      const response = await fetch(`/api/coach/sage/exercises/${exerciseId}/complete`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ completed }),
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to update exercise status");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/coach/sage/training-plans", activePlanId] });
+      toast({
+        title: "Exercise updated",
+        description: "Exercise status has been updated.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Error updating exercise",
+        description: error.message,
+      });
+    },
+  });
+  
+  // Generate a new session for a specific dimension
+  const handleGenerateSession = (dimensionFocus: string) => {
+    generateSessionMutation.mutate({
+      sessionType: "GENERAL",
+      dimensionFocus,
+    });
+  };
+  
+  // Generate a training plan for the active session
+  const handleGeneratePlan = () => {
+    if (activeSessionId) {
+      generatePlanMutation.mutate({ sessionId: activeSessionId });
+    }
+  };
+  
+  // Toggle exercise completion status
+  const handleToggleExercise = (exerciseId: number, currentStatus: boolean) => {
+    markExerciseMutation.mutate({
+      exerciseId,
+      completed: !currentStatus,
+    });
+  };
+  
+  // Render dimension badge with appropriate color
+  const renderDimensionBadge = (dimensionCode: string) => {
+    let color;
+    let label;
+    
+    switch (dimensionCode) {
+      case "TECH":
+        color = "bg-blue-500";
+        label = "Technical";
+        break;
+      case "TACT":
+        color = "bg-purple-500";
+        label = "Tactical";
+        break;
+      case "PHYS":
+        color = "bg-green-500";
+        label = "Physical";
+        break;
+      case "MENT":
+        color = "bg-yellow-500";
+        label = "Mental";
+        break;
+      case "CONS":
+        color = "bg-red-500";
+        label = "Consistency";
+        break;
+      default:
+        color = "bg-gray-500";
+        label = dimensionCode;
     }
     
-    return grouped;
-  };
-
-  // Check if there are any errors
-  if (sessionsError) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Error Loading Coaching Data</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p>There was an error loading your coaching data. Please try again later.</p>
-        </CardContent>
-      </Card>
+      <Badge className={`${color} text-white`}>
+        {label}
+      </Badge>
+    );
+  };
+  
+  // Loading state for the entire panel
+  if (isLoadingSessions) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
     );
   }
-
+  
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">S.A.G.E. Coaching</h2>
-          <p className="text-muted-foreground">Skills Assessment & Growth Engine</p>
-        </div>
-        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>Create Coaching Session</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create Coaching Session</DialogTitle>
-              <DialogDescription>
-                Configure your coaching session below. SAGE will analyze your playing history and generate personalized insights.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label htmlFor="session-type" className="text-sm font-medium">Session Type</label>
-                <Select
-                  value={sessionType}
-                  onValueChange={(value) => setSessionType(value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select session type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sessionTypes.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="dimension-focus" className="text-sm font-medium">Primary Focus</label>
-                <Select
-                  value={dimensionFocus}
-                  onValueChange={(value) => setDimensionFocus(value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select focus dimension" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(dimensionNames).map(([code, name]) => (
-                      <SelectItem key={code} value={code}>
-                        <div className="flex items-center">
-                          <span className={dimensionColors[code as keyof typeof dimensionColors]}>
-                            {dimensionIcons[code as keyof typeof dimensionIcons]}
-                          </span>
-                          <span className="ml-2">{name}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button 
-                onClick={handleGenerateSession} 
-                disabled={generateSessionMutation.isPending}
-              >
-                {generateSessionMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  "Generate Coaching Session"
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+    <div className="container mx-auto p-4">
+      <div className="mb-8 text-center">
+        <h1 className="text-3xl font-bold tracking-tight">S.A.G.E. Coaching</h1>
+        <p className="mt-2 text-gray-500 dark:text-gray-400">
+          Skills Assessment & Growth Engine - Your Rule-Based Pickleball Coach
+        </p>
       </div>
-
-      {isLoadingSessions ? (
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="col-span-1 space-y-4">
+      
+      <Tabs defaultValue="sessions" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="sessions">Coaching Sessions</TabsTrigger>
+          <TabsTrigger value="insights">Insights</TabsTrigger>
+          <TabsTrigger value="training">Training Plans</TabsTrigger>
+        </TabsList>
+        
+        {/* Coaching Sessions Tab */}
+        <TabsContent value="sessions" className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Coaching Sessions</CardTitle>
+                <CardTitle>Create New Session</CardTitle>
                 <CardDescription>
-                  Select a session to view detailed insights
+                  Start a new coaching session focused on a specific dimension
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleGenerateSession("TECH")}
+                  disabled={generateSessionMutation.isPending}
+                  className="flex items-center justify-start gap-2">
+                  <PlusCircle className="h-4 w-4" />
+                  Technical Skills
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleGenerateSession("TACT")}
+                  disabled={generateSessionMutation.isPending}
+                  className="flex items-center justify-start gap-2">
+                  <PlusCircle className="h-4 w-4" />
+                  Tactical Awareness
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleGenerateSession("PHYS")}
+                  disabled={generateSessionMutation.isPending}
+                  className="flex items-center justify-start gap-2">
+                  <PlusCircle className="h-4 w-4" />
+                  Physical Fitness
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleGenerateSession("MENT")}
+                  disabled={generateSessionMutation.isPending}
+                  className="flex items-center justify-start gap-2">
+                  <PlusCircle className="h-4 w-4" />
+                  Mental Toughness
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => handleGenerateSession("CONS")}
+                  disabled={generateSessionMutation.isPending}
+                  className="flex items-center justify-start gap-2">
+                  <PlusCircle className="h-4 w-4" />
+                  Consistency
+                </Button>
+              </CardContent>
+              {generateSessionMutation.isPending && (
+                <CardFooter>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating your coaching session...
+                  </div>
+                </CardFooter>
+              )}
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Your Coaching Sessions</CardTitle>
+                <CardDescription>
+                  Select a session to view insights and training plans
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="max-h-[320px] overflow-y-auto">
                 {sessions && sessions.length > 0 ? (
                   <div className="space-y-2">
                     {sessions.map((session: CoachingSession) => (
-                      <div
+                      <div 
                         key={session.id}
-                        className={`p-3 rounded-md cursor-pointer transition-colors ${
-                          selectedSession === session.id
-                            ? "bg-primary/10 border border-primary/20"
-                            : "hover:bg-muted"
+                        onClick={() => setActiveSessionId(session.id)}
+                        className={`cursor-pointer rounded-md border p-3 transition-colors hover:bg-accent ${
+                          activeSessionId === session.id ? "border-primary bg-accent" : ""
                         }`}
-                        onClick={() => setSelectedSession(session.id)}
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <span className={`mr-2 ${dimensionColors[session.dimensionFocus as keyof typeof dimensionColors]}`}>
-                              {dimensionIcons[session.dimensionFocus as keyof typeof dimensionIcons]}
-                            </span>
-                            <div>
-                              <h3 className="font-medium">{session.title}</h3>
-                              <p className="text-sm text-muted-foreground">
-                                {new Date(session.createdAt).toLocaleDateString()}
-                              </p>
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className="font-medium">{session.title}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {new Date(session.createdAt).toLocaleDateString()}
                             </div>
                           </div>
-                          {selectedSession === session.id ? (
-                            <ChevronDown className="h-4 w-4" />
-                          ) : (
-                            <ChevronRight className="h-4 w-4" />
-                          )}
+                          {renderDimensionBadge(session.dimensionFocus)}
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">
-                      No coaching sessions yet. Create your first session to get started.
-                    </p>
+                  <div className="text-center text-muted-foreground">
+                    No coaching sessions yet. Create your first session to get started.
                   </div>
                 )}
               </CardContent>
             </Card>
           </div>
-
-          <div className="col-span-1 md:col-span-2">
-            {selectedSession && sessionDetails ? (
-              <Tabs defaultValue="insights">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="insights">Coaching Insights</TabsTrigger>
-                  <TabsTrigger value="plan">Training Plan</TabsTrigger>
-                </TabsList>
-                <TabsContent value="insights" className="space-y-4 mt-4">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>{sessionDetails.session.title}</CardTitle>
-                      <CardDescription>{sessionDetails.session.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      {sessionDetails.insights && sessionDetails.insights.length > 0 ? (
-                        <Accordion type="single" collapsible className="w-full">
-                          {sessionDetails.insights.map((insight: CoachingInsight) => (
-                            <AccordionItem key={insight.id} value={`insight-${insight.id}`}>
-                              <AccordionTrigger>
-                                <div className="flex items-center">
-                                  <span className={`mr-2 ${dimensionColors[insight.dimensionCode as keyof typeof dimensionColors]}`}>
-                                    {dimensionIcons[insight.dimensionCode as keyof typeof dimensionIcons]}
-                                  </span>
-                                  {insight.title}
-                                </div>
-                              </AccordionTrigger>
-                              <AccordionContent>
-                                <div className="whitespace-pre-line">
-                                  {insight.content}
-                                </div>
-                              </AccordionContent>
-                            </AccordionItem>
-                          ))}
-                        </Accordion>
-                      ) : (
-                        <p className="text-muted-foreground">No insights available for this session.</p>
-                      )}
-                    </CardContent>
-                    <CardFooter>
-                      <Button
-                        onClick={() => handleGeneratePlan(sessionDetails.session.id)}
-                        disabled={generatePlanMutation.isPending}
-                      >
-                        {generatePlanMutation.isPending ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Generating Plan...
-                          </>
-                        ) : (
-                          "Generate Training Plan"
-                        )}
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                </TabsContent>
-                <TabsContent value="plan" className="space-y-4 mt-4">
-                  {planDetails ? (
-                    <Card>
+          
+          {/* Selected Session Details */}
+          {activeSessionId && sessionDetails && (
+            <Card className="mt-6">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>{sessionDetails.session.title}</CardTitle>
+                    <CardDescription className="mt-1">
+                      {sessionDetails.session.description}
+                    </CardDescription>
+                  </div>
+                  {renderDimensionBadge(sessionDetails.session.dimensionFocus)}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="mb-2 text-lg font-medium">Insights</h3>
+                    {sessionDetails.insights && sessionDetails.insights.length > 0 ? (
+                      <div className="space-y-2">
+                        {sessionDetails.insights.map((insight: CoachingInsight) => (
+                          <div key={insight.id} className="rounded-md border p-3">
+                            <div className="flex items-center justify-between">
+                              <div className="font-medium">{insight.title}</div>
+                              {renderDimensionBadge(insight.dimensionCode)}
+                            </div>
+                            <div className="mt-2 text-sm">
+                              {insight.content}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-muted-foreground">
+                        No insights yet for this session.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="flex justify-between gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleGeneratePlan}
+                  disabled={generatePlanMutation.isPending}
+                  className="flex-1"
+                >
+                  {generatePlanMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <ClipboardList className="mr-2 h-4 w-4" />
+                      Generate Training Plan
+                    </>
+                  )}
+                </Button>
+              </CardFooter>
+            </Card>
+          )}
+        </TabsContent>
+        
+        {/* Insights Tab */}
+        <TabsContent value="insights" className="space-y-4">
+          {activeSessionId && sessionDetails ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold">
+                  Insights for {sessionDetails.session.title}
+                </h2>
+                {renderDimensionBadge(sessionDetails.session.dimensionFocus)}
+              </div>
+              
+              {sessionDetails.insights && sessionDetails.insights.length > 0 ? (
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {sessionDetails.insights.map((insight: CoachingInsight) => (
+                    <Card key={insight.id}>
                       <CardHeader>
-                        <CardTitle>{planDetails.plan.title}</CardTitle>
-                        <CardDescription>{planDetails.plan.description}</CardDescription>
+                        <div className="flex items-center justify-between">
+                          <CardTitle>{insight.title}</CardTitle>
+                          {renderDimensionBadge(insight.dimensionCode)}
+                        </div>
                       </CardHeader>
                       <CardContent>
-                        <div className="mb-6">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium">Plan Completion</span>
-                            <span className="text-sm font-medium">
-                              {calculatePlanCompletion(planDetails.exercises)}%
-                            </span>
-                          </div>
-                          <Progress value={calculatePlanCompletion(planDetails.exercises)} className="h-2" />
-                        </div>
-                        
-                        {planDetails.exercises && planDetails.exercises.length > 0 ? (
-                          <div className="space-y-6">
-                            {Object.entries(groupExercisesByDay(planDetails.exercises)).map(([day, exercises]) => (
-                              <div key={day} className="space-y-3">
-                                <h3 className="text-lg font-medium">Day {day}</h3>
-                                {exercises.map((exercise: TrainingExercise) => (
-                                  <div 
-                                    key={exercise.id} 
-                                    className={`p-4 rounded-lg border ${exercise.isCompleted ? "bg-primary/5 border-primary/20" : "bg-card"}`}
-                                  >
-                                    <div className="flex items-start justify-between">
-                                      <div>
-                                        <div className="flex items-center">
-                                          <span className={`mr-2 ${dimensionColors[exercise.dimensionCode as keyof typeof dimensionColors]}`}>
-                                            {dimensionIcons[exercise.dimensionCode as keyof typeof dimensionIcons]}
-                                          </span>
-                                          <h4 className="font-medium">{exercise.title}</h4>
-                                        </div>
-                                        <p className="mt-1 text-sm">{exercise.description}</p>
-                                        
-                                        <Accordion type="single" collapsible className="w-full mt-2">
-                                          <AccordionItem value={`instructions-${exercise.id}`}>
-                                            <AccordionTrigger className="text-sm py-2">
-                                              Instructions
-                                            </AccordionTrigger>
-                                            <AccordionContent>
-                                              <div className="text-sm whitespace-pre-line">
-                                                {exercise.instructions}
-                                              </div>
-                                            </AccordionContent>
-                                          </AccordionItem>
-                                        </Accordion>
-                                        
-                                        <div className="flex items-center mt-3 text-sm text-muted-foreground">
-                                          <span>{exercise.durationMinutes} minutes</span>
-                                          <span className="mx-2">•</span>
-                                          <span>{exercise.difficultyLevel}</span>
-                                        </div>
-                                      </div>
-                                      
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => handleMarkExercise(exercise.id, !exercise.isCompleted)}
-                                      >
-                                        {exercise.isCompleted ? (
-                                          <CheckCircle2 className="h-5 w-5 text-primary" />
-                                        ) : (
-                                          <CircleDashed className="h-5 w-5" />
-                                        )}
-                                      </Button>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-muted-foreground">No exercises available for this plan.</p>
-                        )}
+                        <p>{insight.content}</p>
                       </CardContent>
                     </Card>
-                  ) : (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>No Training Plan</CardTitle>
-                        <CardDescription>
-                          Generate a training plan from the Coaching Insights tab to see exercises.
-                        </CardDescription>
-                      </CardHeader>
-                    </Card>
-                  )}
-                </TabsContent>
-              </Tabs>
-            ) : (
+                  ))}
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="py-10 text-center">
+                    <Book className="mx-auto h-12 w-12 text-muted-foreground" />
+                    <p className="mt-4 text-lg font-medium">No insights available</p>
+                    <p className="mt-2 text-muted-foreground">
+                      Select a coaching session first or create a new one.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="py-10 text-center">
+                <Brain className="mx-auto h-12 w-12 text-muted-foreground" />
+                <p className="mt-4 text-lg font-medium">No session selected</p>
+                <p className="mt-2 text-muted-foreground">
+                  Select a coaching session first to view your insights.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+        
+        {/* Training Plans Tab */}
+        <TabsContent value="training" className="space-y-4">
+          {activePlanId && planDetails ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold">{planDetails.plan.title}</h2>
+                {renderDimensionBadge(planDetails.plan.primaryDimensionFocus)}
+              </div>
+              
               <Card>
                 <CardHeader>
-                  <CardTitle>Select a Session</CardTitle>
-                  <CardDescription>
-                    Select a coaching session from the left to view insights and training plans.
-                  </CardDescription>
+                  <CardTitle>Plan Overview</CardTitle>
+                  <CardDescription>{planDetails.plan.description}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-12">
-                    <Brain className="mx-auto h-12 w-12 text-muted-foreground" />
-                    <p className="mt-4 text-muted-foreground">
-                      S.A.G.E. uses rule-based analysis to provide personalized coaching insights
-                      and training plans based on your playing history and skill level.
-                    </p>
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                    <div>
+                      <div className="text-sm font-medium text-muted-foreground">Duration</div>
+                      <div className="mt-1 font-medium">{planDetails.plan.durationDays} days</div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-muted-foreground">Difficulty</div>
+                      <div className="mt-1 font-medium">{planDetails.plan.difficultyLevel}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-muted-foreground">Status</div>
+                      <div className="mt-1 font-medium">{planDetails.plan.status}</div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
-            )}
-          </div>
-        </div>
-      )}
+              
+              {planDetails.exercises && planDetails.exercises.length > 0 ? (
+                <div className="space-y-4">
+                  {/* Group exercises by day */}
+                  {Array.from(
+                    { length: planDetails.plan.durationDays },
+                    (_, dayIndex) => dayIndex + 1
+                  ).map((day) => {
+                    const dayExercises = planDetails.exercises.filter(
+                      (ex: TrainingExercise) => ex.dayNumber === day
+                    );
+                    
+                    if (dayExercises.length === 0) return null;
+                    
+                    return (
+                      <Card key={`day-${day}`}>
+                        <CardHeader>
+                          <CardTitle>Day {day}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          {dayExercises
+                            .sort((a, b) => a.orderInDay - b.orderInDay)
+                            .map((exercise: TrainingExercise) => (
+                              <div 
+                                key={exercise.id}
+                                className={`flex items-start justify-between rounded-md border p-3 ${
+                                  exercise.isCompleted ? "border-green-500 bg-green-50 dark:bg-green-900/20" : ""
+                                }`}
+                              >
+                                <div className="flex-1">
+                                  <div className="flex items-center">
+                                    <div className="font-medium">{exercise.title}</div>
+                                    <div className="ml-2">
+                                      {renderDimensionBadge(exercise.dimensionCode)}
+                                    </div>
+                                  </div>
+                                  <div className="mt-1 text-sm">{exercise.description}</div>
+                                  <div className="mt-2 text-sm text-muted-foreground">
+                                    <span className="font-medium">Instructions: </span>
+                                    {exercise.instructions}
+                                  </div>
+                                  <div className="mt-1 text-sm text-muted-foreground">
+                                    <span className="font-medium">Duration: </span>
+                                    {exercise.durationMinutes} minutes
+                                  </div>
+                                </div>
+                                <Button
+                                  variant={exercise.isCompleted ? "default" : "outline"}
+                                  className="ml-4 shrink-0"
+                                  onClick={() => handleToggleExercise(exercise.id, exercise.isCompleted)}
+                                  disabled={markExerciseMutation.isPending}
+                                >
+                                  {exercise.isCompleted ? "Completed" : "Mark Complete"}
+                                </Button>
+                              </div>
+                            ))}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="py-10 text-center">
+                    <Dumbbell className="mx-auto h-12 w-12 text-muted-foreground" />
+                    <p className="mt-4 text-lg font-medium">No exercises available</p>
+                    <p className="mt-2 text-muted-foreground">
+                      This training plan doesn't have any exercises yet.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          ) : activeSessionId && sessionDetails ? (
+            <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Training Plans</CardTitle>
+                  <CardDescription>
+                    Training plans for {sessionDetails.session.title}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {/* If no plans, show create button */}
+                  <div className="text-center py-10">
+                    <Dumbbell className="mx-auto h-12 w-12 text-muted-foreground" />
+                    <p className="mt-4 text-lg font-medium">No training plans yet</p>
+                    <p className="mt-2 text-muted-foreground">
+                      Generate a training plan to start improving your skills.
+                    </p>
+                    <Button
+                      className="mt-4"
+                      onClick={handleGeneratePlan}
+                      disabled={generatePlanMutation.isPending}
+                    >
+                      {generatePlanMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <ClipboardList className="mr-2 h-4 w-4" />
+                          Generate Training Plan
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="py-10 text-center">
+                <Star className="mx-auto h-12 w-12 text-muted-foreground" />
+                <p className="mt-4 text-lg font-medium">No session selected</p>
+                <p className="mt-2 text-muted-foreground">
+                  Select a coaching session first to view or create training plans.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
-
-export default SageCoachingPanel;
