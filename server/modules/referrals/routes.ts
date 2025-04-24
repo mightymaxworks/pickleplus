@@ -15,7 +15,7 @@ import { recordReferral, getNextAchievement } from './service';
 const router = express.Router();
 
 // Get user's referrals
-router.get('/referrals', isAuthenticated, async (req: Request, res: Response) => {
+router.get('/', isAuthenticated, async (req: Request, res: Response) => {
   try {
     if (!req.user) return res.status(401).json({ error: 'Authentication required' });
     
@@ -30,7 +30,7 @@ router.get('/referrals', isAuthenticated, async (req: Request, res: Response) =>
 });
 
 // Get user's referral achievements
-router.get('/referrals/achievements', isAuthenticated, async (req: Request, res: Response) => {
+router.get('/achievements', isAuthenticated, async (req: Request, res: Response) => {
   try {
     if (!req.user) return res.status(401).json({ error: 'Authentication required' });
     
