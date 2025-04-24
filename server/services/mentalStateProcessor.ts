@@ -52,50 +52,125 @@ export interface MentalStateAnalysis {
  */
 const mentalStateKeywords: Record<MentalStateType, string[]> = {
   [MentalStateType.VICTORY_ELATION]: [
-    'won', 'winning', 'victory', 'champion', 'crushed', 'dominated', 'beat',
-    'excited', 'thrilled', 'elated', 'on top of the world', 'proud', 'accomplished'
+    // Match outcomes
+    'won', 'winning', 'victory', 'champion', 'crushed', 'dominated', 'beat', 'defeated them', 
+    'outplayed', 'triumph', 'victorious', 'came out on top', 'prevailed', 'conquered',
+    
+    // Positive emotions
+    'excited', 'thrilled', 'elated', 'on top of the world', 'proud', 'accomplished', 'ecstatic',
+    'overjoyed', 'euphoric', 'exhilarated', 'exuberant', 'flying high', 'jubilant', 'celebrating',
+    'stoked', 'pumped', 'psyched', 'over the moon', 'riding high', 'beaming', 'glowing'
   ],
   [MentalStateType.VICTORY_RELIEF]: [
-    'finally won', 'pulled through', 'survived', 'made it', 'close win', 
-    'relieved', 'weight off my shoulders', 'breakthrough', 'got through'
+    // Close match outcomes
+    'finally won', 'pulled through', 'survived', 'made it', 'close win', 'squeaked by',
+    'barely won', 'scraped through', 'managed to win', 'escaped with a win', 'edged out',
+    'won by a hair', 'clinched it', 'pulled it off', 'came back from behind',
+    
+    // Relief emotions
+    'relieved', 'weight off my shoulders', 'breakthrough', 'got through', 'phew',
+    'thank goodness', 'finally', 'at last', 'exhaled', 'unburdened', 'tension released',
+    'pressure is off', 'dodged a bullet', 'escaped defeat', 'close call'
   ],
   [MentalStateType.DEFEAT_FRUSTRATION]: [
-    'lost', 'losing', 'defeated', 'failure', 'frustrating', 'annoyed', 'angry',
-    'irritated', 'upset', 'mad', 'furious', 'fuming', 'ticked off'
+    // Negative match outcomes
+    'lost', 'losing', 'defeated', 'failure', 'beaten', 'fell short', 'came up short',
+    'did not make it', 'dropped the match', 'could not pull it off', 'could not win',
+    'took an L', 'could not finish', 'slipped away', 'let it get away',
+    
+    // Frustration emotions
+    'frustrating', 'annoyed', 'angry', 'irritated', 'upset', 'mad', 'furious', 'fuming', 
+    'ticked off', 'agitated', 'pissed', 'irate', 'infuriated', 'enraged', 'steaming',
+    'livid', 'outraged', 'exasperated', 'vexed', 'irked', 'bothered', 'incensed',
+    'resentful', 'bitter', 'hostile', 'annoying', 'fed up', 'had enough'
   ],
   [MentalStateType.DEFEAT_DISAPPOINTMENT]: [
-    'lost', 'losing', 'fell short', 'let down', 'disappointed', 'sad', 'upset',
-    'devastated', 'heartbroken', 'bummed', 'down', 'depressed', 'blue', 'crushed'
+    // Disappointing outcomes
+    'lost', 'losing', 'fell short', 'let down', 'blown opportunity', 'missed chance',
+    'should have won', 'could have won', 'failed to capitalize', 'slipped away',
+    'gave it away', 'threw it away', 'blew it', 'choked', 'collapsed',
+    
+    // Disappointment emotions
+    'disappointed', 'sad', 'upset', 'devastated', 'heartbroken', 'bummed', 'down', 
+    'depressed', 'blue', 'crushed', 'dejected', 'disheartened', 'dismayed', 'gloomy',
+    'downcast', 'crestfallen', 'despondent', 'dispirited', 'miserable', 'unhappy',
+    'defeated', 'demoralized', 'disconsolate', 'heavy-hearted', 'let down', 'deflated',
+    'discouraged', 'gutted', 'brought down'
   ],
   [MentalStateType.PRESSURE_ANXIETY]: [
+    // High-stakes situations
     'nervous', 'anxious', 'pressure', 'stress', 'tense', 'tight', 'worried',
-    'fear', 'afraid', 'scared', 'panicked', 'overwhelmed', 'freaking out',
-    'tournament', 'competition', 'championship', 'playoff', 'final'
+    'tournament', 'competition', 'championship', 'playoff', 'final', 'important match',
+    'crucial point', 'big moment', 'must-win', 'do-or-die', 'elimination', 'high stakes',
+    'on the line', 'clutch situation', 'decisive moment',
+    
+    // Anxiety emotions
+    'fear', 'afraid', 'scared', 'panicked', 'overwhelmed', 'freaking out', 'uneasy',
+    'apprehensive', 'jittery', 'butterflies', 'knots in stomach', 'on edge', 'jumpy',
+    'restless', 'antsy', 'unsettled', 'troubled', 'distressed', 'rattled', 'shaken',
+    'flustered', 'keyed up', 'agitated', 'uptight', 'wound up', 'sweaty palms', 
+    'racing heart', 'sick to my stomach', 'nerves got the best of me'
   ],
   [MentalStateType.FOCUS_ISSUE]: [
+    // Focus problems
     'distracted', 'unfocused', 'concentration', 'losing focus', 'mind wandering',
-    'can\'t focus', 'focus issues', 'attention', 'zoning out', 'spacing out'
+    'can\'t focus', 'focus issues', 'attention', 'zoning out', 'spacing out',
+    'scattered', 'fuzzy', 'foggy', 'drifting', 'daydreaming', 'preoccupied',
+    'lost concentration', 'mentally checked out', 'not present', 'absent-minded',
+    'disengaged', 'inattentive', 'diverted attention', 'lost track', 'mind went blank',
+    'head was not in the game', 'mentally elsewhere', 'not locked in', 'lost my edge',
+    'wavering attention', 'cannot concentrate', 'cannot stay focused', 'my mind wanders',
+    'lose my train of thought', 'mental lapses', 'focus drifts'
   ],
   [MentalStateType.CONFIDENCE_LOSS]: [
+    // Confidence issues
     'doubt', 'unsure', 'hesitant', 'second-guessing', 'lost confidence',
-    'questioning', 'uncertain', 'insecure', 'not confident', 'afraid to'
+    'questioning', 'uncertain', 'insecure', 'not confident', 'afraid to',
+    'tentative', 'wavering', 'indecisive', 'apprehensive', 'self-doubt',
+    'unassured', 'shaky confidence', 'faltering', 'intimidated', 'inadequate',
+    'inferior', 'unworthy', 'not good enough', 'impostor', 'fraud', 'pretender',
+    'do not trust my shots', 'fear of failure', 'playing it safe', 'playing not to lose',
+    'defensive mindset', 'holding back', 'afraid to commit', 'timid play'
   ],
   [MentalStateType.CONFIDENCE_GAIN]: [
+    // Confidence growth
     'confident', 'sure', 'believe in myself', 'self-assured', 'trust my',
-    'self-confidence', 'feel good about', 'positive mindset', 'mental strength'
+    'self-confidence', 'feel good about', 'positive mindset', 'mental strength',
+    'assertive', 'certain', 'conviction', 'faith in my abilities', 'self-belief',
+    'assured', 'poised', 'composed', 'courage', 'bold', 'fearless', 'unafraid',
+    'decisive', 'resolute', 'determined', 'unwavering', 'self-reliant', 'empowered',
+    'in command', 'in control', 'capable', 'competent', 'strong', 'invincible',
+    'feel unstoppable', 'bulletproof', 'playing freely', 'trusting my instincts'
   ],
   [MentalStateType.MOTIVATION_HIGH]: [
+    // High motivation
     'motivated', 'inspired', 'determined', 'driven', 'fired up', 'eager',
-    'excited', 'passionate', 'pumped', 'enthusiastic', 'can\'t wait to'
+    'excited', 'passionate', 'pumped', 'enthusiastic', 'can\'t wait to',
+    'dedicated', 'committed', 'intense', 'gung-ho', 'focused', 'ambitious',
+    'energized', 'zealous', 'avid', 'compelled', 'ardent', 'fervent', 'keen',
+    'stoked', 'stimulated', 'hungry for success', 'thirsty for improvement',
+    'ready to work', 'charged up', 'raring to go', 'want it badly', 'all in',
+    'hyped', 'impatient to start', 'single-minded', 'resolute'
   ],
   [MentalStateType.MOTIVATION_LOW]: [
+    // Low motivation
     'unmotivated', 'uninspired', 'apathetic', 'bored', 'don\'t care',
     'lost interest', 'no motivation', 'stuck', 'lack of motivation', 'tired of',
-    'giving up', 'quit', 'burnout', 'burned out'
+    'giving up', 'quit', 'burnout', 'burned out', 'jaded', 'disinterested',
+    'indifferent', 'listless', 'lethargic', 'passive', 'idle', 'sluggish',
+    'half-hearted', 'reluctant', 'unenthusiastic', 'weary', 'fatigued',
+    'disheartened', 'discouraged', 'disenchanted', 'disengaged', 'detached',
+    'going through the motions', 'phoning it in', 'on autopilot', 'lost my drive',
+    'lost my spark', 'cannot be bothered', 'what is the point', 'no desire', 'given up'
   ],
   [MentalStateType.NEUTRAL]: [
+    // Neutral emotions
     'normal', 'fine', 'okay', 'alright', 'so-so', 'neutral', 'balanced',
-    'steady', 'stable', 'even-keeled'
+    'steady', 'stable', 'even-keeled', 'average', 'fair', 'moderate',
+    'middle-of-the-road', 'neither here nor there', 'indifferent', 'undecided',
+    'ambivalent', 'dispassionate', 'noncommittal', 'unbiased', 'detached',
+    'impartial', 'objective', 'unemotional', 'equanimous', 'level-headed',
+    'calm', 'composed', 'collected', 'reasonable', 'tempered', 'centered'
   ]
 };
 
@@ -103,28 +178,77 @@ const mentalStateKeywords: Record<MentalStateType, string[]> = {
  * Intensity modifiers that can increase the detected intensity
  */
 const intensityModifiers: string[] = [
+  // Standard intensity modifiers
   'very', 'extremely', 'incredibly', 'really', 'so', 'totally',
   'completely', 'absolutely', 'utterly', 'thoroughly', 'deeply',
-  'intensely', 'seriously', 'badly', 'severely', 'terribly'
+  'intensely', 'seriously', 'badly', 'severely', 'terribly',
+  
+  // Additional intensity amplifiers
+  'beyond', 'overwhelmingly', 'unbelievably', 'ridiculously', 'insanely',
+  'immensely', 'exceptionally', 'remarkably', 'extraordinarily', 'tremendously',
+  'hugely', 'massively', 'profoundly', 'intensively', 'supremely', 'exceedingly',
+  'excessively', 'enormously', 'desperately', 'horribly', 'awfully', 'dreadfully',
+  'wildly', 'crazily', 'unimaginably', 'indescribably', 'impossibly',
+  
+  // Superlative phrases
+  'more than ever', 'worst ever', 'best ever', 'of all time', 'in my life',
+  'never been so', 'never felt so', 'never experienced such', 'most', 'greatest',
+  
+  // Repetition indicators
+  'so so', 'very very', 'really really', 'super', 'mega', 'ultra'
 ];
 
 /**
  * Words that indicate seeking advice
  */
 const adviceRequestTerms: string[] = [
+  // Direct requests
   'help', 'advice', 'suggestion', 'tip', 'guidance', 'what should i do',
   'how can i', 'how do i', 'what can i do', 'need help', 'handle this',
-  'deal with this', 'overcome this', 'fix this', 'improve this'
+  'deal with this', 'overcome this', 'fix this', 'improve this',
+  
+  // Additional question formats
+  'any ideas', 'any thoughts', 'any advice', 'what would you recommend',
+  'what do you suggest', 'do you have any tips', 'can you recommend',
+  'should i', 'would it be better to', 'is it better to', 'best way to',
+  'how do you handle', 'how would you handle', 'what worked for you',
+  
+  // Implicit requests
+  'struggling with', 'having trouble with', 'can\'t figure out', 'can\'t seem to',
+  'unsure about', 'not sure how to', 'difficulty with', 'problem with', 
+  'need to improve', 'want to get better at', 'trying to work on',
+  'looking for ways to', 'working on', 'want to develop', 'need guidance on',
+  
+  // Coaching requests
+  'coach me', 'need coaching', 'training suggestions', 'practice ideas',
+  'drills for', 'exercises for', 'workouts for', 'mental techniques for',
+  'strategy for', 'tactics against', 'approach for'
 ];
 
 /**
  * Match-related terms to detect if the mental state is related to a match
  */
 const matchRelatedTerms: string[] = [
+  // Basic match terms
   'match', 'game', 'tournament', 'championship', 'competition', 'played',
   'opponent', 'score', 'point', 'court', 'beat', 'won', 'lost', 'defeated',
   'winning', 'losing', 'victory', 'defeat', 'performance', 'played against',
-  'during the game', 'in my match', 'at the tournament'
+  'during the game', 'in my match', 'at the tournament',
+  
+  // Specific pickleball match contexts
+  'mixed doubles', 'men\'s doubles', 'women\'s doubles', 'singles', 'partner',
+  'team', 'bracket', 'round', 'finals', 'semi-finals', 'quarters', 'qualifying',
+  'elimination', 'pool play', 'seeding', 'medal', 'gold', 'silver', 'bronze',
+  
+  // Match events
+  'rally', 'serve', 'return', 'scored', 'points', 'timeout', 'break', 'comeback',
+  'lead', 'tied', 'tied up', 'close game', 'blowout', 'match point', 'game point',
+  'at deuce', 'final point', 'deciding point', 'sudden death', 
+  
+  // Temporal indicators
+  'yesterday\'s game', 'last match', 'recent match', 'this weekend', 'last tournament',
+  'played earlier', 'upcoming match', 'next round', 'next opponent', 'previous match',
+  'during the match', 'after the match', 'before the match'
 ];
 
 /**
