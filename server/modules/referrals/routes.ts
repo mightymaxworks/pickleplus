@@ -45,7 +45,7 @@ router.get('/achievements', isAuthenticated, async (req: Request, res: Response)
 });
 
 // Get user's referral stats
-router.get('/referrals/stats', isAuthenticated, async (req: Request, res: Response) => {
+router.get('/stats', isAuthenticated, async (req: Request, res: Response) => {
   try {
     if (!req.user) return res.status(401).json({ error: 'Authentication required' });
     
@@ -60,7 +60,7 @@ router.get('/referrals/stats', isAuthenticated, async (req: Request, res: Respon
 });
 
 // Get pickleball tips for status ticker
-router.get('/referrals/tips', async (req: Request, res: Response) => {
+router.get('/tips', async (req: Request, res: Response) => {
   try {
     const tips = await storage.getReferralTips();
     return res.json(tips);
@@ -71,7 +71,7 @@ router.get('/referrals/tips', async (req: Request, res: Response) => {
 });
 
 // Get recent referral activity for status ticker
-router.get('/referrals/activity', async (req: Request, res: Response) => {
+router.get('/activity', async (req: Request, res: Response) => {
   try {
     const activity = await storage.getRecentReferralActivity();
     return res.json(activity);
@@ -82,7 +82,7 @@ router.get('/referrals/activity', async (req: Request, res: Response) => {
 });
 
 // Record a referral
-router.post('/referrals/record', async (req: Request, res: Response) => {
+router.post('/record', async (req: Request, res: Response) => {
   try {
     const schema = z.object({
       referrerId: z.number(),
@@ -116,7 +116,7 @@ router.post('/referrals/record', async (req: Request, res: Response) => {
 });
 
 // Get a user's next achievement
-router.get('/referrals/next-achievement', isAuthenticated, async (req: Request, res: Response) => {
+router.get('/next-achievement', isAuthenticated, async (req: Request, res: Response) => {
   try {
     if (!req.user) return res.status(401).json({ error: 'Authentication required' });
     
@@ -131,7 +131,7 @@ router.get('/referrals/next-achievement', isAuthenticated, async (req: Request, 
 });
 
 // Generate a referral link for a user
-router.get('/referrals/generate-link', isAuthenticated, async (req: Request, res: Response) => {
+router.get('/generate-link', isAuthenticated, async (req: Request, res: Response) => {
   try {
     if (!req.user) return res.status(401).json({ error: 'Authentication required' });
     
