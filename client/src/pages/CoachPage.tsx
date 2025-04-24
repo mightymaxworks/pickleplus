@@ -9,26 +9,42 @@
  * @lastModified 2025-04-24
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AICoachPanel } from '@/components/ai-coach/AICoachPanel';
-import { Dumbbell, ChevronRight, Zap, Award, TrendingUp, BookOpen } from 'lucide-react';
+import PlayerDataCollector from '@/components/ai-coach/PlayerDataCollector';
+import { useToast } from '@/hooks/use-toast';
+import { Dumbbell, ChevronRight, Zap, Award, TrendingUp, BookOpen, Save } from 'lucide-react';
 
 const CoachPage: React.FC = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const [playerDataSubmitted, setPlayerDataSubmitted] = useState(false);
+  
+  const handlePlayerDataSubmit = (data: any) => {
+    console.log('Player data submitted:', data);
+    setPlayerDataSubmitted(true);
+    
+    // In a real implementation, this would send the data to the server
+    // For now, we'll just show that it worked with a toast notification
+    toast({
+      title: "Player Data Saved",
+      description: "Your information will be used to enhance your CourtIQ Pro experience",
+    });
+  };
 
   return (
     <div className="container mx-auto py-6 space-y-12 max-w-6xl">
       <div className="flex flex-col space-y-2">
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
           <Dumbbell className="h-8 w-8 text-primary" />
-          AI Pickle Coach
+          CourtIQ Pro
         </h1>
         <p className="text-muted-foreground text-lg">
-          Your personalized AI coach helps improve your game with data-driven insights
+          Your personalized coaching system helps improve your game with data-driven insights
         </p>
         <Separator className="my-2" />
       </div>
@@ -233,6 +249,10 @@ const CoachPage: React.FC = () => {
             </CardContent>
           </Card>
         </div>
+      </div>
+      
+      <div className="grid grid-cols-1 gap-6">
+        <PlayerDataCollector onSubmit={handlePlayerDataSubmit} />
       </div>
     </div>
   );
