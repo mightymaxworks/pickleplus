@@ -232,3 +232,71 @@ export const SessionTypes = {
 } as const;
 
 export type SessionType = keyof typeof SessionTypes;
+
+/**
+ * PKL-278651-SAGE-0002-CONV 
+ * SAGE Conversational UI Tables
+ * These tables store conversation history between users and the SAGE coaching system
+ */
+
+/**
+ * Coaching Conversations table
+ * Stores conversation sessions between users and SAGE
+ */
+export const coachingConversations = pgTable("coaching_conversations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  title: text("title"),
+  topic: text("topic"),
+  dimensionFocus: text("dimension_focus"), // Optional focus on a specific dimension (TECH, TACT, etc.)
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  lastMessageAt: timestamp("last_message_at").defaultNow().notNull(),
+  isArchived: boolean("is_archived").default(false).notNull(),
+  sessionId: integer("session_id").references(() => coachingSessions.id), // Optional link to a coaching session
+  metadata: jsonb("metadata").default({}).notNull(),
+});
+
+/**
+ * Coaching Messages table
+ * Stores individual messages within a conversation
+ */
+export const coachingMessages = pgTable("coaching_messages", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").notNull().references(() => coachingConversations.id),
+  role: text("role").notNull(), // "user", "sage", "system"
+  content: text("content").notNull(),
+  sentAt: timestamp("sent_at").defaultNow().notNull(),
+  feedback: text("feedback"), // "positive", "negative", null
+  metadata: jsonb("metadata").default({}).notNull(),
+});
+
+// Define relationships
+export const coachingConversationsRelations = relations(coachingConversations, ({ one, many }) => ({
+  user: one(users, {
+    fields: [coachingConversations.userId],
+    references: [users.id],
+  }),
+  session: one(coachingSessions, {
+    fields: [coachingConversations.sessionId],
+    references: [coachingSessions.id],
+  }),
+  messages: many(coachingMessages),
+}));
+
+export const coachingMessagesRelations = relations(coachingMessages, ({ one }) => ({
+  conversation: one(coachingConversations, {
+    fields: [coachingMessages.conversationId],
+    references: [coachingConversations.id],
+  }),
+}));
+
+// Create Zod schemas for insertion validation
+export const insertCoachingConversationSchema = createInsertSchema(coachingConversations);
+export const insertCoachingMessageSchema = createInsertSchema(coachingMessages);
+
+// Export types
+export type CoachingConversation = typeof coachingConversations.$inferSelect;
+export type InsertCoachingConversation = typeof coachingConversations.$inferInsert;
+
+export type CoachingMessage = typeof coachingMessages.$inferSelect;
+export type InsertCoachingMessage = typeof coachingMessages.$inferInsert;

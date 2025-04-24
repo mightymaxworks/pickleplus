@@ -134,6 +134,19 @@ import memorystore from "memorystore";
 export interface IStorage {
   sessionStore: Store;
   
+  // PKL-278651-SAGE-0002-CONV - SAGE Conversation Interface
+  // Conversation operations
+  createConversation(data: InsertCoachingConversation): Promise<CoachingConversation>;
+  getConversation(id: number): Promise<CoachingConversation | undefined>;
+  getConversationsByUserId(userId: number): Promise<CoachingConversation[]>;
+  updateConversation(id: number, data: Partial<InsertCoachingConversation>): Promise<CoachingConversation>;
+  getActiveConversation(userId: number): Promise<CoachingConversation | undefined>;
+  
+  // Message operations
+  createMessage(data: InsertCoachingMessage): Promise<CoachingMessage>;
+  getMessagesByConversationId(conversationId: number): Promise<CoachingMessage[]>;
+  updateMessageFeedback(id: number, feedback: 'positive' | 'negative' | null): Promise<CoachingMessage>;
+  
   // PKL-278651-AUTH-0016-PROLES - Role Management
   // Role operations
   getAllRoles(): Promise<Role[]>;
@@ -4950,6 +4963,122 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('[Storage] getUserProgressByPlanId error:', error);
       return [];
+    }
+  }
+  
+  /**
+   * PKL-278651-SAGE-0002-CONV - SAGE Conversational UI Implementation
+   * Conversation operations
+   */
+   
+  async createConversation(data: InsertCoachingConversation): Promise<CoachingConversation> {
+    try {
+      const [conversation] = await db.insert(coachingConversations).values(data).returning();
+      return conversation;
+    } catch (error) {
+      console.error('[Storage] createConversation error:', error);
+      throw error;
+    }
+  }
+  
+  async getConversation(id: number): Promise<CoachingConversation | undefined> {
+    try {
+      const [conversation] = await db.select().from(coachingConversations).where(eq(coachingConversations.id, id));
+      return conversation;
+    } catch (error) {
+      console.error('[Storage] getConversation error:', error);
+      return undefined;
+    }
+  }
+  
+  async getConversationsByUserId(userId: number): Promise<CoachingConversation[]> {
+    try {
+      return await db.select()
+        .from(coachingConversations)
+        .where(eq(coachingConversations.userId, userId))
+        .orderBy(desc(coachingConversations.lastMessageAt));
+    } catch (error) {
+      console.error('[Storage] getConversationsByUserId error:', error);
+      return [];
+    }
+  }
+  
+  async updateConversation(id: number, data: Partial<InsertCoachingConversation>): Promise<CoachingConversation> {
+    try {
+      const [updatedConversation] = await db.update(coachingConversations)
+        .set(data)
+        .where(eq(coachingConversations.id, id))
+        .returning();
+      return updatedConversation;
+    } catch (error) {
+      console.error('[Storage] updateConversation error:', error);
+      throw error;
+    }
+  }
+  
+  async getActiveConversation(userId: number): Promise<CoachingConversation | undefined> {
+    try {
+      // Get the most recent non-archived conversation for this user
+      const [conversation] = await db.select()
+        .from(coachingConversations)
+        .where(
+          and(
+            eq(coachingConversations.userId, userId),
+            eq(coachingConversations.isArchived, false)
+          )
+        )
+        .orderBy(desc(coachingConversations.lastMessageAt))
+        .limit(1);
+      
+      return conversation;
+    } catch (error) {
+      console.error('[Storage] getActiveConversation error:', error);
+      return undefined;
+    }
+  }
+  
+  /**
+   * Message operations
+   */
+   
+  async createMessage(data: InsertCoachingMessage): Promise<CoachingMessage> {
+    try {
+      const [message] = await db.insert(coachingMessages).values(data).returning();
+      
+      // Update the lastMessageAt timestamp in the conversation
+      await db.update(coachingConversations)
+        .set({ lastMessageAt: new Date() })
+        .where(eq(coachingConversations.id, data.conversationId));
+        
+      return message;
+    } catch (error) {
+      console.error('[Storage] createMessage error:', error);
+      throw error;
+    }
+  }
+  
+  async getMessagesByConversationId(conversationId: number): Promise<CoachingMessage[]> {
+    try {
+      return await db.select()
+        .from(coachingMessages)
+        .where(eq(coachingMessages.conversationId, conversationId))
+        .orderBy(asc(coachingMessages.sentAt));
+    } catch (error) {
+      console.error('[Storage] getMessagesByConversationId error:', error);
+      return [];
+    }
+  }
+  
+  async updateMessageFeedback(id: number, feedback: 'positive' | 'negative' | null): Promise<CoachingMessage> {
+    try {
+      const [updatedMessage] = await db.update(coachingMessages)
+        .set({ feedback })
+        .where(eq(coachingMessages.id, id))
+        .returning();
+      return updatedMessage;
+    } catch (error) {
+      console.error('[Storage] updateMessageFeedback error:', error);
+      throw error;
     }
   }
 }

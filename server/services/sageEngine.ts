@@ -6,8 +6,10 @@
  * It analyzes player data and generates coaching insights and training plans
  * without requiring external AI dependencies.
  * 
+ * PKL-278651-SAGE-0002-CONV - Added conversation support for SAGE Conversational UI
+ * 
  * @framework Framework5.3
- * @version 1.0.0
+ * @version 1.1.0
  * @lastModified 2025-04-24
  */
 
@@ -16,6 +18,8 @@ import {
   InsertCoachingInsight, 
   InsertTrainingPlan,
   InsertTrainingExercise,
+  InsertCoachingConversation,
+  InsertCoachingMessage,
   DimensionCode, 
   InsightType,
   SessionType,
