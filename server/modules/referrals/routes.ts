@@ -16,6 +16,7 @@ const router = express.Router();
 
 // Get user's referrals
 router.get('/', isAuthenticated, async (req: Request, res: Response) => {
+  console.log('Base referrals API called');
   try {
     if (!req.user) return res.status(401).json({ error: 'Authentication required' });
     
@@ -132,6 +133,7 @@ router.get('/next-achievement', isAuthenticated, async (req: Request, res: Respo
 
 // Generate a referral link for a user
 router.get('/generate-link', isAuthenticated, async (req: Request, res: Response) => {
+  console.log('Generate Link API called');
   try {
     if (!req.user) return res.status(401).json({ error: 'Authentication required' });
     
