@@ -224,6 +224,17 @@ export const InsightTypes = {
 
 export type InsightType = keyof typeof InsightTypes;
 
+// Export mood types for journaling as a type for type safety
+export const MoodTypes = {
+  excellent: "excellent",
+  good: "good",
+  neutral: "neutral",
+  low: "low",
+  poor: "poor",
+} as const;
+
+export type MoodType = keyof typeof MoodTypes;
+
 // Export session types as a type for type safety
 export const SessionTypes = {
   match_analysis: "match_analysis",
@@ -300,3 +311,119 @@ export type InsertCoachingConversation = typeof coachingConversations.$inferInse
 
 export type CoachingMessage = typeof coachingMessages.$inferSelect;
 export type InsertCoachingMessage = typeof coachingMessages.$inferInsert;
+
+/**
+ * PKL-278651-SAGE-0003-JOURNAL
+ * SAGE Journaling System Tables
+ * These tables store user journal entries and reflections for the SAGE coaching system
+ */
+
+/**
+ * Journal Entries table
+ * Stores user journal entries and reflections
+ */
+export const journalEntries = pgTable("journal_entries", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  mood: text("mood").notNull(), // Using MoodTypes: excellent, good, neutral, low, poor
+  entryType: text("entry_type").notNull(), // "free_form", "guided", "reflection", "training_log"
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  isPrivate: boolean("is_private").default(true).notNull(),
+  sessionId: integer("session_id").references(() => coachingSessions.id), // Optional link to coaching session
+  matchId: integer("match_id").references(() => matches.id), // Optional link to match
+  dimensionCode: text("dimension_code"), // Optional focus dimension
+  tags: text("tags"), // Comma-separated tags
+  metadata: jsonb("metadata").default({}).notNull(),
+});
+
+/**
+ * Journal Prompts table
+ * Stores prompts that can be used to guide journal entries
+ */
+export const journalPrompts = pgTable("journal_prompts", {
+  id: serial("id").primaryKey(),
+  promptText: text("prompt_text").notNull(),
+  promptType: text("prompt_type").notNull(), // "emotional", "technical", "reflection", "goal_setting"
+  dimensionCode: text("dimension_code"), // Optional focus dimension
+  skillLevel: text("skill_level"), // "beginner", "intermediate", "advanced"
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  metadata: jsonb("metadata").default({}).notNull(),
+});
+
+/**
+ * Journal Reflections table
+ * Stores SAGE's reflections and insights on user journal entries
+ */
+export const journalReflections = pgTable("journal_reflections", {
+  id: serial("id").primaryKey(),
+  entryId: integer("entry_id").notNull().references(() => journalEntries.id),
+  content: text("content").notNull(),
+  insightType: text("insight_type").notNull(), // Using InsightTypes
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  isRead: boolean("is_read").default(false).notNull(),
+  userFeedback: text("user_feedback"), // "helpful", "not_helpful", null
+  metadata: jsonb("metadata").default({}).notNull(),
+});
+
+// Define relationships
+export const journalEntriesRelations = relations(journalEntries, ({ one, many }) => ({
+  user: one(users, {
+    fields: [journalEntries.userId],
+    references: [users.id],
+  }),
+  session: one(coachingSessions, {
+    fields: [journalEntries.sessionId],
+    references: [coachingSessions.id],
+  }),
+  match: one(matches, {
+    fields: [journalEntries.matchId],
+    references: [matches.id],
+  }),
+  reflections: many(journalReflections),
+}));
+
+export const journalReflectionsRelations = relations(journalReflections, ({ one }) => ({
+  entry: one(journalEntries, {
+    fields: [journalReflections.entryId],
+    references: [journalEntries.id],
+  }),
+}));
+
+// Create Zod schemas for insertion validation
+export const insertJournalEntrySchema = createInsertSchema(journalEntries);
+export const insertJournalPromptSchema = createInsertSchema(journalPrompts);
+export const insertJournalReflectionSchema = createInsertSchema(journalReflections);
+
+// Export types
+export type JournalEntry = typeof journalEntries.$inferSelect;
+export type InsertJournalEntry = typeof journalEntries.$inferInsert;
+
+export type JournalPrompt = typeof journalPrompts.$inferSelect;
+export type InsertJournalPrompt = typeof journalPrompts.$inferInsert;
+
+export type JournalReflection = typeof journalReflections.$inferSelect;
+export type InsertJournalReflection = typeof journalReflections.$inferInsert;
+
+// Export journal entry types as a type for type safety
+export const JournalEntryTypes = {
+  free_form: "free_form",
+  guided: "guided",
+  reflection: "reflection",
+  training_log: "training_log",
+} as const;
+
+export type JournalEntryType = keyof typeof JournalEntryTypes;
+
+// Export journal prompt types as a type for type safety
+export const JournalPromptTypes = {
+  emotional: "emotional",
+  technical: "technical",
+  reflection: "reflection",
+  goal_setting: "goal_setting",
+} as const;
+
+export type JournalPromptType = keyof typeof JournalPromptTypes;
