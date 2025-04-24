@@ -37,6 +37,10 @@ export interface MentalStateAnalysis {
   primaryState: MentalStateType;
   /** The intensity of the mental state (1-5 scale) */
   intensity: number;
+  /** The confidence level (1-5) of the detection */
+  confidence: number;
+  /** Whether this indicates a mental issue */
+  hasIssue: boolean;
   /** Whether this is related to a match outcome */
   isMatchRelated: boolean;
   /** Whether the mental state is positive, negative or neutral */
@@ -45,6 +49,8 @@ export interface MentalStateAnalysis {
   relevantDimension: DimensionCode;
   /** Whether the message asks for help or advice */
   seeksAdvice: boolean;
+  /** The specific mental issue identified, if any */
+  specificIssue?: string;
 }
 
 /**
@@ -280,6 +286,9 @@ export function analyzeMentalState(message: string): MentalStateAnalysis {
   // Base intensity from 1-3 based on number of matches
   let intensity = Math.min(3, Math.max(1, Math.ceil(maxMatches / 2)));
   
+  // Calculate confidence score (1-5) based on number of matches
+  let confidence = Math.min(5, Math.max(1, Math.ceil(maxMatches / 2)));
+  
   // Increase intensity if intensity modifiers are present
   intensityModifiers.forEach(modifier => {
     if (lowerMessage.includes(modifier)) {
@@ -296,6 +305,36 @@ export function analyzeMentalState(message: string): MentalStateAnalysis {
   // Check if the mental state is related to a match
   const isMatchRelated = matchRelatedTerms.some(term => lowerMessage.includes(term));
   
+  // Determine if this mental state indicates an issue
+  const issueStates = [
+    MentalStateType.DEFEAT_FRUSTRATION,
+    MentalStateType.DEFEAT_DISAPPOINTMENT,
+    MentalStateType.PRESSURE_ANXIETY,
+    MentalStateType.FOCUS_ISSUE,
+    MentalStateType.CONFIDENCE_LOSS,
+    MentalStateType.MOTIVATION_LOW
+  ];
+  
+  const hasIssue = issueStates.some(state => primaryState === state);
+  
+  // Determine a specific issue if one exists
+  let specificIssue: string | undefined;
+  if (hasIssue) {
+    if (primaryState === MentalStateType.DEFEAT_FRUSTRATION) {
+      specificIssue = "Frustration after losses affecting gameplay";
+    } else if (primaryState === MentalStateType.DEFEAT_DISAPPOINTMENT) {
+      specificIssue = "Disappointment impacting confidence";
+    } else if (primaryState === MentalStateType.PRESSURE_ANXIETY) {
+      specificIssue = "Performance anxiety in important moments";
+    } else if (primaryState === MentalStateType.FOCUS_ISSUE) {
+      specificIssue = "Difficulty maintaining concentration during matches";
+    } else if (primaryState === MentalStateType.CONFIDENCE_LOSS) {
+      specificIssue = "Declining confidence affecting shot selection";
+    } else if (primaryState === MentalStateType.MOTIVATION_LOW) {
+      specificIssue = "Decreased motivation impacting practice quality";
+    }
+  }
+  
   // Determine sentiment based on the mental state type
   let sentiment: 'positive' | 'negative' | 'neutral';
   
@@ -307,14 +346,8 @@ export function analyzeMentalState(message: string): MentalStateAnalysis {
     MentalStateType.MOTIVATION_HIGH
   ];
   
-  const negativeStates = [
-    MentalStateType.DEFEAT_FRUSTRATION,
-    MentalStateType.DEFEAT_DISAPPOINTMENT,
-    MentalStateType.PRESSURE_ANXIETY,
-    MentalStateType.FOCUS_ISSUE,
-    MentalStateType.CONFIDENCE_LOSS,
-    MentalStateType.MOTIVATION_LOW
-  ];
+  // Reuse the issue states as negative states
+  const negativeStates = issueStates;
   
   // Determine sentiment
   if (positiveStates.includes(primaryState)) {
@@ -359,6 +392,9 @@ export function analyzeMentalState(message: string): MentalStateAnalysis {
   return {
     primaryState,
     intensity,
+    confidence,
+    hasIssue,
+    specificIssue,
     isMatchRelated,
     sentiment,
     relevantDimension,
@@ -478,7 +514,7 @@ export function generateMentalStateResponse(
     MentalStateType.MOTIVATION_LOW
   ];
   
-  if (isMatchRelated && nonNeutralStates.includes(primaryState) && !response.includes('match analysis')) {
+  if (isMatchRelated && nonNeutralStates.some(state => state === primaryState) && !response.includes('match analysis')) {
     response += ` A structured match analysis looking at technical, tactical, physical, and mental aspects can transform this experience into actionable insights.`;
   }
   

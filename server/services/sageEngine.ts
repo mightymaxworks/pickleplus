@@ -9,9 +9,10 @@
  * PKL-278651-SAGE-0002-CONV - Added conversation support for SAGE Conversational UI
  * PKL-278651-COACH-0003-TERMS - Added pickleball terminology recognition
  * PKL-278651-COACH-0004-MENT-STATE - Added mental state recognition for match outcomes
+ * PKL-278651-COACH-0004-COURTIQ - Added comprehensive CourtIQ dimension analysis
  * 
  * @framework Framework5.3
- * @version 1.3.0
+ * @version 1.4.0
  * @lastModified 2025-04-24
  */
 
@@ -31,7 +32,7 @@ import { storage } from '../storage';
 import { User } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { analyzePickleballTerminology, generateTerminologyResponse } from './pickleballTermProcessor';
-import { analyzeMentalState, generateMentalStateResponse } from './mentalStateProcessor';
+import { analyzeCourtIQ, generateCourtIQResponse } from './courtIQProcessor';
 
 /**
  * Rule-based coaching engine for generating insights and training plans
