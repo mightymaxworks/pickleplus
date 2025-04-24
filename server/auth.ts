@@ -118,6 +118,82 @@ export function isSecureAdmin(req: Request, res: Response, next: NextFunction) {
 }
 
 // Setup authentication for the application
+/**
+ * Framework 5.3 Direct Solution: Super-Admin Override
+ * Directly handles login requests for the mightymax super-admin user
+ */
+export async function handleMightymaxLogin(req: Request, res: Response, next: NextFunction) {
+  try {
+    console.log('[SuperAdmin] Checking for mightymax special login');
+    
+    // Check if this is a request for the special user
+    const { username, password } = req.body;
+    
+    if (username !== 'mightymax') {
+      return next(); // Not mightymax, continue with regular auth
+    }
+    
+    console.log('[SuperAdmin] mightymax login attempt detected');
+    
+    // Find the user
+    const user = await storage.getUserByUsername('mightymax');
+    
+    if (!user) {
+      console.log('[SuperAdmin] mightymax user not found in database');
+      return res.status(401).json({ message: "Invalid username or password" });
+    }
+    
+    // Validate password 
+    if (!(await comparePasswords(password, user.password))) {
+      console.log('[SuperAdmin] Password validation failed for mightymax');
+      return res.status(401).json({ message: "Invalid username or password" });
+    }
+    
+    // Force admin privileges regardless of database values
+    const enhancedUser = {
+      ...user,
+      isAdmin: true,
+      isFoundingMember: true
+    };
+    
+    console.log('[SuperAdmin] Enhanced user with admin privileges: isAdmin=true, isFoundingMember=true');
+    
+    // Log the user in with enhanced privileges
+    req.login(enhancedUser, (err) => {
+      if (err) {
+        console.error('[SuperAdmin] Login error:', err);
+        return next(err);
+      }
+      
+      console.log('[SuperAdmin] mightymax login successful');
+      console.log('[SuperAdmin] Session ID:', req.sessionID);
+      
+      // Create audit log for successful admin login
+      storage.createAuditLog({
+        timestamp: new Date(),
+        userId: enhancedUser.id,
+        action: AuditAction.ADMIN_LOGIN,
+        resource: AuditResource.USER,
+        resourceId: enhancedUser.id.toString(),
+        ipAddress: req.ip || 'unknown',
+        userAgent: req.headers['user-agent'] || null,
+        statusCode: 200,
+        additionalData: {
+          method: "special-admin-login",
+          enhancedPrivileges: true
+        }
+      }).catch(err => console.error('Failed to log admin login:', err));
+      
+      // Return the user data without the password
+      const { password, ...userWithoutPassword } = enhancedUser;
+      res.status(200).json(userWithoutPassword);
+    });
+  } catch (error) {
+    console.error('[SuperAdmin] Error in special admin handler:', error);
+    next(error);
+  }
+}
+
 export function setupAuth(app: Express) {
   // Create session configuration
   const sessionSettings: session.SessionOptions = {
@@ -405,8 +481,9 @@ export function setupAuth(app: Express) {
   });
 
   // Login route
-  app.post("/api/auth/login", (req, res, next) => {
+  app.post("/api/auth/login", handleMightymaxLogin, (req, res, next) => {
     try {
+      // If we get here, it's not mightymax or the special handler passed to next()
       // Validate login data
       loginSchema.parse(req.body);
       
@@ -416,12 +493,21 @@ export function setupAuth(app: Express) {
           return res.status(401).json({ message: "Invalid username or password" });
         }
         
+        // Check for mightymax username as a backup and force admin privileges
+        if (user.username === 'mightymax') {
+          console.log('[Login] mightymax detected in regular login flow, enforcing admin privileges');
+          user.isAdmin = true;
+          user.isFoundingMember = true;
+        }
+        
         req.login(user, (err) => {
           if (err) return next(err);
           
           // Extra logging for debug
           console.log('Login successful for user:', user.username);
           console.log('Session ID:', req.sessionID);
+          console.log('User admin status:', user.isAdmin);
+          console.log('User founding member status:', user.isFoundingMember);
           
           // Create audit log for successful login
           const auditAction = user.isAdmin ? AuditAction.ADMIN_LOGIN : AuditAction.USER_LOGIN;
@@ -587,6 +673,11 @@ export function setupAuth(app: Express) {
         // Verify admin privileges are set correctly in the database
         if (freshUserData) {
           console.log(`[Auth] mightymax admin status in DB: isAdmin=${freshUserData.isAdmin}, isFoundingMember=${freshUserData.isFoundingMember}`);
+          
+          // Framework 5.3 direct solution: Force admin privileges for mightymax regardless of DB values
+          freshUserData.isAdmin = true;
+          freshUserData.isFoundingMember = true;
+          console.log('[Auth] Force-enabled admin privileges for mightymax');
         }
       } else {
         // For all other users, use standard method
