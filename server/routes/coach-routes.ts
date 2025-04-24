@@ -448,6 +448,205 @@ router.get('/sage/content', isAuthenticated, async (req: Request, res: Response)
   }
 });
 
+// --------------- SAGE Conversation UI Routes ---------------
+
+/**
+ * @route   GET /api/coach/sage/conversation
+ * @desc    Get the user's active conversation with SAGE
+ * @access  Private
+ */
+router.get('/sage/conversation', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      // PKL-278651-AUTH-0017-DEBUG - Development test mode support for SAGE conversation
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[DEV MODE] Returning development test data for SAGE conversation');
+        
+        // Return a simple conversation
+        return res.json({
+          sessionId: 999,
+          topic: 'Technical Skills Improvement',
+          dimensionFocus: 'TECH',
+          startedAt: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+          messages: [
+            {
+              id: 'system-welcome',
+              type: 'system',
+              content: 'Welcome to S.A.G.E. (Skills Assessment & Growth Engine), your personal pickleball coach. How can I help you improve your game today?',
+              timestamp: new Date(Date.now() - 3600000).toISOString()
+            },
+            {
+              id: 'user-1',
+              type: 'user',
+              content: 'I want to improve my dinking technique',
+              timestamp: new Date(Date.now() - 3540000).toISOString() // 59 minutes ago
+            },
+            {
+              id: 'sage-1',
+              type: 'sage',
+              content: 'Your dinking technique is crucial for controlling the game. For better third shots and dinks, focus on paddle angle and keeping your wrist firm. Would you like me to create a training plan focused on your technical skills?',
+              timestamp: new Date(Date.now() - 3530000).toISOString(), // 58.8 minutes ago
+              metadata: {
+                recommendationType: 'training',
+                dimensionFocus: 'TECH'
+              }
+            }
+          ]
+        });
+      }
+      
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    // In a real implementation, we would fetch the user's active conversation
+    // from the database. For this sprint, we'll use the development test data.
+    const conversation = await storage.getActiveConversation(userId);
+    return res.json(conversation);
+  } catch (error) {
+    console.error('[SAGE] Get conversation error:', error);
+    return res.status(500).json({ error: 'Failed to retrieve conversation' });
+  }
+});
+
+/**
+ * @route   POST /api/coach/sage/conversation
+ * @desc    Send a message to SAGE and get a response
+ * @access  Private
+ */
+router.post('/sage/conversation', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const { message, conversationId } = req.body;
+    
+    if (!userId) {
+      // PKL-278651-AUTH-0017-DEBUG - Development test mode support for SAGE conversation
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[DEV MODE] Returning development test data for SAGE conversation response');
+        
+        // Validate input
+        if (!message || typeof message !== 'string') {
+          return res.status(400).json({ error: 'Message is required' });
+        }
+        
+        // Create new conversation or use existing
+        const sessionId = conversationId || 999;
+        const newUserMessageId = `user-${Date.now()}`;
+        const newSageMessageId = `sage-${Date.now() + 1}`;
+        
+        // Create SAGE response based on user message
+        const lowerMessage = message.toLowerCase();
+        let sageResponse, dimensionFocus, recommendationType;
+        
+        if (lowerMessage.includes('dink') || lowerMessage.includes('third shot')) {
+          sageResponse = 'Your dinking technique is crucial for controlling the game. For better third shots and dinks, focus on paddle angle and keeping your wrist firm. Would you like me to create a training plan focused on your technical skills?';
+          dimensionFocus = 'TECH';
+          recommendationType = 'training';
+        } else if (lowerMessage.includes('strategy') || lowerMessage.includes('position')) {
+          sageResponse = 'Court positioning and strategy are key tactical elements. I notice you might benefit from working on your tactical awareness. Remember to return to the middle after each shot and communicate clearly with your partner.';
+          dimensionFocus = 'TACT';
+          recommendationType = 'insight';
+        } else if (lowerMessage.includes('nervous') || lowerMessage.includes('pressure')) {
+          sageResponse = 'Mental toughness is often overlooked but critically important. When feeling pressure, use deep breathing and focus on one point at a time. Would you like to work on some mental exercises to improve performance under pressure?';
+          dimensionFocus = 'MENT';
+          recommendationType = 'training';
+        } else if (lowerMessage.includes('tired') || lowerMessage.includes('stamina')) {
+          sageResponse = 'Physical conditioning directly impacts your game, especially in long tournaments. I recommend incorporating more pickleball-specific movement drills to improve your on-court stamina.';
+          dimensionFocus = 'PHYS';
+          recommendationType = 'insight';
+        } else if (lowerMessage.includes('training') || lowerMessage.includes('practice')) {
+          sageResponse = 'Consistent practice leads to consistent play. I can create a structured training schedule to help you improve systematically. Would you like me to generate a weekly practice plan?';
+          dimensionFocus = 'CONS';
+          recommendationType = 'schedule';
+        } else {
+          sageResponse = 'I understand you want to improve your pickleball skills. To offer more specific guidance, could you tell me which aspect of your game you want to focus on? Technical skills, tactical awareness, physical fitness, mental toughness, or consistency?';
+          dimensionFocus = null;
+          recommendationType = null;
+        }
+        
+        // Return new messages
+        return res.json({
+          sessionId,
+          newMessages: [
+            {
+              id: newUserMessageId,
+              type: 'user',
+              content: message,
+              timestamp: new Date().toISOString()
+            },
+            {
+              id: newSageMessageId,
+              type: 'sage',
+              content: sageResponse,
+              timestamp: new Date(Date.now() + 1000).toISOString(), // 1 second later
+              metadata: recommendationType ? {
+                recommendationType,
+                dimensionFocus
+              } : undefined
+            }
+          ]
+        });
+      }
+      
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    // In a real implementation, we would process the message and generate a response
+    // using the SAGE engine. For this sprint, we'll use the development test data.
+    const result = await sageEngine.processConversationMessage(userId, message, conversationId);
+    return res.json(result);
+  } catch (error) {
+    console.error('[SAGE] Process conversation message error:', error);
+    return res.status(500).json({ error: 'Failed to process message' });
+  }
+});
+
+/**
+ * @route   POST /api/coach/sage/feedback
+ * @desc    Record user feedback on a SAGE message
+ * @access  Private
+ */
+router.post('/sage/feedback', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const { messageId, feedbackType, conversationId } = req.body;
+    
+    if (!userId) {
+      // PKL-278651-AUTH-0017-DEBUG - Development test mode support for SAGE feedback
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[DEV MODE] Returning development test data for SAGE feedback');
+        
+        // Validate input
+        if (!messageId || typeof messageId !== 'string') {
+          return res.status(400).json({ error: 'MessageId is required' });
+        }
+        
+        if (!feedbackType || (feedbackType !== 'positive' && feedbackType !== 'negative')) {
+          return res.status(400).json({ error: 'FeedbackType must be "positive" or "negative"' });
+        }
+        
+        // Return dummy success response
+        return res.json({
+          messageId,
+          feedbackType,
+          success: true
+        });
+      }
+      
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    // In a real implementation, we would record the feedback in the database
+    // and use it to improve the SAGE engine. For this sprint, we'll use the development test data.
+    const result = await storage.recordSageFeedback(userId, messageId, feedbackType, conversationId);
+    return res.json(result);
+  } catch (error) {
+    console.error('[SAGE] Record feedback error:', error);
+    return res.status(500).json({ error: 'Failed to record feedback' });
+  }
+});
+
 // --------------- SAGE Rule-Based Engine Routes ---------------
 
 /**

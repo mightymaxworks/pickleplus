@@ -8,13 +8,15 @@ import {
 // Import SAGE coaching schema (PKL-278651-COACH-0001-CORE - Skills Assessment & Growth Engine)
 import {
   coachingSessions, coachingInsights, trainingPlans, trainingExercises, 
-  coachingContentLibrary, userProgressLogs,
+  coachingContentLibrary, userProgressLogs, coachingConversations, coachingMessages,
   type CoachingSession, type InsertCoachingSession,
   type CoachingInsight, type InsertCoachingInsight,
   type TrainingPlan, type InsertTrainingPlan,
   type TrainingExercise, type InsertTrainingExercise,
   type CoachingContentLibrary, type InsertCoachingContentLibrary,
   type UserProgressLog, type InsertUserProgressLog,
+  type CoachingConversation, type InsertCoachingConversation,
+  type CoachingMessage, type InsertCoachingMessage,
   DimensionCodes, type DimensionCode
 } from "@shared/schema/sage";
 
