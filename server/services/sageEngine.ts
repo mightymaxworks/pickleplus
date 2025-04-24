@@ -7,9 +7,10 @@
  * without requiring external AI dependencies.
  * 
  * PKL-278651-SAGE-0002-CONV - Added conversation support for SAGE Conversational UI
+ * PKL-278651-COACH-0003-TERMS - Added pickleball terminology recognition
  * 
  * @framework Framework5.3
- * @version 1.1.0
+ * @version 1.2.0
  * @lastModified 2025-04-24
  */
 
@@ -28,6 +29,7 @@ import {
 import { storage } from '../storage';
 import { User } from '@shared/schema';
 import { eq } from 'drizzle-orm';
+import { analyzePickleballTerminology, generateTerminologyResponse } from './pickleballTermProcessor';
 
 /**
  * Rule-based coaching engine for generating insights and training plans
@@ -46,9 +48,17 @@ export class SageEngine {
     courtiqRatings: any,
     recentJournalEntries: any[]
   ): DimensionCode {
+    // First, check for pickleball terminology to determine dimension focus
+    const termAnalysis = analyzePickleballTerminology(message);
+    
+    // If terminology analysis suggests a dimension, use it
+    if (termAnalysis.suggestedDimension) {
+      return termAnalysis.suggestedDimension;
+    }
+    
     const lowerMessage = message.toLowerCase();
     
-    // First, check if the message explicitly mentions a dimension
+    // Fall back to keyword-based dimension detection
     if (lowerMessage.includes('technique') || lowerMessage.includes('dink') || 
         lowerMessage.includes('shot') || lowerMessage.includes('technical')) {
       return 'TECH';
@@ -208,7 +218,7 @@ export class SageEngine {
       // still mention journaling if the message is about improvement or progress
       else if (recentJournalEntries.length > 2 && 
               (lowerMessage.includes('improve') || lowerMessage.includes('progress') || lowerMessage.includes('better'))) {
-        return `I notice you've been consistently journaling about your pickleball journey, which is excellent for tracking progress. ${this.generateSageResponse(message, user)} Your journal entries provide valuable context that can help us tailor more specific advice to your development needs.`;
+        return `I notice you've been consistently journaling about your pickleball journey, which is excellent for tracking progress. ${this.generateSageResponse(message, user, recentJournalEntries)} Your journal entries provide valuable context that can help us tailor more specific advice to your development needs.`;
       }
     }
     
@@ -252,7 +262,7 @@ export class SageEngine {
     }
     
     // If none of the contextual responses match, fall back to the standard response
-    return this.generateSageResponse(message, user);
+    return this.generateSageResponse(message, user, recentJournalEntries);
   }
   
   /**
@@ -1475,15 +1485,35 @@ export class SageEngine {
    * 
    * @param message The user message
    * @param user The user object
+   * @param recentJournalEntries Optional recent journal entries to inform terminology responses
    * @returns The SAGE response text
    */
-  private generateSageResponse(message: string, user: any): string {
+  private generateSageResponse(message: string, user: any, recentJournalEntries: any[] = []): string {
     const lowerMessage = message.toLowerCase();
     
     // Welcome and introduction for first message in conversation
     if (lowerMessage.match(/^(hi|hello|hey|greetings|howdy)/i)) {
       return `Hello ${user.firstName || user.username || 'there'}! I'm S.A.G.E. (Skills Assessment & Growth Engine), your personalized pickleball coach. How can I help improve your game today? You can ask me about specific skills, request a training plan, or get advice on your playing strategy.`;
     }
+    
+    // First, check for pickleball terminology in the message
+    const termAnalysis = analyzePickleballTerminology(message);
+    
+    // If we found pickleball terms, generate a terminology-specific response
+    if (termAnalysis.detectedTerms.length > 0) {
+      const termResponse = generateTerminologyResponse(
+        termAnalysis, 
+        user.firstName || user.username || 'there',
+        recentJournalEntries
+      );
+      
+      // If we have a valid term response, use it
+      if (termResponse) {
+        return termResponse;
+      }
+    }
+    
+    // Fall back to standard responses if no terminology recognized
     
     // Technical skills
     if (lowerMessage.includes('dink') || lowerMessage.includes('third shot') || lowerMessage.includes('technique')) {
@@ -1529,13 +1559,6 @@ export class SageEngine {
    * 
    * @param userMessage The user message
    * @param sageResponse The SAGE response
-   * @returns Recommendation type and dimension focus if present
-   */
-  /**
-   * Determine if the SAGE response contains a recommendation
-   * 
-   * @param userMessage The user message
-   * @param sageResponse The SAGE response
    * @param dimensionFocus The current dimension focus
    * @returns Recommendation type and dimension focus if present
    */
@@ -1546,6 +1569,12 @@ export class SageEngine {
   ): { type: 'training' | 'insight' | 'schedule', dimensionFocus: DimensionCode } | null {
     const lowerUserMessage = userMessage.toLowerCase();
     const lowerSageResponse = sageResponse.toLowerCase();
+    
+    // Check for terminology focus first
+    const termAnalysis = analyzePickleballTerminology(userMessage);
+    if (termAnalysis.suggestedDimension) {
+      dimensionFocus = termAnalysis.suggestedDimension;
+    }
     
     // Determine recommendation type
     if (lowerSageResponse.includes('training plan') || lowerSageResponse.includes('create a plan') || 
@@ -1558,6 +1587,10 @@ export class SageEngine {
                lowerSageResponse.includes('try') || lowerSageResponse.includes('focus on') || 
                lowerSageResponse.includes('remember to') || lowerSageResponse.includes('important'))) {
       return { type: 'insight', dimensionFocus };
+    } else if (termAnalysis.detectedTerms.length > 0 && 
+              (lowerSageResponse.includes('drill') || lowerSageResponse.includes('practice') || 
+               lowerSageResponse.includes('improve') || lowerSageResponse.includes('technique'))) {
+      return { type: 'training', dimensionFocus };
     }
     
     return null;
@@ -1572,6 +1605,31 @@ export class SageEngine {
   private deriveTopic(message: string): string {
     const lowerMessage = message.toLowerCase();
     
+    // First, check for specific pickleball terminology in the message
+    const termAnalysis = analyzePickleballTerminology(message);
+    
+    // If we found pickleball terms, use the primary term in the topic
+    if (termAnalysis.primaryTerm) {
+      const term = termAnalysis.primaryTerm;
+      
+      // Customize topic based on term category and dimension
+      switch(term.primaryDimension) {
+        case 'TECH':
+          return `${term.term.charAt(0).toUpperCase() + term.term.slice(1)} Technique Coaching`;
+        case 'TACT':
+          return `${term.term.charAt(0).toUpperCase() + term.term.slice(1)} Strategic Development`;
+        case 'PHYS':
+          return `${term.term.charAt(0).toUpperCase() + term.term.slice(1)} Physical Training`;
+        case 'MENT':
+          return `${term.term.charAt(0).toUpperCase() + term.term.slice(1)} Mental Approach`;
+        case 'CONS':
+          return `${term.term.charAt(0).toUpperCase() + term.term.slice(1)} Consistency Training`;
+        default:
+          return `${term.term.charAt(0).toUpperCase() + term.term.slice(1)} Skill Development`;
+      }
+    }
+    
+    // Fall back to standard topic derivation if no specific terms found
     if (lowerMessage.includes('dink') || lowerMessage.includes('third shot') || lowerMessage.includes('technique')) {
       return 'Technical Skills Discussion';
     } else if (lowerMessage.includes('strategy') || lowerMessage.includes('position') || lowerMessage.includes('tactic')) {
