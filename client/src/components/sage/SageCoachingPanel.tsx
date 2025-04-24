@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, PlusCircle, ClipboardList, Book, Brain, Dumbbell, Star } from "lucide-react";
+import { getQueryFn, apiRequest } from "@/lib/queryClient";
 
 // Type definitions for SAGE coaching data
 interface CoachingSession {
@@ -85,32 +86,33 @@ export default function SageCoachingPanel() {
   // Fetch coaching sessions
   const { data: sessions, isLoading: isLoadingSessions } = useQuery({
     queryKey: ["/api/coach/sage/sessions"],
+    queryFn: getQueryFn(),
     enabled: !!user,
   });
   
   // Fetch session details when a session is selected
   const { data: sessionDetails, isLoading: isLoadingSessionDetails } = useQuery({
     queryKey: ["/api/coach/sage/sessions", activeSessionId],
+    queryFn: getQueryFn(),
     enabled: !!activeSessionId,
   });
   
   // Fetch training plan details when a plan is selected
   const { data: planDetails, isLoading: isLoadingPlanDetails } = useQuery({
     queryKey: ["/api/coach/sage/training-plans", activePlanId],
+    queryFn: getQueryFn(),
     enabled: !!activePlanId,
   });
   
   // Generate a new coaching session
   const generateSessionMutation = useMutation({
     mutationFn: async (data: { sessionType: string; dimensionFocus: string }) => {
-      const response = await fetch("/api/coach/sage/generate-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+      const response = await apiRequest("POST", "/api/coach/sage/generate-session", data);
       
       if (!response.ok) {
-        throw new Error("Failed to generate coaching session");
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Session creation error:', errorData);
+        throw new Error(errorData.error || "Failed to generate coaching session");
       }
       
       return response.json();
@@ -134,14 +136,16 @@ export default function SageCoachingPanel() {
   // Generate a training plan for a session
   const generatePlanMutation = useMutation({
     mutationFn: async ({ sessionId, durationDays }: { sessionId: number; durationDays?: number }) => {
-      const response = await fetch(`/api/coach/sage/sessions/${sessionId}/generate-plan`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ durationDays: durationDays || 7 }),
-      });
+      const response = await apiRequest(
+        "POST", 
+        `/api/coach/sage/sessions/${sessionId}/generate-plan`, 
+        { durationDays: durationDays || 7 }
+      );
       
       if (!response.ok) {
-        throw new Error("Failed to generate training plan");
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Plan creation error:', errorData);
+        throw new Error(errorData.error || "Failed to generate training plan");
       }
       
       return response.json();
@@ -165,14 +169,16 @@ export default function SageCoachingPanel() {
   // Mark exercise as complete/incomplete
   const markExerciseMutation = useMutation({
     mutationFn: async ({ exerciseId, completed }: { exerciseId: number; completed: boolean }) => {
-      const response = await fetch(`/api/coach/sage/exercises/${exerciseId}/complete`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ completed }),
-      });
+      const response = await apiRequest(
+        "PATCH", 
+        `/api/coach/sage/exercises/${exerciseId}/complete`,
+        { completed }
+      );
       
       if (!response.ok) {
-        throw new Error("Failed to update exercise status");
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Exercise update error:', errorData);
+        throw new Error(errorData.error || "Failed to update exercise status");
       }
       
       return response.json();
