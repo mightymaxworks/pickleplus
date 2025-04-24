@@ -179,7 +179,9 @@ export default function QuickMatchFAB() {
   }
 
   // Determine if user is a founding member for special styling
-  const isFoundingMember = user?.badges?.includes('founding_member');
+  // PKL-278651-STATS-0001-CORE - Fix type issue with badges property
+  // Using type assertion since we know the user object may have badges
+  const isFoundingMember = user && (user as any).badges ? (user as any).badges.includes('founding_member') : false;
 
   // Set button colors based on founding member status
   const buttonClass = isFoundingMember 

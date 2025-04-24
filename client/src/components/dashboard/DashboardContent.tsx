@@ -605,6 +605,7 @@ export default function DashboardContent() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: isLoaded ? 1 : 0, scale: isLoaded ? 1 : 0.95 }}
                 transition={{ delay: 0.4, duration: 0.5 }}
+                className="stats-card" /* PKL-278651-STATS-0001-CORE - Added stats-card class for FAB detection */
               >
                 <Card className="shadow-lg border border-gray-100/20 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm overflow-hidden h-full">
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#2196F3] to-[#03A9F4]"></div>
