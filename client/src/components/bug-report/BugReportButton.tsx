@@ -22,7 +22,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface BugReportButtonProps {
   position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';

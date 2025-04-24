@@ -29,10 +29,10 @@ export interface RegisterCredentials {
 
 // Constants
 const AUTH_ENDPOINTS = {
-  LOGIN: '/api/login',
-  REGISTER: '/api/register',
-  LOGOUT: '/api/logout',
-  CURRENT_USER: '/api/user',
+  LOGIN: '/api/auth/login',
+  REGISTER: '/api/auth/register',
+  LOGOUT: '/api/auth/logout',
+  CURRENT_USER: '/api/auth/current-user',
 };
 
 // Storage keys

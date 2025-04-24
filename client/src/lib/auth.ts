@@ -4,4 +4,5 @@
  */
 
 // Export the useAuth hook from the hooks directory
-export { useAuth } from '@/hooks/useAuth';
+// Re-export the new auth context for backward compatibility
+export { useAuth, AuthProvider } from '@/contexts/AuthContext';

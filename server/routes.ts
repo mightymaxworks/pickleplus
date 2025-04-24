@@ -26,7 +26,7 @@ import simpleRatingApi from "./routes/simple-rating-api"; // Simple rating API (
 import matchAssessmentRoutes from "./api/match-assessment"; // PKL-278651-COURTIQ-0002-ASSESS
 import referralRoutes from "./modules/referrals/routes"; // PKL-278651-COMM-0007 - Enhanced Referral System
 import { isAuthenticated as isAuthenticatedMiddleware } from "./middleware/auth";
-import { isAuthenticated } from "./auth"; // Import the proper passport-based authentication
+import { isAuthenticated, setupAuth } from "./auth"; // Import the proper passport-based authentication
 import { specialRouter } from "./special-routes"; // Import special critical routes
 
 /**
@@ -35,6 +35,11 @@ import { specialRouter } from "./special-routes"; // Import special critical rou
  * @returns HTTP server
  */
 export async function registerRoutes(app: express.Express): Promise<Server> {
+  // Set up authentication routes and middleware
+  console.log("[AUTH] Setting up authentication routes and middleware");
+  setupAuth(app);
+  console.log("[AUTH] Authentication setup complete");
+  
   console.log("[API][CRITICAL] Registering special direct routes before standard routes");
   // Mount special router first to ensure direct implementation takes precedence
   app.use('/api', specialRouter);
