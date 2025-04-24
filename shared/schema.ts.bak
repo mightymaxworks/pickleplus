@@ -144,35 +144,6 @@ import {
   apiWebhookDeliveryLogs
 } from './schema/api-gateway';
 
-// Import user roles schema (PKL-278651-AUTH-0016-PROLES - Persistent Role Management)
-import {
-  roles,
-  userRoles,
-  permissions,
-  rolePermissions,
-  roleAuditLogs,
-  rolesRelations,
-  userRolesRelations,
-  permissionsRelations,
-  rolePermissionsRelations,
-  roleAuditLogsRelations,
-  insertRoleSchema,
-  insertUserRoleSchema,
-  insertPermissionSchema,
-  insertRolePermissionSchema,
-  insertRoleAuditLogSchema,
-  type Role,
-  type InsertRole,
-  type UserRole as DbUserRole,
-  type InsertUserRole,
-  type Permission,
-  type InsertPermission,
-  type RolePermission,
-  type InsertRolePermission,
-  type RoleAuditLog,
-  type InsertRoleAuditLog
-} from './schema/user-roles';
-
 // Import Referral system schema (PKL-278651-COMM-0007 - Enhanced Referral System & Community Ticker)
 import {
   referrals,

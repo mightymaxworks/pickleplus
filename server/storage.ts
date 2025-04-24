@@ -8,6 +8,16 @@ import {
 // Import XP tables from their new modular location
 import { xpTransactions } from "@shared/schema/xp";
 
+// Import user roles schema (PKL-278651-AUTH-0016-PROLES - Persistent Role Management)
+import {
+  roles, userRoles, permissions, rolePermissions, roleAuditLogs,
+  type Role, type InsertRole,
+  type UserRole as DbUserRole, type InsertUserRole,
+  type Permission, type InsertPermission,
+  type RolePermission, type InsertRolePermission,
+  type RoleAuditLog, type InsertRoleAuditLog
+} from "@shared/schema/user-roles";
+
 // PKL-278651-COMM-0007 - Enhanced Referral System & Community Ticker
 import {
   referrals,
@@ -108,6 +118,35 @@ import memorystore from "memorystore";
 
 export interface IStorage {
   sessionStore: Store;
+  
+  // PKL-278651-AUTH-0016-PROLES - Role Management
+  // Role operations
+  getAllRoles(): Promise<Role[]>;
+  getRoleById(id: number): Promise<Role | undefined>;
+  getRoleByName(name: string): Promise<Role | undefined>;
+  createRole(roleData: InsertRole): Promise<Role>;
+  updateRole(id: number, updates: Partial<InsertRole>): Promise<Role | undefined>;
+  deleteRole(id: number): Promise<boolean>;
+  
+  // User role operations
+  getUserRoles(userId: number): Promise<(DbUserRole & { role: Role })[]>;
+  assignRoleToUser(userId: number, roleId: number, assignedBy?: number): Promise<DbUserRole>;
+  removeRoleFromUser(userId: number, roleId: number): Promise<boolean>;
+  hasRole(userId: number, roleName: string): Promise<boolean>;
+  getUsersWithRole(roleId: number, options?: { limit?: number, offset?: number }): Promise<(DbUserRole & { user: User })[]>;
+  
+  // Role permissions operations
+  getAllPermissions(): Promise<Permission[]>;
+  getPermissionById(id: number): Promise<Permission | undefined>;
+  getPermissionByName(name: string): Promise<Permission | undefined>;
+  createPermission(permissionData: InsertPermission): Promise<Permission>;
+  getRolePermissions(roleId: number): Promise<(RolePermission & { permission: Permission })[]>;
+  assignPermissionToRole(roleId: number, permissionId: number): Promise<RolePermission>;
+  removePermissionFromRole(roleId: number, permissionId: number): Promise<boolean>;
+  
+  // Role audit operations
+  createRoleAuditLog(logData: InsertRoleAuditLog): Promise<RoleAuditLog>;
+  getRoleAuditLogs(filters?: { userId?: number, roleId?: number, action?: string, limit?: number, offset?: number }): Promise<RoleAuditLog[]>;
   
   // PKL-278651-COMM-0007 - Enhanced Referral System & Community Ticker
   // Referral operations
