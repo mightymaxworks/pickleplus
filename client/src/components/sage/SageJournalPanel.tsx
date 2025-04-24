@@ -862,7 +862,7 @@ export default function SageJournalPanel() {
             <CardContent className="flex-grow overflow-auto">
               <div className="prose dark:prose-invert max-w-none">
                 {/* Format the content with proper paragraph breaks */}
-                {activeEntry.content.split("\n").map((paragraph, i) => (
+                {activeEntry.content.split("\n").map((paragraph: string, i: number) => (
                   <p key={i}>{paragraph}</p>
                 ))}
               </div>
@@ -876,7 +876,7 @@ export default function SageJournalPanel() {
                   </h3>
                   
                   <div className="space-y-4">
-                    {activeEntry.reflections.map((reflection) => (
+                    {activeEntry.reflections.map((reflection: JournalReflection) => (
                       <Card key={reflection.id} className="bg-primary/5">
                         <CardHeader className="pb-2">
                           <div className="flex justify-between items-start">
