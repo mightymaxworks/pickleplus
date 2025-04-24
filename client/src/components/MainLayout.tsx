@@ -45,6 +45,10 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     
     // Framework 5.3 Direct Solution: Simple approach with multiple fallbacks
     try {
+      // Set a flag to prevent redirect loop on auth page
+      sessionStorage.setItem('just_logged_out', 'true');
+      console.log("Logout flag set to prevent redirect loop");
+      
       // 1. Try the logout mutation
       logoutMutation.mutate();
       
@@ -54,15 +58,24 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
       });
       
-      // 3. Force redirection to auth page after a brief timeout
-      setTimeout(() => {
-        window.location.href = '/auth';
-      }, 100);
+      // 3. Clear all cached auth data
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("user_data");
+      
+      // 4. Force a complete page reload to reset all React state
+      window.location.replace('/auth');
     } catch (e) {
       console.error("Error during logout:", e);
       
-      // Even on error, force a redirect
-      window.location.href = '/auth';
+      // Even on error, set the flag and force a logout
+      sessionStorage.setItem('just_logged_out', 'true');
+      document.cookie.split(";").forEach(function(c) {
+        document.cookie = c.replace(/^ +/, "")
+          .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      });
+      
+      // Force a complete page reload
+      window.location.replace('/auth');
     }
   };
 

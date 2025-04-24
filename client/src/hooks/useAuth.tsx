@@ -177,34 +177,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     },
     onSuccess: () => {
+      // Set session flag to prevent redirect loops
+      sessionStorage.setItem('just_logged_out', 'true');
+      
       // Clear all cached data
       queryClient.setQueryData(["/api/auth/current-user"], null);
       queryClient.invalidateQueries();
       
-      // Add a small delay to ensure state updates properly
-      setTimeout(() => {
-        window.location.href = '/auth'; // Direct redirect to auth page
-      }, 300);
+      // Clear any persistent auth data
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("user_data");
       
       toast({
         title: "Logged out",
         description: "You have been logged out successfully.",
       });
+      
+      // Note: We don't redirect here anymore - let MainLayout handle the redirect
     },
     onError: (error: Error) => {
+      // Set session flag to prevent redirect loops
+      sessionStorage.setItem('just_logged_out', 'true');
+      
       // Even on error, clear local state
       queryClient.setQueryData(["/api/auth/current-user"], null);
       
-      // Force reload the page to reset the application state
-      setTimeout(() => {
-        window.location.href = '/auth';
-      }, 300);
+      // Clear any persistent auth data
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("user_data");
       
       toast({
         title: "Logout issue",
         description: "You have been logged out, but there was an issue with the server.",
         variant: "default",
       });
+      
+      // Note: We don't redirect here anymore - let MainLayout handle the redirect
     },
   });
 

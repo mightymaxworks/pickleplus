@@ -49,10 +49,20 @@ export default function AuthPage() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("login");
 
-  // Handle redirect using useEffect
+  // Handle redirect using useEffect, with a check for fresh logout
   useEffect(() => {
-    if (user) {
+    // Create a flag in sessionStorage to indicate if we just logged out
+    const justLoggedOut = sessionStorage.getItem('just_logged_out');
+    
+    // Only redirect if user exists and we didn't just log out
+    if (user && !justLoggedOut) {
       setLocation("/dashboard");
+    }
+    
+    // Clear the flag if it exists
+    if (justLoggedOut) {
+      sessionStorage.removeItem('just_logged_out');
+      console.log("Auth page: Cleared logout flag");
     }
   }, [user, setLocation]);
 
@@ -108,6 +118,8 @@ export default function AuthPage() {
         email: credentials.email,
         password: credentials.password,
         displayName: displayName, // Server expects displayName, not firstName/lastName
+        firstName: displayName.split(' ')[0] || displayName, // Extract first name from display name
+        lastName: displayName.split(' ').slice(1).join(' ') || '', // Extract last name from display name
         yearOfBirth: yearOfBirth || undefined,
         location: location || undefined,
         playingSince: playingSince || undefined,
