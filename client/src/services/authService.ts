@@ -6,12 +6,14 @@
  * following Framework 5.3 principles of simplicity and reliability.
  * 
  * @framework Framework5.3
- * @version 1.0.0
+ * @version 1.1.0
  * @lastModified 2025-04-24
  */
 
 import { User } from '@shared/schema';
 import { apiRequest } from '@/lib/queryClient';
+import { UserRole, hasRequiredRole } from '@/lib/roles';
+import { UserWithRole, hasRoleInfo, ensureUserHasRole } from '@shared/user-types';
 
 // Define the types for login and registration
 export interface LoginCredentials {
@@ -109,7 +111,8 @@ export class AuthService {
   }
 
   /**
-   * Gets the current user
+   * Gets the current user with role information
+   * @returns User with role information or null if not authenticated
    */
   async getCurrentUser(): Promise<User | null> {
     try {
@@ -124,6 +127,12 @@ export class AuthService {
       }
       
       const user = await response.json();
+      
+      // Enhance the user with role information
+      if (user && !hasRoleInfo(user)) {
+        return ensureUserHasRole(user);
+      }
+      
       return user;
     } catch (error) {
       console.error('Get current user error:', error);
@@ -134,17 +143,33 @@ export class AuthService {
 
   /**
    * Checks if a user has a specific role
+   * @param user The user to check
+   * @param role The required role as a string (player, coach, admin)
+   * @returns boolean indicating if the user has the required permissions
    */
   hasRole(user: User | null, role: string): boolean {
     if (!user) return false;
     
-    // For admin role check
-    if (role === 'admin') {
-      return user.isAdmin === true;
+    const userWithRole = hasRoleInfo(user) 
+      ? user as UserWithRole 
+      : ensureUserHasRole(user);
+    
+    let requiredRole: UserRole;
+    
+    // Map string role to enum
+    switch (role.toLowerCase()) {
+      case 'admin':
+        requiredRole = UserRole.ADMIN;
+        break;
+      case 'coach':
+        requiredRole = UserRole.COACH;
+        break;
+      case 'player':
+      default:
+        requiredRole = UserRole.PLAYER;
     }
     
-    // For other roles, can be expanded in the future
-    return false;
+    return hasRequiredRole(userWithRole.role, requiredRole);
   }
 
   /**

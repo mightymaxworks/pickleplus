@@ -1,12 +1,12 @@
 /**
  * PKL-278651-AUTH-0002-CONTEXT
- * Authentication Context
+ * Authentication Context with Role Management
  * 
  * A central React context for managing authentication state throughout the application
  * following Framework 5.3 principles of simplicity and frontend-first design.
  * 
  * @framework Framework5.3
- * @version 1.0.0
+ * @version 1.1.0
  * @lastModified 2025-04-24
  */
 
@@ -24,6 +24,8 @@ import authService, {
   LoginCredentials, 
   RegisterCredentials 
 } from '@/services/authService';
+import { UserRole } from '@/lib/roles';
+import { UserWithRole, hasRoleInfo, ensureUserHasRole } from '@shared/user-types';
 
 // Define the shape of our auth context
 interface AuthContextType {
@@ -34,6 +36,7 @@ interface AuthContextType {
   register: (credentials: RegisterCredentials) => Promise<User>;
   logout: () => Promise<void>;
   hasRole: (role: string) => boolean;
+  getUserRole: () => UserRole | null;
 }
 
 // Create the auth context with a default value
@@ -168,6 +171,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const hasRole = (role: string): boolean => {
     return authService.hasRole(user, role);
   };
+  
+  // Get user role function
+  const getUserRole = (): UserRole | null => {
+    if (!user) return null;
+    
+    const userWithRole = hasRoleInfo(user) 
+      ? user as UserWithRole 
+      : ensureUserHasRole(user);
+      
+    return userWithRole.role;
+  };
 
   // Create the value object for the provider
   const value = {
@@ -177,7 +191,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     register,
     logout,
-    hasRole
+    hasRole,
+    getUserRole
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

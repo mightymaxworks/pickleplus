@@ -15,8 +15,11 @@ import { LazyLoadingFallback, lazyLoad } from '@/utils/lazyLoad' // PKL-278651-P
 import { moduleRegistry } from '@/core/modules/moduleRegistry' // For feedback module
 import { SimpleBugReportButton } from '@/components/bug-report/BugReportButton' // Simplified bug report button
 import { ProtectedRouteWithLayout } from './lib/protected-route-with-layout' // PKL-278651-UI-0001-STDROUTE
+import { RoleProtectedRoute } from '@/components/auth/RoleProtectedRoute' // PKL-278651-AUTH-0008-ROLES
 import { BounceMascot } from '@/components/mascot' // PKL-278651-MASCOT-0001-CORE
 import OnboardingCompletePage from './pages/onboarding-complete-page' // PKL-278651-COURTIQ-0002-GUIDANCE
+import RoleProtectedDemoPage from './pages/RoleProtectedDemoPage' // PKL-278651-AUTH-0008-ROLES
+import { UserRole } from '@/lib/roles' // PKL-278651-AUTH-0008-ROLES
 
 
 // Import module initializations
@@ -247,6 +250,29 @@ export default function App() {
                   </Route>
                   <Route path="/passport">
                     {(params) => <CentralProtectedRoute component={LazyPassportPage} path="/passport" />}
+                  </Route>
+                  
+                  {/* PKL-278651-AUTH-0008-ROLES - Role protected routes demo */}
+                  <Route path="/roles/demo">
+                    {() => <RoleProtectedRoute component={RoleProtectedDemoPage} path="/roles/demo" />}
+                  </Route>
+                  
+                  {/* Coach-specific route example */}
+                  <Route path="/coach/dashboard">
+                    {() => <RoleProtectedRoute 
+                      component={RoleProtectedDemoPage} 
+                      path="/coach/dashboard" 
+                      requiredRole={UserRole.COACH} 
+                    />}
+                  </Route>
+                  
+                  {/* Admin-specific route example */}
+                  <Route path="/admin/system">
+                    {() => <RoleProtectedRoute 
+                      component={RoleProtectedDemoPage} 
+                      path="/admin/system" 
+                      requiredRole={UserRole.ADMIN} 
+                    />}
                   </Route>
                   <ProtectedRouteWithLayout
                     path="/profile"
