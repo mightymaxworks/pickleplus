@@ -26,7 +26,7 @@
 .ticker-content {
   display: inline-block;
   white-space: nowrap;
-  animation: scroll 45s linear infinite; /* Optimized speed: 45s for better readability */
+  animation: scroll 38s linear infinite; /* Optimized speed: 38s for ideal readability */
   position: relative;
 }
 
