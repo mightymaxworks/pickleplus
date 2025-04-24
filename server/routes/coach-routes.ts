@@ -91,6 +91,32 @@ router.get('/sage/sessions', isAuthenticated, async (req: Request, res: Response
   try {
     const userId = req.user?.id;
     if (!userId) {
+      // PKL-278651-AUTH-0017-DEBUG - Development test mode support for SAGE
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[DEV MODE] Returning development test data for coaching sessions');
+        return res.json([
+          {
+            id: 1,
+            userId: 1,
+            title: 'Technical Skills Focus',
+            description: 'A coaching session focused on improving your technical skills.',
+            sessionType: 'GENERAL',
+            dimensionFocus: 'TECH',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          },
+          {
+            id: 2,
+            userId: 1,
+            title: 'Mental Game Improvement',
+            description: 'Strategies to strengthen your mental toughness on the court.',
+            sessionType: 'GENERAL',
+            dimensionFocus: 'MENT',
+            createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+            updatedAt: new Date(Date.now() - 86400000).toISOString()
+          }
+        ]);
+      }
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -113,6 +139,75 @@ router.get('/sage/sessions/:id', isAuthenticated, async (req: Request, res: Resp
     const userId = req.user?.id;
     
     if (!userId) {
+      // PKL-278651-AUTH-0017-DEBUG - Development test mode support for SAGE session details
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[DEV MODE] Returning development test data for coaching session details');
+        
+        // Simulate different responses based on requested session ID
+        const sessionId = parseInt(req.params.id);
+        
+        if (sessionId === 1) {
+          return res.json({
+            session: {
+              id: 1,
+              userId: 1,
+              title: 'Technical Skills Focus',
+              description: 'A coaching session focused on improving your technical skills.',
+              sessionType: 'GENERAL',
+              dimensionFocus: 'TECH',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            },
+            insights: [
+              {
+                id: 1,
+                sessionId: 1,
+                title: 'Dink Technique Improvement',
+                content: 'Your dink technique could be improved by focusing on wrist stability and paddle angle control.',
+                dimensionCode: 'TECH',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              },
+              {
+                id: 2,
+                sessionId: 1,
+                title: 'Serve Consistency',
+                content: 'Work on maintaining a consistent serve motion to improve your first serve percentage.',
+                dimensionCode: 'TECH',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              }
+            ]
+          });
+        } else if (sessionId === 2) {
+          return res.json({
+            session: {
+              id: 2,
+              userId: 1,
+              title: 'Mental Game Improvement',
+              description: 'Strategies to strengthen your mental toughness on the court.',
+              sessionType: 'GENERAL',
+              dimensionFocus: 'MENT',
+              createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+              updatedAt: new Date(Date.now() - 86400000).toISOString()
+            },
+            insights: [
+              {
+                id: 3,
+                sessionId: 2,
+                title: 'Focus Under Pressure',
+                content: 'Practice mindfulness techniques to maintain focus during critical points.',
+                dimensionCode: 'MENT',
+                createdAt: new Date(Date.now() - 86400000).toISOString(),
+                updatedAt: new Date(Date.now() - 86400000).toISOString()
+              }
+            ]
+          });
+        } else {
+          return res.status(404).json({ error: 'Session not found' });
+        }
+      }
+      
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -364,6 +459,68 @@ router.post('/sage/generate-session', isAuthenticated, async (req: Request, res:
   try {
     const userId = req.user?.id;
     if (!userId) {
+      // PKL-278651-AUTH-0017-DEBUG - Development test mode support for SAGE session generation
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[DEV MODE] Returning development test data for session generation');
+        
+        const { dimensionFocus } = req.body;
+        
+        // Create a new session with generated insights based on the dimension focus
+        const sessionId = Math.floor(Math.random() * 1000) + 10; // Random ID that won't conflict with test data
+        
+        return res.status(201).json({
+          session: {
+            id: sessionId,
+            userId: 1,
+            title: `${dimensionFocus === 'TECH' ? 'Technical' : 
+                    dimensionFocus === 'TACT' ? 'Tactical' : 
+                    dimensionFocus === 'PHYS' ? 'Physical' : 
+                    dimensionFocus === 'MENT' ? 'Mental' : 
+                    dimensionFocus === 'CONS' ? 'Consistency' : 'General'} Focus Session`,
+            description: `This session focuses on improving your ${
+              dimensionFocus === 'TECH' ? 'technical skills and shot execution' : 
+              dimensionFocus === 'TACT' ? 'tactical awareness and decision making' : 
+              dimensionFocus === 'PHYS' ? 'physical conditioning and court movement' : 
+              dimensionFocus === 'MENT' ? 'mental toughness and focus' : 
+              dimensionFocus === 'CONS' ? 'consistency and error reduction' : 'pickleball skills'
+            }.`,
+            sessionType: 'GENERAL',
+            dimensionFocus: dimensionFocus as DimensionCode || 'TECH',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          },
+          insights: [
+            {
+              id: sessionId * 10 + 1,
+              sessionId: sessionId,
+              title: dimensionFocus === 'TECH' ? 'Shot Selection Analysis' :
+                     dimensionFocus === 'TACT' ? 'Court Positioning' :
+                     dimensionFocus === 'PHYS' ? 'Endurance Assessment' :
+                     dimensionFocus === 'MENT' ? 'Focus Under Pressure' :
+                     dimensionFocus === 'CONS' ? 'Error Pattern Analysis' : 'General Skill Assessment',
+              content: `Based on your recent play patterns, we've identified areas where your ${
+                dimensionFocus === 'TECH' ? 'technical skills' : 
+                dimensionFocus === 'TACT' ? 'tactical awareness' : 
+                dimensionFocus === 'PHYS' ? 'physical fitness' : 
+                dimensionFocus === 'MENT' ? 'mental game' : 
+                dimensionFocus === 'CONS' ? 'consistency' : 'overall game'
+              } can improve with focused practice.`,
+              dimensionCode: dimensionFocus as DimensionCode || 'TECH',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            },
+            {
+              id: sessionId * 10 + 2,
+              sessionId: sessionId,
+              title: 'Development Path',
+              content: 'The S.A.G.E. coaching system has mapped out a development path to help you progress in this area through structured training.',
+              dimensionCode: dimensionFocus as DimensionCode || 'TECH',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            }
+          ]
+        });
+      }
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -394,6 +551,109 @@ router.post('/sage/sessions/:id/generate-plan', isAuthenticated, async (req: Req
     const userId = req.user?.id;
     
     if (!userId) {
+      // PKL-278651-AUTH-0017-DEBUG - Development test mode support for training plan generation
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[DEV MODE] Returning development test data for training plan generation');
+        
+        // Create a new training plan with exercises
+        const planId = Math.floor(Math.random() * 1000) + 100; // Random ID that won't conflict with test data
+        const { durationDays = 7 } = req.body;
+        
+        // Find the mock session to get its dimension focus
+        let dimensionFocus = 'TECH';
+        if (sessionId === 1) {
+          dimensionFocus = 'TECH';
+        } else if (sessionId === 2) {
+          dimensionFocus = 'MENT';
+        }
+        
+        const planTitle = dimensionFocus === 'TECH' ? 'Shot Improvement Plan' :
+                         dimensionFocus === 'TACT' ? 'Strategic Development Plan' :
+                         dimensionFocus === 'PHYS' ? 'Fitness Enhancement Plan' :
+                         dimensionFocus === 'MENT' ? 'Mental Toughness Plan' :
+                         dimensionFocus === 'CONS' ? 'Consistency Building Plan' : 'Skill Development Plan';
+        
+        // Create exercises for each day of the plan
+        const exercises = [];
+        for (let day = 1; day <= durationDays; day++) {
+          // Create 2-3 exercises per day
+          const exercisesPerDay = Math.floor(Math.random() * 2) + 2; // 2-3 exercises
+          
+          for (let i = 1; i <= exercisesPerDay; i++) {
+            const exerciseId = planId * 100 + (day * 10) + i;
+            
+            // Create different types of exercises based on dimension focus
+            let exerciseTitle, exerciseDescription, exerciseInstructions;
+            
+            if (dimensionFocus === 'TECH') {
+              if (i === 1) {
+                exerciseTitle = 'Dink Accuracy Drill';
+                exerciseDescription = 'Improve your dinking accuracy with this targeted practice drill.';
+                exerciseInstructions = 'Set up targets in the kitchen area. Practice dinking to hit each target 10 times in a row.';
+              } else if (i === 2) {
+                exerciseTitle = 'Third Shot Drop Practice';
+                exerciseDescription = 'Focus on perfecting your third shot drop technique.';
+                exerciseInstructions = 'With a partner, practice serving, return, and then executing a controlled third shot drop. Repeat 20 times.';
+              } else {
+                exerciseTitle = 'Volley Reaction Drill';
+                exerciseDescription = 'Improve your volley reactions at the net.';
+                exerciseInstructions = 'Stand at the kitchen line while a partner feeds balls to your forehand and backhand sides. Focus on quick paddle preparation.';
+              }
+            } else if (dimensionFocus === 'MENT') {
+              if (i === 1) {
+                exerciseTitle = 'Pressure Point Simulation';
+                exerciseDescription = 'Simulate high-pressure points to build mental toughness.';
+                exerciseInstructions = 'Play practice points where you start at 9-10 in a game to 11. Focus on staying calm and executing your shots.';
+              } else if (i === 2) {
+                exerciseTitle = 'Mindfulness Practice';
+                exerciseDescription = 'Develop your ability to stay present during play.';
+                exerciseInstructions = 'Before each point, take a deep breath and focus on your pre-point routine. Practice this for 15 minutes.';
+              } else {
+                exerciseTitle = 'Distraction Management';
+                exerciseDescription = 'Improve your focus amid distractions.';
+                exerciseInstructions = 'Have partners create noise or movement while you practice serving accurately to targets.';
+              }
+            } else {
+              // Generic exercises for other dimensions
+              exerciseTitle = `${dimensionFocus} Exercise ${i}`;
+              exerciseDescription = `A focused exercise to improve your ${dimensionFocus} skills.`;
+              exerciseInstructions = `Complete 3 sets of this training activity focusing on proper form and technique.`;
+            }
+            
+            exercises.push({
+              id: exerciseId,
+              planId: planId,
+              title: exerciseTitle,
+              description: exerciseDescription,
+              instructions: exerciseInstructions,
+              durationMinutes: 15 + (Math.floor(Math.random() * 4) * 5), // 15, 20, 25, or 30 minutes
+              dimensionCode: dimensionFocus,
+              dayNumber: day,
+              orderInDay: i,
+              isCompleted: false,
+              difficultyLevel: Math.random() > 0.5 ? 'INTERMEDIATE' : 'BEGINNER',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            });
+          }
+        }
+        
+        return res.status(201).json({
+          plan: {
+            id: planId,
+            sessionId: sessionId,
+            title: planTitle,
+            description: `A ${durationDays}-day training plan focused on improving your ${dimensionFocus} skills with structured exercises.`,
+            durationDays: durationDays,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            isCompleted: false,
+            completionPercentage: 0
+          },
+          exercises: exercises
+        });
+      }
+      
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
