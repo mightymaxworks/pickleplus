@@ -218,6 +218,7 @@ export function generateRuleResponse(question: string): string {
 
 /**
  * Find rules for a question using enhanced matching
+ * @export
  */
 export function findRulesForQuestion(question: string): PickleballRule[] {
   // Clean the question text

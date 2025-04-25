@@ -160,6 +160,7 @@ export interface IStorage {
   
   // Journal integration operations
   getRecentJournalEntries(userId: number, limit: number): Promise<JournalEntry[]>;
+  getJournalEntriesForUser(userId: number, limit?: number): Promise<JournalEntry[]>;
   
   // Court IQ operations
   getCourtIQRatings(userId: number): Promise<Record<DimensionCode, number>>;
@@ -5200,6 +5201,24 @@ export class DatabaseStorage implements IStorage {
         .limit(limit);
     } catch (error) {
       console.error('[Storage] getRecentJournalEntries error:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * Get journal entries for a user with optional limit
+   * Extended method for SAGE Drill integration
+   */
+  async getJournalEntriesForUser(userId: number, limit: number = 5): Promise<JournalEntry[]> {
+    try {
+      return await db
+        .select()
+        .from(journalEntries)
+        .where(eq(journalEntries.userId, userId))
+        .orderBy(desc(journalEntries.createdAt))
+        .limit(limit);
+    } catch (error) {
+      console.error('[Storage] getJournalEntriesForUser error:', error);
       return [];
     }
   }

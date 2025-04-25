@@ -1,46 +1,33 @@
 /**
- * PKL-278651-SEC-0004-VAL - Request Validation Middleware
+ * PKL-278651-SAGE-0009-DRILLS - Validation Middleware
  * 
- * This middleware handles request validation using Zod schemas.
- * 
- * @framework Framework5.2
- * @version 1.0.0
- * @lastModified 2025-04-21
+ * This middleware validates request bodies against zod schemas.
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { z } from 'zod';
+import { ZodSchema } from 'zod';
 
 /**
- * Middleware factory for validating request body against a Zod schema
- * @param schema Zod schema to validate against
- * @returns Express middleware
+ * Validate request body against a zod schema
  */
-export function validateRequest(schema: z.ZodType<any, any>) {
+export function validateWithSchema(schema: ZodSchema) {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
-      // Validate and transform the request body
-      const validated = schema.parse(req.body);
+      const result = schema.safeParse(req.body);
       
-      // Replace the request body with the validated result
-      req.body = validated;
-      
-      next();
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        // Return validation errors in a standardized format
+      if (!result.success) {
         return res.status(400).json({
-          message: 'Validation failed',
-          errors: error.errors.map(err => ({
-            path: err.path.join('.'),
-            message: err.message
-          }))
+          error: 'Validation error',
+          details: result.error.format()
         });
       }
       
-      // Handle other errors
-      console.error('[Validation] Unexpected error:', error);
-      return res.status(500).json({ message: 'Internal server error during validation' });
+      // Update request body with validated data
+      req.body = result.data;
+      next();
+    } catch (error) {
+      console.error('Validation error:', error);
+      res.status(500).json({ error: 'Validation failed' });
     }
   };
 }
