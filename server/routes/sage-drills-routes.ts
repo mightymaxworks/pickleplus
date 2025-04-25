@@ -12,6 +12,7 @@ import { drillsService } from '../services/drillsService';
 import { findRulesForQuestion } from '../services/simple-pickleball-rules';
 import { storage } from '../storage';
 import { JournalEntry } from '@shared/schema/journal';
+import { FlexibleJournalEntry } from '../services/sageDrillsIntegration';
 
 const router = express.Router();
 
@@ -30,10 +31,10 @@ router.post('/drill-recommendations',
       }
       
       // Get user's journals if available
-      let journals: JournalEntry[] = [];
+      let journals: FlexibleJournalEntry[] = [];
       try {
-        // The JournalEntry from storage matches the expected format for sageDrillsIntegration
-        journals = await storage.getJournalEntriesForUser(req.user!.id, 5);
+        // Cast the journal entries to FlexibleJournalEntry type for compatibility
+        journals = (await storage.getJournalEntriesForUser(req.user!.id, 5)) as FlexibleJournalEntry[];
       } catch (err) {
         console.warn('Could not retrieve journals for drill recommendations:', err);
         // Continue without journals

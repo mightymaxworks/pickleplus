@@ -10,6 +10,7 @@ import { PickleballDrill } from '@shared/schema/drills';
 import { JournalEntry } from '@shared/schema/journal';
 import { PickleballRule } from './simple-pickleball-rules';
 import { findRelevantJournalEntries, JournalReferenceSummary } from './sageJournalIntegration';
+import { analyzeJournalEntry, analyzeJournalHistory } from './journalAnalyzer';
 
 // Flexible JournalEntry for integration with different types
 export interface FlexibleJournalEntry {

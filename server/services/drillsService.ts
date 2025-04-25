@@ -17,6 +17,7 @@ import { db } from '../db';
 import { eq, and, or, like, desc, SQL, sql } from 'drizzle-orm';
 import { JournalEntry } from '@shared/schema/journal';
 import { analyzeJournalEntry } from './journalAnalyzer';
+import { FlexibleJournalEntry } from './sageDrillsIntegration';
 
 /**
  * DrillSearchParams type for filtering drill search
@@ -44,7 +45,7 @@ interface DrillRecommendationParams {
   focusAreas?: string[];
   relatedRules?: string[];
   conversationId?: string;
-  journalEntries?: JournalEntry[];
+  journalEntries?: FlexibleJournalEntry[];
   limit?: number;
 }
 
@@ -339,7 +340,7 @@ export class DrillsService {
   /**
    * Score drills based on journal entries
    */
-  private scoreBasedOnJournals(drill: PickleballDrill, journals: JournalEntry[]): number {
+  private scoreBasedOnJournals(drill: PickleballDrill, journals: FlexibleJournalEntry[]): number {
     let score = 0;
     
     // Analyze the most recent journal entries
