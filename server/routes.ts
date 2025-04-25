@@ -116,6 +116,14 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   app.use('/api/coach/sage/knowledge', sageExtendedKnowledgeRoutes);
   
   // Mount SAGE Dashboard routes - PKL-278651-COACH-0022-API
+  // Add logger for SAGE endpoints
+  app.use((req, res, next) => {
+    if (req.path.includes('/api/coach/sage')) {
+      console.log(`[SAGE-API-TRACKER] Request to ${req.method} ${req.path}`);
+    }
+    next();
+  });
+
   app.use('/api/coach/sage/dashboard', sageDashboardRoutes);
   
   // Initialize OpenAI client if API key is available

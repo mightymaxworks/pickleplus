@@ -40,9 +40,10 @@ export const SageRecommendationsWidget = () => {
     queryFn: async () => {
       console.log('[SAGE_WIDGET] Starting API request...');
       try {
-        console.log('[SAGE] Fetching dashboard widget data...');
+        const apiPath = '/api/coach/sage/dashboard/widget';
+        console.log('[SAGE] Fetching dashboard widget data from', apiPath);
         // Use the direct widget endpoint that doesn't require authentication
-        const res = await apiRequest('GET', '/api/coach/sage/dashboard/widget');
+        const res = await apiRequest('GET', apiPath);
         
         if (res.ok) {
           console.log('[SAGE] Widget API response received successfully');
