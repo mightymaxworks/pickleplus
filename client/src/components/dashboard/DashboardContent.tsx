@@ -283,7 +283,7 @@ export default function DashboardContent() {
               </CardContent>
             </Card>
             
-            {/* SAGE Platform Concierge - Directly below passport for easy mobile access */}
+            {/* SAGE - Directly below passport for easy mobile access */}
             <div className="mb-6">
               <div className="flex items-center mb-4">
                 <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-400 to-indigo-600 text-transparent bg-clip-text">

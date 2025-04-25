@@ -1,6 +1,6 @@
 /**
- * PKL-278651-SAGE-0028-CONCIERGE
- * SAGE Platform Concierge Interface
+ * PKL-278651-SAGE-0028-ASSISTANT
+ * SAGE Platform Assistant Interface
  * 
  * This component provides an immediate SAGE interaction interface
  * directly on the dashboard to guide users throughout the platform.
@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Bot, Map, Calendar, Users, Settings, Star, Search, PlusCircle } from "lucide-react";
 import { useLocation } from 'wouter';
 
-// Quick suggestions for SAGE platform concierge interactions
+// Quick suggestions for SAGE platform assistant interactions
 const QUICK_SUGGESTIONS = [
   "What features should I try first?",
   "How do I find tournaments?", 
@@ -33,9 +33,13 @@ export default function SimpleSageWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Scroll to bottom of messages whenever conversations change
+  // Use scrollIntoView with block: 'nearest' to prevent page scrolling
   useEffect(() => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      messagesEndRef.current.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'nearest' // This prevents the page from scrolling excessively
+      });
     }
   }, [conversations]);
   
@@ -69,7 +73,7 @@ export default function SimpleSageWidget() {
       } else if (msg.includes('coach') || msg.includes('drill') || msg.includes('improve') || msg.includes('learn')) {
         response = "I can help with your pickleball skills! The Coaching section offers:\n\n• Personalized drill recommendations\n• Technique analysis\n• Strategy guides for different play styles\n• Mental game development\n\nWhat specific aspect of your game would you like to work on?";
       } else {
-        response = "I can help you with that! As your Pickle+ concierge, I can guide you through any feature on the platform, help you find tournaments, connect with players, improve your skills, or track your progress. What aspect are you most interested in exploring?";
+        response = "I can help you with that! As your personal assistant, I can guide you through any feature on the platform, help you find tournaments, connect with players, improve your skills, or track your progress. What aspect are you most interested in exploring?";
       }
       
       setConversations(prev => [...prev, {role: 'sage', content: response}]);
@@ -96,7 +100,7 @@ export default function SimpleSageWidget() {
       } else if (suggestion.includes('CourtIQ')) {
         response = "Your CourtIQ™ performance shows your multi-dimensional rating across 5 key areas. Looking at your profile, your strongest dimensions are Technical Skills and Tactical Awareness, while you could benefit from development in Mental Toughness. Would you like me to recommend personalized drills to improve your weaker dimensions?";
       } else {
-        response = "I can help you with that! As your Pickle+ concierge, I can guide you through any feature on the platform, help you find tournaments, connect with players, improve your skills, or track your progress. What aspect are you most interested in exploring?";
+        response = "I can help you with that! As your personal assistant, I can guide you through any feature on the platform, help you find tournaments, connect with players, improve your skills, or track your progress. What aspect are you most interested in exploring?";
       }
       
       setConversations(prev => [...prev, {role: 'sage', content: response}]);
