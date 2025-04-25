@@ -767,14 +767,7 @@ export default function DashboardContent() {
                 </Card>
               </motion.div>
               
-              {/* SAGE Insights Widget - PKL-278651-COACH-0021-WIDGET-SIMPLE */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: isLoaded ? 1 : 0, scale: isLoaded ? 1 : 0.95 }}
-                transition={{ delay: 0.5, duration: 0.5 }}
-              >
-                <SimpleSageWidget />
-              </motion.div>
+              {/* Removed duplicate SAGE widget that was previously here - now positioned below passport */}
             </div>
           </motion.div>
         </div>
