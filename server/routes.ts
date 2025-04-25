@@ -99,6 +99,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   // Mount Drill Videos routes - PKL-278651-SAGE-0009-VIDEO
   app.use('/api/drills', drillVideosRoutes);
   
+  // Mount Feedback routes - PKL-278651-SAGE-0010-FEEDBACK
+  app.use('/api/feedback', feedbackRoutes);
+  
   // Initialize OpenAI client if API key is available
   initializeOpenAI();
   

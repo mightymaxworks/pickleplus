@@ -114,6 +114,7 @@ import UnifiedActivityDashboard from './pages/UnifiedActivityDashboard' // PKL-2
 import SimpleUnifiedDashboard from './pages/SimpleUnifiedDashboard' // PKL-278651-COMM-0005-DASH-SIMPLE
 import XpDashboardPage from './pages/xp-dashboard' // PKL-278651-XP-0002-UI
 import CoachPage from './pages/CoachPage' // PKL-278651-COACH-0001-AI - AI Coach
+import FeedbackDemo from './pages/FeedbackDemo' // PKL-278651-SAGE-0010-FEEDBACK - Feedback System Demo
 
 import { useAuth } from '@/contexts/AuthContext'
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute'
@@ -505,6 +506,9 @@ export default function App() {
                   
                   {/* PKL-278651-COMM-0005-DASH-SIMPLE - Simple Unified Activity-Centric Dashboard Route */}
                   <Route path="/test/simple-unified" component={SimpleUnifiedDashboard} />
+                  
+                  {/* PKL-278651-SAGE-0010-FEEDBACK - Feedback System Demo Route */}
+                  <Route path="/test/feedback" component={FeedbackDemo} />
                   
                   {/* PKL-278651-COMM-0006-HUB - Community Hub Implementation */}
                   <Route path="/communities/create">
