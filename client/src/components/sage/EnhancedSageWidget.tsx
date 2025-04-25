@@ -152,107 +152,62 @@ export function EnhancedSageWidget() {
     }
   }, [isLoading, profile, courtIQ, getWeakestDimension]);
   
-  // Calculate contextual suggestions whenever messages change
-  useEffect(() => {
-    // Debug log for suggestion context
-    console.log("[SAGE][DEBUG] Calculating new contextual suggestions...");
-    
-    const getSuggestions = () => {
-    // If no messages yet, return general suggestions
+  // Simple function to get contextual suggestions
+  const getContextualSuggestions = () => {
+    // Default suggestions (general)
+    let defaultSuggestions = baseSuggestions
+      .filter(s => s.category === 'general')
+      .slice(0, 3);
+      
+    // If no messages, return default
     if (messages.length === 0) {
+      return defaultSuggestions;
+    }
+    
+    // Get last message content
+    const lastMessage = messages[messages.length - 1];
+    const content = lastMessage.content.toLowerCase();
+    
+    // Simple keyword matching for categories
+    if (content.includes('drill') || content.includes('practice') || content.includes('improve')) {
       return baseSuggestions
-        .filter(s => s.category === 'general' || s.category === 'performance')
-        .sort((a, b) => b.relevanceScore - a.relevanceScore)
+        .filter(s => s.category === 'training')
         .slice(0, 3);
     }
     
-    // Get the last sage message and last user message for context
-    const lastSageMessage = [...messages].reverse().find(m => m.role === 'sage');
-    const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
-    
-    // Combine texts for analysis
-    const contextText = [
-      lastSageMessage?.content || '', 
-      lastUserMessage?.content || ''
-    ].join(' ').toLowerCase();
-    
-    // Contextual filtering based on message content and user data
-    let relevantCategories: string[] = [];
-    
-    // Add categories based on conversation keywords
-    if (contextText.includes('drill') || contextText.includes('practice') || 
-        contextText.includes('improve') || contextText.includes('skill')) {
-      relevantCategories.push('training');
+    if (content.includes('match') || content.includes('game') || content.includes('play')) {
+      return baseSuggestions
+        .filter(s => s.category === 'performance')
+        .slice(0, 3);
     }
     
-    if (contextText.includes('match') || contextText.includes('game') || 
-        contextText.includes('play') || contextText.includes('record')) {
-      relevantCategories.push('performance');
+    if (content.includes('connect') || content.includes('tournament') || content.includes('social')) {
+      return baseSuggestions
+        .filter(s => s.category === 'social')
+        .slice(0, 3);
     }
     
-    if (contextText.includes('connect') || contextText.includes('player') || 
-        contextText.includes('tournament') || contextText.includes('social')) {
-      relevantCategories.push('social');
+    if (content.includes('subscription') || content.includes('premium') || content.includes('upgrade')) {
+      return baseSuggestions
+        .filter(s => s.category === 'subscription')
+        .slice(0, 3);
     }
     
-    if (contextText.includes('subscription') || contextText.includes('premium') || 
-        contextText.includes('pay') || contextText.includes('upgrade')) {
-      relevantCategories.push('subscription');
+    if (content.includes('wellness') || content.includes('journal') || content.includes('mental')) {
+      return baseSuggestions
+        .filter(s => s.category === 'wellness')
+        .slice(0, 3);
     }
     
-    if (contextText.includes('wellness') || contextText.includes('journal') || 
-        contextText.includes('mental') || contextText.includes('health')) {
-      relevantCategories.push('wellness');
-    }
-    
-    // Add categories based on user data
-    if (courtIQ && getWeakestDimension() === 'MENT') {
-      // If mental toughness is the weakest dimension, suggest mental game improvements
-      if (!relevantCategories.includes('wellness')) {
-        relevantCategories.push('wellness');
-      }
-    }
-    
-    if (!subscription?.isPremium && lastSageMessage?.content.includes('limited')) {
-      // If non-premium user hits a limit, suggest upgrade
-      if (!relevantCategories.includes('subscription')) {
-        relevantCategories.push('subscription');
-      }
-    }
-    
-    // If no relevant categories found, include general
-    if (relevantCategories.length === 0) {
-      relevantCategories.push('general');
-    }
-    
-    // Filter suggestions by relevant categories and sort by relevance
-    let contextualSuggestions = baseSuggestions
-      .filter(s => relevantCategories.includes(s.category))
-      .sort((a, b) => b.relevanceScore - a.relevanceScore)
-      .slice(0, 3);
-    
-    // If there aren't enough suggestions, add some general ones
-    if (contextualSuggestions.length < 3) {
-      const generalSuggestions = baseSuggestions
-        .filter(s => s.category === 'general')
-        .sort((a, b) => b.relevanceScore - a.relevanceScore)
-        .slice(0, 3 - contextualSuggestions.length);
-      
-      contextualSuggestions = [...contextualSuggestions, ...generalSuggestions];
-    }
-    
-    return contextualSuggestions;
-    }
-    
-    // Get the suggestions and update state
-    const newSuggestions = getSuggestions();
-    
-    // Debug - log the categories of suggestions for debugging
-    const categories = newSuggestions.map(s => s.category);
-    console.log("[SAGE][DEBUG] New suggestions categories:", categories);
-    
-    setContextualSuggestions(newSuggestions);
-  }, [messages, courtIQ, subscription, getWeakestDimension, baseSuggestions]);
+    // Default fallback
+    return defaultSuggestions;
+  };
+  
+  // Update suggestions when messages change
+  useEffect(() => {
+    console.log("[SAGE] Messages updated, updating suggestions");
+    setContextualSuggestions(getContextualSuggestions());
+  }, [messages, baseSuggestions]);
   
   // Handle suggestion button click
   const handleSuggestionClick = (suggestion: SageSuggestion) => {
