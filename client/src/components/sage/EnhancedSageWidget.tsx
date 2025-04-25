@@ -10,7 +10,7 @@
  * @lastModified 2025-04-25
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSageData } from '@/contexts/SageDataContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -44,11 +44,19 @@ const dimensionColors: Record<DimensionCode, string> = {
   'CONS': 'bg-red-500'
 };
 
+// Interface for a platform link
+interface SageLink {
+  text: string;
+  url: string;
+  type: 'primary' | 'secondary';
+}
+
 // Interface for a SAGE message
 interface SageMessage {
   role: 'user' | 'sage';
   content: string;
   timestamp: Date;
+  links?: SageLink[]; // Optional deep links to platform pages
 }
 
 // Interface for contextual suggestions
@@ -57,6 +65,7 @@ interface SageSuggestion {
   icon: React.ElementType;
   category: 'general' | 'training' | 'social' | 'performance' | 'wellness' | 'subscription';
   relevanceScore: number;
+  link?: string; // Optional deep link to a platform page
 }
 
 export function EnhancedSageWidget() {
@@ -77,64 +86,80 @@ export function EnhancedSageWidget() {
       text: "What features should I try first?", 
       icon: Info, 
       category: 'general',
-      relevanceScore: 100
+      relevanceScore: 100,
+      link: "/features"
     },
     { 
       text: "How do I find tournaments?", 
       icon: Calendar, 
       category: 'social',
-      relevanceScore: 80
+      relevanceScore: 80,
+      link: "/tournaments"
     },
     { 
       text: "Help me connect with players", 
       icon: Users, 
       category: 'social',
-      relevanceScore: 70
+      relevanceScore: 70,
+      link: "/community"
     },
     { 
       text: "Show me my CourtIQ stats", 
       icon: LineChart, 
       category: 'performance',
-      relevanceScore: 90
+      relevanceScore: 90,
+      link: "/courtiq"
     },
     { 
       text: "Recommend drills for my weak areas", 
       icon: Target, 
       category: 'training',
-      relevanceScore: 85
+      relevanceScore: 85,
+      link: "/drills"
     },
     { 
       text: "What's included in premium?", 
       icon: Medal, 
       category: 'subscription',
-      relevanceScore: 60
+      relevanceScore: 60,
+      link: "/subscription"
     },
     { 
       text: "How can I improve my mental game?", 
       icon: Brain, 
       category: 'training',
-      relevanceScore: 75
+      relevanceScore: 75,
+      link: "/mental-training"
     },
     { 
       text: "Track my wellness journey", 
       icon: Heart, 
       category: 'wellness',
-      relevanceScore: 65
+      relevanceScore: 65,
+      link: "/wellness"
     },
     {
       text: "Create a training plan", 
       icon: ActivitySquare, 
       category: 'training',
-      relevanceScore: 80
+      relevanceScore: 80,
+      link: "/training-plan"
     }
   ];
+  
+  // Get default suggestions
+  const defaultSuggestions = useMemo(() => {
+    return baseSuggestions
+      .filter(s => s.category === 'general')
+      .slice(0, 3);
+  }, [baseSuggestions]);
   
   // Local state for the chat
   const [messages, setMessages] = useState<SageMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState('chat');
-  const [contextualSuggestions, setContextualSuggestions] = useState<SageSuggestion[]>([]);
+  const [contextualSuggestions, setContextualSuggestions] = useState<SageSuggestion[]>(defaultSuggestions);
   
   // Generate welcome message based on user data when data loads
   useEffect(() => {
@@ -142,76 +167,124 @@ export function EnhancedSageWidget() {
       const weakestDimension = getWeakestDimension();
       const weakestDimensionName = weakestDimension ? dimensionLabels[weakestDimension] : '';
       
+      // Create welcome message with links
+      const welcomeLinks: SageLink[] = [
+        {
+          text: 'View My Profile',
+          url: '/profile',
+          type: 'primary'
+        },
+        {
+          text: 'CourtIQ Dashboard',
+          url: '/courtiq',
+          type: 'secondary'
+        }
+      ];
+      
+      if (courtIQ?.weakestDimension) {
+        welcomeLinks.push({
+          text: `Find ${dimensionLabels[courtIQ.weakestDimension]} Drills`,
+          url: `/drills?dimension=${courtIQ.weakestDimension}`,
+          type: 'primary'
+        });
+      }
+      
       const welcomeMessage: SageMessage = {
         role: 'sage',
         content: `Hello ${profile.displayName || profile.username}! 👋\n\nI'm SAGE, your Smart Assistant and Guidance Engine. I'm here to help you improve your pickleball game and navigate the Pickle+ platform.\n\n${weakestDimensionName ? `Based on your CourtIQ profile, I notice your ${weakestDimensionName} could use some focus. I can recommend drills to help you improve in this area.` : ''}\n\nHow can I assist you today?`,
-        timestamp: new Date()
+        timestamp: new Date(),
+        links: welcomeLinks
       };
       
       setMessages([welcomeMessage]);
     }
   }, [isLoading, profile, courtIQ, getWeakestDimension]);
   
-  // Simple function to get contextual suggestions
-  const getContextualSuggestions = () => {
+  // Get contextual suggestions based on content
+  const getContextualSuggestions = useCallback((content: string = '') => {
+    console.log("[SAGE] Getting contextual suggestions for content:", content);
+    
     // Default suggestions (general)
     let defaultSuggestions = baseSuggestions
       .filter(s => s.category === 'general')
       .slice(0, 3);
       
-    // If no messages, return default
-    if (messages.length === 0) {
+    // If no content, return default
+    if (!content) {
       return defaultSuggestions;
     }
     
-    // Get last message content
-    const lastMessage = messages[messages.length - 1];
-    const content = lastMessage.content.toLowerCase();
+    content = content.toLowerCase();
     
     // Simple keyword matching for categories
     if (content.includes('drill') || content.includes('practice') || content.includes('improve')) {
+      console.log("[SAGE] Matched training category");
       return baseSuggestions
         .filter(s => s.category === 'training')
         .slice(0, 3);
     }
     
     if (content.includes('match') || content.includes('game') || content.includes('play')) {
+      console.log("[SAGE] Matched performance category");
       return baseSuggestions
         .filter(s => s.category === 'performance')
         .slice(0, 3);
     }
     
     if (content.includes('connect') || content.includes('tournament') || content.includes('social')) {
+      console.log("[SAGE] Matched social category");
       return baseSuggestions
         .filter(s => s.category === 'social')
         .slice(0, 3);
     }
     
     if (content.includes('subscription') || content.includes('premium') || content.includes('upgrade')) {
+      console.log("[SAGE] Matched subscription category");
       return baseSuggestions
         .filter(s => s.category === 'subscription')
         .slice(0, 3);
     }
     
     if (content.includes('wellness') || content.includes('journal') || content.includes('mental')) {
+      console.log("[SAGE] Matched wellness category");
       return baseSuggestions
         .filter(s => s.category === 'wellness')
         .slice(0, 3);
     }
     
-    // Default fallback
+    console.log("[SAGE] No category match, using defaults");
     return defaultSuggestions;
-  };
+  }, [baseSuggestions]);
   
-  // Update suggestions when messages change
+  // Update suggestions whenever messages change
   useEffect(() => {
-    console.log("[SAGE] Messages updated, updating suggestions");
-    setContextualSuggestions(getContextualSuggestions());
-  }, [messages, baseSuggestions]);
+    if (messages.length === 0) {
+      console.log("[SAGE] No messages, setting default suggestions");
+      setContextualSuggestions(getContextualSuggestions());
+      return;
+    }
+    
+    const lastMessage = messages[messages.length - 1];
+    console.log("[SAGE] Last message is from:", lastMessage.role);
+    
+    // Only update suggestions based on SAGE responses (more relevant context)
+    if (lastMessage.role === 'sage') {
+      console.log("[SAGE] Updating suggestions based on SAGE response");
+      const newSuggestions = getContextualSuggestions(lastMessage.content);
+      setContextualSuggestions(newSuggestions);
+    }
+  }, [messages, getContextualSuggestions]);
   
   // Handle suggestion button click
   const handleSuggestionClick = (suggestion: SageSuggestion) => {
-    setInputValue(suggestion.text);
+    // If the suggestion has a link, navigate to it
+    if (suggestion.link) {
+      console.log(`[SAGE] Navigating to ${suggestion.link}`);
+      window.location.href = suggestion.link;
+    } else {
+      // Otherwise, just set the input value
+      setInputValue(suggestion.text);
+    }
   };
 
   // Handle sending a message
@@ -285,10 +358,69 @@ export function EnhancedSageWidget() {
         responseContent = "I'm here to help you improve your pickleball game and navigate the Pickle+ platform. You can ask me about drills, match history, your CourtIQ ratings, or subscription options.";
       }
       
+      // Create links based on the context
+      let links: SageLink[] = [];
+      
+      // Add relevant links based on the conversation context
+      if (input.includes('drill') || input.includes('practice') || input.includes('improve')) {
+        links.push({
+          text: 'View All Drills',
+          url: '/drills',
+          type: 'primary'
+        });
+        
+        if (courtIQ?.weakestDimension) {
+          links.push({
+            text: `${dimensionLabels[courtIQ.weakestDimension]} Training`,
+            url: `/training/${courtIQ.weakestDimension.toLowerCase()}`,
+            type: 'secondary'
+          });
+        }
+      } 
+      else if (input.includes('match') || input.includes('game') || input.includes('play')) {
+        links.push({
+          text: 'Record Match',
+          url: '/match/record',
+          type: 'primary'
+        });
+        links.push({
+          text: 'Match History',
+          url: '/match/history',
+          type: 'secondary'
+        });
+      }
+      else if (input.includes('level') || input.includes('rating') || input.includes('courtiq')) {
+        links.push({
+          text: 'My CourtIQ Profile',
+          url: '/courtiq',
+          type: 'primary'
+        });
+        links.push({
+          text: 'Leaderboards',
+          url: '/rankings',
+          type: 'secondary'
+        });
+      }
+      else if (input.includes('subscription') || input.includes('premium') || input.includes('upgrade')) {
+        if (!subscription?.isPremium) {
+          links.push({
+            text: 'Upgrade Now',
+            url: '/subscription',
+            type: 'primary'
+          });
+          links.push({
+            text: 'Compare Plans',
+            url: '/subscription/compare',
+            type: 'secondary'
+          });
+        }
+      }
+      
       const sageResponse: SageMessage = {
         role: 'sage',
         content: responseContent,
-        timestamp: new Date()
+        timestamp: new Date(),
+        links: links.length > 0 ? links : undefined
       };
       
       setMessages(prev => [...prev, sageResponse]);
@@ -360,6 +492,26 @@ export function EnhancedSageWidget() {
                         {message.content}
                       </ReactMarkdown>
                     </div>
+                    
+                    {/* Display links if present */}
+                    {message.links && message.links.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {message.links.map((link, idx) => (
+                          <a
+                            key={idx}
+                            href={link.url}
+                            className={`text-xs px-3 py-1 rounded-full ${
+                              link.type === 'primary'
+                                ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                                : 'bg-muted-foreground/10 text-foreground hover:bg-muted-foreground/20'
+                            }`}
+                          >
+                            {link.text}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                    
                     <div className={`text-xs mt-1 ${message.role === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
                       {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
