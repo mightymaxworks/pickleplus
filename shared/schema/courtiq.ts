@@ -1,12 +1,17 @@
 /**
- * PKL-278651-SAGE-0029-API - CourtIQ Schema
+ * PKL-278651-COURTIQ-0018-SCHEMA - CourtIQ Schema Definition
  * 
- * Defines the schema for CourtIQ ratings and dimensions
+ * Defines the database schema for CourtIQ ratings and dimensions along with
+ * TypeScript types used throughout the application.
  * 
  * @framework Framework5.3
- * @version 1.0.0
- * @sprint 7
- * @lastModified 2025-04-25
+ * @module courtiq-schema
+ * @version 1.0.1
+ * @dependencies database, users, matches
+ * @provides db-tables, type-definitions
+ * @critical-component true
+ * @last-modified 2025-04-25
+ * @modified-by DevTeam
  */
 
 import { pgTable, text, serial, integer, boolean, timestamp, jsonb, date, varchar, decimal, primaryKey } from "drizzle-orm/pg-core";

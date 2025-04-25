@@ -366,6 +366,12 @@ const submitProfileForm = async (formData) => {
 ✅ Avoid unnecessary wrapper divs  
 ✅ Keep component interfaces focused and minimal  
 
+### 7. Schema File Management
+✅ Use standardized file headers with dependency tags  
+✅ Never replace database schema definitions, always extend them  
+✅ Include schema validation in CI/CD pipelines  
+✅ Create automated backups before schema modifications  
+
 ## Common Issues and Simple Solutions
 
 | Issue | Overcomplicated Approach | Simple Solution |
@@ -513,3 +519,156 @@ When converting from a backend-driven to frontend-driven approach:
 5. Add clear logging to track the new approach
 
 Our onboarding flow successfully migrated from a complex backend-driven approach to a simpler frontend-driven implementation. This resulted in greater resilience, easier debugging, and faster development iterations.
+
+## Schema File Management Guidelines
+
+Schema files are critical infrastructure. Accidental modifications can cause cascading application failures. Follow these guidelines to maintain schema integrity.
+
+### 1. File Header Protocol
+
+Every schema file must include a standardized header:
+
+```typescript
+/**
+ * PKL-278651-[AREA]-[NUM]-[DESC] - [File Description]
+ * 
+ * @framework Framework5.3
+ * @module [module-name]
+ * @version [x.y.z]
+ * @dependencies [comma-separated list of dependencies]
+ * @provides [comma-separated list of exports]
+ * @critical-component [true/false]
+ * @last-modified [YYYY-MM-DD]
+ * @modified-by [developer-name]
+ */
+```
+
+Example:
+```typescript
+/**
+ * PKL-278651-COURTIQ-0018-SCHEMA - CourtIQ Schema Definition
+ * 
+ * @framework Framework5.3
+ * @module courtiq-schema
+ * @version 1.2.0
+ * @dependencies database, users, matches
+ * @provides db-tables, type-definitions
+ * @critical-component true
+ * @last-modified 2025-04-25
+ * @modified-by DevTeam
+ */
+```
+
+### 2. Extension vs. Replacement Pattern
+
+✅ **DO**: Extend existing schema definitions
+```typescript
+// Correct way to add a new field
+export const existingTable = pgTable("existing_table", {
+  ...existingTableFields,
+  
+  // Add new fields by extending
+  newField: varchar("new_field", { length: 255 }),
+});
+```
+
+❌ **DON'T**: Replace schema definitions
+```typescript
+// WRONG: Don't replace table definitions with type-only definitions
+// This removes the actual database table definition
+export type ExistingTable = {
+  id: number;
+  name: string;
+};
+```
+
+### 3. Schema Change Validation
+
+Before committing schema changes, run automatic validation:
+
+```bash
+# Run the validation script
+npm run validate-schema
+```
+
+Implement a schema validation script:
+```typescript
+// scripts/validate-schema.ts
+import fs from 'fs';
+import path from 'path';
+
+// Define critical patterns that must be present in schema files
+const CRITICAL_PATTERNS = {
+  'schema/courtiq.ts': ['pgTable', 'courtiqUserRatings', 'DimensionCode'],
+  'schema/matches.ts': ['pgTable', 'matches', 'matchParticipants'],
+  // Add other critical schema files and their required patterns
+};
+
+function validateSchemaFiles() {
+  let hasErrors = false;
+  
+  Object.entries(CRITICAL_PATTERNS).forEach(([filePath, requiredPatterns]) => {
+    const fullPath = path.join(__dirname, '../shared', filePath);
+    
+    if (!fs.existsSync(fullPath)) {
+      console.error(`❌ Critical schema file missing: ${filePath}`);
+      hasErrors = true;
+      return;
+    }
+    
+    const content = fs.readFileSync(fullPath, 'utf8');
+    
+    requiredPatterns.forEach(pattern => {
+      if (!content.includes(pattern)) {
+        console.error(`❌ Critical pattern missing: ${pattern} in ${filePath}`);
+        hasErrors = true;
+      }
+    });
+  });
+  
+  if (hasErrors) {
+    console.error('❌ Schema validation failed');
+    process.exit(1);
+  } else {
+    console.log('✅ Schema validation passed');
+  }
+}
+
+validateSchemaFiles();
+```
+
+### 4. Schema Backups
+
+Before modifying schema files:
+
+```typescript
+// scripts/backup-schema.ts
+import fs from 'fs';
+import path from 'path';
+
+export function backupSchemaFile(filePath: string) {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const backupPath = `${filePath}.${timestamp}.bak`;
+  
+  if (fs.existsSync(filePath)) {
+    fs.copyFileSync(filePath, backupPath);
+    console.log(`✅ Created backup: ${backupPath}`);
+    return backupPath;
+  } else {
+    console.error(`❌ File not found: ${filePath}`);
+    return null;
+  }
+}
+
+// Usage
+backupSchemaFile('./shared/schema/courtiq.ts');
+```
+
+### 5. Schema Review Requirements
+
+All schema changes require:
+1. Running the validation script
+2. Creating a backup of the original file
+3. Peer review by at least one other developer
+4. Documentation of what changed and why
+5. Verification that imports aren't broken
