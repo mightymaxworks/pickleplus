@@ -5,7 +5,8 @@
 
 import { isRuleQuestion, findRulesForQuestion, generateRuleResponse, pickleballRules, PickleballRule, RuleCategory } from './simple-pickleball-rules';
 import { findRelevantJournalEntries, generatePersonalizedRuleRecommendations, generateJournalBasedFollowUps } from './sageJournalIntegration';
-import { JournalEntry } from '@shared/schema';
+import { JournalEntry } from '@shared/schema/journal';
+import { sageDrillsIntegration } from './sageDrillsIntegration';
 
 /**
  * Options to customize the response
@@ -21,6 +22,12 @@ export interface ResponseOptions {
   playerLevel?: 'beginner' | 'intermediate' | 'advanced';
   /** Journal entries to use for personalized recommendations */
   userJournals?: JournalEntry[];
+  /** Include drill recommendations in the response */
+  includeDrillRecommendations?: boolean;
+  /** User ID for tracking drill recommendations */
+  userId?: number;
+  /** Conversation ID for tracking context */
+  conversationId?: string;
 }
 
 /**
@@ -37,6 +44,9 @@ export function processPickleballQuery(
     includeCoachingTips: false,
     playerLevel: 'intermediate',
     userJournals: [],
+    includeDrillRecommendations: false,
+    userId: 0,
+    conversationId: '',
     ...options
   };
   
@@ -231,6 +241,19 @@ export function processPickleballQuery(
           }
         }
       }
+    }
+    
+    // Add drill recommendations if requested
+    if (resolvedOptions.includeDrillRecommendations && 
+        resolvedOptions.userId > 0 &&
+        matchingRules.length > 0) {
+      
+      response += "\n\n--- Practice Drill Recommendations ---";
+      response += "\n*Loading personalized drill recommendations...*";
+      response += "\n\nSAGE is analyzing your skills and preparing custom drill recommendations based on this rule. You'll see the recommended drills appear shortly.";
+      
+      // Note: The actual drill recommendations will be fetched asynchronously
+      // through the /api/sage/drill-recommendations endpoint
     }
     
     // Add follow-up questions if requested
