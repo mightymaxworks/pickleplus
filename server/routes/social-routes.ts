@@ -85,11 +85,17 @@ router.post('/content', isAuthenticated, async (req: Request, res: Response) => 
       });
     }
     
-    // Add authenticated user ID and ensure contentType is a valid enum value
+    // Add authenticated user ID and ensure contentType and visibility are valid enum values
     const contentData = {
       ...validation.data,
-      userId: req.user!.id,
-      contentType: validation.data.contentType as any, // Cast to valid enum type
+      userId: getUserId(req),
+      // Cast contentType to one of the valid enum values
+      contentType: validation.data.contentType as "journal_entry" | "feedback" | "drill" | 
+        "training_plan" | "match_result" | "achievement" | "sage_insight" | "user_connection",
+      // Ensure visibility is a valid enum type if provided
+      visibility: validation.data.visibility ? 
+        (validation.data.visibility as "public" | "friends" | "private" | "coaches") : 
+        "public"
     };
     
     // Create shared content
@@ -131,13 +137,13 @@ router.get('/content/:id', async (req: Request, res: Response) => {
       }
       
       // Private content is only visible to the owner
-      if (content.visibility === 'private' && content.userId !== req.user?.id) {
+      if (content.visibility === 'private' && content.userId !== getUserId(req)) {
         return res.status(403).json({ success: false, message: 'Not authorized to view this content' });
       }
       
       // Friends content requires checking connections
-      if (content.visibility === 'friends' && content.userId !== req.user?.id) {
-        const connections = await socialService.getUserConnections(req.user.id);
+      if (content.visibility === 'friends' && content.userId !== getUserId(req)) {
+        const connections = await socialService.getUserConnections(getUserId(req));
         const isConnected = connections.some(conn => conn.connectedUserId === content.userId);
         
         if (!isConnected) {
@@ -718,7 +724,8 @@ router.post('/connections/request', isAuthenticated, async (req: Request, res: R
     console.error('Error requesting connection:', error);
     
     // Special error handling for specific cases
-    if (error.message === 'Connection already exists' || error.message === 'Connection request already pending') {
+    if (error instanceof Error && 
+        (error.message === 'Connection already exists' || error.message === 'Connection request already pending')) {
       return res.status(400).json({ success: false, message: error.message });
     }
     
@@ -767,7 +774,8 @@ router.post('/connections/requests/:id/accept', isAuthenticated, async (req: Req
   } catch (error) {
     console.error('Error accepting connection request:', error);
     
-    if (error.message === 'Connection request not found or already processed') {
+    if (error instanceof Error && 
+        error.message === 'Connection request not found or already processed') {
       return res.status(404).json({ success: false, message: error.message });
     }
     
@@ -805,7 +813,7 @@ router.post('/connections/requests/:id/decline', isAuthenticated, async (req: Re
  */
 router.get('/connections', isAuthenticated, async (req: Request, res: Response) => {
   try {
-    const connections = await socialService.getUserConnections(req.user.id);
+    const connections = await socialService.getUserConnections(getUserId(req));
     
     res.json({
       success: true,
@@ -872,7 +880,7 @@ router.delete('/connections/:userId', isAuthenticated, async (req: Request, res:
       return res.status(400).json({ success: false, message: 'Invalid user ID' });
     }
     
-    await socialService.removeConnection(req.user.id, connectedUserId);
+    await socialService.removeConnection(getUserId(req), connectedUserId);
     
     res.json({
       success: true,
