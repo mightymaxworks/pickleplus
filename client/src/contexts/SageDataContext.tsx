@@ -106,7 +106,7 @@ export function SageDataProvider({ children }: { children: ReactNode }) {
   };
   
   const isPremiumUser = (): boolean => {
-    return subscription?.isPremium || false;
+    return Boolean(subscription?.isPremium);
   };
   
   const getRatingForDimension = (dimension: DimensionCode): number | undefined => {

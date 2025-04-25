@@ -223,9 +223,11 @@ export function EnhancedSageWidget() {
                         : 'bg-muted'
                     }`}
                   >
-                    <ReactMarkdown className="prose prose-sm dark:prose-invert break-words">
-                      {message.content}
-                    </ReactMarkdown>
+                    <div className="prose prose-sm dark:prose-invert break-words">
+                      <ReactMarkdown>
+                        {message.content}
+                      </ReactMarkdown>
+                    </div>
                     <div className={`text-xs mt-1 ${message.role === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
                       {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
