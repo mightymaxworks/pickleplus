@@ -19,15 +19,26 @@ import { LayoutContainer } from "@/components/layout/LayoutContainer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 
+// Import the types
+import { SharedContent } from "@/types/social";
+
 // Temporary placeholders until components are fully implemented
-const SocialContentCard = ({ content }: any) => (
+const SocialContentCard = ({ content }: { content: SharedContent }) => (
   <div className="border rounded-lg p-6">
     <h3 className="font-semibold text-lg">{content.title}</h3>
     <p className="text-muted-foreground mt-2">{content.description || "No description provided."}</p>
   </div>
 );
 
-const ContentShareDialog = ({ open, onOpenChange, userId }: any) => null;
+const ContentShareDialog = ({ 
+  open, 
+  onOpenChange, 
+  userId 
+}: { 
+  open: boolean; 
+  onOpenChange: (open: boolean) => void; 
+  userId?: number 
+}) => null;
 
 export default function SocialContentPage() {
   const { user } = useAuth();

@@ -29,11 +29,30 @@ import {
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-// Temporary placeholders until we implement the actual hooks
-// These will be replaced with actual hooks once we implement them
-const useJournals = () => ({ data: [] });
-const useDrills = () => ({ data: [] });
-const useFeedback = () => ({ data: [] });
+// Import types
+import { SharedContent } from "@/types/social";
+
+// Temporary mock data for testing
+const useJournals = () => ({ 
+  data: [
+    { id: 1, title: "Journal Entry 1" },
+    { id: 2, title: "Journal Entry 2" }
+  ] 
+});
+
+const useDrills = () => ({ 
+  data: [
+    { id: 1, name: "Drill 1" },
+    { id: 2, name: "Drill 2" }
+  ] 
+});
+
+const useFeedback = () => ({ 
+  data: [
+    { id: 1, title: "Feedback 1" },
+    { id: 2, title: "Feedback 2" }
+  ] 
+});
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 
@@ -59,7 +78,7 @@ export function ContentShareDialog({
   const { data: feedback } = useFeedback();
   
   // Form state
-  const [contentType, setContentType] = useState<string>("journal_entry");
+  const [contentType, setContentType] = useState<ContentType>("journal_entry");
   const [contentId, setContentId] = useState<number | undefined>(undefined);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
