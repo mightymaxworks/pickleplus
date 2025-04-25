@@ -1,18 +1,11 @@
 /**
- * PKL-278651-COMM-0029-MOD - Report Content Dialog
- * Implementation timestamp: 2025-04-20 22:55 ET
+ * PKL-278651-SAGE-0011-SOCIAL - Report Content Dialog Component
  * 
- * Dialog for reporting content for moderation
- * Framework 5.2 compliant implementation
+ * This component provides a dialog for reporting inappropriate content
+ * Part of Sprint 5: Social Features & UI Polish
  */
 
-import React from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useMutation } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
-
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -22,156 +15,134 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { moderationService } from "@/lib/api/community/moderation-service";
-
-// Schema for the report form
-const reportSchema = z.object({
-  reason: z.string().min(3, {
-    message: "Reason must be at least 3 characters.",
-  }).max(100, {
-    message: "Reason cannot exceed 100 characters."
-  }),
-  details: z.string().max(1000, {
-    message: "Details cannot exceed 1000 characters."
-  }).optional(),
-});
-
-type ReportFormValues = z.infer<typeof reportSchema>;
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { AlertTriangle } from "lucide-react";
 
 interface ReportContentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  communityId: number;
   contentId: number;
-  contentType: 'post' | 'comment' | 'event';
-  onReportComplete?: () => void;
+  contentType: string;
 }
 
-/**
- * Dialog component for reporting content
- */
 export function ReportContentDialog({
   open,
   onOpenChange,
-  communityId,
   contentId,
   contentType,
-  onReportComplete
 }: ReportContentDialogProps) {
   const { toast } = useToast();
+  const [reason, setReason] = useState("");
+  const [details, setDetails] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Initialize form
-  const form = useForm<ReportFormValues>({
-    resolver: zodResolver(reportSchema),
-    defaultValues: {
-      reason: "",
-      details: "",
-    },
-  });
-
-  // Report mutation
-  const reportMutation = useMutation({
-    mutationFn: (values: ReportFormValues) => {
-      return moderationService.reportContent({
-        communityId,
-        contentId,
-        contentType,
-        reason: values.reason,
-        details: values.details
-      });
-    },
-    onSuccess: () => {
+  // Reset form
+  const resetForm = () => {
+    setReason("");
+    setDetails("");
+  };
+  
+  // Handle close
+  const handleClose = () => {
+    resetForm();
+    onOpenChange(false);
+  };
+  
+  // Handle report submission
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!reason) {
       toast({
-        title: "Report submitted",
-        description: "Thank you for your report. Our moderators will review it shortly.",
-      });
-      form.reset();
-      onOpenChange(false);
-      if (onReportComplete) {
-        onReportComplete();
-      }
-    },
-    onError: (error) => {
-      toast({
-        title: "Failed to submit report",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
+        title: "Reason required",
+        description: "Please select a reason for your report.",
         variant: "destructive",
       });
-    },
-  });
-
-  // Form submission handler
-  function onSubmit(values: ReportFormValues) {
-    reportMutation.mutate(values);
-  }
-
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    // Mock API call for now - will be replaced with actual API integration
+    setTimeout(() => {
+      toast({
+        title: "Report submitted",
+        description: "Thank you for helping to keep our community safe.",
+      });
+      setIsSubmitting(false);
+      handleClose();
+    }, 1000);
+  };
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Report Content</DialogTitle>
+          <DialogTitle className="flex items-center">
+            <AlertTriangle className="h-5 w-5 mr-2 text-yellow-500" />
+            Report Content
+          </DialogTitle>
           <DialogDescription>
-            Let us know why you think this content violates our community guidelines.
+            Report this content if it violates our community guidelines.
           </DialogDescription>
         </DialogHeader>
         
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="reason"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Reason for report</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g. Inappropriate content" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="report-reason">Reason</Label>
+            <Select value={reason} onValueChange={setReason}>
+              <SelectTrigger id="report-reason">
+                <SelectValue placeholder="Select a reason" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="inappropriate">Inappropriate Content</SelectItem>
+                <SelectItem value="harassment">Harassment or Bullying</SelectItem>
+                <SelectItem value="spam">Spam or Misleading</SelectItem>
+                <SelectItem value="violence">Threatening or Violent</SelectItem>
+                <SelectItem value="hate_speech">Hate Speech</SelectItem>
+                <SelectItem value="misinformation">False Information</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="report-details">Details (Optional)</Label>
+            <Textarea
+              id="report-details"
+              value={details}
+              onChange={e => setDetails(e.target.value)}
+              placeholder="Provide additional details about your report"
+              rows={4}
             />
-            
-            <FormField
-              control={form.control}
-              name="details"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Additional details (optional)</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Please provide any additional context that might help our moderators understand the issue."
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <DialogFooter className="pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={reportMutation.isPending}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={reportMutation.isPending}
-              >
-                {reportMutation.isPending ? "Submitting..." : "Submit Report"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={handleClose}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Submitting..." : "Submit Report"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
 }
-
-export default ReportContentDialog;

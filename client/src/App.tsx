@@ -85,6 +85,9 @@ import NotificationPreferencesPage from './pages/NotificationPreferencesPage'
 // Import referral page (PKL-278651-COMM-0007 - Enhanced Referral System)
 import ReferralPage from './pages/ReferralPage'
 
+// Import social content page (PKL-278651-SAGE-0011-SOCIAL)
+import SocialContentPage from './pages/social-content'
+
 // Import custom test login page to help with loading issues
 import TestLoginPage from './pages/test-login-page'
 
@@ -546,6 +549,13 @@ export default function App() {
                   <Route path="/communities/discover">
                     {(params) => <CentralProtectedRoute component={CommunityDiscoveryPage} path="/communities/discover" />}
                   </Route>
+                  
+                  {/* PKL-278651-SAGE-0011-SOCIAL - Social Content */}
+                  <ProtectedRouteWithLayout 
+                    path="/social/content" 
+                    component={SocialContentPage} 
+                    pageTitle="Social Content"
+                  />
                   
                   {/* PKL-278651-COMM-0011-OSI - NodeBB Community Hub v2 */}
                   <Route path="/community/v2">
