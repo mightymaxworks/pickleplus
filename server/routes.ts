@@ -28,6 +28,7 @@ import matchAssessmentRoutes from "./api/match-assessment"; // PKL-278651-COURTI
 import referralRoutes from "./modules/referrals/routes"; // PKL-278651-COMM-0007 - Enhanced Referral System
 import coachRoutes from "./routes/coach-routes"; // PKL-278651-COACH-0001-AI - AI Coach
 import simpleSageRoutes from "./routes/simple-sage-routes"; // Simplified version for testing
+import { registerSageDrillsRoutes } from "./routes/sage-drills-routes"; // PKL-278651-SAGE-0009-DRILLS - SAGE Drills Integration
 import { initializeOpenAI } from "./services/aiCoach"; // AI Coach service initialization
 import { isAuthenticated as isAuthenticatedMiddleware } from "./middleware/auth";
 import { isAuthenticated, setupAuth } from "./auth"; // Import the proper passport-based authentication
@@ -69,6 +70,7 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   registerPassportVerificationRoutes(app); // PKL-278651-CONN-0004-PASS-ADMIN - Passport verification routes
   registerUserRolesRoutes(app); // PKL-278651-AUTH-0016-PROLES - Role Management
   registerJournalRoutes(app); // PKL-278651-SAGE-0003-JOURNAL - SAGE Journaling System
+  registerSageDrillsRoutes(app); // PKL-278651-SAGE-0009-DRILLS - SAGE Drills Integration
   
   // Mount security routes
   app.use('/api/security', securityRoutes);

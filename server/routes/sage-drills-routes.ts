@@ -160,3 +160,13 @@ router.post('/drills/:id/complete',
 );
 
 export default router;
+
+/**
+ * Register SAGE drill recommendation routes
+ * @param app Express application
+ */
+export function registerSageDrillsRoutes(app: express.Express): void {
+  console.log("[API] Registering SAGE Drill Recommendation API routes");
+  app.use('/api/sage', router);
+  console.log("[API] SAGE Drill Recommendation API routes registered successfully");
+}

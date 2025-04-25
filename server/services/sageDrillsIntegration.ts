@@ -37,6 +37,7 @@ export interface DrillRecommendationResult {
   recommendationText: string;
   recommendationConfidence: number;
   focusAreas: string[];
+  recommendationIds?: number[]; // Store the IDs of the created recommendation records
 }
 
 /**
