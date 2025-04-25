@@ -10,13 +10,16 @@
  * @lastModified 2025-04-25
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSageData } from '@/contexts/SageDataContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Send, BookOpen, Dumbbell, Medal, Award } from 'lucide-react';
+import { 
+  Loader2, Send, BookOpen, Dumbbell, Medal, Award, Calendar, 
+  Users, Brain, Target, LineChart, Info, Heart, ActivitySquare 
+} from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -46,6 +49,14 @@ interface SageMessage {
   role: 'user' | 'sage';
   content: string;
   timestamp: Date;
+}
+
+// Interface for contextual suggestions
+interface SageSuggestion {
+  text: string;
+  icon: React.ElementType;
+  category: 'general' | 'training' | 'social' | 'performance' | 'wellness' | 'subscription';
+  relevanceScore: number;
 }
 
 export function EnhancedSageWidget() {
