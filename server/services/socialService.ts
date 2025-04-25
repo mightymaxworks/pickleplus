@@ -152,7 +152,7 @@ export class SocialService {
     const [userWithRoles] = await db
       .select({
         id: users.id,
-        roles: sql<any>`(SELECT json_agg(r.name) FROM user_roles ur JOIN roles r ON ur.role_id = r.id WHERE ur.user_id = ${users.id} AND ur.is_active = true)`
+        roles: sql<any>`(SELECT json_agg(r.name) FROM user_roles ur JOIN roles r ON ur.role_id = r.id WHERE ur.user_id = ${userId} AND ur.is_active = true)`
       })
       .from(users)
       .where(eq(users.id, userId));
