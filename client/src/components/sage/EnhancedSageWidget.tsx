@@ -71,6 +71,64 @@ export function EnhancedSageWidget() {
     getWeakestDimension
   } = useSageData();
   
+  // Base suggestions that might be relevant in various contexts
+  const baseSuggestions: SageSuggestion[] = [
+    { 
+      text: "What features should I try first?", 
+      icon: Info, 
+      category: 'general',
+      relevanceScore: 100
+    },
+    { 
+      text: "How do I find tournaments?", 
+      icon: Calendar, 
+      category: 'social',
+      relevanceScore: 80
+    },
+    { 
+      text: "Help me connect with players", 
+      icon: Users, 
+      category: 'social',
+      relevanceScore: 70
+    },
+    { 
+      text: "Show me my CourtIQ stats", 
+      icon: LineChart, 
+      category: 'performance',
+      relevanceScore: 90
+    },
+    { 
+      text: "Recommend drills for my weak areas", 
+      icon: Target, 
+      category: 'training',
+      relevanceScore: 85
+    },
+    { 
+      text: "What's included in premium?", 
+      icon: Medal, 
+      category: 'subscription',
+      relevanceScore: 60
+    },
+    { 
+      text: "How can I improve my mental game?", 
+      icon: Brain, 
+      category: 'training',
+      relevanceScore: 75
+    },
+    { 
+      text: "Track my wellness journey", 
+      icon: Heart, 
+      category: 'wellness',
+      relevanceScore: 65
+    },
+    {
+      text: "Create a training plan", 
+      icon: ActivitySquare, 
+      category: 'training',
+      relevanceScore: 80
+    }
+  ];
+  
   // Local state for the chat
   const [messages, setMessages] = useState<SageMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -93,6 +151,99 @@ export function EnhancedSageWidget() {
     }
   }, [isLoading, profile, courtIQ, getWeakestDimension]);
   
+  // Function to get contextually relevant suggestions based on conversation and user data
+  const getContextualSuggestions = useMemo(() => {
+    // If no messages yet, return general suggestions
+    if (messages.length === 0) {
+      return baseSuggestions
+        .filter(s => s.category === 'general' || s.category === 'performance')
+        .sort((a, b) => b.relevanceScore - a.relevanceScore)
+        .slice(0, 3);
+    }
+    
+    // Get the last sage message and last user message for context
+    const lastSageMessage = [...messages].reverse().find(m => m.role === 'sage');
+    const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
+    
+    // Combine texts for analysis
+    const contextText = [
+      lastSageMessage?.content || '', 
+      lastUserMessage?.content || ''
+    ].join(' ').toLowerCase();
+    
+    // Contextual filtering based on message content and user data
+    let relevantCategories: string[] = [];
+    
+    // Add categories based on conversation keywords
+    if (contextText.includes('drill') || contextText.includes('practice') || 
+        contextText.includes('improve') || contextText.includes('skill')) {
+      relevantCategories.push('training');
+    }
+    
+    if (contextText.includes('match') || contextText.includes('game') || 
+        contextText.includes('play') || contextText.includes('record')) {
+      relevantCategories.push('performance');
+    }
+    
+    if (contextText.includes('connect') || contextText.includes('player') || 
+        contextText.includes('tournament') || contextText.includes('social')) {
+      relevantCategories.push('social');
+    }
+    
+    if (contextText.includes('subscription') || contextText.includes('premium') || 
+        contextText.includes('pay') || contextText.includes('upgrade')) {
+      relevantCategories.push('subscription');
+    }
+    
+    if (contextText.includes('wellness') || contextText.includes('journal') || 
+        contextText.includes('mental') || contextText.includes('health')) {
+      relevantCategories.push('wellness');
+    }
+    
+    // Add categories based on user data
+    if (courtIQ && getWeakestDimension() === 'MENT') {
+      // If mental toughness is the weakest dimension, suggest mental game improvements
+      if (!relevantCategories.includes('wellness')) {
+        relevantCategories.push('wellness');
+      }
+    }
+    
+    if (!subscription?.isPremium && lastSageMessage?.content.includes('limited')) {
+      // If non-premium user hits a limit, suggest upgrade
+      if (!relevantCategories.includes('subscription')) {
+        relevantCategories.push('subscription');
+      }
+    }
+    
+    // If no relevant categories found, include general
+    if (relevantCategories.length === 0) {
+      relevantCategories.push('general');
+    }
+    
+    // Filter suggestions by relevant categories and sort by relevance
+    let contextualSuggestions = baseSuggestions
+      .filter(s => relevantCategories.includes(s.category))
+      .sort((a, b) => b.relevanceScore - a.relevanceScore)
+      .slice(0, 3);
+    
+    // If there aren't enough suggestions, add some general ones
+    if (contextualSuggestions.length < 3) {
+      const generalSuggestions = baseSuggestions
+        .filter(s => s.category === 'general')
+        .sort((a, b) => b.relevanceScore - a.relevanceScore)
+        .slice(0, 3 - contextualSuggestions.length);
+      
+      contextualSuggestions = [...contextualSuggestions, ...generalSuggestions];
+    }
+    
+    return contextualSuggestions;
+  }, [messages, courtIQ, subscription, getWeakestDimension, baseSuggestions]);
+  
+  // Handle suggestion button click
+  const handleSuggestionClick = (suggestion: SageSuggestion) => {
+    setInputValue(suggestion.text);
+  };
+
   // Handle sending a message
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isSubmitting) return;
@@ -248,7 +399,25 @@ export function EnhancedSageWidget() {
             )}
           </CardContent>
           
-          <CardFooter className="p-4 pt-0">
+          <CardFooter className="p-4 pt-0 flex-col space-y-3">
+            {/* Contextual Suggestion Buttons */}
+            <div className="flex flex-wrap gap-2 w-full">
+              {getContextualSuggestions.map((suggestion, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs flex items-center gap-1 py-1 h-auto"
+                  onClick={() => handleSuggestionClick(suggestion)}
+                  disabled={isSubmitting}
+                >
+                  {React.createElement(suggestion.icon, { className: "h-3 w-3" })}
+                  <span>{suggestion.text}</span>
+                </Button>
+              ))}
+            </div>
+            
+            {/* Message Input */}
             <div className="flex w-full items-center space-x-2">
               <Textarea
                 placeholder="Ask SAGE something..."
