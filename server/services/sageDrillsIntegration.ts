@@ -9,12 +9,25 @@ import { drillsService } from './drillsService';
 import { PickleballDrill } from '@shared/schema/drills';
 import { JournalEntry } from '@shared/schema/journal';
 import { PickleballRule } from './simple-pickleball-rules';
-import { findRelevantJournalEntries } from './sageJournalIntegration';
+import { findRelevantJournalEntries, JournalReferenceSummary } from './sageJournalIntegration';
+
+// Flexible JournalEntry for integration with different types
+export interface FlexibleJournalEntry {
+  id: number;
+  userId: number;
+  title: string;
+  content: string;
+  mood?: string | null;
+  skillLevel?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  [key: string]: any; // Allow for additional properties
+}
 
 export interface DrillRecommendationContext {
   query: string;
   playerLevel?: 'beginner' | 'intermediate' | 'advanced';
-  journals?: JournalEntry[];
+  journals?: FlexibleJournalEntry[];
   matchingRules?: PickleballRule[];
 }
 
@@ -77,7 +90,7 @@ export class SageDrillsIntegration {
   /**
    * Extract focus areas from query and journals
    */
-  private extractFocusAreas(query: string, journals: JournalEntry[]): string[] {
+  private extractFocusAreas(query: string, journals: FlexibleJournalEntry[]): string[] {
     const focusAreas: Set<string> = new Set();
     
     // Standard focus areas that we recognize in queries

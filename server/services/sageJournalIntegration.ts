@@ -6,6 +6,7 @@
  */
 
 import { JournalEntry } from '@shared/schema/journal';
+import { FlexibleJournalEntry } from './sageDrillsIntegration';
 import { analyzeJournalEntry, analyzeJournalHistory, JournalAnalysisResult } from './journalAnalyzer';
 import { PickleballRule } from './simple-pickleball-rules';
 
