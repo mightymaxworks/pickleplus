@@ -31,12 +31,14 @@ interface SageRecommendation {
 }
 
 export const SageRecommendationsWidget = () => {
+  console.log('[SAGE_WIDGET] Component rendering...');
   const [, navigate] = useLocation();
-  
+
   // Fetch personalized recommendations for the dashboard widget
   const { data: recommendations, isLoading, error } = useQuery({
     queryKey: ['/api/coach/sage/dashboard/widget'],
     queryFn: async () => {
+      console.log('[SAGE_WIDGET] Starting API request...');
       try {
         console.log('[SAGE] Fetching dashboard widget data...');
         // Use the direct widget endpoint that doesn't require authentication

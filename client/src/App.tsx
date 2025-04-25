@@ -88,6 +88,9 @@ import ReferralPage from './pages/ReferralPage'
 // Import social content page (PKL-278651-SAGE-0011-SOCIAL)
 import SocialContentPage from './pages/social-content'
 
+// Import SAGE Demo Page (PKL-278651-COACH-0021-WIDGET-DEMO)
+import SageDemoPage from './pages/SageDemoPage'
+
 // Import custom test login page to help with loading issues
 import TestLoginPage from './pages/test-login-page'
 
@@ -200,6 +203,7 @@ export default function App() {
                   <Route path="/test-routing" component={TestRoutingPage} />
                   <Route path="/landing-test" component={LandingPageTest} />
                   <Route path="/test-login" component={TestLoginPage} />
+                  <Route path="/sage-demo" component={SageDemoPage} />
                 
                   {/* Protected Routes - Now using StandardLayout */}
                   <ProtectedRouteWithLayout 
