@@ -20,6 +20,13 @@ import {
 } from '@shared/schema/social';
 import { z } from 'zod';
 
+// Helper function to safely access user ID from authenticated requests
+// This can be used wherever the isAuthenticated middleware is applied
+const getUserId = (req: Request): number => {
+  // The isAuthenticated middleware guarantees req.user exists
+  return req.user!.id;
+};
+
 // Extend Express Request type to include content
 declare global {
   namespace Express {
@@ -78,10 +85,11 @@ router.post('/content', isAuthenticated, async (req: Request, res: Response) => 
       });
     }
     
-    // Add authenticated user ID
+    // Add authenticated user ID and ensure contentType is a valid enum value
     const contentData = {
       ...validation.data,
-      userId: req.user.id
+      userId: req.user!.id,
+      contentType: validation.data.contentType as any, // Cast to valid enum type
     };
     
     // Create shared content
@@ -138,8 +146,14 @@ router.get('/content/:id', async (req: Request, res: Response) => {
       }
       
       // Coaches content requires checking role
-      if (content.visibility === 'coaches' && req.user?.role !== 'COACH') {
-        return res.status(403).json({ success: false, message: 'Not authorized to view this content' });
+      if (content.visibility === 'coaches') {
+        // Check if user has COACH role by examining roles array
+        const userRoles = (req.user as any)?.roles || [];
+        const isCoach = Array.isArray(userRoles) && userRoles.some(r => r.name === 'COACH');
+        
+        if (!isCoach) {
+          return res.status(403).json({ success: false, message: 'Not authorized to view this content' });
+        }
       }
     }
     
@@ -259,7 +273,8 @@ router.get('/feed/content', isAuthenticated, async (req: Request, res: Response)
     const limit = parseInt(req.query.limit as string) || 20;
     const offset = parseInt(req.query.offset as string) || 0;
     
-    const content = await socialService.getPublicContentFeed(req.user.id, limit, offset);
+    // isAuthenticated middleware ensures req.user exists
+    const content = await socialService.getPublicContentFeed(req.user!.id, limit, offset);
     
     res.json({
       success: true,
@@ -307,7 +322,7 @@ router.post('/content/:id/reactions', isAuthenticated, async (req: Request, res:
     }
     
     // Add reaction
-    await socialService.addReaction(contentId, req.user.id, validation.data.reactionType);
+    await socialService.addReaction(contentId, req.user!.id, validation.data.reactionType);
     
     res.status(201).json({
       success: true,
@@ -334,7 +349,7 @@ router.delete('/content/:id/reactions/:type', isAuthenticated, async (req: Reque
     }
     
     // Remove reaction
-    await socialService.removeReaction(contentId, req.user.id, reactionType);
+    await socialService.removeReaction(contentId, getUserId(req), reactionType);
     
     res.json({
       success: true,
@@ -384,7 +399,7 @@ router.get('/content/:id/reactions/:type/check', isAuthenticated, async (req: Re
       return res.status(400).json({ success: false, message: 'Invalid content ID' });
     }
     
-    const hasReacted = await socialService.hasUserReacted(contentId, req.user.id, reactionType);
+    const hasReacted = await socialService.hasUserReacted(contentId, getUserId(req), reactionType);
     
     res.json({
       success: true,
@@ -435,7 +450,7 @@ router.post('/content/:id/comments', isAuthenticated, async (req: Request, res: 
     // Add comment
     const comment = await socialService.addComment(
       contentId, 
-      req.user.id, 
+      getUserId(req), 
       validation.data.text,
       validation.data.parentCommentId
     );
@@ -534,7 +549,7 @@ router.post('/recommendations', isAuthenticated, async (req: Request, res: Respo
     // Create recommendation
     const recommendation = await socialService.createRecommendation({
       ...validation.data,
-      fromUserId: req.user.id,
+      fromUserId: getUserId(req),
       status: 'pending',
     });
     
@@ -556,7 +571,7 @@ router.post('/recommendations', isAuthenticated, async (req: Request, res: Respo
  */
 router.get('/recommendations/received', isAuthenticated, async (req: Request, res: Response) => {
   try {
-    const recommendations = await socialService.getUserReceivedRecommendations(req.user.id);
+    const recommendations = await socialService.getUserReceivedRecommendations(getUserId(req));
     
     res.json({
       success: true,
@@ -575,7 +590,7 @@ router.get('/recommendations/received', isAuthenticated, async (req: Request, re
  */
 router.get('/recommendations/sent', isAuthenticated, async (req: Request, res: Response) => {
   try {
-    const recommendations = await socialService.getUserSentRecommendations(req.user.id);
+    const recommendations = await socialService.getUserSentRecommendations(getUserId(req));
     
     res.json({
       success: true,
@@ -647,7 +662,7 @@ router.get('/feed', isAuthenticated, async (req: Request, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 20;
     const offset = parseInt(req.query.offset as string) || 0;
     
-    const feed = await socialService.getUserFeed(req.user.id, limit, offset);
+    const feed = await socialService.getUserFeed(getUserId(req), limit, offset);
     
     res.json({
       success: true,
@@ -687,7 +702,7 @@ router.post('/connections/request', isAuthenticated, async (req: Request, res: R
     
     // Create connection request
     const request = await socialService.requestConnection(
-      req.user.id,
+      getUserId(req),
       validation.data.toUserId,
       validation.data.connectionType,
       validation.data.message
@@ -717,7 +732,7 @@ router.post('/connections/request', isAuthenticated, async (req: Request, res: R
  */
 router.get('/connections/requests', isAuthenticated, async (req: Request, res: Response) => {
   try {
-    const requests = await socialService.getPendingConnectionRequests(req.user.id);
+    const requests = await socialService.getPendingConnectionRequests(getUserId(req));
     
     res.json({
       success: true,

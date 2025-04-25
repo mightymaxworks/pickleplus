@@ -38,7 +38,13 @@ export class SocialService {
    * Share content with the community
    */
   async shareContent(contentData: InsertSharedContent): Promise<SharedContent> {
-    const [result] = await db.insert(sharedContent).values(contentData).returning();
+    // Ensure visibility is a valid value from our enum
+    const updatedContentData = {
+      ...contentData,
+      visibility: (contentData.visibility || 'public') as "public" | "friends" | "private" | "coaches"
+    };
+    
+    const [result] = await db.insert(sharedContent).values(updatedContentData).returning();
     
     // Create a feed item for this shared content
     await this.createFeedItem({
@@ -51,7 +57,7 @@ export class SocialService {
       summary: contentData.description || null,
       imageUrl: contentData.customImage || null,
       enrichmentData: null,
-      visibility: contentData.visibility,
+      visibility: updatedContentData.visibility,
     });
     
     return result;
@@ -141,10 +147,18 @@ export class SocialService {
     
     const connectionIds = connections.map(c => c.connectedUserId);
     
-    // Get user role (simplified - check if user has COACH flag)
-    const [user] = await db.select().from(users).where(eq(users.id, userId));
-    // In our system, coaches are identified by isCoach flag
-    const isCoach = user?.isCoach === true;
+    // Get user roles to check for coach access
+    const [userWithRoles] = await db
+      .select({
+        id: users.id,
+        roles: sql<any>`(SELECT json_agg(r.name) FROM user_roles ur JOIN roles r ON ur.role_id = r.id WHERE ur.user_id = ${users.id} AND ur.is_active = true)`
+      })
+      .from(users)
+      .where(eq(users.id, userId));
+    
+    // Check if user has the COACH role
+    const roles = userWithRoles?.roles || [];
+    const isCoach = Array.isArray(roles) && roles.includes('COACH');
     
     return db
       .select()
