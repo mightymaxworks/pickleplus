@@ -22,7 +22,7 @@ export default function SimpleSageWidget() {
   
   // Function to navigate to SAGE page
   const navigateToSage = () => {
-    navigate('/coach/sage');
+    navigate('/coach');
   };
   
   // Just use a direct recommendation for simplicity
