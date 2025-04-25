@@ -14,7 +14,7 @@ import {
   drillGenerationParams, InsertDrillGenerationParam
 } from '@shared/schema/drills';
 import { db } from '../db';
-import { eq, and, or, like, desc, SQL, sql } from 'drizzle-orm';
+import { eq, and, or, like, desc, inArray, SQL, sql } from 'drizzle-orm';
 import { JournalEntry } from '@shared/schema/journal';
 import { analyzeJournalEntry } from './journalAnalyzer';
 import { FlexibleJournalEntry } from './sageDrillsIntegration';
@@ -405,6 +405,38 @@ export class DrillsService {
       .returning();
     
     return !!updated;
+  }
+  
+  /**
+   * Get recent drill recommendations for a user and drill IDs
+   */
+  async getRecentRecommendationsForUser(userId: number, drillIds: number[]): Promise<DrillRecommendation[]> {
+    if (drillIds.length === 0) {
+      return [];
+    }
+    
+    // Get the most recent recommendations for these drills and this user
+    // We'll query each drill ID separately and combine the results
+    const allRecommendations: DrillRecommendation[] = [];
+    
+    for (const drillId of drillIds) {
+      const recommendations = await db.select()
+        .from(drillRecommendations)
+        .where(
+          and(
+            eq(drillRecommendations.userId, userId),
+            eq(drillRecommendations.drillId, drillId)
+          )
+        )
+        .orderBy(desc(drillRecommendations.recommendedAt))
+        .limit(1);
+      
+      if (recommendations.length > 0) {
+        allRecommendations.push(recommendations[0]);
+      }
+    }
+    
+    return allRecommendations;
   }
   
   /**

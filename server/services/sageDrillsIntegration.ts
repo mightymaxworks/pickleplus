@@ -71,6 +71,10 @@ export class SageDrillsIntegration {
       limit: 3
     });
     
+    // Fetch the recommendation IDs that were just created
+    const recommendationRecords = await this.getRecentRecommendations(userId, drills.map(drill => drill.id));
+    const recommendationIds = recommendationRecords.map(rec => rec.id);
+    
     // Generate recommendation text
     const recommendationText = this.generateRecommendationText(
       drills, query, focusAreas, playerLevel, journals.length > 0
@@ -85,7 +89,8 @@ export class SageDrillsIntegration {
       drills,
       recommendationText,
       recommendationConfidence,
-      focusAreas
+      focusAreas,
+      recommendationIds
     };
   }
   
@@ -284,6 +289,20 @@ export class SageDrillsIntegration {
     return Math.min(0.95, Math.max(0.1, confidence));
   }
   
+  /**
+   * Fetch the most recent recommendation records for a user and drill IDs
+   */
+  private async getRecentRecommendations(userId: number, drillIds: number[]): Promise<any[]> {
+    try {
+      // Uses the drillsService to find the most recent recommendations
+      const recommendations = await drillsService.getRecentRecommendationsForUser(userId, drillIds);
+      return recommendations;
+    } catch (error) {
+      console.error('Error fetching recent recommendations:', error);
+      return []; // Return empty array on error
+    }
+  }
+
   /**
    * Generate detailed instructions for a specific drill
    */
