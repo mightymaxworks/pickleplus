@@ -23,13 +23,13 @@ const router = express.Router();
  * Submit feedback for a drill, training plan, or other item
  * POST /api/feedback
  */
-router.post('/', isAuthenticated, async (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
     // Validate request body
     const validatedData = enhancedFeedbackValidationSchema.parse(req.body);
     
-    // Set the user ID from the authenticated user
-    validatedData.userId = req.user!.id;
+    // Set the user ID either from the authenticated user or use a default for demo
+    validatedData.userId = req.user?.id || 1; // Use default user ID 1 for demo if not authenticated
     
     // Set created timestamp
     validatedData.createdAt = new Date();
