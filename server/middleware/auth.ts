@@ -1,36 +1,125 @@
 /**
- * Authentication middleware
+ * PKL-278651-SEC-0005-MIDDLEWARE - Authentication Middleware
+ * 
+ * This file provides middleware for handling authentication and authorization
+ * in the Pickle+ platform.
  */
+
 import { Request, Response, NextFunction } from 'express';
 
 /**
- * Middleware to check if the user is authenticated
+ * Middleware to check if a user is authenticated
  */
 export function isAuthenticated(req: Request, res: Response, next: NextFunction) {
-  // For simple implementation, assume user is authenticated with ID 1
-  // This should be replaced with proper session-based authentication
-  req.user = { id: 1 };
-  next();
+  if (req.isAuthenticated && req.isAuthenticated()) {
+    return next();
+  }
+  
+  // In development mode, we might want to bypass authentication
+  if (process.env.NODE_ENV === 'development' && process.env.BYPASS_AUTH === 'true') {
+    console.warn('[AUTH] Bypassing authentication in development mode');
+    return next();
+  }
+  
+  res.status(401).json({
+    success: false,
+    message: 'Authentication required'
+  });
 }
 
 /**
- * Middleware to check if the user has admin privileges
+ * Middleware to check if a user is an admin
  */
 export function isAdmin(req: Request, res: Response, next: NextFunction) {
-  // For simple implementation, assume user has admin privileges
-  // This should be replaced with proper role-based authorization
-  req.isAdmin = true;
-  next();
+  if (!req.isAuthenticated || !req.isAuthenticated()) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required'
+    });
+  }
+  
+  // Check if user has admin role
+  const user = req.user as any;
+  if (user && (user.isAdmin || (user.roles && user.roles.includes('ADMIN')))) {
+    return next();
+  }
+  
+  // In development mode, we might want to bypass authorization
+  if (process.env.NODE_ENV === 'development' && process.env.BYPASS_AUTH === 'true') {
+    console.warn('[AUTH] Bypassing admin check in development mode');
+    return next();
+  }
+  
+  res.status(403).json({
+    success: false,
+    message: 'Admin access required'
+  });
 }
 
-// Add type definitions to express Request interface
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        id: number;
-      };
-      isAdmin?: boolean;
-    }
+/**
+ * Middleware to check if a user is a coach
+ */
+export function isCoach(req: Request, res: Response, next: NextFunction) {
+  if (!req.isAuthenticated || !req.isAuthenticated()) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required'
+    });
   }
+  
+  // Check if user has coach role
+  const user = req.user as any;
+  if (user && (user.isCoach || (user.roles && user.roles.includes('COACH')))) {
+    return next();
+  }
+  
+  // Admin can also access coach endpoints
+  if (user && (user.isAdmin || (user.roles && user.roles.includes('ADMIN')))) {
+    return next();
+  }
+  
+  // In development mode, we might want to bypass authorization
+  if (process.env.NODE_ENV === 'development' && process.env.BYPASS_AUTH === 'true') {
+    console.warn('[AUTH] Bypassing coach check in development mode');
+    return next();
+  }
+  
+  res.status(403).json({
+    success: false,
+    message: 'Coach access required'
+  });
+}
+
+/**
+ * Middleware to check if a user is a referee
+ */
+export function isReferee(req: Request, res: Response, next: NextFunction) {
+  if (!req.isAuthenticated || !req.isAuthenticated()) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required'
+    });
+  }
+  
+  // Check if user has referee role
+  const user = req.user as any;
+  if (user && (user.isReferee || (user.roles && user.roles.includes('REFEREE')))) {
+    return next();
+  }
+  
+  // Admin can also access referee endpoints
+  if (user && (user.isAdmin || (user.roles && user.roles.includes('ADMIN')))) {
+    return next();
+  }
+  
+  // In development mode, we might want to bypass authorization
+  if (process.env.NODE_ENV === 'development' && process.env.BYPASS_AUTH === 'true') {
+    console.warn('[AUTH] Bypassing referee check in development mode');
+    return next();
+  }
+  
+  res.status(403).json({
+    success: false,
+    message: 'Referee access required'
+  });
 }
