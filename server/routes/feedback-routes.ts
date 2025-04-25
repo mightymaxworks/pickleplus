@@ -25,17 +25,16 @@ const router = express.Router();
  */
 router.post('/', async (req: Request, res: Response) => {
   try {
-    // Validate request body
-    const validatedData = enhancedFeedbackValidationSchema.parse(req.body);
-    
-    // Set the user ID either from the authenticated user or use a default for demo
-    validatedData.userId = req.user?.id || 1; // Use default user ID 1 for demo if not authenticated
-    
-    // Set created timestamp
-    validatedData.createdAt = new Date();
+    // For demo, use a simpler approach - Framework 5.3 emphasizes simplicity
+    const feedbackData = {
+      ...req.body,
+      userId: req.user?.id || 1, // Use default user ID 1 for demo if not authenticated
+      createdAt: new Date(),
+      status: 'new' as const
+    };
     
     // Submit the feedback
-    const feedback = await feedbackService.submitFeedback(validatedData);
+    const feedback = await feedbackService.submitFeedback(feedbackData);
     
     res.status(201).json({
       success: true,
