@@ -39,50 +39,50 @@ const SAGE_SUGGESTIONS: SageSuggestion[] = [
   { 
     text: "What features should I try first?", 
     icon: Info, 
-    category: 'general',
-    link: "/features"
+    category: 'general'
+    // Removed direct link to use conversation instead
   },
   { 
     text: "How do I find tournaments?", 
     icon: Calendar, 
     category: 'social',
-    link: "/tournaments"
+    link: "/events" // Updated to existing route
   },
   { 
     text: "Help me connect with players", 
     icon: Users, 
     category: 'social',
-    link: "/community"
+    link: "/community/discovery" // Updated to existing route
   },
   { 
     text: "Show me my CourtIQ stats", 
     icon: LineChart, 
     category: 'performance',
-    link: "/courtiq"
+    link: "/profile" // Updated to existing route
   },
   { 
     text: "Recommend drills for me", 
     icon: Target, 
     category: 'training',
-    link: "/drills"
+    link: "/training/drills" // Updated to existing route
   },
   { 
     text: "What's included in premium?", 
     icon: Medal, 
     category: 'subscription',
-    link: "/subscription"
+    link: "/account/subscription" // Updated to existing route
   },
   { 
     text: "How can I improve my mental game?", 
     icon: Brain, 
     category: 'training',
-    link: "/mental-training"
+    link: "/training/mental" // Updated to existing route
   },
   { 
     text: "Track my wellness journey", 
     icon: Heart, 
-    category: 'wellness',
-    link: "/wellness"
+    category: 'wellness'
+    // Removed direct link for future feature
   }
 ];
 
@@ -101,13 +101,13 @@ export default function SimpleSageWidget() {
   // Add welcome links to the initial message
   const welcomeLinks: SageLink[] = [
     {
-      text: 'Explore Features',
-      url: '/features',
+      text: 'View Profile',
+      url: '/profile',
       type: 'primary'
     },
     {
-      text: 'View CourtIQ',
-      url: '/courtiq',
+      text: 'Find Players',
+      url: '/community/discovery',
       type: 'secondary'
     }
   ];
@@ -245,37 +245,37 @@ export default function SimpleSageWidget() {
         response = "Based on your profile, I'd recommend exploring these Pickle+ features:\n\n1. CourtIQ™ Performance - track your multi-dimensional skill ratings\n2. Community Hub - connect with players in your area\n3. Tournament Finder - discover upcoming events\n\nWhat would you like to explore first?";
         
         links = [
-          { text: 'CourtIQ Dashboard', url: '/courtiq', type: 'primary' },
-          { text: 'Community Hub', url: '/community', type: 'secondary' },
-          { text: 'Find Tournaments', url: '/tournaments', type: 'secondary' }
+          { text: 'Profile Stats', url: '/profile', type: 'primary' },
+          { text: 'Community', url: '/community/discovery', type: 'secondary' },
+          { text: 'Find Events', url: '/events', type: 'secondary' }
         ];
       } else if (msg.includes('tournament') || msg.includes('event') || msg.includes('play')) {
         response = "The Tournament Finder is your hub for events! Head to the Events tab to browse upcoming tournaments filtered by location, skill level, and format. You can register directly through Pickle+, and I can help you prepare a training plan leading up to your selected event.";
         
         links = [
-          { text: 'Tournament Finder', url: '/tournaments', type: 'primary' },
-          { text: 'Training Plans', url: '/training-plans', type: 'secondary' }
+          { text: 'Events Calendar', url: '/events', type: 'primary' },
+          { text: 'Profile', url: '/profile', type: 'secondary' }
         ];
       } else if (msg.includes('player') || msg.includes('partner') || msg.includes('connect') || msg.includes('friend')) {
         response = "To connect with other players, visit the Community tab where you can:\n\n• Search for players by location and skill level\n• Join local Pickle+ groups\n• Use Partner Finder to match with compatible players\n• Create or join meetups\n\nWould you like me to help you find specific types of players?";
         
         links = [
-          { text: 'Find Players', url: '/community/players', type: 'primary' },
-          { text: 'Join Groups', url: '/community/groups', type: 'secondary' }
+          { text: 'Find Players', url: '/community/discovery', type: 'primary' },
+          { text: 'Community', url: '/community', type: 'secondary' }
         ];
       } else if (msg.includes('stat') || msg.includes('courtiq') || msg.includes('rating') || msg.includes('score')) {
         response = "Your CourtIQ™ performance shows your multi-dimensional rating across 5 key areas. Looking at your profile, your strongest dimensions are Technical Skills and Tactical Awareness, while you could benefit from development in Mental Toughness. Would you like me to recommend personalized drills to improve your weaker dimensions?";
         
         links = [
-          { text: 'View CourtIQ', url: '/courtiq', type: 'primary' },
-          { text: 'Skill Development', url: '/drills', type: 'secondary' }
+          { text: 'View Profile', url: '/profile', type: 'primary' },
+          { text: 'Leaderboard', url: '/leaderboard', type: 'secondary' }
         ];
       } else if (msg.includes('coach') || msg.includes('drill') || msg.includes('improve') || msg.includes('learn')) {
         response = "I can help with your pickleball skills! The Coaching section offers:\n\n• Personalized drill recommendations\n• Technique analysis\n• Strategy guides for different play styles\n• Mental game development\n\nWhat specific aspect of your game would you like to work on?";
         
         links = [
-          { text: 'Browse Drills', url: '/drills', type: 'primary' },
-          { text: 'Technique Guides', url: '/techniques', type: 'secondary' }
+          { text: 'Training', url: '/training', type: 'primary' },
+          { text: 'Profile', url: '/profile', type: 'secondary' }
         ];
       } else {
         response = "I can help you with that! As your personal assistant, I can guide you through any feature on the platform, help you find tournaments, connect with players, improve your skills, or track your progress. What aspect are you most interested in exploring?";
@@ -328,30 +328,30 @@ export default function SimpleSageWidget() {
         response = "Based on your profile, I'd recommend exploring these Pickle+ features:\n\n1. CourtIQ™ Performance - track your multi-dimensional skill ratings\n2. Community Hub - connect with players in your area\n3. Tournament Finder - discover upcoming events\n\nWhat would you like to explore first?";
         
         links = [
-          { text: 'CourtIQ Dashboard', url: '/courtiq', type: 'primary' },
-          { text: 'Community Hub', url: '/community', type: 'secondary' },
-          { text: 'Find Tournaments', url: '/tournaments', type: 'secondary' }
+          { text: 'Profile Stats', url: '/profile', type: 'primary' },
+          { text: 'Community', url: '/community/discovery', type: 'secondary' },
+          { text: 'Find Events', url: '/events', type: 'secondary' }
         ];
       } else if (suggestion.text.includes('tournaments')) {
         response = "The Tournament Finder is your hub for events! Head to the Events tab to browse upcoming tournaments filtered by location, skill level, and format. You can register directly through Pickle+, and I can help you prepare a training plan leading up to your selected event.";
         
         links = [
-          { text: 'Tournament Finder', url: '/tournaments', type: 'primary' },
-          { text: 'Training Plans', url: '/training-plans', type: 'secondary' }
+          { text: 'Events Calendar', url: '/events', type: 'primary' },
+          { text: 'Profile', url: '/profile', type: 'secondary' }
         ];
       } else if (suggestion.text.includes('connect')) {
         response = "To connect with other players, visit the Community tab where you can:\n\n• Search for players by location and skill level\n• Join local Pickle+ groups\n• Use Partner Finder to match with compatible players\n• Create or join meetups\n\nWould you like me to help you find specific types of players?";
         
         links = [
-          { text: 'Find Players', url: '/community/players', type: 'primary' },
-          { text: 'Join Groups', url: '/community/groups', type: 'secondary' }
+          { text: 'Find Players', url: '/community/discovery', type: 'primary' },
+          { text: 'Community', url: '/community', type: 'secondary' }
         ];
       } else if (suggestion.text.includes('CourtIQ')) {
         response = "Your CourtIQ™ performance shows your multi-dimensional rating across 5 key areas. Looking at your profile, your strongest dimensions are Technical Skills and Tactical Awareness, while you could benefit from development in Mental Toughness. Would you like me to recommend personalized drills to improve your weaker dimensions?";
         
         links = [
-          { text: 'View CourtIQ', url: '/courtiq', type: 'primary' },
-          { text: 'Skill Development', url: '/drills', type: 'secondary' }
+          { text: 'View Profile', url: '/profile', type: 'primary' },
+          { text: 'Leaderboard', url: '/leaderboard', type: 'secondary' }
         ];
       } else {
         response = "I can help you with that! As your personal assistant, I can guide you through any feature on the platform, help you find tournaments, connect with players, improve your skills, or track your progress. What aspect are you most interested in exploring?";
