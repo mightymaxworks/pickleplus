@@ -17,6 +17,7 @@ import {
   userConnectionRequests,
   userConnections,
   ContentTypeEnum,
+  ContentType,
   VisibilityEnum,
   type SharedContent,
   type ContentReaction,
@@ -78,7 +79,7 @@ export class SocialService {
   /**
    * Get content based on the original content
    */
-  async getContentByOriginal(contentType: string, contentId: number): Promise<SharedContent[]> {
+  async getContentByOriginal(contentType: 'journal_entry' | 'feedback' | 'drill' | 'training_plan' | 'match_result' | 'achievement' | 'sage_insight' | 'user_connection', contentId: number): Promise<SharedContent[]> {
     return db
       .select()
       .from(sharedContent)
@@ -329,7 +330,7 @@ export class SocialService {
   async createRecommendation(recommendation: {
     fromUserId: number;
     toUserId: number;
-    contentType: ContentType;
+    contentType: 'journal_entry' | 'feedback' | 'drill' | 'training_plan' | 'match_result' | 'achievement' | 'sage_insight' | 'user_connection';
     contentId: number;
     status: string;
     message?: string;
