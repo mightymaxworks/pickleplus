@@ -134,6 +134,7 @@ export function EnhancedSageWidget() {
   const [inputValue, setInputValue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState('chat');
+  const [contextualSuggestions, setContextualSuggestions] = useState<SageSuggestion[]>([]);
   
   // Generate welcome message based on user data when data loads
   useEffect(() => {
@@ -151,8 +152,12 @@ export function EnhancedSageWidget() {
     }
   }, [isLoading, profile, courtIQ, getWeakestDimension]);
   
-  // Function to get contextually relevant suggestions based on conversation and user data
-  const getContextualSuggestions = useMemo(() => {
+  // Calculate contextual suggestions whenever messages change
+  useEffect(() => {
+    // Debug log for suggestion context
+    console.log("[SAGE][DEBUG] Calculating new contextual suggestions...");
+    
+    const getSuggestions = () => {
     // If no messages yet, return general suggestions
     if (messages.length === 0) {
       return baseSuggestions
@@ -237,6 +242,16 @@ export function EnhancedSageWidget() {
     }
     
     return contextualSuggestions;
+    }
+    
+    // Get the suggestions and update state
+    const newSuggestions = getSuggestions();
+    
+    // Debug - log the categories of suggestions for debugging
+    const categories = newSuggestions.map(s => s.category);
+    console.log("[SAGE][DEBUG] New suggestions categories:", categories);
+    
+    setContextualSuggestions(newSuggestions);
   }, [messages, courtIQ, subscription, getWeakestDimension, baseSuggestions]);
   
   // Handle suggestion button click
@@ -402,7 +417,7 @@ export function EnhancedSageWidget() {
           <CardFooter className="p-4 pt-0 flex-col space-y-3">
             {/* Contextual Suggestion Buttons */}
             <div className="flex flex-wrap gap-2 w-full">
-              {getContextualSuggestions.map((suggestion, index) => (
+              {contextualSuggestions.map((suggestion, index) => (
                 <Button
                   key={index}
                   variant="outline"
