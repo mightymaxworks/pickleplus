@@ -31,6 +31,7 @@ import simpleSageRoutes from "./routes/simple-sage-routes"; // Simplified versio
 import { registerSageDrillsRoutes } from "./routes/sage-drills-routes"; // PKL-278651-SAGE-0009-DRILLS - SAGE Drills Integration
 import drillVideosRoutes from "./routes/drill-videos-routes"; // PKL-278651-SAGE-0009-VIDEO - YouTube Integration
 import feedbackRoutes from "./routes/feedback-routes"; // PKL-278651-SAGE-0010-FEEDBACK - Enhanced Feedback System
+import socialRoutes from "./routes/social-routes"; // PKL-278651-SAGE-0011-SOCIAL - Social Sharing Features
 import { initializeOpenAI } from "./services/aiCoach"; // AI Coach service initialization
 import { isAuthenticated as isAuthenticatedMiddleware } from "./middleware/auth";
 import { isAuthenticated, setupAuth } from "./auth"; // Import the proper passport-based authentication
@@ -101,6 +102,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Mount Feedback routes - PKL-278651-SAGE-0010-FEEDBACK
   app.use('/api/feedback', feedbackRoutes);
+  
+  // Mount Social Sharing routes - PKL-278651-SAGE-0011-SOCIAL
+  app.use('/api/social', socialRoutes);
   
   // Initialize OpenAI client if API key is available
   initializeOpenAI();
