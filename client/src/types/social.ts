@@ -1,10 +1,11 @@
 /**
- * PKL-278651-SAGE-0011-SOCIAL - Social Content Types
+ * PKL-278651-SAGE-0011-SOCIAL - Social Types
  * 
- * This file defines the TypeScript types for social content features
+ * Type definitions for social content features
  * Part of Sprint 5: Social Features & UI Polish
  */
 
+// Content types supported by the social system
 export type ContentType = 
   | "journal_entry" 
   | "drill" 
@@ -15,92 +16,124 @@ export type ContentType =
   | "feedback" 
   | "user_connection";
 
-export type ContentVisibility = "public" | "friends" | "private" | "coaches";
+// Visibility options for shared content
+export type Visibility = "public" | "friends" | "private" | "coaches";
 
+// Reaction types for content
+export type ReactionType = "like" | "celebrate" | "insightful" | "helpful";
+
+// Report reason types
+export type ReportReason = 
+  | "inappropriate" 
+  | "spam" 
+  | "offensive" 
+  | "incorrect" 
+  | "other";
+
+// Shared content interface
 export interface SharedContent {
   id: number;
-  userId: number;
   contentType: ContentType;
   contentId: number;
+  userId: number;
   title: string;
   description?: string;
-  visibility: ContentVisibility;
+  visibility: Visibility;
   createdAt: string;
-  updatedAt: string;
-  likeCount: number;
-  viewCount: number;
-  commentCount: number;
-  shareCount: number;
+  updatedAt?: string;
+  user?: {
+    id: number;
+    username: string;
+    displayName?: string;
+    avatarUrl?: string;
+  };
+  stats?: {
+    commentCount: number;
+    reactionCount: number;
+    viewCount: number;
+  };
   highlightedText?: string;
   customTags?: string[];
   customImage?: string;
+  isPinned?: boolean;
+  isHighlighted?: boolean;
 }
 
-export interface ContentReaction {
-  id: number;
-  userId: number;
-  contentId: number;
-  reactionType: "like" | "celebrate" | "insightful" | "helpful";
-  createdAt: string;
-}
-
+// Content comment interface
 export interface ContentComment {
   id: number;
-  userId: number;
   contentId: number;
+  userId: number;
   text: string;
-  parentCommentId?: number;
   createdAt: string;
-  updatedAt: string;
+  user?: {
+    id: number;
+    username: string;
+    displayName?: string;
+    avatarUrl?: string;
+  };
+  isEdited?: boolean;
+  parentCommentId?: number;
   replies?: ContentComment[];
 }
 
-export interface ContentReport {
+// Content reaction interface
+export interface ContentReaction {
   id: number;
-  userId: number;
   contentId: number;
-  contentType: string;
-  reasonCode: string;
-  description: string;
-  status: "pending" | "reviewed" | "resolved" | "rejected";
+  userId: number;
+  reactionType: ReactionType;
   createdAt: string;
-  updatedAt: string;
+  user?: {
+    id: number;
+    username: string;
+    displayName?: string;
+    avatarUrl?: string;
+  };
 }
 
-// API request/response types
+// Request interfaces
+
+// Parameters for retrieving content feed
+export interface ContentFeedParams {
+  limit?: number;
+  offset?: number;
+  userId?: number;
+  contentType?: ContentType;
+}
+
+// Request to share content
 export interface ShareContentRequest {
   contentType: ContentType;
   contentId: number;
   userId: number;
   title: string;
   description?: string;
-  visibility: ContentVisibility;
+  visibility: Visibility;
   highlightedText?: string;
   customTags?: string[];
   customImage?: string;
 }
 
+// Request to add a reaction to content
 export interface AddReactionRequest {
   contentId: number;
-  reactionType: string;
+  userId: number;
+  reactionType: ReactionType;
 }
 
+// Request to add a comment to content
 export interface AddCommentRequest {
   contentId: number;
+  userId: number;
   text: string;
   parentCommentId?: number;
 }
 
+// Request to report content
 export interface ReportContentRequest {
   contentId: number;
-  contentType: string;
-  reasonCode: string;
-  description: string;
-}
-
-export interface ContentFeedParams {
-  limit?: number;
-  offset?: number;
-  userId?: number;
-  contentType?: ContentType;
+  userId: number;
+  reason: ReportReason;
+  details?: string;
 }

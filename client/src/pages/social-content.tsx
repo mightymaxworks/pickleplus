@@ -44,10 +44,10 @@ export default function SocialContentPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("all");
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  const { data: contentFeed, isLoading, refetch } = useContentFeed({ limit: 20 });
+  const { data: contentFeed, isLoading, isError, error, refetch } = useContentFeed({ limit: 20 });
   
   // Filter content based on active tab
-  const filteredContent = contentFeed ? contentFeed.filter(content => {
+  const filteredContent = Array.isArray(contentFeed) ? contentFeed.filter(content => {
     if (activeTab === "all") return true;
     if (activeTab === "journals" && content.contentType === "journal_entry") return true;
     if (activeTab === "drills" && content.contentType === "drill") return true;
