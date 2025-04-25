@@ -66,23 +66,23 @@ export default function SageCoachingPage() {
           <TabsList className="w-full max-w-xl">
             <TabsTrigger value="conversation" className="flex items-center justify-center gap-2">
               <MessageSquare className="h-5 w-5" />
-              <span>Chat</span>
+              <span className="hidden sm:inline">Chat</span>
             </TabsTrigger>
             <TabsTrigger value="structured" className="flex items-center justify-center gap-2">
               <ListChecks className="h-5 w-5" />
-              <span>Training</span>
+              <span className="hidden sm:inline">Training</span>
             </TabsTrigger>
             <TabsTrigger value="journal" className="flex items-center justify-center gap-2">
               <BookText className="h-5 w-5" />
-              <span>Journal</span>
+              <span className="hidden sm:inline">Journal</span>
             </TabsTrigger>
             <TabsTrigger value="concierge" className="flex items-center justify-center gap-2">
               <Compass className="h-5 w-5" />
-              <span>Concierge</span>
+              <span className="hidden sm:inline">Concierge</span>
             </TabsTrigger>
             <TabsTrigger value="recommendations" className="flex items-center justify-center gap-2">
               <Lightbulb className="h-5 w-5" />
-              <span>For You</span>
+              <span className="hidden sm:inline">For You</span>
             </TabsTrigger>
           </TabsList>
         </div>
