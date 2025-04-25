@@ -124,8 +124,8 @@ export const pickleballRules: PickleballRule[] = [
     id: 'double-bounce-rule',
     name: 'Double Bounce Rule',
     category: RuleCategory.GAMEPLAY,
-    description: 'After the serve, each side must let the ball bounce once before hitting it. After these two bounces, the ball can be volleyed or played off the bounce.',
-    keywords: ['double bounce', 'two bounce', 'return', 'serve', 'volley']
+    description: 'After the serve, each side must let the ball bounce once before hitting it. The serving team must let the return bounce before hitting it. After these two bounces (serve and return), the ball can be volleyed or played off the bounce. Volleying the return of serve before it bounces is a fault.',
+    keywords: ['double bounce', 'two bounce', 'return', 'serve', 'volley', 'bounce twice', 'bounce rule', 'first shot']
   },
   {
     id: 'line-calls',

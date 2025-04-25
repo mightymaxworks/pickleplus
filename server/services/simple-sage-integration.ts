@@ -4,6 +4,8 @@
  */
 
 import { isRuleQuestion, findRulesForQuestion, generateRuleResponse, pickleballRules, PickleballRule, RuleCategory } from './simple-pickleball-rules';
+import { findRelevantJournalEntries, generatePersonalizedRuleRecommendations, generateJournalBasedFollowUps } from './sageJournalIntegration';
+import { JournalEntry } from '@shared/schema';
 
 /**
  * Options to customize the response
@@ -17,6 +19,8 @@ export interface ResponseOptions {
   includeCoachingTips?: boolean;
   /** Adjust response for player skill level (beginner, intermediate, advanced) */
   playerLevel?: 'beginner' | 'intermediate' | 'advanced';
+  /** Journal entries to use for personalized recommendations */
+  userJournals?: JournalEntry[];
 }
 
 /**
@@ -32,6 +36,7 @@ export function processPickleballQuery(
     casualTone: true,
     includeCoachingTips: false,
     playerLevel: 'intermediate',
+    userJournals: [],
     ...options
   };
   
@@ -106,6 +111,32 @@ export function processPickleballQuery(
     }
   }
   
+  // Special handling for double bounce rule questions
+  if (lowerMessage.includes('double bounce') || 
+      lowerMessage.includes('two bounce') || 
+      lowerMessage.includes('bounce twice') ||
+      lowerMessage.includes('bouncing twice') ||
+      lowerMessage.includes('bounce rule')) {
+    
+    const doubleBounceRule = pickleballRules.find(rule => rule.id === 'double-bounce-rule');
+    if (doubleBounceRule) {
+      let response = `${doubleBounceRule.name}: ${doubleBounceRule.description}`;
+      
+      // Add coaching tip if requested
+      if (resolvedOptions.includeCoachingTips) {
+        const tip = generateCoachingTip(doubleBounceRule);
+        if (tip) {
+          response += `\n\nCoaching Tip: ${tip}`;
+        }
+      }
+      
+      // Add follow-up
+      response += "\n\nWould you like to know more about the double bounce rule or common mistakes players make with this rule?";
+      
+      return response;
+    }
+  }
+
   // Special handling for kitchen/non-volley zone questions
   if (lowerMessage.includes('kitchen') || 
       lowerMessage.includes('non-volley') || 
@@ -163,22 +194,71 @@ export function processPickleballQuery(
     // Get the base rule response
     let response = generateRuleResponse(message);
     
+    // Get matching rules for this question
+    const matchingRules = findRulesForQuestion(message);
+    
     // Add coaching tips if requested
-    if (resolvedOptions.includeCoachingTips) {
-      const matchingRules = findRulesForQuestion(message);
-      if (matchingRules.length > 0) {
-        const tip = generateCoachingTip(matchingRules[0]);
-        if (tip) {
-          response += `\n\nCoaching Tip: ${tip}`;
+    if (resolvedOptions.includeCoachingTips && matchingRules.length > 0) {
+      const tip = generateCoachingTip(matchingRules[0]);
+      if (tip) {
+        response += `\n\nCoaching Tip: ${tip}`;
+      }
+    }
+    
+    // Look for relevant journal entries if available
+    if (resolvedOptions.userJournals && resolvedOptions.userJournals.length > 0) {
+      const journalReferences = findRelevantJournalEntries(message, resolvedOptions.userJournals);
+      
+      // Only add journal insights if we have some confidence they're relevant
+      if (journalReferences.confidenceScore > 0.3 && journalReferences.keyInsights.length > 0) {
+        // Add a separator
+        response += "\n\n--- Based on Your Journal Entries ---";
+        
+        // Add key insights from journals
+        journalReferences.keyInsights.slice(0, 2).forEach(insight => {
+          response += `\n• ${insight}`;
+        });
+        
+        // Add personalized recommendations if we have matching rules
+        if (matchingRules.length > 0) {
+          const recommendations = generatePersonalizedRuleRecommendations(
+            matchingRules[0], 
+            resolvedOptions.userJournals
+          );
+          
+          if (recommendations.length > 0) {
+            response += "\n\nPersonalized recommendation: " + recommendations[0];
+          }
         }
       }
     }
     
     // Add follow-up questions if requested
     if (resolvedOptions.includeFollowUps) {
-      const followUps = generateFollowUpQuestions(message);
-      if (followUps) {
-        response += `\n\n${followUps}`;
+      // Use journal-based follow-ups if we have journals and matching rules
+      if (resolvedOptions.userJournals && 
+          resolvedOptions.userJournals.length > 0 && 
+          matchingRules.length > 0) {
+        const journalFollowUps = generateJournalBasedFollowUps(
+          matchingRules[0], 
+          resolvedOptions.userJournals
+        );
+        
+        if (journalFollowUps.length > 0) {
+          response += `\n\n${journalFollowUps[0]}`;
+        } else {
+          // Fall back to standard follow-ups
+          const followUps = generateFollowUpQuestions(message);
+          if (followUps) {
+            response += `\n\n${followUps}`;
+          }
+        }
+      } else {
+        // Standard follow-ups when no journals are available
+        const followUps = generateFollowUpQuestions(message);
+        if (followUps) {
+          response += `\n\n${followUps}`;
+        }
       }
     }
     
@@ -250,7 +330,7 @@ function generateCoachingTip(rule: PickleballRule): string | null {
     'doubles-scoring': 'When calling the score in doubles, always use the three-number format: serving team\'s score, receiving team\'s score, server number.',
     'non-volley-zone': 'Always be conscious of the kitchen line when moving forward. Many players lose points by forgetting how close they are to the non-volley zone.',
     'kitchen-volley': 'After hitting a volley, be sure your momentum doesn\'t carry you into the kitchen. This is a common fault that many new players make. Practice stepping backward after your volley to avoid momentum carrying you into the kitchen.',
-    'double-bounce-rule': 'During the return of serve, don\'t rush to the net immediately. Wait until you\'ve made your return, then advance strategically.',
+    'double-bounce-rule': 'During the return of serve, don\'t rush to the net immediately. Wait until you\'ve made your return, then advance strategically. New players often forget this rule and try to volley the return of serve, which is a fault.',
     'line-calls': 'When making line calls, be fair and consistent. If you\'re not sure, give the benefit of the doubt to your opponent.',
     'fault-rules': 'Understanding faults clearly helps prevent unnecessary point loss. Review these rules periodically, especially before tournaments.'
   };
