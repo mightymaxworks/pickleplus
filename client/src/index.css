@@ -521,3 +521,53 @@
 .transition-width {
   transition-property: width;
 }
+
+/* SAGE Markdown Styles */
+.sage-markdown {
+  @apply text-sm;
+}
+
+.sage-markdown h1 {
+  @apply text-xl font-bold mb-3 text-primary;
+}
+
+.sage-markdown h2 {
+  @apply text-lg font-semibold mb-2 mt-4 text-primary/90;
+}
+
+.sage-markdown h3 {
+  @apply text-base font-medium mb-1 mt-3;
+}
+
+.sage-markdown p {
+  @apply mb-2;
+}
+
+.sage-markdown ul, 
+.sage-markdown ol {
+  @apply pl-5 mb-3;
+}
+
+.sage-markdown li {
+  @apply mb-1;
+}
+
+.sage-markdown ul li {
+  @apply list-disc;
+}
+
+.sage-markdown ol li {
+  @apply list-decimal;
+}
+
+.sage-markdown a {
+  @apply text-secondary underline;
+}
+
+.sage-markdown blockquote {
+  @apply pl-3 border-l-2 border-primary/30 italic my-2;
+}
+
+.sage-markdown code {
+  @apply bg-muted px-1 py-0.5 rounded text-xs;
+}

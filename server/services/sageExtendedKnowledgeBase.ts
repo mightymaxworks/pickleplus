@@ -314,227 +314,267 @@ Advanced Concepts:
       {
         id: 'courtiq_explained',
         title: 'CourtIQ™ Rating System Explained',
-        content: `CourtIQ™ is Pickle+'s proprietary multi-dimensional rating system that analyzes five key aspects of your pickleball game:
+        content: `# Understanding CourtIQ™ Ratings
 
-1. Technical Skills (TECH): Measures your stroke execution, mechanics, and shot-making ability
-2. Tactical Awareness (TACT): Assesses your strategic thinking, shot selection, and court awareness
-3. Physical Fitness (PHYS): Evaluates your movement, agility, and physical conditioning
-4. Mental Toughness (MENT): Gauges your focus, resilience, and performance under pressure
-5. Consistency (CONS): Measures your reliability and error minimization
+CourtIQ™ is Pickle+'s innovative multi-dimensional rating system that provides a complete picture of your pickleball abilities beyond just a single number.
 
-Each dimension is rated on a scale from 1.0 to 5.0, with half-point increments. These individual ratings combine to create your overall CourtIQ™ score, ranging from 200 to 2000 points.
+## What Makes CourtIQ™ Different?
 
-CourtIQ™ ratings are updated automatically based on:
-- Match results and performance metrics
-- Skills assessments and drills
-- Coach observations and feedback
-- Tournament performance
+Unlike traditional rating systems that only use one number, CourtIQ™ analyzes five different dimensions of your game:
 
-Your CourtIQ™ profile provides a comprehensive view of your strengths and improvement areas, allowing for targeted training and development.`,
+1. Technical Skills: Your stroke execution and mechanics
+2. Tactical Awareness: Your strategic thinking and court awareness
+3. Physical Fitness: Your movement, agility, and conditioning
+4. Mental Toughness: Your focus and performance under pressure
+5. Consistency: Your reliability and error minimization
+
+## How to Use Your CourtIQ™ Profile
+
+You can access your CourtIQ™ profile in several ways:
+- On your player dashboard
+- Through your Pickle Passport™
+- In the "Skills" section of your profile
+
+Your CourtIQ™ profile helps you:
+- Identify your strengths and areas for improvement
+- Track your progress over time
+- Get personalized training recommendations from SAGE™
+- Find suitable practice partners and opponents
+- Qualify for appropriate tournament divisions
+
+The more you play and practice on Pickle+, the more accurate your CourtIQ™ profile becomes!`,
         keywords: ['courtiq', 'rating', 'multi-dimensional', 'skills', 'assessment', 'score', 'metrics', 'dimensions']
       },
       {
         id: 'ranking_points',
         title: 'Ranking Points System',
-        content: `Pickle+ uses a comprehensive ranking system based on match performance and CourtIQ™ ratings:
+        content: `# Understanding Pickle+ Ranking Points
 
-Point Allocation per Match:
-- Win against higher-ranked players: 8-15 points
-- Win against similar-ranked players: 5-8 points
-- Win against lower-ranked players: 2-5 points
-- Loss against higher-ranked players: 0-2 points
-- Loss against similar-ranked players: -2 to -5 points
-- Loss against lower-ranked players: -5 to -10 points
+Pickle+ uses a dynamic ranking points system that reflects your skill level and competitive performance. Your ranking points determine your position on leaderboards and help match you with players of similar skill.
 
-Tournament Multipliers:
-- Local tournaments: 1.2x multiplier
-- Regional tournaments: 1.5x multiplier
-- National tournaments: 2.0x multiplier
+## What Affects Your Ranking Points?
 
-Consistency Bonuses:
-- Play at least 3 matches per week: +2 points/week
-- Maintain win ratio above 60% for 4+ weeks: +5 points/month
-- Complete your player profile: +10 one-time bonus
-- Verified skill assessment: +5 points
+Your points change based on several key factors:
+- Match outcomes (wins increase points, losses may decrease points)
+- Opponent's skill level (challenging stronger opponents offers greater rewards)
+- Tournament participation (tournaments offer multipliers to accelerate progress)
+- Consistent play (regular participation earns bonus points)
 
-Ranking Categories:
-- Overall ranking (combines all formats)
-- Format-specific rankings (singles, doubles, mixed doubles)
-- Age division rankings
-- Regional/local leaderboards
+## How to View and Improve Your Ranking
 
-Your ranking is determined by your accumulated points and is updated after each recorded match or tournament.`,
+You can find your current ranking points in these places:
+- Your player profile under the "Rankings" tab
+- Community leaderboards (overall and by category)
+- After each match in your match history
+
+To improve your ranking:
+1. Play regularly to accumulate points
+2. Challenge yourself against higher-ranked players
+3. Participate in tournaments for multiplier bonuses
+4. Complete your player profile for one-time bonuses
+5. Focus on your win percentage over time
+
+Rankings are updated automatically after each recorded match or tournament.`,
         keywords: ['ranking', 'points', 'leaderboard', 'standing', 'position', 'rating points', 'tournaments', 'multiplier']
       },
       {
         id: 'sage_features',
         title: 'SAGE™ Features & Capabilities',
-        content: `SAGE™ (Skills Assessment & Growth Engine) is your AI-powered pickleball coach and platform concierge with multiple capabilities:
+        content: `# Meet SAGE™: Your Personal Pickleball Assistant
 
-Coaching & Training:
-- Personalized training plans based on your CourtIQ™ profile
-- Technique analysis and improvement suggestions
-- Strategy recommendations for different opponents and situations
-- Video demonstration links for proper technique (Premium)
-- Progressive difficulty adjustments as you improve (Premium)
+SAGE™ (Skills Assessment & Growth Engine) is your AI-powered pickleball coach and platform guide that helps you get the most out of Pickle+.
 
-Journaling & Progress Tracking:
-- Record match results and personal reflections
-- Track emotional and physical state during matches
-- Identify patterns in performance over time
-- Set and monitor improvement goals
-- Review progress through interactive charts and metrics
+## What Can SAGE™ Do For You?
 
-Platform Navigation (Concierge):
-- Help finding specific features within Pickle+
-- Explanations of platform functionality and tools
-- Personalized feature recommendations based on your needs
-- Step-by-step guidance for complex processes
+SAGE™ serves as your all-in-one assistant with four main capabilities:
 
-Knowledge Database:
-- Complete pickleball rules and regulations
-- Terminology explanations and glossary
-- Equipment recommendations and reviews
-- Training drills and exercise descriptions
-- Tournament preparation guidance
+1. **Coaching & Training**
+   SAGE™ helps improve your pickleball skills by offering personalized training suggestions based on your style of play and CourtIQ™ profile.
 
-SAGE™ learns from your interactions and adapts its recommendations to your specific needs and goals over time.`,
+2. **Journaling & Progress Tracking**
+   Record your match experiences, track your emotional state during games, and identify patterns to improve your mental game.
+
+3. **Platform Navigation (Concierge)**
+   SAGE™ helps you discover and use all the features of Pickle+, answering questions about how things work and where to find them.
+
+4. **Knowledge Database**
+   Access comprehensive information about pickleball rules, techniques, equipment, and Pickle+ platform features.
+
+## How to Use SAGE™
+
+You can access SAGE™ in several ways:
+- From the SAGE™ button on your dashboard
+- Through the SAGE™ floating button available on most pages
+- By visiting the dedicated SAGE™ page under the "Coaching" section
+
+Simply type your question or request, and SAGE™ will respond with helpful information, guidance, or recommendations tailored to your needs.
+
+Free users can get up to 3 drill recommendations per query, while premium subscribers enjoy unlimited SAGE™ coaching and recommendations.`,
         keywords: ['sage', 'ai coach', 'training', 'concierge', 'journaling', 'recommendations', 'assistance', 'guidance']
       },
       {
         id: 'tournaments',
         title: 'Tournament System',
-        content: `Pickle+ offers a comprehensive tournament system for players of all levels:
+        content: `# Tournament System on Pickle+
 
-Tournament Types:
-- Round Robin: Everyone plays against everyone in their group
-- Single Elimination: Lose once and you're out
-- Double Elimination: Two losses required for elimination
-- Modified Round Robin: Round robin followed by elimination bracket
-- Swiss Format: Multiple rounds without elimination
+Pickle+ makes participating in pickleball tournaments easy and fun for players of all skill levels.
 
-Division Categories:
-- Skill Level: Based on CourtIQ™ ratings (Novice, Intermediate, Advanced, Elite)
-- Age Groups: 19+, 35+, 50+, 65+
-- Format: Singles, Doubles, Mixed Doubles
-- Special Events: Challenge tournaments, Pro-Am events, club championships
+## Finding the Right Tournament
 
-Tournament Features:
-- Real-time bracket updates and score tracking
-- Online registration and payment processing
-- Court assignments and scheduling
-- Automated notifications for upcoming matches
-- Results recording and statistics tracking
+Tournaments on Pickle+ are organized by:
+- Skill level divisions (based on your CourtIQ™ ratings)
+- Age groups (19+, 35+, 50+, 65+)
+- Format (Singles, Doubles, Mixed Doubles)
+- Special events (Challenge tournaments, Pro-Am events)
 
-Tournament Rewards:
-- Ranking points with tournament multipliers
-- Digital trophies and achievements
-- CourtIQ™ rating adjustments based on performance
-- Qualification for higher-level tournaments
+## How to Join a Tournament
 
-To join a tournament, navigate to the Tournaments section, browse available events, and register online. Payment and waivers can be completed directly through the platform.`,
+1. Go to the "Tournaments" section from your dashboard
+2. Browse upcoming events in your area or skill level
+3. Select a tournament that interests you
+4. Choose your division and register online
+5. Complete payment and electronic waivers
+6. Receive confirmation and tournament details
+
+## During the Tournament
+
+Once registered, you'll have access to:
+- Your match schedule and court assignments
+- Real-time bracket updates
+- Notifications before your matches
+- Score tracking and results
+
+## Tournament Benefits
+
+Playing in tournaments helps you:
+- Earn ranking points (with tournament multipliers)
+- Gain achievements and digital trophies 
+- Improve your CourtIQ™ ratings
+- Qualify for higher-level competitions
+- Test your skills against new opponents
+
+The more tournaments you participate in, the more visibility you gain in the Pickle+ community!`,
         keywords: ['tournament', 'bracket', 'division', 'elimination', 'round robin', 'competition', 'event', 'match play']
       },
       {
         id: 'subscription_tiers',
         title: 'Subscription Plans & Premium Features',
-        content: `Pickle+ offers different subscription tiers to match your needs and goals:
+        content: `# Pickle+ Subscription Plans
 
-Free Tier:
-- Basic match recording and history
-- Limited access to SAGE™ features (3 drills per request)
-- Public community access
-- Standard player profile
-- Basic CourtIQ™ assessment
+Pickle+ offers flexible subscription options to match your needs and goals, from casual players to serious competitors.
 
-Basic Plan ($5.99/month):
-- Unlimited SAGE™ conversations
-- Complete training plans (not just 3 drills)
-- Detailed performance tracking
-- Access to standard drill library
-- Weekly training recommendations
-- Tournament registration access
-- Enhanced player profile
-- Removal of advertisements
+## Available Plans
 
-Power Plan ($11.99/month):
-- Everything in Basic Plan
+### Free Tier
+Try Pickle+ with these basic features:
+- Record and track your matches
+- Get up to 3 drill recommendations per SAGE™ request
+- Join the Pickle+ community forums
+- Create your player profile
+- Receive a basic CourtIQ™ assessment
+
+### Basic Plan ($5.99/month)
+Everything in Free, plus:
+- Unlimited SAGE™ coaching conversations
+- Full training plans (not just individual drills)
+- Detailed performance analytics and tracking
+- Access to our complete standard drill library
+- Weekly personalized recommendations
+- Ad-free experience
+
+### Power Plan ($11.99/month)
+The ultimate pickleball experience with:
 - Advanced multi-dimensional training programs
 - Video analysis capabilities
-- Priority SAGE™ responses
-- Advanced performance analytics
+- Priority SAGE™ coaching responses
+- In-depth performance analytics
 - Access to exclusive premium drills
 - Personalized improvement roadmaps
 - Early access to new features
-- Premium profile badge
 
-Team/Facility Plans:
-- Contact our sales team for group and facility pricing options
-- Includes admin controls and group management tools
-- Customized team training programs
-- Facility-level analytics and reporting
+## How to Subscribe
 
-Upgrade anytime through your account settings or when prompted during relevant features usage.`,
+1. Visit the "Account" section in your profile
+2. Select "Subscription Options"
+3. Choose the plan that's right for you
+4. Enter payment information
+5. Start enjoying your premium benefits immediately
+
+You can upgrade, downgrade, or cancel your subscription at any time through your account settings.`,
         keywords: ['subscription', 'premium', 'plan', 'pricing', 'features', 'paid', 'tier', 'upgrade']
       },
       {
         id: 'mastery_paths',
         title: 'Mastery Paths System',
-        content: `Mastery Paths are Pickle+'s skill development tracking system, allowing you to progress through defined skill trees:
+        content: `# Mastery Paths: Your Pickleball Skill Journey
 
-Path Categories:
-- Technical Mastery: Focused on stroke development and shot execution
-- Tactical Mastery: Strategic understanding and court awareness
-- Physical Mastery: Movement, agility, and conditioning
-- Mental Mastery: Focus, resilience, and competitive mindset
-- Match Mastery: Performing under pressure in competitive situations
+Mastery Paths is Pickle+'s visual skill development system that guides your improvement journey and celebrates your progress along the way.
 
-Each path contains multiple levels (Novice, Developing, Intermediate, Advanced, Expert, Master) with specific skills to acquire. Progress is tracked through:
+## What Are Mastery Paths?
 
-- Skill assessments verified by the system
-- Coach validations and observations
-- Performance in drills and challenges
-- Match performance metrics
-- Video submission reviews (Premium feature)
+Think of Mastery Paths as skill trees that map out different aspects of pickleball excellence:
 
-Benefits of Mastery Paths:
-- Clear progression roadmap for skill development
-- Visual representation of strengths and weaknesses
-- Achievement badges and recognition
-- Personalized drill recommendations based on current level
-- Community recognition for mastery accomplishments
+- **Technical Mastery**: Developing proper stroke mechanics and shot execution
+- **Tactical Mastery**: Learning game strategy and court awareness
+- **Physical Mastery**: Building the movement skills and conditioning needed for pickleball
+- **Mental Mastery**: Developing focus, resilience, and competitive mindset
+- **Match Mastery**: Applying all skills effectively in competitive situations
 
-Access Mastery Paths through your dashboard or profile section to view current progress and next steps for improvement.`,
+## How to Use Mastery Paths
+
+1. Access your Mastery Paths through your dashboard or profile
+2. Review your current skill level in each path
+3. Identify the next skills to work on in your development
+4. Complete suggested drills and challenges to make progress
+5. Earn achievements and badges as you advance
+
+## Benefits of Following Mastery Paths
+
+- See a clear roadmap for your pickleball development
+- Identify your strengths and areas for improvement at a glance
+- Receive personalized drill recommendations based on your current level
+- Track your progress with visual indicators and achievements
+- Share your accomplishments with the Pickle+ community
+
+As you improve, your Mastery Paths visualization evolves, creating a rewarding journey of continuous growth and achievement.`,
         keywords: ['mastery', 'path', 'skill tree', 'progression', 'development', 'achievement', 'learning path']
       },
       {
         id: 'pickle_passport',
         title: 'Pickle Passport™ & Digital ID',
-        content: `The Pickle Passport™ is your digital pickleball identity and credential within the Pickle+ ecosystem:
+        content: `# Your Pickle Passport™
 
-Passport Features:
-- Digital ID with verified player information
-- CourtIQ™ rating display with dimensional breakdown
+The Pickle Passport™ is your official digital identity in the world of Pickle+, serving as your verified player credential for tournaments, events, and community participation.
+
+## What's Inside Your Passport
+
+Your Pickle Passport™ contains all your important player information in one place:
+- Your verified player profile and photo
+- CourtIQ™ ratings with dimensional breakdown
 - Tournament history and achievements
-- Ranking position and points
-- Mastery paths progress visualization
-- Equipment preferences and playing style
-- Digital verification QR code for tournaments and events
-- Profile image and personalization options
+- Current ranking and points
+- Mastery paths progress
+- Equipment preferences
+- Playing style and preferences
+- Digital verification QR code
 
-Verification Process:
-- Basic verification: Email and account confirmation
-- Standard verification: Photo ID submission
-- Premium verification: In-person skills assessment with certified coach
+## Getting Verified
 
-Benefits of Verified Passport:
-- Tournament registration without additional verification
-- Access to verified-only events and competitions
-- Credibility within the Pickle+ community
-- Eligibility for official rankings and leaderboards
-- Recognition at partner facilities and events
+There are three levels of verification available:
+1. **Basic**: Verify your email and complete account setup
+2. **Standard**: Submit photo ID for additional verification
+3. **Premium**: Complete an in-person skills assessment with a certified coach
 
-Your Pickle Passport™ can be accessed digitally through the mobile app or web interface, and can be shared via QR code or direct link when needed for verification purposes.`,
+## Using Your Passport
+
+Your Pickle Passport™ makes pickleball more convenient and connected:
+- Register for tournaments without additional verification steps
+- Access verified-only events and competitions
+- Build credibility in the Pickle+ community
+- Qualify for official rankings and leaderboards
+- Receive recognition at partner facilities
+
+You can access your Pickle Passport™ anytime from your profile and share it via QR code or digital link when needed for verification.`,
         keywords: ['passport', 'id', 'identity', 'verification', 'credential', 'digital id', 'player card']
       }
     ]
@@ -547,179 +587,250 @@ Your Pickle Passport™ can be accessed digitally through the mobile app or web 
       {
         id: 'beginner_drills',
         title: 'Beginner Pickleball Drills',
-        content: `Essential drills for beginning pickleball players:
+        content: `# Beginner Pickleball Drills
 
-1. Dink Practice: With a partner, practice soft dinks back and forth from the kitchen line. Focus on consistency and control rather than power.
+Getting started with pickleball is exciting, and these fundamental drills will help you build a solid foundation for your game.
 
-2. Serve Accuracy: Place targets or cones in the service court and practice hitting them with your serves. Start close and gradually move back to the baseline.
+## Why Beginner Drills Matter
 
-3. Return of Serve: Have a partner serve to you, focusing on making consistent returns that land deep in the court.
+Beginner drills are essential because they:
+- Build proper technique from the start
+- Develop consistent shot-making abilities
+- Create muscle memory for fundamental movements
+- Increase confidence on the court
+- Make the game more enjoyable as you improve
 
-4. Forehand/Backhand Wall Rally: Hit against a wall, alternating between forehand and backhand strokes to develop consistency and technique.
+## Core Beginner Skills to Practice
 
-5. Kitchen Line Mobility: Practice moving side to side along the kitchen line while maintaining proper ready position.
+### Dinking
+The soft game at the kitchen line is the heart of pickleball. Practicing controlled dinks helps you develop touch and consistency.
 
-6. Drop Shot Practice: From the baseline, practice hitting soft drop shots that land in the kitchen. Focus on getting the right height and depth.
+### Serving & Return
+Every point starts with a serve and return. These are your first opportunity to set up a successful point or neutralize your opponent's advantage.
 
-7. Volley Practice: With a partner, stand at the kitchen line and hit volleys back and forth, focusing on control and proper technique.
+### Basic Strokes
+Developing proper forehand and backhand technique early prevents bad habits that can be difficult to correct later.
 
-These drills focus on developing the fundamental skills needed for pickleball success: consistency, control, and proper technique.`,
+### Court Movement
+Learning to move efficiently around the court helps with shot preparation and reduces fatigue during longer play sessions.
+
+## Getting Started with Beginner Drills
+
+1. Practice regularly, even if only for short sessions
+2. Focus on proper technique rather than power
+3. Use a wall for solo practice when a partner isn't available
+4. Keep it fun and celebrate small improvements
+5. Ask SAGE™ for personalized drill recommendations based on your current skill level
+
+Remember that everyone starts as a beginner. With consistent practice of these fundamental drills, you'll be surprised at how quickly your skills develop!`,
         keywords: ['beginner', 'drill', 'practice', 'fundamental', 'basic', 'starter', 'new player']
       },
       {
         id: 'intermediate_drills',
         title: 'Intermediate Pickleball Drills',
-        content: `Drills to develop skills for intermediate players:
+        content: `# Intermediate Pickleball Drills
 
-1. Third Shot Drop Progression: Practice third shot drops from different positions, gradually moving from mid-court to the baseline. Focus on clearing the net with minimal height.
+Once you've mastered the basics, these intermediate drills will help you develop the more nuanced skills needed to compete at a higher level.
 
-2. Dink Patterns: Practice specific dinking patterns with a partner - cross-court, down the line, and diagonal dinks in sequence.
+## Why Intermediate Drills Matter
 
-3. Reset Drill: Have a partner hit firm shots at you at the kitchen line, and practice "resetting" them softly into the kitchen.
+Intermediate drills help you:
+- Develop more refined shot selection and control
+- Improve your tactical decision-making
+- Enhance your court positioning and movement
+- Build a more complete skill set for competitive play
+- Make the transition from recreational to competitive player
 
-4. Transition Drill: Start at the baseline, hit a drop shot, move to the kitchen line, and then continue the point with dinks and volleys.
+## Key Focus Areas for Intermediate Players
 
-5. Attack the Middle: In doubles practice, focus on hitting shots down the middle between two opponents to create confusion.
+### Third Shot Development
+The third shot (especially the drop) is often considered the most important shot in pickleball. Drills focusing on this shot help you start points with control rather than power.
 
-6. Around the World Volleys: One player feeds balls from mid-court while the other moves laterally along the kitchen line, practicing volleys from different positions.
+### Kitchen Line Play
+Most points in pickleball are won and lost at the kitchen line. These drills improve your ability to handle different ball heights, speeds, and placements while maintaining proper position.
 
-7. Drop-Drive-Dink: Practice the three main shots in sequence - third shot drop, drive volley when given the opportunity, and dink when needed to reset the point.
+### Transitional Movement
+Moving efficiently from the baseline to the kitchen line is crucial. These drills help you develop smooth transitions between court positions.
 
-These drills focus on developing more advanced shot selection, court awareness, and movement patterns that are crucial for competitive play.`,
+### Shot Selection
+Learning when to dink, when to drive, and when to reset is essential at the intermediate level. These drills help you make better decisions under pressure.
+
+## Getting Started with Intermediate Drills
+
+1. Find a practice partner at or slightly above your skill level
+2. Focus on one aspect of your game in each practice session
+3. Begin with slower-paced drills and gradually increase the speed
+4. Practice both individual shots and game-like sequences
+5. Use the SAGE™ coaching feature to get personalized drill recommendations
+
+As you master these intermediate skills, you'll notice significant improvement in your match performance and consistency.`,
         keywords: ['intermediate', 'drill', 'practice', 'shot selection', 'control', 'consistency']
       },
       {
         id: 'advanced_drills',
         title: 'Advanced Pickleball Drills',
-        content: `Sophisticated drills for advanced skill development:
+        content: `# Advanced Pickleball Drills
 
-1. Speed-Up Drill: Practice recognizing and attacking high dinks with aggressive put-away shots. One player intentionally hits slightly high dinks while the other practices driving them.
+These sophisticated drills are designed for experienced players looking to elevate their game to the highest levels of competitive play.
 
-2. Erne Transition: Practice moving from the kitchen line to the outside of the court to execute an erne shot (jumping around the kitchen to volley the ball).
+## Why Advanced Drills Matter
 
-3. ATP (Around The Post) Practice: Position near the sideline and practice hitting shots around the net post rather than over the net.
+As your skills improve, you need more challenging and complex drills that:
+- Develop advanced shot-making abilities
+- Enhance situational awareness and decision-making
+- Build greater pressure tolerance
+- Improve recovery skills and court coverage
+- Integrate multiple skills simultaneously
 
-4. Reset and Counter Reset: After resetting a hard shot into the kitchen, immediately prepare for your opponent's speed-up attempt with a counter reset.
+## Types of Advanced Drills
 
-5. Third Shot Options: Practice all three third shot options (drop, drive, lob) and make decisions based on positioning and scenario.
+Advanced drills focus on several key areas:
 
-6. Defensive Lob Recovery: When pulled off the court, practice hitting defensive lobs and then recovering proper court position.
+### Offensive Weapons
+Develop specialized shots like the Erne, ATP (Around the Post), and speed-up attacks that can break through even strong defenses.
 
-7. Two-on-One Kitchen Game: Two players dink against one player to develop exceptional movement and shot selection under pressure.
+### Defensive Counters
+Practice resetting hard shots, defensive lobs, counter-drives, and other techniques to neutralize aggressive opponents.
 
-These advanced drills develop situational awareness, shot versatility, and the ability to execute complex strategies under pressure.`,
+### Tactical Variations
+Learn to seamlessly transition between different strategies and shot selections based on opponents and situations.
+
+### Pressure Simulation
+Train under conditions that replicate or exceed match pressure to build competitive resilience.
+
+## Getting the Most from Advanced Drills
+
+1. Work with a skilled partner or coach who can provide quality feeds
+2. Focus on quality over quantity in your repetitions
+3. Gradually increase speed and difficulty as skills improve
+4. Alternate between isolated skill work and game-like situations
+5. Record and analyze your performance to identify subtle improvements
+
+Premium Pickle+ subscribers receive access to the complete library of advanced drills with video demonstrations from professional players.`,
         isPremium: true,
         keywords: ['advanced', 'drill', 'complex', 'strategy', 'high-level', 'expert', 'competitive']
       },
       {
         id: 'physical_training',
         title: 'Physical Conditioning for Pickleball',
-        content: `Physical training specifically designed for pickleball players:
+        content: `# Physical Training for Pickleball Success
 
-Agility & Footwork:
-- Ladder drills: Forward/backward runs, lateral shuffles, in-out steps
-- Cone patterns: Set up cones in court positions and practice movement patterns
-- Split-step practice: Develop the proper timing for the split-step between shots
-- Direction change drills: Practice quickly changing direction on signal
+Good physical conditioning is essential for pickleball performance and injury prevention. A well-designed training program can significantly improve your game.
 
-Endurance & Stamina:
-- Interval training: Short bursts of high intensity followed by brief recovery periods
-- Shadow pickleball: Move through shot sequences without a ball to build stamina
-- Court movement circuits: Continuous movement across all court zones
-- Extended rally practice: Sustained dinking or rally sessions
+## Why Physical Training Matters
 
-Strength & Power:
-- Lower body: Squats, lunges, and step-ups for leg strength
-- Core training: Planks, rotational exercises, and stability work
-- Upper body: Resistance band exercises for shoulder health and rotational power
-- Plyometrics: Controlled jumps and explosive movements (for advanced players)
+Pickleball requires specific physical attributes:
+- Quick lateral movements and direction changes
+- Explosive power for specific shots
+- Core stability for balance and rotation
+- Endurance for long matches and tournaments
+- Flexibility for reaching difficult shots
 
-Flexibility & Recovery:
-- Dynamic warm-up routine: Active stretching before play
-- Post-play static stretching: Focus on shoulders, hips, and lower back
-- Foam rolling for muscle recovery
-- Mobility exercises for wrists, shoulders, and hips
+## Four Key Areas of Physical Training
 
-A balanced physical conditioning program should include elements from each category, with emphasis based on your specific needs and limitations. Always consult a healthcare provider before beginning a new exercise program.`,
+### 1. Agility & Footwork
+Improve your ability to move quickly and efficiently around the court. Good footwork positions you properly for each shot and helps prevent injuries.
+
+### 2. Endurance & Stamina
+Build the energy systems needed to maintain a high level of play throughout an entire match or tournament day without fatigue affecting your performance.
+
+### 3. Strength & Power
+Develop the muscular strength and power needed for explosive movements, shot generation, and injury prevention, with special focus on core and rotational strength.
+
+### 4. Flexibility & Recovery
+Maintain and improve your range of motion to reach difficult shots and recover more quickly between matches with proper cool-down routines.
+
+## Getting Started with Physical Training
+
+1. Begin with a basic assessment of your current fitness level
+2. Start with low-intensity, proper-form exercises before progressing
+3. Incorporate pickleball-specific movements into your training
+4. Train consistently but allow adequate recovery time
+5. Include warm-up and cool-down routines with every session
+
+Remember to consult with a healthcare provider before beginning any new exercise program, especially if you have existing health conditions.`,
         keywords: ['fitness', 'conditioning', 'exercise', 'agility', 'strength', 'endurance', 'physical training']
       },
       {
         id: 'mental_game',
         title: 'Mental Game & Performance Psychology',
-        content: `Developing mental toughness and psychological skills for pickleball:
+        content: `# The Mental Side of Pickleball
 
-Focus & Concentration:
-- Pre-point routines to reset focus before each serve or return
-- Attention control exercises to stay present and engaged
-- Cue words to trigger proper concentration during critical moments
-- Visual anchors to maintain focus between points
+The mental game is often what separates good players from great ones. Developing mental toughness and psychological skills can dramatically improve your pickleball performance.
 
-Emotional Management:
-- Breathing techniques to regulate arousal and anxiety
-- Acceptance strategies for managing frustration and setbacks
-- Positive self-talk and cognitive reframing
-- Energy management between points and games
+## Why Mental Skills Matter
 
-Confidence Building:
-- Performance journaling to track improvement and successes
-- Visualization of successful execution and positive outcomes
-- Affirmations and confidence statements
-- Evidence-based confidence through deliberate practice
+In pickleball, mental skills are crucial because:
+- Matches can shift momentum quickly
+- Quick decisions must be made under pressure
+- Errors can lead to frustration if not managed
+- Confidence affects how aggressively you play
+- Focus determines how well you execute shots
 
-Strategic Thinking:
-- Match planning and opponent analysis
-- Tactical adjustments during play
-- Pattern recognition in gameplay
-- Decision-making frameworks for shot selection
+## Key Mental Skills to Develop
 
-Pressure Management:
-- Simulation training to practice under pressure
-- Routine development for consistency in high-pressure situations
-- Reframing pressure as opportunity
-- Physical relaxation techniques during tense moments
+### Focus & Concentration
+Learn to direct your attention where it matters most and block out distractions during play.
 
-Mental training should be incorporated into regular practice sessions, not just applied during matches. Like physical skills, mental skills require consistent practice to develop and maintain.`,
+### Emotional Management
+Develop techniques to stay calm under pressure and recover quickly from mistakes or setbacks.
+
+### Confidence Building
+Build genuine belief in your abilities through tracking progress and celebrating improvements.
+
+### Strategic Thinking
+Improve your ability to analyze situations, recognize patterns, and make smart decisions during matches.
+
+### Pressure Management
+Learn to perform your best when it matters most by practicing under simulated pressure situations.
+
+## How to Train Your Mental Game
+
+Mental skills can be developed just like physical ones:
+1. Set aside dedicated time for mental training
+2. Practice techniques like visualization and breathing exercises
+3. Create pre-point routines that reset your focus
+4. Keep a performance journal to track patterns
+5. Use specific cue words to trigger ideal mental states
+
+The most successful players integrate mental training into their regular practice sessions rather than only thinking about it during matches.`,
         isPremium: true,
         keywords: ['mental', 'psychology', 'focus', 'concentration', 'confidence', 'pressure', 'mindset']
       },
       {
         id: 'personalized_training',
         title: 'Personalized Training Based on CourtIQ',
-        content: `SAGE creates personalized training recommendations based on your CourtIQ™ dimensional profile:
+        content: `# Personalized Training Plans
 
-Technical Focus Areas (TECH):
-- Specific stroke mechanics improvement
-- Shot execution and precision development
-- Technical drills targeted to weakness areas
-- Video analysis of form and mechanics (Premium)
+SAGE™ creates training recommendations customized specifically for you based on your unique CourtIQ™ profile.
 
-Tactical Development (TACT):
-- Strategic pattern recognition
-- Decision-making exercises
-- Shot selection scenarios
-- Pattern-based drills and simulations
-- Court positioning improvement
+## How Personalized Training Works
 
-Physical Conditioning (PHYS):
-- Customized agility training
-- Endurance development specific to your needs
-- Strength training for pickleball performance
-- Recovery protocols and injury prevention
+Unlike generic drills and exercises, SAGE™ analyzes your dimensional CourtIQ™ profile to identify:
+- Your strengths that can be leveraged
+- Your growth areas that need development
+- Your playing style and preferences
+- Your specific goals and objectives
 
-Mental Toughness (MENT):
-- Focus and concentration exercises
-- Pressure management techniques
-- Confidence building protocols
-- Emotional regulation strategies
-- Performance routines development
+Based on this analysis, SAGE™ creates training recommendations that target exactly what you need to improve most.
 
-Consistency Training (CONS):
-- Error reduction drills
-- Percentage play development
-- Reliability under pressure training
-- Shot tolerance exercises
+## What Your Training Plan Includes
 
-Your personalized training plan adjusts automatically as your CourtIQ™ profile evolves, ensuring you're always working on the most relevant aspects of your game for maximum improvement.`,
+Your personalized plan addresses all five dimensions of your game:
+- **Technical Skills**: Improve your stroke mechanics and shot execution
+- **Tactical Awareness**: Enhance your strategic thinking and decision-making
+- **Physical Fitness**: Develop the specific physical attributes you need
+- **Mental Toughness**: Strengthen your focus and emotional control
+- **Consistency**: Build reliability in your game under all conditions
+
+## How to Access Your Personalized Plan
+
+1. Complete your CourtIQ™ assessment (if you haven't already)
+2. Go to the SAGE™ coaching page
+3. Ask for "my personalized training plan" or "what should I work on"
+4. Review your recommendations and save them to your training journal
+
+Free users receive up to 3 drill recommendations per request, while premium subscribers get complete training plans that adapt automatically as your CourtIQ™ profile evolves.`,
         isPremium: true,
         keywords: ['personalized', 'custom', 'training plan', 'individual', 'tailored', 'specific']
       }

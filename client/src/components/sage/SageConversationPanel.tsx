@@ -16,6 +16,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient, getQueryFn } from "@/lib/queryClient";
+import ReactMarkdown from "react-markdown";
 import { 
   Send, 
   User, 
@@ -84,7 +85,7 @@ export default function SageConversationPanel() {
       {
         id: 'welcome',
         type: 'system',
-        content: 'Welcome to S.A.G.E. (Skills Assessment & Growth Engine), your personal pickleball coach. How can I help you improve your game today?',
+        content: 'Welcome to S.A.G.E. (Skills Assessment & Growth Engine), your personal pickleball assistant. I can help you improve your game with personalized coaching and also help you navigate Pickle+ features. Ask me about training, tournaments, CourtIQ ratings, or any other platform features!',
         timestamp: new Date()
       }
     ]
@@ -109,15 +110,59 @@ export default function SageConversationPanel() {
     }
   }, [savedConversation]);
   
+  // Query the extended knowledge base for relevant content
+  const queryKnowledgeBase = async (query: string): Promise<any> => {
+    try {
+      // First, try to get intent-based knowledge using the POST endpoint
+      const intentResponse = await apiRequest(
+        "POST",
+        "/api/coach/sage/knowledge/intent",
+        {
+          query,
+          intent: query.toLowerCase().includes('drill') || 
+                  query.toLowerCase().includes('practice') || 
+                  query.toLowerCase().includes('training') 
+                    ? 'training' 
+                    : 'general'
+        }
+      );
+      
+      if (intentResponse.ok) {
+        return await intentResponse.json();
+      }
+      
+      // Fallback to search if intent-based query fails
+      const searchResponse = await apiRequest(
+        "GET",
+        `/api/coach/sage/knowledge/search?query=${encodeURIComponent(query)}`
+      );
+      
+      if (searchResponse.ok) {
+        return await searchResponse.json();
+      }
+      
+      return null;
+    } catch (error) {
+      console.error("Error querying knowledge base:", error);
+      return null;
+    }
+  };
+  
   // Send message to SAGE
   const sendMessageMutation = useMutation({
     mutationFn: async (messageContent: string) => {
+      // First, check if there's relevant knowledge base content
+      const knowledgeResults = await queryKnowledgeBase(messageContent);
+      
+      // Send message to SAGE conversation API
       const response = await apiRequest(
         "POST", 
         "/api/coach/sage/conversation", 
         { 
           message: messageContent,
-          conversationId: conversation.sessionId
+          conversationId: conversation.sessionId,
+          // Include knowledge base results if available
+          knowledgeResults: knowledgeResults?.success ? knowledgeResults : undefined
         }
       );
       
@@ -145,9 +190,9 @@ export default function SageConversationPanel() {
       setMessage('');
     },
     onError: (error: Error) => {
-      // In development mode, simulate a rule-based response
+      // In development mode, simulate a rule-based response with knowledge base integration
       if (process.env.NODE_ENV !== 'production') {
-        console.log('[DEV MODE] Simulating SAGE response');
+        console.log('[DEV MODE] Simulating SAGE response with knowledge base integration');
         
         // Create user message
         const userMessage: Message = {
@@ -160,10 +205,188 @@ export default function SageConversationPanel() {
         // Create SAGE response based on user message
         let sageResponse: Message;
         
+        // First, check if we need knowledge base information
+        const isKnowledgeQuery = 
+          message.toLowerCase().includes('what is') || 
+          message.toLowerCase().includes('how do') || 
+          message.toLowerCase().includes('explain') || 
+          message.toLowerCase().includes('define') ||
+          message.toLowerCase().includes('tell me about');
+          
+        // Check if this is a concierge request (exploring platform features)
+        const isConciergeQuery = 
+          message.toLowerCase().includes('feature') || 
+          message.toLowerCase().includes('show me') || 
+          message.toLowerCase().includes('help me find') ||
+          message.toLowerCase().includes('where is') ||
+          message.toLowerCase().includes('how to access') ||
+          message.toLowerCase().includes('navigate');
+        
         // Simple rule-based responses
         const lowerMessage = message.toLowerCase();
         
-        if (lowerMessage.includes('dink') || lowerMessage.includes('third shot')) {
+        // Check for concierge/feature exploration queries first
+        if (isConciergeQuery && (lowerMessage.includes('tournament') || lowerMessage.includes('match'))) {
+          sageResponse = {
+            id: `sage-${Date.now()}`,
+            type: 'sage',
+            content: `# Tournament & Match Features
+
+Pickle+ offers comprehensive tournament and match tracking capabilities to enhance your competitive experience.
+
+## Tournament Features
+
+Our tournament system allows you to:
+- Browse upcoming tournaments in your area
+- Register for events with seamless payment
+- Track your bracket and upcoming matches
+- Receive notifications about schedule changes
+- View complete match history and statistics
+
+## Match Recording
+
+The match recording system helps you:
+- Log casual and competitive matches
+- Track scores and key statistics
+- Analyze your performance trends
+- Share results with friends and teammates
+- Build your CourtIQ™ profile
+
+Would you like me to help you navigate to one of these features?`,
+            timestamp: new Date()
+          };
+        }
+        else if (isConciergeQuery && (lowerMessage.includes('subscription') || lowerMessage.includes('pricing') || lowerMessage.includes('plan'))) {
+          sageResponse = {
+            id: `sage-${Date.now()}`,
+            type: 'sage',
+            content: `# Pickle+ Subscription Plans
+
+Pickle+ offers flexible subscription tiers designed to match your commitment level and help you reach your pickleball goals.
+
+## Free Plan
+
+Our free tier gives you access to:
+- Basic match recording and statistics
+- Public tournament information
+- Community forum access
+- Basic CourtIQ™ assessment
+- Limited SAGE coaching (3 drill recommendations per month)
+
+## Basic Plan - $5.99/month
+
+The Basic Plan includes everything in Free, plus:
+- Unlimited SAGE coaching conversations
+- Complete training plans and drills
+- Full match analytics and insights
+- Expanded CourtIQ™ metrics
+- Early tournament registration
+
+## Power Plan - $11.99/month
+
+For serious players, the Power Plan includes everything in Basic, plus:
+- Advanced training programs with video analysis
+- Priority SAGE coaching responses
+- Exclusive advanced drills
+- Tournament strategy guides
+- Customized improvement roadmaps
+
+Would you like to see a detailed feature comparison or learn how to upgrade your account?`,
+            timestamp: new Date()
+          };
+        }
+        else if (isConciergeQuery && (lowerMessage.includes('courtiq') || lowerMessage.includes('rating'))) {
+          sageResponse = {
+            id: `sage-${Date.now()}`,
+            type: 'sage',
+            content: `# CourtIQ™ Multi-Dimensional Rating System
+
+CourtIQ™ is Pickle+'s proprietary rating system that provides a comprehensive view of your pickleball abilities across five key dimensions.
+
+## The Five Dimensions
+
+1. **Technical Skills (TECH)** - Your shot execution, form, and mechanical abilities
+2. **Tactical Awareness (TACT)** - Your strategic decision-making and court positioning
+3. **Physical Fitness (PHYS)** - Your speed, endurance, and athletic capabilities
+4. **Mental Toughness (MENT)** - Your focus, composure, and competitive mindset
+5. **Consistency (CONS)** - Your ability to maintain performance levels over time
+
+## How It Works
+
+CourtIQ™ analyzes your match results, practice sessions, and specialized assessments to generate scores in each dimension on a scale of 1-5. This creates a complete picture of your strengths and areas for improvement.
+
+Would you like to see your current CourtIQ™ profile or learn how to improve specific dimensions?`,
+            timestamp: new Date()
+          };
+        }
+        // Then check for knowledge base related queries
+        else if (isKnowledgeQuery && lowerMessage.includes('beginner') && (lowerMessage.includes('drill') || lowerMessage.includes('practice'))) {
+          sageResponse = {
+            id: `sage-${Date.now()}`,
+            type: 'sage',
+            content: `# Beginner Pickleball Drills
+
+Getting started with pickleball is exciting, and these fundamental drills will help you build a solid foundation for your game.
+
+## Why Beginner Drills Matter
+
+Beginner drills are essential because they:
+- Build proper technique from the start
+- Develop consistent shot-making abilities
+- Create muscle memory for fundamental movements
+- Increase confidence on the court
+- Make the game more enjoyable as you improve
+
+## Core Beginner Skills to Practice
+
+### Dinking
+The soft game at the kitchen line is the heart of pickleball. Practicing controlled dinks helps you develop touch and consistency.
+
+### Serving & Return
+Every point starts with a serve and return. These are your first opportunity to set up a successful point or neutralize your opponent's advantage.
+
+Would you like me to recommend specific drills for any of these skills?`,
+            timestamp: new Date(),
+            metadata: {
+              recommendationType: 'training',
+              dimensionFocus: 'TECH'
+            }
+          };
+        }
+        else if (isKnowledgeQuery && lowerMessage.includes('mental') && (lowerMessage.includes('game') || lowerMessage.includes('toughness'))) {
+          sageResponse = {
+            id: `sage-${Date.now()}`,
+            type: 'sage',
+            content: `# The Mental Side of Pickleball
+
+The mental game is often what separates good players from great ones. Developing mental toughness and psychological skills can dramatically improve your pickleball performance.
+
+## Why Mental Skills Matter
+
+In pickleball, mental skills are crucial because:
+- Matches can shift momentum quickly
+- Quick decisions must be made under pressure
+- Errors can lead to frustration if not managed
+- Confidence affects how aggressively you play
+- Focus determines how well you execute shots
+
+## Key Mental Skills to Develop
+
+### Focus & Concentration
+Learn to direct your attention where it matters most and block out distractions during play.
+
+### Emotional Management
+Develop techniques to stay calm under pressure and recover quickly from mistakes or setbacks.
+
+Would you like specific exercises to improve your mental game?`,
+            timestamp: new Date(),
+            metadata: {
+              recommendationType: 'training',
+              dimensionFocus: 'MENT'
+            }
+          };
+        }
+        else if (lowerMessage.includes('dink') || lowerMessage.includes('third shot')) {
           sageResponse = {
             id: `sage-${Date.now()}`,
             type: 'sage',
@@ -259,7 +482,7 @@ export default function SageConversationPanel() {
         {
           id: 'welcome',
           type: 'system',
-          content: 'Welcome to S.A.G.E. (Skills Assessment & Growth Engine), your personal pickleball coach. How can I help you improve your game today?',
+          content: 'Welcome to S.A.G.E. (Skills Assessment & Growth Engine), your personal pickleball assistant. I can help you improve your game with personalized coaching and also help you navigate Pickle+ features. Ask me about training, tournaments, CourtIQ ratings, or any other platform features!',
           timestamp: new Date()
         }
       ]
@@ -515,7 +738,13 @@ export default function SageConversationPanel() {
                             : 'bg-accent'
                       }`}
                     >
-                      <p className="text-sm">{msg.content}</p>
+                      {msg.type === 'sage' && msg.content.includes('#') ? (
+                        <div className="text-sm sage-markdown">
+                          <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        </div>
+                      ) : (
+                        <p className="text-sm">{msg.content}</p>
+                      )}
                     </div>
                     <div className="flex items-center mt-1 text-xs text-muted-foreground">
                       <span>
