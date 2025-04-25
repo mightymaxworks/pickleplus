@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useShareContentMutation } from "@/hooks/use-social";
-import { SharedContent } from "@/types/social";
+import { SharedContent, ContentType } from "@/types/social";
 import {
   Dialog,
   DialogContent,
@@ -29,8 +29,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-// Import types
-import { SharedContent } from "@/types/social";
+import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
 
 // Temporary mock data for testing
 const useJournals = () => ({ 
@@ -53,8 +53,6 @@ const useFeedback = () => ({
     { id: 2, title: "Feedback 2" }
   ] 
 });
-import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
 
 interface ContentShareDialogProps {
   open: boolean;

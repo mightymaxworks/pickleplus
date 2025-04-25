@@ -30,6 +30,7 @@ const Sidebar = ({ user }: SidebarProps) => {
     { path: "/tournaments", label: "Tournaments", icon: "fas fa-trophy" },
     { path: "/achievements", label: "Achievements", icon: "fas fa-medal" },
     { path: "/leaderboard", label: "Leaderboard", icon: "fas fa-users" },
+    { path: "/social/content", label: "Community Content", icon: "fas fa-share-alt" },
   ];
 
   return (
