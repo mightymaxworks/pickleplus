@@ -101,13 +101,13 @@ export default function SimpleSageWidget() {
   // Add welcome links to the initial message
   const welcomeLinks: SageLink[] = [
     {
-      text: 'View Profile',
-      url: '/profile',
+      text: 'Dashboard',
+      url: '/dashboard',
       type: 'primary'
     },
     {
-      text: 'Find Players',
-      url: '/community/discovery',
+      text: 'Community',
+      url: '/community',
       type: 'secondary'
     }
   ];
@@ -149,7 +149,7 @@ export default function SimpleSageWidget() {
   
   // Function to navigate to full SAGE experience
   const navigateToSage = () => {
-    navigate('/coach/sage');
+    navigate('/dashboard'); // Use dashboard as fallback until full SAGE experience is ready
   };
   
   // Helper function to get contextual suggestions based on message content
@@ -245,37 +245,37 @@ export default function SimpleSageWidget() {
         response = "Based on your profile, I'd recommend exploring these Pickle+ features:\n\n1. CourtIQ™ Performance - track your multi-dimensional skill ratings\n2. Community Hub - connect with players in your area\n3. Tournament Finder - discover upcoming events\n\nWhat would you like to explore first?";
         
         links = [
-          { text: 'Profile Stats', url: '/profile', type: 'primary' },
-          { text: 'Community', url: '/community/discovery', type: 'secondary' },
-          { text: 'Find Events', url: '/events', type: 'secondary' }
+          { text: 'Dashboard', url: '/dashboard', type: 'primary' },
+          { text: 'Community', url: '/community', type: 'secondary' },
+          { text: 'Events', url: '/events', type: 'secondary' }
         ];
       } else if (msg.includes('tournament') || msg.includes('event') || msg.includes('play')) {
         response = "The Tournament Finder is your hub for events! Head to the Events tab to browse upcoming tournaments filtered by location, skill level, and format. You can register directly through Pickle+, and I can help you prepare a training plan leading up to your selected event.";
         
         links = [
-          { text: 'Events Calendar', url: '/events', type: 'primary' },
-          { text: 'Profile', url: '/profile', type: 'secondary' }
+          { text: 'Events', url: '/events', type: 'primary' },
+          { text: 'Dashboard', url: '/dashboard', type: 'secondary' }
         ];
       } else if (msg.includes('player') || msg.includes('partner') || msg.includes('connect') || msg.includes('friend')) {
         response = "To connect with other players, visit the Community tab where you can:\n\n• Search for players by location and skill level\n• Join local Pickle+ groups\n• Use Partner Finder to match with compatible players\n• Create or join meetups\n\nWould you like me to help you find specific types of players?";
         
         links = [
-          { text: 'Find Players', url: '/community/discovery', type: 'primary' },
-          { text: 'Community', url: '/community', type: 'secondary' }
+          { text: 'Community', url: '/community', type: 'primary' },
+          { text: 'Dashboard', url: '/dashboard', type: 'secondary' }
         ];
       } else if (msg.includes('stat') || msg.includes('courtiq') || msg.includes('rating') || msg.includes('score')) {
         response = "Your CourtIQ™ performance shows your multi-dimensional rating across 5 key areas. Looking at your profile, your strongest dimensions are Technical Skills and Tactical Awareness, while you could benefit from development in Mental Toughness. Would you like me to recommend personalized drills to improve your weaker dimensions?";
         
         links = [
-          { text: 'View Profile', url: '/profile', type: 'primary' },
-          { text: 'Leaderboard', url: '/leaderboard', type: 'secondary' }
+          { text: 'Dashboard', url: '/dashboard', type: 'primary' },
+          { text: 'Community', url: '/community', type: 'secondary' }
         ];
       } else if (msg.includes('coach') || msg.includes('drill') || msg.includes('improve') || msg.includes('learn')) {
         response = "I can help with your pickleball skills! The Coaching section offers:\n\n• Personalized drill recommendations\n• Technique analysis\n• Strategy guides for different play styles\n• Mental game development\n\nWhat specific aspect of your game would you like to work on?";
         
         links = [
-          { text: 'Training', url: '/training', type: 'primary' },
-          { text: 'Profile', url: '/profile', type: 'secondary' }
+          { text: 'Dashboard', url: '/dashboard', type: 'primary' },
+          { text: 'Community', url: '/community', type: 'secondary' }
         ];
       } else {
         response = "I can help you with that! As your personal assistant, I can guide you through any feature on the platform, help you find tournaments, connect with players, improve your skills, or track your progress. What aspect are you most interested in exploring?";
@@ -328,30 +328,30 @@ export default function SimpleSageWidget() {
         response = "Based on your profile, I'd recommend exploring these Pickle+ features:\n\n1. CourtIQ™ Performance - track your multi-dimensional skill ratings\n2. Community Hub - connect with players in your area\n3. Tournament Finder - discover upcoming events\n\nWhat would you like to explore first?";
         
         links = [
-          { text: 'Profile Stats', url: '/profile', type: 'primary' },
-          { text: 'Community', url: '/community/discovery', type: 'secondary' },
-          { text: 'Find Events', url: '/events', type: 'secondary' }
+          { text: 'Dashboard', url: '/dashboard', type: 'primary' },
+          { text: 'Community', url: '/community', type: 'secondary' },
+          { text: 'Events', url: '/events', type: 'secondary' }
         ];
       } else if (suggestion.text.includes('tournaments')) {
         response = "The Tournament Finder is your hub for events! Head to the Events tab to browse upcoming tournaments filtered by location, skill level, and format. You can register directly through Pickle+, and I can help you prepare a training plan leading up to your selected event.";
         
         links = [
-          { text: 'Events Calendar', url: '/events', type: 'primary' },
-          { text: 'Profile', url: '/profile', type: 'secondary' }
+          { text: 'Events', url: '/events', type: 'primary' },
+          { text: 'Dashboard', url: '/dashboard', type: 'secondary' }
         ];
       } else if (suggestion.text.includes('connect')) {
         response = "To connect with other players, visit the Community tab where you can:\n\n• Search for players by location and skill level\n• Join local Pickle+ groups\n• Use Partner Finder to match with compatible players\n• Create or join meetups\n\nWould you like me to help you find specific types of players?";
         
         links = [
-          { text: 'Find Players', url: '/community/discovery', type: 'primary' },
-          { text: 'Community', url: '/community', type: 'secondary' }
+          { text: 'Community', url: '/community', type: 'primary' },
+          { text: 'Dashboard', url: '/dashboard', type: 'secondary' }
         ];
       } else if (suggestion.text.includes('CourtIQ')) {
         response = "Your CourtIQ™ performance shows your multi-dimensional rating across 5 key areas. Looking at your profile, your strongest dimensions are Technical Skills and Tactical Awareness, while you could benefit from development in Mental Toughness. Would you like me to recommend personalized drills to improve your weaker dimensions?";
         
         links = [
-          { text: 'View Profile', url: '/profile', type: 'primary' },
-          { text: 'Leaderboard', url: '/leaderboard', type: 'secondary' }
+          { text: 'Dashboard', url: '/dashboard', type: 'primary' },
+          { text: 'Community', url: '/community', type: 'secondary' }
         ];
       } else {
         response = "I can help you with that! As your personal assistant, I can guide you through any feature on the platform, help you find tournaments, connect with players, improve your skills, or track your progress. What aspect are you most interested in exploring?";
