@@ -279,8 +279,8 @@ router.get('/feed/content', isAuthenticated, async (req: Request, res: Response)
     const limit = parseInt(req.query.limit as string) || 20;
     const offset = parseInt(req.query.offset as string) || 0;
     
-    // isAuthenticated middleware ensures req.user exists
-    const content = await socialService.getPublicContentFeed(req.user!.id, limit, offset);
+    // Get content feed using authenticated user ID
+    const content = await socialService.getPublicContentFeed(getUserId(req), limit, offset);
     
     res.json({
       success: true,
@@ -328,7 +328,7 @@ router.post('/content/:id/reactions', isAuthenticated, async (req: Request, res:
     }
     
     // Add reaction
-    await socialService.addReaction(contentId, req.user!.id, validation.data.reactionType);
+    await socialService.addReaction(contentId, getUserId(req), validation.data.reactionType);
     
     res.status(201).json({
       success: true,

@@ -326,7 +326,16 @@ export class SocialService {
   /**
    * Create a coaching recommendation
    */
-  async createRecommendation(recommendation: CoachingRecommendation): Promise<CoachingRecommendation> {
+  async createRecommendation(recommendation: {
+    fromUserId: number;
+    toUserId: number;
+    contentType: ContentType;
+    contentId: number;
+    status: string;
+    message?: string;
+    relevanceReason?: string;
+    skillsTargeted?: string[];
+  }): Promise<CoachingRecommendation> {
     const [result] = await db
       .insert(coachingRecommendations)
       .values(recommendation)
