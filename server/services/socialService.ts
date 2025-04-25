@@ -141,9 +141,10 @@ export class SocialService {
     
     const connectionIds = connections.map(c => c.connectedUserId);
     
-    // Get user role (simplified - in a real app this would use proper role system)
+    // Get user role (simplified - check if user has COACH flag)
     const [user] = await db.select().from(users).where(eq(users.id, userId));
-    const isCoach = user?.role === 'COACH';
+    // In our system, coaches are identified by isCoach flag
+    const isCoach = user?.isCoach === true;
     
     return db
       .select()
@@ -544,7 +545,7 @@ export class SocialService {
     
     // Create feed item for the connection
     await this.createFeedItem({
-      contentType: 'user_connection',
+      contentType: 'user_connection' as const,
       contentId: connections[0][0].id,
       activityType: 'connected',
       userId: request.fromUserId,
