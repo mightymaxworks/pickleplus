@@ -25,6 +25,7 @@ import { BounceAssistancePanel } from '@/components/bounce/BounceAssistancePanel
 import { useToast } from '@/hooks/use-toast';
 import { useMatchStatistics } from '@/hooks/use-match-statistics';
 import { useCourtIQPerformance } from '@/hooks/use-courtiq-performance';
+import SimpleSageWidget from '@/components/sage/SimpleSageWidget';
 
 export default function DashboardContent() {
   const { user } = useAuth();
@@ -753,7 +754,14 @@ export default function DashboardContent() {
                 </Card>
               </motion.div>
               
-              {/* CourtIQ Card removed as requested - redundant with main CourtIQ Performance visualization */}
+              {/* SAGE Insights Widget - PKL-278651-COACH-0021-WIDGET-SIMPLE */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: isLoaded ? 1 : 0, scale: isLoaded ? 1 : 0.95 }}
+                transition={{ delay: 0.5, duration: 0.5 }}
+              >
+                <SimpleSageWidget />
+              </motion.div>
             </div>
           </motion.div>
         </div>
