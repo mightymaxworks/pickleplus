@@ -25,6 +25,14 @@ import {
   DimensionCodes, type DimensionCode
 } from "@shared/schema/sage";
 
+// Import SAGE Concierge schema (PKL-278651-SAGE-0015-CONCIERGE - SAGE Platform Concierge)
+import {
+  conciergeInteractions, conciergeRecommendations, conciergeNavigationStats,
+  type ConciergeInteraction, type InsertConciergeInteraction, 
+  type ConciergeRecommendation, type InsertConciergeRecommendation,
+  type ConciergeNavigationStat, type InsertConciergeNavigationStat
+} from "@shared/schema/sage-concierge";
+
 // Import XP tables from their new modular location
 import { xpTransactions } from "@shared/schema/xp";
 
@@ -218,6 +226,23 @@ export interface IStorage {
   
   // Helper method to award XP
   awardXpToUser(userId: number, xpAmount: number, source: string): Promise<User | undefined>;
+  
+  // PKL-278651-SAGE-0015-CONCIERGE - SAGE Concierge operations
+  createConciergeInteraction(interaction: InsertConciergeInteraction): Promise<ConciergeInteraction>;
+  getConciergeInteractions(userId: number, limit?: number): Promise<ConciergeInteraction[]>;
+  updateConciergeInteractionStatus(userId: number, target: string, isCompleted: boolean): Promise<void>;
+  createConciergeRecommendation(recommendation: InsertConciergeRecommendation): Promise<ConciergeRecommendation>;
+  getConciergeRecommendations(userId: number, limit?: number): Promise<ConciergeRecommendation[]>;
+  markRecommendationViewed(id: number): Promise<void>;
+  markRecommendationActioned(id: number): Promise<void>;
+  updateConciergeNavigationStats(featureId: string, visited: boolean, completed: boolean): Promise<void>;
+  getProfileCompletion(userId: number): Promise<{ percentage: number, fields: string[] } | undefined>;
+  getUserRecentActivity(userId: number): Promise<string[]>;
+  getDrillsByDimensionAndLevel(dimension: DimensionCode, level: number): Promise<any[]>;
+  getUserTrainingPlans(userId: number): Promise<any[]>;
+  getTrainingPlansByDimension(dimension: DimensionCode): Promise<any[]>;
+  getTournamentsByDivision(division: string): Promise<any[]>;
+  
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getAllActiveUserIds(): Promise<number[]>;

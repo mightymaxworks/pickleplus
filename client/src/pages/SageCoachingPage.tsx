@@ -3,11 +3,11 @@
  * S.A.G.E. (Skills Assessment & Growth Engine) Coaching Page
  * 
  * This page hosts the SAGE coaching panel with Structured Coaching, Conversational UI,
- * and Journaling components.
+ * Journaling, and Concierge components.
  * 
  * @framework Framework5.3
- * @version 3.0.0
- * @lastModified 2025-04-24
+ * @version 3.2.0
+ * @lastModified 2025-04-25
  */
 
 import { useState } from "react";
@@ -15,7 +15,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import SageCoachingPanel from "@/components/sage/SageCoachingPanel";
 import SageConversationPanel from "@/components/sage/SageConversationPanel";
 import SageJournalPanel from "@/components/sage/SageJournalPanel";
-import { Loader2, MessageSquare, ListChecks, BookText } from "lucide-react";
+import { SageConciergePanel } from "@/components/sage/SageConciergePanel";
+import { SageRecommendationCard } from "@/components/sage/SageRecommendationCard";
+import { PlatformFeatureExplorer } from "@/components/sage/PlatformFeatureExplorer";
+import { 
+  Loader2, 
+  MessageSquare, 
+  ListChecks, 
+  BookText, 
+  Compass, 
+  Lightbulb
+} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 
@@ -53,7 +63,7 @@ export default function SageCoachingPage() {
       
       <Tabs defaultValue="conversation" onValueChange={setActiveTab} className="w-full">
         <div className="flex justify-center mb-6">
-          <TabsList className="w-full max-w-md">
+          <TabsList className="w-full max-w-xl">
             <TabsTrigger value="conversation" className="flex items-center justify-center gap-2">
               <MessageSquare className="h-5 w-5" />
               <span>Chat</span>
@@ -65,6 +75,14 @@ export default function SageCoachingPage() {
             <TabsTrigger value="journal" className="flex items-center justify-center gap-2">
               <BookText className="h-5 w-5" />
               <span>Journal</span>
+            </TabsTrigger>
+            <TabsTrigger value="concierge" className="flex items-center justify-center gap-2">
+              <Compass className="h-5 w-5" />
+              <span>Concierge</span>
+            </TabsTrigger>
+            <TabsTrigger value="recommendations" className="flex items-center justify-center gap-2">
+              <Lightbulb className="h-5 w-5" />
+              <span>For You</span>
             </TabsTrigger>
           </TabsList>
         </div>
@@ -79,6 +97,41 @@ export default function SageCoachingPage() {
         
         <TabsContent value="journal">
           <SageJournalPanel />
+        </TabsContent>
+        
+        <TabsContent value="concierge" className="w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <SageConciergePanel />
+            </div>
+            <div className="lg:col-span-1">
+              <SageRecommendationCard />
+            </div>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="recommendations" className="w-full">
+          <div className="grid grid-cols-1 gap-6">
+            <PlatformFeatureExplorer />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <SageRecommendationCard />
+              <div className="bg-muted p-6 rounded-lg shadow-sm">
+                <h3 className="text-xl font-bold mb-3">Personalized Insights</h3>
+                <p className="text-muted-foreground mb-4">
+                  Based on your CourtIQ™ profile and recent activities, these
+                  features are tailored to help you improve your game.
+                </p>
+                <div className="space-y-2 mt-4">
+                  <p className="text-sm font-medium">Top skills to improve:</p>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="text-xs bg-destructive/10 text-destructive px-2 py-1 rounded-full">Technical Skills</span>
+                    <span className="text-xs bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded-full">Mental Toughness</span>
+                    <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-1 rounded-full">Consistency</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
