@@ -9,8 +9,9 @@ import express, { Request, Response } from 'express';
 import { isAuthenticated } from '../middleware/auth';
 import { sageDrillsIntegration } from '../services/sageDrillsIntegration';
 import { drillsService } from '../services/drillsService';
-import { findRulesForQuestion } from '../services/simple-sage-integration';
+import { findRulesForQuestion } from '../services/simple-pickleball-rules';
 import { storage } from '../storage';
+import { JournalEntry } from '@shared/schema/journal';
 
 const router = express.Router();
 
@@ -29,7 +30,7 @@ router.post('/drill-recommendations',
       }
       
       // Get user's journals if available
-      let journals = [];
+      let journals: JournalEntry[] = [];
       try {
         journals = await storage.getJournalEntriesForUser(req.user!.id, 5);
       } catch (err) {
