@@ -95,6 +95,4 @@ function run(args: string[]) {
 }
 
 // When executed directly, run the CLI
-if (require.main === module) {
-  run(process.argv.slice(2));
-}
+run(process.argv.slice(2));

@@ -113,11 +113,9 @@ function validateSchemaFiles(): boolean {
 }
 
 // Run validation when script is executed directly
-if (require.main === module) {
-  const passed = validateSchemaFiles();
-  if (!passed) {
-    process.exit(1);
-  }
+const passed = validateSchemaFiles();
+if (!passed) {
+  process.exit(1);
 }
 
 export { validateSchemaFiles };

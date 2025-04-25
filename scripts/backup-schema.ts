@@ -106,17 +106,15 @@ export function backupAllSchemaFiles(): string[] {
 }
 
 // When executed directly, backup all schema files
-if (require.main === module) {
-  console.log('Running schema backup...');
+console.log('Running schema backup...');
   
-  // If filename is provided as argument, backup only that file
-  if (process.argv.length > 2) {
-    const filePath = process.argv[2];
-    console.log(`Backing up specific file: ${filePath}`);
-    backupSchemaFile(filePath);
-  } else {
-    // Otherwise backup all schema files
-    console.log('Backing up all schema files...');
-    backupAllSchemaFiles();
-  }
+// If filename is provided as argument, backup only that file
+if (process.argv.length > 2) {
+  const filePath = process.argv[2];
+  console.log(`Backing up specific file: ${filePath}`);
+  backupSchemaFile(filePath);
+} else {
+  // Otherwise backup all schema files
+  console.log('Backing up all schema files...');
+  backupAllSchemaFiles();
 }
