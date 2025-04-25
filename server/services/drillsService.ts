@@ -4,6 +4,8 @@
  * This service provides CRUD operations for managing pickleball drills
  * and related drill recommendations. It also includes drill search and 
  * recommendation logic for SAGE integration.
+ * 
+ * Updated for Sprint 4: Enhanced Training Plans & Video Integration
  */
 
 import { 
@@ -18,6 +20,7 @@ import { eq, and, or, like, desc, inArray, SQL, sql } from 'drizzle-orm';
 import { JournalEntry } from '@shared/schema/journal';
 import { analyzeJournalEntry } from './journalAnalyzer';
 import { FlexibleJournalEntry } from './sageDrillsIntegration';
+import { youtubeService } from './youtubeService';
 
 /**
  * DrillSearchParams type for filtering drill search
@@ -153,7 +156,7 @@ export class DrillsService {
         or(
           like(pickleballDrills.name, `%${keyword}%`),
           like(pickleballDrills.setupInstructions, `%${keyword}%`)
-        )
+        ) as SQL<unknown>
       );
     }
     
@@ -452,6 +455,148 @@ export class DrillsService {
       .returning();
     
     return !!updated;
+  }
+
+  /**
+   * Add YouTube video to a drill
+   */
+  async addYoutubeVideoToDrill(
+    drillId: number, 
+    videoUrl: string, 
+    isPrimary: boolean = false
+  ): Promise<PickleballDrill | undefined> {
+    const videoId = youtubeService.extractVideoId(videoUrl);
+    
+    if (!videoId) {
+      throw new Error('Invalid YouTube URL');
+    }
+    
+    // Get the current drill
+    const drill = await this.getDrillById(drillId);
+    
+    if (!drill) {
+      throw new Error('Drill not found');
+    }
+    
+    // Update the drill with the new video ID
+    const updates: Partial<PickleballDrill> = {};
+    
+    // Add to the array of video IDs
+    const youtubeVideoIds = drill.youtubeVideoIds || [];
+    if (!youtubeVideoIds.includes(videoId)) {
+      updates.youtubeVideoIds = [...youtubeVideoIds, videoId];
+    }
+    
+    // Set as primary if requested or if it's the first video
+    if (isPrimary || !drill.primaryVideoId) {
+      updates.primaryVideoId = videoId;
+      updates.videoSource = 'youtube';
+    }
+    
+    return await this.updateDrill(drillId, updates);
+  }
+  
+  /**
+   * Update video timestamps for a drill
+   */
+  async updateVideoTimestamps(
+    drillId: number,
+    timestamps: Record<string, number>
+  ): Promise<PickleballDrill | undefined> {
+    return await this.updateDrill(drillId, {
+      videoTimestamps: timestamps
+    });
+  }
+  
+  /**
+   * Get video details for a drill
+   */
+  async getDrillVideoDetails(drillId: number): Promise<ReturnType<typeof youtubeService.getDrillVideoDetails> | null> {
+    const drill = await this.getDrillById(drillId);
+    
+    if (!drill || !drill.primaryVideoId) {
+      return null;
+    }
+    
+    return youtubeService.getDrillVideoDetails(drill);
+  }
+  
+  /**
+   * Set which video is the primary one for a drill
+   */
+  async setPrimaryVideo(drillId: number, videoId: string): Promise<PickleballDrill | undefined> {
+    const drill = await this.getDrillById(drillId);
+    
+    if (!drill) {
+      throw new Error('Drill not found');
+    }
+    
+    // Verify the video ID is in the drill's video collection
+    if (drill.youtubeVideoIds && !drill.youtubeVideoIds.includes(videoId)) {
+      throw new Error('Video ID not found in drill videos');
+    }
+    
+    return await this.updateDrill(drillId, {
+      primaryVideoId: videoId,
+      videoSource: 'youtube'
+    });
+  }
+  
+  /**
+   * Remove a video from a drill
+   */
+  async removeVideoFromDrill(drillId: number, videoId: string): Promise<PickleballDrill | undefined> {
+    const drill = await this.getDrillById(drillId);
+    
+    if (!drill) {
+      throw new Error('Drill not found');
+    }
+    
+    // If the video isn't there, nothing to do
+    if (!drill.youtubeVideoIds || !drill.youtubeVideoIds.includes(videoId)) {
+      return drill;
+    }
+    
+    // Remove from the array
+    const updatedVideoIds = drill.youtubeVideoIds.filter(id => id !== videoId);
+    const updates: Partial<PickleballDrill> = {
+      youtubeVideoIds: updatedVideoIds
+    };
+    
+    // If this was the primary video, unset it or set a new one
+    if (drill.primaryVideoId === videoId) {
+      if (updatedVideoIds.length > 0) {
+        // Set the first remaining video as primary
+        updates.primaryVideoId = updatedVideoIds[0];
+      } else {
+        // No videos left, unset primary
+        updates.primaryVideoId = undefined;
+      }
+    }
+    
+    return await this.updateDrill(drillId, updates);
+  }
+  
+  /**
+   * Search for drills with videos
+   */
+  async searchDrillsWithVideos(params: DrillSearchParams): Promise<{
+    drills: PickleballDrill[];
+    total: number;
+  }> {
+    // Modify the search parameters to only include drills with videos
+    const { drills, total } = await this.searchDrills(params);
+    
+    // Filter to drills with videos
+    const drillsWithVideos = drills.filter(drill => 
+      drill.primaryVideoId || 
+      (drill.youtubeVideoIds && drill.youtubeVideoIds.length > 0)
+    );
+    
+    return {
+      drills: drillsWithVideos,
+      total: drillsWithVideos.length
+    };
   }
 }
 

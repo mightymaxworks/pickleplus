@@ -29,6 +29,7 @@ import referralRoutes from "./modules/referrals/routes"; // PKL-278651-COMM-0007
 import coachRoutes from "./routes/coach-routes"; // PKL-278651-COACH-0001-AI - AI Coach
 import simpleSageRoutes from "./routes/simple-sage-routes"; // Simplified version for testing
 import { registerSageDrillsRoutes } from "./routes/sage-drills-routes"; // PKL-278651-SAGE-0009-DRILLS - SAGE Drills Integration
+import drillVideosRoutes from "./routes/drill-videos-routes"; // PKL-278651-SAGE-0009-VIDEO - YouTube Integration
 import { initializeOpenAI } from "./services/aiCoach"; // AI Coach service initialization
 import { isAuthenticated as isAuthenticatedMiddleware } from "./middleware/auth";
 import { isAuthenticated, setupAuth } from "./auth"; // Import the proper passport-based authentication
@@ -93,6 +94,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Mount simplified SAGE Pickleball Knowledge routes for testing
   app.use('/api/simple-sage', simpleSageRoutes);
+  
+  // Mount Drill Videos routes - PKL-278651-SAGE-0009-VIDEO
+  app.use('/api/drills', drillVideosRoutes);
   
   // Initialize OpenAI client if API key is available
   initializeOpenAI();

@@ -55,6 +55,12 @@ export const pickleballDrills = pgTable("pickleball_drills", {
   mediaUrls: text("media_urls").array(),
   coachingTips: text("coaching_tips").array(),
   
+  // Video content
+  youtubeVideoIds: text("youtube_video_ids").array(), // Array of YouTube video IDs
+  primaryVideoId: text("primary_video_id"), // Primary YouTube video ID
+  videoTimestamps: jsonb("video_timestamps").default({}), // Timestamps for key sections (setup, steps, etc.)
+  videoSource: text("video_source").default('youtube'), // 'youtube', 'self-hosted', 'mux', etc.
+  
   // Admin metadata
   createdBy: integer("created_by").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
