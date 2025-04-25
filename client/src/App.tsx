@@ -9,6 +9,7 @@ import { UserDataProvider } from '@/contexts/UserDataContext' // PKL-278651-PERF
 import { TutorialProvider } from '@/components/onboarding' // PKL-278651-GAME-0002-TUT
 import { CommunityProvider } from '@/lib/providers/CommunityProvider' // PKL-278651-COMM-0014-CONT
 import { GuidedTaskProvider } from '@/contexts/BounceGuidedTaskContext' // PKL-278651-BOUNCE-0008-ASSIST
+import { SageDataProvider } from '@/contexts/SageDataContext' // PKL-278651-SAGE-0029-API
 import { BounceFloatingWidget } from '@/components/bounce/BounceFloatingWidget' // PKL-278651-BOUNCE-0008-ASSIST
 import QuickMatchFAB from '@/components/QuickMatchFAB' // Match Recording FAB
 import { LazyLoadingFallback, lazyLoad } from '@/utils/lazyLoad' // PKL-278651-PERF-0001.2-SPLIT
@@ -172,7 +173,8 @@ export default function App() {
               <TutorialProvider>
                 <CommunityProvider>
                   <GuidedTaskProvider>
-                    <Suspense fallback={<LazyLoadingFallback />}>
+                    <SageDataProvider>
+                      <Suspense fallback={<LazyLoadingFallback />}>
                       {/* Add Simplified Bug Report Button (PKL-278651-FEED-0001-BUG) - Only for authenticated users */}
                       <AuthenticationWrapper>
                         <SimpleBugReportButton position="bottom-right" />
@@ -587,6 +589,7 @@ export default function App() {
                   <Route component={LazyNotFoundPage} />
                 </Switch>
                   </Suspense>
+                    </SageDataProvider>
                   </GuidedTaskProvider>
                 </CommunityProvider>
               </TutorialProvider>
