@@ -26,7 +26,7 @@ export interface JournalReferenceSummary {
 /**
  * Generate a summary of a journal entry for use in references
  */
-function summarizeEntry(entry: JournalEntry, analysis: JournalAnalysisResult): string {
+function summarizeEntry(entry: FlexibleJournalEntry, analysis: JournalAnalysisResult): string {
   const sentences = entry.content
     .replace(/([.?!])\s*(?=[A-Z])/g, '$1|')
     .split('|')
@@ -81,7 +81,7 @@ function summarizeEntry(entry: JournalEntry, analysis: JournalAnalysisResult): s
  */
 export function findRelevantJournalEntries(
   query: string,
-  entries: JournalEntry[]
+  entries: FlexibleJournalEntry[]
 ): JournalReferenceSummary {
   if (!entries || entries.length === 0) {
     return {
@@ -290,7 +290,7 @@ function findMatchingRuleFromJournals(
  */
 export function generatePersonalizedRuleRecommendations(
   rule: PickleballRule,
-  entries: JournalEntry[]
+  entries: FlexibleJournalEntry[]
 ): string[] {
   if (!entries || entries.length === 0) {
     return [];
@@ -429,7 +429,7 @@ export function generatePersonalizedRuleRecommendations(
  */
 export function generateJournalBasedFollowUps(
   rule: PickleballRule,
-  entries: JournalEntry[]
+  entries: FlexibleJournalEntry[]
 ): string[] {
   if (!entries || entries.length === 0) {
     return [];

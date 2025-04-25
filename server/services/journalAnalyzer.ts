@@ -6,6 +6,7 @@
  */
 
 import { JournalEntry } from '@shared/schema/journal';
+import { FlexibleJournalEntry } from './sageDrillsIntegration';
 
 export interface JournalAnalysisResult {
   keywords: string[];
@@ -278,7 +279,7 @@ function calculateConfidence(analysis: Partial<JournalAnalysisResult>): number {
 /**
  * Analyze a journal entry to extract useful information for SAGE
  */
-export function analyzeJournalEntry(entry: JournalEntry): JournalAnalysisResult {
+export function analyzeJournalEntry(entry: JournalEntry | FlexibleJournalEntry): JournalAnalysisResult {
   const text = entry.content;
   
   // Extract keywords
@@ -323,7 +324,7 @@ export function analyzeJournalEntry(entry: JournalEntry): JournalAnalysisResult 
 /**
  * Extract relevant patterns from multiple journal entries
  */
-export function analyzeJournalHistory(entries: JournalEntry[]): {
+export function analyzeJournalHistory(entries: (JournalEntry | FlexibleJournalEntry)[]): {
   commonKeywords: string[];
   persistentImprovementAreas: string[];
   progressiveSuccessAreas: string[];
