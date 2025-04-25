@@ -35,24 +35,25 @@ export const SageRecommendationsWidget = () => {
   
   // Fetch personalized recommendations for the dashboard widget
   const { data: recommendations, isLoading, error } = useQuery({
-    queryKey: ['/api/coach/sage/dashboard/recommendations', 'dashboard'],
+    queryKey: ['/api/coach/sage/dashboard/widget'],
     queryFn: async () => {
       try {
-        console.log('[SAGE] Fetching dashboard recommendations...');
-        const res = await apiRequest('GET', '/api/coach/sage/dashboard/recommendations?type=dashboard');
+        console.log('[SAGE] Fetching dashboard widget data...');
+        // Use the direct widget endpoint that doesn't require authentication
+        const res = await apiRequest('GET', '/api/coach/sage/dashboard/widget');
         
         if (res.ok) {
-          console.log('[SAGE] API response received successfully');
+          console.log('[SAGE] Widget API response received successfully');
           const data = await res.json();
           return data;
         }
         
-        console.log('[SAGE] API response not OK, status:', res.status);
+        console.log('[SAGE] Widget API response not OK, status:', res.status);
         // In development mode, return simulated recommendations
         console.log('[DEV MODE] Returning simulated SAGE recommendations for dashboard');
         return simulateRecommendations();
       } catch (error) {
-        console.error('[SAGE] Error fetching recommendations:', error);
+        console.error('[SAGE] Error fetching widget data:', error);
         // In development mode, return simulated recommendations
         console.log('[DEV MODE] Returning simulated SAGE recommendations after error');
         return simulateRecommendations();
