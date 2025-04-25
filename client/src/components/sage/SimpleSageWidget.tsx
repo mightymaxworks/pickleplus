@@ -1,27 +1,43 @@
 /**
  * PKL-278651-COACH-0021-WIDGET-SIMPLE
- * Simple SAGE Recommendations Widget
+ * Direct SAGE Messaging Interface for Dashboard
  * 
- * This is a simplified SAGE widget for the dashboard that provides
- * direct interaction with SAGE without leaving the dashboard.
+ * This component provides an immediate SAGE messaging interface
+ * directly on the dashboard with no additional navigation required.
  * 
  * @framework Framework5.3
- * @version 1.1.0
+ * @version 1.2.0
  * @sprint 7
  * @lastModified 2025-04-25
  */
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BrainCircuit, MessageCircle, ChevronRight, ThumbsUp, Sparkles } from "lucide-react";
+import { BrainCircuit, Sparkles, Info, PlusCircle } from "lucide-react";
 import { useLocation } from 'wouter';
+
+// Quick suggestions for common SAGE interactions
+const QUICK_SUGGESTIONS = [
+  "What's a good drill for my dinking?",
+  "How can I improve my third shot drop?", 
+  "Help me prepare for my tournament",
+  "Tips for better positioning"
+];
 
 export default function SimpleSageWidget() {
   const [, navigate] = useLocation();
-  const [showChat, setShowChat] = useState(false);
   const [userMessage, setUserMessage] = useState('');
-  const [conversations, setConversations] = useState<{role: 'user'|'sage', content: string}[]>([]);
+  const [conversations, setConversations] = useState<{role: 'user'|'sage', content: string}[]>([
+    {role: 'sage', content: "👋 Hi! I'm SAGE, your pickleball coach. How can I help with your game today?"}
+  ]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Scroll to bottom of messages whenever conversations change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [conversations]);
   
   // Function to navigate to full SAGE experience
   const navigateToSage = () => {
@@ -38,132 +54,120 @@ export default function SimpleSageWidget() {
     
     // Simulate SAGE response (in a real implementation, this would call the API)
     setTimeout(() => {
-      let response = "I'd recommend focusing on your dinking technique. Try the 'Four Corners' drill to improve precision and control.";
+      // Generate a simple contextual response
+      let response: string;
+      const msg = userMessage.toLowerCase();
+      
+      if (msg.includes('dink') || msg.includes('dinking')) {
+        response = "For dinking practice, I recommend the 'Four Corners' drill. Position yourself at the kitchen line and aim for all four corners of the opponent's kitchen. Focus on control and placement rather than power.";
+      } else if (msg.includes('third') || msg.includes('drop')) {
+        response = "To improve your third shot drop, try the 'Target Practice' drill. Have a partner stand at the kitchen line while you hit drop shots from the baseline. Aim for targets placed in different spots in the kitchen to develop touch and accuracy.";
+      } else if (msg.includes('tournament') || msg.includes('competition')) {
+        response = "Before a tournament, focus on consistency drills rather than learning new skills. Practice pressure situations with game scenarios, and make sure to have a solid warm-up routine. Would you like me to create a tournament preparation plan for you?";
+      } else if (msg.includes('position') || msg.includes('movement')) {
+        response = "Good positioning starts with the ready position - knees slightly bent, paddle up at chest level. Practice side-to-side kitchen line movements and always try to return to the center of your side after each shot. The 'Shadow Drill' where you mirror a partner's movements can help with this.";
+      } else {
+        response = "That's a great question! I'd recommend practicing specific drills focused on that aspect of your game. Would you like a detailed breakdown of exercises that could help?";
+      }
+      
       setConversations(prev => [...prev, {role: 'sage', content: response}]);
     }, 500);
     
     setUserMessage('');
   };
   
-  // Just use a direct recommendation for simplicity
-  const recommendation = {
-    id: 'rec-1',
-    type: 'drill',
-    title: 'Improve Your Dink Accuracy',
-    summary: 'Based on your recent matches, focusing on controlled dinking will improve your consistency in kitchen exchanges. Try the "Four Corners" drill to build precision.',
-    dimensionCode: 'TECH'
-  };
-  
-  // Helper function to get dimension badge color
-  const getDimensionColor = (code: string) => {
-    switch (code) {
-      case 'TECH': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-      case 'TACT': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
-      case 'PHYS': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'MENT': return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300';
-      case 'CONS': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
-    }
-  };
-  
-  // Helper function to get dimension name
-  const getDimensionName = (code: string) => {
-    switch (code) {
-      case 'TECH': return 'Technical';
-      case 'TACT': return 'Tactical';
-      case 'PHYS': return 'Physical';
-      case 'MENT': return 'Mental';
-      case 'CONS': return 'Consistency';
-      default: return 'General';
-    }
+  // Function to handle quick suggestion click
+  const handleSuggestionClick = (suggestion: string) => {
+    setUserMessage(suggestion);
+    setConversations([...conversations, {role: 'user', content: suggestion}]);
+    
+    // Simulate SAGE response
+    setTimeout(() => {
+      let response: string;
+      
+      if (suggestion.includes('dinking')) {
+        response = "For dinking practice, I recommend the 'Four Corners' drill. Position yourself at the kitchen line and aim for all four corners of the opponent's kitchen. Focus on control and placement rather than power.";
+      } else if (suggestion.includes('third shot drop')) {
+        response = "To improve your third shot drop, try the 'Target Practice' drill. Have a partner stand at the kitchen line while you hit drop shots from the baseline. Aim for targets placed in different spots in the kitchen to develop touch and accuracy.";
+      } else if (suggestion.includes('tournament')) {
+        response = "Before a tournament, focus on consistency drills rather than learning new skills. Practice pressure situations with game scenarios, and make sure to have a solid warm-up routine. Would you like me to create a tournament preparation plan for you?";
+      } else if (suggestion.includes('positioning')) {
+        response = "Good positioning starts with the ready position - knees slightly bent, paddle up at chest level. Practice side-to-side kitchen line movements and always try to return to the center of your side after each shot. The 'Shadow Drill' where you mirror a partner's movements can help with this.";
+      } else {
+        response = "Let me help you with that! I can provide specific drills and techniques to improve your game.";
+      }
+      
+      setConversations(prev => [...prev, {role: 'sage', content: response}]);
+    }, 500);
+    
+    setUserMessage('');
   };
   
   return (
-    <Card className="overflow-hidden h-full">
-      <CardHeader className="pb-2 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30">
+    <Card className="overflow-hidden">
+      <CardHeader className="py-3 px-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center">
             <BrainCircuit className="h-5 w-5 mr-2 text-primary" />
             SAGE Coach
           </CardTitle>
           
-          {!showChat && (
-            <Badge variant="outline" className={getDimensionColor(recommendation.dimensionCode)}>
-              {getDimensionName(recommendation.dimensionCode)}
-            </Badge>
-          )}
+          <Button 
+            variant="ghost" 
+            onClick={navigateToSage} 
+            className="h-8 w-8 p-0" 
+            title="Open full SAGE experience"
+          >
+            <PlusCircle className="h-4 w-4 text-muted-foreground" />
+          </Button>
         </div>
       </CardHeader>
       
-      {showChat ? (
-        <>
-          <CardContent className="p-3 max-h-[180px] overflow-y-auto">
-            {conversations.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-20 text-center">
-                <Sparkles className="h-5 w-5 mb-2 text-blue-500" />
-                <p className="text-sm text-muted-foreground">Ask SAGE about drills, technique, or strategy</p>
+      <CardContent className="p-3 max-h-[200px] overflow-y-auto">
+        <div className="space-y-3">
+          {conversations.map((msg, i) => (
+            <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[85%] px-3 py-2 rounded-lg text-sm ${
+                msg.role === 'user' 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-muted'
+              }`}>
+                {msg.content}
               </div>
-            ) : (
-              <div className="space-y-3">
-                {conversations.map((msg, i) => (
-                  <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] px-3 py-2 rounded-lg text-sm ${
-                      msg.role === 'user' 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'bg-muted'
-                    }`}>
-                      {msg.content}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-          
-          <CardFooter className="pt-2">
-            <form onSubmit={handleSendMessage} className="w-full flex gap-2">
-              <input
-                type="text"
-                value={userMessage}
-                onChange={(e) => setUserMessage(e.target.value)}
-                placeholder="Ask SAGE something..."
-                className="flex-1 px-3 py-2 text-sm rounded-md border border-input bg-background"
-              />
-              <Button type="submit" size="sm">
-                Send
-              </Button>
-            </form>
-          </CardFooter>
-        </>
-      ) : (
-        <>
-          <CardContent className="pt-4 pb-2">
-            <h3 className="font-medium mb-1">{recommendation.title}</h3>
-            <p className="text-sm text-muted-foreground line-clamp-3">
-              {recommendation.summary}
-            </p>
-          </CardContent>
-          
-          <CardFooter className="pt-2 flex gap-2">
-            <Button 
-              onClick={() => setShowChat(true)} 
-              variant="outline" 
-              className="flex-1"
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+      </CardContent>
+      
+      <div className="px-3 pb-2">
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          {QUICK_SUGGESTIONS.map((suggestion, i) => (
+            <button
+              key={i}
+              onClick={() => handleSuggestionClick(suggestion)}
+              className="text-xs bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-800/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full whitespace-nowrap"
             >
-              <MessageCircle className="h-4 w-4 mr-2" />
-              Quick Chat
-            </Button>
-            <Button 
-              onClick={navigateToSage} 
-              variant="default" 
-              className="flex-1"
-            >
-              <span>Full Coach</span>
-              <ChevronRight className="ml-1 h-4 w-4" />
-            </Button>
-          </CardFooter>
-        </>
-      )}
+              {suggestion}
+            </button>
+          ))}
+        </div>
+      </div>
+      
+      <CardFooter className="pt-0 pb-3 px-3">
+        <form onSubmit={handleSendMessage} className="w-full flex gap-2">
+          <input
+            type="text"
+            value={userMessage}
+            onChange={(e) => setUserMessage(e.target.value)}
+            placeholder="Ask SAGE anything..."
+            className="flex-1 px-3 py-2 text-sm rounded-md border border-input bg-background"
+          />
+          <Button type="submit" size="sm">
+            Send
+          </Button>
+        </form>
+      </CardFooter>
     </Card>
   );
 }

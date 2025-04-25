@@ -23,9 +23,9 @@ import CourtIQStatsOverview from '@/components/dashboard/CourtIQStatsOverview';
 import { BounceStatusTicker } from '@/components/bounce/BounceStatusTicker';
 import { BounceAssistancePanel } from '@/components/bounce/BounceAssistancePanel';
 import { useToast } from '@/hooks/use-toast';
+import SimpleSageWidget from '@/components/sage/SimpleSageWidget';
 import { useMatchStatistics } from '@/hooks/use-match-statistics';
 import { useCourtIQPerformance } from '@/hooks/use-courtiq-performance';
-import SimpleSageWidget from '@/components/sage/SimpleSageWidget';
 
 export default function DashboardContent() {
   const { user } = useAuth();
@@ -282,6 +282,19 @@ export default function DashboardContent() {
                 </div>
               </CardContent>
             </Card>
+            
+            {/* SAGE Coach - Directly below passport for easy mobile access */}
+            <div className="mb-6">
+              <div className="flex items-center mb-4">
+                <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-400 to-indigo-600 text-transparent bg-clip-text">
+                  SAGE Coach
+                </h3>
+                <div className="ml-2 text-xs bg-gradient-to-r from-blue-400 to-indigo-600 text-white px-2 py-0.5 rounded-full">
+                  AI Powered
+                </div>
+              </div>
+              <SimpleSageWidget />
+            </div>
           </motion.div>
           
           {/* PCP Rankings Section */}
