@@ -9,6 +9,7 @@ import RecentMatchesSummary from '@/components/match/RecentMatchesSummary';
 import CourtIQStats from '@/components/rankings/CourtIQStats';
 import AchievementsShowcase from '@/components/achievement/AchievementsShowcase';
 import UpcomingTournaments from '@/components/tournament/UpcomingTournaments';
+import SageRecommendationsWidget from '@/components/sage/SageRecommendationsWidget';
 import MobileNavigation from '@/components/layout/MobileNavigation';
 import DesktopSidebar from '@/components/layout/DesktopSidebar';
 import UserDropdownMenu from '@/components/layout/UserDropdownMenu';
@@ -103,6 +104,11 @@ export default function DashboardPage() {
             {/* Recent Matches */}
             <div className="col-span-1">
               <RecentMatchesSummary userId={user.id} />
+            </div>
+
+            {/* SAGE Recommendations - Added in Sprint 7 */}
+            <div className="col-span-1">
+              <SageRecommendationsWidget />
             </div>
 
             {/* CourtIQ Stats */}

@@ -34,6 +34,7 @@ import feedbackRoutes from "./routes/feedback-routes"; // PKL-278651-SAGE-0010-F
 import socialRoutes from "./routes/social-routes"; // PKL-278651-SAGE-0011-SOCIAL - Social Sharing Features
 import sageConciergeRoutes from "./routes/sage-concierge-routes"; // PKL-278651-SAGE-0013-CONCIERGE - SAGE Concierge
 import sageExtendedKnowledgeRoutes from "./routes/sage-extended-knowledge-routes"; // PKL-278651-SAGE-0016-EXTENDED-KB - SAGE Extended Knowledge Base
+import sageDashboardRoutes from "./routes/sage-dashboard-routes"; // PKL-278651-COACH-0022-API - SAGE Dashboard Integration
 import { initializeOpenAI } from "./services/aiCoach"; // AI Coach service initialization
 import { isAuthenticated as isAuthenticatedMiddleware } from "./middleware/auth";
 import { isAuthenticated, setupAuth } from "./auth"; // Import the proper passport-based authentication
@@ -113,6 +114,9 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
   
   // Mount SAGE Extended Knowledge Base routes - PKL-278651-SAGE-0016-EXTENDED-KB
   app.use('/api/coach/sage/knowledge', sageExtendedKnowledgeRoutes);
+  
+  // Mount SAGE Dashboard routes - PKL-278651-COACH-0022-API
+  app.use('/api/coach/sage/dashboard', sageDashboardRoutes);
   
   // Initialize OpenAI client if API key is available
   initializeOpenAI();
