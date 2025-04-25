@@ -8,7 +8,7 @@
 import React, { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { useContentComments, useAddCommentMutation } from "@/hooks/use-social";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Dialog,
   DialogContent,

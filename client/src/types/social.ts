@@ -1,179 +1,106 @@
 /**
  * PKL-278651-SAGE-0011-SOCIAL - Social Content Types
  * 
- * Type definitions for social features, mirroring the database schema from shared/schema/social.ts
+ * This file defines the TypeScript types for social content features
  * Part of Sprint 5: Social Features & UI Polish
  */
 
-// Content types
 export type ContentType = 
-  | 'journal_entry'
-  | 'feedback'
-  | 'drill'
-  | 'training_plan'
-  | 'match_result'
-  | 'achievement'
-  | 'sage_insight'
-  | 'user_connection';
+  | "journal_entry" 
+  | "drill" 
+  | "training_plan" 
+  | "match_result" 
+  | "achievement" 
+  | "sage_insight" 
+  | "feedback" 
+  | "user_connection";
 
-// Visibility levels
-export type Visibility = 'public' | 'friends' | 'private' | 'coaches';
+export type ContentVisibility = "public" | "friends" | "private" | "coaches";
 
-// Shared content
 export interface SharedContent {
   id: number;
+  userId: number;
   contentType: ContentType;
   contentId: number;
-  userId: number;
   title: string;
-  description: string | null;
-  visibility: Visibility;
-  customTags: string[] | null;
-  highlightedText: string | null;
-  customImage: string | null;
-  viewCount: number;
+  description?: string;
+  visibility: ContentVisibility;
+  createdAt: string;
+  updatedAt: string;
   likeCount: number;
+  viewCount: number;
   commentCount: number;
   shareCount: number;
-  isFeatured: boolean;
-  isModerationFlagged: boolean;
-  isRemoved: boolean;
-  createdAt: string;
-  updatedAt: string | null;
+  highlightedText?: string;
+  customTags?: string[];
+  customImage?: string;
 }
 
-// Content reaction
 export interface ContentReaction {
   id: number;
-  contentId: number;
   userId: number;
-  reactionType: string;
+  contentId: number;
+  reactionType: "like" | "celebrate" | "insightful" | "helpful";
   createdAt: string;
 }
 
-// Content comment
 export interface ContentComment {
   id: number;
-  contentId: number;
   userId: number;
+  contentId: number;
   text: string;
-  parentCommentId: number | null;
-  likeCount: number;
-  isEdited: boolean;
-  isRemoved: boolean;
+  parentCommentId?: number;
   createdAt: string;
-  updatedAt: string | null;
-  // UI-specific properties
-  user?: {
-    id: number;
-    username: string;
-    displayName: string;
-    avatarUrl: string | null;
-  };
+  updatedAt: string;
   replies?: ContentComment[];
 }
 
-// Coaching recommendation
-export interface CoachingRecommendation {
+export interface ContentReport {
   id: number;
-  fromUserId: number;
-  toUserId: number;
-  contentType: ContentType;
+  userId: number;
   contentId: number;
-  status: string; // pending, accepted, declined, completed
-  message: string | null;
-  relevanceReason: string | null;
-  skillsTargeted: string[] | null;
-  respondedAt: string | null;
-  completedAt: string | null;
-  feedbackRating: number | null;
-  feedbackComment: string | null;
+  contentType: string;
+  reasonCode: string;
+  description: string;
+  status: "pending" | "reviewed" | "resolved" | "rejected";
   createdAt: string;
-  // UI-specific properties
-  fromUser?: {
-    id: number;
-    username: string;
-    displayName: string;
-    avatarUrl: string | null;
-  };
-  content?: SharedContent;
+  updatedAt: string;
 }
 
-// Social feed item
-export interface SocialFeedItem {
-  id: number;
+// API request/response types
+export interface ShareContentRequest {
   contentType: ContentType;
   contentId: number;
-  activityType: string; // shared, commented, reacted, recommended, etc.
   userId: number;
-  targetUserId: number | null;
   title: string;
-  summary: string | null;
-  imageUrl: string | null;
-  enrichmentData: any | null;
-  visibility: Visibility;
-  isPinned: boolean;
-  isHighlighted: boolean;
-  timestamp: string;
-  // UI-specific properties
-  user?: {
-    id: number;
-    username: string;
-    displayName: string;
-    avatarUrl: string | null;
-  };
-  targetUser?: {
-    id: number;
-    username: string;
-    displayName: string;
-    avatarUrl: string | null;
-  };
+  description?: string;
+  visibility: ContentVisibility;
+  highlightedText?: string;
+  customTags?: string[];
+  customImage?: string;
 }
 
-// User connection request
-export interface UserConnectionRequest {
-  id: number;
-  fromUserId: number;
-  toUserId: number;
-  connectionType: string; // friend, coach, mentor, etc.
-  status: string; // pending, accepted, declined
-  message: string | null;
-  createdAt: string;
-  respondedAt: string | null;
-  // UI-specific properties
-  fromUser?: {
-    id: number;
-    username: string;
-    displayName: string;
-    avatarUrl: string | null;
-  };
-  toUser?: {
-    id: number;
-    username: string;
-    displayName: string;
-    avatarUrl: string | null;
-  };
+export interface AddReactionRequest {
+  contentId: number;
+  reactionType: string;
 }
 
-// User connection
-export interface UserConnection {
-  id: number;
-  userId: number;
-  connectedUserId: number;
-  connectionType: string; // friend, coach, mentor, etc.
-  status: string; // active, blocked, archived
-  createdAt: string;
-  // UI-specific properties
-  user?: {
-    id: number;
-    username: string;
-    displayName: string;
-    avatarUrl: string | null;
-  };
-  connectedUser?: {
-    id: number;
-    username: string;
-    displayName: string;
-    avatarUrl: string | null;
-  };
+export interface AddCommentRequest {
+  contentId: number;
+  text: string;
+  parentCommentId?: number;
+}
+
+export interface ReportContentRequest {
+  contentId: number;
+  contentType: string;
+  reasonCode: string;
+  description: string;
+}
+
+export interface ContentFeedParams {
+  limit?: number;
+  offset?: number;
+  userId?: number;
+  contentType?: ContentType;
 }

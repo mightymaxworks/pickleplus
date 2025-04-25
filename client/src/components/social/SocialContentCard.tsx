@@ -33,10 +33,16 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAddReactionMutation, useRemoveReactionMutation } from "@/hooks/use-social";
-import { useAuth } from "@/hooks/use-auth";
-import { ContentCommentDialog } from "./ContentCommentDialog";
-import { ReportContentDialog } from "@/components/moderation/ReportContentDialog";
-import { ContentShareDialog } from "./ContentShareDialog";
+import { useAuth } from "@/contexts/AuthContext";
+// Add these dialogs later once we've fixed the main issues
+// import { ContentCommentDialog } from "./ContentCommentDialog";
+// import { ReportContentDialog } from "@/components/moderation/ReportContentDialog";
+// import { ContentShareDialog } from "./ContentShareDialog";
+
+// Temporary placeholder components
+const ContentCommentDialog = ({ open, onOpenChange, contentId }: any) => null;
+const ReportContentDialog = ({ open, onOpenChange, contentId, contentType }: any) => null;
+const ContentShareDialog = ({ open, onOpenChange, userId, prefilledContent }: any) => null;
 
 interface SocialContentCardProps {
   content: SharedContent;

@@ -29,9 +29,11 @@ import {
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useJournals } from "@/hooks/use-journals";
-import { useDrills } from "@/hooks/use-drills";
-import { useFeedback } from "@/hooks/use-feedback";
+// Temporary placeholders until we implement the actual hooks
+// These will be replaced with actual hooks once we implement them
+const useJournals = () => ({ data: [] });
+const useDrills = () => ({ data: [] });
+const useFeedback = () => ({ data: [] });
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 

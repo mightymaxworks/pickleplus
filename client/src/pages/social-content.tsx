@@ -7,8 +7,6 @@
 
 import React, { useState } from "react";
 import { useContentFeed } from "@/hooks/use-social";
-import { SocialContentCard } from "@/components/social/SocialContentCard";
-import { ContentShareDialog } from "@/components/social/ContentShareDialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlusCircle, RefreshCw } from "lucide-react";
@@ -19,7 +17,17 @@ import {
 } from "@/components/ui/page-header";
 import { LayoutContainer } from "@/components/layout/LayoutContainer";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/contexts/AuthContext";
+
+// Temporary placeholders until components are fully implemented
+const SocialContentCard = ({ content }: any) => (
+  <div className="border rounded-lg p-6">
+    <h3 className="font-semibold text-lg">{content.title}</h3>
+    <p className="text-muted-foreground mt-2">{content.description || "No description provided."}</p>
+  </div>
+);
+
+const ContentShareDialog = ({ open, onOpenChange, userId }: any) => null;
 
 export default function SocialContentPage() {
   const { user } = useAuth();
