@@ -1,34 +1,34 @@
 /**
- * PKL-278651-COACH-0021-WIDGET-SIMPLE
- * Direct SAGE Messaging Interface for Dashboard
+ * PKL-278651-SAGE-0028-CONCIERGE
+ * SAGE Platform Concierge Interface
  * 
- * This component provides an immediate SAGE messaging interface
- * directly on the dashboard with no additional navigation required.
+ * This component provides an immediate SAGE interaction interface
+ * directly on the dashboard to guide users throughout the platform.
  * 
  * @framework Framework5.3
- * @version 1.2.0
+ * @version 2.0.0
  * @sprint 7
  * @lastModified 2025-04-25
  */
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BrainCircuit, Sparkles, Info, PlusCircle } from "lucide-react";
+import { Bot, Map, Calendar, Users, Settings, Star, Search, PlusCircle } from "lucide-react";
 import { useLocation } from 'wouter';
 
-// Quick suggestions for common SAGE interactions
+// Quick suggestions for SAGE platform concierge interactions
 const QUICK_SUGGESTIONS = [
-  "What's a good drill for my dinking?",
-  "How can I improve my third shot drop?", 
-  "Help me prepare for my tournament",
-  "Tips for better positioning"
+  "What features should I try first?",
+  "How do I find tournaments?", 
+  "Help me connect with players",
+  "Show me my CourtIQ stats"
 ];
 
 export default function SimpleSageWidget() {
   const [, navigate] = useLocation();
   const [userMessage, setUserMessage] = useState('');
   const [conversations, setConversations] = useState<{role: 'user'|'sage', content: string}[]>([
-    {role: 'sage', content: "👋 Hi! I'm SAGE, your pickleball coach. How can I help with your game today?"}
+    {role: 'sage', content: "👋 Hi! I'm SAGE, your Pickle+ concierge. I can help you discover features, find players, or improve your game. What would you like to explore today?"}
   ]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
@@ -54,20 +54,22 @@ export default function SimpleSageWidget() {
     
     // Simulate SAGE response (in a real implementation, this would call the API)
     setTimeout(() => {
-      // Generate a simple contextual response
+      // Generate a contextual response based on platform features
       let response: string;
       const msg = userMessage.toLowerCase();
       
-      if (msg.includes('dink') || msg.includes('dinking')) {
-        response = "For dinking practice, I recommend the 'Four Corners' drill. Position yourself at the kitchen line and aim for all four corners of the opponent's kitchen. Focus on control and placement rather than power.";
-      } else if (msg.includes('third') || msg.includes('drop')) {
-        response = "To improve your third shot drop, try the 'Target Practice' drill. Have a partner stand at the kitchen line while you hit drop shots from the baseline. Aim for targets placed in different spots in the kitchen to develop touch and accuracy.";
-      } else if (msg.includes('tournament') || msg.includes('competition')) {
-        response = "Before a tournament, focus on consistency drills rather than learning new skills. Practice pressure situations with game scenarios, and make sure to have a solid warm-up routine. Would you like me to create a tournament preparation plan for you?";
-      } else if (msg.includes('position') || msg.includes('movement')) {
-        response = "Good positioning starts with the ready position - knees slightly bent, paddle up at chest level. Practice side-to-side kitchen line movements and always try to return to the center of your side after each shot. The 'Shadow Drill' where you mirror a partner's movements can help with this.";
+      if (msg.includes('feature') || msg.includes('try') || msg.includes('new')) {
+        response = "Based on your profile, I'd recommend exploring these Pickle+ features:\n\n1. CourtIQ™ Performance - track your multi-dimensional skill ratings\n2. Community Hub - connect with players in your area\n3. Tournament Finder - discover upcoming events\n\nWhat would you like to explore first?";
+      } else if (msg.includes('tournament') || msg.includes('event') || msg.includes('play')) {
+        response = "The Tournament Finder is your hub for events! Head to the Events tab to browse upcoming tournaments filtered by location, skill level, and format. You can register directly through Pickle+, and I can help you prepare a training plan leading up to your selected event.";
+      } else if (msg.includes('player') || msg.includes('partner') || msg.includes('connect') || msg.includes('friend')) {
+        response = "To connect with other players, visit the Community tab where you can:\n\n• Search for players by location and skill level\n• Join local Pickle+ groups\n• Use Partner Finder to match with compatible players\n• Create or join meetups\n\nWould you like me to help you find specific types of players?";
+      } else if (msg.includes('stat') || msg.includes('courtiq') || msg.includes('rating') || msg.includes('score')) {
+        response = "Your CourtIQ™ performance shows your multi-dimensional rating across 5 key areas. Looking at your profile, your strongest dimensions are Technical Skills and Tactical Awareness, while you could benefit from development in Mental Toughness. Would you like me to recommend personalized drills to improve your weaker dimensions?";
+      } else if (msg.includes('coach') || msg.includes('drill') || msg.includes('improve') || msg.includes('learn')) {
+        response = "I can help with your pickleball skills! The Coaching section offers:\n\n• Personalized drill recommendations\n• Technique analysis\n• Strategy guides for different play styles\n• Mental game development\n\nWhat specific aspect of your game would you like to work on?";
       } else {
-        response = "That's a great question! I'd recommend practicing specific drills focused on that aspect of your game. Would you like a detailed breakdown of exercises that could help?";
+        response = "I can help you with that! As your Pickle+ concierge, I can guide you through any feature on the platform, help you find tournaments, connect with players, improve your skills, or track your progress. What aspect are you most interested in exploring?";
       }
       
       setConversations(prev => [...prev, {role: 'sage', content: response}]);
@@ -85,16 +87,16 @@ export default function SimpleSageWidget() {
     setTimeout(() => {
       let response: string;
       
-      if (suggestion.includes('dinking')) {
-        response = "For dinking practice, I recommend the 'Four Corners' drill. Position yourself at the kitchen line and aim for all four corners of the opponent's kitchen. Focus on control and placement rather than power.";
-      } else if (suggestion.includes('third shot drop')) {
-        response = "To improve your third shot drop, try the 'Target Practice' drill. Have a partner stand at the kitchen line while you hit drop shots from the baseline. Aim for targets placed in different spots in the kitchen to develop touch and accuracy.";
-      } else if (suggestion.includes('tournament')) {
-        response = "Before a tournament, focus on consistency drills rather than learning new skills. Practice pressure situations with game scenarios, and make sure to have a solid warm-up routine. Would you like me to create a tournament preparation plan for you?";
-      } else if (suggestion.includes('positioning')) {
-        response = "Good positioning starts with the ready position - knees slightly bent, paddle up at chest level. Practice side-to-side kitchen line movements and always try to return to the center of your side after each shot. The 'Shadow Drill' where you mirror a partner's movements can help with this.";
+      if (suggestion.includes('features')) {
+        response = "Based on your profile, I'd recommend exploring these Pickle+ features:\n\n1. CourtIQ™ Performance - track your multi-dimensional skill ratings\n2. Community Hub - connect with players in your area\n3. Tournament Finder - discover upcoming events\n\nWhat would you like to explore first?";
+      } else if (suggestion.includes('tournaments')) {
+        response = "The Tournament Finder is your hub for events! Head to the Events tab to browse upcoming tournaments filtered by location, skill level, and format. You can register directly through Pickle+, and I can help you prepare a training plan leading up to your selected event.";
+      } else if (suggestion.includes('connect')) {
+        response = "To connect with other players, visit the Community tab where you can:\n\n• Search for players by location and skill level\n• Join local Pickle+ groups\n• Use Partner Finder to match with compatible players\n• Create or join meetups\n\nWould you like me to help you find specific types of players?";
+      } else if (suggestion.includes('CourtIQ')) {
+        response = "Your CourtIQ™ performance shows your multi-dimensional rating across 5 key areas. Looking at your profile, your strongest dimensions are Technical Skills and Tactical Awareness, while you could benefit from development in Mental Toughness. Would you like me to recommend personalized drills to improve your weaker dimensions?";
       } else {
-        response = "Let me help you with that! I can provide specific drills and techniques to improve your game.";
+        response = "I can help you with that! As your Pickle+ concierge, I can guide you through any feature on the platform, help you find tournaments, connect with players, improve your skills, or track your progress. What aspect are you most interested in exploring?";
       }
       
       setConversations(prev => [...prev, {role: 'sage', content: response}]);
@@ -108,8 +110,8 @@ export default function SimpleSageWidget() {
       <CardHeader className="py-3 px-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center">
-            <BrainCircuit className="h-5 w-5 mr-2 text-primary" />
-            SAGE Coach
+            <Bot className="h-5 w-5 mr-2 text-primary" />
+            SAGE Concierge
           </CardTitle>
           
           <Button 

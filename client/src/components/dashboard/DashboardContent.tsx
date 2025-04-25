@@ -283,14 +283,14 @@ export default function DashboardContent() {
               </CardContent>
             </Card>
             
-            {/* SAGE Coach - Directly below passport for easy mobile access */}
+            {/* SAGE Platform Concierge - Directly below passport for easy mobile access */}
             <div className="mb-6">
               <div className="flex items-center mb-4">
                 <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-400 to-indigo-600 text-transparent bg-clip-text">
-                  SAGE Coach
+                  SAGE Concierge
                 </h3>
                 <div className="ml-2 text-xs bg-gradient-to-r from-blue-400 to-indigo-600 text-white px-2 py-0.5 rounded-full">
-                  AI Powered
+                  Platform Assistant
                 </div>
               </div>
               <SimpleSageWidget />
