@@ -28,7 +28,7 @@ export default function SimpleSageWidget() {
   const [, navigate] = useLocation();
   const [userMessage, setUserMessage] = useState('');
   const [conversations, setConversations] = useState<{role: 'user'|'sage', content: string}[]>([
-    {role: 'sage', content: "👋 Hi! I'm SAGE, your Pickle+ concierge. I can help you discover features, find players, or improve your game. What would you like to explore today?"}
+    {role: 'sage', content: "👋 Hi! I'm SAGE, your personal assistant. I can help you explore Pickle+ features, find players, discover tournaments, or improve your game. What would you like to do today?"}
   ]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
@@ -111,7 +111,7 @@ export default function SimpleSageWidget() {
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center">
             <Bot className="h-5 w-5 mr-2 text-primary" />
-            SAGE Concierge
+            SAGE
           </CardTitle>
           
           <Button 

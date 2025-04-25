@@ -287,7 +287,7 @@ export default function DashboardContent() {
             <div className="mb-6">
               <div className="flex items-center mb-4">
                 <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-400 to-indigo-600 text-transparent bg-clip-text">
-                  SAGE Concierge
+                  SAGE
                 </h3>
                 <div className="ml-2 text-xs bg-gradient-to-r from-blue-400 to-indigo-600 text-white px-2 py-0.5 rounded-full">
                   Platform Assistant
