@@ -550,12 +550,15 @@ export default function App() {
                     {(params) => <CentralProtectedRoute component={CommunityDiscoveryPage} path="/communities/discover" />}
                   </Route>
                   
-                  {/* PKL-278651-SAGE-0011-SOCIAL - Social Content */}
-                  <ProtectedRouteWithLayout 
-                    path="/social/content" 
-                    component={SocialContentPage} 
-                    pageTitle="Social Content"
-                  />
+                  {/* PKL-278651-SAGE-0011-SOCIAL - Social Content - TEMPORARILY DISABLED */}
+                  <Route path="/social/content">
+                    {() => {
+                      if (typeof window !== 'undefined') {
+                        window.location.href = '/dashboard';
+                      }
+                      return null;
+                    }}
+                  </Route>
                   
                   {/* PKL-278651-COMM-0011-OSI - NodeBB Community Hub v2 */}
                   <Route path="/community/v2">
