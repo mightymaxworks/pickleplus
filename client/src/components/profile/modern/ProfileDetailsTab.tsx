@@ -2,9 +2,10 @@
  * PKL-278651-PROF-0011-COMP - Profile Details Tab
  * 
  * Detail tab for the modern profile page, displaying and editing personal information.
+ * Enhanced with mobile-friendly inline editing capabilities.
  * 
  * @framework Framework5.3
- * @version 1.0.0
+ * @version 1.1.0
  * @lastUpdated 2025-04-26
  */
 
@@ -12,9 +13,12 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { EnhancedUser } from "@/types/enhanced-user";
 import EditableProfileField from "./EditableProfileField";
-import { Mail, Calendar, User, MapPin, Info, Award } from "lucide-react";
+import { Mail, Calendar, User, MapPin, Info, Award, Smartphone, Edit, Check } from "lucide-react";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 interface ProfileDetailsTabProps {
   user: EnhancedUser;
@@ -47,6 +51,10 @@ export default function ProfileDetailsTab({
   isCurrentUser,
   onFieldUpdate
 }: ProfileDetailsTabProps) {
+  // Detect if on mobile
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const [showEditInfo, setShowEditInfo] = useState(false);
+  
   return (
     <motion.div 
       className="space-y-6"
@@ -57,11 +65,19 @@ export default function ProfileDetailsTab({
       {/* Personal Information */}
       <motion.div variants={itemVariants}>
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5 text-primary" />
               <span>Personal Information</span>
             </CardTitle>
+            {isCurrentUser && isMobile && (
+              <div onClick={() => setShowEditInfo(!showEditInfo)} className="cursor-pointer">
+                <Badge variant={showEditInfo ? "secondary" : "outline"} className="flex gap-1 items-center">
+                  <Edit className="h-3 w-3" />
+                  <span>{showEditInfo ? "Exit Edit Mode" : "Edit Info"}</span>
+                </Badge>
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -86,7 +102,7 @@ export default function ProfileDetailsTab({
                       value={user.firstName || ""}
                       field="firstName"
                       onUpdate={onFieldUpdate}
-                      editable={isCurrentUser}
+                      editable={isCurrentUser && (!isMobile || showEditInfo)}
                       placeholder="First name"
                       render={(value, editing, onChange) => (
                         editing ? (
@@ -129,7 +145,7 @@ export default function ProfileDetailsTab({
                       value={user.location || ""}
                       field="location"
                       onUpdate={onFieldUpdate}
-                      editable={isCurrentUser}
+                      editable={isCurrentUser && (!isMobile || showEditInfo)}
                       placeholder="Add your location"
                       render={(value, editing, onChange) => (
                         editing ? (
@@ -167,7 +183,7 @@ export default function ProfileDetailsTab({
                           onFieldUpdate(field, numValue);
                         }
                       }}
-                      editable={isCurrentUser}
+                      editable={isCurrentUser && (!isMobile || showEditInfo)}
                       placeholder="Add year of birth"
                       render={(value, editing, onChange) => (
                         editing ? (
@@ -202,7 +218,7 @@ export default function ProfileDetailsTab({
                       value={user.bio || ""}
                       field="bio"
                       onUpdate={onFieldUpdate}
-                      editable={isCurrentUser}
+                      editable={isCurrentUser && (!isMobile || showEditInfo)}
                       placeholder="Tell others about yourself"
                       render={(value, editing, onChange) => (
                         editing ? (
@@ -231,11 +247,19 @@ export default function ProfileDetailsTab({
       {/* Equipment */}
       <motion.div variants={itemVariants}>
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Award className="h-5 w-5 text-primary" />
               <span>Equipment Information</span>
             </CardTitle>
+            {isCurrentUser && isMobile && (
+              <div onClick={() => setShowEditInfo(!showEditInfo)} className="cursor-pointer">
+                <Badge variant={showEditInfo ? "secondary" : "outline"} className="flex gap-1 items-center">
+                  <Edit className="h-3 w-3" />
+                  <span>{showEditInfo ? "Exit Edit Mode" : "Edit Info"}</span>
+                </Badge>
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -248,7 +272,7 @@ export default function ProfileDetailsTab({
                       value={user.paddleBrand || ""}
                       field="paddleBrand"
                       onUpdate={onFieldUpdate}
-                      editable={isCurrentUser}
+                      editable={isCurrentUser && (!isMobile || showEditInfo)}
                       placeholder="Brand"
                       render={(value, editing, onChange) => (
                         editing ? (
@@ -271,7 +295,7 @@ export default function ProfileDetailsTab({
                       value={user.paddleModel || ""}
                       field="paddleModel"
                       onUpdate={onFieldUpdate}
-                      editable={isCurrentUser}
+                      editable={isCurrentUser && (!isMobile || showEditInfo)}
                       placeholder="Model"
                       render={(value, editing, onChange) => (
                         editing ? (
@@ -298,7 +322,7 @@ export default function ProfileDetailsTab({
                       value={user.backupPaddleBrand || ""}
                       field="backupPaddleBrand"
                       onUpdate={onFieldUpdate}
-                      editable={isCurrentUser}
+                      editable={isCurrentUser && (!isMobile || showEditInfo)}
                       placeholder="Brand"
                       render={(value, editing, onChange) => (
                         editing ? (
@@ -321,7 +345,7 @@ export default function ProfileDetailsTab({
                       value={user.backupPaddleModel || ""}
                       field="backupPaddleModel"
                       onUpdate={onFieldUpdate}
-                      editable={isCurrentUser}
+                      editable={isCurrentUser && (!isMobile || showEditInfo)}
                       placeholder="Model"
                       render={(value, editing, onChange) => (
                         editing ? (
@@ -345,165 +369,82 @@ export default function ProfileDetailsTab({
               {/* Other Equipment */}
               <div className="space-y-2">
                 <div className="text-sm font-medium">Other Equipment</div>
-                <EditableProfileField
-                  value={user.otherEquipment || ""}
-                  field="otherEquipment"
-                  onUpdate={onFieldUpdate}
-                  editable={isCurrentUser}
-                  placeholder="List any other equipment you use"
-                  render={(value, editing, onChange) => (
-                    editing ? (
-                      <textarea
-                        className="w-full min-h-[80px] px-2 py-1 bg-muted rounded border border-input text-sm"
-                        value={value}
-                        onChange={(e) => onChange(e.target.value)}
-                        placeholder="List any other equipment you use"
-                        autoFocus
-                      />
-                    ) : (
-                      <div className="text-sm text-muted-foreground whitespace-pre-wrap">
-                        {value || (isCurrentUser ? "Add other equipment information" : "No information provided")}
-                      </div>
-                    )
-                  )}
-                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <EditableProfileField
+                    value={user.shoeBrand || ""}
+                    field="shoeBrand"
+                    onUpdate={onFieldUpdate}
+                    editable={isCurrentUser && (!isMobile || showEditInfo)}
+                    placeholder="Shoe Brand"
+                    render={(value, editing, onChange) => (
+                      editing ? (
+                        <input
+                          className="w-full px-2 py-1 bg-muted rounded border border-input text-sm"
+                          value={value}
+                          onChange={(e) => onChange(e.target.value)}
+                          placeholder="Shoe Brand"
+                          autoFocus
+                        />
+                      ) : (
+                        <div className="text-sm text-muted-foreground">
+                          {value ? `Shoe Brand: ${value}` : "No shoe brand specified"}
+                        </div>
+                      )
+                    )}
+                  />
+                  
+                  <EditableProfileField
+                    value={user.apparel || ""}
+                    field="apparel"
+                    onUpdate={onFieldUpdate}
+                    editable={isCurrentUser && (!isMobile || showEditInfo)}
+                    placeholder="Apparel"
+                    render={(value, editing, onChange) => (
+                      editing ? (
+                        <input
+                          className="w-full px-2 py-1 bg-muted rounded border border-input text-sm"
+                          value={value}
+                          onChange={(e) => onChange(e.target.value)}
+                          placeholder="Apparel"
+                          autoFocus
+                        />
+                      ) : (
+                        <div className="text-sm text-muted-foreground">
+                          {value ? `Apparel: ${value}` : "No apparel specified"}
+                        </div>
+                      )
+                    )}
+                  />
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
       </motion.div>
       
-      {/* Playing Preferences */}
-      <motion.div variants={itemVariants}>
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Award className="h-5 w-5 text-primary" />
-              <span>Playing Preferences</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <div className="text-sm font-medium">Preferred Position</div>
-                <EditableProfileField
-                  value={user.preferredPosition || ""}
-                  field="preferredPosition"
-                  onUpdate={onFieldUpdate}
-                  editable={isCurrentUser}
-                  placeholder="Select position"
-                  render={(value, editing, onChange) => (
-                    editing ? (
-                      <select
-                        className="w-full px-2 py-1 bg-muted rounded border border-input text-sm"
-                        value={value}
-                        onChange={(e) => onChange(e.target.value)}
-                        autoFocus
-                      >
-                        <option value="">Select position</option>
-                        <option value="Right">Right</option>
-                        <option value="Left">Left</option>
-                        <option value="Either">Either</option>
-                      </select>
-                    ) : (
-                      <div className="text-sm text-muted-foreground">
-                        {value || (isCurrentUser ? "Select your position" : "Not specified")}
-                      </div>
-                    )
-                  )}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <div className="text-sm font-medium">Preferred Surface</div>
-                <EditableProfileField
-                  value={user.preferredSurface || ""}
-                  field="preferredSurface"
-                  onUpdate={onFieldUpdate}
-                  editable={isCurrentUser}
-                  placeholder="Select surface"
-                  render={(value, editing, onChange) => (
-                    editing ? (
-                      <select
-                        className="w-full px-2 py-1 bg-muted rounded border border-input text-sm"
-                        value={value}
-                        onChange={(e) => onChange(e.target.value)}
-                        autoFocus
-                      >
-                        <option value="">Select surface</option>
-                        <option value="Indoor">Indoor</option>
-                        <option value="Outdoor">Outdoor</option>
-                        <option value="Either">Either</option>
-                      </select>
-                    ) : (
-                      <div className="text-sm text-muted-foreground">
-                        {value || (isCurrentUser ? "Select your preferred surface" : "Not specified")}
-                      </div>
-                    )
-                  )}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <div className="text-sm font-medium">Indoor/Outdoor</div>
-                <EditableProfileField
-                  value={user.indoorOutdoorPreference || ""}
-                  field="indoorOutdoorPreference"
-                  onUpdate={onFieldUpdate}
-                  editable={isCurrentUser}
-                  placeholder="Select preference"
-                  render={(value, editing, onChange) => (
-                    editing ? (
-                      <select
-                        className="w-full px-2 py-1 bg-muted rounded border border-input text-sm"
-                        value={value}
-                        onChange={(e) => onChange(e.target.value)}
-                        autoFocus
-                      >
-                        <option value="">Select preference</option>
-                        <option value="Indoor">Indoor</option>
-                        <option value="Outdoor">Outdoor</option>
-                        <option value="No Preference">No Preference</option>
-                      </select>
-                    ) : (
-                      <div className="text-sm text-muted-foreground">
-                        {value || (isCurrentUser ? "Select your preference" : "Not specified")}
-                      </div>
-                    )
-                  )}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <div className="text-sm font-medium">Looking for Partners?</div>
-                <EditableProfileField
-                  value={user.lookingForPartners ? "Yes" : "No"}
-                  field="lookingForPartners"
-                  onUpdate={(field, value) => onFieldUpdate(field, value === "Yes")}
-                  editable={isCurrentUser}
-                  render={(value, editing, onChange) => (
-                    editing ? (
-                      <select
-                        className="w-full px-2 py-1 bg-muted rounded border border-input text-sm"
-                        value={value}
-                        onChange={(e) => onChange(e.target.value)}
-                        autoFocus
-                      >
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
-                      </select>
-                    ) : (
-                      <div className="text-sm text-muted-foreground">
-                        {value}
-                      </div>
-                    )
-                  )}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+      {/* Mobile Edit Mode Banner */}
+      {isCurrentUser && isMobile && showEditInfo && (
+        <motion.div 
+          className="fixed bottom-0 left-0 right-0 bg-background border-t border-border p-3 flex justify-between items-center z-50"
+          initial={{ y: 100 }}
+          animate={{ y: 0 }}
+          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+        >
+          <div className="text-sm font-medium text-primary">
+            <Smartphone className="h-4 w-4 inline-block mr-2" />
+            <span>Tap fields to edit your profile</span>
+          </div>
+          <Button 
+            size="sm" 
+            variant="secondary"
+            onClick={() => setShowEditInfo(false)}
+            className="flex items-center gap-1"
+          >
+            <Check className="h-4 w-4" />
+            <span>Done</span>
+          </Button>
+        </motion.div>
+      )}
     </motion.div>
   );
 }

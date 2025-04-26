@@ -1,7 +1,8 @@
 /**
- * PKL-278651-UI-0005-HOOK - useMediaQuery Hook
+ * PKL-278651-PROF-0028-HOOK - Media Query Hook
  * 
- * Custom hook for responsive media queries that updates when viewport changes.
+ * A custom hook for responsive design, detecting if a media query matches.
+ * Used for conditional rendering based on screen size.
  * 
  * @framework Framework5.3
  * @version 1.0.0
@@ -11,48 +12,44 @@
 import { useState, useEffect } from 'react';
 
 /**
- * Hook to check if a media query matches
- * @param query - CSS media query string (e.g., '(max-width: 768px)')
- * @returns boolean indicating if the media query matches
+ * Hook to detect if a media query matches
+ * 
+ * @param query - CSS media query string
+ * @returns Boolean indicating if the query matches
+ * 
+ * @example
+ * // Check if device is mobile
+ * const isMobile = useMediaQuery('(max-width: 768px)');
+ * 
+ * // Check if device is in dark mode
+ * const isDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
  */
 export function useMediaQuery(query: string): boolean {
-  // Initialize with current match state or false if SSR
-  const getMatches = (): boolean => {
-    // Check if window is available (browser environment)
-    if (typeof window !== 'undefined') {
-      return window.matchMedia(query).matches;
-    }
-    return false;
-  };
-
-  const [matches, setMatches] = useState<boolean>(getMatches());
-
-  // Update matches state whenever the media query result changes
+  // Default to false for SSR
+  const [matches, setMatches] = useState(false);
+  
   useEffect(() => {
-    // Get initial match
-    const matchMedia = window.matchMedia(query);
-    setMatches(matchMedia.matches);
-
-    // Create handler to update state
-    const handleChange = (e: MediaQueryListEvent) => {
-      setMatches(e.matches);
-    };
-
-    // Add event listener for changes
-    if (matchMedia.addEventListener) {
-      // Modern browsers
-      matchMedia.addEventListener('change', handleChange);
-      return () => {
-        matchMedia.removeEventListener('change', handleChange);
+    // Check if window is available (for SSR)
+    if (typeof window !== 'undefined') {
+      const media = window.matchMedia(query);
+      
+      // Set the initial value
+      setMatches(media.matches);
+      
+      // Define the change handler
+      const listener = (event: MediaQueryListEvent) => {
+        setMatches(event.matches);
       };
-    } else {
-      // Fallback for older browsers
-      matchMedia.addListener(handleChange);
+      
+      // Add the listener
+      media.addEventListener('change', listener);
+      
+      // Clean up
       return () => {
-        matchMedia.removeListener(handleChange);
+        media.removeEventListener('change', listener);
       };
     }
   }, [query]);
-
+  
   return matches;
 }
