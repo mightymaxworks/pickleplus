@@ -25,6 +25,14 @@ export interface CourtIQMetrics {
 }
 
 // Calculated user metrics from DataCalculationService
+export interface PCPRankingInfo {
+  tier: PCPTier;
+  points: number;
+  nextTierThreshold: number;
+  progressPercentage: number;
+  ratingContribution: number;
+}
+
 export interface CalculatedUserMetrics {
   level: number;
   nextLevelXP: number;
@@ -35,10 +43,24 @@ export interface CalculatedUserMetrics {
   masteryLevel?: string;
   dimensionRatings?: CourtIQMetrics;
   completionPercentage: number;
+  pcpRanking?: PCPRankingInfo;
 }
 
 // Rating system types
 export type RatingSystem = "COURTIQ" | "DUPR" | "UTPR" | "WPR";
+
+// PCP Tier definition
+export type PCPTier = "Bronze" | "Silver" | "Gold" | "Platinum" | "Diamond" | "Master";
+
+// PCP Tier threshold configuration
+export const PCP_TIER_THRESHOLDS = {
+  BRONZE: 0,
+  SILVER: 1000,
+  GOLD: 2500,
+  PLATINUM: 5000,
+  DIAMOND: 10000,
+  MASTER: 25000
+};
 
 // Dimension weight configuration
 const DIMENSION_WEIGHTS = {
@@ -56,6 +78,9 @@ const RATING_PROTECTION = {
   MIN_CHANGE_THRESHOLD: 25,
   VOLATILITY_DAMPENER: 0.8
 };
+
+// Maximum PCP ranking points that contribute to CourtIQ rating
+export const MAX_PCP_RATING_CONTRIBUTION = 500;
 
 /**
  * Converts a CourtIQ rating to the specified rating system
@@ -115,6 +140,10 @@ export class DataCalculationService {
     const completionPercentage = user.profileCompletionPct || 
       this.calculateProfileCompletionPercentage(user);
       
+    // Calculate PCP ranking info if user has ranking points
+    const pcpRanking = user.rankingPoints !== undefined ? 
+      this.calculatePCPRanking(user.rankingPoints) : undefined;
+      
     return {
       ...levelInfo,
       overallRating: this.calculateOverallRating(user),
@@ -122,7 +151,84 @@ export class DataCalculationService {
       masteryLevel: this.calculateMasteryLevel(user),
       dimensionRatings,
       recentPerformance,
-      completionPercentage
+      completionPercentage,
+      pcpRanking
+    };
+  }
+  
+  /**
+   * Calculate PCP ranking tier and progress information
+   * @param rankingPoints - User's total PCP ranking points
+   * @returns PCP ranking information including tier, progress, and rating contribution
+   */
+  calculatePCPRanking(rankingPoints: number): PCPRankingInfo {
+    // Default to 0 if undefined
+    const points = rankingPoints || 0;
+    
+    // Determine current tier
+    let tier: PCPTier = "Bronze";
+    let nextTierThreshold = PCP_TIER_THRESHOLDS.SILVER;
+    
+    if (points >= PCP_TIER_THRESHOLDS.MASTER) {
+      tier = "Master";
+      nextTierThreshold = Infinity; // No next tier
+    } else if (points >= PCP_TIER_THRESHOLDS.DIAMOND) {
+      tier = "Diamond";
+      nextTierThreshold = PCP_TIER_THRESHOLDS.MASTER;
+    } else if (points >= PCP_TIER_THRESHOLDS.PLATINUM) {
+      tier = "Platinum";
+      nextTierThreshold = PCP_TIER_THRESHOLDS.DIAMOND;
+    } else if (points >= PCP_TIER_THRESHOLDS.GOLD) {
+      tier = "Gold";
+      nextTierThreshold = PCP_TIER_THRESHOLDS.PLATINUM;
+    } else if (points >= PCP_TIER_THRESHOLDS.SILVER) {
+      tier = "Silver";
+      nextTierThreshold = PCP_TIER_THRESHOLDS.GOLD;
+    }
+    
+    // Calculate progress to next tier
+    let progressPercentage = 0;
+    let currentTierThreshold = 0;
+    
+    switch (tier) {
+      case "Bronze":
+        currentTierThreshold = PCP_TIER_THRESHOLDS.BRONZE;
+        break;
+      case "Silver":
+        currentTierThreshold = PCP_TIER_THRESHOLDS.SILVER;
+        break;
+      case "Gold":
+        currentTierThreshold = PCP_TIER_THRESHOLDS.GOLD;
+        break;
+      case "Platinum":
+        currentTierThreshold = PCP_TIER_THRESHOLDS.PLATINUM;
+        break;
+      case "Diamond":
+        currentTierThreshold = PCP_TIER_THRESHOLDS.DIAMOND;
+        break;
+      case "Master":
+        currentTierThreshold = PCP_TIER_THRESHOLDS.MASTER;
+        break;
+    }
+    
+    // If not at max tier, calculate progress percentage
+    if (tier !== "Master") {
+      const tierRange = nextTierThreshold - currentTierThreshold;
+      const pointsInTier = points - currentTierThreshold;
+      progressPercentage = Math.min(100, Math.round((pointsInTier / tierRange) * 100));
+    } else {
+      progressPercentage = 100; // Max tier achieved
+    }
+    
+    // Calculate rating contribution (capped at MAX_PCP_RATING_CONTRIBUTION)
+    const ratingContribution = Math.min(points, MAX_PCP_RATING_CONTRIBUTION);
+    
+    return {
+      tier,
+      points,
+      nextTierThreshold,
+      progressPercentage,
+      ratingContribution
     };
   }
   
@@ -161,9 +267,9 @@ export class DataCalculationService {
       baseRating += Math.min(user.totalTournaments * 25, 250);
     }
     
-    // Apply ranking points
+    // Apply ranking points (capped at MAX_PCP_RATING_CONTRIBUTION)
     if (user.rankingPoints > 0) {
-      baseRating += Math.min(user.rankingPoints, 500);
+      baseRating += Math.min(user.rankingPoints, MAX_PCP_RATING_CONTRIBUTION);
     }
     
     // Cap at 3000

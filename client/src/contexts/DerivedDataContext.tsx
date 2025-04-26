@@ -30,7 +30,14 @@ const DEFAULT_METRICS: CalculatedUserMetrics = {
   xpProgressPercentage: 0,
   recentPerformance: 0,
   overallRating: 1000,
-  completionPercentage: 0
+  completionPercentage: 0,
+  pcpRanking: {
+    tier: "Bronze",
+    points: 0,
+    nextTierThreshold: 1000,
+    progressPercentage: 0,
+    ratingContribution: 0
+  }
 };
 
 export function DerivedDataProvider({ children }: { children: React.ReactNode }) {

@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { Trophy, Activity, BarChart3, TrendingUp, Zap, Target } from "lucide-react";
 import { EnhancedUser } from "@/types/enhanced-user";
 import { CourtIQMetrics, CalculatedUserMetrics } from "@/services/DataCalculationService";
+import { PCPRankingCard } from "@/components/profile/PCPRankingCard";
 import { useMemo } from "react";
 
 interface ProfileStatisticsSectionProps {
@@ -201,6 +202,11 @@ export function ProfileStatisticsSection({ user, calculatedMetrics }: ProfileSta
           </CardContent>
         </Card>
         
+        {/* PCP Ranking Card - Displays when PCP ranking info is available */}
+        {calculatedMetrics.pcpRanking && (
+          <PCPRankingCard rankingInfo={calculatedMetrics.pcpRanking} />
+        )}
+        
         {/* Tournament Stats Card */}
         <Card>
           <CardHeader>
@@ -211,11 +217,6 @@ export function ProfileStatisticsSection({ user, calculatedMetrics }: ProfileSta
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Tournaments</span>
                 <span className="font-medium">{user.totalTournaments || 0}</span>
-              </div>
-              <Separator />
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Ranking Points</span>
-                <span className="font-medium">{user.rankingPoints || 0}</span>
               </div>
               <Separator />
               <div className="flex justify-between items-center">
