@@ -12,22 +12,71 @@
 import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { useDerivedData } from "@/contexts/DerivedDataContext";
+// EMERGENCY FIX: Removed import for useDerivedData to prevent infinite loops
 import { useAuth } from "@/lib/auth";
 import { Zap, ChevronRight } from "lucide-react";
 
 export default function XPProgressCard() {
   const { user } = useAuth();
-  const { calculatedMetrics } = useDerivedData();
+  
+  // EMERGENCY FIX: Direct calculation instead of using DerivedDataContext
+  // to prevent infinite render loops
+  const nextLevelXpMap = {
+    1: 100,
+    2: 250,
+    3: 500,
+    4: 750,
+    5: 800,
+    6: 850,
+    7: 900,
+    8: 950,
+    9: 1000
+  };
+  
+  // Calculate level directly
+  const level = useMemo(() => {
+    if (!user?.xp) return 1;
+    const xp = user.xp;
+    
+    if (xp >= 1000) return 10;
+    if (xp >= 950) return 9;
+    if (xp >= 900) return 8;
+    if (xp >= 850) return 7;
+    if (xp >= 800) return 6;
+    if (xp >= 750) return 5;
+    if (xp >= 500) return 4;
+    if (xp >= 250) return 3;
+    if (xp >= 100) return 2;
+    return 1;
+  }, [user?.xp]);
+  
+  // Get next level XP threshold
+  const nextLevelXP = useMemo(() => {
+    return nextLevelXpMap[level as keyof typeof nextLevelXpMap] || 1000;
+  }, [level]);
+  
+  // Calculate XP progress percentage
+  const xpProgressPercentage = useMemo(() => {
+    if (!user?.xp) return 0;
+    
+    const currentLevelXP = level > 1 ? 
+      nextLevelXpMap[(level - 1) as keyof typeof nextLevelXpMap] :
+      0;
+    
+    const xpInCurrentLevel = user.xp - currentLevelXP;
+    const xpRequiredForNextLevel = nextLevelXP - currentLevelXP;
+    
+    return Math.min(100, Math.round((xpInCurrentLevel / xpRequiredForNextLevel) * 100));
+  }, [user?.xp, level, nextLevelXP]);
   
   // Calculate remaining XP to next level
   const remainingXP = useMemo(() => {
-    if (!calculatedMetrics) return 0;
-    return calculatedMetrics.nextLevelXP - (user?.xp || 0);
-  }, [calculatedMetrics, user?.xp]);
+    if (!user?.xp) return nextLevelXP;
+    return nextLevelXP - user.xp;
+  }, [nextLevelXP, user?.xp]);
   
   // Show loading skeleton if data is not available
-  if (!calculatedMetrics || !user) {
+  if (!user) {
     return (
       <Card>
         <CardContent className="p-6">
@@ -56,22 +105,22 @@ export default function XPProgressCard() {
             <Zap className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold">Level {calculatedMetrics.level}</h3>
+            <h3 className="text-lg font-semibold">Level {level}</h3>
             <p className="text-sm text-muted-foreground">
-              {remainingXP} XP needed for Level {calculatedMetrics.level + 1}
+              {remainingXP} XP needed for Level {level + 1}
             </p>
           </div>
         </div>
         
         <Progress
-          value={calculatedMetrics.xpProgressPercentage}
+          value={xpProgressPercentage}
           className="h-2 mb-2"
         />
         
         <div className="flex justify-between text-sm">
-          <span>{user.xp} XP</span>
+          <span>{user.xp || 0} XP</span>
           <div className="flex items-center">
-            <span>{calculatedMetrics.nextLevelXP} XP</span>
+            <span>{nextLevelXP} XP</span>
             <ChevronRight className="h-4 w-4 ml-1 text-muted-foreground" />
           </div>
         </div>

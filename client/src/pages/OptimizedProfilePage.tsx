@@ -119,9 +119,11 @@ export default function OptimizedProfilePage() {
     allowedTabs.push("settings");
   }
   
+  // EMERGENCY FIX: Bypassing DerivedDataProvider temporarily due to infinite render loop
+  // Will restore once the loop issue is resolved
+  console.log("EMERGENCY: Bypassing DerivedDataProvider to prevent infinite loops");
   return (
-    <DerivedDataProvider>
-      <div className="container py-8">
+    <div className="container py-8">
         <div className="flex flex-col space-y-6">
           {/* Profile Header */}
           <div className="pb-6 border-b flex flex-col md:flex-row gap-6 justify-between">
@@ -182,6 +184,5 @@ export default function OptimizedProfilePage() {
           />
         </div>
       </div>
-    </DerivedDataProvider>
   );
 }

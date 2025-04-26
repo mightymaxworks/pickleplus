@@ -22,7 +22,8 @@ import { ProfileStatisticsSection } from "@/components/profile/sections/ProfileS
 import { ProfileAchievementsSection } from "@/components/profile/sections/ProfileAchievementsSection";
 import { ProfileHistorySection } from "@/components/profile/sections/ProfileHistorySection";
 import { ProfileSettingsSection } from "@/components/profile/sections/ProfileSettingsSection";
-import { useDerivedData } from "@/contexts/DerivedDataContext";
+// EMERGENCY FIX: Removing DerivedDataContext dependency
+import { DataCalculationService, CalculatedUserMetrics } from "@/services/DataCalculationService";
 
 export type ProfileTabId = 
   | "details" 
@@ -45,7 +46,13 @@ export function OptimizedProfileTabs({
   allowedTabs,
   onTabChange
 }: OptimizedProfileTabsProps) {
-  const { calculatedMetrics } = useDerivedData();
+  // EMERGENCY FIX: Create calculation service directly instead of using the context
+  const calculationService = useMemo(() => new DataCalculationService(), []);
+  const calculatedMetrics = useMemo(() => {
+    console.log("EMERGENCY FIX: Performing direct calculations in ProfileTabs");
+    return calculationService.calculateUserMetrics(user);
+  }, [calculationService, user]);
+
   const [activeTab, setActiveTab] = useState<ProfileTabId>(initialTab);
   const [loadedTabs, setLoadedTabs] = useState<ProfileTabId[]>([initialTab]);
   const isMobile = useMediaQuery("(max-width: 767px)");
