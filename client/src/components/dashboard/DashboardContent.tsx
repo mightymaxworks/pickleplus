@@ -23,7 +23,7 @@ import CourtIQStatsOverview from '@/components/dashboard/CourtIQStatsOverview';
 import { BounceStatusTicker } from '@/components/bounce/BounceStatusTicker';
 import { BounceAssistancePanel } from '@/components/bounce/BounceAssistancePanel';
 import { useToast } from '@/hooks/use-toast';
-import { calculateLevelFromXP, getXpRequiredForLevel } from '@/lib/calculateLevel';
+import { calculateLevel as calculateLevelFromXP, getNextLevelXP as getXpRequiredForLevel } from '@/lib/calculateLevel';
 import SimpleSageWidget from '@/components/sage/SimpleSageWidget';
 import { useMatchStatistics } from '@/hooks/use-match-statistics';
 import { useCourtIQPerformance } from '@/hooks/use-courtiq-performance';
