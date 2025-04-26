@@ -1,121 +1,133 @@
 /**
- * PKL-278651-PROF-0010-UTIL - Level Calculation Utility
+ * PKL-278651-PROF-0021-UTIL - Level Calculation Utility
  * 
- * This utility provides level calculation based on XP thresholds
- * with frontend-first implementation.
+ * Utility functions for calculating level information from XP.
  * 
  * @framework Framework5.3
  * @version 1.0.0
  * @lastUpdated 2025-04-26
  */
 
-/**
- * XP threshold for each level
- * Index corresponds to level (e.g., levelThresholds[1] is XP needed for level 1)
- */
-export const levelThresholds = [
-  0,     // Level 0 (not used)
-  0,     // Level 1 (starting level)
-  100,   // Level 2
-  250,   // Level 3
-  500,   // Level 4
-  750,   // Level 5
-  800,   // Level 6
-  850,   // Level 7
-  900,   // Level 8
-  950,   // Level 9
-  1000,  // Level 10
-  1100,  // Level 11
-  1200,  // Level 12
-  1300,  // Level 13
-  1500,  // Level 14
-  1750,  // Level 15
-  2000,  // Level 16
-  2500,  // Level 17
-  3000,  // Level 18
-  4000,  // Level 19
-  5000,  // Level 20
-  7500,  // Level 21
-  10000, // Level 22
-  12500, // Level 23
-  15000, // Level 24
-  20000, // Level 25
-  25000, // Level 26
-  30000, // Level 27
-  40000, // Level 28
-  50000, // Level 29
-  100000 // Level 30 (max level)
+interface LevelInfo {
+  level: number;
+  currentLevelXP: number;
+  nextLevelXP: number;
+  xpProgressPercentage: number;
+  totalXpForCurrentLevel: number;
+  xpNeededForNextLevel: number;
+}
+
+// XP thresholds for each level
+const XP_THRESHOLDS = [
+  0,      // Level 1: 0 XP
+  100,    // Level 2: 100 XP
+  250,    // Level 3: 250 XP
+  500,    // Level 4: 500 XP
+  750,    // Level 5: 750 XP
+  1000,   // Level 6: 1,000 XP
+  1300,   // Level 7: 1,300 XP
+  1650,   // Level 8: 1,650 XP
+  2050,   // Level 9: 2,050 XP
+  2500,   // Level 10: 2,500 XP
+  3000,   // Level 11: 3,000 XP
+  3600,   // Level 12: 3,600 XP
+  4300,   // Level 13: 4,300 XP
+  5100,   // Level 14: 5,100 XP
+  6000,   // Level 15: 6,000 XP
+  7000,   // Level 16: 7,000 XP
+  8200,   // Level 17: 8,200 XP
+  9500,   // Level 18: 9,500 XP
+  11000,  // Level 19: 11,000 XP
+  12500,  // Level 20: 12,500 XP
+  15000,  // Level 21: 15,000 XP
+  20000,  // Level 22: 20,000 XP
+  25000,  // Level 23: 25,000 XP
+  30000,  // Level 24: 30,000 XP
+  40000,  // Level 25: 40,000 XP
+  50000,  // Level 26: 50,000 XP
+  60000,  // Level 27: 60,000 XP
+  75000,  // Level 28: 75,000 XP
+  100000, // Level 29: 100,000 XP
+  150000  // Level 30: 150,000 XP
 ];
 
-export const MAX_LEVEL = levelThresholds.length - 1;
-
-/**
- * Calculate user level based on XP
- * @param xp - User's current XP
- * @returns The calculated level
- */
-export function calculateLevel(xp: number): number {
-  if (xp >= levelThresholds[MAX_LEVEL]) {
-    return MAX_LEVEL;
+// Calculate XP required for levels beyond the predefined thresholds
+function calculateXpForHighLevel(level: number): number {
+  // For levels beyond our threshold table, increase by 50% each level
+  const lastDefinedLevel = XP_THRESHOLDS.length;
+  const lastDefinedXp = XP_THRESHOLDS[lastDefinedLevel - 1];
+  
+  // Calculate how many levels beyond the table
+  const levelsOver = level - lastDefinedLevel;
+  
+  // Each level beyond increases by 50%
+  let requiredXp = lastDefinedXp;
+  for (let i = 0; i < levelsOver; i++) {
+    requiredXp = Math.round(requiredXp * 1.5);
   }
   
-  // Find the highest level where the threshold is less than or equal to the user's XP
-  for (let i = MAX_LEVEL - 1; i >= 1; i--) {
-    if (xp >= levelThresholds[i]) {
-      return i;
+  return requiredXp;
+}
+
+/**
+ * Calculate level information from XP
+ * 
+ * @param xp - Current XP amount
+ * @returns Level information including current level, next level XP, etc.
+ */
+export function getLevelInfo(xp: number): LevelInfo {
+  xp = Math.max(0, xp); // Ensure XP is not negative
+  
+  // Find the current level by finding the highest threshold that is <= the XP
+  let level = 1;
+  for (let i = 1; i < XP_THRESHOLDS.length; i++) {
+    if (xp >= XP_THRESHOLDS[i]) {
+      level = i + 1;
+    } else {
+      break;
     }
   }
   
-  return 1; // Default to level 1
-}
-
-/**
- * Calculate the XP needed for the next level
- * @param currentLevel - User's current level
- * @returns XP needed for the next level
- */
-export function getNextLevelXP(currentLevel: number): number {
-  const safeLevel = Math.min(Math.max(1, currentLevel), MAX_LEVEL - 1);
-  return levelThresholds[safeLevel + 1];
-}
-
-/**
- * Calculate progress percentage towards the next level
- * @param xp - User's current XP
- * @param currentLevel - User's current level
- * @returns Percentage (0-100) of progress towards the next level
- */
-export function calculateLevelProgress(xp: number, currentLevel: number): number {
-  // If at max level, return 100%
-  if (currentLevel >= MAX_LEVEL) {
-    return 100;
+  // Handle levels beyond our predefined thresholds
+  if (level > XP_THRESHOLDS.length) {
+    let testLevel = XP_THRESHOLDS.length + 1;
+    let testXp = calculateXpForHighLevel(testLevel);
+    
+    while (xp >= testXp) {
+      level = testLevel;
+      testLevel++;
+      testXp = calculateXpForHighLevel(testLevel);
+    }
   }
   
-  const currentLevelXP = levelThresholds[currentLevel];
-  const nextLevelXP = levelThresholds[currentLevel + 1];
-  const xpForCurrentLevel = xp - currentLevelXP;
-  const xpRequiredForNextLevel = nextLevelXP - currentLevelXP;
+  // Get XP threshold for current and next level
+  const currentLevelXP = level <= XP_THRESHOLDS.length ? 
+    XP_THRESHOLDS[level - 1] : calculateXpForHighLevel(level);
+    
+  const nextLevelXP = level < XP_THRESHOLDS.length ? 
+    XP_THRESHOLDS[level] : calculateXpForHighLevel(level + 1);
   
-  return Math.round((xpForCurrentLevel / xpRequiredForNextLevel) * 100);
-}
-
-/**
- * Get an object with all level-related calculations
- * @param xp - User's current XP
- * @returns Object containing level, next level XP, and progress percentage
- */
-export function getLevelInfo(xp: number): { 
-  level: number;
-  nextLevelXP: number;
-  xpProgressPercentage: number;
-} {
-  const level = calculateLevel(xp);
-  const nextLevelXP = getNextLevelXP(level);
-  const xpProgressPercentage = calculateLevelProgress(xp, level);
+  // Calculate XP progress percentage to next level
+  const totalXpForCurrentLevel = nextLevelXP - currentLevelXP;
+  const xpProgressInCurrentLevel = xp - currentLevelXP;
+  const xpProgressPercentage = Math.min(100, Math.round((xpProgressInCurrentLevel / totalXpForCurrentLevel) * 100));
   
   return {
     level,
+    currentLevelXP,
     nextLevelXP,
-    xpProgressPercentage
+    xpProgressPercentage,
+    totalXpForCurrentLevel,
+    xpNeededForNextLevel: nextLevelXP - xp
   };
+}
+
+/**
+ * Calculate the level from XP (simplified version)
+ * 
+ * @param xp - Current XP amount
+ * @returns Current level
+ */
+export function calculateLevel(xp: number): number {
+  return getLevelInfo(xp).level;
 }

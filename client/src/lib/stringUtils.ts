@@ -1,7 +1,7 @@
 /**
- * PKL-278651-UTIL-0001-STR - String Utility Functions
+ * PKL-278651-PROF-0018-UTIL - String Utilities
  * 
- * A collection of helper functions for string manipulation.
+ * Helper functions for string manipulations needed by the profile page.
  * 
  * @framework Framework5.3
  * @version 1.0.0
@@ -9,58 +9,103 @@
  */
 
 /**
- * Extracts initials from a name
+ * Generates initials from user's name (display name, first/last, or username)
  * 
- * @param name - Full name or display name
- * @param maxLength - Maximum number of initials to return (default: 2)
- * @returns Uppercase initials (e.g., "JD" for "John Doe")
+ * @param displayName - The user's display name
+ * @param firstName - The user's first name
+ * @param lastName - The user's last name
+ * @param username - The user's username (fallback)
+ * @returns A string with the user's initials (1-2 characters)
  */
-export function getInitials(name: string, maxLength: number = 2): string {
-  if (!name) return '';
-  
-  // Split the name by spaces
-  const parts = name.split(' ').filter(part => part.length > 0);
-  
-  if (parts.length === 0) return '';
-  
-  // For single names or usernames, use the first two characters
-  if (parts.length === 1) {
-    return parts[0].substring(0, maxLength).toUpperCase();
+export function getAvatarInitials(
+  displayName?: string | null,
+  firstName?: string | null,
+  lastName?: string | null,
+  username?: string
+): string {
+  // If display name is available, use it
+  if (displayName && displayName.trim() !== '') {
+    const nameParts = displayName.trim().split(/\s+/);
+    
+    if (nameParts.length >= 2) {
+      // Take first letter of first and last parts
+      return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
+    } else {
+      // Just use the first letter
+      return nameParts[0][0].toUpperCase();
+    }
   }
   
-  // For multiple name parts, get the first character of each part
-  const initials = parts
-    .slice(0, maxLength)
-    .map(part => part.charAt(0))
-    .join('')
-    .toUpperCase();
+  // If first and last name are available, use those
+  if (firstName && firstName.trim() !== '') {
+    if (lastName && lastName.trim() !== '') {
+      return (firstName[0] + lastName[0]).toUpperCase();
+    } else {
+      return firstName[0].toUpperCase();
+    }
+  }
   
-  return initials;
+  // Fall back to username
+  if (username) {
+    return username[0].toUpperCase();
+  }
+  
+  // Last resort: just return 'U' for user
+  return 'U';
 }
 
 /**
- * Truncates a string to a maximum length with ellipsis
+ * Truncates a string to a maximum length and adds ellipsis if needed
  * 
- * @param text - The string to truncate
+ * @param str - The string to truncate
  * @param maxLength - Maximum length before truncation
  * @returns Truncated string with ellipsis if needed
  */
-export function truncateString(text: string, maxLength: number): string {
-  if (!text || text.length <= maxLength) return text;
-  return text.substring(0, maxLength) + '...';
+export function truncateString(str: string, maxLength: number): string {
+  if (!str) return '';
+  if (str.length <= maxLength) return str;
+  
+  return str.substring(0, maxLength) + '...';
 }
 
 /**
- * Formats a name for display
+ * Formats a date string to a human-readable format
  * 
- * @param firstName - First name
- * @param lastName - Last name
- * @param fallback - Fallback name if both first and last are empty
- * @returns Formatted full name or fallback
+ * @param dateString - Date string to format
+ * @param format - Format style ('short', 'medium', 'long')
+ * @returns Formatted date string
  */
-export function formatName(firstName?: string, lastName?: string, fallback: string = ''): string {
-  if (!firstName && !lastName) return fallback;
-  if (!firstName) return lastName || '';
-  if (!lastName) return firstName;
-  return `${firstName} ${lastName}`;
+export function formatDate(
+  dateString: string | Date,
+  format: 'short' | 'medium' | 'long' = 'medium'
+): string {
+  try {
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    
+    if (isNaN(date.getTime())) {
+      return 'Invalid date';
+    }
+    
+    switch (format) {
+      case 'short':
+        return date.toLocaleDateString();
+      case 'long':
+        return date.toLocaleDateString(undefined, {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+      case 'medium':
+      default:
+        return date.toLocaleDateString(undefined, {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+    }
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Date error';
+  }
 }

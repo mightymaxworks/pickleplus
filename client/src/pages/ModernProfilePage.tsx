@@ -62,8 +62,8 @@ export default function ModernProfilePage() {
   // Auth context for current user
   const { user: currentUser } = useAuth();
   
-  // Get derived data context for performance calculations
-  const { calculateCourtIQRating } = useDerivedData();
+  // Get derived data context and calculation service
+  const { calculationService } = useDerivedData();
   
   // Toast for notifications
   const { toast } = useToast();
@@ -90,7 +90,7 @@ export default function ModernProfilePage() {
   });
   
   // Courts IQ Rating calculation (client-side calculation)
-  const courtIQRating = user ? calculateCourtIQRating(user) : 0;
+  const courtIQRating = user ? calculationService.calculateOverallRating(user) : 0;
   
   // Mutation for updating profile fields
   const updateProfileMutation = useMutation({
