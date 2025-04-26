@@ -1,0 +1,63 @@
+/**
+ * PKL-278651-PROF-0012-COMP - Profile Stats Tab
+ * 
+ * Statistics tab for the modern profile page, showing performance metrics and visualizations.
+ * 
+ * @framework Framework5.3
+ * @version 1.0.0
+ * @lastUpdated 2025-04-26
+ */
+
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EnhancedUser } from "@/types/enhanced-user";
+
+interface ProfileStatsTabProps {
+  user: EnhancedUser;
+}
+
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: { 
+    y: 0, 
+    opacity: 1,
+    transition: { type: "spring", stiffness: 300, damping: 24 }
+  }
+};
+
+export default function ProfileStatsTab({
+  user
+}: ProfileStatsTabProps) {
+  return (
+    <motion.div 
+      className="space-y-6"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div variants={itemVariants}>
+        <Card>
+          <CardHeader>
+            <CardTitle>Performance Statistics</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center p-8 text-muted-foreground">
+              Performance statistics will be available in Sprint 2
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </motion.div>
+  );
+}

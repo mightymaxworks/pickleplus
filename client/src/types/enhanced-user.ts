@@ -18,8 +18,11 @@ export interface EnhancedUser {
   username: string;
   email?: string | null;
   password: string;
+  firstName?: string | null;
+  lastName?: string | null;
   displayName?: string | null;
   avatarUrl?: string | null;
+  coverImageUrl?: string | null;
   avatarInitials: string;
   bio?: string | null;
   location?: string | null;

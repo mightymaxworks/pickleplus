@@ -107,6 +107,7 @@ import MatchRewardDemo from './pages/match-reward-demo'
 import EnhancedProfile from './pages/EnhancedProfile'
 import EnhancedProfilePage from './pages/EnhancedProfilePage'
 import ContextualEnhancedProfile from './pages/ContextualEnhancedProfile'
+import ModernProfilePage from './pages/ModernProfilePage'
 import LandingPageTest from './pages/LandingPageTest'
 import QRTestPage from './pages/dev/QRTestPage'
 import EventTestPage from './pages/events/EventTestPage'
@@ -330,6 +331,11 @@ export default function App() {
                     path="/profile/streamlined"
                     component={LazyProfilePage}
                     pageTitle="Streamlined Profile"
+                  />
+                  <ProtectedRouteWithLayout
+                    path="/profile/modern"
+                    component={ModernProfilePage}
+                    pageTitle="Modern Profile"
                   />
                   {/* PKL-278651-COURTIQ-0005-DETAIL - CourtIQ Detailed Analysis */}
                   <ProtectedRouteWithLayout 
