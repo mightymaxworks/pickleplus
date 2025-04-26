@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { apiRequest } from "@/lib/queryClient";
+import { calculateLevelFromXP, getXpRequiredForLevel } from "@/lib/calculateLevel";
 
 interface XPProgressCardProps {
   user: User;
@@ -14,14 +15,20 @@ interface XPProgressCardProps {
 export default function XPProgressCard({ user }: XPProgressCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   
-  // Calculate XP progress within current level
+  // Calculate XP progress using the correct level calculation
   const currentXP = user.xp || 0;
-  const currentLevel = user.level || 1;
-  const nextLevelThreshold = currentLevel * 1000;
-  const previousLevelThreshold = (currentLevel - 1) * 1000;
+  // Use the correct level based on XP amount, not the stored level value
+  const currentLevel = calculateLevelFromXP(currentXP);
+  
+  console.debug(`[XP Debug] XP=${currentXP}, Calculated Level=${currentLevel}, Stored Level=${user.level}`);
+  
+  // Get the current and next level thresholds
+  const previousLevelThreshold = getXpRequiredForLevel(currentLevel);
+  const nextLevelThreshold = getXpRequiredForLevel(currentLevel + 1);
+  
   const xpForCurrentLevel = currentXP - previousLevelThreshold;
   const xpNeededForNextLevel = nextLevelThreshold - previousLevelThreshold;
-  const progressPercentage = Math.floor((xpForCurrentLevel / xpNeededForNextLevel) * 100);
+  const progressPercentage = Math.min(99, Math.floor((xpForCurrentLevel / xpNeededForNextLevel) * 100));
   
   // Query XP history
   const { data: xpHistory, isLoading: isXpLoading } = useQuery({

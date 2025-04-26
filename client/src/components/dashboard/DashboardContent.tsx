@@ -23,6 +23,7 @@ import CourtIQStatsOverview from '@/components/dashboard/CourtIQStatsOverview';
 import { BounceStatusTicker } from '@/components/bounce/BounceStatusTicker';
 import { BounceAssistancePanel } from '@/components/bounce/BounceAssistancePanel';
 import { useToast } from '@/hooks/use-toast';
+import { calculateLevelFromXP, getXpRequiredForLevel } from '@/lib/calculateLevel';
 import SimpleSageWidget from '@/components/sage/SimpleSageWidget';
 import { useMatchStatistics } from '@/hooks/use-match-statistics';
 import { useCourtIQPerformance } from '@/hooks/use-courtiq-performance';
@@ -159,7 +160,11 @@ export default function DashboardContent() {
     return percentage;
   };
   
-  const xpPercentage = calculateXpPercentage(user.xp || 0, user.level || 1);
+  // Calculate the correct level based on XP (ensures displayed level is accurate)
+  const correctLevel = calculateLevelFromXP(user.xp || 0);
+  
+  // XP percentage still uses the calculated level to show correct progress
+  const xpPercentage = calculateXpPercentage(user.xp || 0, correctLevel);
   // Only calculate winRate when we have real match data
   const hasMatchData = (matchStats && matchStats.totalMatches && matchStats.totalMatches > 0) || (user.totalMatches && user.totalMatches > 0);
   const winRate = hasMatchData 
