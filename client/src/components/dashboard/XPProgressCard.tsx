@@ -137,7 +137,7 @@ export default function XPProgressCard() {
           </div>
           <div className="text-center">
             <div className="text-lg font-semibold">
-              {user.totalMatches ? Math.round((user.matchesWon / user.totalMatches) * 100) : 0}%
+              {user.totalMatches && user.matchesWon ? Math.round((user.matchesWon / user.totalMatches) * 100) : 0}%
             </div>
             <div className="text-xs text-muted-foreground">Win Rate</div>
           </div>

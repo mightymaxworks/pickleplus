@@ -21,7 +21,6 @@ import { EnhancedUser } from "@/types/enhanced-user";
 import { OptimizedProfileTabs, ProfileTabId } from "@/components/profile/OptimizedProfileTabs";
 import { FEATURE_FLAGS } from "@/lib/feature-flags";
 import XPProgressCard from "@/components/dashboard/XPProgressCard";
-import { DerivedDataProvider } from "@/contexts/DerivedDataContext";
 
 export default function OptimizedProfilePage() {
   const { id } = useParams<{ id: string }>();
@@ -34,14 +33,17 @@ export default function OptimizedProfilePage() {
   
   // Get user data
   const { 
-    data: profileUser, 
+    data: profileUserData, 
     isLoading, 
     error 
-  } = useQuery({
+  } = useQuery<EnhancedUser>({
     queryKey: ['/api/users', id],
     // Use long stale time for profile data since it doesn't change frequently
     staleTime: 300000, // 5 minutes 
   });
+  
+  // Cast to EnhancedUser type to fix type errors
+  const profileUser = profileUserData as EnhancedUser;
   
   // Determine if this is the current user's profile
   const isCurrentUser = useMemo(() => {
@@ -100,7 +102,7 @@ export default function OptimizedProfilePage() {
   if (!profileUser.avatarInitials && profileUser.displayName) {
     profileUser.avatarInitials = profileUser.displayName
       .split(' ')
-      .map(n => n[0])
+      .map((n: string) => n[0])
       .join('')
       .toUpperCase();
   }
