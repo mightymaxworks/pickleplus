@@ -18,6 +18,7 @@ export function calculateLevelFromXP(xp: number): number {
     3: 250,
     4: 500,
     5: 750,
+    6: 800,  // Added missing Level 6 threshold
     10: 1000,
     15: 2000,
     20: 4000
@@ -91,6 +92,7 @@ export function getXpRequiredForLevel(level: number): number {
     3: 250,
     4: 500,
     5: 750,
+    6: 800,  // Added missing Level 6 threshold
     10: 1000,
     15: 2000,
     20: 4000
