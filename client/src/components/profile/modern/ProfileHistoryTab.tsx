@@ -9,8 +9,12 @@
  */
 
 import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EnhancedUser } from "@/types/enhanced-user";
+import { useDerivedData } from "@/contexts/DerivedDataContext";
+import MatchHistoryTimeline from "./MatchHistoryTimeline";
+import TournamentShowcase from "./TournamentShowcase";
+import AchievementsGallery from "./AchievementsGallery";
+import PerformanceTrends from "./PerformanceTrends";
 
 interface ProfileHistoryTabProps {
   user: EnhancedUser;
@@ -39,6 +43,8 @@ const itemVariants = {
 export default function ProfileHistoryTab({
   user
 }: ProfileHistoryTabProps) {
+  const { calculationService } = useDerivedData();
+  
   return (
     <motion.div 
       className="space-y-6"
@@ -46,30 +52,24 @@ export default function ProfileHistoryTab({
       initial="hidden"
       animate="visible"
     >
+      {/* Match History Timeline */}
       <motion.div variants={itemVariants}>
-        <Card>
-          <CardHeader>
-            <CardTitle>Match History</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center p-8 text-muted-foreground">
-              Match history will be available in Sprint 3
-            </div>
-          </CardContent>
-        </Card>
+        <MatchHistoryTimeline user={user} />
       </motion.div>
       
+      {/* Performance Trends */}
       <motion.div variants={itemVariants}>
-        <Card>
-          <CardHeader>
-            <CardTitle>Achievements</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center p-8 text-muted-foreground">
-              Achievements will be available in Sprint 3
-            </div>
-          </CardContent>
-        </Card>
+        <PerformanceTrends user={user} />
+      </motion.div>
+      
+      {/* Tournament Showcase */}
+      <motion.div variants={itemVariants}>
+        <TournamentShowcase user={user} />
+      </motion.div>
+      
+      {/* Achievements Gallery */}
+      <motion.div variants={itemVariants}>
+        <AchievementsGallery user={user} />
       </motion.div>
     </motion.div>
   );
